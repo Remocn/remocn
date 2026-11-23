@@ -8,19 +8,14 @@ import {
 } from "@remotion/paths";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const onest = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -40,7 +35,21 @@ export interface RideTrackingProps {
   eta?: number;
   /** Pickup street shown on the pin and in the sheet. */
   pickup?: string;
+  /** Sheet title once the car reaches the pin. */
+  arrivedTitle?: string;
+  /** Frames the car takes to drive the route to the pickup. */
+  drive?: number;
   accent?: string;
+  /** Color of the lines beside the phone; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Size of the phone and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   /** Three lines beside the phone: route, drive, arrival. */
@@ -79,6 +88,8 @@ const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const hash = (n: number) => {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return x - Math.floor(x);
@@ -706,11 +717,34 @@ function CarSide({ uid, dark }: { uid: string; dark: boolean }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RideTracking({
   driver = DEFAULT_DRIVER,
   eta = 4,
   pickup = "214 Linden St",
+  arrivedTitle = "Your driver has arrived",
+  drive = DRIVE_END - DRIVE_AT,
   accent = "#276EF1",
+  ink,
+  background,
+  fontFamily = onest.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   lines = [
@@ -721,11 +755,14 @@ export function RideTracking({
   ground,
   groundParams,
 }: RideTrackingProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { fps, width, height } = useSceneConfig();
   const f = frame * speed;
   const dark = theme === "dark";
   const c = dark ? DARK : LIGHT;
+  const fg = ink ?? c.copy;
+  const driveEnd = DRIVE_AT + drive;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const tall = height > width;
@@ -736,13 +773,20 @@ export function RideTracking({
   const phoneCx = tall ? W / 2 : W * 0.68;
   const phoneCy = tall ? H - 30 - (BH * k) / 2 : H / 2;
 
+  const spAt = (t: number, at: number, config: Partial<typeof CARD> = CARD) =>
+    spring({ frame: t - at, fps, config });
   const sp = (at: number, config: Partial<typeof CARD> = CARD) =>
-    spring({ frame: f - at, fps, config });
+    spAt(f, at, config);
+  // The springs here overshoot and stack, so "still moving" is read off the
+  // neighbouring frames rather than off a progress value.
+  const moved = (at: (t: number) => number) =>
+    Math.abs(at(f + 1) - at(f)) > 1e-5 || Math.abs(at(f) - at(f - 1)) > 1e-5;
   const rise = sp(0, HEAVY);
-  const camS = interpolate(f, [0, 270], [1, 1.03], clamp);
+  const camP = interpolate(f, [0, 270], [0, 1], clamp);
+  const camS = 1 + 0.03 * camP;
 
   const prog = (t: number) =>
-    interpolate(t, [DRIVE_AT, DRIVE_END], [0, 1], { ...clamp, easing: MOVE });
+    interpolate(t, [DRIVE_AT, driveEnd], [0, 1], { ...clamp, easing: MOVE });
   const d = prog(f);
   const s = d * ROUTE_LEN;
   const car = routePoint(s);
@@ -770,7 +814,7 @@ export function RideTracking({
     easing: CAMERA,
   });
   const arrive = spring({
-    frame: f - DRIVE_END,
+    frame: f - driveEnd,
     fps,
     config: { damping: 200 },
     durationInFrames: 30,
@@ -778,36 +822,53 @@ export function RideTracking({
   const camX = overview.x + (target.x - overview.x) * m;
   const camY = overview.y + (target.y - overview.y) * m;
   const zoom = interpolate(m, [0, 1], [0.6, 0.98]) + arrive * 0.2;
+  // The camera trails the car by up to 12 frames, so it outlasts the drive.
+  const mapMoving =
+    midway(m) || midway(d) || midway(prog(f - 12)) || midway(arrive);
+  const phoneTilt = midway(camP) || midway(rise);
 
   const stepAt = (n: number) => {
-    for (let t = DRIVE_AT; t <= DRIVE_END; t++)
-      if (prog(t) >= n / eta) return t;
-    return DRIVE_END;
+    for (let t = DRIVE_AT; t <= driveEnd; t++) if (prog(t) >= n / eta) return t;
+    return driveEnd;
   };
   const steps = Array.from({ length: eta - 1 }, (_, i) => stepAt(i + 1));
-  const roll = steps.reduce((a, at) => a + sp(at, CARD), 0);
+  const rollAt = (t: number) =>
+    steps.reduce((a, at) => a + spAt(t, at, CARD), 0);
+  const roll = rollAt(f);
   const etaLabels = Array.from({ length: eta - 1 }, (_, i) => `${eta - i}`);
-  const arrived = f >= DRIVE_END;
-  const arrivedIn = sp(DRIVE_END, CHIP);
-  const swap = Math.min(1, sp(DRIVE_END, { damping: 200 }));
+  const arrived = f >= driveEnd;
+  const arrivedIn = sp(driveEnd, CHIP);
+  const swap = Math.min(1, sp(driveEnd, { damping: 200 }));
   const sheetIn = sp(10, CARD);
   const pinIn = sp(DRAW_END - 6, CHIP);
-  const rows = [0, 1].map((i) => sp(18 + i * 4, CARD));
 
   const dash = `${Math.max(0.001, ROUTE_LEN * draw - s)} ${ROUTE_LEN * 3}`;
   const pulses = [0, 22, 44].map((off) => {
-    const t = (((f - DRIVE_END - off) % 66) + 66) % 66;
-    return f - DRIVE_END - off < 0 ? null : t / 66;
+    const t = (((f - driveEnd - off) % 66) + 66) % 66;
+    return f - driveEnd - off < 0 ? null : t / 66;
   });
 
   const row: React.CSSProperties = { display: "flex", alignItems: "center" };
   const pillX = FOCUS.x + (PICKUP.x - camX) * zoom;
-  const rise8 = (v: number): React.CSSProperties => ({
-    opacity: Math.min(1, v * 1.4),
-    transform: `translateY(${(1 - v) * 16}px)`,
-  });
+  const pillY = FOCUS.y + (PICKUP.y - camY) * zoom - 24 * zoom * pinIn - 38;
+  // Where the pill ends up once the camera has settled on the arrival. Layout
+  // rounds a box and a baseline to whole pixels, so a pill that tracks the map
+  // through `left`/`top` clicks along; it is laid out here and the way here is
+  // a transform.
+  const stop = routePoint(ROUTE_LEN);
+  const pillRest = {
+    x: FOCUS.x + (PICKUP.x - stop.x) * 0.78 * 1.18,
+    y: FOCUS.y + (PICKUP.y - stop.y) * 0.78 * 1.18 - 24 * 1.18 - 38,
+  };
+  const rise8 = (at: number): React.CSSProperties => {
+    const v = sp(at, CARD);
+    return {
+      opacity: Math.min(1, v * 1.4),
+      transform: `translateY(${(1 - v) * 16}px)${glide(moved((t) => spAt(t, at, CARD)))}`,
+    };
+  };
 
-  const beats = [0, DRIVE_AT - 4, DRIVE_END];
+  const beats = [0, DRIVE_AT - 4, driveEnd];
   const copyLine = (i: number) => {
     const inAt = beats[i] + (i === 0 ? 8 : 0);
     const outAt = beats[i + 1];
@@ -831,7 +892,7 @@ export function RideTracking({
           left: 0,
           right: 0,
           top: 0,
-          transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
+          transform: `translateY(${(1 - pin) * 70 - pout * 50}%)${glide(midway(pin) || midway(pout))}`,
           opacity: pin * (1 - pout),
         }}
       >
@@ -842,517 +903,547 @@ export function RideTracking({
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? (dark ? "earthshine" : "paper-crease")}
-        params={groundParams}
-        timeOffset={dark ? 3 : 5}
-        timeScale={0.35}
-      />
-      <AbsoluteFill style={{ background: c.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - W * u) / 2,
-          top: (height - H * u) / 2,
-          width: W,
-          height: H,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (dark ? "earthshine" : "paper-crease")}
+            params={groundParams}
+            timeOffset={dark ? 3 : 5}
+            timeScale={0.35}
+          />
+          <AbsoluteFill style={{ background: c.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: tall ? 56 : 88,
-            top: tall ? 84 : H / 2 - 112,
-            width: tall ? W - 112 : 470,
-            height: tall ? 140 : 160,
-            fontSize: tall ? 62 : 70,
-            fontWeight: 300,
-            lineHeight: 1.04,
-            letterSpacing: "-0.035em",
-            color: c.copy,
-            overflow: "hidden",
-            textWrap: "balance",
+            left: (width - W * u) / 2,
+            top: (height - H * u) / 2,
+            width: W,
+            height: H,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
-          {[0, 1, 2].map((i) => copyLine(i))}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: tall ? 56 : 88,
-            top: tall ? 236 : H / 2 + 72,
-            fontSize: tall ? 26 : 22,
-            fontWeight: 400,
-            color: c.copyMuted,
-            fontVariantNumeric: "tabular-nums",
-            ...rise8(sp(20, CARD)),
-          }}
-        >
-          {arrived ? `${driver.name} · ${driver.plate}` : `Pickup at ${pickup}`}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: phoneCx - BW / 2,
-            top: phoneCy - BH / 2,
-            width: BW,
-            height: BH,
-            transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})`,
-          }}
-        >
-          <Phone c={c}>
-            <svg
-              width={SW}
-              height={SH}
-              style={{ position: "absolute", inset: 0 }}
-              fontFamily={fontFamily}
-            >
-              <defs>
-                <filter
-                  id={`${uid}sh`}
-                  x="-50%"
-                  y="-50%"
-                  width="200%"
-                  height="200%"
-                >
-                  <feDropShadow
-                    dx="0"
-                    dy="2"
-                    stdDeviation="2.2"
-                    floodOpacity="0.4"
-                  />
-                </filter>
-                <linearGradient id={`${uid}car`} x1="0" x2="1" y1="0" y2="0">
-                  <stop offset="0" stopColor={c.carShade} />
-                  <stop offset="0.3" stopColor={c.carBody} />
-                  <stop offset="0.7" stopColor={c.carBody} />
-                  <stop offset="1" stopColor={c.carShade} />
-                </linearGradient>
-              </defs>
-              <g
-                transform={`translate(${FOCUS.x} ${FOCUS.y}) scale(${zoom}) translate(${-camX} ${-camY})`}
+          <div
+            style={{
+              position: "absolute",
+              left: tall ? 56 : 88,
+              top: tall ? 84 : H / 2 - 112,
+              width: tall ? W - 112 : 470,
+              height: tall ? 140 : 160,
+              fontSize: tall ? 62 : 70,
+              fontWeight: 300,
+              lineHeight: 1.04,
+              letterSpacing: "-0.035em",
+              color: fg,
+              overflow: "hidden",
+              textWrap: "balance",
+            }}
+          >
+            {[0, 1, 2].map((i) => copyLine(i))}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: tall ? 56 : 88,
+              top: tall ? 236 : H / 2 + 72,
+              fontSize: tall ? 26 : 22,
+              fontWeight: 400,
+              color: c.copyMuted,
+              fontVariantNumeric: "tabular-nums",
+              ...rise8(20),
+            }}
+          >
+            {arrived
+              ? `${driver.name} · ${driver.plate}`
+              : `Pickup at ${pickup}`}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: phoneCx - BW / 2,
+              top: phoneCy - BH / 2,
+              width: BW,
+              height: BH,
+              // The camera drift never rests inside its window, so the tilt
+              // holds for all of it and covers every label in the phone.
+              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})${glide(phoneTilt)}`,
+            }}
+          >
+            <Phone c={c}>
+              <svg
+                width={SW}
+                height={SH}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  // The map's labels move by SVG attributes, which the mark
+                  // can't ride on; the drawing carries it instead.
+                  transform: glide(mapMoving).trim(),
+                }}
+                fontFamily={fontFamily}
               >
-                <MapArt c={c} />
-                <path
-                  d={ROUTE}
-                  stroke={c.casing}
-                  strokeWidth={11}
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeDasharray={dash}
-                  strokeDashoffset={-s}
-                />
-                <path
-                  d={ROUTE}
-                  stroke={c.route}
-                  strokeWidth={6}
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeDasharray={dash}
-                  strokeDashoffset={-s}
-                />
-                {pulses.map((p, i) =>
-                  p === null ? null : (
+                <defs>
+                  <filter
+                    id={`${uid}sh`}
+                    x="-50%"
+                    y="-50%"
+                    width="200%"
+                    height="200%"
+                  >
+                    <feDropShadow
+                      dx="0"
+                      dy="2"
+                      stdDeviation="2.2"
+                      floodOpacity="0.4"
+                    />
+                  </filter>
+                  <linearGradient id={`${uid}car`} x1="0" x2="1" y1="0" y2="0">
+                    <stop offset="0" stopColor={c.carShade} />
+                    <stop offset="0.3" stopColor={c.carBody} />
+                    <stop offset="0.7" stopColor={c.carBody} />
+                    <stop offset="1" stopColor={c.carShade} />
+                  </linearGradient>
+                </defs>
+                <g
+                  transform={`translate(${FOCUS.x} ${FOCUS.y}) scale(${zoom}) translate(${-camX} ${-camY})`}
+                >
+                  <MapArt c={c} />
+                  <path
+                    d={ROUTE}
+                    stroke={c.casing}
+                    strokeWidth={11}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeDasharray={dash}
+                    strokeDashoffset={-s}
+                  />
+                  <path
+                    d={ROUTE}
+                    stroke={c.route}
+                    strokeWidth={6}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeDasharray={dash}
+                    strokeDashoffset={-s}
+                  />
+                  {pulses.map((p, i) =>
+                    p === null ? null : (
+                      <circle
+                        key={i}
+                        cx={PICKUP.x}
+                        cy={PICKUP.y}
+                        r={8 + p * 46}
+                        fill={accent}
+                        opacity={(1 - p) * 0.3}
+                      />
+                    ),
+                  )}
+                  <g
+                    transform={`translate(${PICKUP.x} ${PICKUP.y}) scale(${pinIn})`}
+                  >
+                    <line
+                      x1={0}
+                      y1={0}
+                      x2={0}
+                      y2={-24}
+                      stroke={accent}
+                      strokeWidth={2.5}
+                    />
                     <circle
-                      key={i}
-                      cx={PICKUP.x}
-                      cy={PICKUP.y}
-                      r={8 + p * 46}
+                      r={8}
                       fill={accent}
-                      opacity={(1 - p) * 0.3}
+                      stroke="#fff"
+                      strokeWidth={2.5}
                     />
-                  ),
-                )}
-                <g
-                  transform={`translate(${PICKUP.x} ${PICKUP.y}) scale(${pinIn})`}
-                >
-                  <line
-                    x1={0}
-                    y1={0}
-                    x2={0}
-                    y2={-24}
-                    stroke={accent}
-                    strokeWidth={2.5}
-                  />
-                  <circle r={8} fill={accent} stroke="#fff" strokeWidth={2.5} />
-                  <rect x={-2.5} y={-2.5} width={5} height={5} fill="#fff" />
-                </g>
-                <g
-                  transform={`translate(${RIDER.x} ${RIDER.y})`}
-                  opacity={Math.min(1, pinIn)}
-                >
-                  {[0, 1, 2].map((i) => (
+                    <rect x={-2.5} y={-2.5} width={5} height={5} fill="#fff" />
+                  </g>
+                  <g
+                    transform={`translate(${RIDER.x} ${RIDER.y})`}
+                    opacity={Math.min(1, pinIn)}
+                  >
+                    {[0, 1, 2].map((i) => (
+                      <circle
+                        key={i}
+                        cx={(PICKUP.x - RIDER.x) * (0.25 + i * 0.25)}
+                        cy={(PICKUP.y + 6 - RIDER.y) * (0.25 + i * 0.25)}
+                        r={1.6}
+                        fill={c.label}
+                      />
+                    ))}
+                    <circle r={16} fill={accent} opacity={0.14} />
                     <circle
-                      key={i}
-                      cx={(PICKUP.x - RIDER.x) * (0.25 + i * 0.25)}
-                      cy={(PICKUP.y + 6 - RIDER.y) * (0.25 + i * 0.25)}
-                      r={1.6}
-                      fill={c.label}
+                      r={6.5}
+                      fill={accent}
+                      stroke="#fff"
+                      strokeWidth={2.5}
                     />
-                  ))}
-                  <circle r={16} fill={accent} opacity={0.14} />
-                  <circle
-                    r={6.5}
-                    fill={accent}
-                    stroke="#fff"
-                    strokeWidth={2.5}
-                  />
+                  </g>
+                  <g
+                    transform={`translate(${car.x} ${car.y}) rotate(${angle}) scale(1.35)`}
+                    filter={`url(#${uid}sh)`}
+                  >
+                    <path
+                      d="M -7.5 -14 Q -7.5 -17 -4 -17.5 L 4 -17.5 Q 7.5 -17 7.5 -14 L 8 13 Q 8 17 4 17.5 L -4 17.5 Q -8 17 -8 13 Z"
+                      fill={`url(#${uid}car)`}
+                      stroke={c.carShade}
+                      strokeWidth={0.6}
+                    />
+                    <path
+                      d="M -6 -7.5 Q 0 -10 6 -7.5 L 5 -3 L -5 -3 Z"
+                      fill={c.glass}
+                    />
+                    <path
+                      d="M -5 9 L 5 9 L 5.6 12.5 Q 0 14 -5.6 12.5 Z"
+                      fill={c.glass}
+                    />
+                    <rect
+                      x={-5}
+                      y={-3}
+                      width={10}
+                      height={12}
+                      rx={2}
+                      fill={c.carBody}
+                    />
+                  </g>
                 </g>
-                <g
-                  transform={`translate(${car.x} ${car.y}) rotate(${angle}) scale(1.35)`}
-                  filter={`url(#${uid}sh)`}
+              </svg>
+              <div
+                style={{
+                  position: "absolute",
+                  left: pillRest.x,
+                  top: pillRest.y,
+                  transform: `translate(${pillX - pillRest.x}px, ${pillY - pillRest.y}px) translateX(-50%) scale(${pinIn})${glide(mapMoving || moved((t) => spAt(t, DRAW_END - 6, CHIP)))}`,
+                  transformOrigin: "50% 100%",
+                  opacity: interpolate(
+                    Math.min(pillX, SW - pillX),
+                    [40, 110],
+                    [0, 1],
+                    clamp,
+                  ),
+                  padding: "8px 13px",
+                  borderRadius: 12,
+                  background: c.sheet,
+                  color: c.text,
+                  fontSize: 14,
+                  fontWeight: 400,
+                  whiteSpace: "nowrap",
+                  boxShadow: dark
+                    ? "0 0 0 1px rgba(255,255,255,0.1), 0 8px 20px rgba(0,0,0,0.4)"
+                    : "0 0 0 1px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.08), 0 8px 18px -6px rgba(0,0,0,0.18)",
+                  zIndex: 3,
+                  ...row,
+                  gap: 7,
+                }}
+              >
+                <div
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: 4,
+                    background: accent,
+                  }}
+                />
+                {arrived ? "Driver is here" : pickup}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: "0 0 auto 0",
+                  height: 120,
+                  background: `linear-gradient(180deg, ${dark ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.75)"}, transparent)`,
+                  zIndex: 3,
+                }}
+              />
+              <StatusBar color={c.status} />
+              <div
+                style={{
+                  position: "absolute",
+                  top: 62,
+                  left: 18,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  background: c.sheet,
+                  boxShadow: dark
+                    ? "0 0 0 1px rgba(255,255,255,0.08)"
+                    : "0 0 0 1px rgba(0,0,0,0.05), 0 4px 12px -4px rgba(0,0,0,0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 4,
+                }}
+              >
+                <Glyph d={ICON.back} size={20} color={c.text} />
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: SHEET_Y,
+                  bottom: 0,
+                  background: c.sheet,
+                  borderRadius: "28px 28px 0 0",
+                  boxShadow: dark
+                    ? "0 0 0 1px rgba(255,255,255,0.07)"
+                    : "0 -1px 0 rgba(0,0,0,0.04), 0 -12px 32px -8px rgba(0,0,0,0.14)",
+                  transform: `translateY(${(1 - sheetIn) * 340}px)${glide(moved((t) => spAt(t, 10, CARD)))}`,
+                  padding: "8px 20px 0",
+                  boxSizing: "border-box",
+                  color: c.text,
+                  zIndex: 5,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                <div
+                  style={{
+                    width: 36,
+                    height: 5,
+                    borderRadius: 3,
+                    background: c.hair,
+                    margin: "0 auto 16px",
+                  }}
+                />
+                <div
+                  style={{ ...row, justifyContent: "space-between", gap: 12 }}
                 >
-                  <path
-                    d="M -7.5 -14 Q -7.5 -17 -4 -17.5 L 4 -17.5 Q 7.5 -17 7.5 -14 L 8 13 Q 8 17 4 17.5 L -4 17.5 Q -8 17 -8 13 Z"
-                    fill={`url(#${uid}car)`}
-                    stroke={c.carShade}
-                    strokeWidth={0.6}
-                  />
-                  <path
-                    d="M -6 -7.5 Q 0 -10 6 -7.5 L 5 -3 L -5 -3 Z"
-                    fill={c.glass}
-                  />
-                  <path
-                    d="M -5 9 L 5 9 L 5.6 12.5 Q 0 14 -5.6 12.5 Z"
-                    fill={c.glass}
-                  />
-                  <rect
-                    x={-5}
-                    y={-3}
-                    width={10}
-                    height={12}
-                    rx={2}
-                    fill={c.carBody}
-                  />
-                </g>
-              </g>
-            </svg>
-            <div
-              style={{
-                position: "absolute",
-                left: pillX,
-                top:
-                  FOCUS.y + (PICKUP.y - camY) * zoom - 24 * zoom * pinIn - 38,
-                transform: `translateX(-50%) scale(${pinIn})`,
-                transformOrigin: "50% 100%",
-                opacity: interpolate(
-                  Math.min(pillX, SW - pillX),
-                  [40, 110],
-                  [0, 1],
-                  clamp,
-                ),
-                padding: "8px 13px",
-                borderRadius: 12,
-                background: c.sheet,
-                color: c.text,
-                fontSize: 14,
-                fontWeight: 400,
-                whiteSpace: "nowrap",
-                boxShadow: dark
-                  ? "0 0 0 1px rgba(255,255,255,0.1), 0 8px 20px rgba(0,0,0,0.4)"
-                  : "0 0 0 1px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.08), 0 8px 18px -6px rgba(0,0,0,0.18)",
-                zIndex: 3,
-                ...row,
-                gap: 7,
-              }}
-            >
-              <div
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: 4,
-                  background: accent,
-                }}
-              />
-              {arrived ? "Driver is here" : pickup}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                inset: "0 0 auto 0",
-                height: 120,
-                background: `linear-gradient(180deg, ${dark ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.75)"}, transparent)`,
-                zIndex: 3,
-              }}
-            />
-            <StatusBar color={c.status} />
-            <div
-              style={{
-                position: "absolute",
-                top: 62,
-                left: 18,
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                background: c.sheet,
-                boxShadow: dark
-                  ? "0 0 0 1px rgba(255,255,255,0.08)"
-                  : "0 0 0 1px rgba(0,0,0,0.05), 0 4px 12px -4px rgba(0,0,0,0.2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 4,
-              }}
-            >
-              <Glyph d={ICON.back} size={20} color={c.text} />
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: SHEET_Y,
-                bottom: 0,
-                background: c.sheet,
-                borderRadius: "28px 28px 0 0",
-                boxShadow: dark
-                  ? "0 0 0 1px rgba(255,255,255,0.07)"
-                  : "0 -1px 0 rgba(0,0,0,0.04), 0 -12px 32px -8px rgba(0,0,0,0.14)",
-                transform: `translateY(${(1 - sheetIn) * 340}px)`,
-                padding: "8px 20px 0",
-                boxSizing: "border-box",
-                color: c.text,
-                zIndex: 5,
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              <div
-                style={{
-                  width: 36,
-                  height: 5,
-                  borderRadius: 3,
-                  background: c.hair,
-                  margin: "0 auto 16px",
-                }}
-              />
-              <div style={{ ...row, justifyContent: "space-between", gap: 12 }}>
-                <div style={{ position: "relative", flex: 1, height: 52 }}>
-                  {[false, true].map((isArr) => (
+                  <div style={{ position: "relative", flex: 1, height: 52 }}>
+                    {[false, true].map((isArr) => (
+                      <div
+                        key={String(isArr)}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          opacity: isArr ? swap : 1 - swap,
+                          transform: `translateY(${isArr ? (1 - swap) * 10 : -swap * 8}px)${glide(midway(swap))}`,
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 23,
+                            fontWeight: 400,
+                            letterSpacing: "-0.02em",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {isArr
+                            ? arrivedTitle
+                            : `${driver.name} is on the way`}
+                        </div>
+                        <div
+                          style={{ fontSize: 15, color: c.muted, marginTop: 4 }}
+                        >
+                          {isArr
+                            ? `Meet ${driver.name} at the pin`
+                            : `Arriving at ${pickup}`}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div
+                    style={{
+                      position: "relative",
+                      width: 64,
+                      height: 52,
+                      borderRadius: 14,
+                      background: c.chip,
+                      overflow: "hidden",
+                      flexShrink: 0,
+                    }}
+                  >
                     <div
-                      key={String(isArr)}
                       style={{
                         position: "absolute",
                         inset: 0,
-                        opacity: isArr ? swap : 1 - swap,
-                        transform: `translateY(${isArr ? (1 - swap) * 10 : -swap * 8}px)`,
+                        opacity: 1 - swap,
+                        maskImage:
+                          "linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent)",
                       }}
                     >
                       <div
                         style={{
-                          fontSize: 23,
-                          fontWeight: 400,
-                          letterSpacing: "-0.02em",
-                          whiteSpace: "nowrap",
+                          transform: `translateY(${-roll * 52}px)${glide(moved(rollAt))}`,
                         }}
                       >
-                        {isArr
-                          ? "Your driver has arrived"
-                          : `${driver.name} is on the way`}
-                      </div>
-                      <div
-                        style={{ fontSize: 15, color: c.muted, marginTop: 4 }}
-                      >
-                        {isArr
-                          ? `Meet ${driver.name} at the pin`
-                          : `Arriving at ${pickup}`}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div
-                  style={{
-                    position: "relative",
-                    width: 64,
-                    height: 52,
-                    borderRadius: 14,
-                    background: c.chip,
-                    overflow: "hidden",
-                    flexShrink: 0,
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      opacity: 1 - swap,
-                      maskImage:
-                        "linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent)",
-                    }}
-                  >
-                    <div style={{ transform: `translateY(${-roll * 52}px)` }}>
-                      {[...etaLabels, "1"].map((l, i) => (
-                        <div
-                          key={`${l}${i}`}
-                          style={{
-                            height: 52,
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
+                        {[...etaLabels, "1"].map((l, i) => (
                           <div
+                            key={`${l}${i}`}
                             style={{
-                              fontSize: 22,
-                              fontWeight: 400,
-                              lineHeight: "24px",
+                              height: 52,
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           >
-                            {l}
+                            <div
+                              style={{
+                                fontSize: 22,
+                                fontWeight: 400,
+                                lineHeight: "24px",
+                              }}
+                            >
+                              {l}
+                            </div>
+                            <div style={{ fontSize: 12, color: c.muted }}>
+                              min
+                            </div>
                           </div>
-                          <div style={{ fontSize: 12, color: c.muted }}>
-                            min
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background: accent,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      opacity: arrived ? Math.min(1, arrivedIn * 1.6) : 0,
-                    }}
-                  >
                     <div
-                      style={{ transform: `scale(${0.5 + arrivedIn * 0.5})` }}
-                    >
-                      <Glyph d={ICON.check} size={26} color="#fff" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                style={{
-                  height: 4,
-                  borderRadius: 2,
-                  background: c.chip,
-                  marginTop: 16,
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    width: "100%",
-                    height: 4,
-                    borderRadius: 2,
-                    background: arrived ? accent : c.text,
-                    transform: `scaleX(${0.06 + d * 0.94})`,
-                    transformOrigin: "0 50%",
-                  }}
-                />
-              </div>
-              <div
-                style={{
-                  height: 1,
-                  background: c.line,
-                  margin: "20px -20px 16px",
-                }}
-              />
-              <div style={{ ...row, gap: 12, ...rise8(rows[0]) }}>
-                <div style={{ flexShrink: 0 }}>
-                  <Portrait uid={uid} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      ...row,
-                      gap: 8,
-                      fontSize: 17,
-                      fontWeight: 400,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {driver.name}
-                    <span
                       style={{
-                        ...row,
-                        gap: 3,
-                        fontSize: 13,
-                        fontVariantNumeric: "tabular-nums",
+                        position: "absolute",
+                        inset: 0,
+                        background: accent,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        opacity: arrived ? Math.min(1, arrivedIn * 1.6) : 0,
                       }}
                     >
-                      <svg
-                        width={11}
-                        height={11}
-                        viewBox="0 0 24 24"
-                        style={{ flexShrink: 0 }}
+                      <div
+                        style={{ transform: `scale(${0.5 + arrivedIn * 0.5})` }}
                       >
-                        <path d={ICON.star} fill={c.text} />
-                      </svg>
-                      {driver.rating.toFixed(2)}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>
-                    {driver.trips}
+                        <Glyph d={ICON.check} size={26} color="#fff" />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <CarSide uid={uid} dark={dark} />
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div
-                    style={{
-                      display: "inline-block",
-                      padding: "3px 8px",
-                      borderRadius: 6,
-                      background: c.chip,
-                      fontSize: 15,
-                      fontWeight: 400,
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    {driver.plate}
-                  </div>
-                  <div style={{ fontSize: 12, color: c.muted, marginTop: 4 }}>
-                    {driver.car}
-                  </div>
-                </div>
-              </div>
-              <div
-                style={{ ...row, gap: 10, marginTop: 22, ...rise8(rows[1]) }}
-              >
                 <div
                   style={{
-                    flex: 1,
-                    height: 46,
-                    borderRadius: 23,
+                    height: 4,
+                    borderRadius: 2,
                     background: c.chip,
-                    ...row,
-                    padding: "0 18px",
-                    fontSize: 15,
-                    color: c.muted,
+                    marginTop: 16,
+                    overflow: "hidden",
                   }}
                 >
-                  Message {driver.name}
-                </div>
-                {[ICON.phone, ICON.shield].map((ic) => (
                   <div
-                    key={ic}
                     style={{
-                      width: 46,
+                      width: "100%",
+                      height: 4,
+                      borderRadius: 2,
+                      background: arrived ? accent : c.text,
+                      transform: `scaleX(${0.06 + d * 0.94})`,
+                      transformOrigin: "0 50%",
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    height: 1,
+                    background: c.line,
+                    margin: "20px -20px 16px",
+                  }}
+                />
+                <div style={{ ...row, gap: 12, ...rise8(18) }}>
+                  <div style={{ flexShrink: 0 }}>
+                    <Portrait uid={uid} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        ...row,
+                        gap: 8,
+                        fontSize: 17,
+                        fontWeight: 400,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {driver.name}
+                      <span
+                        style={{
+                          ...row,
+                          gap: 3,
+                          fontSize: 13,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        <svg
+                          width={11}
+                          height={11}
+                          viewBox="0 0 24 24"
+                          style={{ flexShrink: 0 }}
+                        >
+                          <path d={ICON.star} fill={c.text} />
+                        </svg>
+                        {driver.rating.toFixed(2)}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>
+                      {driver.trips}
+                    </div>
+                  </div>
+                  <CarSide uid={uid} dark={dark} />
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div
+                      style={{
+                        display: "inline-block",
+                        padding: "3px 8px",
+                        borderRadius: 6,
+                        background: c.chip,
+                        fontSize: 15,
+                        fontWeight: 400,
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {driver.plate}
+                    </div>
+                    <div style={{ fontSize: 12, color: c.muted, marginTop: 4 }}>
+                      {driver.car}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ ...row, gap: 10, marginTop: 22, ...rise8(22) }}>
+                  <div
+                    style={{
+                      flex: 1,
                       height: 46,
                       borderRadius: 23,
                       background: c.chip,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      ...row,
+                      padding: "0 18px",
+                      fontSize: 15,
+                      color: c.muted,
                     }}
                   >
-                    <Glyph d={ic} size={19} color={c.text} />
+                    Message {driver.name}
                   </div>
-                ))}
+                  {[ICON.phone, ICON.shield].map((ic) => (
+                    <div
+                      key={ic}
+                      style={{
+                        width: 46,
+                        height: 46,
+                        borderRadius: 23,
+                        background: c.chip,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Glyph d={ic} size={19} color={c.text} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </Phone>
+            </Phone>
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

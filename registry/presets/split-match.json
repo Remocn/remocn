@@ -1,0 +1,106 @@
+{
+  "component": "split-match",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A snappy developer-tool look in monospace type on near-black with a mint accent.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace dev tool style",
+        "fast hacker vibe",
+        "как терминал",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#e6f2ec",
+        "accent": "#3ddc97",
+        "step": 6,
+        "hold": 10
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, elegant serif reveal on warm paper with a deep oxblood accent.",
+      "askedAs": [
+        "elegant serif magazine look",
+        "slow and luxurious",
+        "light warm paper style",
+        "элегантный журнальный стиль",
+        "медленно и с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1e1a16",
+        "accent": "#7a1f2b",
+        "hold": 28
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Quick, punchy beats with big grotesque type and an electric orange accent.",
+      "askedAs": [
+        "make it fast and punchy",
+        "quick energetic cuts",
+        "bigger text more energy",
+        "быстро и энергично",
+        "крупнее и резче"
+      ],
+      "props": {
+        "speed": 1.5,
+        "hold": 8,
+        "step": 4,
+        "scale": 1.25,
+        "fontFamily": "Space Grotesk",
+        "accent": "#ff5a1f"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "A crisp, grain-free light layout in Geist with a cobalt accent.",
+      "askedAs": [
+        "clean minimal white version",
+        "no grain light mode",
+        "simple corporate look",
+        "чистый светлый вариант",
+        "минимализм без шума"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Geist",
+        "grain": false,
+        "accent": "#1f4fd8",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "A measured, premium reveal in Fraunces on deep navy with a soft gold accent.",
+      "askedAs": [
+        "luxury navy and gold",
+        "premium slow brand reveal",
+        "classy dark serif",
+        "люкс тёмно-синий с золотом",
+        "премиальное медленное появление"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#0e1424",
+        "ink": "#f2ebdd",
+        "accent": "#c9a45c",
+        "speed": 0.75,
+        "delay": 12
+      }
+    }
+  ]
+}

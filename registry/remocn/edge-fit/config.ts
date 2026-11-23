@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const edgeFitConfig: ComponentConfig = {
   componentName: "EdgeFit",
   importPath: "@/components/remocn/edge-fit",
+  lists: {
+    words: {
+      default: ["intros", "teasers", "recaps"],
+      description: "Words",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -36,6 +48,17 @@ export const edgeFitConfig: ComponentConfig = {
       description: "Hold",
       hiddenFromList: false,
     },
+    fit: {
+      type: "number",
+      default: 0.9,
+      min: 0.5,
+      max: 1,
+      step: 0.02,
+      description: "Fit width",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Anton" }),
     speed: {
       type: "number",
       default: 1,

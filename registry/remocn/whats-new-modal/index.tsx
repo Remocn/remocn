@@ -10,14 +10,14 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: figtree } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -42,8 +42,24 @@ export interface WhatsNewModalProps {
   src?: string;
   /** Pictures used by the built-in art and the dashboard mock. */
   images?: string[];
+  /** Label of the button for the next slide (a slide's own `cta` wins). */
+  nextLabel?: string;
+  /** Label of the quiet button left of the CTA. */
+  skipLabel?: string;
+  /** Frames each slide stays up before the next swipe. */
+  dwell?: number;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color of the slide titles; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Size of the app and modal, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -339,20 +355,25 @@ function Art({
     const left = cx - pw / 2;
     const p = pop(0);
     const stretch = spring({ frame: t - 22, fps: 30, config: SPR.morph });
-    const head = interpolate(t, [6, 60], [0.08, 0.86], {
+    const HEAD_END = 0.86;
+    const head = interpolate(t, [6, 60], [0.08, HEAD_END], {
       ...CL,
       easing: EASE.move,
     });
     const scale = (pw - 32) / 15;
-    const rows: [string, number, number, boolean][][] = [
+    const rowsAt = (s: number): [string, number, number, boolean][][] => [
       [
         ["Intro", 0, 2.6, false],
-        ["Product UI", 2.8, 4.6 + 1.2 * stretch, true],
-        ["Pricing", 7.6 + 1.2 * stretch, 3.4, false],
+        ["Product UI", 2.8, 4.6 + 1.2 * s, true],
+        ["Pricing", 7.6 + 1.2 * s, 3.4, false],
       ],
-      [["Voiceover", 0.6, 9.4 + 1.2 * stretch, false]],
+      [["Voiceover", 0.6, 9.4 + 1.2 * s, false]],
       [["Music", 0, 14.6, false]],
     ];
+    const rows = rowsAt(stretch);
+    // Clips pushed along by the stretch are laid out where it leaves them and
+    // ride there by transform: layout would round their edges to whole pixels.
+    const settled = rowsAt(1);
     return (
       <div
         style={{
@@ -389,13 +410,16 @@ function Art({
         {rows.map((row, r) =>
           row.map(([label, x, len, hero], i) => {
             const grow = pop(4 + r * 3 + i * 2, SPR.card);
+            const home = settled[r][i][1];
+            const ride = settle((x - home) * scale);
             return (
               <div
                 key={label}
                 style={{
                   position: "absolute",
-                  left: 16 + x * scale,
+                  left: 16 + home * scale,
                   top: 46 + r * 46,
+                  transform: ride ? `translateX(${ride}px)` : undefined,
                   width: Math.max(0, len * scale * clamp01(grow) - 4),
                   height: 36,
                   borderRadius: 8,
@@ -425,7 +449,12 @@ function Art({
         <div
           style={{
             position: "absolute",
-            left: 16 + head * (pw - 32),
+            // Laid out where it stops and moved by transform: layout rounds
+            // the playhead's edges to whole pixels, so `left` stepped it.
+            left: 16 + HEAD_END * (pw - 32),
+            transform: settle((head - HEAD_END) * (pw - 32))
+              ? `translateX(${(head - HEAD_END) * (pw - 32)}px)`
+              : undefined,
             top: 36,
             width: 1.5,
             bottom: 10,
@@ -684,6 +713,28 @@ function DashboardMock({
   );
 }
 
+/** Whether `px(f)`, a value in pixels, moves at frame `f`. */
+const stirs = (px: (f: number) => number, f: number) =>
+  Math.abs(px(f + 1) - px(f)) > 1e-3 || Math.abs(px(f) - px(f - 1)) > 1e-3;
+/** A leftover offset under a thousandth of a pixel is rest. */
+const settle = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WhatsNewModal({
   slides = DEFAULT_SLIDES,
   brand = "remocn",
@@ -691,26 +742,38 @@ export function WhatsNewModal({
   children,
   src,
   images = DEFAULT_IMAGES,
+  nextLabel = "Next",
+  skipLabel = "Skip",
+  dwell = DWELL,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = figtree,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: WhatsNewModalProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const tall = height > width;
   const SW = tall ? 600 : 1280;
   const SH = tall ? (600 * height) / width : 720;
   const k = width / SW;
   const dark = theme === "dark";
   const pal = palette(dark);
+  const fg = ink ?? pal.text;
+  const spAt = (f: number, at: number, config: Record<string, number>) =>
+    spring({ frame: f - at, fps, config });
   const sp = (at: number, config: Record<string, number>) =>
-    spring({ frame: frame - at, fps, config });
+    spAt(frame, at, config);
 
   const n = Math.max(1, slides.length);
-  const swipeAt = Array.from({ length: n }, (_, i) => FIRST + i * DWELL);
-  const endAt = swipeAt[n - 1] + DWELL - 10;
+  const swipeAt = Array.from({ length: n }, (_, i) => FIRST + i * dwell);
+  const endAt = swipeAt[n - 1] + dwell - 10;
   const PRESS = endAt + 20;
   const pos = swipeAt.slice(1).reduce((acc, t) => acc + sp(t, SPR.heavy), 0);
   const active = Math.min(n - 1, swipeAt.filter((t) => frame >= t).length - 1);
@@ -732,7 +795,20 @@ export function WhatsNewModal({
   const kick = swipeAt
     .slice(1)
     .reduce((acc, t) => acc + Math.sin(clamp01((frame - t) / 16) * Math.PI), 0);
-  const cam = 1 + 0.03 * tween(frame, 6, PRESS, EASE.camera);
+  const camAt = (f: number) => 1 + 0.03 * tween(f, 6, PRESS, EASE.camera);
+  const cam = camAt(frame);
+  // The camera carries the window and the modal, so its tilt covers their
+  // text; each of them tilts on its own only while the camera holds still.
+  const camMoving = stirs((f) => camAt(f) * 1000, frame);
+  const winMoving =
+    !camMoving && stirs((f) => spAt(f, 0, SPR.heavy) * 36, frame);
+  const modalMoving =
+    !camMoving && stirs((f) => spAt(f, 6, SPR.card) * (20 + 0.04 * MH), frame);
+  // Layout rounds a box to whole pixels, so slides swiped by `left` click
+  // sideways; they are laid out on the nearest stop and the swipe there is a
+  // transform.
+  const stop = Math.round(pos);
+  const swipe = settle((stop - pos) * (MW - 16));
 
   const ctaW = slides[n - 1]?.cta ? 148 : 112;
   const ctaPt = { x: mx + MW - 28 - ctaW / 2 + 6, y: my + MH - 46 };
@@ -750,7 +826,7 @@ export function WhatsNewModal({
   const pressed = frame >= PRESS;
   const hoverCta = tween(frame, PRESS - 8, 6, EASE.enter);
   const cursorOp = tween(frame, endAt, 6, EASE.enter);
-  const cta = slides[active]?.cta ?? "Next";
+  const cta = slides[active]?.cta ?? nextLabel;
 
   return (
     <AbsoluteFill
@@ -760,362 +836,375 @@ export function WhatsNewModal({
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <GshGround
-        preset={ground ?? (dark ? "projector" : "glasswork")}
-        params={groundParams}
-        timeOffset={3}
-        timeScale={0.5}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: SW,
-          height: SH,
-          transformOrigin: "0 0",
-          transform: `scale(${k})`,
-        }}
-      >
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? (dark ? "projector" : "glasswork")}
+          params={groundParams}
+          timeOffset={3}
+          timeScale={0.5}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${cam})`,
-            transformOrigin: `${SW / 2}px ${SH / 2}px`,
+            left: 0,
+            top: 0,
+            width: SW,
+            height: SH,
+            transformOrigin: "0 0",
+            transform: `scale(${k})`,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: WIN.x,
-              top: WIN.y,
-              width: WIN.w,
-              height: WIN.h,
-              borderRadius: 18,
-              overflow: "hidden",
-              boxShadow: pal.winShadow,
-              opacity: winOp,
-              transform: `translateY(${(1 - winIn) * 36}px) scale(${1 - 0.015 * dim})`,
+              inset: 0,
+              transform: `scale(${cam})${glide(camMoving)}`,
+              transformOrigin: `${SW / 2}px ${SH / 2}px`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                inset: 0,
-                filter: `blur(${3 * dim}px)`,
+                left: WIN.x,
+                top: WIN.y,
+                width: WIN.w,
+                height: WIN.h,
+                borderRadius: 18,
+                overflow: "hidden",
+                boxShadow: pal.winShadow,
+                opacity: winOp,
+                transform: `translateY(${(1 - winIn) * 36}px) scale(${1 - 0.015 * dim})${glide(winMoving)}`,
               }}
             >
-              {children ??
-                (src ? (
-                  <Img
-                    src={src}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                ) : (
-                  <DashboardMock
-                    pal={pal}
-                    brand={brand}
-                    userName={userName}
-                    images={images}
-                    tall={tall}
-                  />
-                ))}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: dark ? "rgba(0,0,0,0.45)" : "rgba(24,24,27,0.18)",
-                opacity: dim,
-              }}
-            />
-          </div>
-          {[-1, 1].map((side) => {
-            const off = (26 + 10 * kick) * fan;
-            return (
               <div
-                key={side}
                 style={{
                   position: "absolute",
-                  left: mx,
-                  top: my + 26,
-                  width: MW,
-                  height: MH - 52,
-                  borderRadius: 24,
-                  background: pal.dark ? "#1E1F23" : "#F7F7F5",
-                  boxShadow: pal.raised,
-                  opacity: clamp01(fan * 1.5) * modalOp,
-                  transform: `translateX(${side * off}px) rotate(${side * (2.6 + 1.2 * kick) * fan}deg) scale(0.94)`,
+                  inset: 0,
+                  filter: `blur(${3 * dim}px)`,
+                }}
+              >
+                {children ??
+                  (src ? (
+                    <Img
+                      src={src}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <DashboardMock
+                      pal={pal}
+                      brand={brand}
+                      userName={userName}
+                      images={images}
+                      tall={tall}
+                    />
+                  ))}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: dark ? "rgba(0,0,0,0.45)" : "rgba(24,24,27,0.18)",
+                  opacity: dim,
                 }}
               />
-            );
-          })}
-          <div
-            style={{
-              position: "absolute",
-              left: mx,
-              top: my,
-              width: MW,
-              height: MH,
-              borderRadius: 24,
-              overflow: "hidden",
-              background: pal.modal,
-              boxShadow: pal.modalShadow,
-              opacity: modalOp,
-              transform: `translateY(${(1 - modalIn) * 20}px) scale(${0.96 + 0.04 * modalIn})`,
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                left: 8,
-                top: 8,
-                width: MW - 16,
-                height: ART_H,
-                borderRadius: 16,
-                background: pal.art,
-                overflow: "hidden",
-              }}
-            >
-              {slides.map((s, i) => {
-                const x = (i - pos) * (MW - 16);
-                if (Math.abs(x) > MW + 10) return null;
-                const t = frame - (i === 0 ? FIRST : swipeAt[i] - 2);
-                return (
-                  <div
-                    key={s.title}
-                    style={{
-                      position: "absolute",
-                      left: x,
-                      top: 0,
-                      width: MW - 16,
-                      height: ART_H,
-                    }}
-                  >
-                    {s.illustration ??
-                      (s.src ? (
-                        <Img
-                          src={s.src}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <Art
-                          variant={i % 3}
-                          t={t}
-                          frame={frame}
-                          w={MW - 16}
-                          accent={accent}
-                          pal={pal}
-                          images={images}
-                        />
-                      ))}
-                  </div>
-                );
-              })}
             </div>
-            <div
-              style={{
-                position: "absolute",
-                right: 20,
-                top: 20,
-                width: 34,
-                height: 34,
-                borderRadius: 17,
-                background: pal.dark
-                  ? "rgba(23,24,27,0.7)"
-                  : "rgba(255,255,255,0.85)",
-                boxShadow: `0 0 0 1px ${pal.line}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Icon d={ICON.close} size={16} color={pal.muted} />
-            </div>
-            {slides.map((s, i) => {
-              const inAt = i === 0 ? FIRST + 2 : swipeAt[i] + 4;
-              const tin = tween(frame, inAt, 14, EASE.enter);
-              const tout =
-                i < n - 1 ? tween(frame, swipeAt[i + 1], 6, EASE.exit) : 0;
-              if (tout >= 1 || tin <= 0) return null;
-              const line = (d: number) => {
-                const p = tween(frame, inAt + d, 14, EASE.enter);
-                return {
-                  opacity: p * (1 - tout),
-                  transform: `translateX(${(1 - p) * 26 - tout * 22}px)`,
-                };
-              };
+            {[-1, 1].map((side) => {
+              const off = (26 + 10 * kick) * fan;
               return (
                 <div
-                  key={`t-${s.title}`}
+                  key={side}
                   style={{
                     position: "absolute",
-                    left: 32,
-                    top: ART_H + 36,
-                    width: MW - 64,
+                    left: mx,
+                    top: my + 26,
+                    width: MW,
+                    height: MH - 52,
+                    borderRadius: 24,
+                    background: pal.dark ? "#1E1F23" : "#F7F7F5",
+                    boxShadow: pal.raised,
+                    opacity: clamp01(fan * 1.5) * modalOp,
+                    transform: `translateX(${side * off}px) rotate(${side * (2.6 + 1.2 * kick) * fan}deg) scale(0.94)`,
                   }}
-                >
-                  <div style={{ fontSize: 16, color: pal.muted, ...line(0) }}>
-                    {s.eyebrow}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 31,
-                      lineHeight: 1.12,
-                      letterSpacing: "-0.025em",
-                      color: pal.text,
-                      textWrap: "balance",
-                      marginTop: 10,
-                      ...line(2),
-                    }}
-                  >
-                    {s.title}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 17,
-                      lineHeight: 1.5,
-                      color: pal.muted,
-                      textWrap: "pretty",
-                      marginTop: 12,
-                      ...line(4),
-                    }}
-                  >
-                    {s.body}
-                  </div>
-                </div>
+                />
               );
             })}
             <div
               style={{
                 position: "absolute",
-                left: 32,
-                bottom: 42,
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              {slides.map((s, i) => {
-                const a = clamp01(1 - Math.abs(pos - i));
-                const fill =
-                  i < active
-                    ? 1
-                    : interpolate(
-                        frame,
-                        [swipeAt[i], swipeAt[i] + DWELL - 4],
-                        [0, 1],
-                        CL,
-                      );
-                return (
-                  <div
-                    key={`d-${s.title}`}
-                    style={{
-                      width: 8 + 24 * a,
-                      height: 8,
-                      borderRadius: 4,
-                      background: pal.dark
-                        ? "rgba(255,255,255,0.16)"
-                        : "rgba(24,24,27,0.12)",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: `${fill * 100}%`,
-                        height: "100%",
-                        background: pal.text,
-                        opacity: a,
-                      }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                right: 28,
-                bottom: 24,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
+                left: mx,
+                top: my,
+                width: MW,
+                height: MH,
+                borderRadius: 24,
+                overflow: "hidden",
+                background: pal.modal,
+                boxShadow: pal.modalShadow,
+                opacity: modalOp,
+                transform: `translateY(${(1 - modalIn) * 20}px) scale(${0.96 + 0.04 * modalIn})${glide(modalMoving)}`,
               }}
             >
               <div
                 style={{
-                  height: 44,
-                  padding: "0 14px",
-                  display: "flex",
-                  alignItems: "center",
-                  fontSize: 16,
-                  color: pal.muted,
+                  position: "absolute",
+                  left: 8,
+                  top: 8,
+                  width: MW - 16,
+                  height: ART_H,
+                  borderRadius: 16,
+                  background: pal.art,
+                  overflow: "hidden",
                 }}
               >
-                Skip
+                {slides.map((s, i) => {
+                  const x = (i - pos) * (MW - 16);
+                  if (Math.abs(x) > MW + 10) return null;
+                  const t = frame - (i === 0 ? FIRST : swipeAt[i] - 2);
+                  return (
+                    <div
+                      key={s.title}
+                      style={{
+                        position: "absolute",
+                        left: (i - stop) * (MW - 16),
+                        top: 0,
+                        transform: swipe ? `translateX(${swipe}px)` : undefined,
+                        width: MW - 16,
+                        height: ART_H,
+                      }}
+                    >
+                      {s.illustration ??
+                        (s.src ? (
+                          <Img
+                            src={s.src}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <Art
+                            variant={i % 3}
+                            t={t}
+                            frame={frame}
+                            w={MW - 16}
+                            accent={accent}
+                            pal={pal}
+                            images={images}
+                          />
+                        ))}
+                    </div>
+                  );
+                })}
               </div>
               <div
                 style={{
-                  height: 44,
-                  width: ctaW,
-                  boxSizing: "border-box",
-                  borderRadius: 12,
-                  background: pressed
-                    ? `linear-gradient(rgba(0,0,0,0.14), rgba(0,0,0,0.14)), ${accent}`
-                    : accent,
-                  color: "#FFFFFF",
+                  position: "absolute",
+                  right: 20,
+                  top: 20,
+                  width: 34,
+                  height: 34,
+                  borderRadius: 17,
+                  background: pal.dark
+                    ? "rgba(23,24,27,0.7)"
+                    : "rgba(255,255,255,0.85)",
+                  boxShadow: `0 0 0 1px ${pal.line}`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: 8,
-                  fontSize: 16,
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
-                  transform: `scale(${1 - 0.04 * press})`,
-                  whiteSpace: "nowrap",
                 }}
               >
-                {cta}
-                <div style={{ transform: `translateX(${2 * hoverCta}px)` }}>
-                  <Icon d={ICON.arrow} size={16} color="#FFFFFF" />
+                <Icon d={ICON.close} size={16} color={pal.muted} />
+              </div>
+              {slides.map((s, i) => {
+                const inAt = i === 0 ? FIRST + 2 : swipeAt[i] + 4;
+                const tin = tween(frame, inAt, 14, EASE.enter);
+                const tout =
+                  i < n - 1 ? tween(frame, swipeAt[i + 1], 6, EASE.exit) : 0;
+                if (tout >= 1 || tin <= 0) return null;
+                const line = (d: number) => {
+                  const p = tween(frame, inAt + d, 14, EASE.enter);
+                  return {
+                    opacity: p * (1 - tout),
+                    transform: `translateX(${(1 - p) * 26 - tout * 22}px)`,
+                  };
+                };
+                return (
+                  <div
+                    key={`t-${s.title}`}
+                    style={{
+                      position: "absolute",
+                      left: 32,
+                      top: ART_H + 36,
+                      width: MW - 64,
+                    }}
+                  >
+                    <div style={{ fontSize: 16, color: pal.muted, ...line(0) }}>
+                      {s.eyebrow}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 31,
+                        lineHeight: 1.12,
+                        letterSpacing: "-0.025em",
+                        color: fg,
+                        textWrap: "balance",
+                        marginTop: 10,
+                        ...line(2),
+                      }}
+                    >
+                      {s.title}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 17,
+                        lineHeight: 1.5,
+                        color: pal.muted,
+                        textWrap: "pretty",
+                        marginTop: 12,
+                        ...line(4),
+                      }}
+                    >
+                      {s.body}
+                    </div>
+                  </div>
+                );
+              })}
+              <div
+                style={{
+                  position: "absolute",
+                  left: 32,
+                  bottom: 42,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                {slides.map((s, i) => {
+                  const a = clamp01(1 - Math.abs(pos - i));
+                  const fill =
+                    i < active
+                      ? 1
+                      : interpolate(
+                          frame,
+                          [swipeAt[i], swipeAt[i] + dwell - 4],
+                          [0, 1],
+                          CL,
+                        );
+                  return (
+                    <div
+                      key={`d-${s.title}`}
+                      style={{
+                        width: 8 + 24 * a,
+                        height: 8,
+                        borderRadius: 4,
+                        background: pal.dark
+                          ? "rgba(255,255,255,0.16)"
+                          : "rgba(24,24,27,0.12)",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${fill * 100}%`,
+                          height: "100%",
+                          background: fg,
+                          opacity: a,
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  right: 28,
+                  bottom: 24,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <div
+                  style={{
+                    height: 44,
+                    padding: "0 14px",
+                    display: "flex",
+                    alignItems: "center",
+                    fontSize: 16,
+                    color: pal.muted,
+                  }}
+                >
+                  {skipLabel}
+                </div>
+                <div
+                  style={{
+                    height: 44,
+                    width: ctaW,
+                    boxSizing: "border-box",
+                    borderRadius: 12,
+                    background: pressed
+                      ? `linear-gradient(rgba(0,0,0,0.14), rgba(0,0,0,0.14)), ${accent}`
+                      : accent,
+                    color: "#FFFFFF",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    fontSize: 16,
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
+                    transform: `scale(${1 - 0.04 * press})`,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {cta}
+                  <div style={{ transform: `translateX(${2 * hoverCta}px)` }}>
+                    <Icon d={ICON.arrow} size={16} color="#FFFFFF" />
+                  </div>
                 </div>
               </div>
             </div>
+            <svg
+              width={24}
+              height={28}
+              viewBox="0 0 20 24"
+              aria-hidden
+              style={{
+                position: "absolute",
+                // Laid out where it comes to rest; the travel there is a
+                // transform, for the same reason as the slides.
+                left: ctaPt.x - 2,
+                top: ctaPt.y - 2,
+                opacity: cursorOp,
+                transformOrigin: "2px 2px",
+                transform: `translate(${settle(cur.x - ctaPt.x)}px, ${settle(cur.y - ctaPt.y)}px) scale(${1 - 0.04 * press})`,
+                filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
+                overflow: "visible",
+              }}
+            >
+              <path
+                d="M2 2 L2 19.5 L6.6 15.4 L9.8 22.4 L12.9 21 L9.8 14.2 L16 14.2 Z"
+                fill="#FFFFFF"
+                stroke="#16171A"
+                strokeWidth={1.1}
+                strokeLinejoin="round"
+              />
+            </svg>
           </div>
-          <svg
-            width={24}
-            height={28}
-            viewBox="0 0 20 24"
-            aria-hidden
-            style={{
-              position: "absolute",
-              left: cur.x - 2,
-              top: cur.y - 2,
-              opacity: cursorOp,
-              transformOrigin: "2px 2px",
-              transform: `scale(${1 - 0.04 * press})`,
-              filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
-              overflow: "visible",
-            }}
-          >
-            <path
-              d="M2 2 L2 19.5 L6.6 15.4 L9.8 22.4 L12.9 21 L9.8 14.2 L16 14.2 Z"
-              fill="#FFFFFF"
-              stroke="#16171A"
-              strokeWidth={1.1}
-              strokeLinejoin="round"
-            />
-          </svg>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

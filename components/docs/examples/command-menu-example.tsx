@@ -1,6 +1,5 @@
 "use client";
-
-import { useCurrentFrame } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { revealCount } from "@/lib/remocn-ui";
 import { CommandMenu } from "@/registry/remocn-ui/command-menu";
 import { useCommandMenuTransition } from "@/registry/remocn-ui/command-menu/use-command-menu-transition";
@@ -18,7 +17,7 @@ export const commandMenuExampleControls = [] as const;
 export type CommandMenuExampleProps = Record<string, never>;
 
 export const CommandMenuExampleScene = (_p: CommandMenuExampleProps = {}) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
 
   // Panel: closed → opened at frame 16, then closed again at frame 108.
   const panelStyle = useCommandMenuTransition([
@@ -60,20 +59,21 @@ export const commandMenuExampleCode = (
   const extraProps = "";
   const optsStr = "";
 
-  return `import { useCurrentFrame } from "remotion";
+  return `import { useCurrentFrame, useVideoConfig } from "remotion";
 import { revealCount } from "@/lib/remocn-ui";
 import { CommandMenu } from "@/components/remocn/command-menu";
 import { useCommandMenuTransition } from "@/components/remocn/use-command-menu-transition";
 import { useCommandMenuItemTransition } from "@/components/remocn/use-command-menu-item-transition";
 
 const QUERY = "settings";
-const TYPE_START = 20;
-const FPS = 30;
+const TYPE_START = 40; // composition frame at 60 fps (~0.67 s)
 const CPS = 4;
 
 export const Scene = () => {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
 
+  // Step frames (\`at\`, \`duration\`) count at 30 fps at any composition rate.
   // Panel zooms in, holds while query is typed and a row is selected, then closes.
   const panelStyle = useCommandMenuTransition(
     [
@@ -86,7 +86,7 @@ export const Scene = () => {
   // filters the list as more characters appear.
   const revealed = revealCount(
     Math.max(0, frame - TYPE_START),
-    FPS,
+    fps,
     QUERY.length,
     CPS,
   );

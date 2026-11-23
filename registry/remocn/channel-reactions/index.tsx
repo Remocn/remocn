@@ -2,16 +2,19 @@
 
 import { loadFont as loadOnest } from "@remotion/google-fonts/Onest";
 import type React from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
+  continueRender,
+  delayRender,
   Easing,
   Img,
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -50,8 +53,24 @@ export interface ChannelReactionsProps {
   channel?: string;
   /** Large line above the window in the 9:16 layout. */
   headline?: string;
+  /** Timestamp on the launch message. */
+  time?: string;
+  /** Muted note after the reply count on the thread line. */
+  lastReplyLabel?: string;
+  /** Frames between reaction chips popping in. */
+  stagger?: number;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Size of the window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -110,6 +129,8 @@ const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
 const CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 function withAlpha(color: string, alpha: number) {
   const hex = color.replace("#", "");
@@ -179,16 +200,52 @@ function Count({ value }: { value: number }) {
   );
 }
 
-function Grow({ p, children }: { p: number; children: React.ReactNode }) {
+/**
+ * A row that opens from 0 to its content's height. With `cut` it is laid out
+ * fully open and that much of its bottom is clipped off instead, so nothing
+ * around it is pushed by layout while it opens.
+ */
+function Grow({
+  p,
+  cut,
+  children,
+}: {
+  p: number;
+  cut?: number;
+  children: React.ReactNode;
+}) {
+  const open = p >= 0.999;
   return (
-    <div style={{ display: "grid", gridTemplateRows: `${clamp(p, 0, 1)}fr` }}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateRows: cut === undefined ? `${clamp(p, 0, 1)}fr` : "1fr",
+      }}
+    >
       <div
-        style={{ minHeight: 0, overflow: p >= 0.999 ? "visible" : "hidden" }}
+        style={{
+          minHeight: 0,
+          overflow: open ? "visible" : "hidden",
+          clipPath:
+            cut === undefined || open ? undefined : `inset(0 0 ${cut}px 0)`,
+        }}
       >
         {children}
       </div>
     </div>
   );
+}
+
+/** Height layout gives an element: unrounded, and blind to transforms. */
+function layoutHeight(el: Element | null | undefined) {
+  if (!el) return 0;
+  const style = getComputedStyle(el);
+  const height = Number.parseFloat(style.height) || 0;
+  return style.boxSizing === "border-box"
+    ? height
+    : height +
+        Number.parseFloat(style.paddingTop) +
+        Number.parseFloat(style.paddingBottom);
 }
 
 function Message({
@@ -199,6 +256,7 @@ function Message({
   context,
   bg,
   pad,
+  cut,
 }: {
   person: ChannelAuthor;
   time: string;
@@ -207,6 +265,8 @@ function Message({
   context?: string;
   bg?: string;
   pad: number;
+  /** Px clipped off the bottom while a block inside is laid out ahead. */
+  cut?: number;
 }) {
   return (
     <div
@@ -216,6 +276,7 @@ function Message({
         padding: `10px ${pad}px`,
         background: bg,
         position: "relative",
+        clipPath: cut ? `inset(0 0 ${cut}px 0)` : undefined,
       }}
     >
       <Avatar person={person} size={38} />
@@ -293,6 +354,22 @@ const ic = (d: string, color: string, size = 18) => (
     <path d={d} />
   </svg>
 );
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
 
 const CHANNELS = ["general", "design", "launch", "marketing"];
 
@@ -377,21 +454,46 @@ export function ChannelReactions({
   workspace = "remocn",
   channel = "launch",
   headline = "Launch day, live",
+  time = "10:30 AM",
+  lastReplyLabel = "Last reply just now",
+  stagger = 6,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = onest.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: ChannelReactionsProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const rawFrame = useSceneFrame();
+  const frame = Math.max(0, rawFrame - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const tall = height > width;
   const SW = tall ? 720 : 1280;
   const SH = tall ? 1280 : 720;
   const u = Math.min(width / SW, height / SH);
-  const pal = palette(theme, accent);
+  const base = palette(theme, accent);
+  const pal: Pal =
+    ink === undefined ? base : { ...base, text: ink, strong: ink };
+  const spAt = (
+    f: number,
+    at: number,
+    config: Partial<typeof CARD>,
+    dur?: number,
+  ) => spring({ frame: f - at, fps, config, durationInFrames: dur });
   const sp = (at: number, config: Partial<typeof CARD>, dur?: number) =>
-    spring({ frame: frame - at, fps, config, durationInFrames: dur });
+    spAt(frame, at, config, dur);
+  // Whether a value of the frame is moving right now: springs overshoot and
+  // trail off, so it is read against the neighbouring frames instead of a
+  // progress. Nothing moves while `delay` holds the first frame.
+  const stirs = (at: (f: number) => number, eps = 1e-5) =>
+    rawFrame >= delay &&
+    (Math.abs(at(frame + speed) - at(frame)) > eps ||
+      Math.abs(at(frame) - at(frame - speed)) > eps);
   const ease = (a: number, b: number, easing = ENTER) =>
     interpolate(frame, [a, b], [0, 1], { ...CL, easing });
 
@@ -404,10 +506,18 @@ export function ChannelReactions({
 
   const win = sp(0, HEAVY);
   const winFade = ease(0, 12);
-  const cam = interpolate(frame, [0, 220], [1, 1.03], {
-    ...CL,
-    easing: CAMERA,
-  });
+  const camAt = (f: number) =>
+    interpolate(f, [0, 220], [1, 1.03], {
+      ...CL,
+      easing: CAMERA,
+    });
+  const cam = camAt(frame);
+  // The camera eases in and out over the whole scene, so the window counts
+  // as moving while its furthest line still travels a thousandth of a pixel
+  // a frame; below that it is at rest and gets no tilt.
+  const winMoving =
+    stirs((f) => spAt(f, 0, HEAVY) * 60, 5e-4) ||
+    stirs((f) => (0.96 + 0.04 * spAt(f, 0, HEAVY)) * camAt(f), 2e-6);
   const headIn = ease(4, 20);
 
   const msgIn = sp(16, MORPH, 16);
@@ -444,537 +554,670 @@ export function ChannelReactions({
   const barIn = sp(58, CARD);
   const barOut = 1 - ease(90, 98, EXIT);
 
-  const popAt = reactions.map((_, i) => (i === 0 ? 80 : 86 + i * 6));
+  const popAt = reactions.map((_, i) => (i === 0 ? 80 : 86 + i * stagger));
   const rowIn = sp(78, MORPH, 12);
   const threadIn = sp(104, MORPH, 14);
   const replyAt = replies.map((_, i) => 120 + i * 24);
+
+  // The channel sticks to its bottom edge, so a block that opens pushes every
+  // line above it up by layout, and layout rounds each baseline and box edge
+  // on the way: the lines click up pixel by pixel, each on its own frame.
+  // While a block opens, the column is laid out with that block already open
+  // and the height still to come sits on one translate of the whole column,
+  // with the block clipped down to what it showed. The blocks open strictly
+  // from the top down, so nothing visible sits below one that moves and
+  // nothing needs a translate of its own. At rest the markup is the plain
+  // `Grow`.
+  const messageRef = useRef<HTMLDivElement>(null);
+  const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Natural heights: the message without its blocks, then each block in
+  // order (unfurl, reactions, thread line, replies).
+  const [heights, setHeights] = useState<number[]>([]);
+  // A font that arrives after the first render changes the heights with no
+  // render to follow (a still, a paused player), so the frame is held until
+  // the fonts are in and the heights have been read once more.
+  const [handle] = useState(() => delayRender("channel-reactions: measuring"));
+  const [fontsIn, setFontsIn] = useState(false);
+  useEffect(() => {
+    let live = true;
+    onest
+      .waitUntilDone()
+      .then(() => document.fonts.ready)
+      .catch(() => undefined)
+      .then(() => {
+        if (live) setFontsIn(true);
+        else continueRender(handle);
+      });
+    return () => {
+      live = false;
+    };
+  }, [handle]);
+  useLayoutEffect(() => {
+    if (fontsIn) continueRender(handle);
+  }, [fontsIn, handle]);
+  // No dependency list: the copy and the font can change on any render, and
+  // this runs before the frame is painted.
+  useLayoutEffect(() => {
+    const blocks = blockRefs.current.slice(0, 3 + replies.length);
+    const next = [
+      // Less the rows of its three blocks, whatever state they are laid out
+      // in right now.
+      blocks
+        .slice(0, 3)
+        .reduce(
+          (h, el) => h - layoutHeight(el?.parentElement?.parentElement),
+          layoutHeight(messageRef.current),
+        ),
+      ...blocks.map(layoutHeight),
+    ];
+    if (
+      next.length !== heights.length ||
+      next.some((h, i) => Math.abs(h - heights[i]) > 0.01)
+    )
+      setHeights(next);
+  });
+  // Progress of each row, the message first, then its blocks and the replies.
+  const openAt = [
+    (f: number) => clamp(spAt(f, 16, MORPH, 16)),
+    (f: number) => clamp(spAt(f, 30, MORPH, 16)),
+    (f: number) => clamp(spAt(f, 78, MORPH, 12)),
+    (f: number) => clamp(spAt(f, 104, MORPH, 14)),
+    ...replyAt.map((at) => (f: number) => clamp(spAt(f, at, MORPH, 14))),
+  ];
+  // Px of its height each row still holds back. The message holds back a
+  // share of what it contains at that moment, its blocks as far as they are
+  // open.
+  const hiddenAt = openAt.map((at, i) => (f: number) => {
+    const full =
+      i === 0
+        ? openAt
+            .slice(1, 4)
+            .reduce(
+              (h, inner, k) => h + inner(f) * (heights[k + 1] ?? 0),
+              heights[0] ?? 0,
+            )
+        : (heights[i] ?? 0);
+    return (1 - at(f)) * full;
+  });
+  const opening = hiddenAt.map((at) => stirs(at, 1e-3));
+  const hidden = hiddenAt.map((at, i) => (opening[i] ? at(frame) : 0));
+  const columnMoving = opening.some(Boolean);
+  const lift = hidden.reduce((sum, h) => sum + h, 0);
+  const insideHidden = hidden[1] + hidden[2] + hidden[3];
+  // A `p`fr track in an auto-height grid makes the row p of its content tall,
+  // and the track is then resolved against that height once more: the content
+  // shows through a window of p * p of its height, at the top of the row. So
+  // the clip takes off more than the row holds back.
+  const cut = (i: number) =>
+    opening[i]
+      ? hidden[i] * (1 + openAt[i](frame)) + (i === 0 ? insideHidden : 0)
+      : undefined;
+  // One tilt per chain: a block that fades in while the window or the column
+  // above it already carries the tilt gets none of its own.
+  const carried = winMoving || columnMoving;
   const threadAvatars = [PEOPLE.leo, PEOPLE.priya, PEOPLE.sam, PEOPLE.maya];
   const typing = 1 - ease(12, 18, EXIT);
 
   return (
     <AbsoluteFill
       style={{
-        fontFamily: onest.fontFamily,
+        fontFamily,
         WebkitFontSmoothing: "antialiased",
         overflow: "hidden",
       }}
     >
-      <GshGround
-        preset={ground ?? (pal.dark ? "hearth" : "paper-crease")}
-        params={
-          groundParams ??
-          (pal.dark || ground
-            ? undefined
-            : {
-                colors: ["#ff9a5c", "#ffc9a3", "#f6e3d3", "#a8553a"],
-                background: "#f3ece4",
-              })
-        }
-        timeOffset={pal.dark ? 4 : 5}
-        timeScale={0.35}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - SW * u) / 2,
-          top: (height - SH * u) / 2,
-          width: SW,
-          height: SH,
-          transform: `scale(${u})`,
-          transformOrigin: "0 0",
-        }}
-      >
-        {tall ? (
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? (pal.dark ? "hearth" : "paper-crease")}
+          params={
+            groundParams ??
+            (pal.dark || ground
+              ? undefined
+              : {
+                  colors: ["#ff9a5c", "#ffc9a3", "#f6e3d3", "#a8553a"],
+                  background: "#f3ece4",
+                })
+          }
+          timeOffset={pal.dark ? 4 : 5}
+          timeScale={0.35}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: (width - SW * u) / 2,
+            top: (height - SH * u) / 2,
+            width: SW,
+            height: SH,
+            transform: `scale(${u})`,
+            transformOrigin: "0 0",
+          }}
+        >
+          {tall ? (
+            <div
+              style={{
+                position: "absolute",
+                left: WIN.x,
+                top: 150,
+                width: WIN.w,
+                fontSize: 52,
+                fontWeight: 300,
+                letterSpacing: "-0.035em",
+                lineHeight: 1.04,
+                color: ink ?? (pal.dark ? "#F6F2EE" : "#1E1A16"),
+                opacity: headIn,
+                transform: `translateY(${(1 - headIn) * 18}px)${glide(midway(headIn))}`,
+              }}
+            >
+              {headline}
+            </div>
+          ) : null}
           <div
             style={{
               position: "absolute",
               left: WIN.x,
-              top: 150,
+              top: WIN.y,
               width: WIN.w,
-              fontSize: 52,
-              fontWeight: 300,
-              letterSpacing: "-0.035em",
-              lineHeight: 1.04,
-              color: pal.dark ? "#F6F2EE" : "#1E1A16",
-              opacity: headIn,
-              transform: `translateY(${(1 - headIn) * 18}px)`,
-            }}
-          >
-            {headline}
-          </div>
-        ) : null}
-        <div
-          style={{
-            position: "absolute",
-            left: WIN.x,
-            top: WIN.y,
-            width: WIN.w,
-            height: WIN.h,
-            borderRadius: 18,
-            overflow: "hidden",
-            display: "flex",
-            background: pal.window,
-            boxShadow: pal.depth,
-            opacity: winFade,
-            transformOrigin: "50% 50%",
-            transform: `translateY(${(1 - win) * 60}px) scale(${(0.96 + 0.04 * win) * cam})`,
-          }}
-        >
-          {SIDE ? (
-            <Sidebar pal={pal} workspace={workspace} channel={channel} />
-          ) : null}
-          <div
-            style={{
-              flex: 1,
+              height: WIN.h,
+              borderRadius: 18,
+              overflow: "hidden",
               display: "flex",
-              flexDirection: "column",
-              minWidth: 0,
+              background: pal.window,
+              boxShadow: pal.depth,
+              opacity: winFade,
+              transformOrigin: "50% 50%",
+              transform: `translateY(${(1 - win) * 60}px) scale(${(0.96 + 0.04 * win) * cam})${glide(winMoving)}`,
             }}
           >
-            <div
-              style={{
-                height: 60,
-                flexShrink: 0,
-                display: "flex",
-                alignItems: "center",
-                padding: `0 ${PAD}px`,
-                boxShadow: `inset 0 -1px 0 ${pal.rule}`,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 18,
-                  color: pal.strong,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {ic(I.hash, pal.muted, 17)}
-                {channel}
-              </span>
-              <div
-                style={{
-                  marginLeft: "auto",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  color: pal.muted,
-                  fontSize: 15,
-                }}
-              >
-                <svg
-                  width={18}
-                  height={18}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke={pal.muted}
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                >
-                  <path d="M9 11 A3.5 3.5 0 1 0 9 4 A3.5 3.5 0 0 0 9 11 Z M3 20 C3 16.5 5.7 14 9 14 C12.3 14 15 16.5 15 20 M16 4.3 A3.5 3.5 0 0 1 16 10.7 M18 14.3 C19.9 15 21 17.2 21 20" />
-                </svg>
-                <span style={{ fontVariantNumeric: "tabular-nums" }}>24</span>
-              </div>
-            </div>
+            {SIDE ? (
+              <Sidebar pal={pal} workspace={workspace} channel={channel} />
+            ) : null}
             <div
               style={{
                 flex: 1,
-                position: "relative",
-                overflow: "hidden",
-                maskImage:
-                  "linear-gradient(to bottom, transparent, black 40px)",
+                display: "flex",
+                flexDirection: "column",
+                minWidth: 0,
               }}
             >
               <div
                 style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 6,
+                  height: 60,
+                  flexShrink: 0,
                   display: "flex",
-                  flexDirection: "column",
+                  alignItems: "center",
+                  padding: `0 ${PAD}px`,
+                  boxShadow: `inset 0 -1px 0 ${pal.rule}`,
                 }}
               >
-                {HISTORY.map((h) => (
-                  <Message
-                    key={h.time}
-                    person={h.person}
-                    time={h.time}
-                    pal={pal}
-                    pad={PAD}
+                <span
+                  style={{
+                    fontSize: 18,
+                    color: pal.strong,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {ic(I.hash, pal.muted, 17)}
+                  {channel}
+                </span>
+                <div
+                  style={{
+                    marginLeft: "auto",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    color: pal.muted,
+                    fontSize: 15,
+                  }}
+                >
+                  <svg
+                    width={18}
+                    height={18}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={pal.muted}
+                    strokeWidth={1.5}
+                    strokeLinecap="round"
                   >
-                    {h.text}
-                  </Message>
-                ))}
-                <Grow p={msgIn}>
-                  <div
-                    style={{
-                      position: "relative",
-                      zIndex: 2,
-                      opacity: msgFade,
-                      transform: `translateY(${(1 - msgFade) * 16}px)`,
-                    }}
-                  >
+                    <path d="M9 11 A3.5 3.5 0 1 0 9 4 A3.5 3.5 0 0 0 9 11 Z M3 20 C3 16.5 5.7 14 9 14 C12.3 14 15 16.5 15 20 M16 4.3 A3.5 3.5 0 0 1 16 10.7 M18 14.3 C19.9 15 21 17.2 21 20" />
+                  </svg>
+                  <span style={{ fontVariantNumeric: "tabular-nums" }}>24</span>
+                </div>
+              </div>
+              <div
+                style={{
+                  flex: 1,
+                  position: "relative",
+                  overflow: "hidden",
+                  maskImage:
+                    "linear-gradient(to bottom, transparent, black 40px)",
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 6,
+                    display: "flex",
+                    flexDirection: "column",
+                    transform: columnMoving
+                      ? `translateY(${lift}px)${glide(!winMoving)}`
+                      : undefined,
+                  }}
+                >
+                  {HISTORY.map((h) => (
                     <Message
-                      person={author}
-                      time="10:30 AM"
+                      key={h.time}
+                      person={h.person}
+                      time={h.time}
                       pal={pal}
                       pad={PAD}
-                      bg={
-                        hover > 0
-                          ? withAlpha(
-                              pal.dark ? "#ffffff" : "#1e1c18",
-                              (pal.dark ? 0.035 : 0.03) * hover,
-                            )
-                          : undefined
-                      }
                     >
-                      {message}{" "}
-                      <span style={{ color: pal.link }}>{link.url}</span>
-                      <Grow p={unfurl}>
-                        <div style={{ opacity: unfurlFade, paddingTop: 10 }}>
+                      {h.text}
+                    </Message>
+                  ))}
+                  <Grow p={msgIn} cut={cut(0)}>
+                    <div
+                      ref={messageRef}
+                      style={{
+                        position: "relative",
+                        zIndex: 2,
+                        opacity: msgFade,
+                        transform: `translateY(${(1 - msgFade) * 16}px)${glide(midway(msgFade) && !carried)}`,
+                      }}
+                    >
+                      <Message
+                        person={author}
+                        time={time}
+                        pal={pal}
+                        pad={PAD}
+                        cut={insideHidden}
+                        bg={
+                          hover > 0
+                            ? withAlpha(
+                                pal.dark ? "#ffffff" : "#1e1c18",
+                                (pal.dark ? 0.035 : 0.03) * hover,
+                              )
+                            : undefined
+                        }
+                      >
+                        {message}{" "}
+                        <span style={{ color: pal.link }}>{link.url}</span>
+                        <Grow p={unfurl} cut={cut(1)}>
                           <div
-                            style={{
-                              display: "flex",
-                              flexDirection: tall ? "column" : "row",
-                              gap: tall ? 10 : 16,
-                              maxWidth: tall ? 420 : 620,
-                              paddingLeft: 14,
-                              boxShadow: `inset 3px 0 0 ${pal.rule}`,
+                            ref={(el) => {
+                              blockRefs.current[0] = el;
                             }}
+                            style={{ opacity: unfurlFade, paddingTop: 10 }}
                           >
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 14, color: pal.muted }}>
-                                {link.site}
-                              </div>
-                              <div
-                                style={{
-                                  fontSize: 16,
-                                  color: pal.link,
-                                  marginTop: 3,
-                                  lineHeight: "22px",
-                                }}
-                              >
-                                {link.title}
-                              </div>
-                              {tall ? null : (
-                                <div
-                                  style={{
-                                    fontSize: 15,
-                                    color: pal.text,
-                                    marginTop: 3,
-                                    lineHeight: "21px",
-                                  }}
-                                >
-                                  {link.description}
-                                </div>
-                              )}
-                            </div>
                             <div
                               style={{
-                                width: tall ? 300 : 192,
-                                height: tall ? 158 : 101,
-                                borderRadius: 10,
-                                overflow: "hidden",
-                                flexShrink: 0,
-                                position: "relative",
-                                background: "#05141f",
+                                display: "flex",
+                                flexDirection: tall ? "column" : "row",
+                                gap: tall ? 10 : 16,
+                                maxWidth: tall ? 420 : 620,
+                                paddingLeft: 14,
+                                boxShadow: `inset 3px 0 0 ${pal.rule}`,
                               }}
                             >
-                              <Img
-                                src={image ?? staticFile("hero.png")}
-                                style={{
-                                  width: "100%",
-                                  height: "100%",
-                                  objectFit: "cover",
-                                  display: "block",
-                                }}
-                              />
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  inset: 0,
-                                  borderRadius: 10,
-                                  boxShadow: `inset 0 0 0 1px ${pal.outline}`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </Grow>
-                      <Grow p={rowIn}>
-                        <div
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 6,
-                            paddingTop: 10,
-                            alignItems: "center",
-                          }}
-                        >
-                          {reactions.map((r, i) => {
-                            const s = sp(popAt[i], CHIP);
-                            const self = i === 0;
-                            const start = popAt[i] + 4;
-                            const v = interpolate(
-                              frame,
-                              [start, start + 62 + i * 3],
-                              [1, r.count],
-                              { ...CL, easing: LIGHT },
-                            );
-                            return (
-                              <div
-                                key={r.emoji}
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: 6,
-                                  height: 30,
-                                  padding: "0 10px 0 8px",
-                                  borderRadius: 15,
-                                  boxSizing: "border-box",
-                                  background: self
-                                    ? withAlpha(accent, pal.dark ? 0.2 : 0.09)
-                                    : pal.pill,
-                                  boxShadow: self
-                                    ? `inset 0 0 0 1px ${withAlpha(accent, 0.7)}`
-                                    : undefined,
-                                  color: self ? pal.link : pal.text,
-                                  fontSize: 15,
-                                  transform: `scale(${s})`,
-                                  transformOrigin: "30% 60%",
-                                }}
-                              >
-                                <span
-                                  style={{ fontSize: 16, lineHeight: "18px" }}
-                                >
-                                  {r.emoji}
-                                </span>
-                                <Count value={frame < start ? 1 : v} />
-                              </div>
-                            );
-                          })}
-                          <div
-                            style={{
-                              height: 30,
-                              width: 38,
-                              borderRadius: 15,
-                              background: pal.pill,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              opacity: ease(
-                                popAt[popAt.length - 1] + 4,
-                                popAt[popAt.length - 1] + 14,
-                              ),
-                            }}
-                          >
-                            {ic(I.emoji, pal.muted, 17)}
-                          </div>
-                        </div>
-                      </Grow>
-                      <Grow p={threadIn}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 10,
-                            paddingTop: 10,
-                            fontSize: 15,
-                          }}
-                        >
-                          <div style={{ display: "flex", gap: 4 }}>
-                            {threadAvatars.map((p, i) => {
-                              const s = sp(104 + i * 6, CHIP);
-                              return (
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 14, color: pal.muted }}>
+                                  {link.site}
+                                </div>
                                 <div
-                                  key={p.name}
                                   style={{
-                                    width: 24 * clamp(s),
-                                    transform: `scale(${s})`,
+                                    fontSize: 16,
+                                    color: pal.link,
+                                    marginTop: 3,
+                                    lineHeight: "22px",
                                   }}
                                 >
-                                  <Avatar person={p} size={24} />
+                                  {link.title}
+                                </div>
+                                {tall ? null : (
+                                  <div
+                                    style={{
+                                      fontSize: 15,
+                                      color: pal.text,
+                                      marginTop: 3,
+                                      lineHeight: "21px",
+                                    }}
+                                  >
+                                    {link.description}
+                                  </div>
+                                )}
+                              </div>
+                              <div
+                                style={{
+                                  width: tall ? 300 : 192,
+                                  height: tall ? 158 : 101,
+                                  borderRadius: 10,
+                                  overflow: "hidden",
+                                  flexShrink: 0,
+                                  position: "relative",
+                                  background: "#05141f",
+                                }}
+                              >
+                                <Img
+                                  src={image ?? staticFile("hero.png")}
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                    display: "block",
+                                  }}
+                                />
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    borderRadius: 10,
+                                    boxShadow: `inset 0 0 0 1px ${pal.outline}`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </Grow>
+                        <Grow p={rowIn} cut={cut(2)}>
+                          <div
+                            ref={(el) => {
+                              blockRefs.current[1] = el;
+                            }}
+                            style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              gap: 6,
+                              paddingTop: 10,
+                              alignItems: "center",
+                            }}
+                          >
+                            {reactions.map((r, i) => {
+                              const s = sp(popAt[i], CHIP);
+                              const self = i === 0;
+                              const start = popAt[i] + 4;
+                              const v = interpolate(
+                                frame,
+                                [start, start + 62 + i * 3],
+                                [1, r.count],
+                                { ...CL, easing: LIGHT },
+                              );
+                              return (
+                                <div
+                                  key={r.emoji}
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                    height: 30,
+                                    padding: "0 10px 0 8px",
+                                    borderRadius: 15,
+                                    boxSizing: "border-box",
+                                    background: self
+                                      ? withAlpha(accent, pal.dark ? 0.2 : 0.09)
+                                      : pal.pill,
+                                    boxShadow: self
+                                      ? `inset 0 0 0 1px ${withAlpha(accent, 0.7)}`
+                                      : undefined,
+                                    color: self ? pal.link : pal.text,
+                                    fontSize: 15,
+                                    transform: `scale(${s})${glide(stirs((f) => spAt(f, popAt[i], CHIP)))}`,
+                                    transformOrigin: "30% 60%",
+                                  }}
+                                >
+                                  <span
+                                    style={{ fontSize: 16, lineHeight: "18px" }}
+                                  >
+                                    {r.emoji}
+                                  </span>
+                                  <Count value={frame < start ? 1 : v} />
                                 </div>
                               );
                             })}
+                            <div
+                              style={{
+                                height: 30,
+                                width: 38,
+                                borderRadius: 15,
+                                background: pal.pill,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                opacity: ease(
+                                  popAt[popAt.length - 1] + 4,
+                                  popAt[popAt.length - 1] + 14,
+                                ),
+                              }}
+                            >
+                              {ic(I.emoji, pal.muted, 17)}
+                            </div>
                           </div>
-                          <span
+                        </Grow>
+                        <Grow p={threadIn} cut={cut(3)}>
+                          <div
+                            ref={(el) => {
+                              blockRefs.current[2] = el;
+                            }}
                             style={{
-                              color: pal.link,
-                              display: "inline-flex",
-                              gap: 5,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                              paddingTop: 10,
+                              fontSize: 15,
                             }}
                           >
-                            <Count
-                              value={interpolate(
-                                frame,
-                                [104, 176],
-                                [1, replyCount],
-                                { ...CL, easing: LIGHT },
-                              )}
-                            />
-                            replies
-                          </span>
-                          {tall ? null : (
-                            <span style={{ color: pal.muted }}>
-                              Last reply just now
+                            <div style={{ display: "flex", gap: 4 }}>
+                              {threadAvatars.map((p, i) => {
+                                const s = sp(104 + i * 6, CHIP);
+                                return (
+                                  <div
+                                    key={p.name}
+                                    style={{
+                                      width: 24 * clamp(s),
+                                      transform: `scale(${s})${glide(stirs((f) => spAt(f, 104 + i * 6, CHIP)))}`,
+                                    }}
+                                  >
+                                    <Avatar person={p} size={24} />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <span
+                              style={{
+                                color: pal.link,
+                                display: "inline-flex",
+                                gap: 5,
+                              }}
+                            >
+                              <Count
+                                value={interpolate(
+                                  frame,
+                                  [104, 176],
+                                  [1, replyCount],
+                                  { ...CL, easing: LIGHT },
+                                )}
+                              />
+                              replies
                             </span>
-                          )}
-                        </div>
-                      </Grow>
-                    </Message>
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: barX,
-                        top: -18,
-                        width: barW,
-                        height: 38,
-                        boxSizing: "border-box",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                        padding: "0 5px",
-                        borderRadius: 10,
-                        background: pal.panel,
-                        boxShadow: pal.raised,
-                        opacity: frame >= 58 ? clamp(barIn) * barOut : 0,
-                        transform: `translateY(${(1 - barIn) * 6}px)`,
-                        fontSize: 15,
-                        color: pal.text,
-                      }}
-                    >
-                      {[reactions[0]?.emoji ?? "🚀", "👀", "🙌"].map((e, i) => (
+                            {tall ? null : (
+                              <span style={{ color: pal.muted }}>
+                                {lastReplyLabel}
+                              </span>
+                            )}
+                          </div>
+                        </Grow>
+                      </Message>
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: barX,
+                          top: -18,
+                          width: barW,
+                          height: 38,
+                          boxSizing: "border-box",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 2,
+                          padding: "0 5px",
+                          borderRadius: 10,
+                          background: pal.panel,
+                          boxShadow: pal.raised,
+                          opacity: frame >= 58 ? clamp(barIn) * barOut : 0,
+                          transform: `translateY(${(1 - barIn) * 6}px)${glide(stirs((f) => spAt(f, 58, CARD)))}`,
+                          fontSize: 15,
+                          color: pal.text,
+                        }}
+                      >
+                        {[reactions[0]?.emoji ?? "🚀", "👀", "🙌"].map(
+                          (e, i) => (
+                            <div
+                              key={e}
+                              style={{
+                                width: 30,
+                                height: 30,
+                                borderRadius: 7,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: 16,
+                                background:
+                                  i === 0
+                                    ? withAlpha(
+                                        pal.dark ? "#ffffff" : "#1e1c18",
+                                        0.07 * ease(68, 74),
+                                      )
+                                    : undefined,
+                              }}
+                            >
+                              {e}
+                            </div>
+                          ),
+                        )}
                         <div
-                          key={e}
                           style={{
-                            width: 30,
-                            height: 30,
-                            borderRadius: 7,
+                            width: 1,
+                            height: 20,
+                            background: pal.rule,
+                            margin: "0 4px",
+                          }}
+                        />
+                        <div
+                          style={{
                             display: "flex",
                             alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 16,
-                            background:
-                              i === 0
-                                ? withAlpha(
-                                    pal.dark ? "#ffffff" : "#1e1c18",
-                                    0.07 * ease(68, 74),
-                                  )
-                                : undefined,
+                            gap: 5,
+                            padding: "0 6px",
                           }}
                         >
-                          {e}
+                          {ic(I.emoji, pal.muted, 16)}React
                         </div>
-                      ))}
-                      <div
-                        style={{
-                          width: 1,
-                          height: 20,
-                          background: pal.rule,
-                          margin: "0 4px",
-                        }}
-                      />
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 5,
-                          padding: "0 6px",
-                        }}
-                      >
-                        {ic(I.emoji, pal.muted, 16)}React
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 5,
-                          padding: "0 6px",
-                        }}
-                      >
-                        {ic(I.reply, pal.muted, 16)}Reply
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: cx,
-                        top: cy,
-                        opacity: cursorOpacity,
-                        zIndex: 5,
-                      }}
-                    >
-                      <MacCursor press={clamp(press)} />
-                    </div>
-                  </div>
-                </Grow>
-                {replies.map((r, i) => {
-                  const p = sp(replyAt[i], MORPH, 14);
-                  const o = ease(replyAt[i], replyAt[i] + 10);
-                  return (
-                    <Grow key={r.text} p={p}>
-                      <div
-                        style={{
-                          opacity: o,
-                          transform: `translateY(${(1 - o) * 12}px)`,
-                        }}
-                      >
-                        <Message
-                          person={r.author}
-                          time="10:31 AM"
-                          pal={pal}
-                          pad={PAD}
-                          context={
-                            tall ? undefined : `${message.slice(0, 18)}…`
-                          }
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                            padding: "0 6px",
+                          }}
                         >
-                          {r.text}
-                        </Message>
+                          {ic(I.reply, pal.muted, 16)}Reply
+                        </div>
                       </div>
-                    </Grow>
-                  );
-                })}
+                      <div
+                        style={{
+                          position: "absolute",
+                          // Laid out on the button it presses and led
+                          // around by a transform: layout rounds a box to
+                          // whole pixels, so a pointer moved by `left`/`top`
+                          // steps instead of gliding.
+                          left: target.x,
+                          top: target.y,
+                          transform: `translate(${cx - target.x}px, ${cy - target.y}px)`,
+                          opacity: cursorOpacity,
+                          zIndex: 5,
+                        }}
+                      >
+                        <MacCursor press={clamp(press)} />
+                      </div>
+                    </div>
+                  </Grow>
+                  {replies.map((r, i) => {
+                    const p = sp(replyAt[i], MORPH, 14);
+                    const o = ease(replyAt[i], replyAt[i] + 10);
+                    return (
+                      <Grow key={r.text} p={p} cut={cut(4 + i)}>
+                        <div
+                          ref={(el) => {
+                            blockRefs.current[3 + i] = el;
+                          }}
+                          style={{
+                            opacity: o,
+                            transform: `translateY(${(1 - o) * 12}px)${glide(midway(o) && !carried)}`,
+                          }}
+                        >
+                          <Message
+                            person={r.author}
+                            time="10:31 AM"
+                            pal={pal}
+                            pad={PAD}
+                            context={
+                              tall ? undefined : `${message.slice(0, 18)}…`
+                            }
+                          >
+                            {r.text}
+                          </Message>
+                        </div>
+                      </Grow>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-            <div style={{ padding: `0 ${PAD}px 8px`, flexShrink: 0 }}>
-              <div
-                style={{
-                  borderRadius: 12,
-                  height: 52,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "0 14px",
-                  boxSizing: "border-box",
-                  boxShadow: `inset 0 0 0 1px ${pal.rule}`,
-                }}
-              >
-                {ic(I.plus, pal.muted, 18)}
-                <span style={{ fontSize: 16, color: pal.muted, flex: 1 }}>
-                  Message #{channel}
-                </span>
-                {ic(I.send, pal.muted, 18)}
-              </div>
-              <div
-                style={{
-                  height: 22,
-                  fontSize: 14,
-                  color: pal.muted,
-                  paddingTop: 4,
-                  opacity: typing,
-                }}
-              >
-                <span style={{ color: pal.text }}>{author.name}</span> is
-                typing…
+              <div style={{ padding: `0 ${PAD}px 8px`, flexShrink: 0 }}>
+                <div
+                  style={{
+                    borderRadius: 12,
+                    height: 52,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "0 14px",
+                    boxSizing: "border-box",
+                    boxShadow: `inset 0 0 0 1px ${pal.rule}`,
+                  }}
+                >
+                  {ic(I.plus, pal.muted, 18)}
+                  <span style={{ fontSize: 16, color: pal.muted, flex: 1 }}>
+                    Message #{channel}
+                  </span>
+                  {ic(I.send, pal.muted, 18)}
+                </div>
+                <div
+                  style={{
+                    height: 22,
+                    fontSize: 14,
+                    color: pal.muted,
+                    paddingTop: 4,
+                    opacity: typing,
+                  }}
+                >
+                  <span style={{ color: pal.text }}>{author.name}</span> is
+                  typing…
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

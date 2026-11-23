@@ -1,0 +1,107 @@
+{
+  "component": "unit-grid",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm off-white page with a deep red accent and serif numerals, like a printed newspaper chart.",
+      "askedAs": [
+        "newspaper style dot chart",
+        "print editorial look with serif",
+        "cream paper background infographic",
+        "газетный стиль инфографики",
+        "светлый фон с серифным шрифтом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b23a2e",
+        "fontFamily": "Instrument Serif",
+        "flip": 14
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Near-black console backdrop with small mint dots and monospace type that snaps on quickly.",
+      "askedAs": [
+        "hacker terminal style stat",
+        "monospace dark data grid",
+        "fast techy dot counter",
+        "стиль терминала с моноширинным шрифтом",
+        "быстрая тёмная сетка точек"
+      ],
+      "props": {
+        "background": "#0b0f0e",
+        "ink": "#d6e5df",
+        "accent": "#4fd1a5",
+        "fontFamily": "JetBrains Mono",
+        "dotSize": 0.22,
+        "speed": 2
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Large, chunky dots on a dark navy field that flip in slowly after a short pause for dramatic emphasis.",
+      "askedAs": [
+        "slow dramatic reveal of the stat",
+        "big dots animating calmly",
+        "cinematic proportion reveal",
+        "медленное драматичное появление",
+        "крупные точки плавно загораются"
+      ],
+      "props": {
+        "background": "#0f1626",
+        "ink": "#e8ecf5",
+        "dotSize": 0.46,
+        "flip": 24,
+        "delay": 20,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "clean-corporate",
+      "label": "Clean Corporate",
+      "description": "Crisp white slide with a teal accent, Inter type and no grain for a polished deck look.",
+      "askedAs": [
+        "clean presentation slide style",
+        "white corporate infographic",
+        "minimal business stat without noise",
+        "чистый корпоративный стиль",
+        "белый слайд для презентации"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111827",
+        "accent": "#0e8a7e",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "compact-amber",
+      "label": "Compact Amber",
+      "description": "Smaller, tighter composition on charcoal with warm amber dots and Space Grotesk type for a lower-third feel.",
+      "askedAs": [
+        "small compact stat overlay",
+        "warm amber dots on dark",
+        "smaller grid for corner of video",
+        "компактная версия с янтарным цветом",
+        "уменьшенная сетка поверх видео"
+      ],
+      "props": {
+        "scale": 0.7,
+        "background": "#1a1816",
+        "ink": "#f2ede4",
+        "accent": "#e3a13b",
+        "fontFamily": "Space Grotesk",
+        "flip": 6
+      }
+    }
+  ]
+}

@@ -2,12 +2,8 @@
 
 import { NeuroNoise, type NeuroNoiseProps } from "@paper-design/shaders-react";
 import { useCallback, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface ShaderNeuroNoiseProps
   extends Omit<NeuroNoiseProps, "frame" | "ref"> {}
@@ -22,8 +18,8 @@ export function ShaderNeuroNoise({
   className,
   ...rest
 }: ShaderNeuroNoiseProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
 
   const [handle] = useState(() => delayRender("shader-neuro-noise"));
   const gate = useCallback(

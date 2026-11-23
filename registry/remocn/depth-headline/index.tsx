@@ -2,14 +2,10 @@
 
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Fraunces";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import type React from "react";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["300", "400"],
@@ -30,7 +26,21 @@ export interface DepthHeadlineProps {
   caption?: string;
   /** Show the remocn logo at the foot of the frame. */
   showLogo?: boolean;
+  /** Replaces the remocn mark at the foot of the frame. */
+  logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the headline and logo; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the headline. Load it yourself; Fraunces by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames the subject takes to rise in front of the headline. */
+  riseFrames?: number;
+  /** Size of the headline and subject, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -114,18 +124,48 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DepthHeadline({
   title = "Studio",
   src,
   caption = "Studio",
   showLogo = true,
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  fontWeight = 400,
+  riseFrames = 44,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: DepthHeadlineProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const size = Math.min(
     H * 0.56,
@@ -142,7 +182,7 @@ export function DepthHeadline({
   const headY = (1 - open) * H * 0.035;
 
   // Near plane: the subject rises from below and covers much more ground.
-  const rise = interpolate(frame, [4, 48], [0, 1], {
+  const rise = interpolate(frame, [4, 4 + riseFrames], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -167,99 +207,103 @@ export function DepthHeadline({
   const discTop = headTop + size * 0.15;
 
   return (
-    <AbsoluteFill style={{ backgroundColor: c.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: headTop,
-          textAlign: "center",
-          fontFamily: display,
-          fontWeight: 400,
-          fontSize: size,
-          lineHeight: 1,
-          letterSpacing: `${tracking}em`,
-          color: c.fg,
-          whiteSpace: "nowrap",
-          transform: `translate(${headX}px, calc(-50% + ${headY}px)) scale(${headScale})`,
-          transformOrigin: "50% 60%",
-        }}
-      >
-        {title}
-      </div>
-
-      {src ? (
-        <Img
-          src={src}
-          style={{
-            position: "absolute",
-            left: "50%",
-            bottom: 0,
-            height: H * 0.84,
-            objectFit: "contain",
-            transform: `translate(-50%, ${subjectY}px) scale(${subjectScale})`,
-            transformOrigin: "50% 100%",
-            filter: `drop-shadow(0 ${H * 0.03}px ${H * 0.05}px ${c.shadow})`,
-          }}
-        />
-      ) : (
+    <AbsoluteFill style={{ backgroundColor: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: (W - disc) / 2,
-            top: discTop,
-            width: disc,
-            height: disc,
-            borderRadius: "50%",
-            background: meshFill(frame / 120, accent),
-            transform: `translateY(${subjectY}px) scale(${subjectScale})`,
-            transformOrigin: "50% 40%",
-          }}
-        />
-      )}
-
-      {showLogo || caption ? (
-        <div
-          style={{
-            position: "absolute",
-            left: H * 0.08,
-            bottom: H * 0.07,
-            display: "flex",
-            alignItems: "baseline",
-            gap: H * 0.018,
-            opacity: captionIn,
-            transform: `translateY(${(1 - captionIn) * H * 0.01}px)`,
+            left: 0,
+            right: 0,
+            top: headTop,
+            textAlign: "center",
+            fontFamily,
+            fontWeight,
+            fontSize: size,
+            lineHeight: 1,
+            letterSpacing: `${tracking}em`,
+            color: fg,
+            whiteSpace: "nowrap",
+            transform: `translate(${headX}px, calc(-50% + ${headY}px)) scale(${headScale})${glide(midway(open) || midway(push))}`,
+            transformOrigin: "50% 60%",
           }}
         >
-          {showLogo ? <RemocnLogo fontSize={H * 0.032} color={c.fg} /> : null}
-          {showLogo && caption ? (
-            <div
-              style={{
-                width: 1,
-                height: H * 0.024,
-                alignSelf: "center",
-                backgroundColor: c.muted,
-                opacity: 0.6,
-              }}
-            />
-          ) : null}
-          {caption ? (
-            <div
-              style={{
-                fontFamily: sans,
-                fontWeight: 500,
-                fontSize: H * 0.028,
-                letterSpacing: "-0.01em",
-                lineHeight: 1,
-                color: c.muted,
-              }}
-            >
-              {caption}
-            </div>
-          ) : null}
+          {title}
         </div>
-      ) : null}
+
+        {src ? (
+          <Img
+            src={src}
+            style={{
+              position: "absolute",
+              left: "50%",
+              bottom: 0,
+              height: H * 0.84,
+              objectFit: "contain",
+              transform: `translate(-50%, ${subjectY}px) scale(${subjectScale})`,
+              transformOrigin: "50% 100%",
+              filter: `drop-shadow(0 ${H * 0.03}px ${H * 0.05}px ${c.shadow})`,
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              position: "absolute",
+              left: (W - disc) / 2,
+              top: discTop,
+              width: disc,
+              height: disc,
+              borderRadius: "50%",
+              background: meshFill(frame / 120, accent),
+              transform: `translateY(${subjectY}px) scale(${subjectScale})`,
+              transformOrigin: "50% 40%",
+            }}
+          />
+        )}
+
+        {showLogo || caption ? (
+          <div
+            style={{
+              position: "absolute",
+              left: H * 0.08,
+              bottom: H * 0.07,
+              display: "flex",
+              alignItems: "baseline",
+              gap: H * 0.018,
+              opacity: captionIn,
+              transform: `translateY(${(1 - captionIn) * H * 0.01}px)${glide(midway(captionIn))}`,
+            }}
+          >
+            {showLogo
+              ? (logo ?? <RemocnLogo fontSize={H * 0.032} color={fg} />)
+              : null}
+            {showLogo && caption ? (
+              <div
+                style={{
+                  width: 1,
+                  height: H * 0.024,
+                  alignSelf: "center",
+                  backgroundColor: c.muted,
+                  opacity: 0.6,
+                }}
+              />
+            ) : null}
+            {caption ? (
+              <div
+                style={{
+                  fontFamily: sans,
+                  fontWeight: 500,
+                  fontSize: H * 0.028,
+                  letterSpacing: "-0.01em",
+                  lineHeight: 1,
+                  color: c.muted,
+                }}
+              >
+                {caption}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

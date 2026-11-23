@@ -5,13 +5,9 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -69,6 +65,20 @@ export interface NumberMosaicProps {
   /** Replaces the default remocn mark in the lockup. */
   logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the product name; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the label. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Frames for the light to sweep across the number, left to right. */
+  sweep?: number;
+  /** Width of one counter in the field, in px at 720p; smaller packs it denser. */
+  cellSize?: number;
+  grain?: boolean;
+  /** Size of the field and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -406,23 +416,52 @@ function fieldClock(t: number) {
   return a + d - (d * d) / (2 * (b - a));
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function NumberMosaic({
   value = "10,000",
   label = "launch videos rendered",
   name = "remocn",
   logo,
   accent = "#3B5BFD",
+  ink: inkProp,
+  background,
+  fontFamily = sans,
+  sweep = 26,
+  cellSize = 12,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: NumberMosaicProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const p: Palette = THEMES[theme];
+  const fg = inkProp ?? p.fg;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
+  const cu = u * (cellSize / 12);
   const gid = `m${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
-  const cellW = 12 * u;
-  const cellH = 16 * u;
+  const cellW = 12 * cu;
+  const cellH = 16 * cu;
   // overscan so the tilted plane never shows its edge
   const cols = Math.ceil((width * 1.16) / cellW);
   const rows = Math.ceil((height * 1.18) / cellH);
@@ -465,12 +504,12 @@ export function NumberMosaic({
           tier: n1 < 0.52 ? 0 : n1 < 0.86 ? 1 : 2,
           rate: n2 < 0.35 ? 0 : 1 / (5 + n2 * 14),
           seed: Math.floor(n3 * 10),
-          start: 22 + xN * 26 + hash(i * 5.1 + 3) * 12,
+          start: 22 + xN * sweep + hash(i * 5.1 + 3) * 12,
         });
       }
     }
     return out;
-  }, [rows, cols, cellW, cellH, ox, oy, unit, numLeft, numTop, layout]);
+  }, [rows, cols, cellW, cellH, ox, oy, unit, numLeft, numTop, layout, sweep]);
 
   // Global beats
   const enter = interpolate(t, [0, 16], [0.7, 1], {
@@ -495,8 +534,8 @@ export function NumberMosaic({
   for (let l = 0; l < layerCount; l++) buckets.push([]);
   // lit cells also get a solid tile, so the number reads as one shape
   const tiles: string[] = Array.from({ length: LIT_STEPS + 1 }, () => "");
-  const tw = cellW - 1.6 * u;
-  const th = cellH - 1.6 * u;
+  const tw = cellW - 1.6 * cu;
+  const th = cellH - 1.6 * cu;
   for (let r = 0; r < rows; r++) {
     const rowChars: string[][] = [];
     const rowX: number[][] = [];
@@ -518,8 +557,8 @@ export function NumberMosaic({
       const digit = (cell.seed + Math.floor(k * cell.rate)) % 10;
       const layer = step === 0 ? cell.tier : 2 + step;
       if (step > 0) {
-        const tx = ox + c * cellW + 0.8 * u;
-        const ty = oy + r * cellH + 0.8 * u;
+        const tx = ox + c * cellW + 0.8 * cu;
+        const ty = oy + r * cellH + 0.8 * cu;
         tiles[step] +=
           `M${tx.toFixed(1)} ${ty.toFixed(1)}h${tw.toFixed(1)}v${th.toFixed(1)}h${(-tw).toFixed(1)}Z`;
       }
@@ -530,7 +569,7 @@ export function NumberMosaic({
       if (rowChars[l].length)
         buckets[l].push({
           x: rowX[l],
-          y: oy + (r + 0.5) * cellH + 4.2 * u,
+          y: oy + (r + 0.5) * cellH + 4.2 * cu,
           s: rowChars[l].join(""),
         });
     }
@@ -547,97 +586,117 @@ export function NumberMosaic({
   // the gradient drifts a few % sideways over the shot
   const gDrift = interpolate(t, [0, 140], [-0.04, 0.04], CLAMP);
 
-  // Label
+  // Label: tilted while it rises, none at rest (exactly 0 or 1).
+  const tilt = (k: number) => glide(k > 0 && k < 1);
   const lab = (d: number) =>
     interpolate(t, [84 + d, 108 + d], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const labelTop = numTop + unit * 1.08 + 30 * u;
   const band = interpolate(t, [74, 100], [0, 1], { ...CLAMP, easing: EASE_IO });
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          opacity: enter,
-          perspective: 1600 * u,
-          perspectiveOrigin: "50% 46%",
-        }}
-      >
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${push})`,
-            transformOrigin: "50% 46%",
+            opacity: enter,
+            perspective: 1600 * u,
+            perspectiveOrigin: "50% 46%",
           }}
         >
-          <svg
-            width={width}
-            height={height}
-            style={{ position: "absolute", inset: 0, overflow: "visible" }}
-            aria-hidden
+          <AbsoluteFill
+            style={{
+              // The field is seen in perspective until the camera lands, and
+              // text in perspective is drawn on a layer of its own; from then
+              // on it rests flat, off the grid in a smaller player, and is
+              // marked so it keeps one way of being drawn.
+              transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${push})${cam >= 1 ? glide(false) : ""}`,
+              transformOrigin: "50% 46%",
+            }}
           >
-            <defs>
-              <radialGradient
-                id={gid}
-                gradientUnits="userSpaceOnUse"
-                cx={(lx / 100) * width}
-                cy={(ly / 100) * height}
-                r={width * 0.62}
-              >
-                <stop offset="0" stopColor="#fff" stopOpacity={1} />
-                <stop offset="0.55" stopColor="#fff" stopOpacity={0.55} />
-                <stop offset="1" stopColor="#fff" stopOpacity={0.22} />
-              </radialGradient>
-              <linearGradient
-                id={`${gid}t`}
-                gradientUnits="userSpaceOnUse"
-                x1={numLeft + numW * gDrift}
-                y1={numTop + unit}
-                x2={numLeft + numW * (1 + gDrift)}
-                y2={numTop}
-              >
-                {/* the accent opens the gradient; the rest is the palette */}
-                {[accent, ...p.tile.slice(1)].map((col, k) => (
-                  <stop
-                    key={`${col}${k}`}
-                    offset={k / (p.tile.length - 1)}
-                    stopColor={col}
-                  />
-                ))}
-              </linearGradient>
-              <mask id={`${gid}k`}>
-                <rect
-                  x={-width * 0.1}
-                  y={-height * 0.1}
-                  width={width * 1.2}
-                  height={height * 1.2}
-                  fill={`url(#${gid})`}
-                />
-              </mask>
-            </defs>
-            <g fill={`url(#${gid}t)`}>
-              {tiles.map((d, k) =>
-                d ? (
-                  <path
-                    key={k}
-                    d={d}
-                    opacity={Math.min(1, (k / LIT_STEPS) * 1.15)}
-                  />
-                ) : null,
-              )}
-            </g>
-            <g
-              fontFamily={mono}
-              fontSize={11 * u}
-              textAnchor="middle"
-              style={{ fontVariantNumeric: "tabular-nums" }}
+            <svg
+              width={width}
+              height={height}
+              style={{ position: "absolute", inset: 0, overflow: "visible" }}
+              aria-hidden
             >
-              <g mask={`url(#${gid}k)`}>
-                {[0, 1, 2].map((l) => (
+              <defs>
+                <radialGradient
+                  id={gid}
+                  gradientUnits="userSpaceOnUse"
+                  cx={(lx / 100) * width}
+                  cy={(ly / 100) * height}
+                  r={width * 0.62}
+                >
+                  <stop offset="0" stopColor="#fff" stopOpacity={1} />
+                  <stop offset="0.55" stopColor="#fff" stopOpacity={0.55} />
+                  <stop offset="1" stopColor="#fff" stopOpacity={0.22} />
+                </radialGradient>
+                <linearGradient
+                  id={`${gid}t`}
+                  gradientUnits="userSpaceOnUse"
+                  x1={numLeft + numW * gDrift}
+                  y1={numTop + unit}
+                  x2={numLeft + numW * (1 + gDrift)}
+                  y2={numTop}
+                >
+                  {/* the accent opens the gradient; the rest is the palette */}
+                  {[accent, ...p.tile.slice(1)].map((col, k) => (
+                    <stop
+                      key={`${col}${k}`}
+                      offset={k / (p.tile.length - 1)}
+                      stopColor={col}
+                    />
+                  ))}
+                </linearGradient>
+                <mask id={`${gid}k`}>
+                  <rect
+                    x={-width * 0.1}
+                    y={-height * 0.1}
+                    width={width * 1.2}
+                    height={height * 1.2}
+                    fill={`url(#${gid})`}
+                  />
+                </mask>
+              </defs>
+              <g fill={`url(#${gid}t)`}>
+                {tiles.map((d, k) =>
+                  d ? (
+                    <path
+                      key={k}
+                      d={d}
+                      opacity={Math.min(1, (k / LIT_STEPS) * 1.15)}
+                    />
+                  ) : null,
+                )}
+              </g>
+              <g
+                fontFamily={mono}
+                fontSize={11 * cu}
+                textAnchor="middle"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                <g mask={`url(#${gid}k)`}>
+                  {[0, 1, 2].map((l) => (
+                    <g
+                      key={l}
+                      fill={`rgba(${ink[0]},${ink[1]},${ink[2]},${(p.tiers[l] * dim).toFixed(3)})`}
+                      fontWeight={400}
+                    >
+                      {buckets[l].map((row) => (
+                        <text key={row.y} x={row.x.join(" ")} y={row.y}>
+                          {row.s}
+                        </text>
+                      ))}
+                    </g>
+                  ))}
+                </g>
+                {Array.from({ length: LIT_STEPS }, (_, i) => i + 1).map((k) => (
                   <g
-                    key={l}
-                    fill={`rgba(${ink[0]},${ink[1]},${ink[2]},${(p.tiers[l] * dim).toFixed(3)})`}
-                    fontWeight={400}
+                    key={k}
+                    fill={litColor(k)}
+                    fontWeight={k >= LIT_STEPS - 2 ? 500 : 400}
                   >
-                    {buckets[l].map((row) => (
+                    {buckets[2 + k].map((row) => (
                       <text key={row.y} x={row.x.join(" ")} y={row.y}>
                         {row.s}
                       </text>
@@ -645,106 +704,93 @@ export function NumberMosaic({
                   </g>
                 ))}
               </g>
-              {Array.from({ length: LIT_STEPS }, (_, i) => i + 1).map((k) => (
-                <g
-                  key={k}
-                  fill={litColor(k)}
-                  fontWeight={k >= LIT_STEPS - 2 ? 500 : 400}
-                >
-                  {buckets[2 + k].map((row) => (
-                    <text key={row.y} x={row.x.join(" ")} y={row.y}>
-                      {row.s}
-                    </text>
-                  ))}
-                </g>
-              ))}
-            </g>
-          </svg>
+            </svg>
+          </AbsoluteFill>
         </AbsoluteFill>
-      </AbsoluteFill>
 
-      {/* quiet band behind the label so it reads over the field */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: labelTop - 34 * u,
-          height: 104 * u,
-          background: `radial-gradient(ellipse 34% 50% at 50% 50%, ${p.bg} 30%, transparent 100%)`,
-          opacity: band,
-        }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: labelTop,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 16 * u,
-          fontFamily: sans,
-          fontSize: 22 * u,
-          lineHeight: 1,
-        }}
-      >
+        {/* quiet band behind the label so it reads over the field */}
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 9 * u,
-            opacity: lab(0),
-            transform: `translateY(${(1 - lab(0)) * 14 * u}px)`,
-          }}
-        >
-          {logo ??
-            (name.trim().toLowerCase() === "remocn" ? (
-              <RemocnLogo fontSize={27 * u} color={p.fg} />
-            ) : (
-              <span
-                style={{
-                  color: p.fg,
-                  fontWeight: 500,
-                  letterSpacing: "-0.03em",
-                  fontSize: 26 * u,
-                }}
-              >
-                {name}
-              </span>
-            ))}
-        </div>
-        <div
-          style={{
-            width: Math.max(1, u),
-            height: 22 * u,
-            background: p.hair,
-            transform: `scaleY(${lab(3)})`,
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: labelTop - 34 * u,
+            height: 104 * u,
+            background: `radial-gradient(ellipse 34% 50% at 50% 50%, ${bg} 30%, transparent 100%)`,
+            opacity: band,
           }}
         />
-        <span
+
+        <div
           style={{
-            color: p.muted,
-            fontWeight: 400,
-            letterSpacing: "-0.01em",
-            opacity: lab(6),
-            transform: `translateY(${(1 - lab(6)) * 14 * u}px)`,
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: labelTop,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 16 * u,
+            fontFamily,
+            fontSize: 22 * u,
+            lineHeight: 1,
           }}
         >
-          {label}
-        </span>
-      </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 9 * u,
+              opacity: lab(0),
+              transform: `translateY(${(1 - lab(0)) * 14 * u}px)${tilt(lab(0))}`,
+            }}
+          >
+            {logo ??
+              (name.trim().toLowerCase() === "remocn" ? (
+                <RemocnLogo fontSize={27 * u} color={fg} />
+              ) : (
+                <span
+                  style={{
+                    color: fg,
+                    fontWeight: 500,
+                    letterSpacing: "-0.03em",
+                    fontSize: 26 * u,
+                  }}
+                >
+                  {name}
+                </span>
+              ))}
+          </div>
+          <div
+            style={{
+              width: Math.max(1, u),
+              height: 22 * u,
+              background: p.hair,
+              transform: `scaleY(${lab(3)})`,
+            }}
+          />
+          <span
+            style={{
+              color: p.muted,
+              fontWeight: 400,
+              letterSpacing: "-0.01em",
+              opacity: lab(6),
+              transform: `translateY(${(1 - lab(6)) * 14 * u}px)${tilt(lab(6))}`,
+            }}
+          >
+            {label}
+          </span>
+        </div>
+      </ScaleLayer>
 
       {/* vignette */}
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 75% 75% at 50% 46%, transparent 55%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 75% 75% at 50% 46%, transparent 55%, ${bg} 100%)`,
           opacity: 0.85,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -1,0 +1,101 @@
+{
+  "component": "wireframe-to-final",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-reveal",
+      "label": "Midnight Reveal",
+      "description": "Dark theme with a soft violet accent and a strong glow as the product emerges from shadow.",
+      "askedAs": [
+        "dark mode wireframe reveal",
+        "glowing night version",
+        "moody dark product transformation",
+        "тёмная версия с подсветкой",
+        "ночной стиль раскрытия интерфейса"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#8b7cf6",
+        "glow": 1.6,
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A fast, tight sweep with almost no glow for a crisp, punchy before-and-after cut.",
+      "askedAs": [
+        "fast wireframe to final",
+        "snappy quick transition",
+        "short punchy reveal for social",
+        "быстрый переход из макета",
+        "резкое короткое раскрытие"
+      ],
+      "props": {
+        "sweep": 16,
+        "speed": 2,
+        "glow": 0.3,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "slow-cinematic",
+      "label": "Slow Cinematic",
+      "description": "A long, unhurried sweep with a delayed start and a slightly larger frame for a calm hero moment.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "cinematic product transformation",
+        "calm long sweep intro",
+        "медленное кинематографичное раскрытие",
+        "плавный долгий переход"
+      ],
+      "props": {
+        "sweep": 90,
+        "speed": 0.5,
+        "delay": 20,
+        "scale": 1.15,
+        "glow": 1.3
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm cream paper background with deep ink text, a terracotta accent and an elegant serif.",
+      "askedAs": [
+        "warm editorial look",
+        "serif magazine style reveal",
+        "cream paper background version",
+        "тёплый редакционный стиль",
+        "версия с засечками на бежевом фоне"
+      ],
+      "props": {
+        "background": "#f5efe4",
+        "ink": "#2a2420",
+        "accent": "#c2593a",
+        "fontFamily": "Fraunces",
+        "glow": 0.5
+      }
+    },
+    {
+      "id": "forest-studio",
+      "label": "Forest Studio",
+      "description": "Deep green background with mint text and accent in a friendly grotesk, sized down for layouts with captions.",
+      "askedAs": [
+        "green dark theme reveal",
+        "calm forest color palette",
+        "smaller framed version with room for text",
+        "зелёная тёмная палитра",
+        "уменьшенная версия в зелёных тонах"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#10231c",
+        "ink": "#e3f2ea",
+        "accent": "#4fc59a",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 0.85
+      }
+    }
+  ]
+}

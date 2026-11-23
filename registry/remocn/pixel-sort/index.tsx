@@ -6,13 +6,9 @@ import type {
 } from "@remotion/transitions";
 import type React from "react";
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random } from "remotion";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type PixelSortProps = {
   /** Number of vertical columns the frame is sliced into. */
@@ -40,6 +36,8 @@ const clamp = {
 const meltEase = Easing.in(Easing.cubic);
 const snapEase = Easing.out(Easing.back(1.6));
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 type Column = {
   left: number;
   width: number;
@@ -58,7 +56,8 @@ const PixelSortPresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const { width, height } = useSceneConfig();
   const { columns, seed, streakColor } = {
     ...pixelSortDefaults,
     ...passedProps,
@@ -96,10 +95,11 @@ const PixelSortPresentation: React.FC<
         let streak: number;
         let opacity = 1;
         let origin = "50% 0%";
+        let moving: boolean;
         if (exiting) {
-          const m = meltEase(
-            interpolate(p, [c.meltAt, c.meltAt + MELT], [0, 1], clamp),
-          );
+          const mp = interpolate(p, [c.meltAt, c.meltAt + MELT], [0, 1], clamp);
+          const m = meltEase(mp);
+          moving = midway(mp);
           // Stretch around the streak start so the column never tears open.
           stretch = 1 + m * c.amount * 4;
           shift = 0;
@@ -112,10 +112,10 @@ const PixelSortPresentation: React.FC<
             [0, 1],
             clamp,
           );
-          const snap = snapEase(
-            interpolate(p, [c.snapAt, c.snapAt + SNAP], [0, 1], clamp),
-          );
+          const sp = interpolate(p, [c.snapAt, c.snapAt + SNAP], [0, 1], clamp);
+          const snap = snapEase(sp);
           if (drop <= 0) return null;
+          moving = midway(drop) || midway(sp);
           // A smeared streak falls in from above, then snaps to the real image.
           stretch = interpolate(snap, [0, 1], [1 + c.amount * 3, 1]);
           shift = -(1 - Easing.out(Easing.cubic)(drop)) * height * 1.1;
@@ -143,7 +143,7 @@ const PixelSortPresentation: React.FC<
                 width,
                 height,
                 transformOrigin: origin,
-                transform: `translateY(${shift}px) scaleY(${stretch})`,
+                transform: `translateY(${shift}px) scaleY(${stretch})${glide(moving)}`,
               }}
             >
               {children}

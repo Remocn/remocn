@@ -1,0 +1,102 @@
+{
+  "component": "serif-rise",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-ivory",
+      "label": "Editorial Ivory",
+      "description": "Warm ivory paper with deep ink and a classic serif, finished in a muted oxblood accent.",
+      "askedAs": [
+        "magazine style serif on cream",
+        "elegant light editorial title",
+        "classic print look",
+        "кремовый фон с засечками как в журнале",
+        "элегантный светлый заголовок"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#9b2c2c"
+      }
+    },
+    {
+      "id": "slow-cinema",
+      "label": "Slow Cinema",
+      "description": "A large, slow, deliberate rise on near-black with wide letter stagger for a film-title feel.",
+      "askedAs": [
+        "slow cinematic title reveal",
+        "dramatic film opening text",
+        "big slow movie title",
+        "медленное кинематографичное появление",
+        "как титры в кино"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "speed": 0.5,
+        "stagger": 3.5,
+        "scale": 1.3,
+        "background": "#0b0b0c",
+        "ink": "#ece7df"
+      }
+    },
+    {
+      "id": "quiet-clean",
+      "label": "Quiet Clean",
+      "description": "A clean, grain-free white frame with a modest sans line and a calm navy accent.",
+      "askedAs": [
+        "minimal clean white text",
+        "simple modern statement no texture",
+        "corporate clean title",
+        "минималистичный белый фон",
+        "чистый простой текст без зерна"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "grain": false,
+        "accent": "#1f3a8a",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "brisk-snap",
+      "label": "Brisk Snap",
+      "description": "A fast, tight rise with no letter stagger so the whole line lands at once.",
+      "askedAs": [
+        "quick punchy text",
+        "fast snappy reveal",
+        "line appears all at once",
+        "быстрое резкое появление",
+        "текст появляется сразу целиком"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 0,
+        "fontFamily": "Space Grotesk",
+        "grain": false
+      }
+    },
+    {
+      "id": "forest-gold",
+      "label": "Forest Gold",
+      "description": "Deep forest green with warm cream type and an antique gold accent for a luxurious tone.",
+      "askedAs": [
+        "luxury green and gold title",
+        "premium dark green look",
+        "rich elegant brand statement",
+        "роскошный зелёный с золотом",
+        "премиальный тёмно-зелёный стиль"
+      ],
+      "props": {
+        "background": "#14261f",
+        "ink": "#efe8d8",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "delay": 12
+      }
+    }
+  ]
+}

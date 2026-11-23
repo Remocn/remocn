@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const hotSlabMorphConfig: ComponentConfig = {
   componentName: "HotSlabMorphDemo",
@@ -27,6 +34,29 @@ export const hotSlabMorphConfig: ComponentConfig = {
       type: "text-content",
       default: "A 30-second launch film for our new editor",
       description: "Prompt",
+    },
+    placeholder: {
+      type: "text-content",
+      default: "Describe your launch film",
+      description: "Placeholder",
+    },
+    searchLabel: {
+      type: "text-content",
+      default: "Search templates",
+      description: "Search label",
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl("Ground A"),
+    groundB: groundControl("Ground B"),
+    ...sceneControls({ font: "Hanken Grotesk" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 126,

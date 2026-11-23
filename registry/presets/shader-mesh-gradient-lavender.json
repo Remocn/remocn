@@ -1,0 +1,92 @@
+{
+  "component": "shader-mesh-gradient-lavender",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-haze",
+      "label": "Still Haze",
+      "description": "An almost motionless lilac wash with gentle, barely shifting blends for calm backgrounds.",
+      "askedAs": [
+        "make it barely move",
+        "calmer slower gradient",
+        "very subtle background motion",
+        "почти неподвижный фон",
+        "спокойнее и медленнее"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.4,
+        "swirl": 0
+      }
+    },
+    {
+      "id": "silk-drift",
+      "label": "Silk Drift",
+      "description": "Smooth, flattened color bands that glide slowly like draped fabric.",
+      "askedAs": [
+        "smooth silky flow",
+        "less warping more flowing",
+        "soft fabric-like gradient",
+        "шелковистый плавный градиент",
+        "мягкие плавные волны"
+      ],
+      "props": {
+        "speed": 0.5,
+        "distortion": 0.25,
+        "swirl": 0.35
+      }
+    },
+    {
+      "id": "dream-swirl",
+      "label": "Dream Swirl",
+      "description": "Lilac and pink curl into each other in slow, dreamy spirals.",
+      "askedAs": [
+        "more swirly gradient",
+        "dreamy twisting colors",
+        "make the colors spiral",
+        "больше завихрений",
+        "мечтательный вихрь цветов"
+      ],
+      "props": {
+        "speed": 0.75,
+        "distortion": 1.1,
+        "swirl": 0.8
+      }
+    },
+    {
+      "id": "lively-bloom",
+      "label": "Lively Bloom",
+      "description": "A brisker, more energetic haze with blooming, warped color pools.",
+      "askedAs": [
+        "faster more energetic",
+        "livelier gradient motion",
+        "more dynamic background",
+        "быстрее и живее",
+        "энергичный градиент"
+      ],
+      "props": {
+        "speed": 2.25,
+        "distortion": 1.35,
+        "swirl": 0.25
+      }
+    },
+    {
+      "id": "liquid-pulse",
+      "label": "Liquid Pulse",
+      "description": "Fast, fluid motion with strong warping and twisting for a bold, liquid feel.",
+      "askedAs": [
+        "liquid fast swirling",
+        "bold intense motion",
+        "melting colors effect",
+        "жидкий быстрый перелив",
+        "интенсивное движение цвета"
+      ],
+      "props": {
+        "speed": 3.5,
+        "distortion": 1.5,
+        "swirl": 0.6
+      }
+    }
+  ]
+}

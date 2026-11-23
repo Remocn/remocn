@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const gloock = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -23,8 +23,18 @@ export interface KeepBelief {
 
 export interface KeepWordsProps {
   beliefs?: KeepBelief[];
+  /** Frames the finished motto holds at the end. */
+  hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Gloock by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -64,23 +74,23 @@ const CLAMP = {
 
 let measureCtx: CanvasRenderingContext2D | null = null;
 
-function em(s: string): number {
+function em(s: string, fontFamily: string): number {
   if (!measureCtx) {
     measureCtx = document.createElement("canvas").getContext("2d");
   }
   if (!measureCtx) return s.length * 0.5;
-  measureCtx.font = `400 100px "${gloock.fontFamily}"`;
+  measureCtx.font = `400 100px "${fontFamily}"`;
   return measureCtx.measureText(s).width / 100 + TRACK * Array.from(s).length;
 }
 
-function useFontReady() {
+function useFontReady(fontFamily: string) {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("keep-words: font"));
   useEffect(() => {
     let live = true;
     gloock
       .waitUntilDone()
-      .then(() => document.fonts.load(`400 100px "${gloock.fontFamily}"`))
+      .then(() => document.fonts.load(`400 100px "${fontFamily}"`))
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
@@ -90,7 +100,7 @@ function useFontReady() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, fontFamily]);
   return ready;
 }
 
@@ -110,8 +120,8 @@ interface Laid {
   lines: number;
 }
 
-function wrapAt(words: Word[], maxEm: number): Laid {
-  const space = em(" ");
+function wrapAt(words: Word[], maxEm: number, fontFamily: string): Laid {
+  const space = em(" ", fontFamily);
   const out: { x: number; line: number }[] = [];
   let line = 0;
   let x = 0;
@@ -126,24 +136,30 @@ function wrapAt(words: Word[], maxEm: number): Laid {
   return { words: out, lines: line + 1 };
 }
 
-function balanced(words: Word[], maxEm: number): Laid {
-  const base = wrapAt(words, maxEm);
+function balanced(words: Word[], maxEm: number, fontFamily: string): Laid {
+  const base = wrapAt(words, maxEm, fontFamily);
   let lo = Math.max(...words.map((w) => w.w), 0.1);
   let hi = maxEm;
   for (let i = 0; i < 14; i++) {
     const mid = (lo + hi) / 2;
-    if (wrapAt(words, mid).lines <= base.lines) hi = mid;
+    if (wrapAt(words, mid, fontFamily).lines <= base.lines) hi = mid;
     else lo = mid;
   }
-  return wrapAt(words, hi);
+  return wrapAt(words, hi, fontFamily);
 }
 
-function fitSize(words: Word[], boxW: number, boxH: number, maxF: number) {
+function fitSize(
+  words: Word[],
+  boxW: number,
+  boxH: number,
+  maxF: number,
+  fontFamily: string,
+) {
   let lo = 8;
   let hi = maxF;
   for (let i = 0; i < 18; i++) {
     const mid = (lo + hi) / 2;
-    const lay = wrapAt(words, boxW / mid);
+    const lay = wrapAt(words, boxW / mid, fontFamily);
     const widest = Math.max(...words.map((w) => w.w)) * mid;
     if (lay.lines * LH * mid <= boxH && widest <= boxW) lo = mid;
     else hi = mid;
@@ -151,7 +167,7 @@ function fitSize(words: Word[], boxW: number, boxH: number, maxF: number) {
   return lo;
 }
 
-function splitBelief(b: KeepBelief): Word[] {
+function splitBelief(b: KeepBelief, fontFamily: string): Word[] {
   const tokens = b.text.split(/\s+/).filter(Boolean);
   const keepTokens = b.keep.toLowerCase().split(/\s+/).filter(Boolean);
   const core = (s: string) =>
@@ -166,16 +182,17 @@ function splitBelief(b: KeepBelief): Word[] {
   }
   return tokens.map((tk, i) => {
     const k = at >= 0 && i >= at && i < at + keepTokens.length ? i - at : -1;
-    if (k < 0) return { segs: [{ text: tk, dx: 0, key: -1 }], w: em(tk) };
+    if (k < 0)
+      return { segs: [{ text: tk, dx: 0, key: -1 }], w: em(tk, fontFamily) };
     const c = core(tk);
     const start = tk.indexOf(c);
     const lead = tk.slice(0, start);
     const tail = tk.slice(start + c.length);
     const segs: Seg[] = [];
     if (lead) segs.push({ text: lead, dx: 0, key: -1 });
-    segs.push({ text: c, dx: em(lead), key: k });
-    if (tail) segs.push({ text: tail, dx: em(lead + c), key: -1 });
-    return { segs, w: em(tk) };
+    segs.push({ text: c, dx: em(lead, fontFamily), key: k });
+    if (tail) segs.push({ text: tail, dx: em(lead + c, fontFamily), key: -1 });
+    return { segs, w: em(tk, fontFamily) };
   });
 }
 
@@ -184,21 +201,45 @@ function mottoOf(keep: string) {
   return `${t.charAt(0).toUpperCase()}${t.slice(1)}`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function KeepWords({
   beliefs = DEFAULT_BELIEFS,
+  hold = FINAL_HOLD,
   accent,
+  ink,
   background,
+  fontFamily = gloock.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: KeepWordsProps) {
-  const frame = useCurrentFrame();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const ready = useFontReady();
+  const ready = useFontReady(fontFamily);
+  const emF = (s: string) => em(s, fontFamily);
 
   if (!ready || beliefs.length === 0) {
     return (
@@ -211,7 +252,7 @@ export function KeepWords({
   const D = durationInFrames * speed;
   const seg = Math.max(
     48,
-    (D - START - STACK_MOVE - FINAL_HOLD - 30) / Math.max(1, n),
+    (D - START - STACK_MOVE - hold - 30) / Math.max(1, n),
   );
   const lastTravel =
     START + (n - 1) * seg + seg * 0.66 + Math.min(24, seg * 0.3);
@@ -223,16 +264,16 @@ export function KeepWords({
   const boxH = H * (portrait ? 0.46 : 0.56);
 
   const mottoItems = beliefs.map((b) => mottoOf(b.keep));
-  const space = em(" ");
+  const space = emF(" ");
   const mottoWidthEm =
-    mottoItems.reduce((s, m) => s + em(`${m}.`), 0) + space * (n - 1);
+    mottoItems.reduce((s, m) => s + emF(`${m}.`), 0) + space * (n - 1);
   const Fm = Math.min(
     H * (portrait ? 0.05 : 0.085),
     (W - mx * 2) / mottoWidthEm,
   );
   const mottoTop = H * (portrait ? 0.66 : 0.76);
 
-  const stackWidest = Math.max(...mottoItems.map((m) => em(`${m}.`)));
+  const stackWidest = Math.max(...mottoItems.map((m) => emF(`${m}.`)));
   const Ff = Math.min(
     (H * (portrait ? 0.62 : 0.8)) / (n * LH),
     (W - mx * 2) / stackWidest,
@@ -251,171 +292,211 @@ export function KeepWords({
     for (const p of parts) {
       rowSlots.push({ x: mx + (mxEm + local) * Fm, y: mottoTop });
       colSlots.push({ x: mx + local * Ff, y: stackTop + i * LH * Ff });
-      local += em(p) + space;
+      local += emF(p) + space;
     }
-    rowSlots.push({ x: mx + (mxEm + em(m)) * Fm, y: mottoTop });
-    colSlots.push({ x: mx + em(m) * Ff, y: stackTop + i * LH * Ff });
+    rowSlots.push({ x: mx + (mxEm + emF(m)) * Fm, y: mottoTop });
+    colSlots.push({ x: mx + emF(m) * Ff, y: stackTop + i * LH * Ff });
     mottoSlots.push(rowSlots);
     stackSlots.push(colSlots);
-    mxEm += em(`${m}.`) + space;
+    mxEm += emF(`${m}.`) + space;
   });
 
-  const stackOf = (i: number) =>
-    interpolate(t, [stackAt + i * 4, stackAt + i * 4 + STACK_MOVE], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
+  interface Spec {
+    key: string;
+    text: string;
+    x: number;
+    y: number;
+    size: number;
+    render: number;
+    color: string;
+    opacity: number;
+  }
+
+  const laid = beliefs.map((b) => {
+    const words = splitBelief(b, fontFamily);
+    const F = fitSize(
+      words,
+      boxW,
+      boxH,
+      H * (portrait ? 0.1 : 0.17),
+      fontFamily,
+    );
+    return { words, F, lay: balanced(words, boxW / F, fontFamily) };
+  });
+
+  // Every glyph at time `tt`. The eases here are long and wide (a word flies
+  // from the paragraph into the motto, the motto folds into a stack), so a
+  // progress that reads "done" can still leave a fraction of a pixel to
+  // travel; "moving" compares the drawn geometry with the neighbouring frames.
+  const specsAt = (tt: number): Spec[] => {
+    const out: Spec[] = [];
+    const stackOf = (i: number) =>
+      interpolate(tt, [stackAt + i * 4, stackAt + i * 4 + STACK_MOVE], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      });
+    beliefs.forEach((_, bi) => {
+      const stackP = stackOf(bi);
+      const s0 = START + bi * seg;
+      const u = tt - s0;
+      const { words, F, lay } = laid[bi];
+      const markAt = seg * 0.42;
+      const fallAt = seg * 0.6;
+      const travelAt = seg * 0.66;
+      const travelLen = Math.min(24, seg * 0.3);
+      const mark = interpolate(u, [markAt, markAt + 8], [0, 1], CLAMP);
+      const keyColor = interpolateColors(mark, [0, 1], [fg, hi]);
+
+      if (u > -1) {
+        const stagger = Math.min(2, 22 / Math.max(1, words.length));
+        let order = 0;
+        words.forEach((w, wi) => {
+          const pos = lay.words[wi];
+          const wx = mx + pos.x * F;
+          const wy = boxTop + pos.line * LH * F;
+          const enter = interpolate(
+            u,
+            [order * stagger, order * stagger + 16],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: EASE_OUT,
+            },
+          );
+          order += 1;
+          w.segs.forEach((sg, si) => {
+            const id = `b${bi}w${wi}s${si}`;
+            if (sg.key < 0) {
+              const fall = interpolate(
+                u,
+                [fallAt + (wi % 4), fallAt + (wi % 4) + 12],
+                [0, 1],
+                { ...CLAMP, easing: EASE_IN },
+              );
+              const op = enter * (1 - fall);
+              if (op <= 0.001) return;
+              out.push({
+                key: id,
+                text: sg.text,
+                x: wx + sg.dx * F,
+                y: wy + (1 - enter) * F * 0.32 + fall * F * 0.22,
+                size: F,
+                render: F,
+                color: fg,
+                opacity: op,
+              });
+              return;
+            }
+            const travel = interpolate(
+              u,
+              [travelAt + sg.key * 2, travelAt + sg.key * 2 + travelLen],
+              [0, 1],
+              { ...CLAMP, easing: EASE_IO },
+            );
+            const row = mottoSlots[bi][sg.key];
+            const col = stackSlots[bi][sg.key];
+            const fx = wx + sg.dx * F;
+            const fy = wy + (1 - enter) * F * 0.32;
+            const rx = row.x + (col.x - row.x) * stackP;
+            const ry = row.y + (col.y - row.y) * stackP;
+            const rs = Fm + (Ff - Fm) * stackP;
+            const x = fx + (rx - fx) * travel;
+            const y = fy + (ry - fy) * travel;
+            const size = F + (rs - F) * travel;
+            const render = Math.max(F, Ff);
+            const landed = interpolate(travel, [0.85, 1], [0, 1], CLAMP);
+            const color = interpolateColors(landed, [0, 1], [keyColor, fg]);
+            const finalText =
+              sg.key === 0 ? mottoItems[bi].split(/\s+/)[0] : sg.text;
+            const swap = finalText !== sg.text ? landed : 0;
+            if (swap < 1) {
+              out.push({
+                key: id,
+                text: sg.text,
+                x,
+                y,
+                size,
+                render,
+                color,
+                opacity: enter * (1 - swap),
+              });
+            }
+            if (swap > 0) {
+              out.push({
+                key: `${id}f`,
+                text: finalText,
+                x,
+                y,
+                size,
+                render,
+                color,
+                opacity: swap,
+              });
+            }
+          });
+        });
+      }
+
+      const dotAt = travelAt + (mottoSlots[bi].length - 2) * 2 + travelLen;
+      const dot = interpolate(u, [dotAt - 4, dotAt + 6], [0, 1], CLAMP);
+      if (dot > 0) {
+        const row = mottoSlots[bi][mottoSlots[bi].length - 1];
+        const col = stackSlots[bi][stackSlots[bi].length - 1];
+        const rs = Fm + (Ff - Fm) * stackP;
+        out.push({
+          key: `b${bi}dot`,
+          text: ".",
+          x: row.x + (col.x - row.x) * stackP,
+          y: row.y + (col.y - row.y) * stackP,
+          size: rs,
+          render: Ff,
+          color: hi,
+          opacity: dot,
+        });
+      }
     });
+    return out;
+  };
 
-  const nodes: React.ReactNode[] = [];
+  const specs = specsAt(t);
+  const byKey = (list: Spec[]) => new Map(list.map((sp) => [sp.key, sp]));
+  const before = byKey(specsAt(t - speed));
+  const after = byKey(specsAt(t + speed));
+  // A size step moves the far end of the word by the step times its width.
+  const shifted = (a: Spec, b: Spec | undefined) =>
+    b !== undefined &&
+    (Math.abs(a.x - b.x) > 1e-3 ||
+      Math.abs(a.y - b.y) > 1e-3 ||
+      Math.abs(a.size - b.size) * Math.max(LH, emF(a.text)) > 1e-3);
 
-  const glyph = (
-    key: string,
-    text: string,
-    x: number,
-    y: number,
-    size: number,
-    renderSize: number,
-    color: string,
-    opacity: number,
-  ) => (
+  const nodes = specs.map((sp) => (
     <div
-      key={key}
+      key={sp.key}
       style={{
         position: "absolute",
         left: 0,
         top: 0,
-        fontFamily: gloock.fontFamily,
+        fontFamily,
         fontWeight: 400,
-        fontSize: renderSize,
-        lineHeight: `${LH * renderSize}px`,
+        fontSize: sp.render,
+        lineHeight: `${LH * sp.render}px`,
         letterSpacing: `${TRACK}em`,
         whiteSpace: "pre",
-        color,
-        opacity,
+        color: sp.color,
+        opacity: sp.opacity,
         transformOrigin: "0 0",
-        transform: `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${(size / renderSize).toFixed(4)})`,
+        transform: `translate(${sp.x.toFixed(2)}px, ${sp.y.toFixed(2)}px) scale(${(sp.size / sp.render).toFixed(4)})${glide(
+          shifted(sp, before.get(sp.key)) || shifted(sp, after.get(sp.key)),
+        )}`,
       }}
     >
-      {text}
+      {sp.text}
     </div>
-  );
-
-  beliefs.forEach((b, bi) => {
-    const stackP = stackOf(bi);
-    const s0 = START + bi * seg;
-    const u = t - s0;
-    const words = splitBelief(b);
-    const F = fitSize(words, boxW, boxH, H * (portrait ? 0.1 : 0.17));
-    const lay = balanced(words, boxW / F);
-    const markAt = seg * 0.42;
-    const fallAt = seg * 0.6;
-    const travelAt = seg * 0.66;
-    const travelLen = Math.min(24, seg * 0.3);
-    const mark = interpolate(u, [markAt, markAt + 8], [0, 1], CLAMP);
-    const keyColor = interpolateColors(mark, [0, 1], [c.ink, hi]);
-
-    if (u > -1) {
-      const stagger = Math.min(2, 22 / Math.max(1, words.length));
-      let order = 0;
-      words.forEach((w, wi) => {
-        const pos = lay.words[wi];
-        const wx = mx + pos.x * F;
-        const wy = boxTop + pos.line * LH * F;
-        const enter = interpolate(
-          u,
-          [order * stagger, order * stagger + 16],
-          [0, 1],
-          {
-            ...CLAMP,
-            easing: EASE_OUT,
-          },
-        );
-        order += 1;
-        w.segs.forEach((sg, si) => {
-          const id = `b${bi}w${wi}s${si}`;
-          if (sg.key < 0) {
-            const fall = interpolate(
-              u,
-              [fallAt + (wi % 4), fallAt + (wi % 4) + 12],
-              [0, 1],
-              { ...CLAMP, easing: EASE_IN },
-            );
-            const op = enter * (1 - fall);
-            if (op <= 0.001) return;
-            nodes.push(
-              glyph(
-                id,
-                sg.text,
-                wx + sg.dx * F,
-                wy + (1 - enter) * F * 0.32 + fall * F * 0.22,
-                F,
-                F,
-                c.ink,
-                op,
-              ),
-            );
-            return;
-          }
-          const travel = interpolate(
-            u,
-            [travelAt + sg.key * 2, travelAt + sg.key * 2 + travelLen],
-            [0, 1],
-            { ...CLAMP, easing: EASE_IO },
-          );
-          const row = mottoSlots[bi][sg.key];
-          const col = stackSlots[bi][sg.key];
-          const fx = wx + sg.dx * F;
-          const fy = wy + (1 - enter) * F * 0.32;
-          const rx = row.x + (col.x - row.x) * stackP;
-          const ry = row.y + (col.y - row.y) * stackP;
-          const rs = Fm + (Ff - Fm) * stackP;
-          const x = fx + (rx - fx) * travel;
-          const y = fy + (ry - fy) * travel;
-          const size = F + (rs - F) * travel;
-          const render = Math.max(F, Ff);
-          const landed = interpolate(travel, [0.85, 1], [0, 1], CLAMP);
-          const color = interpolateColors(landed, [0, 1], [keyColor, c.ink]);
-          const finalText =
-            sg.key === 0 ? mottoItems[bi].split(/\s+/)[0] : sg.text;
-          const swap = finalText !== sg.text ? landed : 0;
-          if (swap < 1) {
-            nodes.push(
-              glyph(id, sg.text, x, y, size, render, color, enter * (1 - swap)),
-            );
-          }
-          if (swap > 0) {
-            nodes.push(
-              glyph(`${id}f`, finalText, x, y, size, render, color, swap),
-            );
-          }
-        });
-      });
-    }
-
-    const dotAt = travelAt + (mottoSlots[bi].length - 2) * 2 + travelLen;
-    const dot = interpolate(u, [dotAt - 4, dotAt + 6], [0, 1], CLAMP);
-    if (dot > 0) {
-      const row = mottoSlots[bi][mottoSlots[bi].length - 1];
-      const col = stackSlots[bi][stackSlots[bi].length - 1];
-      const rs = Fm + (Ff - Fm) * stackP;
-      nodes.push(
-        glyph(
-          `b${bi}dot`,
-          ".",
-          row.x + (col.x - row.x) * stackP,
-          row.y + (col.y - row.y) * stackP,
-          rs,
-          Ff,
-          hi,
-          dot,
-        ),
-      );
-    }
-  });
+  ));
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

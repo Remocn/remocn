@@ -4,20 +4,14 @@ import { loadFont } from "@remotion/google-fonts/BricolageGrotesque";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
   subsets: ["latin"],
 });
-const display = sans;
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
   subsets: ["latin"],
@@ -118,6 +112,10 @@ interface Ctx {
   c: Colors;
   accent: string;
   slot?: Rect;
+  font: string;
+  eyebrow: string;
+  tagline: string;
+  logo?: React.ReactNode;
 }
 
 const LIGHT_AT: Record<Kind, string> = {
@@ -181,8 +179,8 @@ const abs = (r: Rect): React.CSSProperties => ({
   height: r.h,
 });
 
-const displayType = (size: number): React.CSSProperties => ({
-  fontFamily: display,
+const displayType = (size: number, font: string): React.CSSProperties => ({
+  fontFamily: font,
   fontWeight: 500,
   fontSize: size,
   letterSpacing: "-0.035em",
@@ -191,7 +189,7 @@ const displayType = (size: number): React.CSSProperties => ({
 });
 
 function TitleBody({ x }: { x: Ctx }) {
-  const { W, H, u, c, slot } = x;
+  const { W, H, u, c, slot, eyebrow, tagline, logo } = x;
   const left = slot ? 0.08 * W : 0;
   return (
     <div
@@ -209,9 +207,9 @@ function TitleBody({ x }: { x: Ctx }) {
       }}
     >
       <div style={{ fontSize: 22 * u, fontWeight: 400, color: c.muted }}>
-        Introducing
+        {eyebrow}
       </div>
-      <RemocnLogo fontSize={132 * u} color={c.fg} />
+      {logo ?? <RemocnLogo fontSize={132 * u} color={c.fg} />}
       <div
         style={{
           fontSize: 24 * u,
@@ -220,7 +218,7 @@ function TitleBody({ x }: { x: Ctx }) {
           textAlign: slot ? "left" : "center",
         }}
       >
-        Motion for the films you launch with.
+        {tagline}
       </div>
     </div>
   );
@@ -447,7 +445,7 @@ function PaneBody({ x }: { x: Ctx }) {
 }
 
 function ChartBody({ x }: { x: Ctx }) {
-  const { W, H, u, c, accent } = x;
+  const { W, H, u, c, accent, font } = x;
   const heights = [0.14, 0.19, 0.17, 0.26, 0.31, 0.38, 0.52];
   const base = 0.84 * H;
   const bw = 0.046 * W;
@@ -459,7 +457,9 @@ function ChartBody({ x }: { x: Ctx }) {
         <div style={{ fontSize: 20 * u, color: c.muted, fontWeight: 500 }}>
           Videos shipped per week
         </div>
-        <div style={{ ...displayType(110 * u), marginTop: 22 * u }}>+212%</div>
+        <div style={{ ...displayType(110 * u, font), marginTop: 22 * u }}>
+          +212%
+        </div>
       </div>
       <div
         style={{
@@ -487,7 +487,7 @@ function ChartBody({ x }: { x: Ctx }) {
 }
 
 function WordBody({ x }: { x: Ctx }) {
-  const { W, H, u, c } = x;
+  const { W, H, u, c, font } = x;
   return (
     <>
       <div
@@ -517,7 +517,7 @@ function WordBody({ x }: { x: Ctx }) {
           position: "absolute",
           left: 0.08 * W - 12 * u,
           bottom: 0.1 * H,
-          ...displayType(250 * u),
+          ...displayType(250 * u, font),
           letterSpacing: "-0.055em",
         }}
       >
@@ -540,17 +540,33 @@ function PlaceholderScene({
   tone,
   accent,
   slot,
-}: SceneSpec & { accent: string; slot?: Rect }) {
-  const { width: W, height: H } = useVideoConfig();
+  font,
+  ink,
+  eyebrow,
+  tagline,
+  logo,
+  scale,
+}: SceneSpec & {
+  accent: string;
+  slot?: Rect;
+  font: string;
+  ink?: string;
+  eyebrow: string;
+  tagline: string;
+  logo?: React.ReactNode;
+  scale: number;
+}) {
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
-  const c = palette(tone, accent);
+  const tones = palette(tone, accent);
+  const c = ink === undefined ? tones : { ...tones, fg: ink };
   const Body = BODIES[kind];
   return (
     <AbsoluteFill
       style={{
         background: c.bg,
         color: c.fg,
-        fontFamily: sans,
+        fontFamily: font,
         overflow: "hidden",
       }}
     >
@@ -559,7 +575,9 @@ function PlaceholderScene({
           background: `radial-gradient(ellipse 75% 85% at ${LIGHT_AT[kind]}, ${c.light}, transparent 72%)`,
         }}
       />
-      <Body x={{ W, H, u, c, accent, slot }} />
+      <ScaleLayer scale={scale}>
+        <Body x={{ W, H, u, c, accent, slot, font, eyebrow, tagline, logo }} />
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -571,6 +589,22 @@ function ImageScene({ src }: { src: string }) {
         src={src}
         style={{ width: "100%", height: "100%", objectFit: "cover" }}
       />
+    </AbsoluteFill>
+  );
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
     </AbsoluteFill>
   );
 }
@@ -625,6 +659,23 @@ export interface ColorBarsProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /** Typeface for the built-in shots. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Text color of the built-in shots; overrides their own ink. */
+  ink?: string;
+  /** Small line above the logo in the built-in title shot. */
+  eyebrow?: string;
+  /** Line under the logo in the built-in title shot. */
+  tagline?: string;
+  /** Replaces the remocn mark in the built-in title shot. */
+  logo?: React.ReactNode;
+  /** Frames between one bar and the next. */
+  stagger?: number;
+  /** Size of the built-in shots' content, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
 }
 
 const HOLD = 14;
@@ -676,9 +727,19 @@ export function ColorBars({
   accent = "#3B5BFD",
   speed = 1,
   theme = "dark",
+  fontFamily = sans,
+  ink,
+  eyebrow = "Introducing",
+  tagline = "Motion for the films you launch with.",
+  logo,
+  stagger = STAGGER,
+  scale = 1,
+  delay = 0,
+  grain = true,
 }: ColorBarsProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const n = Math.round(Math.min(6, Math.max(4, colors?.length ?? bars)));
   const fills = colors?.length ? colors : barColors(n, accent, theme);
@@ -710,7 +771,7 @@ export function ColorBars({
     EASE_WHIP(
       interpolate(
         f,
-        [HOLD + i * STAGGER, HOLD + i * STAGGER + SWEEP],
+        [HOLD + i * stagger, HOLD + i * stagger + SWEEP],
         [0, 1],
         CLAMP,
       ),
@@ -753,7 +814,7 @@ export function ColorBars({
   const settle = EASE_SETTLE(
     interpolate(
       frame,
-      [HOLD + n * STAGGER + SWEEP * 0.35, HOLD + n * STAGGER + SWEEP + 16],
+      [HOLD + n * stagger + SWEEP * 0.35, HOLD + n * stagger + SWEEP + 16],
       [0, 1],
       CLAMP,
     ),
@@ -767,7 +828,18 @@ export function ColorBars({
   const shot = (j: number) => {
     if (scenes) return <AbsoluteFill>{scenes[j]}</AbsoluteFill>;
     if (images) return <ImageScene src={images[j]} />;
-    return <PlaceholderScene {...pair[j]} accent={accent} />;
+    return (
+      <PlaceholderScene
+        {...pair[j]}
+        accent={accent}
+        font={fontFamily}
+        ink={ink}
+        eyebrow={eyebrow}
+        tagline={tagline}
+        logo={logo}
+        scale={scale}
+      />
+    );
   };
 
   return (
@@ -796,7 +868,7 @@ export function ColorBars({
           <AbsoluteFill style={{ clipPath: region(edges[n]) }}>
             <AbsoluteFill
               style={{
-                transform: `translate(${ux * drift}px, ${uy * drift}px) scale(${1 + 0.03 * (1 - settle)})`,
+                transform: `translate(${ux * drift}px, ${uy * drift}px) scale(${1 + 0.03 * (1 - settle)})${glide(settle > 5e-4 && settle < 1 - 5e-4)}`,
               }}
             >
               {shot(1)}
@@ -804,7 +876,7 @@ export function ColorBars({
           </AbsoluteFill>
         </AbsoluteFill>
       ) : null}
-      <Grain opacity={theme === "light" ? 0.04 : 0.055} />
+      {grain ? <Grain opacity={theme === "light" ? 0.04 : 0.055} /> : null}
     </AbsoluteFill>
   );
 }

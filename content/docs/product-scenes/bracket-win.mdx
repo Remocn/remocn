@@ -40,8 +40,8 @@ export const RemotionRoot = () => (
   <Composition
     id="BracketWin"
     component={BracketWinScene}
-    durationInFrames={125}
-    fps={30}
+    durationInFrames={250}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -75,10 +75,49 @@ Eight slots slide in, quarterfinals, semifinals and the final resolve in turn wi
       description: "Three round labels: quarterfinal, semifinal and final.",
     },
     {
+      name: "roundLength",
+      type: "number",
+      default: "20",
+      description: "Frames between one round resolving and the next.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the winner ticks on matches the product is not in.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Color of team names, scores and winner lines; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Tektur\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

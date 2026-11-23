@@ -2,14 +2,8 @@
 
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type AnamorphicFlareProps = {
   /** Lockup revealed behind the streak. Falls back to a placeholder "remocn" lockup. */
@@ -101,8 +95,8 @@ export function AnamorphicFlare(props: AnamorphicFlareProps) {
   const { children, tint, coreColor, backgroundColor, ghosts, y, seed, speed } =
     { ...anamorphicFlareDefaults, ...props };
   const uid = `anamorphic-flare-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
   const t = frame * Math.max(0, speed);
   const cy = y * height;
   const cx = width / 2;

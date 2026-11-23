@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const studioReflectionConfig: ComponentConfig = {
   componentName: "StudioReflection",
@@ -12,11 +18,6 @@ export const studioReflectionConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     value: {
       type: "text-content",
@@ -33,6 +34,22 @@ export const studioReflectionConfig: ComponentConfig = {
       default: "In the library",
       description: "Eyebrow",
     },
+    captionAt: {
+      type: "number",
+      default: 50,
+      min: 0,
+      max: 100,
+      step: 1,
+      description: "Caption in (frame)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    shine: { type: "color", default: undefined, description: "Shine" },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

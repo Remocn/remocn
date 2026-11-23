@@ -5,8 +5,10 @@ import type {
   TransitionPresentationComponentProps,
 } from "@remotion/transitions";
 import { useLayoutEffect, useRef } from "react";
-import { AbsoluteFill, useDelayRender, useVideoConfig } from "remotion";
+import { AbsoluteFill, useDelayRender } from "remotion";
 import { createTunnelRenderer } from "@/components/remocn/shader-light-tunnel";
+import { useSceneConfig, useSceneFrameCount } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type ShaderSpiralPassProps = {
   /** Shader motion multiplier; transition duration is controlled by timing. */
@@ -50,7 +52,11 @@ function ShaderSpiralPassPresentation({
   presentationDurationInFrames,
   passedProps,
 }: TransitionPresentationComponentProps<ShaderSpiralPassProps>) {
-  const { width, height, fps } = useVideoConfig();
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
+  const { width, height, fps } = useSceneConfig();
+  const glide = useGlide();
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const canvas = useRef<HTMLCanvasElement>(null);
   const renderer = useRef<ReturnType<typeof createTunnelRenderer> | null>(null);
@@ -71,6 +77,9 @@ function ShaderSpiralPassPresentation({
   // Clip the incoming scene itself, in screen space. Its content must never
   // extend through the shader outside the exit, even when the scene is scaled.
   const edge = Math.min(feather, radius * 0.12);
+  const sceneZoom = entering ? phase.incomingZoom : phase.outgoingZoom;
+  // the zoom moves while its smoothstep is between its ends
+  const zooming = entering ? p > 0.55 && p < 1 : p > 0 && p < 0.22;
   const sceneMask =
     entering && p < 1
       ? `radial-gradient(circle at center, black ${Math.max(0, radius - edge)}px, transparent ${radius}px)`
@@ -96,7 +105,7 @@ function ShaderSpiralPassPresentation({
     if (!active) return;
     try {
       // Integrate acceleration so shader motion speeds up without a time jump.
-      const seconds = (p * presentationDurationInFrames) / fps;
+      const seconds = (p * sceneLength) / fps;
       const time =
         finite(timeOffset, 0, -10000, 10000) +
         seconds * (1 + 0.8 * p * p) * finite(speed, 1, 0, 5);
@@ -107,7 +116,7 @@ function ShaderSpiralPassPresentation({
   }, [
     active,
     p,
-    presentationDurationInFrames,
+    sceneLength,
     fps,
     speed,
     timeOffset,
@@ -153,7 +162,7 @@ function ShaderSpiralPassPresentation({
       >
         <AbsoluteFill
           style={{
-            transform: `scale(${entering ? phase.incomingZoom : phase.outgoingZoom})`,
+            transform: `scale(${sceneZoom})${glide(zooming)}`,
             transformOrigin: "center",
           }}
         >

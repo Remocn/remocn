@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  interpolate,
-  interpolateColors,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { interpolate, interpolateColors, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface MarkerHighlightProps {
   before?: string;
@@ -33,8 +28,8 @@ export function MarkerHighlight({
   speed = 1,
   className,
 }: MarkerHighlightProps) {
-  const frame = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
 
   const markerScale = spring({
     frame: frame - 15,

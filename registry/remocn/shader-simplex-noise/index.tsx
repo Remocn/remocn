@@ -5,12 +5,8 @@ import {
   type SimplexNoiseProps,
 } from "@paper-design/shaders-react";
 import { useCallback, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const NEUTRAL_COLORS = ["#12121a", "#3a3a5c", "#52527a", "#8a8a95"];
 
@@ -25,8 +21,8 @@ export function ShaderSimplexNoise({
   className,
   ...rest
 }: ShaderSimplexNoiseProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
 
   const [handle] = useState(() => delayRender("shader-simplex-noise"));
   const gate = useCallback(

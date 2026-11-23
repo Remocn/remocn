@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const heatDrainRevealConfig: ComponentConfig = {
   componentName: "HeatDrainReveal",
@@ -13,11 +20,6 @@ export const heatDrainRevealConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#ff7a2e",
-      description: "Accent",
-    },
     headline: {
       type: "text-content",
       default: "Plan the whole launch week.",
@@ -27,6 +29,16 @@ export const heatDrainRevealConfig: ComponentConfig = {
       type: "text-content",
       default: "2026 / 11",
       description: "Month label",
+    },
+    todayLabel: {
+      type: "text-content",
+      default: "Today",
+      description: "Today label",
+    },
+    upcomingTitle: {
+      type: "text-content",
+      default: "Upcoming",
+      description: "Upcoming title",
     },
     firstDay: {
       type: "number",
@@ -53,6 +65,31 @@ export const heatDrainRevealConfig: ComponentConfig = {
       max: 90,
       step: 1,
       description: "Days in month",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 8,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#ff7a2e",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Onest" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

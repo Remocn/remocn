@@ -4,14 +4,9 @@ import { loadFont } from "@remotion/google-fonts/GeistMono";
 import { evolvePath } from "@remotion/paths";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400", "500"],
@@ -34,6 +29,20 @@ export interface PathSearchProps {
   startLabel?: string;
   goalLabel?: string;
   accent?: string;
+  /** Frames per cell as the search floods outward. */
+  floodStep?: number;
+  /** Frames the found route takes to draw. */
+  trace?: number;
+  /** Color of the labels and markers; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Size of the grid, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -239,6 +248,23 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PathSearch({
   cols = 17,
   rows = 9,
@@ -248,13 +274,24 @@ export function PathSearch({
   startLabel = "Start",
   goalLabel = "Goal",
   accent = "#3B5BFD",
+  floodStep = STEP,
+  trace: traceDur = TRACE,
+  ink,
+  background,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: PathSearchProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const routeId = `route${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const { blocked, distArr, dGoal, path } = useMemo(
@@ -270,16 +307,16 @@ export function PathSearch({
   const cx = (c: number) => x0 + (c + 0.5) * cell;
   const cy = (r: number) => y0 + (r + 0.5) * cell;
 
-  const reach = FLOOD_AT + Math.max(0, dGoal) * STEP;
+  const reach = FLOOD_AT + Math.max(0, dGoal) * floodStep;
   const traceAt = reach + 6;
-  const fadeAt = traceAt + TRACE - 6;
+  const fadeAt = traceAt + traceDur - 6;
   const doneAt = fadeAt + 22;
 
   const gridIn = interpolate(t, [0, 14], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const trace = interpolate(t, [traceAt, traceAt + TRACE], [0, 1], {
+  const trace = interpolate(t, [traceAt, traceAt + traceDur], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -289,7 +326,7 @@ export function PathSearch({
     config: { damping: 14, stiffness: 180, mass: 0.6 },
   });
   const startHit = spring({
-    frame: t - (traceAt + TRACE - 2),
+    frame: t - (traceAt + traceDur - 2),
     fps,
     config: { damping: 14, stiffness: 180, mass: 0.6 },
   });
@@ -305,7 +342,7 @@ export function PathSearch({
     for (let c = 0; c < cols; c++) {
       const d = distArr[r * cols + c];
       if (d < 0 || d > dGoal) continue;
-      const at = FLOOD_AT + d * STEP;
+      const at = FLOOD_AT + d * floodStep;
       if (t < at) continue;
       const k = t - at;
       const rise = interpolate(k, [0, 4], [0, 1], {
@@ -406,7 +443,7 @@ export function PathSearch({
           fontSize: 14 * u,
           letterSpacing: "0.08em",
           textTransform: "uppercase",
-          color: p.fg,
+          color: fg,
           opacity: a,
           transform: `translateY(${(1 - a) * 6 * u}px)`,
           whiteSpace: "nowrap",
@@ -438,7 +475,7 @@ export function PathSearch({
   const routeX2 = cx(goal[0]) === routeX1 ? routeX1 + 1 : cx(goal[0]);
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
@@ -446,139 +483,148 @@ export function PathSearch({
           background: `radial-gradient(70% 60% at ${44 + 12 * drift}% 112%, ${p.ground} 0%, transparent 72%)`,
         }}
       />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${0.985 + 0.025 * push})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            // The layer has no fill of its own, so the tilt shows no edge.
+            transform: `scale(${0.985 + 0.025 * push})${glide(
+              push > 5e-4 && push < 1 - 5e-4,
+            )}`,
+            transformOrigin: "50% 50%",
+          }}
         >
-          <defs>
-            <linearGradient
-              id={routeId}
-              gradientUnits="userSpaceOnUse"
-              x1={routeX1}
-              y1={0}
-              x2={routeX2}
-              y2={0}
-            >
-              {[accent, ...p.route.slice(1)].map((c, i) => (
-                <stop key={c} offset={i / (p.route.length - 1)} stopColor={c} />
-              ))}
-            </linearGradient>
-          </defs>
-          <g opacity={gridIn}>
-            {gridLines}
-            <rect
-              x={x0}
-              y={y0}
-              width={gw}
-              height={gh}
-              rx={10 * u}
-              fill="none"
-              stroke={p.frame}
-              strokeWidth={Math.max(1, u)}
-            />
-          </g>
-          {tints}
-          {walls.map((w, i) => {
-            const at = 3 + i * 3;
-            const a = interpolate(t, [at, at + 14], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            const wx = x0 + w.col * cell + inset;
-            const wy = y0 + w.row * cell + inset;
-            const ww = w.w * cell - inset * 2;
-            const wh = w.h * cell - inset * 2;
-            const grow = 0.9 + 0.1 * a;
-            return (
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={routeId}
+                gradientUnits="userSpaceOnUse"
+                x1={routeX1}
+                y1={0}
+                x2={routeX2}
+                y2={0}
+              >
+                {[accent, ...p.route.slice(1)].map((c, i) => (
+                  <stop
+                    key={c}
+                    offset={i / (p.route.length - 1)}
+                    stopColor={c}
+                  />
+                ))}
+              </linearGradient>
+            </defs>
+            <g opacity={gridIn}>
+              {gridLines}
               <rect
-                key={`${w.col}-${w.row}-${w.w}-${w.h}`}
-                x={wx + (ww * (1 - grow)) / 2}
-                y={wy + (wh * (1 - grow)) / 2}
-                width={ww * grow}
-                height={wh * grow}
-                rx={7 * u}
-                fill={p.wall}
-                stroke={p.wallEdge}
+                x={x0}
+                y={y0}
+                width={gw}
+                height={gh}
+                rx={10 * u}
+                fill="none"
+                stroke={p.frame}
                 strokeWidth={Math.max(1, u)}
-                opacity={a}
               />
-            );
-          })}
-          {evo ? (
-            <path
-              d={pathD}
+            </g>
+            {tints}
+            {walls.map((w, i) => {
+              const at = 3 + i * 3;
+              const a = interpolate(t, [at, at + 14], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
+              const wx = x0 + w.col * cell + inset;
+              const wy = y0 + w.row * cell + inset;
+              const ww = w.w * cell - inset * 2;
+              const wh = w.h * cell - inset * 2;
+              const grow = 0.9 + 0.1 * a;
+              return (
+                <rect
+                  key={`${w.col}-${w.row}-${w.w}-${w.h}`}
+                  x={wx + (ww * (1 - grow)) / 2}
+                  y={wy + (wh * (1 - grow)) / 2}
+                  width={ww * grow}
+                  height={wh * grow}
+                  rx={7 * u}
+                  fill={p.wall}
+                  stroke={p.wallEdge}
+                  strokeWidth={Math.max(1, u)}
+                  opacity={a}
+                />
+              );
+            })}
+            {evo ? (
+              <path
+                d={pathD}
+                fill="none"
+                stroke={`url(#${routeId})`}
+                strokeWidth={strokeW}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray={evo.strokeDasharray}
+                strokeDashoffset={evo.strokeDashoffset}
+                opacity={trace > 0 ? 1 : 0}
+              />
+            ) : null}
+            <circle
+              cx={cx(goal[0])}
+              cy={cy(goal[1])}
+              r={markerR * (1.2 + 1.6 * goalHit)}
               fill="none"
-              stroke={`url(#${routeId})`}
-              strokeWidth={strokeW}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray={evo.strokeDasharray}
-              strokeDashoffset={evo.strokeDashoffset}
-              opacity={trace > 0 ? 1 : 0}
+              stroke={p.route[p.route.length - 1]}
+              strokeWidth={1.5 * u}
+              opacity={t >= reach ? (1 - goalHit) * 0.8 : 0}
             />
-          ) : null}
-          <circle
-            cx={cx(goal[0])}
-            cy={cy(goal[1])}
-            r={markerR * (1.2 + 1.6 * goalHit)}
-            fill="none"
-            stroke={p.route[p.route.length - 1]}
-            strokeWidth={1.5 * u}
-            opacity={t >= reach ? (1 - goalHit) * 0.8 : 0}
-          />
-          <circle
-            cx={cx(start[0])}
-            cy={cy(start[1])}
-            r={
-              markerR *
-              (0.7 + 0.3 * startPop) *
-              (1 + 0.12 * Math.sin(Math.PI * Math.min(1, startHit)))
-            }
-            fill={p.bg}
-            stroke={p.fg}
-            strokeWidth={3 * u}
-            opacity={Math.min(1, startPop * 1.5)}
-          />
-          <circle
-            cx={cx(goal[0])}
-            cy={cy(goal[1])}
-            r={
-              markerR *
-              (0.7 + 0.3 * goalPop) *
-              (1 + 0.12 * Math.sin(Math.PI * Math.min(1, goalHit)))
-            }
-            fill={p.bg}
-            stroke={p.fg}
-            strokeWidth={3 * u}
-            opacity={Math.min(1, goalPop * 1.5)}
-          />
-          <circle
-            cx={cx(goal[0])}
-            cy={cy(goal[1])}
-            r={markerR * 0.42 * goalPop}
-            fill={t >= reach ? p.route[p.route.length - 1] : p.fg}
-            opacity={Math.min(1, goalPop * 1.5)}
-          />
-        </svg>
-        {labelFor(start, startLabel, MARK_AT + 4)}
-        {labelFor(goal, goalLabel, MARK_AT + 7)}
-      </AbsoluteFill>
+            <circle
+              cx={cx(start[0])}
+              cy={cy(start[1])}
+              r={
+                markerR *
+                (0.7 + 0.3 * startPop) *
+                (1 + 0.12 * Math.sin(Math.PI * Math.min(1, startHit)))
+              }
+              fill={bg}
+              stroke={fg}
+              strokeWidth={3 * u}
+              opacity={Math.min(1, startPop * 1.5)}
+            />
+            <circle
+              cx={cx(goal[0])}
+              cy={cy(goal[1])}
+              r={
+                markerR *
+                (0.7 + 0.3 * goalPop) *
+                (1 + 0.12 * Math.sin(Math.PI * Math.min(1, goalHit)))
+              }
+              fill={bg}
+              stroke={fg}
+              strokeWidth={3 * u}
+              opacity={Math.min(1, goalPop * 1.5)}
+            />
+            <circle
+              cx={cx(goal[0])}
+              cy={cy(goal[1])}
+              r={markerR * 0.42 * goalPop}
+              fill={t >= reach ? p.route[p.route.length - 1] : fg}
+              opacity={Math.min(1, goalPop * 1.5)}
+            />
+          </svg>
+          {labelFor(start, startLabel, MARK_AT + 4)}
+          {labelFor(goal, goalLabel, MARK_AT + 7)}
+        </AbsoluteFill>
+      </ScaleLayer>
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${bg} 100%)`,
           opacity: 0.5,
           pointerEvents: "none",
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

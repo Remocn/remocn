@@ -19,15 +19,15 @@ Load the `remocn` skill first for the tier conventions and Canvas & timing.
 2. **Read its page.** Fetch the `.md` docs URL the index gives for it. Note the props, the example,
    `Length` and any `Avoid for` note. If the avoid note matches what the user wants, say so and
    suggest the replacement it names.
-3. **Prepare the project once.** If `components.json` has no `@remocn` registry, run
-   `node "${CLAUDE_SKILL_DIR}/../video/scripts/setup.mjs" <project-root>` first (outside Claude
-   Code: `../video/scripts/setup.mjs` from this skill's folder). Its JSON result says which files it
-   wrote; relay any `warning`.
+3. **Prepare the project once.** If `components.json` has no `@remocn` registry, follow the `setup`
+   skill first. It says which files it touched and what, if anything, the user has to add by hand.
 4. **Install.** `npx shadcn add @remocn/<name>`. Dependencies install transitively; list which
    files landed.
 5. **Use it.** Show a usage snippet built from the docs example, sized to the canvas, inside a
    `<Sequence durationInFrames>` of at least its `Length` plus hold time. Transitions go into
    `TransitionSeries.Transition` as `presentation` with `linearTiming`/`springTiming` at their
-   `Length`. If the user named a place in their code, put it there; otherwise ask where it goes.
+   `Length`. `Length` is counted at 30 fps: in a 60 fps composition hand Remotion twice that (scale
+   by `fps / 30` at other rates); frame counts in the component's own props stay as the docs give
+   them. If the user named a place in their code, put it there; otherwise ask where it goes.
 6. **Check.** `npx tsc --noEmit`, then a still at the end of its motion
    (`npx remotion still <composition> out/<name>.png --frame=<n>`) and look at it.

@@ -1,10 +1,11 @@
 "use client";
 
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { Polaroid } from "@/registry/remocn/polaroid";
 
 function LiveMedia() {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const drift = interpolate(frame, [0, 120], [0, 40]);
   const scale = interpolate(frame, [0, 120], [1, 1.08]);
 

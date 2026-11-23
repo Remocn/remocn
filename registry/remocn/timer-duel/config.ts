@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const timerDuelConfig: ComponentConfig = {
   componentName: "TimerDuel",
@@ -46,6 +52,25 @@ export const timerDuelConfig: ComponentConfig = {
       description: "After",
       hiddenFromList: false,
     },
+    run: {
+      type: "number",
+      default: 32,
+      min: 8,
+      max: 90,
+      step: 1,
+      description: "Fast run (frames)",
+      hiddenFromList: false,
+    },
+    chase: {
+      type: "number",
+      default: 50,
+      min: 10,
+      max: 120,
+      step: 1,
+      description: "Chase (frames)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Space Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

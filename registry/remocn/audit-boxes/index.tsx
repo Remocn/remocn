@@ -12,9 +12,11 @@ import {
   type Issue,
   IssueMarks,
   MONO,
+  midway,
   progress,
   useAuditFrame,
 } from "@/lib/remocn/audit-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type AuditBoxesProps = {
   /** UI to audit, laid out in a 1280x720 frame. Defaults to a demo calendar dashboard. */
@@ -92,6 +94,7 @@ function Counter({
   color: string;
   label: string;
 }) {
+  const glide = useGlide();
   const frame = useAuditFrame();
   const count = Math.min(
     total,
@@ -105,7 +108,7 @@ function Counter({
         right: 1280 - DEMO_WINDOW.x - DEMO_WINDOW.w,
         top: 24,
         opacity: show,
-        transform: `translateY(${(1 - show) * -6}px)`,
+        transform: `translateY(${(1 - show) * -6}px)${glide(midway(show))}`,
         display: "flex",
         alignItems: "center",
         gap: 8,

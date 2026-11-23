@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const shoulders = loadFont("normal", {
   weights: ["400", "500"],
@@ -27,8 +27,19 @@ export interface PlainLicenseProps {
   clauses?: PlainLicenseClause[];
   highlight?: number;
   step?: number;
+  /** Frames between words of a plain rewrite as they rise in. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the text. Load it yourself; Big Shoulders by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -84,11 +95,11 @@ interface Metrics {
   cap: number;
 }
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], family: string, weight: number): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("plain-license: no 2d context");
-  ctx.font = `${WGHT} ${PX}px "${shoulders.fontFamily}"`;
+  ctx.font = `${weight} ${PX}px "${family}"`;
   const w: Record<string, number> = {};
   for (const s of texts) w[s] = ctx.measureText(s).width / PX;
   const fm = ctx.measureText("Hgp");
@@ -102,8 +113,8 @@ function measureAll(texts: string[]): Metrics {
   };
 }
 
-function useMetrics(texts: string[]) {
-  const key = texts.join("\u0001");
+function useMetrics(texts: string[], family: string, weight: number) {
+  const key = [family, weight, ...texts].join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("plain-license: measuring"));
   const released = useRef(false);
@@ -111,12 +122,15 @@ function useMetrics(texts: string[]) {
     let live = true;
     Promise.all([
       shoulders.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${shoulders.fontFamily}"`),
+      document.fonts.load(`${weight} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureAll(key.split("\u0001")) });
+        setState({
+          key,
+          m: measureAll(key.split("\u0001").slice(2), family, weight),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -125,7 +139,7 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, family, weight]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -184,19 +198,45 @@ function splitWords(s: string) {
   return s.split(/\s+/).filter(Boolean);
 }
 
+const midway = (p: number) => p > 0 && p < 1;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PlainLicense({
   clauses = DEFAULT_CLAUSES,
   highlight = 0,
   step = 40,
+  stagger = 3,
   accent,
+  ink,
   background,
+  fontFamily = shoulders.fontFamily,
+  fontWeight = WGHT,
+  scale: layerScale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PlainLicenseProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -206,7 +246,7 @@ export function PlainLicense({
   const S = (k: number) => T0 + k * stepLen;
   const zoomAt = S(n - 1) + 34;
   const naturalEnd = zoomAt + ZOOM + 34;
-  const pace = Math.max(1, naturalEnd / Math.max(1, durationInFrames));
+  const pace = Math.max(1, naturalEnd / Math.max(1, durationInFrames - delay));
   const t = frame * speed * pace;
 
   const legal: Token[][] = list.map((cl, i) =>
@@ -227,7 +267,7 @@ export function PlainLicense({
   );
 
   const texts = [...legal.flat(), ...plain.flat()].map((tk) => tk.text);
-  const m = useMetrics(texts);
+  const m = useMetrics(texts, fontFamily, fontWeight);
 
   if (!m) {
     return (
@@ -265,26 +305,50 @@ export function PlainLicense({
     scales.push(Math.max(1, Math.min(boxW / maxW, boxH / h, maxS / s0)));
   }
 
-  const moveP = (k: number) =>
-    interpolate(t, [S(k) + 16, S(k) + 34], [0, 1], {
+  const moveP = (k: number, tt = t) =>
+    interpolate(tt, [S(k) + 16, S(k) + 34], [0, 1], {
       ...CLAMP,
       easing: EASE_MOVE,
     });
-  const lerpState = (get: (k: number) => number) => {
+  const lerpState = (get: (k: number) => number, tt = t) => {
     let v = get(0);
     for (let k = 0; k < n; k++) {
-      const p = moveP(k);
+      const p = moveP(k, tt);
       if (p <= 0) break;
       v = get(k) + (get(k + 1) - get(k)) * p;
     }
     return v;
   };
-  const zoomP = interpolate(t, [zoomAt, zoomAt + ZOOM], [0, 1], {
-    ...CLAMP,
-    easing: EASE_MOVE,
-  });
-  const preZoom = lerpState((k) => (k === n ? scales[n - 1] : scales[k]));
-  const scale = preZoom + (scales[n] - preZoom) * zoomP;
+  // A block is laid out where it finally rests and reaches each earlier
+  // place by a transform: layout rounds a baseline to whole pixels, so text
+  // eased by `top` clicks along, and text handed from a transform back to
+  // layout jumps by the rounding. The travel is exactly 0 once the last move
+  // lands, so the final frame is drawn as it always was.
+  const stateAnchor = (get: (k: number) => number) => {
+    const at = get(n);
+    let travel = get(0) - at;
+    for (let k = 0; k < n; k++) {
+      const p = moveP(k);
+      if (p <= 0) break;
+      travel = get(k + 1) - at + (get(k) - get(k + 1)) * (1 - p);
+    }
+    return { at, travel };
+  };
+  const reflowing = Array.from({ length: n }, (_, k) => moveP(k)).some(midway);
+  const scaleAt = (tt: number) => {
+    const zoomP = interpolate(tt, [zoomAt, zoomAt + ZOOM], [0, 1], {
+      ...CLAMP,
+      easing: EASE_MOVE,
+    });
+    const preZoom = lerpState((k) => (k === n ? scales[n - 1] : scales[k]), tt);
+    return preZoom + (scales[n] - preZoom) * zoomP;
+  };
+  const scale = scaleAt(t);
+  // The box scales from its top-left corner; a step of 1e-6 moves its far
+  // corner, ~1100px out, by a millipixel.
+  const zooming =
+    Math.abs(scaleAt(t + 1) - scale) > 1e-6 ||
+    Math.abs(scale - scaleAt(t - 1)) > 1e-6;
 
   const boxTop = (base: number) =>
     base - ((1 - m.asc - m.desc) / 2 + m.asc) * s0;
@@ -304,6 +368,7 @@ export function PlainLicense({
     color: string,
     opacity: number,
     dy: number,
+    moving: boolean,
   ) => (
     <div
       key={key}
@@ -314,12 +379,12 @@ export function PlainLicense({
         height: s0,
         lineHeight: `${s0}px`,
         fontSize: s0,
-        fontFamily: shoulders.fontFamily,
-        fontWeight: WGHT,
+        fontFamily,
+        fontWeight,
         whiteSpace: "pre",
         color,
         opacity,
-        transform: `translateY(${dy.toFixed(2)}px)`,
+        transform: `translateY(${dy.toFixed(2)}px)${glide(moving && !zooming)}`,
       }}
     >
       {text}
@@ -330,7 +395,7 @@ export function PlainLicense({
   let rowIndex = 0;
   for (let i = 0; i < n; i++) {
     const st = S(i);
-    const top = lerpState((k) => tops[k][i]);
+    const { at: top, travel } = stateAnchor((k) => tops[k][i]);
     const mark = interpolate(t, [st, st + 8], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
@@ -354,9 +419,10 @@ export function PlainLicense({
               tk.text,
               row.xs[j],
               base,
-              c.ink,
+              fg,
               p * (LEGAL_ALPHA + (1 - LEGAL_ALPHA) * mark) * (1 - out),
-              (1 - p) * s0 * 0.3 + out * s0 * 0.16,
+              (1 - p) * s0 * 0.3 + out * s0 * 0.16 + travel,
+              reflowing || midway(p) || midway(out),
             ),
           );
         });
@@ -374,7 +440,7 @@ export function PlainLicense({
     plainB[i].rows.forEach((row, r) => {
       const base = top + m.cap * s0 + r * rowH;
       row.tokens.forEach((tk, j) => {
-        const inAt = st + 24 + j * 3;
+        const inAt = st + 24 + j * stagger;
         const p = interpolate(t, [inAt, inAt + 14], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
@@ -386,9 +452,10 @@ export function PlainLicense({
             tk.text,
             row.xs[j],
             base,
-            mix(hi, c.ink, cool),
+            mix(hi, fg, cool),
             p,
-            (1 - p) * s0 * 0.28,
+            (1 - p) * s0 * 0.28 + travel,
+            reflowing || midway(p),
           ),
         );
       });
@@ -397,19 +464,26 @@ export function PlainLicense({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: marginX,
-          top: marginY,
-          width: boxW,
-          height: boxH,
-          transformOrigin: "0 0",
-          transform: `scale(${scale.toFixed(4)})`,
-        }}
-      >
-        {nodes}
-      </div>
+      <ScaleLayer scale={layerScale}>
+        <div
+          style={{
+            position: "absolute",
+            left: marginX,
+            top: marginY,
+            width: boxW,
+            height: boxH,
+            transformOrigin: "0 0",
+            // Rounded only at rest: a scale stepped to 1e-4 while it moves
+            // would click the far text along by hand. The tilt pivots on
+            // the box's centre, not on the far-off origin.
+            transform: zooming
+              ? `translate(${boxW / 2}px, ${boxH / 2}px)${glide(true)} translate(${-boxW / 2}px, ${-boxH / 2}px) scale(${scale})`
+              : `scale(${scale.toFixed(4)})`,
+          }}
+        >
+          {nodes}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,15 +1,11 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/InstrumentSans";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -41,6 +37,21 @@ export interface WaterfallChartProps {
   title?: string;
   format?: (value: number) => string;
   accent?: string;
+  /** Text color of the values and total label; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Frames each step bar takes to grow. */
+  grow?: number;
+  /** Corner radius of the bars, in px at 720p. */
+  radius?: number;
+  grain?: boolean;
+  /** Size of the chart, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -116,6 +127,24 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 interface Column {
   key: string;
   label: string;
@@ -134,13 +163,25 @@ export function WaterfallChart({
   title = "Net revenue, Q3",
   format = defaultFormat,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  grow = 15,
+  radius: corner = 2,
+  grain = true,
+  scale: zoom = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: WaterfallChartProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const transparent = background === "transparent";
+  const stage = transparent ? "transparent" : (background ?? p.bg);
   const list = steps.slice(0, 8);
 
   const cols: Column[] = [];
@@ -166,7 +207,7 @@ export function WaterfallChart({
       to: next,
       delta: s.value,
       start: 26 + i * STAGGER,
-      dur: 15,
+      dur: grow,
     });
     level = next;
   });
@@ -245,7 +286,7 @@ export function WaterfallChart({
         });
 
   const sw = Math.max(1, u);
-  const radius = 2 * u;
+  const radius = corner * u;
   const totalK = Math.max(0, totalRise);
   const barFull = baseY - yOf(total);
   const drift = interpolate(t, [0, TOTAL_AT + 70], [0, 1], {
@@ -257,254 +298,264 @@ export function WaterfallChart({
   const valueSize = 17 * u;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${scale})`, transformOrigin: "50% 55%" }}
-      >
-        <AbsoluteFill style={{ transform: `translateY(${shift}px)` }}>
-          <svg
-            width={width}
-            height={height}
-            style={{ position: "absolute", inset: 0 }}
-            aria-hidden
-          >
-            <line
-              x1={plotL}
-              x2={plotL + (plotR - plotL) * axisIn}
-              y1={baseY + sw / 2}
-              y2={baseY + sw / 2}
-              stroke={p.axis}
-              strokeWidth={sw}
-            />
-            {cols.map((c, i) => {
-              if (i === 0) return null;
-              const prev = cols[i - 1];
-              const y = yOf(prev.to);
-              const x0 = xOf(i - 1) + colW / 2;
-              const x1 = xOf(i) - colW / 2;
-              const k = interpolate(t, [c.start - 7, c.start + 1], [0, 1], {
-                ...CLAMP,
-                easing: EASE_IO,
-              });
-              if (k <= 0) return null;
-              const dim = c.kind === "total" ? 1 : 1 - 0.45 * focus;
-              return (
-                <line
-                  key={`c${c.key}`}
-                  x1={x0}
-                  x2={x0 + (x1 - x0) * k}
-                  y1={y}
-                  y2={y}
-                  stroke={p.hair}
-                  strokeWidth={sw}
-                  opacity={dim}
-                />
-              );
-            })}
-            {cols.map((c, i) => {
-              const k = progress(c);
-              if (k <= 0 || c.kind === "total") return null;
-              const anchor = c.from;
-              const end = anchor + (c.to - anchor) * k;
-              const lo = Math.min(anchor, end);
-              const hi = Math.max(anchor, end);
-              const y0 = yOf(hi);
-              const h = Math.max(sw, yOf(lo) - y0);
-              const fill =
-                c.kind === "start" ? p.base : c.kind === "up" ? p.up : p.down;
-              const op = 1 - 0.4 * focus;
-              return (
-                <rect
-                  key={c.key}
-                  x={xOf(i) - colW / 2}
-                  y={y0}
-                  width={colW}
-                  height={h}
-                  rx={radius}
-                  fill={fill}
-                  stroke={c.kind === "down" ? p.downEdge : "none"}
-                  strokeWidth={c.kind === "down" ? sw : 0}
-                  opacity={op}
-                />
-              );
-            })}
-          </svg>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={zoom}>
+        <AbsoluteFill
+          style={{
+            // The push outlasts every move inside it, so this one tilt covers
+            // all the text in the chart.
+            transform: `scale(${scale})${glide(midway(push))}`,
+            transformOrigin: "50% 55%",
+          }}
+        >
+          <AbsoluteFill style={{ transform: `translateY(${shift}px)` }}>
+            <svg
+              width={width}
+              height={height}
+              style={{ position: "absolute", inset: 0 }}
+              aria-hidden
+            >
+              <line
+                x1={plotL}
+                x2={plotL + (plotR - plotL) * axisIn}
+                y1={baseY + sw / 2}
+                y2={baseY + sw / 2}
+                stroke={p.axis}
+                strokeWidth={sw}
+              />
+              {cols.map((c, i) => {
+                if (i === 0) return null;
+                const prev = cols[i - 1];
+                const y = yOf(prev.to);
+                const x0 = xOf(i - 1) + colW / 2;
+                const x1 = xOf(i) - colW / 2;
+                const k = interpolate(t, [c.start - 7, c.start + 1], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_IO,
+                });
+                if (k <= 0) return null;
+                const dim = c.kind === "total" ? 1 : 1 - 0.45 * focus;
+                return (
+                  <line
+                    key={`c${c.key}`}
+                    x1={x0}
+                    x2={x0 + (x1 - x0) * k}
+                    y1={y}
+                    y2={y}
+                    stroke={p.hair}
+                    strokeWidth={sw}
+                    opacity={dim}
+                  />
+                );
+              })}
+              {cols.map((c, i) => {
+                const k = progress(c);
+                if (k <= 0 || c.kind === "total") return null;
+                const anchor = c.from;
+                const end = anchor + (c.to - anchor) * k;
+                const lo = Math.min(anchor, end);
+                const hi = Math.max(anchor, end);
+                const y0 = yOf(hi);
+                const h = Math.max(sw, yOf(lo) - y0);
+                const fill =
+                  c.kind === "start" ? p.base : c.kind === "up" ? p.up : p.down;
+                const op = 1 - 0.4 * focus;
+                return (
+                  <rect
+                    key={c.key}
+                    x={xOf(i) - colW / 2}
+                    y={y0}
+                    width={colW}
+                    height={h}
+                    rx={radius}
+                    fill={fill}
+                    stroke={c.kind === "down" ? p.downEdge : "none"}
+                    strokeWidth={c.kind === "down" ? sw : 0}
+                    opacity={op}
+                  />
+                );
+              })}
+            </svg>
 
-          {totalK > 0 ? (
+            {totalK > 0 ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: xOf(cols.length - 1) - colW / 2,
+                  top: yOf(total * totalK),
+                  width: colW,
+                  height: baseY - yOf(total * totalK),
+                  borderRadius: radius,
+                  overflow: "hidden",
+                  background: MESH[0],
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: barFull,
+                    background: mesh(drift, barBase),
+                  }}
+                />
+              </div>
+            ) : null}
+
+            {cols.map((c, i) => {
+              const a = interpolate(t, [c.start, c.start + 14], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
+              const dim = c.kind === "total" ? 1 : 1 - 0.35 * focus;
+              return (
+                <div
+                  key={`l${c.key}`}
+                  style={{
+                    position: "absolute",
+                    left: xOf(i),
+                    top: baseY + 14 * u,
+                    transform: `translate(-50%, ${(1 - a) * 6 * u}px)`,
+                    fontFamily,
+                    fontWeight: 400,
+                    fontSize: labelSize,
+                    color: c.kind === "total" ? fg : p.muted,
+                    whiteSpace: "nowrap",
+                    opacity: a * dim,
+                  }}
+                >
+                  {c.label}
+                </div>
+              );
+            })}
+
+            {cols.map((c, i) => {
+              if (c.kind === "total") return null;
+              const a = interpolate(
+                t,
+                [c.start + c.dur - 8, c.start + c.dur + 6],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              const top = yOf(Math.max(c.from, c.to));
+              const text =
+                c.kind === "start"
+                  ? format(c.delta)
+                  : `${c.delta < 0 ? "−" : "+"}${format(Math.abs(c.delta))}`;
+              return (
+                <div
+                  key={`v${c.key}`}
+                  style={{
+                    position: "absolute",
+                    left: xOf(i),
+                    top: top - 10 * u,
+                    transform: `translate(-50%, ${-100 + (1 - a) * 18}%)`,
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: valueSize,
+                    letterSpacing: "-0.005em",
+                    fontVariantNumeric: "tabular-nums",
+                    color: c.kind === "down" ? p.muted : fg,
+                    whiteSpace: "nowrap",
+                    opacity: a * (1 - 0.4 * focus),
+                  }}
+                >
+                  {text}
+                </div>
+              );
+            })}
+
             <div
               style={{
                 position: "absolute",
-                left: xOf(cols.length - 1) - colW / 2,
-                top: yOf(total * totalK),
-                width: colW,
-                height: baseY - yOf(total * totalK),
-                borderRadius: radius,
-                overflow: "hidden",
-                background: MESH[0],
+                left: plotL,
+                top: height * 0.255,
+                transform: `translateY(-100%) translateY(${(1 - titleIn) * 8 * u}px)`,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 20 * u,
+                letterSpacing: "-0.01em",
+                color: p.muted,
+                whiteSpace: "nowrap",
+                opacity: titleIn,
               }}
             >
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: barFull,
-                  background: mesh(drift, barBase),
-                }}
-              />
+              {title}
             </div>
-          ) : null}
-
-          {cols.map((c, i) => {
-            const a = interpolate(t, [c.start, c.start + 14], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            const dim = c.kind === "total" ? 1 : 1 - 0.35 * focus;
-            return (
-              <div
-                key={`l${c.key}`}
-                style={{
-                  position: "absolute",
-                  left: xOf(i),
-                  top: baseY + 14 * u,
-                  transform: `translate(-50%, ${(1 - a) * 6 * u}px)`,
-                  fontFamily: sans,
-                  fontWeight: 400,
-                  fontSize: labelSize,
-                  color: c.kind === "total" ? p.fg : p.muted,
-                  whiteSpace: "nowrap",
-                  opacity: a * dim,
-                }}
-              >
-                {c.label}
-              </div>
-            );
-          })}
-
-          {cols.map((c, i) => {
-            if (c.kind === "total") return null;
-            const a = interpolate(
-              t,
-              [c.start + c.dur - 8, c.start + c.dur + 6],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            const top = yOf(Math.max(c.from, c.to));
-            const text =
-              c.kind === "start"
-                ? format(c.delta)
-                : `${c.delta < 0 ? "−" : "+"}${format(Math.abs(c.delta))}`;
-            return (
-              <div
-                key={`v${c.key}`}
-                style={{
-                  position: "absolute",
-                  left: xOf(i),
-                  top: top - 10 * u,
-                  transform: `translate(-50%, ${-100 + (1 - a) * 18}%)`,
-                  fontFamily: sans,
-                  fontWeight: 500,
-                  fontSize: valueSize,
-                  letterSpacing: "-0.005em",
-                  fontVariantNumeric: "tabular-nums",
-                  color: c.kind === "down" ? p.muted : p.fg,
-                  whiteSpace: "nowrap",
-                  opacity: a * (1 - 0.4 * focus),
-                }}
-              >
-                {text}
-              </div>
-            );
-          })}
+          </AbsoluteFill>
 
           <div
             style={{
               position: "absolute",
-              left: plotL,
+              right: width - plotR,
               top: height * 0.255,
-              transform: `translateY(-100%) translateY(${(1 - titleIn) * 8 * u}px)`,
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 20 * u,
-              letterSpacing: "-0.01em",
-              color: p.muted,
+              transform: "translateY(-100%)",
+              display: "flex",
+              alignItems: "baseline",
+              gap: 14 * u,
               whiteSpace: "nowrap",
-              opacity: titleIn,
-            }}
-          >
-            {title}
-          </div>
-        </AbsoluteFill>
-
-        <div
-          style={{
-            position: "absolute",
-            right: width - plotR,
-            top: height * 0.255,
-            transform: "translateY(-100%)",
-            display: "flex",
-            alignItems: "baseline",
-            gap: 14 * u,
-            whiteSpace: "nowrap",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 136 * u,
-              lineHeight: 0.86,
-              letterSpacing: "-0.045em",
-              paddingRight: "0.05em",
-              color: "transparent",
-              backgroundImage: `linear-gradient(100deg, ${theme === "dark" ? MESH[0] : MESH[2]} ${4 + 10 * drift}%, ${MESH[1]} 48%, ${theme === "dark" ? MESH[2] : MESH[3]} 100%)`,
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              fontVariantNumeric: "tabular-nums",
-              display: "inline-block",
-              opacity: land,
-              filter: land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
-              transform: `translateY(${(1 - land) * 20 * u}px)`,
-            }}
-          >
-            {format(total * count)}
-          </span>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 10 * u,
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 30 * u,
-              letterSpacing: "-0.015em",
-              color: p.muted,
-              opacity: unitIn,
-              transform: `translateY(${(1 - unitIn) * 8 * u}px)`,
             }}
           >
             <span
               style={{
-                width: 10 * u,
-                height: 10 * u,
-                borderRadius: "50%",
-                background: accent,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 136 * u,
+                lineHeight: 0.86,
+                letterSpacing: "-0.045em",
+                paddingRight: "0.05em",
+                color: "transparent",
+                backgroundImage: `linear-gradient(100deg, ${theme === "dark" ? MESH[0] : MESH[2]} ${4 + 10 * drift}%, ${MESH[1]} 48%, ${theme === "dark" ? MESH[2] : MESH[3]} 100%)`,
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                fontVariantNumeric: "tabular-nums",
+                display: "inline-block",
+                opacity: land,
+                filter:
+                  land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
+                transform: `translateY(${(1 - land) * 20 * u}px)`,
               }}
-            />
-            {totalLabel}
-          </span>
-        </div>
-      </AbsoluteFill>
+            >
+              {format(total * count)}
+            </span>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 10 * u,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 30 * u,
+                letterSpacing: "-0.015em",
+                color: p.muted,
+                opacity: unitIn,
+                transform: `translateY(${(1 - unitIn) * 8 * u}px)`,
+              }}
+            >
+              <span
+                style={{
+                  width: 10 * u,
+                  height: 10 * u,
+                  borderRadius: "50%",
+                  background: accent,
+                }}
+              />
+              {totalLabel}
+            </span>
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
 
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 64%, ${p.bg} 100%)`,
-          opacity: 0.5,
-        }}
-      />
-      <Grain opacity={p.grain} />
+      {transparent ? null : (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 64%, ${stage} 100%)`,
+            opacity: 0.5,
+          }}
+        />
+      )}
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

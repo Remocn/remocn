@@ -1,4 +1,4 @@
-import { COMPONENT_COUNT } from "@/config/site";
+import { COMPONENT_COUNT, TRANSITION_PRESENTATIONS } from "@/config/site";
 import { buildLlmsTxt, MARKDOWN_CONTENT_TYPE } from "@/lib/agent-docs";
 import { docsIndexPages } from "@/lib/docs-index";
 
@@ -9,7 +9,10 @@ export const revalidate = false;
 // `Vary: Accept, User-Agent` is set there for the URLs that negotiate.
 export function GET() {
   return new Response(
-    buildLlmsTxt(docsIndexPages(), { components: COMPONENT_COUNT }),
+    buildLlmsTxt(docsIndexPages(), {
+      components: COMPONENT_COUNT,
+      transitionPresentations: TRANSITION_PRESENTATIONS,
+    }),
     {
       headers: {
         "Content-Type": MARKDOWN_CONTENT_TYPE,

@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="NumberMosaic"
     component={NumberMosaicScene}
-    durationInFrames={140}
-    fps={30}
+    durationInFrames={280}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -69,6 +69,18 @@ A dim field of ticking digits fills the frame while the cells that form the numb
       description: "Product name in the lockup.",
     },
     {
+      name: "sweep",
+      type: "number",
+      default: "26",
+      description: "Frames for the light to sweep across the number, left to right.",
+    },
+    {
+      name: "cellSize",
+      type: "number",
+      default: "12",
+      description: "Width of one counter in the field, in pixels at 720p; smaller packs the field denser.",
+    },
+    {
       name: "logo",
       type: "React.ReactNode",
       description: "Replaces the default Remocn mark in the lockup.",
@@ -78,6 +90,40 @@ A dim field of ticking digits fills the frame while the cells that form the numb
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Gradient accent for the lit cells.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Space Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

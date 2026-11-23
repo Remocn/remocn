@@ -1,0 +1,101 @@
+{
+  "component": "icon-check",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "success-green",
+      "label": "Success Green",
+      "description": "A large, confident green checkmark that draws in and pops once at a steady pace.",
+      "askedAs": [
+        "green success checkmark",
+        "big check for task completed",
+        "confirmation tick in green",
+        "зелёная галочка успеха",
+        "большая галочка подтверждения"
+      ],
+      "props": {
+        "color": "#16a34a",
+        "size": 120,
+        "strokeWidth": 2.5,
+        "animation": "both"
+      }
+    },
+    {
+      "id": "hairline-slow",
+      "label": "Hairline Slow",
+      "description": "A thin, elegant check that slowly draws itself in a soft graphite tone.",
+      "askedAs": [
+        "thin elegant checkmark",
+        "slow minimal tick drawing",
+        "delicate line check",
+        "тонкая элегантная галочка",
+        "медленно рисующаяся галочка"
+      ],
+      "props": {
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "animation": "draw",
+        "color": "#525252",
+        "size": 96
+      }
+    },
+    {
+      "id": "snappy-loop",
+      "label": "Snappy Loop",
+      "description": "A compact bold check that bounces quickly on repeat in a crisp blue.",
+      "askedAs": [
+        "looping bouncing check icon",
+        "fast repeating checkmark",
+        "quick animated tick loop",
+        "быстрая зацикленная галочка",
+        "прыгающая галочка по кругу"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 2,
+        "color": "#1f6feb",
+        "strokeWidth": 3
+      }
+    },
+    {
+      "id": "hero-ink",
+      "label": "Hero Ink",
+      "description": "An oversized heavy-stroke check in deep ink that fills the frame with a measured reveal.",
+      "askedAs": [
+        "huge bold checkmark",
+        "full screen tick",
+        "thick heavy check icon",
+        "огромная жирная галочка",
+        "галочка на весь экран"
+      ],
+      "props": {
+        "size": 200,
+        "strokeWidth": 3,
+        "color": "#0f172a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "warm-amber",
+      "label": "Warm Amber",
+      "description": "A mid-sized amber check that redraws continuously at a calm rhythm.",
+      "askedAs": [
+        "orange looping check",
+        "warm colored tick animation",
+        "amber checkmark drawing repeatedly",
+        "оранжевая галочка в цикле",
+        "тёплая анимированная галочка"
+      ],
+      "props": {
+        "color": "#d97706",
+        "size": 72,
+        "animation": "draw",
+        "loop": true,
+        "speed": 0.75,
+        "strokeWidth": 1.75
+      }
+    }
+  ]
+}

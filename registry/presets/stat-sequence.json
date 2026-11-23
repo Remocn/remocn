@@ -1,0 +1,123 @@
+{
+  "component": "stat-sequence",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "Warm paper background with dark serif numerals and a muted terracotta accent at an unhurried pace.",
+      "askedAs": [
+        "elegant serif stats on cream",
+        "magazine style numbers",
+        "light classy figures",
+        "цифры в журнальном стиле",
+        "светлая элегантная статистика"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b5532f",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced green-tinted figures on near-black that tick in fast with a tight digit stagger.",
+      "askedAs": [
+        "code style numbers",
+        "hacker terminal stats",
+        "monospace data counter",
+        "цифры как в терминале",
+        "моноширинная статистика"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#e6ede7",
+        "accent": "#3fb67a",
+        "stagger": 0.6,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-hero",
+      "label": "Slow Hero",
+      "description": "Oversized numbers with long holds and wide beats so each stat lands as its own moment.",
+      "askedAs": [
+        "big dramatic slow stats",
+        "let each number breathe",
+        "cinematic figures reveal",
+        "медленные крупные цифры",
+        "драматичная подача статистики"
+      ],
+      "props": {
+        "scale": 1.35,
+        "hold": 90,
+        "beat": 56,
+        "stagger": 2.8,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-recap",
+      "label": "Quick Recap",
+      "description": "Compact, snappy count-ups with short beats and no grain for a crisp closing summary.",
+      "askedAs": [
+        "fast numbers recap",
+        "quick stats at the end",
+        "snappy clean counters",
+        "быстрый итог цифрами",
+        "короткая динамичная статистика"
+      ],
+      "props": {
+        "scale": 0.85,
+        "beat": 12,
+        "hold": 18,
+        "grain": false,
+        "speed": 2
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Deep navy backdrop with soft violet accents and geometric Space Grotesk numerals.",
+      "askedAs": [
+        "dark purple stats",
+        "navy tech numbers",
+        "modern startup metrics",
+        "тёмно-синяя статистика",
+        "фиолетовые цифры на тёмном"
+      ],
+      "props": {
+        "background": "#0e1226",
+        "ink": "#eef0fa",
+        "accent": "#8b7cf6",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "clean-white",
+      "label": "Clean White",
+      "description": "Bright grain-free white canvas with charcoal Inter figures and a calm teal accent.",
+      "askedAs": [
+        "minimal white stats",
+        "clean corporate numbers",
+        "simple light metrics",
+        "минималистичные цифры на белом",
+        "чистая светлая статистика"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#1f2328",
+        "accent": "#0f8b8d",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    }
+  ]
+}

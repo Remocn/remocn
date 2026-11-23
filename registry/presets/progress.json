@@ -1,0 +1,88 @@
+{
+  "component": "progress",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "compact-quick",
+      "label": "Compact Quick",
+      "description": "A short, label-free bar that snaps briskly to its target, ideal for tight inline spots.",
+      "askedAs": [
+        "small fast progress bar",
+        "tiny loader without percentage",
+        "compact quick loading bar",
+        "маленький быстрый прогресс-бар",
+        "компактная полоска загрузки без процентов"
+      ],
+      "props": {
+        "width": 160,
+        "showLabel": false,
+        "speed": 2
+      }
+    },
+    {
+      "id": "wide-cinematic",
+      "label": "Wide Cinematic",
+      "description": "A broad, full-width bar that glides slowly to its value with the percentage readout visible.",
+      "askedAs": [
+        "wide slow progress bar",
+        "cinematic loading bar with percent",
+        "long smooth fill animation",
+        "широкий медленный прогресс-бар",
+        "плавная длинная полоса загрузки с процентами"
+      ],
+      "props": {
+        "width": 600,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "clean-line",
+      "label": "Clean Line",
+      "description": "A medium-wide bar with no label, reading as a quiet, minimal line of progress.",
+      "askedAs": [
+        "minimal progress bar no text",
+        "clean bar without label",
+        "just the progress line",
+        "минималистичный прогресс без текста",
+        "чистая полоска прогресса без подписи"
+      ],
+      "props": {
+        "width": 420,
+        "showLabel": false
+      }
+    },
+    {
+      "id": "instant-snap",
+      "label": "Instant Snap",
+      "description": "A standard-width labeled bar that jumps to each step almost instantly for punchy cuts.",
+      "askedAs": [
+        "very fast progress animation",
+        "snappy percentage bar",
+        "progress that jumps quickly",
+        "очень быстрый прогресс-бар",
+        "резкая анимация заполнения"
+      ],
+      "props": {
+        "width": 280,
+        "speed": 4
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A generous labeled bar that creeps forward at a deliberate, suspenseful pace.",
+      "askedAs": [
+        "slow dramatic progress bar",
+        "progress filling very slowly",
+        "suspenseful loading bar",
+        "медленно заполняющийся прогресс",
+        "драматичная медленная загрузка"
+      ],
+      "props": {
+        "width": 500,
+        "speed": 0.25
+      }
+    }
+  ]
+}

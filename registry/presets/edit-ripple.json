@@ -1,0 +1,107 @@
+{
+  "component": "edit-ripple",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper background with a light serif and a terracotta ripple, unhurried and bookish.",
+      "askedAs": [
+        "elegant serif version on cream",
+        "magazine style quote look",
+        "slow classy light theme",
+        "элегантный шрифт с засечками на светлом",
+        "как в журнале, спокойно"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#b5562f"
+      }
+    },
+    {
+      "id": "snappy-tech",
+      "label": "Snappy Tech",
+      "description": "Fast, tight cascade in bold Space Grotesk with an electric blue ripple on near-black.",
+      "askedAs": [
+        "quick punchy tech look",
+        "make it faster and bolder",
+        "startup product promo style",
+        "быстро и дерзко, техно стиль",
+        "сделай резче и быстрее"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "speed": 2,
+        "lag": 6,
+        "accent": "#3b82f6",
+        "background": "#0b0d12"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospace text on a deep slate background with a soft mint ripple, like a developer console.",
+      "askedAs": [
+        "code terminal style",
+        "monospace developer look",
+        "dark console with green accent",
+        "как в терминале, моноширинный",
+        "стиль для программистов"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 400,
+        "background": "#11161c",
+        "ink": "#d6dde5",
+        "accent": "#5fd3a5",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "Thin, oversized type that ripples in slowly with a long lag and a muted lavender accent.",
+      "askedAs": [
+        "slow dreamy reveal",
+        "calm big thin text",
+        "meditative long ripple",
+        "медленно и плавно, крупный тонкий текст",
+        "спокойная мечтательная анимация"
+      ],
+      "props": {
+        "fontWeight": 200,
+        "scale": 1.3,
+        "speed": 0.5,
+        "lag": 30,
+        "accent": "#a99bd6",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "bold-poster",
+      "label": "Bold Poster",
+      "description": "Heavy Bricolage Grotesque on light ground with a confident red ripple, big and graphic.",
+      "askedAs": [
+        "big bold poster text",
+        "loud heavy headline on white",
+        "graphic red accent look",
+        "крупный жирный плакатный текст",
+        "яркий заголовок на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 800,
+        "scale": 1.2,
+        "accent": "#d93a2b",
+        "delay": 10
+      }
+    }
+  ]
+}

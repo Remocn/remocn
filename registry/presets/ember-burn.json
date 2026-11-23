@@ -1,0 +1,103 @@
+{
+  "component": "ember-burn",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-smoulder",
+      "label": "Slow Smoulder",
+      "description": "A patient burn from a few soft-edged patches with gentle heat haze and a deep amber glow.",
+      "askedAs": [
+        "slow gentle burn transition",
+        "soft smouldering fade with fire",
+        "calm cinematic burn away",
+        "медленное тлеющее сгорание кадра",
+        "плавный переход с мягким огнём"
+      ],
+      "props": {
+        "speed": 0.5,
+        "patches": 3,
+        "edgeSoftness": 0.15,
+        "heat": 0.3,
+        "glowColor": "#e0662a",
+        "emberAmount": 0.3
+      }
+    },
+    {
+      "id": "flash-fire",
+      "label": "Flash Fire",
+      "description": "A fast, violent burn igniting from many points at once with strong heat warp and a storm of sparks.",
+      "askedAs": [
+        "fast aggressive fire transition",
+        "quick explosive burn",
+        "frame bursts into flames",
+        "быстрое резкое возгорание кадра",
+        "взрывной огненный переход"
+      ],
+      "props": {
+        "speed": 2.5,
+        "patches": 12,
+        "heat": 1.2,
+        "emberAmount": 0.9,
+        "glowColor": "#ffa040"
+      }
+    },
+    {
+      "id": "paper-char",
+      "label": "Paper Char",
+      "description": "Crisp, hard-edged char lines spreading evenly like burning paper, with little distortion and sparse embers.",
+      "askedAs": [
+        "burning paper edge effect",
+        "sharp charred edges transition",
+        "clean burn without wobble",
+        "эффект горящей бумаги",
+        "чёткие обугленные края"
+      ],
+      "props": {
+        "edgeSoftness": 0.015,
+        "contentBias": 0.1,
+        "heat": 0.1,
+        "emberAmount": 0.2,
+        "glowColor": "#d9541e"
+      }
+    },
+    {
+      "id": "spirit-flame",
+      "label": "Spirit Flame",
+      "description": "A cool blue burn that consumes highlights first, shimmering with heat and drifting pale sparks.",
+      "askedAs": [
+        "blue fire transition",
+        "cold magical burn",
+        "gas flame scene change",
+        "переход с синим пламенем",
+        "холодный магический огонь"
+      ],
+      "props": {
+        "glowColor": "#4a8cff",
+        "contentBias": 0.9,
+        "heat": 0.7,
+        "emberAmount": 0.6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "golden-ash",
+      "label": "Golden Ash",
+      "description": "A warm golden burn led by bright content, carried away in a dense drift of glittering embers.",
+      "askedAs": [
+        "golden sparks dissolve",
+        "luxury gold fire transition",
+        "frame turns into glowing ash",
+        "золотые искры при переходе",
+        "кадр рассыпается золотым пеплом"
+      ],
+      "props": {
+        "glowColor": "#f2b84b",
+        "emberAmount": 1,
+        "contentBias": 1,
+        "patches": 7,
+        "edgeSoftness": 0.1
+      }
+    }
+  ]
+}

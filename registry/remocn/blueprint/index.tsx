@@ -1,13 +1,8 @@
 "use client";
 
 import { type ReactNode, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type BlueprintLabels = {
   width: string;
@@ -75,8 +70,8 @@ export function Blueprint({
   labels,
   speed = blueprintDefaults.speed,
 }: BlueprintProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const text = { ...blueprintDefaults.labels, ...labels };
   const t = (frame / fps) * 30 * speed;

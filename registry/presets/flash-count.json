@@ -1,0 +1,126 @@
+{
+  "component": "flash-count",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "darkroom-serif",
+      "label": "Darkroom Serif",
+      "description": "A warm, slow serif count on near-black with an amber safelight accent.",
+      "askedAs": [
+        "elegant serif counter on dark background",
+        "slow cinematic number reveal with warm glow",
+        "film darkroom style stat",
+        "элегантный счётчик с засечками на тёмном фоне",
+        "медленный кинематографичный счётчик"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#14110f",
+        "ink": "#f2e8da",
+        "accent": "#d98e3f",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "gallery-print",
+      "label": "Gallery Print",
+      "description": "A light, airy gallery look with thin type on warm paper and a soft graphite accent.",
+      "askedAs": [
+        "light minimal counter for a photo exhibit",
+        "clean white number reveal",
+        "paper-like bright stat",
+        "светлый минималистичный счётчик",
+        "счётчик в стиле галереи"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f2ec",
+        "ink": "#1f1d1a",
+        "accent": "#6b6660",
+        "fontWeight": 200,
+        "shadow": false
+      }
+    },
+    {
+      "id": "rapid-shutter",
+      "label": "Rapid Shutter",
+      "description": "A fast, bold mono count that snaps to the flash early with a crisp cool accent.",
+      "askedAs": [
+        "fast punchy number counter",
+        "quick bold stat with flash",
+        "technical monospace counter",
+        "быстрый жирный счётчик",
+        "техничный моноширинный счётчик"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 700,
+        "speed": 2,
+        "flashAt": 30,
+        "accent": "#7fb2e5",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "long-exposure",
+      "label": "Long Exposure",
+      "description": "An oversized, slow-building count with a delayed flash and deep blue night tones.",
+      "askedAs": [
+        "big slow dramatic number",
+        "night sky style counter",
+        "huge stat with delayed flash",
+        "большой медленный драматичный счётчик",
+        "ночной счётчик с поздней вспышкой"
+      ],
+      "props": {
+        "scale": 1.35,
+        "speed": 0.5,
+        "flashAt": 110,
+        "background": "#0b1220",
+        "ink": "#e6ecf5",
+        "accent": "#8fa8d6"
+      }
+    },
+    {
+      "id": "editorial-fraunces",
+      "label": "Editorial",
+      "description": "A magazine-style heavy serif on cream with a muted terracotta accent.",
+      "askedAs": [
+        "magazine style number reveal",
+        "bold serif stat on cream",
+        "editorial photo counter",
+        "журнальный стиль счётчика",
+        "жирный шрифт с засечками на кремовом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "fontWeight": 800,
+        "background": "#efe6d8",
+        "ink": "#2a211b",
+        "accent": "#b5573a"
+      }
+    },
+    {
+      "id": "overlay-clean",
+      "label": "Clean Overlay",
+      "description": "A flat, shadowless Geist count with a short delay, made to sit cleanly over footage.",
+      "askedAs": [
+        "simple counter over video",
+        "flat number without shadow",
+        "minimal overlay stat",
+        "простой счётчик поверх видео",
+        "плоский счётчик без тени"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "fontWeight": 500,
+        "shadow": false,
+        "delay": 15,
+        "scale": 0.8
+      }
+    }
+  ]
+}

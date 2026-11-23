@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const threeStepsConfig: ComponentConfig = {
   componentName: "ThreeSteps",
@@ -13,11 +19,6 @@ export const threeStepsConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     eyebrow: {
       type: "text-content",
       default: "How it works",
@@ -28,6 +29,30 @@ export const threeStepsConfig: ComponentConfig = {
       default: "Your launch video, shipped",
       description: "Outcome",
     },
+    travel: {
+      type: "number",
+      default: 18,
+      min: 4,
+      max: 40,
+      step: 1,
+      description: "Travel (frames)",
+      hiddenFromList: false,
+    },
+    pause: {
+      type: "number",
+      default: 10,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Pause (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Manrope", grain: true }),
     speed: {
       type: "number",
       default: 1,

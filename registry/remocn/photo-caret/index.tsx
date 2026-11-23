@@ -2,6 +2,7 @@
 
 import { loadFont as loadFigtree } from "@remotion/google-fonts/Figtree";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -12,9 +13,9 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -32,10 +33,23 @@ export interface PhotoCaretProps {
   images?: string[];
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Italic typeface for the accent word. Load it yourself; Instrument Serif by default. */
+  accentFont?: string;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   firstStep?: number;
+  /** Frames on the finished line after the accent word lands; the slow push runs through it. */
+  hold?: number;
+  /** Size of the copy and photos, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -117,10 +131,14 @@ interface Metrics {
   cap: number;
 }
 
-function buildMetrics(_version: number): Metrics {
+function buildMetrics(
+  _version: number,
+  sansFamily: string,
+  serifFamily: string,
+): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
-  const sansFont = `400 ${FONT_PX}px "${figtree.fontFamily}"`;
-  const serifFont = `italic 400 ${FONT_PX * SERIF_SCALE}px "${serif.fontFamily}"`;
+  const sansFont = `400 ${FONT_PX}px "${sansFamily}"`;
+  const serifFont = `italic 400 ${FONT_PX * SERIF_SCALE}px "${serifFamily}"`;
   const cache: Record<string, number> = {};
   let cap = 0.7;
   if (ctx) {
@@ -143,7 +161,7 @@ function buildMetrics(_version: number): Metrics {
   };
 }
 
-function useMetrics() {
+function useMetrics(sansFamily: string, serifFamily: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("photo-caret: measuring"));
   const released = useRef(false);
@@ -156,8 +174,8 @@ function useMetrics() {
     Promise.all([
       figtree.waitUntilDone(),
       serif.waitUntilDone(),
-      document.fonts.load(`400 ${FONT_PX}px "${figtree.fontFamily}"`),
-      document.fonts.load(`italic 400 ${FONT_PX}px "${serif.fontFamily}"`),
+      document.fonts.load(`400 ${FONT_PX}px "${sansFamily}"`),
+      document.fonts.load(`italic 400 ${FONT_PX}px "${serifFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -171,8 +189,11 @@ function useMetrics() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMetrics(version), [version]);
+  }, [handle, sansFamily, serifFamily]);
+  return useMemo(
+    () => buildMetrics(version, sansFamily, serifFamily),
+    [version, sansFamily, serifFamily],
+  );
 }
 
 const parseLines = (text: string) =>
@@ -199,10 +220,11 @@ const hopTimes = (count: number, firstStep: number) => {
 export const photoCaretLength = (
   text = "Your launch, / your name / on it.",
   firstStep = 12,
+  hold = BEAT.hold,
 ) => {
   const n = parseLines(text).flat().length;
   const hops = hopTimes(n, firstStep);
-  return hops[hops.length - 1] + BEAT.settle + BEAT.hold;
+  return hops[hops.length - 1] + BEAT.settle + hold;
 };
 
 type Sat = { x: number; y: number; s: number; far: boolean; r: number };
@@ -227,6 +249,22 @@ const SATS_TALL: Sat[] = [
   { x: 0.56, y: 0.95, s: 0.11, far: true, r: 0 },
 ];
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PhotoCaret({
   text = "Your launch, / your name / on it.",
   accentWord = "it.",
@@ -234,13 +272,21 @@ export function PhotoCaret({
   images,
   accent,
   ink,
+  background,
+  fontFamily = figtree.fontFamily,
+  accentFont = serif.fontFamily,
   theme = "dark",
   ground,
   groundParams,
   firstStep = 12,
+  hold = BEAT.hold,
+  scale: layerScale = 1,
+  delay = 0,
+  speed = 1,
 }: PhotoCaretProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const glide = useGlide();
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -248,7 +294,7 @@ export function PhotoCaret({
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
   const bg = gshParams(preset, gParams).background;
   const portrait = H > W * 1.1;
-  const m = useMetrics();
+  const m = useMetrics(fontFamily, accentFont);
   const tileSrc = src ?? staticFile("templates/brand-guidelines/ceramics.jpg");
   const satSrc = (images ?? DEFAULT_IMAGES.map((p) => staticFile(p))).filter(
     Boolean,
@@ -371,57 +417,99 @@ export function PhotoCaret({
     }
     return { cx, cy, s: Math.exp(ls) };
   };
-  const cam = camAt(frame);
-  const push =
+  const pushAt = (t: number) =>
     1 +
     0.03 *
       interpolate(
-        frame,
-        [payoff + BEAT.settle, payoff + BEAT.settle + BEAT.hold - 12],
+        t,
+        [payoff + BEAT.settle, payoff + BEAT.settle + hold - 12],
         [0, 1],
         { ...CLAMP, easing: PUSH },
       );
-  const scale = cam.s * push;
-  const ox = W / 2 - cam.cx * scale;
-  const oy = H / 2 - cam.cy * scale;
-  const toX = (x: number) => ox + x * scale;
-  const toY = (y: number) => oy + y * scale;
-
-  let tx = slots[0].x;
-  let ty = slots[0].y;
-  let squash = 0;
-  let lead = 0;
-  for (let k = 0; k < n; k++) {
-    const f = frame - hops[k];
-    if (f < 0) break;
-    const p = spring({ frame: f, fps, config: CARD });
-    const a = slots[k];
-    const b = slots[k + 1];
-    const sameLine = k < n - 1 && words[k].line === words[k + 1].line;
-    const lift = sameLine ? 0.16 * F : 0.06 * F;
-    tx = a.x + (b.x - a.x) * p;
-    ty = a.y + (b.y - a.y) * p - lift * Math.sin(Math.PI * Math.min(1, p));
-    const pPrev = spring({ frame: f - 1, fps, config: CARD });
-    lead = Math.max(
-      lead,
-      Math.abs(p - pPrev) * Math.hypot(b.x - a.x, b.y - a.y),
+  const viewAt = (t: number) => {
+    const c = camAt(t);
+    const s = c.s * pushAt(t);
+    return { s, ox: W / 2 - c.cx * s, oy: H / 2 - c.cy * s };
+  };
+  const push = pushAt(frame);
+  const { s: scale, ox, oy } = viewAt(frame);
+  // Chrome parks a glyph raster on a whole pixel vertically for as long as the
+  // matrix is axis-aligned, so the words click along under the camera. The
+  // drawing is marked so they lean off that grid while it moves. The camera's
+  // springs have long tails, so this compares neighbouring frames, scale
+  // weighed at the frame's width.
+  const viewDelta = (a: number, b: number) => {
+    const p = viewAt(a);
+    const q = viewAt(b);
+    return Math.max(
+      Math.abs(p.ox - q.ox),
+      Math.abs(p.oy - q.oy),
+      Math.abs(p.s - q.s) * W,
     );
-    squash = interpolate(f, [0, 3, 9], [0, 1, 0], CLAMP);
-  }
+  };
+  const camMoving =
+    viewDelta(frame + 1, frame) > 1e-3 || viewDelta(frame, frame - 1) > 1e-3;
 
-  const intro = spring({ frame, fps, config: CAMERA, durationInFrames: 16 });
+  const tileAt = (fr: number) => {
+    let tx = slots[0].x;
+    let ty = slots[0].y;
+    let squash = 0;
+    let lead = 0;
+    for (let k = 0; k < n; k++) {
+      const f = fr - hops[k];
+      if (f < 0) break;
+      const p = spring({ frame: f, fps, config: CARD });
+      const a = slots[k];
+      const b = slots[k + 1];
+      const sameLine = k < n - 1 && words[k].line === words[k + 1].line;
+      const lift = sameLine ? 0.16 * F : 0.06 * F;
+      tx = a.x + (b.x - a.x) * p;
+      ty = a.y + (b.y - a.y) * p - lift * Math.sin(Math.PI * Math.min(1, p));
+      const pPrev = spring({ frame: f - 1, fps, config: CARD });
+      lead = Math.max(
+        lead,
+        Math.abs(p - pPrev) * Math.hypot(b.x - a.x, b.y - a.y),
+      );
+      squash = interpolate(f, [0, 3, 9], [0, 1, 0], CLAMP);
+    }
+
+    const intro = spring({
+      frame: fr,
+      fps,
+      config: CAMERA,
+      durationInFrames: 16,
+    });
+    const view = viewAt(fr);
+    const sx = view.ox + tx * view.s;
+    const sy = view.oy + ty * view.s;
+    const sw = tw * view.s;
+    const sh = th * view.s;
+    return {
+      tx,
+      squash,
+      lead,
+      intro,
+      tileW: bigW + (sw - bigW) * intro,
+      tileH: bigH + (sh - bigH) * intro,
+      tileX: bigX + (sx - bigX) * intro,
+      tileY: bigY + (sy - bigY) * intro,
+    };
+  };
   const bigH = H * (portrait ? 0.36 : 0.56);
   const bigW = bigH * 0.78;
   const bigX = W / 2 - bigW / 2;
   const bigY = H / 2 - bigH / 2;
-  const sx = toX(tx);
-  const sy = toY(ty);
-  const sw = tw * scale;
-  const sh = th * scale;
-  const tileW = bigW + (sw - bigW) * intro;
-  const tileH = bigH + (sh - bigH) * intro;
-  const tileX = bigX + (sx - bigX) * intro;
-  const tileY = bigY + (sy - bigY) * intro;
+  const { tx, squash, lead, intro, tileW, tileH, tileX, tileY } = tileAt(frame);
+  // Layout rounds a box's edges to whole pixels, so the tile hopping by
+  // `left`/`top` steps unevenly; while it travels, it is placed by a
+  // transform instead. Under 1/64px a frame, layout's own grid, it keeps the
+  // plain layout, so its resting frames are untouched.
+  const tileTravels = [frame - 1, frame + 1].some((fr) => {
+    const o = tileAt(fr);
+    return (
+      Math.abs(o.tileX - tileX) > 1 / 64 || Math.abs(o.tileY - tileY) > 1 / 64
+    );
+  });
   const introBlur = Math.abs(
     intro -
       spring({ frame: frame - 1, fps, config: CAMERA, durationInFrames: 16 }),
@@ -440,6 +528,17 @@ export function PhotoCaret({
     if (far) return i * 4 - 2;
     return payoff + 2 + i * 3;
   };
+
+  // A word rising into place by its `y` attribute clicks the same way.
+  const wordRising = words.some((_, i) => {
+    const f = frame - hops[i];
+    return f > -1 && f < BEAT.reveal + 1;
+  });
+  // The camera holds the words under a scale, off the pixel grid, where
+  // dropping the lean would snap them to the nearest pixel. A drawing in SVG
+  // leans only while its mark says it moves, so it says so there too.
+  const camOffGrid = Math.abs(scale - 1) > 1e-6;
+  const textTilt = camMoving || wordRising || camOffGrid;
 
   const renderWord = (w: (typeof words)[number], i: number) => {
     const start = hops[i];
@@ -483,7 +582,7 @@ export function PhotoCaret({
             y={w.base + rise}
             fill={color}
             filter={blur > 0.1 ? `url(#${filtId})` : undefined}
-            fontFamily={w.accent ? serif.fontFamily : figtree.fontFamily}
+            fontFamily={w.accent ? accentFont : fontFamily}
             fontStyle={w.accent ? "italic" : "normal"}
             fontWeight={400}
             fontSize={w.accent ? F * SERIF_SCALE : F}
@@ -511,22 +610,35 @@ export function PhotoCaret({
     const size = Math.min(W, H) * st.s * (portrait ? 1.6 : 1);
     const wv = size * 0.8;
     const hv = size;
-    const par = (push - 1) * (st.far ? -0.6 : 1.4);
-    const x = W * st.x + (W * st.x - W / 2) * par;
-    const y = H * st.y + (H * st.y - H / 2) * par;
-    const dy = (1 - Math.min(1, p)) * size * 0.25;
+    // Laid out where the push leaves it; the parallax drift and the rise
+    // there are a transform, since layout rounds a box to whole pixels and
+    // a photo eased by `left`/`top` steps along.
+    const parOf = (k: number) => (k - 1) * (st.far ? -0.6 : 1.4);
+    const par = parOf(push);
+    const parEnd = parOf(pushAt(Number.POSITIVE_INFINITY));
+    const x = W * st.x + (W * st.x - W / 2) * parEnd;
+    const y = H * st.y + (H * st.y - H / 2) * parEnd;
+    const dx = (W * st.x - W / 2) * par - (W * st.x - W / 2) * parEnd;
+    const dy =
+      (H * st.y - H / 2) * par -
+      (H * st.y - H / 2) * parEnd +
+      (1 - Math.min(1, p)) * size * 0.25;
+    const shift =
+      Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3
+        ? `translate(${dx}px, ${dy}px) `
+        : "";
     return (
       <div
         key={`sat-${i}`}
         style={{
           position: "absolute",
           left: x - wv / 2,
-          top: y - hv / 2 + dy,
+          top: y - hv / 2,
           width: wv,
           height: hv,
           borderRadius: wv * 0.06,
           overflow: "hidden",
-          transform: `scale(${0.4 + 0.6 * p}) rotate(${st.r}deg)`,
+          transform: `${shift}scale(${0.4 + 0.6 * p}) rotate(${st.r}deg)`,
           opacity: interpolate(p, [0, 0.35], [0, st.far ? 0.5 : 1], CLAMP),
           filter: st.far ? `blur(${6 * (Math.min(W, H) / 720)}px)` : undefined,
           boxShadow: st.far ? undefined : c.shadow,
@@ -542,51 +654,73 @@ export function PhotoCaret({
   };
 
   return (
-    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${portrait ? "90% 46%" : "62% 70%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
-        }}
-      />
-      {sats.map((st, i) => renderSat(st, i, "far"))}
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0, overflow: "visible" }}
-        aria-hidden
-      >
-        <g transform={`translate(${ox} ${oy}) scale(${scale})`}>
-          {words.map((w, i) => renderWord(w, i))}
-        </g>
-      </svg>
-      {sats.map((st, i) => renderSat(st, i, "near"))}
-      <div
-        style={{
-          position: "absolute",
-          left: tileX,
-          top: tileY,
-          width: tileW,
-          height: tileH,
-          borderRadius: Math.max(6, tileW * 0.07),
-          overflow: "hidden",
-          boxShadow: c.shadow,
-          border: `1px solid ${c.border}`,
-          transform: `scale(${tileScale})`,
-          filter: moveBlur > 0.3 ? `blur(${moveBlur * 0.35}px)` : undefined,
-        }}
-      >
-        <Img
-          src={tileSrc}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+    <AbsoluteFill
+      style={{
+        background: background === undefined ? bg : undefined,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={preset}
+            params={gParams}
+            timeOffset={c.groundOffset}
+            timeScale={0.5}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${portrait ? "90% 46%" : "62% 70%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
         />
-      </div>
+      )}
+      <ScaleLayer scale={layerScale}>
+        {sats.map((st, i) => renderSat(st, i, "far"))}
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{
+            position: "absolute",
+            inset: 0,
+            overflow: "visible",
+            transform: glide(textTilt),
+          }}
+          aria-hidden
+        >
+          <g transform={`translate(${ox} ${oy}) scale(${scale})`}>
+            {words.map((w, i) => renderWord(w, i))}
+          </g>
+        </svg>
+        {sats.map((st, i) => renderSat(st, i, "near"))}
+        <div
+          style={{
+            position: "absolute",
+            left: tileTravels ? 0 : tileX,
+            top: tileTravels ? 0 : tileY,
+            width: tileW,
+            height: tileH,
+            borderRadius: Math.max(6, tileW * 0.07),
+            overflow: "hidden",
+            boxShadow: c.shadow,
+            border: `1px solid ${c.border}`,
+            transform: `${tileTravels ? `translate(${tileX}px, ${tileY}px) ` : ""}scale(${tileScale})`,
+            filter: moveBlur > 0.3 ? `blur(${moveBlur * 0.35}px)` : undefined,
+          }}
+        >
+          <Img
+            src={tileSrc}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

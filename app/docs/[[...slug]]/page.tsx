@@ -8,6 +8,7 @@ import { PageFooter } from "@/components/docs/shell/page-footer";
 import { PageHeader } from "@/components/docs/shell/page-header";
 import { getPageLinks } from "@/components/docs/shell/page-links";
 import { JsonLd } from "@/components/json-ld";
+import { docsSeoDescription, docsSeoTitle } from "@/lib/docs-seo";
 import { docsPageJsonLd, faqFromMdx } from "@/lib/structured-data";
 import { getMDXComponents } from "@/mdx-components";
 import { source } from "@/source";
@@ -30,6 +31,11 @@ export default async function Page(props: {
   const raw = await (
     data as typeof data & { getText: (type: "raw") => Promise<string> }
   ).getText("raw");
+  // A component page says in plain text that it is a Remotion component of
+  // its kind; the bare descriptions rarely do, and search reads the body too.
+  const description = data.component
+    ? docsSeoDescription(seoPageFor(params.slug ?? [], data))
+    : data.description;
   const jsonLd = docsPageJsonLd({
     url: page.url,
     title: data.title,
@@ -40,6 +46,7 @@ export default async function Page(props: {
       : "/hero.png",
     component: data.component,
     faq: faqFromMdx(raw),
+    dateModified: data.lastModified,
   });
 
   return (
@@ -51,7 +58,7 @@ export default async function Page(props: {
         <article className="flex min-w-0 flex-1 flex-col px-5 pt-7 pb-14 lg:px-10 lg:pt-9 lg:pb-16 xl:mx-auto xl:w-full xl:max-w-(--docs-article-max) xl:px-(--docs-article-pad)">
           <PageHeader
             title={data.title}
-            description={data.description}
+            description={description}
             links={links}
             previous={previous}
             next={next}
@@ -76,6 +83,21 @@ export function generateStaticParams() {
   return source.generateParams();
 }
 
+function seoPageFor(
+  slug: string[],
+  data: { title: string; description?: string; component?: string },
+) {
+  const parent =
+    slug.length > 1 ? source.getPage(slug.slice(0, -1)) : undefined;
+  return {
+    slug,
+    title: data.title,
+    description: data.description,
+    component: data.component,
+    parentTitle: parent?.data.title,
+  };
+}
+
 export async function generateMetadata(props: {
   params: Promise<{ slug?: string[] }>;
 }) {
@@ -92,9 +114,12 @@ export async function generateMetadata(props: {
     };
   }
   const ogUrl = `/og/docs/${slug.join("/")}`;
+  const seoPage = seoPageFor(slug, data);
+  const title = docsSeoTitle(seoPage);
+  const description = docsSeoDescription(seoPage);
   return {
-    title: data.title,
-    description: data.description,
+    title,
+    description,
     // Agents that browse with a Chrome user agent find the Markdown here.
     alternates: {
       canonical: page.url,
@@ -107,14 +132,14 @@ export async function generateMetadata(props: {
       url: page.url,
       siteName: "Remocn",
       locale: "en_US",
-      title: data.title,
-      description: data.description,
+      title,
+      description,
       images: [{ url: ogUrl, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
-      title: data.title,
-      description: data.description,
+      title,
+      description,
       images: [ogUrl],
     },
   };

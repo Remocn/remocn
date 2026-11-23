@@ -4,19 +4,14 @@ import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: hanken } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -52,6 +47,22 @@ export interface RatingLaurelProps {
   categories?: RatingCategory[];
   device?: "web" | "phone";
   accent?: string;
+  /** Text color of the page copy; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the page. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Label of the install button. */
+  ctaLabel?: string;
+  /** Price in the phone's bottom bar. */
+  priceLabel?: string;
+  /** Replaces the remocn mark in the page header. */
+  logo?: React.ReactNode;
+  /** Size of the window or phone, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -136,6 +147,8 @@ const CAM = Easing.bezier(0.87, 0, 0.13, 1);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const BEAT = {
   laurel: 4,
@@ -293,6 +306,7 @@ function RollingNumber({
   size: number;
   color: string;
 }) {
+  const glide = useGlide();
   const lh = size * 1.1;
   const travel = lh * 0.3;
   let di = -1;
@@ -337,7 +351,7 @@ function RollingNumber({
               inset: 0,
               textAlign: "center",
               opacity: o,
-              transform: `translateY(${y}px)`,
+              transform: `translateY(${y}px)${glide(midway(s))}`,
             }}
           >
             {val(n)}
@@ -679,6 +693,22 @@ function Phone({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RatingLaurel({
   rating = 4.96,
   title = "Loved by builders",
@@ -688,21 +718,41 @@ export function RatingLaurel({
   categories = DEFAULT_CATEGORIES,
   device = "web",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hanken,
+  ctaLabel = "Install",
+  priceLabel = "Free",
+  logo,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   ground,
   groundParams,
 }: RatingLaurelProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  // `glide` names the card strip's travel below, so the glide mark is `tilt`.
+  const tilt = useGlide();
+  const rawFrame = useSceneFrame();
+  const frame = Math.max(0, rawFrame - delay);
+  const { fps, width, height } = useSceneConfig();
   const f = frame * speed;
   const dark = theme === "dark";
-  const c = dark ? DARK : LIGHT;
+  const palette = dark ? DARK : LIGHT;
+  const c = ink === undefined ? palette : { ...palette, ink };
   const tall = height > width;
   const phone = device === "phone" || tall;
 
-  const sp = (at: number, config: typeof CARD) =>
-    spring({ frame: f - at, fps, config });
+  const spAt = (t: number, at: number, config: typeof CARD) =>
+    spring({ frame: t - at, fps, config });
+  const sp = (at: number, config: typeof CARD) => spAt(f, at, config);
+  // Whether a value of time is moving on this frame: springs overshoot and
+  // trail off, so it is read against the neighbouring frames instead of a
+  // progress. Nothing moves while `delay` holds the first frame.
+  const stirs = (at: (t: number) => number, eps = 1e-5) =>
+    rawFrame >= delay &&
+    (Math.abs(at(f + speed) - at(f)) > eps ||
+      Math.abs(at(f) - at(f - speed)) > eps);
   const fadeUp = (at: number, dy = 14): React.CSSProperties => {
     const v = interpolate(f, [at, at + 14], [0, 1], {
       ...clamp,
@@ -710,28 +760,35 @@ export function RatingLaurel({
     });
     return {
       opacity: v,
-      transform: `translateY(${(1 - v) * dy}px)`,
+      transform: `translateY(${(1 - v) * dy}px)${tilt(dy !== 0 && midway(v))}`,
     };
   };
 
-  const groundEl = (
-    <>
-      <GshGround
-        preset={ground ?? (dark ? "earthshine" : "paper-crease")}
-        params={groundParams}
-        timeOffset={5}
-        timeScale={0.35}
+  const groundEl =
+    background !== undefined ? (
+      <AbsoluteFill
+        style={{
+          background: background === "transparent" ? undefined : background,
+        }}
       />
-      {dark ? (
-        <AbsoluteFill
-          style={{
-            background:
-              "radial-gradient(80% 70% at 40% 40%, rgba(3,5,12,0.5), rgba(3,5,12,0) 100%)",
-          }}
+    ) : (
+      <>
+        <GshGround
+          preset={ground ?? (dark ? "earthshine" : "paper-crease")}
+          params={groundParams}
+          timeOffset={5}
+          timeScale={0.35}
         />
-      ) : null}
-    </>
-  );
+        {dark ? (
+          <AbsoluteFill
+            style={{
+              background:
+                "radial-gradient(80% 70% at 40% 40%, rgba(3,5,12,0.5), rgba(3,5,12,0) 100%)",
+            }}
+          />
+        ) : null}
+      </>
+    );
 
   const hero = (scale: number) => (
     <div
@@ -800,243 +857,255 @@ export function RatingLaurel({
       : { x: width * 0.7, y: height / 2 };
     const rise = sp(0, HEAVY);
     const s = width / (tall ? 1080 : 1280);
-    const lineIn = (d: number) =>
-      interpolate(f, [18 + d, 34 + d], [0, 1], { ...clamp, easing: ENTER });
+    const lineAt = (t: number, d: number) =>
+      interpolate(t, [18 + d, 34 + d], [0, 1], { ...clamp, easing: ENTER });
+    const lineIn = (d: number) => lineAt(f, d);
     const barIn = sp(BEAT.cta, CARD);
     return (
       <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
         {groundEl}
-        <div
-          style={{
-            position: "absolute",
-            left: phoneC.x - BW / 2,
-            top: phoneC.y - BH / 2,
-            width: BW,
-            height: BH,
-            transform: `translateY(${(1 - rise) * height * 0.7}px) scale(${pk * (1 + 0.02 * (f / 270))})`,
-          }}
-        >
-          <Phone dark={dark}>
-            <div style={{ position: "absolute", inset: 0, background: c.page }}>
-              <StatusBar color={c.ink} />
+        <ScaleLayer scale={scale}>
+          <div
+            style={{
+              position: "absolute",
+              left: phoneC.x - BW / 2,
+              top: phoneC.y - BH / 2,
+              width: BW,
+              height: BH,
+              // The slow push on the phone never rests, so it is always
+              // moving, and it carries every line on the screen.
+              transform: `translateY(${(1 - rise) * height * 0.7}px) scale(${pk * (1 + 0.02 * (f / 270))})${tilt(true)}`,
+            }}
+          >
+            <Phone dark={dark}>
               <div
-                style={{
-                  position: "absolute",
-                  top: 58,
-                  left: 20,
-                  right: 20,
-                  height: 40,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 22,
-                }}
+                style={{ position: "absolute", inset: 0, background: c.page }}
               >
-                <Icon d="M19 12H5M11 5l-7 7 7 7" size={22} color={c.ink} />
-                <div style={{ flex: 1 }} />
-                <Icon
-                  d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"
-                  size={20}
-                  color={c.ink}
-                />
-                <Icon
-                  d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"
-                  size={21}
-                  color={c.ink}
-                />
-              </div>
-              <div
-                style={{ position: "absolute", top: 104, left: 0, right: 0 }}
-              >
-                {hero(0.8)}
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 330,
-                  left: 22,
-                  right: 22,
-                  display: "flex",
-                  borderTop: `1px solid ${c.hair}`,
-                  borderBottom: `1px solid ${c.hair}`,
-                  padding: "12px 0",
-                  ...fadeUp(BEAT.categories - 4, 0),
-                }}
-              >
-                {categories.slice(0, 4).map((cat, i) => {
-                  const v = sp(BEAT.categories + i * 3, CHIP);
-                  return (
-                    <div
-                      key={cat.label}
-                      style={{
-                        flex: 1,
-                        paddingLeft: i === 0 ? 0 : 10,
-                        borderLeft: i === 0 ? "none" : `1px solid ${c.hair}`,
-                        opacity: Math.min(1, v * 1.5),
-                        transform: `translateY(${(1 - v) * 10}px)`,
-                      }}
-                    >
-                      <div style={{ fontSize: 13, color: c.muted }}>
-                        {cat.label}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 17,
-                          color: c.ink,
-                          fontVariantNumeric: "tabular-nums",
-                          marginTop: 2,
-                        }}
-                      >
-                        {cat.score.toFixed(1)}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 430,
-                  left: 22,
-                  display: "flex",
-                  gap: 28,
-                  transform: `translateX(${-glide}px)`,
-                }}
-              >
-                {[...reviews, ...reviews].map((r, i) => {
-                  const v = sp(BEAT.cards + Math.min(i, 4) * 3, CARD);
-                  return (
-                    <div
-                      key={`${r.name}-${i < reviews.length ? "a" : "b"}`}
-                      style={{
-                        opacity: Math.min(1, v * 1.4),
-                        transform: `translateX(${(1 - v) * 48}px)`,
-                      }}
-                    >
-                      <ReviewCard
-                        review={r}
-                        c={c}
-                        w={cardW}
-                        u={u * 0.92}
-                        lines={5}
-                        dark={dark}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 618,
-                  left: 22,
-                  right: 22,
-                  height: 48,
-                  borderRadius: 12,
-                  background: c.pill,
-                  color: c.ink,
-                  fontSize: 16,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  ...fadeUp(BEAT.cta + 6, 8),
-                }}
-              >
-                Show all {reviewCount} reviews
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 112,
-                  background: c.page,
-                  borderTop: `1px solid ${c.hair}`,
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  padding: "18px 22px 0",
-                  boxSizing: "border-box",
-                  transform: `translateY(${(1 - barIn) * 112}px)`,
-                }}
-              >
-                <div style={{ color: c.ink }}>
-                  <div style={{ fontSize: 18, fontWeight: 400 }}>Free</div>
-                  <div style={{ fontSize: 13, color: c.muted, marginTop: 3 }}>
-                    MIT licensed · own the code
-                  </div>
+                <StatusBar color={c.ink} />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 58,
+                    left: 20,
+                    right: 20,
+                    height: 40,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 22,
+                  }}
+                >
+                  <Icon d="M19 12H5M11 5l-7 7 7 7" size={22} color={c.ink} />
+                  <div style={{ flex: 1 }} />
+                  <Icon
+                    d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"
+                    size={20}
+                    color={c.ink}
+                  />
+                  <Icon
+                    d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"
+                    size={21}
+                    color={c.ink}
+                  />
+                </div>
+                <div
+                  style={{ position: "absolute", top: 104, left: 0, right: 0 }}
+                >
+                  {hero(0.8)}
                 </div>
                 <div
                   style={{
-                    width: 140,
+                    position: "absolute",
+                    top: 330,
+                    left: 22,
+                    right: 22,
+                    display: "flex",
+                    borderTop: `1px solid ${c.hair}`,
+                    borderBottom: `1px solid ${c.hair}`,
+                    padding: "12px 0",
+                    ...fadeUp(BEAT.categories - 4, 0),
+                  }}
+                >
+                  {categories.slice(0, 4).map((cat, i) => {
+                    const v = sp(BEAT.categories + i * 3, CHIP);
+                    const settling = stirs((t) =>
+                      spAt(t, BEAT.categories + i * 3, CHIP),
+                    );
+                    return (
+                      <div
+                        key={cat.label}
+                        style={{
+                          flex: 1,
+                          paddingLeft: i === 0 ? 0 : 10,
+                          borderLeft: i === 0 ? "none" : `1px solid ${c.hair}`,
+                          opacity: Math.min(1, v * 1.5),
+                          transform: `translateY(${(1 - v) * 10}px)${tilt(settling)}`,
+                        }}
+                      >
+                        <div style={{ fontSize: 13, color: c.muted }}>
+                          {cat.label}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 17,
+                            color: c.ink,
+                            fontVariantNumeric: "tabular-nums",
+                            marginTop: 2,
+                          }}
+                        >
+                          {cat.score.toFixed(1)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 430,
+                    left: 22,
+                    display: "flex",
+                    gap: 28,
+                    transform: `translateX(${-glide}px)`,
+                  }}
+                >
+                  {[...reviews, ...reviews].map((r, i) => {
+                    const v = sp(BEAT.cards + Math.min(i, 4) * 3, CARD);
+                    return (
+                      <div
+                        key={`${r.name}-${i < reviews.length ? "a" : "b"}`}
+                        style={{
+                          opacity: Math.min(1, v * 1.4),
+                          transform: `translateX(${(1 - v) * 48}px)`,
+                        }}
+                      >
+                        <ReviewCard
+                          review={r}
+                          c={c}
+                          w={cardW}
+                          u={u * 0.92}
+                          lines={5}
+                          dark={dark}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 618,
+                    left: 22,
+                    right: 22,
                     height: 48,
                     borderRadius: 12,
-                    background: accent,
-                    color: "#fff",
+                    background: c.pill,
+                    color: c.ink,
                     fontSize: 16,
-                    fontWeight: 400,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    boxShadow:
-                      "inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.12)",
+                    ...fadeUp(BEAT.cta + 6, 8),
                   }}
                 >
-                  Install
+                  Show all {reviewCount} reviews
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 112,
+                    background: c.page,
+                    borderTop: `1px solid ${c.hair}`,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    padding: "18px 22px 0",
+                    boxSizing: "border-box",
+                    transform: `translateY(${(1 - barIn) * 112}px)${tilt(stirs((t) => spAt(t, BEAT.cta, CARD)))}`,
+                  }}
+                >
+                  <div style={{ color: c.ink }}>
+                    <div style={{ fontSize: 18, fontWeight: 400 }}>
+                      {priceLabel}
+                    </div>
+                    <div style={{ fontSize: 13, color: c.muted, marginTop: 3 }}>
+                      MIT licensed · own the code
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      width: 140,
+                      height: 48,
+                      borderRadius: 12,
+                      background: accent,
+                      color: "#fff",
+                      fontSize: 16,
+                      fontWeight: 400,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow:
+                        "inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.12)",
+                    }}
+                  >
+                    {ctaLabel}
+                  </div>
                 </div>
               </div>
-            </div>
-          </Phone>
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            ...(tall
-              ? { left: 90 * s, right: 90 * s, top: height * 0.72 }
-              : { left: 96 * s, width: 470 * s, top: height / 2 - 120 * s }),
-            color: dark ? c.ink : "#15161B",
-            textAlign: tall ? "center" : "left",
-          }}
-        >
+            </Phone>
+          </div>
           <div
             style={{
-              fontSize: (tall ? 26 : 20) * s,
-              color: dark ? c.muted : "#4F5260",
-              fontVariantNumeric: "tabular-nums",
-              ...{
-                opacity: lineIn(0),
-                transform: `translateY(${(1 - lineIn(0)) * 10}px)`,
-              },
+              position: "absolute",
+              ...(tall
+                ? { left: 90 * s, right: 90 * s, top: height * 0.72 }
+                : { left: 96 * s, width: 470 * s, top: height / 2 - 120 * s }),
+              color: ink ?? (dark ? c.ink : "#15161B"),
+              textAlign: tall ? "center" : "left",
             }}
           >
-            {reviewCount} reviews
-          </div>
-          <div style={{ overflow: "hidden", paddingBottom: 8 * s }}>
             <div
               style={{
-                marginTop: 10 * s,
-                fontSize: (tall ? 84 : 62) * s,
-                fontWeight: 300,
-                lineHeight: 1.04,
-                letterSpacing: "-0.04em",
-                textWrap: "balance",
-                transform: `translateY(${(1 - lineIn(4)) * 105}%)`,
+                fontSize: (tall ? 26 : 20) * s,
+                color: dark ? c.muted : "#4F5260",
+                fontVariantNumeric: "tabular-nums",
+                ...{
+                  opacity: lineIn(0),
+                  transform: `translateY(${(1 - lineIn(0)) * 10}px)${tilt(midway(lineIn(0)))}`,
+                },
               }}
             >
-              Rated {rating.toFixed(2)} by the people who{" "}
-              <span
+              {reviewCount} reviews
+            </div>
+            <div style={{ overflow: "hidden", paddingBottom: 8 * s }}>
+              <div
                 style={{
-                  fontFamily: serif,
-                  fontStyle: "italic",
-                  letterSpacing: "-0.02em",
+                  marginTop: 10 * s,
+                  fontSize: (tall ? 84 : 62) * s,
+                  fontWeight: 300,
+                  lineHeight: 1.04,
+                  letterSpacing: "-0.04em",
+                  textWrap: "balance",
+                  transform: `translateY(${(1 - lineIn(4)) * 105}%)${tilt(stirs((t) => lineAt(t, 4) * 105, 1e-4))}`,
                 }}
               >
-                ship
-              </span>{" "}
-              with it.
+                Rated {rating.toFixed(2)} by the people who{" "}
+                <span
+                  style={{
+                    fontFamily: serif,
+                    fontStyle: "italic",
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  ship
+                </span>{" "}
+                with it.
+              </div>
             </div>
           </div>
-        </div>
+        </ScaleLayer>
       </AbsoluteFill>
     );
   }
@@ -1051,198 +1120,215 @@ export function RatingLaurel({
   const winH = 640;
   const winX = (1280 - winW) / 2;
   const winY = (720 - winH) / 2;
-  const cam = interpolate(f, [BEAT.camFrom, BEAT.camTo], [0, 1], {
-    ...clamp,
-    easing: CAM,
-  });
-  const zoom = 1.8 - 0.8 * cam;
   const focusY = winY + 215;
-  const ty = (1 - cam) * (360 - focusY);
-  const winIn = sp(0, HEAVY);
-  const push = 1 + 0.02 * interpolate(f, [BEAT.camTo, 270], [0, 1], clamp);
+  const camAt = (t: number) => {
+    const cam = interpolate(t, [BEAT.camFrom, BEAT.camTo], [0, 1], {
+      ...clamp,
+      easing: CAM,
+    });
+    const zoom = 1.8 - 0.8 * cam;
+    const ty = (1 - cam) * (360 - focusY);
+    const winIn = spAt(t, 0, HEAVY);
+    const push = 1 + 0.02 * interpolate(t, [BEAT.camTo, 270], [0, 1], clamp);
+    return { y: ty + (1 - winIn) * 30, k: zoom * push };
+  };
+  const view = camAt(f);
+  // The whole window rides this camera; the tolerances are those of a line
+  // 500px from the focus.
+  const camMoving =
+    stirs((t) => camAt(t).y, 1e-4) || stirs((t) => camAt(t).k, 1e-7);
   const s = width / 1280;
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
       {groundEl}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: 1280,
-          height: 720,
-          transform: `scale(${s})`,
-          transformOrigin: "0 0",
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `translateY(${ty + (1 - winIn) * 30}px) scale(${zoom * push})`,
-            transformOrigin: `640px ${focusY}px`,
+            left: 0,
+            top: 0,
+            width: 1280,
+            height: 720,
+            transform: `scale(${s})`,
+            transformOrigin: "0 0",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: winX,
-              top: winY,
-              width: winW,
-              height: winH,
-              borderRadius: 18,
-              background: c.page,
-              boxShadow: c.window,
-              overflow: "hidden",
+              inset: 0,
+              transform: `translateY(${view.y}px) scale(${view.k})${tilt(camMoving)}`,
+              transformOrigin: `640px ${focusY}px`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 60,
-                borderBottom: `1px solid ${c.hair}`,
-                display: "flex",
-                alignItems: "center",
-                padding: "0 32px",
-                opacity: interpolate(
-                  f,
-                  [BEAT.camFrom + 10, BEAT.camTo],
-                  [0, 1],
-                  {
-                    ...clamp,
-                    easing: ENTER,
-                  },
-                ),
-              }}
-            >
-              <div style={{ flex: 1 }}>
-                <RemocnLogo fontSize={22} color={c.ink} />
-              </div>
-              <div style={{ display: "flex", gap: 28, fontSize: 16 }}>
-                {["Components", "Templates", "Reviews"].map((t, i) => (
-                  <span key={t} style={{ color: i === 2 ? c.ink : c.muted }}>
-                    {t}
-                  </span>
-                ))}
-              </div>
-              <div
-                style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}
-              >
-                <div
-                  style={{
-                    height: 36,
-                    padding: "0 16px",
-                    borderRadius: 10,
-                    background: accent,
-                    color: "#fff",
-                    fontSize: 16,
-                    display: "flex",
-                    alignItems: "center",
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2)",
-                  }}
-                >
-                  Install
-                </div>
-              </div>
-            </div>
-            <div style={{ position: "absolute", top: 84, left: 0, right: 0 }}>
-              {hero(1)}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                top: 318,
-                left: 80,
-                right: 80,
-                display: "flex",
-                borderTop: `1px solid ${c.hair}`,
-                borderBottom: `1px solid ${c.hair}`,
-                padding: "16px 0",
-                ...fadeUp(BEAT.categories - 4, 0),
-              }}
-            >
-              {categories.map((cat, i) => {
-                const v = sp(BEAT.categories + i * 3, CHIP);
-                return (
-                  <div
-                    key={cat.label}
-                    style={{
-                      flex: 1,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      paddingLeft: i === 0 ? 0 : 20,
-                      borderLeft: i === 0 ? "none" : `1px solid ${c.hair}`,
-                      opacity: Math.min(1, v * 1.5),
-                      transform: `translateY(${(1 - v) * 10}px)`,
-                    }}
-                  >
-                    <Icon d={ICONS[cat.icon]} size={24} color={c.ink} />
-                    <div>
-                      <div style={{ fontSize: 16, color: c.muted }}>
-                        {cat.label}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 20,
-                          color: c.ink,
-                          fontVariantNumeric: "tabular-nums",
-                        }}
-                      >
-                        {cat.score.toFixed(1)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                top: 428,
-                left: 0,
-                right: 0,
-                paddingLeft: 80,
-                maskImage:
-                  "linear-gradient(90deg, transparent, #000 6%, #000 90%, transparent)",
+                left: winX,
+                top: winY,
+                width: winW,
+                height: winH,
+                borderRadius: 18,
+                background: c.page,
+                boxShadow: c.window,
+                overflow: "hidden",
               }}
             >
               <div
                 style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 60,
+                  borderBottom: `1px solid ${c.hair}`,
                   display: "flex",
-                  gap: 40,
-                  transform: `translateX(${-glide}px)`,
+                  alignItems: "center",
+                  padding: "0 32px",
+                  opacity: interpolate(
+                    f,
+                    [BEAT.camFrom + 10, BEAT.camTo],
+                    [0, 1],
+                    {
+                      ...clamp,
+                      easing: ENTER,
+                    },
+                  ),
                 }}
               >
-                {[...reviews, ...reviews].map((r, i) => {
-                  const v = sp(BEAT.cards + Math.min(i, 4) * 3, CARD);
+                <div style={{ flex: 1 }}>
+                  {logo ?? <RemocnLogo fontSize={22} color={c.ink} />}
+                </div>
+                <div style={{ display: "flex", gap: 28, fontSize: 16 }}>
+                  {["Components", "Templates", "Reviews"].map((t, i) => (
+                    <span key={t} style={{ color: i === 2 ? c.ink : c.muted }}>
+                      {t}
+                    </span>
+                  ))}
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: 36,
+                      padding: "0 16px",
+                      borderRadius: 10,
+                      background: accent,
+                      color: "#fff",
+                      fontSize: 16,
+                      display: "flex",
+                      alignItems: "center",
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2)",
+                    }}
+                  >
+                    {ctaLabel}
+                  </div>
+                </div>
+              </div>
+              <div style={{ position: "absolute", top: 84, left: 0, right: 0 }}>
+                {hero(1)}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  top: 318,
+                  left: 80,
+                  right: 80,
+                  display: "flex",
+                  borderTop: `1px solid ${c.hair}`,
+                  borderBottom: `1px solid ${c.hair}`,
+                  padding: "16px 0",
+                  ...fadeUp(BEAT.categories - 4, 0),
+                }}
+              >
+                {categories.map((cat, i) => {
+                  const v = sp(BEAT.categories + i * 3, CHIP);
+                  const settling = stirs((t) =>
+                    spAt(t, BEAT.categories + i * 3, CHIP),
+                  );
                   return (
                     <div
-                      key={`${r.name}-${i < reviews.length ? "a" : "b"}`}
+                      key={cat.label}
                       style={{
-                        opacity: Math.min(1, v * 1.4),
-                        transform: `translateX(${(1 - v) * 48}px)`,
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        paddingLeft: i === 0 ? 0 : 20,
+                        borderLeft: i === 0 ? "none" : `1px solid ${c.hair}`,
+                        opacity: Math.min(1, v * 1.5),
+                        transform: `translateY(${(1 - v) * 10}px)${tilt(settling)}`,
                       }}
                     >
-                      <ReviewCard
-                        review={r}
-                        c={c}
-                        w={cardW}
-                        u={1}
-                        lines={4}
-                        dark={dark}
-                      />
+                      <Icon d={ICONS[cat.icon]} size={24} color={c.ink} />
+                      <div>
+                        <div style={{ fontSize: 16, color: c.muted }}>
+                          {cat.label}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 20,
+                            color: c.ink,
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
+                          {cat.score.toFixed(1)}
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
               </div>
+              <div
+                style={{
+                  position: "absolute",
+                  top: 428,
+                  left: 0,
+                  right: 0,
+                  paddingLeft: 80,
+                  maskImage:
+                    "linear-gradient(90deg, transparent, #000 6%, #000 90%, transparent)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 40,
+                    transform: `translateX(${-glide}px)`,
+                  }}
+                >
+                  {[...reviews, ...reviews].map((r, i) => {
+                    const v = sp(BEAT.cards + Math.min(i, 4) * 3, CARD);
+                    return (
+                      <div
+                        key={`${r.name}-${i < reviews.length ? "a" : "b"}`}
+                        style={{
+                          opacity: Math.min(1, v * 1.4),
+                          transform: `translateX(${(1 - v) * 48}px)`,
+                        }}
+                      >
+                        <ReviewCard
+                          review={r}
+                          c={c}
+                          w={cardW}
+                          u={1}
+                          lines={4}
+                          dark={dark}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

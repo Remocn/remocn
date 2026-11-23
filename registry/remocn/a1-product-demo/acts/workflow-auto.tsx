@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   FLOW_BG,
   FLOW_BORDER,
@@ -14,6 +9,9 @@ import {
   FLOW_MUTED,
   FLOW_YELLOW,
   FONT,
+  midway,
+  stirring,
+  useGlide,
 } from "../foundation";
 
 const clamp = {
@@ -124,8 +122,9 @@ function GraphNode({ spec }: { spec: NodeSpec }) {
 }
 
 export function WorkflowAuto({ speed = 1 }: { speed?: number }) {
-  const f = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const f = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
+  const glide = useGlide();
 
   const headerReveal = interpolate(f, [0, 12], [0, 1], clamp);
   const headerShift = interpolate(headerReveal, [0, 1], [16, 0]);
@@ -144,6 +143,7 @@ export function WorkflowAuto({ speed = 1 }: { speed?: number }) {
           gap: 18,
           opacity: headerReveal,
           translate: `0 ${headerShift}px`,
+          transform: glide(midway(headerReveal)),
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -200,12 +200,17 @@ export function WorkflowAuto({ speed = 1 }: { speed?: number }) {
       </svg>
 
       {NODES.map((spec) => {
-        const pop = spring({
-          frame: f - spec.delay,
-          fps,
-          config: { damping: 14, stiffness: 150 },
-        });
+        const popAt = (g: number) =>
+          spring({
+            frame: g - spec.delay,
+            fps,
+            config: { damping: 14, stiffness: 150 },
+          });
+        const pop = popAt(f);
         const scale = interpolate(pop, [0, 1], [0.6, 1]);
+        // The spring overshoots, so the test is on the scale itself, weighed
+        // at the far end of the widest node (about 120px from its centre).
+        const popping = stirring((g) => popAt(g) * 0.4 * 120, f, speed);
         return (
           <div
             key={spec.key}
@@ -215,6 +220,7 @@ export function WorkflowAuto({ speed = 1 }: { speed?: number }) {
               top: spec.y,
               translate: "-50% -50%",
               scale: `${scale}`,
+              transform: glide(popping),
               transformOrigin: "center",
               opacity: pop,
             }}

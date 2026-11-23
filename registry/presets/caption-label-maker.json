@@ -1,0 +1,111 @@
+{
+  "component": "caption-label-maker",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "classic-red-tape",
+      "label": "Classic Red",
+      "description": "Glossy red embossing tape with crisp white letters, like a vintage Dymo label.",
+      "askedAs": [
+        "red label maker tape",
+        "retro dymo red style",
+        "white letters on red strip",
+        "красная лента для этикеток",
+        "ретро красная наклейка"
+      ],
+      "props": {
+        "tapeColor": "#b42318",
+        "color": "#ffffff"
+      }
+    },
+    {
+      "id": "office-blue",
+      "label": "Office Blue",
+      "description": "Calm navy-blue tape with white lettering in a slightly lighter weight for a tidy, organised feel.",
+      "askedAs": [
+        "blue label tape captions",
+        "neat office label look",
+        "navy strip with white text",
+        "синяя лента с белыми буквами",
+        "аккуратные офисные ярлыки"
+      ],
+      "props": {
+        "tapeColor": "#1e3a8a",
+        "color": "#f8fafc",
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "kraft-label",
+      "label": "Kraft Paper",
+      "description": "Warm cream tape with dark brown letters for a soft, craft-desk look.",
+      "askedAs": [
+        "beige paper label captions",
+        "craft kraft tape style",
+        "light tape dark letters",
+        "бежевая крафтовая лента",
+        "светлая наклейка с тёмным текстом"
+      ],
+      "props": {
+        "tapeColor": "#e8dcc4",
+        "color": "#3b2a1a",
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "big-punch",
+      "label": "Big Punch",
+      "description": "Oversized heavy letters on black tape, one quick word at a time for punchy, rhythmic captions.",
+      "askedAs": [
+        "huge bold label captions",
+        "one word at a time tape",
+        "fast punchy big text",
+        "крупные жирные субтитры по одному слову",
+        "быстрые большие надписи"
+      ],
+      "props": {
+        "fontSize": 110,
+        "fontWeight": 900,
+        "combineTokensWithinMilliseconds": 0,
+        "holdMs": 250
+      }
+    },
+    {
+      "id": "slow-notes",
+      "label": "Slow Notes",
+      "description": "Small forest-green tape holding long phrases that linger, like quiet handwritten notes.",
+      "askedAs": [
+        "small calm label captions",
+        "long phrases that stay on screen",
+        "green tape subtle subtitles",
+        "маленькие спокойные подписи",
+        "длинные фразы на зелёной ленте"
+      ],
+      "props": {
+        "fontSize": 44,
+        "tapeColor": "#24412f",
+        "color": "#eef2e6",
+        "combineTokensWithinMilliseconds": 2500,
+        "holdMs": 1500
+      }
+    },
+    {
+      "id": "mustard-tape",
+      "label": "Mustard Tape",
+      "description": "Muted mustard-yellow tape with near-black letters for a bright but grounded DIY look.",
+      "askedAs": [
+        "yellow label tape captions",
+        "black text on yellow strip",
+        "warm DIY tape style",
+        "жёлтая лента с чёрным текстом",
+        "горчичная наклейка для субтитров"
+      ],
+      "props": {
+        "tapeColor": "#d4a72c",
+        "color": "#1c1917",
+        "fontSize": 72
+      }
+    }
+  ]
+}

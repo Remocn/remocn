@@ -2,17 +2,15 @@
 
 import { loadFont as loadSans } from "@remotion/google-fonts/Manrope";
 import { memo, useMemo, useState } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  Sequence,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, Sequence } from "remotion";
 import { BlurOutUp } from "@/components/remocn/blur-out-up";
 import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface Sponsor {
   login: string;
@@ -238,6 +236,8 @@ export function heartPulseScale(frame: number, speed = 1): number {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function ramp(
   frame: number,
   speed: number,
@@ -311,12 +311,14 @@ const SponsorNode = memo(function SponsorNode({
   progress,
   size,
   theme,
+  glide,
 }: {
   sponsor: Sponsor;
   cell: Point;
   progress: number;
   size: number;
   theme: Theme;
+  glide: (moving: boolean) => string;
 }) {
   const y = (1 - progress) * 14;
   const blur = (1 - progress) * 10;
@@ -328,9 +330,11 @@ const SponsorNode = memo(function SponsorNode({
         left: cell.x,
         top: cell.y,
         translate: `-50% calc(-50% + ${y}px)`,
+        // The fallback initial is text and rides the rise.
+        transform: glide(midway(progress)) || undefined,
         opacity: progress,
         filter: `blur(${blur}px)`,
-        willChange: "transform, opacity, filter",
+        willChange: "opacity, filter",
       }}
     >
       <Avatar
@@ -386,8 +390,11 @@ export function GitHubSponsors({
   speed = 1,
   theme = "light",
 }: GitHubSponsorsProps) {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
+  // A `<Sequence>` starts on one of the composition's own frames.
+  const toFrames = useCompositionFrames();
   const t = THEMES[theme] ?? THEMES.light;
   const stageScale = Math.min(width / REF_W, height / REF_H);
 
@@ -450,6 +457,7 @@ export function GitHubSponsors({
             )}
             size={avatarSize}
             theme={t}
+            glide={glide}
           />
         ))}
 
@@ -465,7 +473,6 @@ export function GitHubSponsors({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            willChange: "transform",
           }}
         >
           <HeartGlyph
@@ -485,7 +492,7 @@ export function GitHubSponsors({
             height: 84,
           }}
         >
-          <Sequence from={Math.round(THANK_START / speed)} layout="none">
+          <Sequence from={toFrames(THANK_START / speed)} layout="none">
             <SoftBlurIn
               text="Thank you"
               fontSize={54}
@@ -505,7 +512,7 @@ export function GitHubSponsors({
             height: 36,
           }}
         >
-          <Sequence from={Math.round(SUB_START / speed)} layout="none">
+          <Sequence from={toFrames(SUB_START / speed)} layout="none">
             <BlurOutUp
               text={`Powered by ${count} sponsors`}
               fontSize={24}
@@ -531,6 +538,7 @@ export function GitHubSponsors({
           <div
             style={{
               translate: `0 ${ctaY}px`,
+              transform: glide(midway(ctaProgress)) || undefined,
               opacity: ctaProgress,
               filter: `blur(${ctaBlur}px)`,
               display: "flex",
@@ -543,7 +551,7 @@ export function GitHubSponsors({
               fontSize: 24,
               fontWeight: 600,
               fontFamily: FONT_FAMILY,
-              willChange: "transform, opacity, filter",
+              willChange: "opacity, filter",
             }}
           >
             <HeartGlyph size={22} accent="#ffffff" draw={1} fill={1} />

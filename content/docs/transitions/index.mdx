@@ -21,16 +21,16 @@ own the file and can change it. There is no Remocn runtime package.
 | Install | `npx shadcn@latest add @remocn/<name>` ([setup](/docs/getting-started/installation)) |
 | License | MIT, free. Remotion keeps [its own license](https://www.remotion.dev/docs/license) |
 | Requires | An existing Remotion project. Presentations also use `@remotion/transitions` |
-| Length | Every transition states its natural length in frames at 30fps |
+| Length | Every transition states its natural length in 30 fps frames |
 
 Want to see them move? Every transition has a live preview in the
 [gallery at the bottom of this page](#camera-motion) and on its own docs page.
 
 ## All 59 Remocn transitions
 
-"Natural length" is how many frames the transition's own motion takes at 30fps. For a presentation,
-pass it to `linearTiming({ durationInFrames })`. For a scene, it is when the cut has finished, so
-give the `Sequence` at least that many frames plus any hold.
+"Natural length" is how many frames the transition's own motion takes at 30 fps. For a presentation,
+pass it to `linearTiming({ durationInFrames })`, doubled in a 60 fps composition. For a scene, it is
+when the cut has finished, so give the `Sequence` at least that long plus any hold.
 
 ### TransitionSeries presentations (41)
 
@@ -132,14 +132,14 @@ import { zoomBlur } from "@/components/remocn/zoom-blur";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 18 })}
+      timing={linearTiming({ durationInFrames: 36 })}
       presentation={zoomBlur()}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>
@@ -227,7 +227,7 @@ Yes. Remocn is MIT licensed and free. Remotion and `@remotion/transitions` keep 
 Run `npx shadcn@latest add @remocn/<name>` in your Remotion project, import the presentation from `components/remocn/<name>`, and pass it as the `presentation` of a `TransitionSeries.Transition` with `linearTiming` or `springTiming`.
 
 **Which transition should I use by default?**
-[Zoom Blur](/docs/transitions/zoom-blur) is the general-purpose cut for product demos, at 18 frames. [Whip Pan](/docs/transitions/whip-pan) is faster and more energetic, and [Focus Pull](/docs/transitions/focus-pull) is calmer.
+[Zoom Blur](/docs/transitions/zoom-blur) is the general-purpose cut for product demos, at 18 frames (36 at 60 fps). [Whip Pan](/docs/transitions/whip-pan) is faster and more energetic, and [Focus Pull](/docs/transitions/focus-pull) is calmer.
 
 **Can I change how a transition looks?**
 Yes. Each transition takes props such as colors, direction or timing, and because the source is copied into your project you can edit the code itself.

@@ -1,6 +1,6 @@
-import { Interactive } from "remotion";
+import { Interactive, useVideoConfig } from "remotion";
 import type { SceneProps } from "../content";
-import { move, ramp, recommendationCamera, typed } from "../motion";
+import { move, ramp, recommendationCamera, typed, useGlide } from "../motion";
 import { AccentText, mono } from "../ui";
 
 export function Delivery({ scene, t }: SceneProps) {
@@ -38,9 +38,19 @@ export function Delivery({ scene, t }: SceneProps) {
 }
 
 export function Recommendation({ scene, t }: SceneProps) {
+  const glide = useGlide();
+  const { fps } = useVideoConfig();
   const c = scene.content;
   const full = c.recommendation;
-  const camera = recommendationCamera(t, Array.from(full).length);
+  const length = Array.from(full).length;
+  const camera = recommendationCamera(t, length);
+  // The camera has no clean progress (a pan and a zoom on different windows),
+  // so it moves on any frame where it differs from a neighbouring one.
+  const shift = (u: number) => {
+    const a = recommendationCamera(u, length);
+    return a.x !== camera.x || a.y !== camera.y || a.scale !== camera.scale;
+  };
+  const panning = shift(t + 1 / fps) || shift(t - 1 / fps);
   const budget = `${c.budgetLabel}: ${c.oldBudget} → ${c.newBudget}.`;
   return (
     <Interactive.Div
@@ -54,8 +64,7 @@ export function Recommendation({ scene, t }: SceneProps) {
         lineHeight: "37px",
         width: 1800,
         color: "#e9e9e9",
-        transform: `translate3d(${camera.x}px, ${camera.y}px, 0) scale(${camera.scale})`,
-        willChange: "transform",
+        transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})${glide(panning)}`,
         transformOrigin: "0 0",
         whiteSpace: "pre",
         opacity: 1 - move(t, 37.15, 37.35),

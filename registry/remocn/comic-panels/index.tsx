@@ -1,14 +1,9 @@
 "use client";
 
 import { type ReactNode, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type ComicPanelsColors = {
   ink: string;
@@ -92,6 +87,7 @@ const clamp = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
 };
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const ease = (
   t: number,
   from: number,
@@ -127,8 +123,9 @@ export function ComicPanels({
   heroScale = comicPanelsDefaults.heroScale,
   speed = comicPanelsDefaults.speed,
 }: ComicPanelsProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const { width: W, height: H, fps } = useSceneConfig();
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const merged = { ...comicPanelsDefaults.colors, ...colors };
   const c: ComicPanelsColors = {
@@ -268,7 +265,7 @@ export function ComicPanels({
           style={{
             alignItems: "center",
             justifyContent: "center",
-            transform: `translate(${heroFocus[0] - W / 2 + shake[0]}px, ${heroFocus[1] - H / 2 + shake[1]}px) scale(${heroS})`,
+            transform: `translate(${heroFocus[0] - W / 2 + shake[0]}px, ${heroFocus[1] - H / 2 + shake[1]}px) scale(${heroS})${glide(midway(crackA) || shaking)}`,
           }}
         >
           {children ?? <PlaceholderLockup ink={c.ink} accent={c.accent} />}

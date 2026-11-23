@@ -3,14 +3,9 @@
 import { loadFont } from "@remotion/google-fonts/Sora";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -25,6 +20,18 @@ export interface RubberbandWordProps {
   /** Close the final word with an accent period. */
   period?: boolean;
   accent?: string;
+  /** Text color of the word; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Frames the stretched word holds before it snaps back. */
+  hold?: number;
+  /** How far the cursor pulls the last letter; 1 is a fifth of the frame width. */
+  stretch?: number;
+  /** Size of the word and cursor, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -200,18 +207,46 @@ function Cursor({ size, pressed }: { size: number; pressed: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RubberbandWord({
   word = "tension",
   snapWord = "release",
   period = true,
   accent = "#3B5BFD",
+  ink,
+  background,
+  hold = RELEASE - DRAG_END,
+  stretch = 1,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: RubberbandWordProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const t = THEMES[theme];
+  const fg = ink ?? t.fg;
+  // interpolate() needs a rising range from DRAG_END, so the hold is at least a frame.
+  const release = DRAG_END + Math.max(1, hold);
 
   const from = word.trim() || "tension";
   const to = snapWord.trim() || from;
@@ -227,24 +262,38 @@ export function RubberbandWord({
   const cy = baseline - xh * 0.5;
   const leftA = (W - A.width * F) / 2;
   const leftB = swaps ? (W - (B.width + dotW) * F) / 2 : leftA;
-  const sMax = W * 0.21;
+  const sMax = W * 0.21 * stretch;
 
   // Pull: drag out, hold the tension, then let go with one damped overshoot.
   const drag = interpolate(frame, [GRAB + 4, DRAG_END], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const creep = interpolate(frame, [DRAG_END, RELEASE], [0, 1], {
+  const creep = interpolate(frame, [DRAG_END, release], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
   const held = sMax * (0.95 * drag + 0.05 * creep);
-  const snap = spring({
-    frame: frame - RELEASE,
-    fps,
-    config: { damping: 15, stiffness: 230, mass: 1 },
-  });
-  const s = frame < RELEASE ? held : sMax * (1 - snap);
+  const sAt = (f: number) => {
+    if (f < release) {
+      const d = interpolate(f, [GRAB + 4, DRAG_END], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      });
+      const c = interpolate(f, [DRAG_END, release], [0, 1], {
+        ...CLAMP,
+        easing: Easing.bezier(0.22, 1, 0.36, 1),
+      });
+      return sMax * (0.95 * d + 0.05 * c);
+    }
+    const snap = spring({
+      frame: f - release,
+      fps,
+      config: { damping: 15, stiffness: 230, mass: 1 },
+    });
+    return sMax * (1 - snap);
+  };
+  const s = sAt(frame);
 
   // Grab point: the last glyph's right stem, at mid x-height.
   const lastA = from.length - 1;
@@ -252,7 +301,7 @@ export function RubberbandWord({
     leftA + (A.xs[lastA] + A.ws[lastA] - rsb(from[lastA])) * F - F * 0.05;
   const press = interpolate(
     frame,
-    [GRAB, GRAB + 3, RELEASE, RELEASE + 4],
+    [GRAB, GRAB + 3, release, release + 4],
     [0, 1, 1, 0],
     CLAMP,
   );
@@ -263,7 +312,7 @@ export function RubberbandWord({
   const startX = W * 0.8;
   const startY = H * 0.86;
   const arc = Math.sin(approach * Math.PI) * H * 0.05;
-  const away = interpolate(frame, [RELEASE + 1, RELEASE + 26], [0, 1], {
+  const away = interpolate(frame, [release + 1, release + 26], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -274,13 +323,13 @@ export function RubberbandWord({
     cx = grabX0 + held;
     cyCursor = cy - lift;
   }
-  if (frame >= RELEASE) {
+  if (frame >= release) {
     cx = grabX0 + sMax + W * 0.03 * away;
     cyCursor = cy - H * 0.015 + H * 0.06 * away;
   }
   const cursorOpacity = interpolate(
     frame,
-    [RELEASE + 8, RELEASE + 22],
+    [release + 8, release + 22],
     [1, 0],
     CLAMP,
   );
@@ -288,19 +337,24 @@ export function RubberbandWord({
 
   // The swap rides the snap: the old word squashes flat onto its baseline,
   // the new one springs up out of that line with one overshoot.
-  const SWAP = RELEASE + 4;
+  const SWAP = release + 4;
   const clipTop = baseline - F * 0.98;
   const clipH = F * 1.24;
-  const squash = (i: number, count: number, incoming: boolean) => {
+  const squash = (
+    i: number,
+    count: number,
+    incoming: boolean,
+    f: number = frame,
+  ) => {
     const start = SWAP + (count - 1 - i) * 0.5 + (incoming ? 4 : 0);
     if (!incoming) {
-      return interpolate(frame, [start, start + 5], [1, 0], {
+      return interpolate(f, [start, start + 5], [1, 0], {
         ...CLAMP,
         easing: Easing.bezier(0.55, 0, 1, 0.45),
       });
     }
     return spring({
-      frame: frame - start,
+      frame: f - start,
       fps,
       config: { damping: 12, stiffness: 240, mass: 0.8 },
     });
@@ -314,7 +368,7 @@ export function RubberbandWord({
     B.width *
     F *
     0.12 *
-    interpolate(frame, [RELEASE, RELEASE + 60], [0, 1], {
+    interpolate(frame, [release, release + 60], [0, 1], {
       ...CLAMP,
       easing: Easing.bezier(0.45, 0, 0.55, 1),
     });
@@ -327,18 +381,29 @@ export function RubberbandWord({
     incoming: boolean,
   ) =>
     text.split("").map((ch, i) => {
+      const at = (f: number) => {
+        const e = elastic(i, text.length, L.xs, sAt(f), sMax);
+        const k = swaps ? squash(i, text.length, incoming, f) : 1;
+        return { dx: e.dx, sx: e.sx, sy: e.sy * k };
+      };
       const g = elastic(i, text.length, L.xs, s, sMax);
       const q = swaps ? squash(i, text.length, incoming) : 1;
       if (q <= 0.01) return null;
+      const now = at(frame);
+      const step = (o: ReturnType<typeof at>) =>
+        Math.abs(o.dx - now.dx) +
+          (Math.abs(o.sx - now.sx) + Math.abs(o.sy - now.sy)) * F >
+        1e-3;
+      const moving = step(at(frame - speed)) || step(at(frame + speed));
       const isLast = i === text.length - 1;
       const color =
-        !incoming && isLast && accentOn && (swaps || frame < RELEASE + 6)
+        !incoming && isLast && accentOn && (swaps || frame < release + 6)
           ? accent
-          : t.fg;
+          : fg;
       const w = L.ws[i] * F;
       // The snapped word wears the gradient; without a swap the word itself does.
       const fill: React.CSSProperties =
-        incoming || (!swaps && frame >= RELEASE + 6)
+        incoming || (!swaps && frame >= release + 6)
           ? {
               color: "transparent",
               backgroundImage: wordGradient,
@@ -354,7 +419,9 @@ export function RubberbandWord({
           key={`${uid}-${incoming ? "b" : "a"}-${i}`}
           style={{
             position: "absolute",
-            left: left + L.xs[i] * F + g.dx,
+            // The pull is a transform, not `left`: layout rounds a painted
+            // box to whole pixels, so a glyph eased by `left` clicks along.
+            left: left + L.xs[i] * F,
             top: baseline - clipTop - BASELINE * F,
             width: w,
             fontSize: F,
@@ -362,7 +429,7 @@ export function RubberbandWord({
             ...fill,
             opacity: Math.min(1, q * 6),
             transformOrigin: `50% ${BASELINE * F}px`,
-            transform: `scale(${g.sx}, ${g.sy * q})`,
+            transform: `${Math.abs(g.dx) < 1e-3 ? "" : `translateX(${g.dx}px) `}scale(${g.sx}, ${g.sy * q})${glide(moving)}`,
             whiteSpace: "pre",
           }}
         >
@@ -376,7 +443,7 @@ export function RubberbandWord({
   let bandX: [number, number] = [0, 1];
   const bandOpacity =
     interpolate(s, [sMax * 0.02, sMax * 0.1], [0, 1], CLAMP) *
-    interpolate(frame, [RELEASE, RELEASE + 5], [1, 0], CLAMP);
+    interpolate(frame, [release, release + 5], [1, 0], CLAMP);
   if (from.length > 1 && bandOpacity > 0) {
     const prev = lastA - 1;
     const gp = elastic(prev, from.length, A.xs, s, sMax);
@@ -398,7 +465,7 @@ export function RubberbandWord({
       (wl / 2 - lsb(from[lastA]) * F) * gl.sx +
       F * 0.05;
     // After the release the band stays thin while it whips back and fades.
-    const thinAs = frame >= RELEASE ? Math.max(xR - xL, sMax * 0.8) : xR - xL;
+    const thinAs = frame >= release ? Math.max(xR - xL, sMax * 0.8) : xR - xL;
     band = bandPath(xL, xR, cy, xh * gl.sy, F, thinAs);
     bandX = [xL - xh * 0.3, xR];
   }
@@ -412,73 +479,87 @@ export function RubberbandWord({
   const dotLeft = leftB + (B.xs[lastB] + B.ws[lastB] + TRACK) * F + gB.dx;
 
   return (
-    <AbsoluteFill style={{ background: t.bg }}>
-      {band ? (
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          <defs>
-            <linearGradient
-              id={`${uid}-band`}
-              gradientUnits="userSpaceOnUse"
-              x1={bandX[0]}
-              y1={0}
-              x2={bandX[1]}
-              y2={0}
-            >
-              <stop offset="0" stopColor={halo[0]} />
-              <stop offset="0.55" stopColor={halo[1]} />
-              <stop offset="1" stopColor={halo[2]} />
-            </linearGradient>
-          </defs>
-          <path d={band} fill={`url(#${uid}-band)`} opacity={bandOpacity} />
-        </svg>
-      ) : null}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: clipTop,
-          width: W,
-          height: clipH,
-          overflow: "hidden",
-          fontFamily: sans,
-          fontWeight: 500,
-        }}
-      >
-        {glyphs(from, A, leftA, false)}
-        {swaps ? glyphs(to, B, leftB, true) : null}
-        {period ? (
-          <span
-            style={{
-              position: "absolute",
-              left: dotLeft,
-              top: baseline - clipTop - BASELINE * F,
-              fontSize: F,
-              lineHeight: 1,
-              color: accent,
-              opacity: dotIn,
-              transformOrigin: `30% ${BASELINE * F}px`,
-              transform: `scale(${0.6 + 0.4 * dotIn})`,
-            }}
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? t.bg),
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        {band ? (
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
           >
-            .
-          </span>
+            <defs>
+              <linearGradient
+                id={`${uid}-band`}
+                gradientUnits="userSpaceOnUse"
+                x1={bandX[0]}
+                y1={0}
+                x2={bandX[1]}
+                y2={0}
+              >
+                <stop offset="0" stopColor={halo[0]} />
+                <stop offset="0.55" stopColor={halo[1]} />
+                <stop offset="1" stopColor={halo[2]} />
+              </linearGradient>
+            </defs>
+            <path d={band} fill={`url(#${uid}-band)`} opacity={bandOpacity} />
+          </svg>
         ) : null}
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: cx - cursorSize * 0.06,
-          top: cyCursor - cursorSize * 0.06,
-          opacity: cursorOpacity,
-        }}
-      >
-        <Cursor size={cursorSize} pressed={press} />
-      </div>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: clipTop,
+            width: W,
+            height: clipH,
+            overflow: "hidden",
+            fontFamily: sans,
+            fontWeight: 500,
+          }}
+        >
+          {glyphs(from, A, leftA, false)}
+          {swaps ? glyphs(to, B, leftB, true) : null}
+          {period ? (
+            <span
+              style={{
+                position: "absolute",
+                left: dotLeft,
+                top: baseline - clipTop - BASELINE * F,
+                fontSize: F,
+                lineHeight: 1,
+                color: accent,
+                opacity: dotIn,
+                transformOrigin: `30% ${BASELINE * F}px`,
+                transform: `scale(${0.6 + 0.4 * dotIn})${glide(midway(dotIn))}`,
+              }}
+            >
+              .
+            </span>
+          ) : null}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            // Laid out where it starts; the travel is a transform, since
+            // layout rounds a box to whole pixels and an eased `left`/`top`
+            // clicks along.
+            left: startX - cursorSize * 0.06,
+            top: startY - cursorSize * 0.06,
+            transform:
+              cx === startX && cyCursor === startY
+                ? undefined
+                : `translate(${cx - startX}px, ${cyCursor - startY}px)`,
+            opacity: cursorOpacity,
+          }}
+        >
+          <Cursor size={cursorSize} pressed={press} />
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

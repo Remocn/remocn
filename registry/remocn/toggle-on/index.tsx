@@ -1,14 +1,10 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -22,6 +18,20 @@ export interface ToggleOnProps {
   label?: string;
   state?: string;
   accent?: string;
+  /** Weight of the label and state. */
+  fontWeight?: number;
+  /** Frames between the label and the state word. */
+  stagger?: number;
+  /** Text color of the label; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the label. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the foreground around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -90,20 +100,47 @@ function hexToRgb(hex: string) {
   return `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ToggleOn({
   label = "Auto-captions",
   state = "On",
   accent = "#3B5BFD",
+  fontWeight = 400,
+  stagger = BEATS.state - BEATS.label,
+  ink: inkColor,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   ground,
   groundParams,
   speed = 1,
 }: ToggleOnProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: VW, height: VH, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: VW, height: VH, fps } = useSceneConfig();
   const tall = VH > VW;
   const u = tall ? VW / 760 : Math.min(VW / 1280, VH / 720);
   const p = THEMES[theme];
+  const fg = inkColor ?? p.fg;
   const dark = theme === "dark";
   const acc = hexToRgb(accent);
   const stateInk = p.stateInk || accent;
@@ -144,13 +181,21 @@ export function ToggleOn({
   const fillOn = interpolate(pos, [0, 0.05], [0, 1], CLAMP);
   const fillStart = pad * 0.6 * (1 - Math.min(1, pos * 3));
 
-  const cam = spring({
-    frame: t,
-    fps,
-    config: { mass: 1, damping: 26, stiffness: 120 },
-    durationInFrames: 54,
-  });
-  const camK = interpolate(cam, [0, 1], [1.1, 1]);
+  const camAt = (f: number) =>
+    interpolate(
+      spring({
+        frame: f,
+        fps,
+        config: { mass: 1, damping: 26, stiffness: 120 },
+        durationInFrames: 54,
+      }),
+      [0, 1],
+      [1.1, 1],
+    );
+  const camK = camAt(t);
+  const camMoving =
+    Math.abs(camAt(t + speed) - camK) > 1e-6 ||
+    Math.abs(camK - camAt(t - speed)) > 1e-6;
   const lit = interpolate(t, [BEATS.light, BEATS.light + 30], [0, 1], {
     ...CLAMP,
     easing: ENTER,
@@ -161,10 +206,12 @@ export function ToggleOn({
     easing: MOVE,
   });
 
+  const sliding = open > 0 && open < 1;
+
   const word = (start: number) =>
     interpolate(t, [start, start + 14], [0, 1], { ...CLAMP, easing: ENTER });
   const wLabel = word(BEATS.label);
-  const wState = word(BEATS.state);
+  const wState = word(BEATS.label + stagger);
   const fontSize = (tall ? 92 : 76) * u;
 
   const ink = (v: number) => ({
@@ -251,12 +298,12 @@ export function ToggleOn({
     <div
       style={{
         whiteSpace: "nowrap",
-        fontFamily: sans,
-        fontWeight: 400,
+        fontFamily,
+        fontWeight,
         fontSize,
         lineHeight: 1.08,
         letterSpacing: "-0.035em",
-        color: p.fg,
+        color: fg,
         textAlign: tall ? "center" : "left",
       }}
     >
@@ -272,48 +319,77 @@ export function ToggleOn({
 
   return (
     <AbsoluteFill
-      style={{ overflow: "hidden", background: dark ? "#03050b" : "#eeece8" }}
+      style={{
+        overflow: "hidden",
+        background: background ?? (dark ? "#03050b" : "#eeece8"),
+      }}
     >
-      <GshGround
-        preset={resolvedGround}
-        params={groundParams}
-        timeOffset={dark ? 3 : 6}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(70% 60% at 50% 45%, rgba(${p.scrim},${scrim}) 0%, rgba(${p.scrim},${Math.min(1, scrim + 0.12)}) 100%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{
-          alignItems: "center",
-          justifyContent: "center",
-          transform: `scale(${camK})`,
-        }}
-      >
-        {tall ? (
-          <div
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={resolvedGround}
+            params={groundParams}
+            timeOffset={dark ? 3 : 6}
+            timeScale={0.5}
+          />
+          <AbsoluteFill
             style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 72 * u,
-              transform: `translateY(${(1 - open) * 90 * u}px)`,
+              background: `radial-gradient(70% 60% at 50% 45%, rgba(${p.scrim},${scrim}) 0%, rgba(${p.scrim},${Math.min(1, scrim + 0.12)}) 100%)`,
             }}
-          >
-            {toggle}
-            {labelEl}
-          </div>
-        ) : (
-          <div style={{ display: "flex", alignItems: "center" }}>
-            {toggle}
-            <div style={{ display: "grid", gridTemplateColumns: `${open}fr` }}>
-              <div style={{ minWidth: 0, paddingLeft: 56 * u }}>{labelEl}</div>
+          />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            alignItems: "center",
+            justifyContent: "center",
+            transform: `scale(${camK})${glide(camMoving)}`,
+          }}
+        >
+          {tall ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 72 * u,
+                transform: `translateY(${(1 - open) * 90 * u}px)${glide(midway(open) && !camMoving)}`,
+              }}
+            >
+              {toggle}
+              {labelEl}
             </div>
-          </div>
-        )}
-      </AbsoluteFill>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                // The row widens as the label column opens and the centring
+                // slides the toggle left. Layout rounds those box edges to
+                // whole pixels, so mid-way the row sits at its open width and
+                // the slide is a transform: half the unopened column, which
+                // is half the row less half the toggle.
+                transform: sliding
+                  ? `translateX(calc(${(1 - open) * 50}% - ${((1 - open) * (W + 14 * u)) / 2}px))`
+                  : undefined,
+              }}
+            >
+              {toggle}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: `${sliding ? 1 : open}fr`,
+                }}
+              >
+                <div style={{ minWidth: 0, paddingLeft: 56 * u }}>
+                  {labelEl}
+                </div>
+              </div>
+            </div>
+          )}
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

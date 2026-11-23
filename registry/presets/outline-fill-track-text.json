@@ -1,0 +1,121 @@
+{
+  "component": "outline-fill-track-text",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-punch",
+      "label": "Quick Punch",
+      "description": "A fast, snappy run with a short rise and a near-instant fill for energetic cuts.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick snappy number reveal",
+        "short energetic fill animation",
+        "сделай быстрее и резче",
+        "быстрое появление цифры"
+      ],
+      "props": {
+        "speed": 1.75,
+        "fillDuration": 14,
+        "enterOffset": 120,
+        "outlineWidth": 4
+      }
+    },
+    {
+      "id": "slow-luxe",
+      "label": "Slow Luxe",
+      "description": "An unhurried, deep-plum reveal with a long rise and a slow, deliberate fill.",
+      "askedAs": [
+        "slow elegant luxury reveal",
+        "make it calm and premium",
+        "long cinematic fill",
+        "медленно и роскошно",
+        "плавное элегантное появление"
+      ],
+      "props": {
+        "speed": 0.5,
+        "fillDuration": 45,
+        "enterOffset": 360,
+        "glowColor": "#8a3fc2",
+        "fontWeight": "500"
+      }
+    },
+    {
+      "id": "paper-ink",
+      "label": "Paper Ink",
+      "description": "Dark ink type on a warm off-white background with a thin outline and subtle sand glow.",
+      "askedAs": [
+        "light background version",
+        "black text on white",
+        "clean editorial print look",
+        "светлый фон с тёмным текстом",
+        "как в журнале на бумаге"
+      ],
+      "props": {
+        "backgroundColor": "#f3efe7",
+        "color": "#1a1a1f",
+        "outlineColor": "#2a2a30",
+        "glowColor": "#d9c9a8",
+        "outlineWidth": 2
+      }
+    },
+    {
+      "id": "gold-reserve",
+      "label": "Gold Reserve",
+      "description": "A champagne-gold fill over near-black with an amber glow for financial or award stats.",
+      "askedAs": [
+        "gold numbers on black",
+        "luxury finance stat",
+        "golden premium metric",
+        "золотые цифры на чёрном",
+        "дорогой золотой стиль"
+      ],
+      "props": {
+        "backgroundColor": "#0b0906",
+        "color": "#e4c88a",
+        "outlineColor": "#c9a96a",
+        "glowColor": "#7a5418",
+        "fontWeight": "600"
+      }
+    },
+    {
+      "id": "compact-wire",
+      "label": "Compact Wire",
+      "description": "Smaller, lighter type with a fine hairline outline and tight spacing in a cool slate palette.",
+      "askedAs": [
+        "smaller thinner text",
+        "minimal hairline outline",
+        "compact tech style",
+        "меньше и тоньше шрифт",
+        "минималистичный тонкий контур"
+      ],
+      "props": {
+        "fontSize": 240,
+        "fontWeight": "400",
+        "outlineWidth": 1,
+        "wordGap": 120,
+        "backgroundColor": "#0d1117",
+        "glowColor": "#1f4f7a"
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Oversized heavy type with a thick outline and wide gap for a dramatic headline number.",
+      "askedAs": [
+        "make the number huge",
+        "big bold dramatic stat",
+        "thick outline giant text",
+        "огромные жирные цифры",
+        "крупный заголовок с толстым контуром"
+      ],
+      "props": {
+        "fontSize": 480,
+        "outlineWidth": 7,
+        "wordGap": 300,
+        "glowColor": "#9a1040",
+        "speed": 0.75
+      }
+    }
+  ]
+}

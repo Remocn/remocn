@@ -1,0 +1,122 @@
+{
+  "component": "swipe-deck",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hot-pink-match",
+      "label": "Hot Match",
+      "description": "Dark ember ground with a warm coral accent and punchy Bricolage type at a brisk pace.",
+      "askedAs": [
+        "warm dating app look",
+        "coral pink match screen",
+        "fast playful swipe",
+        "тёплый стиль как в приложении знакомств",
+        "розовый акцент быстрее"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#ff5a6e",
+        "ground": "ember",
+        "fontFamily": "Bricolage Grotesque",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paper-pick",
+      "label": "Paper Pick",
+      "description": "Light cream paper ground with ink-dark text, a forest green accent and editorial Fraunces type.",
+      "askedAs": [
+        "light editorial version",
+        "cream background swipe deck",
+        "calm curated picks",
+        "светлая бумажная версия",
+        "спокойный редакционный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "background": "#f6f1e7",
+        "ink": "#1f1b16",
+        "accent": "#2f6b4f",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "midnight-iris",
+      "label": "Midnight Iris",
+      "description": "Deep violet iris ground with a lavender accent and clean Geist type, moving slow and smooth.",
+      "askedAs": [
+        "moody purple night look",
+        "slow dreamy swipe",
+        "violet dark theme",
+        "фиолетовая ночная тема",
+        "медленно и плавно"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "iris",
+        "accent": "#a78bfa",
+        "fontFamily": "Geist",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-flick",
+      "label": "Quick Flick",
+      "description": "Snappy double-speed swipes on a cyan drift ground with a teal accent and tight Space Grotesk type.",
+      "askedAs": [
+        "very fast swipes",
+        "energetic short cut",
+        "teal techy version",
+        "очень быстрые свайпы",
+        "энергичная бирюзовая версия"
+      ],
+      "props": {
+        "ground": "cyan-drift",
+        "accent": "#14b8a6",
+        "fontFamily": "Space Grotesk",
+        "speed": 2
+      }
+    },
+    {
+      "id": "big-sunset",
+      "label": "Big Sunset",
+      "description": "Oversized cards on a static sunset ground with an amber accent and a short beat before it starts.",
+      "askedAs": [
+        "bigger cards sunset colors",
+        "zoomed in warm deck",
+        "golden hour vibe",
+        "крупные карточки и закат",
+        "тёплый янтарный крупный план"
+      ],
+      "props": {
+        "ground": "static-sunset",
+        "accent": "#f59e0b",
+        "scale": 1.25,
+        "delay": 12,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "polar-mono",
+      "label": "Polar Mono",
+      "description": "Cool light polar ground with slate text, a steel blue accent and JetBrains Mono for a tool-like feel.",
+      "askedAs": [
+        "minimal light tech look",
+        "monospace swipe deck",
+        "cool white developer style",
+        "минималистичный светлый стиль",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "ink": "#1e293b",
+        "accent": "#3a6ea5",
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.9
+      }
+    }
+  ]
+}

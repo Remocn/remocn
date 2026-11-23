@@ -2,15 +2,11 @@
 
 import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { type ReactNode, useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -27,6 +23,23 @@ export interface HiddenWordProps {
   /** The word hiding in it; its letters are found in order inside `text`. */
   word?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill in place of the theme bloom; "transparent" drops it. */
+  background?: string;
+  /**
+   * Typeface for the sentence. Load it yourself; Hanken Grotesk by default.
+   * Layout uses Hanken Grotesk metrics, so another face may set looser or tighter.
+   */
+  fontFamily?: string;
+  /** Frames between letters as they lift out of the sentence. */
+  stagger?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -241,6 +254,8 @@ const THEMES = {
   },
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function advance(face: Face, ch: string) {
   const code = ch.charCodeAt(0);
   if (code >= 32 && code < 127) return face.adv[code - 32] / 1000;
@@ -380,16 +395,43 @@ interface Glyph {
   line: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function HiddenWord({
   text = "Small teams make their launch film in code and post it by Friday.",
   word = "ship",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  stagger = LIFT_STAGGER,
+  scale: layerScale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: HiddenWordProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const B = Math.min(H * 0.068, W * 0.038);
   const set = useMemo(() => {
@@ -454,19 +496,30 @@ export function HiddenWord({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const scale = 1 + (GHOST_SCALE - 1) * move;
-  const midY = blockMid + (ghostMid - blockMid) * move;
-  const place = (x: number, y: number) => ({
-    x: W / 2 + (x - W / 2) * scale,
-    y: midY + (y - blockMid) * scale,
-  });
+  const placeAt = (m: number) => {
+    const scale = 1 + (GHOST_SCALE - 1) * m;
+    const midY = blockMid + (ghostMid - blockMid) * m;
+    const place = (x: number, y: number) => ({
+      x: W / 2 + (x - W / 2) * scale,
+      y: midY + (y - blockMid) * scale,
+    });
+    return { scale, midY, place };
+  };
+  // Layout rounds a baseline to whole pixels, so letters carried by `top`
+  // and `fontSize` click along pixel by pixel. The sentence is laid out where
+  // it rests, the opening for the first half of the move and the caption for
+  // the second, and the move between them is a transform on a wrapper. The
+  // switch lands on the fastest frames, and each rest is laid out as before.
+  const now = placeAt(move);
+  const anchor = placeAt(move < 0.5 ? 0 : 1);
+  const settled = (dx: number, dy: number, k: number) =>
+    Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3 && Math.abs(k - 1) < 1e-6;
 
   const picked = new Map<number, number>();
   picks.forEach((i, j) => {
     if (i >= 0) picked.set(i, j);
   });
-  const lastLand =
-    LIFT_AT + Math.max(0, target.length - 1) * LIFT_STAGGER + FLIGHT;
+  const lastLand = LIFT_AT + Math.max(0, target.length - 1) * stagger + FLIGHT;
   const settle = interpolate(
     t,
     [lastLand + SETTLE_GAP, lastLand + SETTLE_GAP + SETTLE],
@@ -480,7 +533,7 @@ export function HiddenWord({
   const restColor = interpolateColors(
     move,
     [0, 1],
-    [interpolateColors(dim, [0, 1], [c.fg, c.dim]), c.ghost],
+    [interpolateColors(dim, [0, 1], [fg, c.dim]), c.ghost],
   );
 
   const sentence: ReactNode[] = [];
@@ -496,11 +549,12 @@ export function HiddenWord({
       { ...CLAMP, easing: EASE_OUT },
     );
     const homeX = blockLeft + g.x * B;
-    const homeY = firstBase + g.line * lineGap + (1 - enter) * B * 0.45;
+    const lineY = firstBase + g.line * lineGap;
     const j = picked.get(i);
-    const size = B * scale;
     if (j === undefined) {
-      const p = place(homeX, homeY);
+      const size = B * anchor.scale;
+      const p = anchor.place(homeX, lineY);
+      const rise = (1 - enter) * B * 0.45 * anchor.scale;
       sentence.push(
         <span
           key={i}
@@ -511,6 +565,8 @@ export function HiddenWord({
             fontSize: size,
             color: restColor,
             opacity: enter,
+            // Kept at 0 once the letter is in: the lean rides on it.
+            transform: `translateY(${rise > 1e-3 ? rise : 0}px)${glide(midway(enter))}`,
           }}
         >
           {g.ch}
@@ -525,7 +581,7 @@ export function HiddenWord({
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
-    const liftAt = LIFT_AT + j * LIFT_STAGGER;
+    const liftAt = LIFT_AT + j * stagger;
     const p = interpolate(t, [liftAt, liftAt + FLIGHT], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
@@ -534,8 +590,9 @@ export function HiddenWord({
     // The empty slot the letter leaves behind gets a short accent rule.
     const hole = interpolate(p, [0.15, 0.55], [0, 1], CLAMP);
     if (hole > 0) {
+      const size = B * anchor.scale;
       const w = advance(BODY, g.ch) * size;
-      const at = place(homeX, firstBase + g.line * lineGap);
+      const at = anchor.place(homeX, lineY);
       marks.push(
         <div
           key={`m${i}`}
@@ -553,40 +610,63 @@ export function HiddenWord({
       );
     }
 
-    const from = place(homeX + (advance(BODY, g.ch) * B) / 2, homeY);
     const toCh = target[j];
     const to = {
       x: displayLeft + (display.xs[j] + advance(DISPLAY, toCh) / 2) * F,
       y: displayBase,
     };
-    // Lift straight up out of the line, cross over, rise into the slot from below.
-    const c1y = from.y - (g.line + 1.6) * lineGap * scale;
-    const c2y = to.y + F * 0.55;
-    const u = 1 - p;
-    const x =
-      (u * u * u + 3 * u * u * p) * from.x + (3 * u * p * p + p * p * p) * to.x;
-    const y =
-      u * u * u * from.y +
-      3 * u * u * p * c1y +
-      3 * u * p * p * c2y +
-      p * p * p * to.y;
-    const fontSize = size * (F / size) ** p;
+    const flight = (p: number, enter: number, move: number) => {
+      const { scale, place } = placeAt(move);
+      const size = B * scale;
+      const homeY = lineY + (1 - enter) * B * 0.45;
+      const from = place(homeX + (advance(BODY, g.ch) * B) / 2, homeY);
+      // Lift straight up out of the line, cross over, rise into the slot from below.
+      const c1y = from.y - (g.line + 1.6) * lineGap * scale;
+      const c2y = to.y + F * 0.55;
+      const u = 1 - p;
+      const x =
+        (u * u * u + 3 * u * u * p) * from.x +
+        (3 * u * p * p + p * p * p) * to.x;
+      const y =
+        u * u * u * from.y +
+        3 * u * u * p * c1y +
+        3 * u * p * p * c2y +
+        p * p * p * to.y;
+      return { x, y, fontSize: size * (F / size) ** p };
+    };
+    // The same move for the letter in flight: laid out where it rests, in the
+    // sentence for the first half and in the word for the second, and carried
+    // by a transform from there.
+    const { x, y, fontSize } = flight(p, enter, move);
+    const rest = p < 0.5 ? flight(0, 1, 0) : flight(1, 1, 1);
+    const flying = midway(p) || midway(enter) || midway(move);
     const mix = interpolate(p, [0.15, 0.55], [0, 1], CLAMP);
     const color = interpolateColors(
       settle,
       [0, 1],
-      [interpolateColors(lit, [0, 1], [restColor, accent]), c.fg],
+      [interpolateColors(lit, [0, 1], [restColor, accent]), fg],
     );
-    const layer = (key: string, ch: string, face: Face, o: number) =>
-      o > 0 ? (
+    const layer = (key: string, ch: string, face: Face, o: number) => {
+      if (o <= 0) return null;
+      const left = x - (advance(face, ch) * fontSize) / 2;
+      const top = y - baseOf(face) * fontSize;
+      const restLeft = rest.x - (advance(face, ch) * rest.fontSize) / 2;
+      const restTop = rest.y - baseOf(face) * rest.fontSize;
+      const k = fontSize / rest.fontSize;
+      return (
         <span
           key={key}
           style={{
             position: "absolute",
-            left: x - (advance(face, ch) * fontSize) / 2,
-            top: y - baseOf(face) * fontSize,
-            fontSize,
-            fontFamily: face === DISPLAY ? serif : sans,
+            left: restLeft,
+            top: restTop,
+            fontSize: rest.fontSize,
+            // At rest the transform stays, as an identity: the lean rides on it.
+            transform: settled(left - restLeft, top - restTop, k)
+              ? `translate(0px, 0px) scale(1)${glide(false)}`
+              : `translate(${left - restLeft}px, ${top - restTop}px) scale(${k})${glide(flying)}`,
+            transformOrigin: "0 0",
+            fontFamily: face === DISPLAY ? serif : fontFamily,
             fontStyle: face === DISPLAY ? "italic" : "normal",
             letterSpacing: 0,
             color,
@@ -595,7 +675,8 @@ export function HiddenWord({
         >
           {ch}
         </span>
-      ) : null;
+      );
+    };
     flyers.push(layer(`a${i}`, g.ch, BODY, 1 - mix));
     flyers.push(layer(`b${i}`, toCh, DISPLAY, mix));
   });
@@ -603,7 +684,7 @@ export function HiddenWord({
   // Letters of the word that the sentence does not contain arrive on their own.
   target.forEach((ch, j) => {
     if (picks[j] >= 0) return;
-    const at = LIFT_AT + j * LIFT_STAGGER + FLIGHT * 0.5;
+    const at = LIFT_AT + j * stagger + FLIGHT * 0.5;
     const v = interpolate(t, [at, at + FLIGHT * 0.5], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
@@ -615,11 +696,12 @@ export function HiddenWord({
         style={{
           position: "absolute",
           left: displayLeft + display.xs[j] * F,
-          top: displayBase - baseOf(DISPLAY) * F + (1 - v) * F * 0.12,
+          top: displayBase - baseOf(DISPLAY) * F,
+          transform: `translateY(${v < 1 ? (1 - v) * F * 0.12 : 0}px)${glide(midway(v))}`,
           fontSize: F,
           fontFamily: serif,
           fontStyle: "italic",
-          color: interpolateColors(settle, [0, 1], [accent, c.fg]),
+          color: interpolateColors(settle, [0, 1], [accent, fg]),
           opacity: v,
         }}
       >
@@ -636,24 +718,42 @@ export function HiddenWord({
   const ground = `radial-gradient(118% 76% at ${(72 - 8 * drift).toFixed(2)}% ${(104 - 4 * drift).toFixed(2)}%, ${c.mist[0]} 0%, ${c.mist[1]} 22%, ${c.mist[2]} 48%, ${c.mist[3]} 72%, transparent 100%)`;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div style={{ position: "absolute", inset: 0, background: ground }} />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          fontFamily: sans,
-          fontWeight: 400,
-          lineHeight: LINE,
-          fontKerning: "none",
-          whiteSpace: "pre",
-        }}
-      >
-        {sentence}
-        {marks}
-        {flyers}
-      </div>
-      <Grain opacity={c.grain} />
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {background === undefined ? (
+        <div style={{ position: "absolute", inset: 0, background: ground }} />
+      ) : null}
+      <ScaleLayer scale={layerScale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            fontFamily,
+            fontWeight: 400,
+            lineHeight: LINE,
+            fontKerning: "none",
+            whiteSpace: "pre",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              // An identity at either rest, so the mark the lean rides on
+              // stays on: dropping it would snap text resting off the grid.
+              transform:
+                move > 0 && move < 1
+                  ? `translateY(${now.midY - anchor.midY}px) scale(${now.scale / anchor.scale})${glide(midway(move))}`
+                  : `translateY(0px) scale(1)${glide(false)}`,
+              transformOrigin: `${W / 2}px ${anchor.midY}px`,
+            }}
+          >
+            {sentence}
+            {marks}
+          </div>
+          {flyers}
+        </div>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

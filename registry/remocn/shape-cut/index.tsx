@@ -4,13 +4,9 @@ import { loadFont as loadDisplay } from "@remotion/google-fonts/BricolageGrotesq
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -27,7 +23,23 @@ export interface ShapeCutProps {
   from?: string;
   to?: string;
   shape?: ShapeCutShape;
+  /** Frames the shape takes to grow over the frame and close on the mark. */
+  travel?: number;
   accent?: string;
+  /** Text color of the headlines; overrides the theme. */
+  ink?: string;
+  /** Stage fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headlines. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark shown when `to` is "remocn". */
+  logo?: React.ReactNode;
+  /** Size of the headlines and shape, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -183,9 +195,25 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
-const type = (size: number): React.CSSProperties => ({
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+const type = (size: number, fontFamily: string): React.CSSProperties => ({
   position: "absolute",
-  fontFamily: display,
+  fontFamily,
   fontWeight: 500,
   fontSize: size,
   letterSpacing: `${TRACK}em`,
@@ -197,14 +225,35 @@ export function ShapeCut({
   from = "Ideas move fast",
   to = "remocn",
   shape = "circle",
+  travel = G1 - G0,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  logo,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: ShapeCutProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const stage = STAGES[theme];
+  const fg = ink ?? stage.fg;
+  const fill =
+    background === "transparent" ? "transparent" : (background ?? stage.bg);
+  const gp = G0 + ((GP - G0) * travel) / (G1 - G0);
+  const g1 = G0 + travel;
+  // Frame edges in the scale layer's own coordinates, so a shrunk layer
+  // still grows the shape past the corners.
+  const k = Math.min(1, scale);
+  const x0 = k === 1 ? 0 : W / 2 - W / 2 / k;
+  const x1 = k === 1 ? W : W / 2 + W / 2 / k;
+  const y0 = k === 1 ? 0 : H / 2 - H / 2 / k;
+  const y1 = k === 1 ? H : H / 2 + H / 2 / k;
   const pill = shape === "pill";
 
   const isLogo = to.trim().toLowerCase() === "remocn";
@@ -229,7 +278,7 @@ export function ShapeCut({
   const startAspect = pill ? 1.6 : 1;
   const corner = (hh: number) => (shape === "square" ? hh * 0.42 : hh);
 
-  const settle = SETTLE(interpolate(t, [GP, G1 + 14], [0, 1], CLAMP));
+  const settle = SETTLE(interpolate(t, [gp, g1 + 14], [0, 1], CLAMP));
   const bScale = 1 + 0.035 * (1 - settle);
   const bShift = -0.035 * W * (1 - settle);
   const toB = (x: number, y: number) => ({
@@ -240,30 +289,30 @@ export function ShapeCut({
   const r0 = 0.06 * H;
   const start = { x: -r0 * startAspect, y: anchor.y };
   const peakTarget = toB(anchor.x, anchor.y);
-  const peakP = PATH(interpolate(GP, [G0, G1], [0, 1], CLAMP));
+  const peakP = PATH(interpolate(gp, [G0, g1], [0, 1], CLAMP));
   const peakC = {
     x: start.x + (peakTarget.x - start.x) * peakP,
     y: start.y + (peakTarget.y - start.y) * peakP,
   };
   const reach = Math.max(
-    Math.hypot(peakC.x, peakC.y),
-    Math.hypot(W - peakC.x, peakC.y),
-    Math.hypot(peakC.x, H - peakC.y),
-    Math.hypot(W - peakC.x, H - peakC.y),
+    Math.hypot(peakC.x - x0, peakC.y - y0),
+    Math.hypot(x1 - peakC.x, peakC.y - y0),
+    Math.hypot(peakC.x - x0, y1 - peakC.y),
+    Math.hypot(x1 - peakC.x, y1 - peakC.y),
   );
   const rPk = 1.12 * reach;
 
   const geoAt = (f: number): Geo => {
     const target = toB(anchor.x, anchor.y);
-    const p = PATH(interpolate(f, [G0, G1], [0, 1], CLAMP));
+    const p = PATH(interpolate(f, [G0, g1], [0, 1], CLAMP));
     const cx = start.x + (target.x - start.x) * p;
     const cy = start.y + (target.y - start.y) * p;
-    if (f <= GP) {
-      const g = GROW(interpolate(f, [G0, GP], [0, 1], CLAMP));
+    if (f <= gp) {
+      const g = GROW(interpolate(f, [G0, gp], [0, 1], CLAMP));
       const hh = Math.exp(Math.log(r0) + (Math.log(rPk) - Math.log(r0)) * g);
       return { cx, cy, hw: hh * startAspect, hh, rad: corner(hh) };
     }
-    const s = SHRINK(interpolate(f, [GP, G1], [0, 1], CLAMP));
+    const s = SHRINK(interpolate(f, [gp, g1], [0, 1], CLAMP));
     const hh = rPk + (endR - rPk) * s;
     return {
       cx,
@@ -275,7 +324,7 @@ export function ShapeCut({
   };
 
   const geo = geoAt(t);
-  const swapped = t >= GP;
+  const swapped = t >= gp;
 
   const boxA = {
     x0: W / 2 - wA / 2 - 0.02 * fsA,
@@ -283,8 +332,8 @@ export function ShapeCut({
     y0: H / 2 - 0.42 * fsA,
     y1: H / 2 + 0.42 * fsA,
   };
-  let tc = GP;
-  for (let f = G0; f <= GP; f += 0.25) {
+  let tc = gp;
+  for (let f = G0; f <= gp; f += 0.25) {
     if (coversBox(geoAt(f), boxA.x0, boxA.y0, boxA.x1, boxA.y1)) {
       tc = f;
       break;
@@ -292,28 +341,45 @@ export function ShapeCut({
   }
 
   const drift = (f: number) =>
-    1 + 0.018 * interpolate(f, [0, GP], [0, 1], CLAMP);
-  const q = interpolate(t, [tc, G1 - 6], [0, 1], CLAMP);
-  const pull = PATH(q);
-  const sA = drift(Math.min(t, tc)) * Math.min(1, (1.3 * geo.hh) / rPk);
-  const aX = W / 2 + (geo.cx - W / 2) * pull;
-  const aY = H / 2 + (geo.cy - H / 2) * pull;
+    1 + 0.018 * interpolate(f, [0, gp], [0, 1], CLAMP);
+  const pulledAt = (f: number) => {
+    const g = geoAt(f);
+    const pull = PATH(interpolate(f, [tc, g1 - 6], [0, 1], CLAMP));
+    return {
+      s: drift(Math.min(f, tc)) * Math.min(1, (1.3 * g.hh) / rPk),
+      x: W / 2 + (g.cx - W / 2) * pull,
+      y: H / 2 + (g.cy - H / 2) * pull,
+    };
+  };
+  const { s: sA, x: aX, y: aY } = pulledAt(t);
+  const stirs = (a: { s: number; x: number; y: number }) =>
+    Math.abs(a.s - sA) * fsA * 4 > 1e-3 ||
+    Math.abs(a.x - aX) > 1e-3 ||
+    Math.abs(a.y - aY) > 1e-3;
+  const pulling = stirs(pulledAt(t - 1)) || stirs(pulledAt(t + 1));
+  const drifting = t > 0 && t < gp;
   const aOpacity = interpolate(sA, [0.26, 0.5], [0, 1], CLAMP);
-  const inverse = stage.bg;
+  const inverse = fill === "transparent" ? stage.bg : fill;
   const ground = beamGround(
     theme,
     accent,
     interpolate(t, [0, 110], [0, 1], CLAMP),
   );
 
-  const titleA = (color: string, x: number, y: number, s: number) => (
+  const titleA = (
+    color: string,
+    x: number,
+    y: number,
+    s: number,
+    moving: boolean,
+  ) => (
     <div
       style={{
-        ...type(fsA),
+        ...type(fsA, fontFamily),
         left: 0,
         top: 0,
         color,
-        transform: `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${s})`,
+        transform: `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${s})${glide(moving)}`,
         paddingBottom: 0.08 * fsA,
       }}
     >
@@ -324,67 +390,57 @@ export function ShapeCut({
   const shapeLeft = geo.cx - geo.hw;
   const shapeTop = geo.cy - geo.hh;
   const visible =
-    geo.cx + geo.hw > -1 &&
-    geo.cx - geo.hw < W + 1 &&
-    geo.cy + geo.hh > -1 &&
-    geo.cy - geo.hh < H + 1;
+    geo.cx + geo.hw > x0 - 1 &&
+    geo.cx - geo.hw < x1 + 1 &&
+    geo.cy + geo.hh > y0 - 1 &&
+    geo.cy - geo.hh < y1 + 1;
 
   return (
-    <AbsoluteFill style={{ background: stage.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 80% 90% at 24% 0%, ${stage.light}, transparent 70%)`,
         }}
       />
-      {swapped ? (
-        <AbsoluteFill
-          style={{
-            transform: `translateX(${bShift}px) scale(${bScale})`,
-          }}
-        >
-          {isLogo ? (
-            <div style={{ position: "absolute", left, top: topB }}>
-              <RemocnLogo fontSize={fsB} color={stage.fg} />
-            </div>
-          ) : (
-            <div
-              style={{
-                ...type(fsB),
-                left,
-                top: topB,
-                color: stage.fg,
-              }}
-            >
-              {to}
-            </div>
-          )}
-        </AbsoluteFill>
-      ) : (
-        titleA(stage.fg, W / 2, H / 2, drift(t))
-      )}
-      {visible ? (
-        <div
-          style={{
-            position: "absolute",
-            left: shapeLeft,
-            top: shapeTop,
-            width: geo.hw * 2,
-            height: geo.hh * 2,
-            borderRadius: geo.rad,
-            overflow: "hidden",
-          }}
-        >
+      <ScaleLayer scale={scale}>
+        {swapped ? (
+          <AbsoluteFill
+            style={{
+              transform: `translateX(${bShift}px) scale(${bScale})${glide(settle > 5e-4 && settle < 1 - 5e-4)}`,
+            }}
+          >
+            {isLogo ? (
+              <div style={{ position: "absolute", left, top: topB }}>
+                {logo ?? <RemocnLogo fontSize={fsB} color={fg} />}
+              </div>
+            ) : (
+              <div
+                style={{
+                  ...type(fsB, fontFamily),
+                  left,
+                  top: topB,
+                  color: fg,
+                }}
+              >
+                {to}
+              </div>
+            )}
+          </AbsoluteFill>
+        ) : (
+          titleA(fg, W / 2, H / 2, drift(t), drifting)
+        )}
+        {visible ? (
           <div
             style={{
               position: "absolute",
-              left: -shapeLeft,
-              top: -shapeTop,
-              width: W,
-              height: H,
-              background: ground,
+              left: shapeLeft,
+              top: shapeTop,
+              width: geo.hw * 2,
+              height: geo.hh * 2,
+              borderRadius: geo.rad,
+              overflow: "hidden",
             }}
-          />
-          {aOpacity > 0 ? (
+          >
             <div
               style={{
                 position: "absolute",
@@ -392,17 +448,29 @@ export function ShapeCut({
                 top: -shapeTop,
                 width: W,
                 height: H,
-                opacity: aOpacity,
+                background: ground,
               }}
-            >
-              {t < tc
-                ? titleA(inverse, W / 2, H / 2, drift(t))
-                : titleA(inverse, aX, aY, sA)}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-      <Grain opacity={theme === "light" ? 0.04 : 0.055} />
+            />
+            {aOpacity > 0 ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: -shapeLeft,
+                  top: -shapeTop,
+                  width: W,
+                  height: H,
+                  opacity: aOpacity,
+                }}
+              >
+                {t < tc
+                  ? titleA(inverse, W / 2, H / 2, drift(t), drifting)
+                  : titleA(inverse, aX, aY, sA, pulling)}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={theme === "light" ? 0.04 : 0.055} /> : null}
     </AbsoluteFill>
   );
 }

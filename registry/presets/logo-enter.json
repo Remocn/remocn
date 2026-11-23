@@ -1,0 +1,97 @@
+{
+  "component": "logo-enter",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "tight-cluster",
+      "label": "Tight Cluster",
+      "description": "Small chips packed close together that snap in quickly with a near-simultaneous cascade.",
+      "askedAs": [
+        "small logos packed tightly",
+        "quick compact logo stack",
+        "fast little icon cluster",
+        "маленькие логотипы плотно",
+        "быстрая компактная группа иконок"
+      ],
+      "props": {
+        "diameter": 80,
+        "overlap": 30,
+        "stagger": 3,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "hero-marks",
+      "label": "Hero Marks",
+      "description": "Large chips with generous spacing and a slow, deliberate one-by-one entrance.",
+      "askedAs": [
+        "big logos arriving slowly",
+        "large partner logos one at a time",
+        "dramatic slow logo reveal",
+        "крупные логотипы медленно",
+        "большие логотипы по одному"
+      ],
+      "props": {
+        "diameter": 180,
+        "overlap": 20,
+        "stagger": 14,
+        "speed": 0.75,
+        "ringColor": "#f5f2ea"
+      }
+    },
+    {
+      "id": "vertical-column",
+      "label": "Vertical Column",
+      "description": "Chips stack top to bottom in a neat column with a steady cascade.",
+      "askedAs": [
+        "logos stacked vertically",
+        "column of brand icons",
+        "top to bottom logo stack",
+        "логотипы вертикально в столбик",
+        "вертикальная колонка иконок"
+      ],
+      "props": {
+        "orientation": "vertical",
+        "diameter": 104,
+        "overlap": 28,
+        "stagger": 9
+      }
+    },
+    {
+      "id": "dark-ring",
+      "label": "Dark Ring",
+      "description": "Deep charcoal rings outline heavily overlapping chips for a sleek look on light backgrounds.",
+      "askedAs": [
+        "dark outline around logos",
+        "logos with black border",
+        "overlapping logos for light background",
+        "тёмная обводка логотипов",
+        "логотипы с чёрным контуром"
+      ],
+      "props": {
+        "ringColor": "#1c1f26",
+        "overlap": 52,
+        "diameter": 124
+      }
+    },
+    {
+      "id": "brand-blue-burst",
+      "label": "Blue Burst",
+      "description": "Cobalt-ringed chips that pop in rapidly with a punchy, energetic rhythm.",
+      "askedAs": [
+        "blue ring logos fast",
+        "energetic integration lineup",
+        "snappy logo pop in",
+        "синяя обводка быстрые логотипы",
+        "энергичное появление иконок"
+      ],
+      "props": {
+        "ringColor": "#2f5bea",
+        "speed": 2,
+        "stagger": 5,
+        "overlap": 44
+      }
+    }
+  ]
+}

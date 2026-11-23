@@ -3,26 +3,31 @@
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
 import type React from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
+  continueRender,
+  delayRender,
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const hankenFont = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
-const { fontFamily: mono } = loadMono("normal", {
+const monoFont = loadMono("normal", {
   weights: ["400"],
   subsets: ["latin"],
 });
+const hanken = hankenFont.fontFamily;
+const mono = monoFont.fontFamily;
 
 export interface VoiceToolCall {
   /** Function name listed in the call panel, e.g. "book_table". */
@@ -63,8 +68,22 @@ export interface VoiceAgentProps {
   summary?: VoiceSummaryRow[];
   /** Seconds already on the call clock when the clip starts. */
   startSeconds?: number;
+  /** Label of the red button while the call is live. */
+  endLabel?: string;
+  /** Frames between spoken words; punctuation adds a short pause on top. */
+  stagger?: number;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color of the transcript and labels; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the call window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -338,12 +357,58 @@ function Lane({
   );
 }
 
-function Grow({ p, children }: { p: number; children: React.ReactNode }) {
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/**
+ * A row that opens from nothing to its own height. It is laid out fully open
+ * all its life: `ride` is the px it sits off its place, `hide` the px of its
+ * bottom still to open, `moving` whether the ride changes on this frame and
+ * `shut` whether nothing of it shows yet.
+ */
+function Grow({
+  ride,
+  hide,
+  moving,
+  shut,
+  children,
+}: {
+  ride: number;
+  hide: number;
+  moving: boolean;
+  shut: boolean;
+  children: React.ReactNode;
+}) {
+  const glide = useGlide();
   return (
-    <div style={{ display: "grid", gridTemplateRows: `${p}fr` }}>
-      <div style={{ minHeight: 0, overflow: "hidden" }}>{children}</div>
+    <div style={{ display: "grid", gridTemplateRows: "1fr" }}>
+      <div
+        style={{
+          minHeight: 0,
+          overflow: "hidden",
+          transform: `translateY(${Math.abs(ride) > 1e-3 ? ride : 0}px)${glide(moving)}`,
+          clipPath: hide > 1e-3 ? `inset(0 0 ${hide}px 0)` : undefined,
+          visibility: shut ? "hidden" : undefined,
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
+}
+
+/** Top padding of the transcript list. */
+const LIST_PAD = 14;
+
+/** Content height layout gave a box, in px: unrounded, and no transform reaches it. */
+function contentHeight(el: Element) {
+  const s = getComputedStyle(el);
+  const px = (v: string) => Number.parseFloat(v) || 0;
+  const frame =
+    px(s.paddingTop) +
+    px(s.paddingBottom) +
+    px(s.borderTopWidth) +
+    px(s.borderBottomWidth);
+  return px(s.height) - (s.boxSizing === "border-box" ? frame : 0);
 }
 
 function ToolRow({
@@ -353,6 +418,7 @@ function ToolRow({
   frame,
   pal,
   accent,
+  held,
 }: {
   tool: VoiceToolCall;
   start: number;
@@ -360,7 +426,10 @@ function ToolRow({
   frame: number;
   pal: Pal;
   accent: string;
+  /** The window holds still, so this row carries its own tilt. */
+  held: boolean;
 }) {
+  const glide = useGlide();
   const inP = tween(frame, start, start + 10);
   const swap = tween(frame, done, done + 8, MOVE);
   const ok = spring({
@@ -380,7 +449,7 @@ function ToolRow({
         color: pal.muted,
         whiteSpace: "nowrap",
         opacity: inP,
-        transform: `translateY(${(1 - inP) * 8}px)`,
+        transform: `translateY(${(1 - inP) * 8}px)${glide(held && midway(inP))}`,
       }}
     >
       <div style={{ position: "relative", width: 18, height: 18 }}>
@@ -440,6 +509,7 @@ function TurnRow({
   agentName,
   callerName,
   startSeconds,
+  held,
 }: {
   p: TurnPlan;
   frame: number;
@@ -448,6 +518,7 @@ function TurnRow({
   agentName: string;
   callerName: string;
   startSeconds: number;
+  held: boolean;
 }) {
   const agent = p.turn.speaker === "agent";
   const cut = p.turn.interruptedAfter ? tween(frame, p.end - 2, p.end + 6) : 0;
@@ -513,6 +584,7 @@ function TurnRow({
             frame={frame}
             pal={pal}
             accent={accent}
+            held={held}
           />
         ) : null}
       </div>
@@ -529,6 +601,7 @@ function SummaryCard({
   fps,
   pal,
   callerLine,
+  held,
 }: {
   rows: VoiceSummaryRow[];
   title: string;
@@ -538,8 +611,15 @@ function SummaryCard({
   fps: number;
   pal: Pal;
   callerLine: string;
+  /** The window holds still, so the card carries its own tilt. */
+  held: boolean;
 }) {
-  const inP = spring({ frame: frame - at, fps, config: CARD });
+  const glide = useGlide();
+  const inAt = (f: number) => spring({ frame: f - at, fps, config: CARD });
+  const inP = inAt(frame);
+  const settling =
+    Math.abs(inAt(frame + 1) - inP) * 24 > 5e-4 ||
+    Math.abs(inP - inAt(frame - 1)) * 24 > 5e-4;
   return (
     <div style={{ padding: "8px 2px 4px" }}>
       <div
@@ -548,7 +628,7 @@ function SummaryCard({
           background: pal.card,
           boxShadow: pal.cardShadow,
           opacity: Math.min(1, inP * 1.6),
-          transform: `translateY(${(1 - inP) * 24}px)`,
+          transform: `translateY(${(1 - inP) * 24}px)${glide(held && settling)}`,
           overflow: "hidden",
         }}
       >
@@ -576,7 +656,7 @@ function SummaryCard({
                   height: 32,
                   fontSize: 16,
                   opacity: a,
-                  transform: `translateY(${(1 - a) * 6}px)`,
+                  transform: `translateY(${(1 - a) * 6}px)${glide(held && !settling && midway(a))}`,
                 }}
               >
                 <span style={{ width: 132, color: pal.faint }}>{r.label}</span>
@@ -613,6 +693,22 @@ function SummaryCard({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function VoiceAgent({
   agentName = "Ava",
   agentRole = "Fernway concierge",
@@ -623,23 +719,37 @@ export function VoiceAgent({
   summaryStatus = "Booked",
   summary = DEFAULT_SUMMARY,
   startSeconds = 41,
+  endLabel = "End call",
+  stagger = WPF,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hanken,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: VoiceAgentProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const tall = height > width;
   const DW = tall ? 720 : 1280;
   const DH = tall ? 1280 : 720;
   const u = Math.min(width / DW, height / DH);
-  const pal = palette(theme);
-  const tl = plan(turns);
+  const themePal = palette(theme);
+  const pal = ink === undefined ? themePal : { ...themePal, text: ink };
+  const tl = plan(turns, stagger);
   const ended = tween(frame, tl.callEnd, tl.callEnd + 8, MOVE);
   const callSec = startSeconds + Math.min(frame, tl.callEnd) / 30;
-  const winIn = spring({ frame, fps, config: HEAVY });
+  const winAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
+  const winIn = winAt(frame);
+  // Whether a value built from the frame moves into or out of this frame.
+  const stirs = (at: (f: number) => number, eps: number) =>
+    Math.abs(at(frame + 1) - at(frame)) > eps ||
+    Math.abs(at(frame) - at(frame - 1)) > eps;
   const agentLvl = level(tl.turns, "agent", frame) * (1 - ended);
   const callerLvl = level(tl.turns, "caller", frame) * (1 - ended);
   const toolLive = tl.turns.find(
@@ -656,29 +766,129 @@ export function VoiceAgent({
   const callerState =
     ended > 0.5 ? "Ended" : callerLvl > 0.04 ? "Speaking" : "Listening";
   const latency = Math.round(380 + 90 * noise(3, frame / 18));
-  const cam = interpolate(
-    frame,
-    [tl.summaryAt - 10, tl.summaryAt + 40],
-    [1, 1.025],
-    {
+  const camAt = (f: number) =>
+    interpolate(f, [tl.summaryAt - 10, tl.summaryAt + 40], [1, 1.025], {
       ...clampX,
       easing: CAMERA,
-    },
-  );
+    });
+  const cam = camAt(frame);
+  // The window carries the whole call, so its tilt covers everything inside
+  // while it rises or the camera leans in; the movers inside tilt themselves
+  // only while it holds still.
+  const winMoving =
+    stirs((f) => (1 - winAt(f)) * 80, 5e-4) ||
+    stirs((f) => (0.96 + 0.04 * winAt(f)) * camAt(f), 1e-6);
+  const held = !winMoving;
   const live = 1 - ended;
-  const endPress =
-    spring({ frame: frame - tl.callEnd + 2, fps, config: CHIP }) -
-    spring({ frame: frame - tl.callEnd - 3, fps, config: CHIP });
+  const endPressAt = (f: number) =>
+    spring({ frame: f - tl.callEnd + 2, fps, config: CHIP }) -
+    spring({ frame: f - tl.callEnd - 3, fps, config: CHIP });
+  const endPress = endPressAt(frame);
+  const endPressing = held && stirs((f) => Math.max(0, endPressAt(f)), 1e-5);
+
+  // The transcript in flow order: every row and how far open it is.
+  const flowAt = (f: number) => [
+    ...tl.turns.map((p, i) => ({
+      kind: "turn" as const,
+      i,
+      open: tween(f, p.start - 3, p.start + 7, MOVE),
+    })),
+    {
+      kind: "end" as const,
+      i: -1,
+      open: f >= tl.callEnd ? tween(f, tl.callEnd, tl.callEnd + 8, MOVE) : 0,
+    },
+    {
+      kind: "summary" as const,
+      i: -1,
+      open:
+        f >= tl.summaryAt - 2
+          ? tween(f, tl.summaryAt - 2, tl.summaryAt + 10, MOVE)
+          : 0,
+    },
+  ];
+  const flow = flowAt(frame);
+  // A row that opens by layout pushes its neighbours by layout, and layout
+  // rounds every baseline and box edge on the way: once the transcript
+  // outgrows its panel and hangs from the bottom, each line above an opening
+  // row clicks up pixel by pixel, and a row handed between layout and a
+  // transform jumps. So the list is laid out once, with every row fully open
+  // as it finally rests, and everything still to come is a transform on each
+  // row, on every frame.
+  const panelRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const [laid, setLaid] = useState({ room: 0, rows: [] as number[] });
+  // A font that arrives after the first render rewraps the transcript with no
+  // render to follow (a still, a paused player), so the frame is held until
+  // the fonts are in and the heights have been read once more.
+  const [handle] = useState(() => delayRender("voice-agent: measuring"));
+  const [fontsIn, setFontsIn] = useState(false);
+  useEffect(() => {
+    let live = true;
+    Promise.all([hankenFont.waitUntilDone(), monoFont.waitUntilDone()])
+      .then(() => document.fonts.ready)
+      .catch(() => undefined)
+      .then(() => {
+        if (live) setFontsIn(true);
+        else continueRender(handle);
+      });
+    return () => {
+      live = false;
+    };
+  }, [handle]);
+  useLayoutEffect(() => {
+    if (fontsIn) continueRender(handle);
+  }, [fontsIn, handle]);
+  // No dependency list: the copy and the font can change on any render. It
+  // runs before the frame is painted, so a frame never shows the heights of
+  // the one before.
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    const list = listRef.current;
+    if (!panel || !list) return;
+    const room = contentHeight(panel);
+    const rows = Array.from(list.children, contentHeight);
+    if (
+      Math.abs(room - laid.room) > 1e-3 ||
+      rows.length !== laid.rows.length ||
+      rows.some((h, k) => Math.abs(h - laid.rows[k]) > 1e-3)
+    ) {
+      setLaid({ room, rows });
+    }
+  });
+  const fullHeight = LIST_PAD + laid.rows.reduce((a, b) => a + b, 0);
+  const listTop = (h: number) => Math.min(0, laid.room - h);
+  // What each row still hides, and how far each sits off its laid-out place:
+  // the list rests at the top of the panel while it fits and hangs from the
+  // bottom once it does not, and a row moves up by everything the rows above
+  // it still hide.
+  const placeAt = (f: number) => {
+    const hidden = flowAt(f).map(
+      (row, k) => (laid.rows[k] ?? 0) * (1 - row.open),
+    );
+    const listShift =
+      listTop(fullHeight - hidden.reduce((a, b) => a + b, 0)) -
+      listTop(fullHeight);
+    const rides = hidden.map(
+      (_, k) => listShift - hidden.slice(0, k).reduce((a, b) => a + b, 0),
+    );
+    return { hidden, rides };
+  };
+  const { hidden, rides } = placeAt(frame);
+  const ridesBefore = placeAt(frame - 1).rides;
+  const ridesAfter = placeAt(frame + 1).rides;
 
   const L = tall
     ? { win: { x: 56, y: 100, w: 608, h: 1080 }, sideW: 608, sideH: 352 }
     : { win: { x: 136, y: 50, w: 1008, h: 620 }, sideW: 340, sideH: 0 };
   const headH = 64;
   const rise = (at: number): React.CSSProperties => {
+    const riseAt = (f: number) =>
+      (1 - spring({ frame: f - at, fps, config: CARD })) * 12;
     const p = spring({ frame: frame - at, fps, config: CARD });
     return {
       opacity: Math.min(1, p * 1.6),
-      transform: `translateY(${(1 - p) * 12}px)`,
+      transform: `translateY(${(1 - p) * 12}px)${glide(held && stirs(riseAt, 5e-4))}`,
     };
   };
 
@@ -799,7 +1009,7 @@ export function VoiceAgent({
             justifyContent: "center",
             gap: 10,
             fontSize: 17,
-            transform: `scale(${1 - 0.04 * Math.max(0, endPress)})`,
+            transform: `scale(${1 - 0.04 * Math.max(0, endPress)})${glide(endPressing)}`,
           }}
         >
           <Icon
@@ -808,7 +1018,7 @@ export function VoiceAgent({
             size={18}
             style={{ transform: "rotate(135deg)" }}
           />
-          {live > 0.5 ? "End call" : "Call ended"}
+          {live > 0.5 ? endLabel : "Call ended"}
         </div>
       </div>
     </div>
@@ -816,214 +1026,259 @@ export function VoiceAgent({
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? "kiruna"}
-        params={
-          groundParams ??
-          (pal.dark
-            ? undefined
-            : {
-                background: "#edf3f0",
-                colors: ["#ffffff", "#bfe9d9", "#7cc9ad", "#e2ece7"],
-                grain: 0.05,
-              })
-        }
-        timeOffset={6}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: pal.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - DW * u) / 2,
-          top: (height - DH * u) / 2,
-          width: DW,
-          height: DH,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? "kiruna"}
+            params={
+              groundParams ??
+              (pal.dark
+                ? undefined
+                : {
+                    background: "#edf3f0",
+                    colors: ["#ffffff", "#bfe9d9", "#7cc9ad", "#e2ece7"],
+                    grain: 0.05,
+                  })
+            }
+            timeOffset={6}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: pal.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: L.win.x,
-            top: L.win.y,
-            width: L.win.w,
-            height: L.win.h,
-            borderRadius: 18,
-            background: pal.win,
-            boxShadow: pal.shadow,
-            overflow: "hidden",
-            opacity: Math.min(1, winIn * 2),
-            transform: `translateY(${(1 - winIn) * 80}px) scale(${(0.96 + 0.04 * winIn) * cam})`,
-            transformOrigin: "60% 70%",
-            display: "flex",
-            flexDirection: "column",
+            left: (width - DW * u) / 2,
+            top: (height - DH * u) / 2,
+            width: DW,
+            height: DH,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
           <div
             style={{
-              height: headH,
-              flexShrink: 0,
+              position: "absolute",
+              left: L.win.x,
+              top: L.win.y,
+              width: L.win.w,
+              height: L.win.h,
+              borderRadius: 18,
+              background: pal.win,
+              boxShadow: pal.shadow,
+              overflow: "hidden",
+              opacity: Math.min(1, winIn * 2),
+              transform: `translateY(${(1 - winIn) * 80}px) scale(${(0.96 + 0.04 * winIn) * cam})${glide(winMoving)}`,
+              transformOrigin: "60% 70%",
               display: "flex",
-              alignItems: "center",
-              padding: "0 28px",
-              borderBottom: `1px solid ${pal.hair}`,
-              gap: 14,
+              flexDirection: "column",
             }}
           >
             <div
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                background: accent,
+                height: headH,
+                flexShrink: 0,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <svg width={18} height={18} viewBox="0 0 24 24" aria-hidden>
-                <path
-                  d="M4 10v4M8 7v10M12 4v16M16 8v8M20 10.5v3"
-                  stroke="#fff"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-            <span style={{ fontSize: 18, color: pal.text }}>{agentName}</span>
-            <span style={{ fontSize: 16, color: pal.faint }}>{agentRole}</span>
-            <div
-              style={{
-                marginLeft: "auto",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                fontSize: 16,
-                color: live > 0.5 ? pal.red : pal.muted,
+                padding: "0 28px",
+                borderBottom: `1px solid ${pal.hair}`,
+                gap: 14,
               }}
             >
               <div
                 style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  background: live > 0.5 ? pal.red : pal.faint,
-                  opacity:
-                    live > 0.5
-                      ? 0.55 + 0.45 * Math.abs(Math.cos(frame / 12))
-                      : 1,
-                }}
-              />
-              {live > 0.5 ? "Live" : "Ended"}
-              <span
-                style={{
-                  fontFamily: mono,
-                  fontSize: 16,
-                  color: pal.text,
-                  fontVariantNumeric: "tabular-nums",
-                  width: 52,
-                  textAlign: "right",
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  background: accent,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                {clock(callSec)}
+                <svg width={18} height={18} viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    d="M4 10v4M8 7v10M12 4v16M16 8v8M20 10.5v3"
+                    stroke="#fff"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+              <span style={{ fontSize: 18, color: pal.text }}>{agentName}</span>
+              <span style={{ fontSize: 16, color: pal.faint }}>
+                {agentRole}
               </span>
+              <div
+                style={{
+                  marginLeft: "auto",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  fontSize: 16,
+                  color: live > 0.5 ? pal.red : pal.muted,
+                }}
+              >
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    background: live > 0.5 ? pal.red : pal.faint,
+                    opacity:
+                      live > 0.5
+                        ? 0.55 + 0.45 * Math.abs(Math.cos(frame / 12))
+                        : 1,
+                  }}
+                />
+                {live > 0.5 ? "Live" : "Ended"}
+                <span
+                  style={{
+                    fontFamily: mono,
+                    fontSize: 16,
+                    color: pal.text,
+                    fontVariantNumeric: "tabular-nums",
+                    width: 52,
+                    textAlign: "right",
+                  }}
+                >
+                  {clock(callSec)}
+                </span>
+              </div>
             </div>
-          </div>
-          <div
-            style={{
-              flex: 1,
-              minHeight: 0,
-              display: "flex",
-              flexDirection: tall ? "column" : "row",
-            }}
-          >
-            {sidePanel}
             <div
               style={{
                 flex: 1,
                 minHeight: 0,
-                minWidth: 0,
-                overflow: "hidden",
                 display: "flex",
-                flexDirection: "column",
-                justifyContent: "flex-end",
-                padding: "0 32px 24px 28px",
-                WebkitMaskImage:
-                  "linear-gradient(to bottom, transparent 0, #000 40px)",
-                maskImage:
-                  "linear-gradient(to bottom, transparent 0, #000 40px)",
+                flexDirection: tall ? "column" : "row",
               }}
             >
-              <div style={{ marginBottom: "auto", paddingTop: 14 }}>
-                {tl.turns.map((p, i) => {
-                  const g = tween(frame, p.start - 3, p.start + 7, MOVE);
-                  if (g <= 0) return null;
-                  return (
-                    <Grow key={i} p={g}>
-                      <div
-                        style={{
-                          opacity: tween(frame, p.start - 1, p.start + 7),
-                        }}
-                      >
-                        <TurnRow
-                          p={p}
+              {sidePanel}
+              <div
+                ref={panelRef}
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  minWidth: 0,
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "flex-end",
+                  padding: "0 32px 24px 28px",
+                  WebkitMaskImage:
+                    "linear-gradient(to bottom, transparent 0, #000 40px)",
+                  maskImage:
+                    "linear-gradient(to bottom, transparent 0, #000 40px)",
+                }}
+              >
+                <div
+                  ref={listRef}
+                  style={{ marginBottom: "auto", paddingTop: LIST_PAD }}
+                >
+                  {flow.map((row, k) => {
+                    const riding =
+                      Math.abs(ridesBefore[k] - rides[k]) > 1e-6 ||
+                      Math.abs(ridesAfter[k] - rides[k]) > 1e-6;
+                    const grow = {
+                      ride: rides[k],
+                      // The row used to open as a `p`fr track in an
+                      // auto-height grid: p of its content tall, with the
+                      // content showing through the top p * p of it. So the
+                      // clip takes off more than the row holds back.
+                      hide: hidden[k] * (1 + row.open),
+                      moving: riding,
+                      shut: row.open <= 0,
+                    };
+                    // The movers inside mark their own moves only while the
+                    // window and the row hold still.
+                    const rowHeld = held && !riding;
+                    if (row.kind === "turn") {
+                      const p = tl.turns[row.i];
+                      return (
+                        <Grow key={`turn${row.i}`} {...grow}>
+                          <div
+                            style={{
+                              opacity: tween(frame, p.start - 1, p.start + 7),
+                            }}
+                          >
+                            <TurnRow
+                              p={p}
+                              frame={frame}
+                              pal={pal}
+                              accent={accent}
+                              agentName={agentName}
+                              callerName={callerName}
+                              startSeconds={startSeconds}
+                              held={rowHeld}
+                            />
+                          </div>
+                        </Grow>
+                      );
+                    }
+                    if (row.kind === "end") {
+                      return (
+                        <Grow key="end" {...grow}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 14,
+                              padding: "14px 0 10px",
+                              fontSize: 16,
+                              color: pal.faint,
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
+                            <div
+                              style={{
+                                flex: 1,
+                                height: 1,
+                                background: pal.hair,
+                              }}
+                            />
+                            Call ended · {clock(callSec)}
+                            <div
+                              style={{
+                                flex: 1,
+                                height: 1,
+                                background: pal.hair,
+                              }}
+                            />
+                          </div>
+                        </Grow>
+                      );
+                    }
+                    return (
+                      <Grow key="summary" {...grow}>
+                        <SummaryCard
+                          rows={summary}
+                          title={summaryTitle}
+                          status={summaryStatus}
+                          at={tl.summaryAt}
                           frame={frame}
+                          fps={fps}
                           pal={pal}
-                          accent={accent}
-                          agentName={agentName}
-                          callerName={callerName}
-                          startSeconds={startSeconds}
+                          callerLine={callerLine}
+                          held={rowHeld}
                         />
-                      </div>
-                    </Grow>
-                  );
-                })}
-                {frame >= tl.callEnd ? (
-                  <Grow p={tween(frame, tl.callEnd, tl.callEnd + 8, MOVE)}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 14,
-                        padding: "14px 0 10px",
-                        fontSize: 16,
-                        color: pal.faint,
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      <div
-                        style={{ flex: 1, height: 1, background: pal.hair }}
-                      />
-                      Call ended · {clock(callSec)}
-                      <div
-                        style={{ flex: 1, height: 1, background: pal.hair }}
-                      />
-                    </div>
-                  </Grow>
-                ) : null}
-                {frame >= tl.summaryAt - 2 ? (
-                  <Grow
-                    p={tween(frame, tl.summaryAt - 2, tl.summaryAt + 10, MOVE)}
-                  >
-                    <SummaryCard
-                      rows={summary}
-                      title={summaryTitle}
-                      status={summaryStatus}
-                      at={tl.summaryAt}
-                      frame={frame}
-                      fps={fps}
-                      pal={pal}
-                      callerLine={callerLine}
-                    />
-                  </Grow>
-                ) : null}
+                      </Grow>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -1052,7 +1307,7 @@ interface TurnPlan {
   toolDone: number;
 }
 
-function plan(turns: VoiceTurn[]) {
+function plan(turns: VoiceTurn[], stagger = WPF) {
   let t = 12;
   const out: TurnPlan[] = [];
   for (const turn of turns) {
@@ -1066,7 +1321,7 @@ function plan(turns: VoiceTurn[]) {
     let w = t;
     for (const word of words) {
       wordAt.push(w);
-      w += WPF + (/[,.?!]$/.test(word) ? 3 : 0);
+      w += stagger + (/[,.?!]$/.test(word) ? 3 : 0);
     }
     const end = w + 2;
     let toolStart = -1;

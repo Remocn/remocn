@@ -1,0 +1,118 @@
+{
+  "component": "press-stat",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-count",
+      "label": "Snap Count",
+      "description": "A fast, punchy beat where the caption presses early and the number slams in almost instantly.",
+      "askedAs": [
+        "make it quick and punchy",
+        "fast stat hit",
+        "snappy number reveal",
+        "быстрый резкий счётчик",
+        "сделай короче и динамичнее"
+      ],
+      "props": {
+        "pressAt": 10,
+        "countLength": 14,
+        "speed": 1.5,
+        "accent": "#22c55e"
+      }
+    },
+    {
+      "id": "slow-build",
+      "label": "Slow Build",
+      "description": "A patient, cinematic count that lingers before the press and climbs the number slowly.",
+      "askedAs": [
+        "slow dramatic count up",
+        "let the number build slowly",
+        "cinematic stat reveal",
+        "медленный нарастающий счёт",
+        "плавная драматичная цифра"
+      ],
+      "props": {
+        "pressAt": 55,
+        "countLength": 100,
+        "speed": 0.75,
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "A light, warm paper background with serif type and a deep ink-green figure, like a printed report.",
+      "askedAs": [
+        "editorial magazine style",
+        "light serif version",
+        "print report look",
+        "светлый журнальный стиль",
+        "версия с засечками на светлом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1d1a",
+        "accent": "#1f6f4a",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "terminal-amber",
+      "label": "Terminal Amber",
+      "description": "A near-black console look with JetBrains Mono and a warm amber number.",
+      "askedAs": [
+        "retro terminal style",
+        "amber on black stat",
+        "hacker console look",
+        "стиль терминала",
+        "янтарные цифры на чёрном"
+      ],
+      "props": {
+        "background": "#0d0c0a",
+        "ink": "#d9d2c3",
+        "accent": "#f2a93b",
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "product-blue",
+      "label": "Product Blue",
+      "description": "A clean SaaS look on deep navy with Geist type and a calm blue figure, slightly smaller in frame.",
+      "askedAs": [
+        "clean saas product style",
+        "blue corporate stat",
+        "modern startup look",
+        "современный продуктовый стиль",
+        "синий вариант для презентации"
+      ],
+      "props": {
+        "background": "#0b1426",
+        "ink": "#e6ecf5",
+        "accent": "#4c8dff",
+        "fontFamily": "Geist",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "bold-grotesk",
+      "label": "Bold Grotesk",
+      "description": "An oversized Space Grotesk stat on light ground with a crisp coral accent and a short delayed entrance.",
+      "askedAs": [
+        "big bold number",
+        "huge grotesk stat on white",
+        "loud poster style",
+        "крупная жирная цифра",
+        "плакатный стиль на светлом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Space Grotesk",
+        "accent": "#e4572e",
+        "scale": 1.4,
+        "delay": 12
+      }
+    }
+  ]
+}

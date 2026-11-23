@@ -3,6 +3,7 @@
 import { loadFont as loadSans } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -10,9 +11,9 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -76,6 +77,24 @@ export interface RadarCompareProps {
   competitorLabel?: string;
   caption?: string;
   accent?: string;
+  /** Color of the brand name, caption and winning axis labels; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the labels and copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Frames between brand vertices growing out. */
+  stagger?: number;
+  /** Number of grid rings. */
+  rings?: number;
+  /** Replaces the remocn mark when the brand label is "remocn". */
+  logo?: React.ReactNode;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the chart and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -93,6 +112,7 @@ const DEFAULT_BRAND = [0.94, 0.88, 0.7, 0.86, 0.9, 0.96];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -163,6 +183,22 @@ function clamp01(v: number) {
   return Math.min(1, Math.max(0, v));
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RadarCompare({
   axes = DEFAULT_AXES,
   competitor = DEFAULT_COMPETITOR,
@@ -171,14 +207,33 @@ export function RadarCompare({
   competitorLabel = "Kitebase",
   caption,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  stagger = 1.8,
+  rings = RINGS.length,
+  logo,
+  grain = true,
+  scale: size = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: RadarCompareProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const tAt = (f: number) => Math.max(0, f - delay) * speed;
+  const t = tAt(frame);
+  const { width, height, fps } = useSceneConfig();
   const gid = `rc${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const fill =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
+  const ringList =
+    rings === RINGS.length
+      ? RINGS
+      : Array.from({ length: Math.max(1, rings) }, (_, j) => (j + 1) / rings);
   const list = axes.slice(0, 8);
   const n = Math.max(3, list.length);
   const comp = Array.from({ length: n }, (_, i) => clamp01(competitor[i] ?? 0));
@@ -189,8 +244,14 @@ export function RadarCompare({
 
   const R = height * 0.28;
   const cy = height * 0.5;
-  const move = interpolate(t, [86, 118], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const cx = interpolate(move, [0, 1], [width * 0.5, width * 0.335]);
+  const centreAt = (tt: number) =>
+    interpolate(
+      interpolate(tt, [86, 118], [0, 1], { ...CLAMP, easing: EASE_IO }),
+      [0, 1],
+      [width * 0.5, width * 0.335],
+    );
+  const cx = centreAt(t);
+  const cxRest = centreAt(Infinity);
 
   const ang = (i: number) => (i / n) * TAU;
   const pt = (r: number, a: number) => ({
@@ -206,8 +267,15 @@ export function RadarCompare({
       .join(" ")} Z`;
 
   const stage = interpolate(t, [0, 8], [0, 1], CLAMP);
-  const push = interpolate(t, [0, 150], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const scale = 0.965 + 0.035 * push;
+  const scaleAt = (tt: number) =>
+    0.965 +
+    0.035 * interpolate(tt, [0, 150], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const scale = scaleAt(t);
+  // The push eases in and out slowly; it moves while the furthest text, some
+  // 700px from the centre, shifts by more than a thousandth of a pixel.
+  const pushing =
+    Math.abs(scaleAt(tAt(frame + 1)) - scale) * 700 > 1e-3 ||
+    Math.abs(scale - scaleAt(tAt(frame - 1))) * 700 > 1e-3;
 
   const compPts = comp.map((v) => v * R);
   let perim = 0;
@@ -233,7 +301,7 @@ export function RadarCompare({
 
   const grow = mine.map((_, i) =>
     spring({
-      frame: t - 58 - i * 1.8,
+      frame: t - 58 - i * stagger,
       fps,
       config: { damping: 17, stiffness: 110, mass: 0.9 },
     }),
@@ -257,310 +325,326 @@ export function RadarCompare({
   const hw = Math.max(1, u);
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${scale})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0, opacity: stage }}
-          aria-hidden
+    <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
+      <ScaleLayer scale={size}>
+        <AbsoluteFill
+          style={{
+            // The push runs under every other move, so this one tilt covers
+            // the labels and the captions as well.
+            transform: `scale(${scale})${glide(pushing)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
-          {list.map((ax, i) => {
-            const k = interpolate(t, [2 + i * 2, 22 + i * 2], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            const q = pt(R * k, ang(i));
-            return (
-              <line
-                key={`s${ax}`}
-                x1={cx}
-                y1={cy}
-                x2={q.x}
-                y2={q.y}
-                stroke={p.hair}
-                strokeWidth={hw}
-              />
-            );
-          })}
-          {RINGS.map((r, j) => {
-            const k = interpolate(t, [6 + j * 3, 26 + j * 3], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            return (
-              <path
-                key={`r${r}`}
-                d={poly(
-                  Array.from({ length: n }, () => r * R * (0.9 + 0.1 * k)),
-                )}
-                fill="none"
-                stroke={j === RINGS.length - 1 ? p.hairStrong : p.hair}
-                strokeWidth={hw}
-                strokeLinejoin="round"
-                opacity={k}
-              />
-            );
-          })}
-
-          <defs>
-            <clipPath id={`${gid}c`}>
-              <path d={poly(brandPts)} />
-            </clipPath>
-            {p.mesh.map((col, i) => {
-              const [bx, by] = BLOBS[i];
-              const dx = Math.sin(t / 45 + i * 1.7) * 4;
-              const dy = Math.cos(t / 52 + i * 2.3) * 4;
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0, opacity: stage }}
+            aria-hidden
+          >
+            {list.map((ax, i) => {
+              const k = interpolate(t, [2 + i * 2, 22 + i * 2], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
+              const q = pt(R * k, ang(i));
               return (
-                <radialGradient
-                  key={`m${col}${bx}`}
-                  id={`${gid}m${i}`}
-                  cx={(50 + (bx - 50) * 0.72 + dx) / 100}
-                  cy={(50 + (by - 50) * 0.72 + dy) / 100}
-                  r={0.58}
-                >
-                  <stop
-                    offset={0}
-                    stopColor={col}
-                    stopOpacity={p.meshAlpha[i]}
-                  />
-                  <stop offset={0.68} stopColor={col} stopOpacity={0} />
-                </radialGradient>
+                <line
+                  key={`s${ax}`}
+                  x1={cx}
+                  y1={cy}
+                  x2={q.x}
+                  y2={q.y}
+                  stroke={p.hair}
+                  strokeWidth={hw}
+                />
               );
             })}
-          </defs>
-          {brandOn > 0 ? (
-            <g
-              clipPath={`url(#${gid}c)`}
-              opacity={p.brandFill * brandOn * (0.55 + 0.45 * settle)}
-            >
-              <rect
-                x={cx - R}
-                y={cy - R}
-                width={2 * R}
-                height={2 * R}
-                fill={p.meshBase}
-              />
-              {p.mesh.map((col, i) => (
+            {ringList.map((r, j) => {
+              const k = interpolate(t, [6 + j * 3, 26 + j * 3], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
+              return (
+                <path
+                  key={`r${r}`}
+                  d={poly(
+                    Array.from({ length: n }, () => r * R * (0.9 + 0.1 * k)),
+                  )}
+                  fill="none"
+                  stroke={j === ringList.length - 1 ? p.hairStrong : p.hair}
+                  strokeWidth={hw}
+                  strokeLinejoin="round"
+                  opacity={k}
+                />
+              );
+            })}
+
+            <defs>
+              <clipPath id={`${gid}c`}>
+                <path d={poly(brandPts)} />
+              </clipPath>
+              {p.mesh.map((col, i) => {
+                const [bx, by] = BLOBS[i];
+                const dx = Math.sin(t / 45 + i * 1.7) * 4;
+                const dy = Math.cos(t / 52 + i * 2.3) * 4;
+                return (
+                  <radialGradient
+                    key={`m${col}${bx}`}
+                    id={`${gid}m${i}`}
+                    cx={(50 + (bx - 50) * 0.72 + dx) / 100}
+                    cy={(50 + (by - 50) * 0.72 + dy) / 100}
+                    r={0.58}
+                  >
+                    <stop
+                      offset={0}
+                      stopColor={col}
+                      stopOpacity={p.meshAlpha[i]}
+                    />
+                    <stop offset={0.68} stopColor={col} stopOpacity={0} />
+                  </radialGradient>
+                );
+              })}
+            </defs>
+            {brandOn > 0 ? (
+              <g
+                clipPath={`url(#${gid}c)`}
+                opacity={p.brandFill * brandOn * (0.55 + 0.45 * settle)}
+              >
                 <rect
-                  key={`mr${col}${BLOBS[i][0]}`}
                   x={cx - R}
                   y={cy - R}
                   width={2 * R}
                   height={2 * R}
-                  fill={`url(#${gid}m${i})`}
+                  fill={p.meshBase}
                 />
-              ))}
-            </g>
-          ) : null}
-          <path
-            d={poly(compPts)}
-            fill={p.compFill}
-            fillOpacity={compFill * (1 - 0.4 * settle)}
-            stroke={interpolateColors(settle, [0, 1], [p.comp, p.compOver])}
-            strokeWidth={1.75 * u}
-            strokeLinejoin="round"
-            strokeDasharray={`${perim * compDraw} ${perim}`}
-            opacity={compDraw > 0 ? 1 - 0.3 * settle : 0}
-          />
-          {compPts.map((r, i) => {
-            const q = pt(r, ang(i));
-            const f0 = perim > 0 ? cum[i] / perim : 0;
-            const k = interpolate(
-              compDraw * 1.04 + (compDraw > 0 ? 0.02 : 0),
-              [f0, f0 + 0.05],
-              [0, 1],
-              CLAMP,
-            );
-            return (
-              <circle
-                key={`cd${list[i] ?? i}`}
-                cx={q.x}
-                cy={q.y}
-                r={3 * u}
-                fill={interpolateColors(settle, [0, 1], [p.comp, p.compOver])}
-                opacity={k * (1 - 0.3 * settle)}
-              />
-            );
-          })}
-
-          {brandOn > 0 ? (
+                {p.mesh.map((col, i) => (
+                  <rect
+                    key={`mr${col}${BLOBS[i][0]}`}
+                    x={cx - R}
+                    y={cy - R}
+                    width={2 * R}
+                    height={2 * R}
+                    fill={`url(#${gid}m${i})`}
+                  />
+                ))}
+              </g>
+            ) : null}
             <path
-              d={poly(brandPts)}
-              fill="none"
-              stroke={stroke}
-              strokeWidth={2.5 * u}
+              d={poly(compPts)}
+              fill={p.compFill}
+              fillOpacity={compFill * (1 - 0.4 * settle)}
+              stroke={interpolateColors(settle, [0, 1], [p.comp, p.compOver])}
+              strokeWidth={1.75 * u}
               strokeLinejoin="round"
-              opacity={brandOn}
+              strokeDasharray={`${perim * compDraw} ${perim}`}
+              opacity={compDraw > 0 ? 1 - 0.3 * settle : 0}
             />
-          ) : null}
-          {brandPts.map((r, i) => {
-            const q = pt(r, ang(i));
-            return (
-              <circle
-                key={`bd${list[i] ?? i}`}
-                cx={q.x}
-                cy={q.y}
-                r={4.5 * u}
-                fill={stroke}
-                stroke={p.bg}
-                strokeWidth={2 * u}
+            {compPts.map((r, i) => {
+              const q = pt(r, ang(i));
+              const f0 = perim > 0 ? cum[i] / perim : 0;
+              const k = interpolate(
+                compDraw * 1.04 + (compDraw > 0 ? 0.02 : 0),
+                [f0, f0 + 0.05],
+                [0, 1],
+                CLAMP,
+              );
+              return (
+                <circle
+                  key={`cd${list[i] ?? i}`}
+                  cx={q.x}
+                  cy={q.y}
+                  r={3 * u}
+                  fill={interpolateColors(settle, [0, 1], [p.comp, p.compOver])}
+                  opacity={k * (1 - 0.3 * settle)}
+                />
+              );
+            })}
+
+            {brandOn > 0 ? (
+              <path
+                d={poly(brandPts)}
+                fill="none"
+                stroke={stroke}
+                strokeWidth={2.5 * u}
+                strokeLinejoin="round"
                 opacity={brandOn}
               />
-            );
-          })}
-        </svg>
+            ) : null}
+            {brandPts.map((r, i) => {
+              const q = pt(r, ang(i));
+              return (
+                <circle
+                  key={`bd${list[i] ?? i}`}
+                  cx={q.x}
+                  cy={q.y}
+                  r={4.5 * u}
+                  fill={stroke}
+                  stroke={p.bg}
+                  strokeWidth={2 * u}
+                  opacity={brandOn}
+                />
+              );
+            })}
+          </svg>
 
-        {list.map((ax, i) => {
-          const a = ang(i);
-          const k = interpolate(t, [10 + i * 2, 30 + i * 2], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          const q = pt(R + (22 + 6 * (1 - k)) * u, a);
-          const sx = Math.sin(a);
-          const sy = -Math.cos(a);
-          const won = mine[i] > comp[i];
-          return (
-            <div
-              key={`l${ax}`}
-              style={{
-                position: "absolute",
-                left: q.x,
-                top: q.y,
-                transform: `translate(${-50 + sx * 50}%, ${-50 + sy * 50}%)`,
-                fontFamily: sans,
-                fontWeight: 500,
-                fontSize: 17 * u,
-                letterSpacing: "-0.005em",
-                color: won
-                  ? interpolateColors(settle, [0, 1], [p.muted, p.fg])
-                  : p.muted,
-                whiteSpace: "nowrap",
-                opacity: k * stage,
-              }}
-            >
-              {ax}
-            </div>
-          );
-        })}
-
-        <div
-          style={{
-            position: "absolute",
-            left: textLeft,
-            top: cy,
-            transform: "translateY(-50%)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-          }}
-        >
-          <div
-            style={{
-              opacity: hero,
-              filter: hero < 0.99 ? `blur(${(1 - hero) * 8 * u}px)` : undefined,
-              transform: `translateX(${(1 - hero) * 26 * u}px)`,
-            }}
-          >
-            {isRemocn ? (
-              <RemocnLogo fontSize={104 * u} color={p.fg} />
-            ) : (
+          {list.map((ax, i) => {
+            const a = ang(i);
+            const k = interpolate(t, [10 + i * 2, 30 + i * 2], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            const at = (kk: number, x: number) => {
+              const r = R + (22 + 6 * (1 - kk)) * u;
+              return { x: x + r * Math.sin(a), y: cy - r * Math.cos(a) };
+            };
+            // Laid out where the label settles; the drift out and the slide
+            // with the chart are a transform, since layout rounds a baseline
+            // to whole pixels and the label would click along.
+            const q = at(k, cx);
+            const rest = at(1, cxRest);
+            const sx = Math.sin(a);
+            const sy = -Math.cos(a);
+            const won = mine[i] > comp[i];
+            return (
               <div
+                key={`l${ax}`}
                 style={{
-                  fontFamily: sans,
+                  position: "absolute",
+                  left: rest.x,
+                  top: rest.y,
+                  transform: `translate(${q.x - rest.x}px, ${q.y - rest.y}px) translate(${-50 + sx * 50}%, ${-50 + sy * 50}%)`,
+                  fontFamily,
                   fontWeight: 500,
-                  fontSize: 108 * u,
-                  lineHeight: 0.9,
-                  letterSpacing: "-0.04em",
-                  color: p.fg,
+                  fontSize: 17 * u,
+                  letterSpacing: "-0.005em",
+                  color: won
+                    ? interpolateColors(settle, [0, 1], [p.muted, fg])
+                    : p.muted,
                   whiteSpace: "nowrap",
+                  opacity: k * stage,
                 }}
               >
-                {brandLabel}
+                {ax}
               </div>
-            )}
-          </div>
+            );
+          })}
+
           <div
             style={{
-              marginTop: 24 * u,
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 28 * u,
-              lineHeight: 1.25,
-              letterSpacing: "-0.015em",
-              color: p.fg,
-              maxWidth: width * 0.34,
-              textWrap: "balance",
-              opacity: line2,
-              transform: `translateY(${(1 - line2) * 10 * u}px)`,
+              position: "absolute",
+              left: textLeft,
+              top: cy,
+              transform: "translateY(-50%)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
             }}
           >
-            {caption ?? (
-              <>
-                Ahead of {competitorLabel} on{" "}
-                <span
+            <div
+              style={{
+                opacity: hero,
+                filter:
+                  hero < 0.99 ? `blur(${(1 - hero) * 8 * u}px)` : undefined,
+                transform: `translateX(${(1 - hero) * 26 * u}px)`,
+              }}
+            >
+              {isRemocn ? (
+                (logo ?? <RemocnLogo fontSize={104 * u} color={fg} />)
+              ) : (
+                <div
                   style={{
-                    fontFamily: serif,
-                    fontStyle: "italic",
-                    fontWeight: 400,
-                    fontSize: "1.18em",
-                    letterSpacing: "-0.01em",
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: 108 * u,
+                    lineHeight: 0.9,
+                    letterSpacing: "-0.04em",
+                    color: fg,
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  {wins} of {n}
-                </span>
-                .
-              </>
-            )}
+                  {brandLabel}
+                </div>
+              )}
+            </div>
+            <div
+              style={{
+                marginTop: 24 * u,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 28 * u,
+                lineHeight: 1.25,
+                letterSpacing: "-0.015em",
+                color: fg,
+                maxWidth: width * 0.34,
+                textWrap: "balance",
+                opacity: line2,
+                transform: `translateY(${(1 - line2) * 10 * u}px)`,
+              }}
+            >
+              {caption ?? (
+                <>
+                  Ahead of {competitorLabel} on{" "}
+                  <span
+                    style={{
+                      fontFamily: serif,
+                      fontStyle: "italic",
+                      fontWeight: 400,
+                      fontSize: "1.18em",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {wins} of {n}
+                  </span>
+                  .
+                </>
+              )}
+            </div>
+            <div
+              style={{
+                marginTop: 26 * u,
+                display: "flex",
+                alignItems: "center",
+                gap: 26 * u,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 17 * u,
+                color: p.muted,
+                whiteSpace: "nowrap",
+                opacity: line3,
+                transform: `translateY(${(1 - line3) * 8 * u}px)`,
+              }}
+            >
+              {[
+                { name: brandLabel, color: stroke, w: 2.5 },
+                { name: competitorLabel, color: p.comp, w: 1.75 },
+              ].map((it) => (
+                <div
+                  key={it.name}
+                  style={{ display: "flex", alignItems: "center", gap: 10 * u }}
+                >
+                  <span
+                    style={{
+                      width: 18 * u,
+                      height: it.w * u,
+                      borderRadius: it.w * u,
+                      background: it.color,
+                    }}
+                  />
+                  {it.name}
+                </div>
+              ))}
+            </div>
           </div>
-          <div
-            style={{
-              marginTop: 26 * u,
-              display: "flex",
-              alignItems: "center",
-              gap: 26 * u,
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 17 * u,
-              color: p.muted,
-              whiteSpace: "nowrap",
-              opacity: line3,
-              transform: `translateY(${(1 - line3) * 8 * u}px)`,
-            }}
-          >
-            {[
-              { name: brandLabel, color: stroke, w: 2.5 },
-              { name: competitorLabel, color: p.comp, w: 1.75 },
-            ].map((it) => (
-              <div
-                key={it.name}
-                style={{ display: "flex", alignItems: "center", gap: 10 * u }}
-              >
-                <span
-                  style={{
-                    width: 18 * u,
-                    height: it.w * u,
-                    borderRadius: it.w * u,
-                    background: it.color,
-                  }}
-                />
-                {it.name}
-              </div>
-            ))}
-          </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${fill} 100%)`,
           opacity: 0.6,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -17,9 +17,14 @@ import {
   delayRender,
   Easing,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+  useSceneFrameCount,
+} from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -155,6 +160,11 @@ const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+
+// A camera scale built from punches, kicks and a drift has no single progress,
+// so it counts as moving while it differs from a neighbouring frame.
+const drifting = (at: (f: number) => number, f: number) =>
+  Math.abs(at(f + 1) - at(f)) > 1e-6 || Math.abs(at(f) - at(f - 1)) > 1e-6;
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 export type LetterGateProps = {
@@ -200,7 +210,10 @@ const LetterGatePresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
-  const { width: W, height: H } = useVideoConfig();
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
+  const { width: W, height: H } = useSceneConfig();
   const o = { ...letterGateDefaults, ...passedProps };
   const uid = useId().replace(/:/g, "");
   const m = useMetrics(o.fontFamily, o.fontWeight, "gate glyphs");
@@ -242,7 +255,7 @@ const LetterGatePresentation: React.FC<
   const sceneIn = clamp01(q / SWAP);
   // Parting starts on the cut itself: the glyphs never hold, they open while
   // the new scene dissolves in under them.
-  const frames = Math.max(1, presentationDurationInFrames * (1 - o.cut));
+  const frames = Math.max(1, sceneLength * (1 - o.cut));
   // The gate is already opening on the cut frame, so the pair is never seen
   // closed and still.
   const g = clamp01(q + 2 / frames);
@@ -453,6 +466,46 @@ const B_BEATS = {
 } as const;
 const PUNCH = [1, 1.35, 1.8] as const;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+/** The shader ground, or a solid `background` fill in its place. */
+function Ground({
+  background,
+  children,
+}: {
+  background?: string;
+  children: React.ReactNode;
+}) {
+  if (background === undefined) return children;
+  return (
+    <AbsoluteFill
+      style={{
+        background: background === "transparent" ? undefined : background,
+      }}
+    />
+  );
+}
+
+type SceneLook = {
+  background?: string;
+  scale: number;
+  speed: number;
+};
+
 function pillFont(W: number, H: number) {
   const u = Math.min(W, H) / 720;
   return 38 * u;
@@ -463,92 +516,113 @@ function SceneA({
   palette,
   ground,
   groundParams,
+  fontFamily,
+  fontWeight,
+  logo,
+  delay,
+  look: { background, scale, speed },
 }: {
   text: string;
   palette: Palette;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  fontFamily: string;
+  fontWeight: number;
+  logo?: React.ReactNode;
+  delay: number;
+  look: SceneLook;
 }) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const now = useSceneFrame();
+  const frame = Math.max(0, now - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const u = Math.min(W, H) / 720;
   const fs = pillFont(W, H);
   const rise = spring({ frame: frame - A_BEATS.pill, fps, config: CARD });
   const logoIn = ENTER(clamp01((frame - A_BEATS.logo) / 12));
-  const step = frame >= A_BEATS.punch2 ? 2 : frame >= A_BEATS.punch1 ? 1 : 0;
-  const since =
-    step === 2
-      ? frame - A_BEATS.punch2
-      : step === 1
-        ? frame - A_BEATS.punch1
-        : 99;
-  const kick = since < 3 ? 1.035 - since * 0.012 : 1;
-  const cam = PUNCH[step] * kick * (1 + 0.01 * clamp01(frame / A_LEN));
+  const camAt = (f: number) => {
+    const t = Math.max(0, f - delay) * speed;
+    const step = t >= A_BEATS.punch2 ? 2 : t >= A_BEATS.punch1 ? 1 : 0;
+    const since =
+      step === 2 ? t - A_BEATS.punch2 : step === 1 ? t - A_BEATS.punch1 : 99;
+    const kick = since < 3 ? 1.035 - since * 0.012 : 1;
+    return PUNCH[step] * kick * (1 + 0.01 * clamp01(t / A_LEN));
+  };
+  const cam = camAt(now);
   return (
-    <AbsoluteFill style={{ background: palette.groundA.background }}>
-      <GshGround
-        preset={ground}
-        params={
-          ground && !groundParams
-            ? undefined
-            : (groundParams ?? palette.groundA)
-        }
-        timeOffset={3}
-        timeScale={0.7}
-      />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${cam})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        <div
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : palette.groundA.background,
+      }}
+    >
+      <Ground background={background}>
+        <GshGround
+          preset={ground}
+          params={
+            ground && !groundParams
+              ? undefined
+              : (groundParams ?? palette.groundA)
+          }
+          timeOffset={3}
+          timeScale={0.7}
+        />
+      </Ground>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: H / 2 - fs * 2.6,
-            display: "flex",
-            justifyContent: "center",
-            opacity: logoIn,
-            transform: `translateY(${(1 - logoIn) * 10 * u}px)`,
-          }}
-        >
-          <RemocnLogo fontSize={24 * u} color={palette.logo} />
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: H / 2,
-            display: "flex",
-            justifyContent: "center",
+            transform: `scale(${cam})${glide(drifting(camAt, now))}`,
+            transformOrigin: "50% 50%",
           }}
         >
           <div
             style={{
-              transform: `translateY(-50%) translateY(${(1 - rise) * 40 * u}px) scale(${lerp(0.9, 1, rise)})`,
-              opacity: clamp01(rise * 2),
-              filter: `blur(${Math.max(0, (1 - rise) * 6).toFixed(2)}px)`,
-              background: palette.pillBg,
-              border: `${1 * u}px solid ${palette.pillBorder}`,
-              boxShadow: palette.pillShadow,
-              borderRadius: 999,
-              padding: `${fs * 0.42}px ${fs * 0.78}px ${fs * 0.46}px`,
-              fontFamily: geist.fontFamily,
-              fontWeight: 400,
-              fontSize: fs,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.1,
-              color: palette.pillInk,
-              whiteSpace: "pre",
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: H / 2 - fs * 2.6,
+              display: "flex",
+              justifyContent: "center",
+              opacity: logoIn,
+              transform: `translateY(${(1 - logoIn) * 10 * u}px)`,
             }}
           >
-            {text}
+            {logo ?? <RemocnLogo fontSize={24 * u} color={palette.logo} />}
           </div>
-        </div>
-      </AbsoluteFill>
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: H / 2,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                transform: `translateY(-50%) translateY(${(1 - rise) * 40 * u}px) scale(${lerp(0.9, 1, rise)})`,
+                opacity: clamp01(rise * 2),
+                filter: `blur(${Math.max(0, (1 - rise) * 6).toFixed(2)}px)`,
+                background: palette.pillBg,
+                border: `${1 * u}px solid ${palette.pillBorder}`,
+                boxShadow: palette.pillShadow,
+                borderRadius: 999,
+                padding: `${fs * 0.42}px ${fs * 0.78}px ${fs * 0.46}px`,
+                fontFamily,
+                fontWeight,
+                fontSize: fs,
+                letterSpacing: "-0.02em",
+                lineHeight: 1.1,
+                color: palette.pillInk,
+                whiteSpace: "pre",
+              }}
+            >
+              {text}
+            </div>
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -608,6 +682,7 @@ function SceneB({
   accent,
   ground,
   groundParams,
+  look: { background, scale, speed },
 }: {
   prompt: string;
   placeholder: string;
@@ -617,9 +692,12 @@ function SceneB({
   accent: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  look: SceneLook;
 }) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const now = useSceneFrame();
+  const frame = now * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const uid = useId().replace(/:/g, "");
   const tall = H > W * 1.1;
   const u = Math.min(W, H) / 720;
@@ -659,263 +737,285 @@ function SceneB({
   const inD = tall
     ? `M${inFrom.x} ${inFrom.y}C${inFrom.x} ${inTo.y * 0.6} ${inTo.x} ${inTo.y * 0.5} ${inTo.x} ${inTo.y}`
     : `M${inFrom.x} ${inFrom.y}C${inTo.x * 0.5} ${inFrom.y} ${inTo.x * 0.5} ${inTo.y} ${inTo.x} ${inTo.y}`;
-  const push = 1 + 0.04 * clamp01(frame / B_LEN);
+  const pushAt = (f: number) => 1 + 0.04 * clamp01((f * speed) / B_LEN);
+  const push = pushAt(now);
   const len = 900 * k;
   const nodePop = spring({ frame: nodeLocal, fps, config: CARD });
   const labelShown = Math.max(0, nodeLocal - 2);
   return (
-    <AbsoluteFill style={{ background: palette.groundB.background }}>
-      <GshGround
-        preset={ground}
-        params={
-          ground && !groundParams
-            ? undefined
-            : (groundParams ?? palette.groundB)
-        }
-        timeOffset={5}
-        timeScale={0.6}
-      />
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
-        >
-          <defs>
-            <pattern
-              id={`${uid}-dots`}
-              width={24 * k}
-              height={24 * k}
-              patternUnits="userSpaceOnUse"
-              x={cx}
-              y={cy}
-            >
-              <circle cx={12 * k} cy={12 * k} r={1.1 * k} fill={palette.dot} />
-            </pattern>
-          </defs>
-          <rect x={0} y={0} width={W} height={H} fill={`url(#${uid}-dots)`} />
-          <path
-            d={inD}
-            fill="none"
-            stroke={palette.tint}
-            strokeOpacity={0.55}
-            strokeWidth={1.6 * k}
-            strokeDasharray={`${5 * k} ${5 * k}`}
-            strokeDashoffset={-frame * 0.4 * k}
-            strokeLinecap="round"
-          />
-          {edgeP > 0 ? (
-            <path
-              d={edgeD}
-              fill="none"
-              stroke={palette.violet}
-              strokeWidth={1.6 * k}
-              strokeDasharray={`${len * edgeP} ${len}`}
-              strokeLinecap="round"
-              mask={`url(#${uid}-dash)`}
-            />
-          ) : null}
-          <mask id={`${uid}-dash`} maskUnits="userSpaceOnUse">
-            <path
-              d={edgeD}
-              fill="none"
-              stroke="#fff"
-              strokeWidth={3 * k}
-              strokeDasharray={`${5 * k} ${5 * k}`}
-            />
-          </mask>
-        </svg>
-        <div
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : palette.groundB.background,
+      }}
+    >
+      <Ground background={background}>
+        <GshGround
+          preset={ground}
+          params={
+            ground && !groundParams
+              ? undefined
+              : (groundParams ?? palette.groundB)
+          }
+          timeOffset={5}
+          timeScale={0.6}
+        />
+      </Ground>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: cx - fw / 2,
-            top: cy - fh / 2,
-            width: fw,
-            height: fh,
+            transform: `scale(${push})${glide(drifting(pushAt, now))}`,
+            transformOrigin: "50% 50%",
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              width: fw,
-              bottom: fh + 10 * k,
-              textAlign: "center",
-              fontFamily: mono.fontFamily,
-              fontWeight: 400,
-              fontSize: 15 * k,
-              lineHeight: 1,
-              color: palette.tint,
-            }}
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
           >
-            {label}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: 11 * k,
-              background: palette.field,
-              border: `${1.5 * k}px solid ${palette.tint}`,
-              boxShadow: palette.shadow,
-              display: "flex",
-              alignItems: "center",
-              paddingLeft: 16 * k,
-              boxSizing: "border-box",
-              fontFamily: mono.fontFamily,
-              fontWeight: 400,
-              fontSize: fieldText,
-              color: typed > 0 ? palette.ink : palette.muted,
-              whiteSpace: "pre",
-            }}
-          >
-            {typed > 0 ? prompt.slice(0, typed) : placeholder}
-            {frame < B_BEATS.press + 2 && Math.floor(frame / 5) % 2 === 0 ? (
-              <span
-                style={{
-                  display: "inline-block",
-                  width: 1.5 * k,
-                  height: fieldText * 1.15,
-                  marginLeft: 2 * k,
-                  background: palette.tint,
-                }}
+            <defs>
+              <pattern
+                id={`${uid}-dots`}
+                width={24 * k}
+                height={24 * k}
+                patternUnits="userSpaceOnUse"
+                x={cx}
+                y={cy}
+              >
+                <circle
+                  cx={12 * k}
+                  cy={12 * k}
+                  r={1.1 * k}
+                  fill={palette.dot}
+                />
+              </pattern>
+            </defs>
+            <rect x={0} y={0} width={W} height={H} fill={`url(#${uid}-dots)`} />
+            <path
+              d={inD}
+              fill="none"
+              stroke={palette.tint}
+              strokeOpacity={0.55}
+              strokeWidth={1.6 * k}
+              strokeDasharray={`${5 * k} ${5 * k}`}
+              strokeDashoffset={-frame * 0.4 * k}
+              strokeLinecap="round"
+            />
+            {edgeP > 0 ? (
+              <path
+                d={edgeD}
+                fill="none"
+                stroke={palette.violet}
+                strokeWidth={1.6 * k}
+                strokeDasharray={`${len * edgeP} ${len}`}
+                strokeLinecap="round"
+                mask={`url(#${uid}-dash)`}
               />
             ) : null}
-            <div
-              style={{
-                position: "absolute",
-                right: 10 * k,
-                top: fh / 2 - 17 * k,
-                width: 34 * k,
-                height: 34 * k,
-                borderRadius: 17 * k,
-                background: accent,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transform: `scale(${pressS})`,
-              }}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                width={18 * k}
-                height={18 * k}
-                aria-hidden
-              >
-                <path
-                  d="M5 12h14M13 6l6 6-6 6"
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-          </div>
-          <Handles
-            w={fw}
-            h={fh}
-            k={k}
-            color={palette.tint}
-            fill={palette.handle}
-            t={1 - EXIT(clamp01((frame - B_BEATS.edge - 4) / 6))}
-          />
-        </div>
-        {nodeLocal >= 0 ? (
+            <mask id={`${uid}-dash`} maskUnits="userSpaceOnUse">
+              <path
+                d={edgeD}
+                fill="none"
+                stroke="#fff"
+                strokeWidth={3 * k}
+                strokeDasharray={`${5 * k} ${5 * k}`}
+              />
+            </mask>
+          </svg>
           <div
             style={{
               position: "absolute",
-              left: nx - tw / 2,
-              top: ny - tw / 2,
-              width: tw,
-              height: tw,
-              opacity: clamp01(nodeLocal / 4),
-              transform: `scale(${lerp(1.14, 1, nodePop)})`,
+              left: cx - fw / 2,
+              top: cy - fh / 2,
+              width: fw,
+              height: fh,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                ...(tall
-                  ? { left: tw + 14 * k, top: tw / 2 - 7.5 * k }
-                  : { left: -40 * k, width: tw + 80 * k, bottom: tw + 9 * k }),
-                textAlign: tall ? "left" : "center",
+                left: 0,
+                width: fw,
+                bottom: fh + 10 * k,
+                textAlign: "center",
                 fontFamily: mono.fontFamily,
                 fontWeight: 400,
                 fontSize: 15 * k,
                 lineHeight: 1,
-                color: palette.violet,
-                whiteSpace: "pre",
+                color: palette.tint,
               }}
             >
-              {nextLabel.slice(0, Math.min(nextLabel.length, labelShown))}
+              {label}
             </div>
             <div
               style={{
                 position: "absolute",
                 inset: 0,
-                borderRadius: 6 * k,
-                background: palette.nodeBase,
-                border: `${1.5 * k}px solid ${palette.violet}`,
+                borderRadius: 11 * k,
+                background: palette.field,
+                border: `${1.5 * k}px solid ${palette.tint}`,
                 boxShadow: palette.shadow,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
+                paddingLeft: 16 * k,
+                boxSizing: "border-box",
+                fontFamily: mono.fontFamily,
+                fontWeight: 400,
+                fontSize: fieldText,
+                color: typed > 0 ? palette.ink : palette.muted,
+                whiteSpace: "pre",
               }}
             >
+              {typed > 0 ? prompt.slice(0, typed) : placeholder}
+              {frame < B_BEATS.press + 2 && Math.floor(frame / 5) % 2 === 0 ? (
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 1.5 * k,
+                    height: fieldText * 1.15,
+                    marginLeft: 2 * k,
+                    background: palette.tint,
+                  }}
+                />
+              ) : null}
               <div
                 style={{
-                  width: 40 * k,
-                  height: 40 * k,
-                  borderRadius: 7 * k,
-                  border: `${1.2 * k}px dashed ${palette.violet}`,
+                  position: "absolute",
+                  right: 10 * k,
+                  top: fh / 2 - 17 * k,
+                  width: 34 * k,
+                  height: 34 * k,
+                  borderRadius: 17 * k,
+                  background: accent,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  transform: `scale(${spring({ frame: nodeLocal - 4, fps, config: CHIP })})`,
+                  transform: `scale(${pressS})`,
                 }}
               >
                 <svg
                   viewBox="0 0 24 24"
-                  width={21 * k}
-                  height={21 * k}
+                  width={18 * k}
+                  height={18 * k}
                   aria-hidden
                 >
-                  <rect
-                    x={5}
-                    y={3}
-                    width={14}
-                    height={18}
-                    rx={2.5}
-                    fill="none"
-                    stroke={palette.violet}
-                    strokeWidth={1.5}
-                  />
                   <path
-                    d="M8.5 8h7M8.5 12h7M8.5 16h4"
+                    d="M5 12h14M13 6l6 6-6 6"
                     fill="none"
-                    stroke={palette.violet}
-                    strokeWidth={1.5}
+                    stroke="#ffffff"
+                    strokeWidth={2}
                     strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 </svg>
               </div>
             </div>
             <Handles
-              w={tw}
-              h={tw}
+              w={fw}
+              h={fh}
               k={k}
-              color={palette.violet}
+              color={palette.tint}
               fill={palette.handle}
-              t={spring({ frame: nodeLocal, fps, config: CHIP })}
+              t={1 - EXIT(clamp01((frame - B_BEATS.edge - 4) / 6))}
             />
           </div>
-        ) : null}
-      </AbsoluteFill>
+          {nodeLocal >= 0 ? (
+            <div
+              style={{
+                position: "absolute",
+                left: nx - tw / 2,
+                top: ny - tw / 2,
+                width: tw,
+                height: tw,
+                opacity: clamp01(nodeLocal / 4),
+                transform: `scale(${lerp(1.14, 1, nodePop)})`,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  ...(tall
+                    ? { left: tw + 14 * k, top: tw / 2 - 7.5 * k }
+                    : {
+                        left: -40 * k,
+                        width: tw + 80 * k,
+                        bottom: tw + 9 * k,
+                      }),
+                  textAlign: tall ? "left" : "center",
+                  fontFamily: mono.fontFamily,
+                  fontWeight: 400,
+                  fontSize: 15 * k,
+                  lineHeight: 1,
+                  color: palette.violet,
+                  whiteSpace: "pre",
+                }}
+              >
+                {nextLabel.slice(0, Math.min(nextLabel.length, labelShown))}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: 6 * k,
+                  background: palette.nodeBase,
+                  border: `${1.5 * k}px solid ${palette.violet}`,
+                  boxShadow: palette.shadow,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <div
+                  style={{
+                    width: 40 * k,
+                    height: 40 * k,
+                    borderRadius: 7 * k,
+                    border: `${1.2 * k}px dashed ${palette.violet}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transform: `scale(${spring({ frame: nodeLocal - 4, fps, config: CHIP })})`,
+                  }}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width={21 * k}
+                    height={21 * k}
+                    aria-hidden
+                  >
+                    <rect
+                      x={5}
+                      y={3}
+                      width={14}
+                      height={18}
+                      rx={2.5}
+                      fill="none"
+                      stroke={palette.violet}
+                      strokeWidth={1.5}
+                    />
+                    <path
+                      d="M8.5 8h7M8.5 12h7M8.5 16h4"
+                      fill="none"
+                      stroke={palette.violet}
+                      strokeWidth={1.5}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <Handles
+                w={tw}
+                h={tw}
+                k={k}
+                color={palette.violet}
+                fill={palette.handle}
+                t={spring({ frame: nodeLocal, fps, config: CHIP })}
+              />
+            </div>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -929,6 +1029,22 @@ export type LetterGateDemoProps = {
   placeholder?: string;
   label?: string;
   nextLabel?: string;
+  /** Text color of the pill, the gate letters and the prompt; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of both gradient grounds; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the pill and the gate letters. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Weight of the pill and the gate letters. */
+  fontWeight?: number;
+  /** Replaces the remocn mark above the pill. */
+  logo?: React.ReactNode;
+  /** Size of both scenes' foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Playback multiplier for the whole series. */
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   groundB?: GshPresetId;
@@ -945,16 +1061,31 @@ export function LetterGateDemo({
   placeholder = "Describe your launch",
   label = "Prompt",
   nextLabel = "Script",
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  fontWeight = 400,
+  logo,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
   groundB,
   groundParamsB,
   transition,
 }: LetterGateDemoProps) {
-  const { width: W, height: H } = useVideoConfig();
-  const palette = THEMES[theme];
+  const { width: W, height: H } = useSceneConfig();
+  const base = THEMES[theme];
+  const palette = ink ? { ...base, ink, pillInk: ink } : base;
   const acc = accent ?? palette.accent;
-  const m = useMetrics(geist.fontFamily, 400, "pill text");
+  const look: SceneLook = { background, scale, speed };
+  // Speed scales the series itself so the transition keeps pace with the scenes.
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
+  const m = useMetrics(fontFamily, fontWeight, "pill text");
   const idx = Math.max(0, text.indexOf(gate));
   const pair = text.indexOf(gate) >= 0 ? gate : text.slice(idx, idx + 2);
   const t = { ...letterGateDefaults, ...transition };
@@ -976,33 +1107,47 @@ export function LetterGateDemo({
   const baseline = lineTop + Math.floor((1.1 * fs - asc - desc) / 2) + asc;
   const gateY = baseline - (m.xh * fs) / 2;
   const Fm = Math.min(H * t.size, W * 0.95);
-  const fx = (W / 2 + (gateX - W / 2) * cam) / W;
-  const fy = (H / 2 + (gateY - H / 2) * cam) / H;
-  const zoom = Fm / (fs * cam);
+  // The scale layer sits outside the camera push, so the pair lands where both
+  // put it.
+  const fx = (W / 2 + (gateX - W / 2) * cam * scale) / W;
+  const fy = (H / 2 + (gateY - H / 2) * cam * scale) / H;
+  const zoom = Fm / (fs * cam * scale);
   return (
-    <AbsoluteFill style={{ backgroundColor: palette.groundB.background }}>
+    <AbsoluteFill
+      style={{
+        backgroundColor:
+          background === "transparent" ? undefined : palette.groundB.background,
+      }}
+    >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={A_LEN}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(A_LEN)}
+        >
           <SceneA
             text={text}
             palette={palette}
             ground={ground}
             groundParams={groundParams}
+            fontFamily={fontFamily}
+            fontWeight={fontWeight}
+            logo={logo}
+            delay={delay}
+            look={look}
           />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
           presentation={letterGate({
             letters: pair,
-            fontFamily: geist.fontFamily,
-            fontWeight: 400,
+            fontFamily,
+            fontWeight,
             ink: palette.ink,
             focus: [fx, fy],
             zoom,
             ...transition,
           })}
-          timing={linearTiming({ durationInFrames: T_LEN })}
+          timing={linearTiming({ durationInFrames: len(T_LEN) })}
         />
-        <TransitionSeries.Sequence durationInFrames={B_LEN}>
+        <TransitionSeries.Sequence durationInFrames={len(B_LEN)}>
           <SceneB
             prompt={prompt}
             placeholder={placeholder}
@@ -1012,6 +1157,7 @@ export function LetterGateDemo({
             accent={acc}
             ground={groundB}
             groundParams={groundParamsB}
+            look={look}
           />
         </TransitionSeries.Sequence>
       </TransitionSeries>

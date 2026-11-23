@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const liveActivityConfig: ComponentConfig = {
   componentName: "LiveActivity",
@@ -13,16 +20,28 @@ export const liveActivityConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     date: {
       type: "text-content",
       default: "Tuesday, October 24",
       description: "Date",
     },
+    time: {
+      type: "text-content",
+      default: "9:41",
+      description: "Clock",
+    },
+    remainingLabel: {
+      type: "text-content",
+      default: "remaining",
+      description: "Remaining label",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
     speed: {
       type: "number",
       default: 1,

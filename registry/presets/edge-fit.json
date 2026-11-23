@@ -1,0 +1,103 @@
+{
+  "component": "edge-fit",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Tight, fast-cutting condensed words that slam edge to edge with almost no hold.",
+      "askedAs": [
+        "fast word montage",
+        "quick punchy word cuts",
+        "snappy full-frame words",
+        "быстрая смена слов",
+        "резкий монтаж слов"
+      ],
+      "props": {
+        "speed": 2,
+        "hold": 4,
+        "letterGap": 0,
+        "fit": 0.98
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Elegant serif lettering in warm ink on a soft paper background with a slower, calmer hold.",
+      "askedAs": [
+        "magazine style big word",
+        "elegant serif title",
+        "calm editorial look",
+        "журнальный стиль с засечками",
+        "элегантный крупный заголовок"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f3ede2",
+        "ink": "#2a2320",
+        "hold": 28,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "mono-terminal",
+      "label": "Mono Terminal",
+      "description": "Wide-spaced monospace type in pale green on near-black for a technical, code-like feel.",
+      "askedAs": [
+        "code style big text",
+        "terminal look word",
+        "developer monospace title",
+        "моноширинный шрифт как в терминале",
+        "технический стиль текста"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1110",
+        "ink": "#b8e6c4",
+        "letterGap": 8,
+        "fit": 0.8
+      }
+    },
+    {
+      "id": "bold-coral",
+      "label": "Bold Coral",
+      "description": "Chunky grotesque in deep navy on a warm coral field for a cheerful, poster-like pop.",
+      "askedAs": [
+        "colorful playful poster word",
+        "bright warm background title",
+        "fun bold word on color",
+        "яркий постер с крупным словом",
+        "весёлый цветной фон"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "background": "#f27c5e",
+        "ink": "#1b1f3b",
+        "accent": "#fff1e0",
+        "letterGap": 1
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Smaller, airy sans-serif word on clean white with generous margins and a gentle pace.",
+      "askedAs": [
+        "minimal clean word",
+        "subtle small title with space",
+        "calm white background text",
+        "минималистичный чистый стиль",
+        "спокойный текст на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fit": 0.6,
+        "scale": 0.85,
+        "speed": 0.5,
+        "hold": 36
+      }
+    }
+  ]
+}

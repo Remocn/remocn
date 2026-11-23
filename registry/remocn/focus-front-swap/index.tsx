@@ -2,6 +2,7 @@
 
 import { loadFont as loadSans } from "@remotion/google-fonts/Geist";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -10,9 +11,9 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -65,6 +66,17 @@ export interface FocusFrontSwapProps {
   groundParams?: Partial<GradientParams>;
   swap?: number;
   blur?: number;
+  /** Weight of the lines. */
+  fontWeight?: number;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the lines. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the lines and logo, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const THEMES = {
@@ -118,9 +130,13 @@ interface Measure {
   desc: number;
 }
 
-function buildMeasure(_version: number): Measure {
+function buildMeasure(
+  _version: number,
+  fontFamily: string,
+  fontWeight: number,
+): Measure {
   const ctx = document.createElement("canvas").getContext("2d");
-  const font = `300 ${FONT_PX}px "${sans.fontFamily}"`;
+  const font = `${fontWeight} ${FONT_PX}px "${fontFamily}"`;
   const cache: Record<string, number> = {};
   let asc = 0.95;
   let desc = 0.25;
@@ -145,7 +161,7 @@ function buildMeasure(_version: number): Measure {
   };
 }
 
-function useMeasure() {
+function useMeasure(fontFamily: string, fontWeight: number) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("focus-front-swap: measuring"));
   const released = useRef(false);
@@ -158,7 +174,7 @@ function useMeasure() {
     Promise.all([
       sans.waitUntilDone(),
       manrope.waitUntilDone(),
-      document.fonts.load(`300 100px "${sans.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
       document.fonts.load(`600 100px "${manrope.fontFamily}"`),
     ])
       .catch(() => undefined)
@@ -173,8 +189,11 @@ function useMeasure() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMeasure(version), [version]);
+  }, [handle, fontFamily, fontWeight]);
+  return useMemo(
+    () => buildMeasure(version, fontFamily, fontWeight),
+    [version, fontFamily, fontWeight],
+  );
 }
 
 interface Word {
@@ -241,6 +260,22 @@ interface Glyph {
   u: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FocusFrontSwap({
   lines = [
     "Remocn knows the beat",
@@ -255,16 +290,24 @@ export function FocusFrontSwap({
   groundParams,
   swap = BEAT.swap,
   blur = 18,
+  fontWeight = 300,
+  background,
+  fontFamily = sans.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: FocusFrontSwapProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const sinceDelay = useSceneFrame() - delay;
+  const frame = Math.max(0, sinceDelay) * speed;
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
   const bg = gshParams(preset, gParams).background;
-  const m = useMeasure();
+  const m = useMeasure(fontFamily, fontWeight);
   const portrait = H > W * 1.1;
 
   const parsed = lines.map(parse);
@@ -417,8 +460,8 @@ export function FocusFrontSwap({
               top: g.y - asc,
               height: asc + desc,
               lineHeight: `${(asc + desc).toFixed(2)}px`,
-              fontFamily: sans.fontFamily,
-              fontWeight: 300,
+              fontFamily,
+              fontWeight,
               fontSize: T,
               letterSpacing: `${TRACK}em`,
               whiteSpace: "pre",
@@ -447,8 +490,12 @@ export function FocusFrontSwap({
     const logoTop = cy + (lastRows * lastT * 1.2) / 2 + lastT * 0.34;
 
     const push = interpolate(frame, [0, durationInFrames], [1, 1.04], CLAMP);
+    // The push is linear over the whole clip; it only holds during `delay`.
+    const pushing = sinceDelay > -1 && frame < durationInFrames;
     content = (
-      <AbsoluteFill style={{ transform: `scale(${push.toFixed(4)})` }}>
+      <AbsoluteFill
+        style={{ transform: `scale(${push.toFixed(4)})${glide(pushing)}` }}
+      >
         {nodes}
         {logo ? (
           <div
@@ -480,22 +527,36 @@ export function FocusFrontSwap({
   }
 
   return (
-    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.55}
-        style={{
-          transform: `translateX(${(-pan * W * 0.025).toFixed(2)}px) scale(1.14)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${portrait ? "95% 50%" : "70% 60%"} at 50% 47%, rgba(${c.veil},${c.veilIn}) 0%, rgba(${c.veil},${c.veilOut}) 100%)`,
-        }}
-      />
-      {content}
+    <AbsoluteFill
+      style={{
+        background:
+          background === undefined
+            ? bg
+            : background === "transparent"
+              ? undefined
+              : background,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={preset}
+            params={gParams}
+            timeOffset={c.groundOffset}
+            timeScale={0.55}
+            style={{
+              transform: `translateX(${(-pan * W * 0.025).toFixed(2)}px) scale(1.14)`,
+            }}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${portrait ? "95% 50%" : "70% 60%"} at 50% 47%, rgba(${c.veil},${c.veilIn}) 0%, rgba(${c.veil},${c.veilOut}) 100%)`,
+            }}
+          />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

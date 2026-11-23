@@ -38,14 +38,14 @@ import { shaderSeam } from "@/components/remocn/shader-seam";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={108}>
+    <TransitionSeries.Sequence durationInFrames={216}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 60 })}
+      timing={linearTiming({ durationInFrames: 120 })}
       presentation={shaderSeam({ softness: 0.18, detail: 0.65 })}
     />
-    <TransitionSeries.Sequence durationInFrames={108}>
+    <TransitionSeries.Sequence durationInFrames={216}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

@@ -40,8 +40,8 @@ export const RemotionRoot = () => (
   <Composition
     id="DistributionShift"
     component={DistributionShiftScene}
-    durationInFrames={170}
-    fps={30}
+    durationInFrames={340}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -77,10 +77,56 @@ A bell-shaped latency curve rises with a marker at its slow tail, then morphs le
       description: "Name of the measured metric.",
     },
     {
+      name: "fromLabel",
+      type: "string",
+      default: "\"from\"",
+      description: "Word before the old value under the readout.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for the hero element.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Space Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "shiftDuration",
+      type: "number",
+      default: "52",
+      description: "Frames the curve takes to morph from the old value to the new one.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

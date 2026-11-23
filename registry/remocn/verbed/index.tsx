@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const roman = loadFont("normal", {
   weights: ["400", "500"],
@@ -29,8 +29,20 @@ export interface VerbedProps {
   verbSense?: string;
   inflections?: string[];
   example?: string;
+  /** Frame the entry turns from noun to verb. */
+  turnAt?: number;
+  /** Frames between words as a sense writes in. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the entry, roman and italic. Load it yourself; Bitter by default. */
+  fontFamily?: string;
+  /** Size of the entry, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -56,17 +68,18 @@ const BACK = 0.74;
 
 type Face = "head" | "body" | "italic";
 
-function fontOf(face: Face) {
-  if (face === "head") return `500 100px "${roman.fontFamily}"`;
-  if (face === "italic") return `italic 400 100px "${italic.fontFamily}"`;
-  return `400 100px "${roman.fontFamily}"`;
+// Bitter's roman and italic load as one family, so one name covers both.
+function fontOf(face: Face, family: string) {
+  if (face === "head") return `500 100px "${family}"`;
+  if (face === "italic") return `italic 400 100px "${family}"`;
+  return `400 100px "${family}"`;
 }
 
 function trackOf(face: Face) {
   return face === "head" ? HEAD_TRACK : BODY_TRACK;
 }
 
-function useFontsReady() {
+function useFontsReady(family: string) {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("verbed: fonts"));
   const released = useRef(false);
@@ -75,9 +88,9 @@ function useFontsReady() {
     Promise.all([
       roman.waitUntilDone(),
       italic.waitUntilDone(),
-      document.fonts.load(fontOf("head")),
-      document.fonts.load(fontOf("body")),
-      document.fonts.load(fontOf("italic")),
+      document.fonts.load(fontOf("head", family)),
+      document.fonts.load(fontOf("body", family)),
+      document.fonts.load(fontOf("italic", family)),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -90,22 +103,22 @@ function useFontsReady() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [family, handle]);
   return ready;
 }
 
-function useMeasure() {
+function useMeasure(family: string) {
   const ctx = useRef<CanvasRenderingContext2D | null>(null);
   const cache = useRef(new Map<string, number>());
   return (text: string, face: Face) => {
-    const key = `${face}\u0001${text}`;
+    const key = `${family}\u0001${face}\u0001${text}`;
     const hit = cache.current.get(key);
     if (hit !== undefined) return hit;
     if (!ctx.current)
       ctx.current = document.createElement("canvas").getContext("2d");
     let w = text.length * 0.5;
     if (ctx.current) {
-      ctx.current.font = fontOf(face);
+      ctx.current.font = fontOf(face, family);
       w = ctx.current.measureText(text).width / 100;
     }
     const em = w + trackOf(face) * Array.from(text).length;
@@ -167,6 +180,22 @@ function curly(s: string) {
   return `“${body}”`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function Verbed({
   headword = "remocn",
   pronunciation = "/rem-uh-kun/",
@@ -176,19 +205,27 @@ export function Verbed({
   verbSense = "to make the launch film in the same pull request as the feature.",
   inflections = ["remocns", "remocned", "remocning"],
   example = "We remocned the changelog before lunch.",
+  turnAt = 84,
+  stagger = 2,
   accent,
+  ink,
   background,
+  fontFamily = roman.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: VerbedProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames: T } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const ready = useFontsReady();
-  const measure = useMeasure();
+  const ready = useFontsReady(fontFamily);
+  const measure = useMeasure(fontFamily);
 
   if (!ready) {
     return (
@@ -296,17 +333,30 @@ export function Verbed({
     L = layout();
   }
 
-  const rise = (start: number, dur = 16) =>
-    interpolate(t, [start, start + dur], [0, 1], {
+  const riseAt = (x: number, start: number, dur = 16) =>
+    interpolate(x, [start, start + dur], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  const rise = (start: number, dur = 16) => riseAt(t, start, dur);
+  // The ease-out tail is long, so "moving" is judged on the travel in px
+  // against the neighbouring frames, not on the progress.
+  const dt = 1 / pace;
+  const stirs = (px: (x: number) => number) => {
+    const now = px(t);
+    return (
+      Math.abs(px(t + dt) - now) > 1e-3 || Math.abs(now - px(t - dt)) > 1e-3
+    );
+  };
+  const rising = (start: number, dur: number, travel: number) =>
+    stirs((x) => (1 - riseAt(x, start, dur)) * travel);
 
   const word = (
     text: string,
     key: string,
     p: number,
     size: number,
+    moving: boolean,
     extra?: React.CSSProperties,
   ) => (
     <span
@@ -315,7 +365,7 @@ export function Verbed({
         display: "inline-block",
         whiteSpace: "pre",
         opacity: p,
-        transform: `translateY(${((1 - p) * size * 0.4).toFixed(2)}px)`,
+        transform: `translateY(${((1 - p) * size * 0.4).toFixed(2)}px)${glide(moving)}`,
         ...extra,
       }}
     >
@@ -323,11 +373,13 @@ export function Verbed({
     </span>
   );
 
-  const TURN = 84;
-  const turn = interpolate(t, [TURN, TURN + 18], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const TURN = turnAt;
+  const turnOf = (x: number) =>
+    interpolate(x, [TURN, TURN + 18], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const turn = turnOf(t);
   const verbIn = rise(TURN + 4, 18);
 
   const headP = rise(0, 20);
@@ -342,7 +394,7 @@ export function Verbed({
 
   const nounStart = 20;
   const verbStart = TURN + 12;
-  const inflStart = verbStart + verbWords.length * 2 + 10;
+  const inflStart = verbStart + verbWords.length * stagger + 10;
   const exStart = inflStart + 14;
 
   const sideRow = (
@@ -361,7 +413,7 @@ export function Verbed({
       </span>
       <span
         style={{
-          fontFamily: italic.fontFamily,
+          fontFamily,
           fontStyle: "italic",
           fontWeight: 400,
           fontSize: L.Fl,
@@ -388,6 +440,8 @@ export function Verbed({
   );
 
   const nounScale = 1 - (1 - BACK) * turn;
+  // Weighed at the far end of the sense, where the scale moves text most.
+  const nounMoving = stirs((x) => (1 - BACK) * turnOf(x) * blockW);
   const nounShift = (L.numW * turn) / nounScale;
   const nounAlpha = 1 - (1 - DIM) * turn;
 
@@ -413,18 +467,20 @@ export function Verbed({
           whiteSpace: "nowrap",
           fontSize: Fd,
           letterSpacing: `${trackOf(face)}em`,
-          fontFamily: face === "italic" ? italic.fontFamily : roman.fontFamily,
+          fontFamily,
           fontStyle: face === "italic" ? "italic" : "normal",
           fontWeight: 400,
         }}
       >
         {row.map((w, wi) => {
-          const p = rise(start + n++ * 2, 14);
+          const s = start + n++ * stagger;
+          const p = rise(s, 14);
           return word(
             wi < row.length - 1 ? `${w} ` : w,
             `${keyBase}${li}-${wi}`,
             p,
             Fd,
+            rising(s, 14, Fd * 0.4) && !(keyBase === "n" && nounMoving),
             colorOf ? { color: colorOf(w) } : undefined,
           );
         })}
@@ -453,116 +509,120 @@ export function Verbed({
     <AbsoluteFill
       style={{
         background: stage,
-        color: c.ink,
-        fontFamily: roman.fontFamily,
+        color: fg,
+        fontFamily,
         fontWeight: 400,
         overflow: "hidden",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          left: mx,
-          top: headTop,
-          display: "flex",
-          flexDirection: L.stacked ? "column" : "row",
-          alignItems: L.stacked ? "flex-start" : "baseline",
-          lineHeight: 1.08,
-        }}
-      >
-        <span
+      <ScaleLayer scale={scale}>
+        <div
           style={{
-            fontSize: Fh,
-            fontWeight: 500,
-            letterSpacing: `${HEAD_TRACK}em`,
-            whiteSpace: "pre",
-            opacity: headP,
-            transform: `translateY(${((1 - headP) * Fh * 0.18).toFixed(2)}px)`,
+            position: "absolute",
+            left: mx,
+            top: headTop,
+            display: "flex",
+            flexDirection: L.stacked ? "column" : "row",
+            alignItems: L.stacked ? "flex-start" : "baseline",
+            lineHeight: 1.08,
           }}
         >
-          {headword}
-        </span>
-        {L.stacked ? (
-          <div
+          <span
             style={{
-              display: "flex",
-              alignItems: "baseline",
-              marginTop: Fd * 0.2,
-              lineHeight: 1.2,
+              fontSize: Fh,
+              fontWeight: 500,
+              letterSpacing: `${HEAD_TRACK}em`,
+              whiteSpace: "pre",
+              opacity: headP,
+              transform: `translateY(${((1 - headP) * Fh * 0.18).toFixed(2)}px)${glide(rising(0, 20, Fh * 0.18))}`,
             }}
           >
-            {sideRow}
-          </div>
-        ) : (
-          sideRow
-        )}
-      </div>
+            {headword}
+          </span>
+          {L.stacked ? (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                marginTop: Fd * 0.2,
+                lineHeight: 1.2,
+              }}
+            >
+              {sideRow}
+            </div>
+          ) : (
+            sideRow
+          )}
+        </div>
 
-      <div
-        style={{
-          position: "absolute",
-          left: mx,
-          top: sensesTop,
-          width: 0,
-          height: 0,
-          transform: `scale(${nounScale.toFixed(4)})`,
-          transformOrigin: "0 0",
-          opacity: nounAlpha,
-        }}
-      >
+        <div
+          style={{
+            position: "absolute",
+            left: mx,
+            top: sensesTop,
+            width: 0,
+            height: 0,
+            // Rounded only at rest: a scale stepped by 1e-4 moves the far end
+            // of the sense in steps of a sixth of a pixel while it shrinks.
+            transform: `scale(${nounMoving ? nounScale : nounScale.toFixed(4)})${glide(nounMoving)}`,
+            transformOrigin: "0 0",
+            opacity: nounAlpha,
+          }}
+        >
+          <div
+            style={{
+              ...numStyle,
+              left: 0,
+              top: 0,
+              opacity: turn,
+              transform: `translateX(${((1 - turn) * -Fd * 0.4).toFixed(2)}px)`,
+            }}
+          >
+            1.
+          </div>
+          {lines(L.nounLines, 0, nounShift, nounStart, "n", "body")}
+        </div>
+
         <div
           style={{
             ...numStyle,
-            left: 0,
-            top: 0,
-            opacity: turn,
-            transform: `translateX(${((1 - turn) * -Fd * 0.4).toFixed(2)}px)`,
+            top: verbTop,
+            color: hi,
+            opacity: verbIn,
+            transform: `translateY(${((1 - verbIn) * Fd * 0.4).toFixed(2)}px)${glide(rising(TURN + 4, 18, Fd * 0.4))}`,
           }}
         >
-          1.
+          2.
         </div>
-        {lines(L.nounLines, 0, nounShift, nounStart, "n", "body")}
-      </div>
+        {lines(L.verbLines, verbTop, mx + L.numW, verbStart, "v", "body")}
 
-      <div
-        style={{
-          ...numStyle,
-          top: verbTop,
-          color: hi,
-          opacity: verbIn,
-          transform: `translateY(${((1 - verbIn) * Fd * 0.4).toFixed(2)}px)`,
-        }}
-      >
-        2.
-      </div>
-      {lines(L.verbLines, verbTop, mx + L.numW, verbStart, "v", "body")}
+        {L.inflLines.map((row, li) => (
+          <div
+            key={`i${li}`}
+            style={{
+              position: "absolute",
+              left: mx + L.numW,
+              top: inflTop + li * L.inflLineH,
+              height: L.inflLineH,
+              lineHeight: `${L.inflLineH}px`,
+              fontFamily,
+              fontStyle: "italic",
+              fontSize: L.Fi,
+              letterSpacing: `${BODY_TRACK}em`,
+              whiteSpace: "pre",
+              opacity: rise(inflStart + li * 3, 16) * 0.62,
+            }}
+          >
+            {row.join(" ")}
+          </div>
+        ))}
 
-      {L.inflLines.map((row, li) => (
-        <div
-          key={`i${li}`}
-          style={{
-            position: "absolute",
-            left: mx + L.numW,
-            top: inflTop + li * L.inflLineH,
-            height: L.inflLineH,
-            lineHeight: `${L.inflLineH}px`,
-            fontFamily: italic.fontFamily,
-            fontStyle: "italic",
-            fontSize: L.Fi,
-            letterSpacing: `${BODY_TRACK}em`,
-            whiteSpace: "pre",
-            opacity: rise(inflStart + li * 3, 16) * 0.62,
-          }}
-        >
-          {row.join(" ")}
-        </div>
-      ))}
-
-      {lines(L.exLines, exTop, mx + L.numW, exStart, "e", "italic", (w) =>
-        isForm(w)
-          ? interpolateColors(rise(exStart + 12, 16), [0, 1], [c.ink, hi])
-          : c.ink,
-      )}
+        {lines(L.exLines, exTop, mx + L.numW, exStart, "e", "italic", (w) =>
+          isForm(w)
+            ? interpolateColors(rise(exStart + 12, 16), [0, 1], [fg, hi])
+            : fg,
+        )}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

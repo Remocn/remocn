@@ -1,0 +1,126 @@
+{
+  "component": "dynamic-letter",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "Calm light canvas with a deep ink wordmark and a slow, deliberate morph that settles on a solid O.",
+      "askedAs": [
+        "slow elegant light version",
+        "white background minimal logo morph",
+        "calm gallery style letter animation",
+        "светлая спокойная версия логотипа",
+        "медленная элегантная анимация буквы"
+      ],
+      "props": {
+        "theme": "light",
+        "final": "solid",
+        "beat": 14,
+        "speed": 0.75,
+        "accent": "#1f2a44",
+        "grain": false
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Fast, punchy letter swaps on a tight beat that land on a striped O in vivid coral.",
+      "askedAs": [
+        "fast beat synced letter changes",
+        "quick energetic logo sting",
+        "rapid cuts for music video identity",
+        "быстрая смена букв под бит",
+        "энергичная быстрая заставка логотипа"
+      ],
+      "props": {
+        "beat": 4,
+        "minBeat": 2,
+        "speed": 1.5,
+        "final": "stripes",
+        "accent": "#ff5a4e"
+      }
+    },
+    {
+      "id": "editorial-outline",
+      "label": "Editorial Outline",
+      "description": "Warm cream paper with charcoal type and an outlined O for a refined, print-magazine feel.",
+      "askedAs": [
+        "magazine style outline logo",
+        "cream paper editorial wordmark",
+        "refined print look letter morph",
+        "журнальный стиль с контурной буквой",
+        "кремовый фон редакционный логотип"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3ede2",
+        "ink": "#2a2622",
+        "accent": "#b5522e",
+        "final": "outline",
+        "beat": 10
+      }
+    },
+    {
+      "id": "midnight-stencil",
+      "label": "Midnight Stencil",
+      "description": "Deep navy backdrop with pale type and a gold stencil O, scaled up for a bold cinematic close.",
+      "askedAs": [
+        "dark luxury gold logo reveal",
+        "big cinematic wordmark navy",
+        "premium stencil letter ending",
+        "тёмно-синий премиальный логотип с золотом",
+        "крупная кинематографичная заставка"
+      ],
+      "props": {
+        "background": "#0e1424",
+        "ink": "#ede8dc",
+        "accent": "#c9a45c",
+        "final": "stencil",
+        "scale": 1.25,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "clean-mono",
+      "label": "Clean Mono",
+      "description": "Grain-free black and white with a shadowed O and a small, understated scale for a crisp tech look.",
+      "askedAs": [
+        "clean monochrome logo animation",
+        "black and white minimal wordmark",
+        "no grain crisp tech intro",
+        "чистый монохромный логотип",
+        "минималистичная черно-белая анимация"
+      ],
+      "props": {
+        "background": "#0a0a0a",
+        "ink": "#fafafa",
+        "accent": "#9a9a9a",
+        "final": "shadow",
+        "grain": false,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "playful-dots",
+      "label": "Playful Dots",
+      "description": "Soft sage background with forest green type and a dotted O at a bouncy medium pace.",
+      "askedAs": [
+        "friendly playful logo morph",
+        "soft green brand intro",
+        "dotted letter fun identity",
+        "игривая анимация логотипа с точками",
+        "мягкий зелёный фон для бренда"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#dde6da",
+        "ink": "#1e3a2c",
+        "accent": "#e07a3f",
+        "final": "dots",
+        "beat": 6
+      }
+    }
+  ]
+}

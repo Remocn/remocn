@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const splitFlashConfig: ComponentConfig = {
   componentName: "SplitFlash",
@@ -12,11 +18,6 @@ export const splitFlashConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     time: {
       type: "text-content",
@@ -38,6 +39,21 @@ export const splitFlashConfig: ComponentConfig = {
       default: "Fastest lap",
       description: "Flash label",
     },
+    freezeAt: {
+      type: "number",
+      default: 42,
+      min: 10,
+      max: 90,
+      step: 1,
+      description: "Freeze frame",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

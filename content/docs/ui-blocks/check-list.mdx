@@ -48,8 +48,9 @@ const items = [
   { text: "Ships as source", checked: false },
 ];
 
-const LIST_FROM = 12;
-const LIST_DURATION = checkListDuration(items);
+// The component counts in 30 fps frames; this composition runs at 60.
+const LIST_FROM = 24;
+const LIST_DURATION = checkListDuration(items) * 2;
 
 const CheckListScene = () => (
   <AbsoluteFill
@@ -70,7 +71,7 @@ export const RemotionRoot = () => (
     id="CheckList"
     component={CheckListScene}
     durationInFrames={LIST_FROM + LIST_DURATION}
-    fps={30}
+    fps={60}
     width={1280}
     height={720}
   />

@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { random, useCurrentFrame, useVideoConfig } from "remotion";
+import { random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type SpeedLinesMode = "trail" | "focus";
 
@@ -548,8 +549,8 @@ export function SpeedLines({
   children,
   className,
 }: SpeedLinesProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const state = getSpeedLinesState(frame, {
     mode,
     from,

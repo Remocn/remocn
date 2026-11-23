@@ -1,0 +1,116 @@
+{
+  "component": "halftone-print",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "fine-offset",
+      "label": "Fine Offset",
+      "description": "Tight, small dots in near-perfect register on bright white stock, like a clean magazine page.",
+      "askedAs": [
+        "clean magazine print look",
+        "fine halftone barely visible",
+        "crisp offset printing",
+        "аккуратная офсетная печать",
+        "мелкий растр как в журнале"
+      ],
+      "props": {
+        "dotSize": 5,
+        "misregistration": 0.2,
+        "paperTint": "#fbfaf7",
+        "angle": 15
+      }
+    },
+    {
+      "id": "riso-zine",
+      "label": "Riso Zine",
+      "description": "Chunky dots on warm cream paper with plates visibly drifting apart, like a home-run risograph zine.",
+      "askedAs": [
+        "risograph poster style",
+        "messy zine print",
+        "off-register chunky dots",
+        "эффект ризографа",
+        "зин с крупными точками"
+      ],
+      "props": {
+        "dotSize": 18,
+        "misregistration": 3.6,
+        "paperTint": "#f2e6cf",
+        "angle": 22
+      }
+    },
+    {
+      "id": "pop-comic",
+      "label": "Pop Comic",
+      "description": "Big bold Ben-Day dots at a classic 45-degree screen on newsprint grey, in loose register.",
+      "askedAs": [
+        "comic book dots",
+        "pop art halftone",
+        "big ben-day dots",
+        "комикс в стиле поп-арт",
+        "крупные точки как в комиксе"
+      ],
+      "props": {
+        "dotSize": 28,
+        "angle": 45,
+        "misregistration": 2,
+        "paperTint": "#ebe7dd"
+      }
+    },
+    {
+      "id": "slow-press",
+      "label": "Slow Press",
+      "description": "Medium dots on soft ivory with the press running at an unhurried, deliberate pace.",
+      "askedAs": [
+        "slow printing animation",
+        "calm editorial print",
+        "gentle paper texture motion",
+        "медленная печать",
+        "спокойный печатный эффект"
+      ],
+      "props": {
+        "speed": 0.5,
+        "dotSize": 12,
+        "paperTint": "#f6f1e7",
+        "misregistration": 0.8
+      }
+    },
+    {
+      "id": "rushed-newsprint",
+      "label": "Rushed Newsprint",
+      "description": "Coarse dots on greyish newsprint with fast, jittery plates badly out of register, like a cheap tabloid run.",
+      "askedAs": [
+        "cheap newspaper print",
+        "fast gritty tabloid look",
+        "badly registered newsprint",
+        "дешёвая газетная печать",
+        "грубый газетный растр"
+      ],
+      "props": {
+        "speed": 2.5,
+        "dotSize": 14,
+        "misregistration": 5,
+        "paperTint": "#dcd8cc",
+        "angle": 75
+      }
+    },
+    {
+      "id": "kraft-stock",
+      "label": "Kraft Stock",
+      "description": "Mid-size dots printed onto warm brown kraft paper for a handmade, packaging-like feel.",
+      "askedAs": [
+        "print on kraft paper",
+        "brown cardboard print",
+        "handmade packaging look",
+        "печать на крафтовой бумаге",
+        "эффект картона"
+      ],
+      "props": {
+        "paperTint": "#d9c3a0",
+        "dotSize": 16,
+        "angle": 30,
+        "misregistration": 1.6
+      }
+    }
+  ]
+}

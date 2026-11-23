@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const overnightConfig: ComponentConfig = {
   componentName: "Overnight",
@@ -13,6 +19,26 @@ export const overnightConfig: ComponentConfig = {
       },
       description: "Theme",
     },
+    nightAt: {
+      type: "number",
+      default: 52,
+      min: 0,
+      max: 120,
+      step: 1,
+      description: "Night at (frame)",
+      hiddenFromList: false,
+    },
+    morningAt: {
+      type: "number",
+      default: 118,
+      min: 40,
+      max: 160,
+      step: 1,
+      description: "Morning at (frame)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Afacad", ink: false }),
     speed: {
       type: "number",
       default: 1,

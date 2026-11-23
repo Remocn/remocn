@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, random, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type BauhausShape =
   | "circle"
@@ -581,8 +582,8 @@ export function BauhausBuild({
   loop = bauhausBuildDefaults.loop,
   className,
 }: BauhausBuildProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const time = frame * (30 / fps) * Math.max(0, finite(speed, 1));
   const state = getBauhausBuildState(time, {
     seed,

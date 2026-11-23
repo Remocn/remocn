@@ -1,14 +1,17 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/ArchivoNarrow";
-import { useId } from "react";
+import type React from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   AbsoluteFill,
+  continueRender,
+  delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -20,7 +23,19 @@ export interface RepStackProps {
   word?: string;
   /** How many rows run through the gate before the last one locks. */
   reps?: number;
+  /** Frames the reel of copies runs before it brakes into the gate. */
+  runLength?: number;
   accent?: string;
+  /** Color of the outlined copies; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the word. Load it yourself; Archivo Narrow by default. */
+  fontFamily?: string;
+  /** Size of the word stack, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -120,21 +135,96 @@ function measure(text: string) {
   return { lsb, ink: Math.max(0.2, adv - lsb - rsb) };
 }
 
+type Measure = (text: string) => { lsb: number; ink: number };
+
+/**
+ * Word metrics in em. Archivo Narrow uses the tables above; another family is
+ * measured with canvas once it has loaded.
+ */
+function useMeasure(family: string): { measure: Measure; cap: number } {
+  const custom = family !== display;
+  const [ready, setReady] = useState<string | null>(null);
+  const [handle] = useState(() =>
+    custom ? delayRender("rep-stack: measuring") : null,
+  );
+  const released = useRef(false);
+  useEffect(() => {
+    if (!custom) return;
+    let live = true;
+    document.fonts
+      .load(`500 100px "${family}"`)
+      .catch(() => undefined)
+      .then(() => {
+        if (live) setReady(family);
+        if (handle !== null && !released.current) {
+          released.current = true;
+          continueRender(handle);
+        }
+      });
+    return () => {
+      live = false;
+    };
+  }, [custom, family, handle]);
+  if (!custom || ready !== family) return { measure, cap: CAP };
+  const ctx = document.createElement("canvas").getContext("2d");
+  if (!ctx) return { measure, cap: CAP };
+  ctx.font = `500 100px "${family}"`;
+  const cap = ctx.measureText("H").actualBoundingBoxAscent / 100 || CAP;
+  return {
+    cap,
+    measure: (text: string) => {
+      const mt = ctx.measureText(text);
+      const lsb = -mt.actualBoundingBoxLeft / 100;
+      const right = mt.actualBoundingBoxRight / 100 + TRACK * (text.length - 1);
+      return { lsb, ink: Math.max(0.2, right - lsb) };
+    },
+  };
+}
+
 function splitTail(word: string) {
   const m = word.match(/^(.*?)([.!?…]+)$/);
   return m?.[1] ? [m[1], m[2]] : [word, ""];
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RepStack({
   word = "AGAIN.",
   reps = 6,
+  runLength = RUN_LEN,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: RepStackProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
+  const metrics = useMeasure(fontFamily);
+  const CAP_H = metrics.cap;
+  const dimAt = DIM_AT + (runLength - RUN_LEN);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const gateId = `rs${uid}`;
   const duskId = `rsd${uid}`;
@@ -142,22 +232,25 @@ export function RepStack({
 
   const text = word.trim().toUpperCase() || "AGAIN.";
   const [body, tail] = splitTail(text);
-  const m = measure(text);
-  const fs = Math.min((0.86 * W) / m.ink, (0.46 * H) / CAP);
-  const cap = CAP * fs;
+  const m = metrics.measure(text);
+  const fs = Math.min((0.86 * W) / m.ink, (0.46 * H) / CAP_H);
+  const cap = CAP_H * fs;
   const pitch = cap * 1.1;
   const x = (W - m.ink * fs) / 2 - m.lsb * fs;
   const baseline = (H + cap) / 2;
   const n = Math.max(2, Math.round(reps));
 
-  const run = RUN(interpolate(t, [0, RUN_LEN], [0, 1], CLAMP));
-  const settle = SETTLE(
-    interpolate(t, [RUN_LEN, RUN_LEN + SETTLE_LEN], [0, 1], CLAMP),
-  );
   // Rows still to travel, in pitches. It starts between two rows, so the
   // first frame is mid-pass, ends a hair past the gate, then settles.
-  const left = (n + 0.45) * (1 - run) - OVERSHOOT * run + OVERSHOOT * settle;
-  const dim = DIM(interpolate(t, [DIM_AT, DIM_AT + DIM_LEN], [0, 1], CLAMP));
+  const leftAt = (f: number) => {
+    const run = RUN(interpolate(f, [0, runLength], [0, 1], CLAMP));
+    const settle = SETTLE(
+      interpolate(f, [runLength, runLength + SETTLE_LEN], [0, 1], CLAMP),
+    );
+    return (n + 0.45) * (1 - run) - OVERSHOOT * run + OVERSHOOT * settle;
+  };
+  const left = leftAt(t);
+  const dim = DIM(interpolate(t, [dimAt, dimAt + DIM_LEN], [0, 1], CLAMP));
   const echoOpacity = 1 - (1 - c.echo) * dim;
 
   const pad = 0.03 * fs;
@@ -171,103 +264,114 @@ export function RepStack({
     if (y > -0.2 * pitch && y - cap < H + 0.2 * pitch) rows.push(r);
   }
 
+  // Rows stepped by `y` would click along pixel by pixel; the drawing is
+  // marked, so it leans while they run.
+  const running =
+    Math.abs(leftAt(t + speed) - left) > 1e-9 ||
+    Math.abs(left - leftAt(t - speed)) > 1e-9;
   const typeProps = {
     x,
-    fontFamily: display,
+    fontFamily,
     fontWeight: 500,
     fontSize: fs,
     style: { letterSpacing: `${TRACK}em`, fontKerning: "normal" as const },
   };
 
   return (
-    <AbsoluteFill style={{ background: c.stage }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-label={text}
-        role="img"
-      >
-        <defs>
-          <clipPath id={gateId}>
-            <rect x={0} y={gateTop} width={W} height={gateH} />
-          </clipPath>
-          <linearGradient
-            id={duskId}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={gateTop}
-            x2={0}
-            y2={gateTop + gateH}
-          >
-            <stop offset="0" stopColor={HORIZON[1]} />
-            <stop offset="0.55" stopColor={HORIZON[2]} />
-            <stop offset="0.92" stopColor={HORIZON[3]} />
-          </linearGradient>
-          <radialGradient
-            id={glowId}
-            gradientUnits="userSpaceOnUse"
-            cx={glowX * W}
-            cy={gateTop + gateH * 0.78}
-            r={W * 0.42}
-            gradientTransform={`translate(${glowX * W} ${gateTop + gateH * 0.78}) scale(1 0.32) translate(${-glowX * W} ${-(gateTop + gateH * 0.78)})`}
-          >
-            <stop offset="0" stopColor={HORIZON[0]} stopOpacity={0.4} />
-            <stop offset="0.45" stopColor={HORIZON[2]} stopOpacity={0.25} />
-            <stop offset="1" stopColor={HORIZON[2]} stopOpacity={0} />
-          </radialGradient>
-        </defs>
-        <g opacity={echoOpacity}>
-          {rows.map((r) => (
-            <text
-              key={r}
-              {...typeProps}
-              y={baseline + (r + left) * pitch}
-              fill="none"
-              stroke={c.ink}
-              strokeWidth={stroke}
-              strokeLinejoin="round"
-            >
-              {text}
-            </text>
-          ))}
-        </g>
-        <rect
-          x={0}
-          y={gateTop}
+    <AbsoluteFill style={{ background: stage }}>
+      <ScaleLayer scale={scale}>
+        <svg
           width={W}
-          height={gateH}
-          fill={`url(#${duskId})`}
-        />
-        <rect
-          x={0}
-          y={gateTop}
-          width={W}
-          height={gateH}
-          fill={`url(#${glowId})`}
-        />
-        <g clipPath={`url(#${gateId})`}>
-          {rows.map((r) => (
-            <text
-              key={r}
-              {...typeProps}
-              y={baseline + (r + left) * pitch}
-              fill={c.cut}
-              stroke={c.cut}
-              strokeWidth={stroke}
-              strokeLinejoin="round"
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(running).trim(),
+          }}
+          aria-label={text}
+          role="img"
+        >
+          <defs>
+            <clipPath id={gateId}>
+              <rect x={0} y={gateTop} width={W} height={gateH} />
+            </clipPath>
+            <linearGradient
+              id={duskId}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={gateTop}
+              x2={0}
+              y2={gateTop + gateH}
             >
-              {body}
-              {tail ? (
-                <tspan fill={accent} stroke={accent}>
-                  {tail}
-                </tspan>
-              ) : null}
-            </text>
-          ))}
-        </g>
-      </svg>
+              <stop offset="0" stopColor={HORIZON[1]} />
+              <stop offset="0.55" stopColor={HORIZON[2]} />
+              <stop offset="0.92" stopColor={HORIZON[3]} />
+            </linearGradient>
+            <radialGradient
+              id={glowId}
+              gradientUnits="userSpaceOnUse"
+              cx={glowX * W}
+              cy={gateTop + gateH * 0.78}
+              r={W * 0.42}
+              gradientTransform={`translate(${glowX * W} ${gateTop + gateH * 0.78}) scale(1 0.32) translate(${-glowX * W} ${-(gateTop + gateH * 0.78)})`}
+            >
+              <stop offset="0" stopColor={HORIZON[0]} stopOpacity={0.4} />
+              <stop offset="0.45" stopColor={HORIZON[2]} stopOpacity={0.25} />
+              <stop offset="1" stopColor={HORIZON[2]} stopOpacity={0} />
+            </radialGradient>
+          </defs>
+          <g opacity={echoOpacity}>
+            {rows.map((r) => (
+              <text
+                key={r}
+                {...typeProps}
+                y={baseline + (r + left) * pitch}
+                fill="none"
+                stroke={fg}
+                strokeWidth={stroke}
+                strokeLinejoin="round"
+              >
+                {text}
+              </text>
+            ))}
+          </g>
+          <rect
+            x={0}
+            y={gateTop}
+            width={W}
+            height={gateH}
+            fill={`url(#${duskId})`}
+          />
+          <rect
+            x={0}
+            y={gateTop}
+            width={W}
+            height={gateH}
+            fill={`url(#${glowId})`}
+          />
+          <g clipPath={`url(#${gateId})`}>
+            {rows.map((r) => (
+              <text
+                key={r}
+                {...typeProps}
+                y={baseline + (r + left) * pitch}
+                fill={c.cut}
+                stroke={c.cut}
+                strokeWidth={stroke}
+                strokeLinejoin="round"
+              >
+                {body}
+                {tail ? (
+                  <tspan fill={accent} stroke={accent}>
+                    {tail}
+                  </tspan>
+                ) : null}
+              </text>
+            ))}
+          </g>
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

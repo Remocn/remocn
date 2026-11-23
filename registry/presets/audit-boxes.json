@@ -1,0 +1,106 @@
+{
+  "component": "audit-boxes",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "dark-inspector",
+      "label": "Dark Inspector",
+      "description": "Coral marks on a near-black canvas, like a dev-tools overlay in dark mode.",
+      "askedAs": [
+        "dark mode audit boxes",
+        "red boxes on black background",
+        "devtools style issue overlay",
+        "тёмная тема для аудита",
+        "красные рамки на тёмном фоне"
+      ],
+      "props": {
+        "background": "#14151a",
+        "color": "#ff6b6b"
+      }
+    },
+    {
+      "id": "rapid-scan",
+      "label": "Rapid Scan",
+      "description": "Issues snap in back to back at double speed for a quick, punchy sweep.",
+      "askedAs": [
+        "make the issues appear faster",
+        "quick scan of errors",
+        "fast paced bug flagging",
+        "быстрое появление ошибок",
+        "ускорить анимацию проверки"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 2
+      }
+    },
+    {
+      "id": "slow-review",
+      "label": "Slow Review",
+      "description": "Each flag lands deliberately with long pauses, giving viewers time to read every fix.",
+      "askedAs": [
+        "slow down the audit",
+        "give time to read each issue",
+        "calm walkthrough of problems",
+        "медленный разбор ошибок",
+        "чтобы успеть прочитать каждую правку"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 10
+      }
+    },
+    {
+      "id": "amber-warnings",
+      "label": "Amber Warnings",
+      "description": "Warm amber marks on soft cream read as gentle warnings rather than hard errors.",
+      "askedAs": [
+        "orange warning boxes",
+        "softer than red errors",
+        "yellow caution highlights",
+        "оранжевые предупреждения вместо красных",
+        "мягкие предупреждения на светлом фоне"
+      ],
+      "props": {
+        "color": "#d97706",
+        "background": "#faf6ee"
+      }
+    },
+    {
+      "id": "blueprint-qa",
+      "label": "Blueprint QA",
+      "description": "Crisp blue annotation boxes on cool white for a neutral, design-review feel.",
+      "askedAs": [
+        "blue annotation boxes",
+        "neutral design review markup",
+        "not alarming red, use blue",
+        "синие рамки для ревью дизайна",
+        "спокойная разметка без красного"
+      ],
+      "props": {
+        "color": "#2563eb",
+        "background": "#f3f6fb",
+        "stagger": 6
+      }
+    },
+    {
+      "id": "midnight-a11y",
+      "label": "Midnight A11y",
+      "description": "Violet marks on deep navy with a brisk cadence, suited to accessibility tool demos.",
+      "askedAs": [
+        "purple boxes on navy",
+        "accessibility checker look",
+        "dark blue background with violet marks",
+        "фиолетовые рамки на тёмно-синем",
+        "стиль проверки доступности"
+      ],
+      "props": {
+        "color": "#a78bfa",
+        "background": "#0f172a",
+        "speed": 1.5,
+        "stagger": 3
+      }
+    }
+  ]
+}

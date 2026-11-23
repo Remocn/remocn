@@ -7,14 +7,9 @@ import {
   getTangentAtLength,
 } from "@remotion/paths";
 import { useEffect, useMemo, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -328,8 +323,9 @@ export function PathRide({
   speed = pathRideDefaults.speed,
   className,
 }: PathRideProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
   const unit = height / 720;
   const t = getPathRideTime(frame, { fps, speed });
   const metrics = useMetrics(
@@ -364,6 +360,26 @@ export function PathRide({
   const toY = (y: number) => height / 2 + (y - 360) * unit;
   const size = fontSize * unit;
   const line = getPathRideLine(samples, tail, head, k, straight);
+  // Letters straighten onto a fractional baseline, turning through level on
+  // the last frames; the mark keeps them off the pixel grid as they cross.
+  const poseAt = (f: number, center: number) => {
+    const at = getPathRideTime(f, { fps, speed });
+    const arc = getPathRideArc(
+      getPathRideHead(at, length),
+      center,
+      textWidth,
+      fontSize,
+    );
+    return getPathRidePoint(
+      samples,
+      arc,
+      getPathRideStraighten(at),
+      straight,
+      lift,
+    );
+  };
+  const same = (a: PathRidePose, b: PathRidePose) =>
+    a.x === b.x && a.y === b.y && a.angle === b.angle;
 
   return (
     <div
@@ -405,6 +421,9 @@ export function PathRide({
         const fade = getPathRideFade(arc, fontSize);
         if (fade <= 0) return null;
         const pose = getPathRidePoint(samples, arc, k, straight, lift);
+        const moving =
+          !same(poseAt(frame - 1, centers[j]), pose) ||
+          !same(pose, poseAt(frame + 1, centers[j]));
         return (
           <span
             key={j}
@@ -421,7 +440,7 @@ export function PathRide({
               whiteSpace: "pre",
               opacity: fade,
               transformOrigin: "0 0",
-              transform: `translate(${toX(pose.x)}px, ${toY(pose.y)}px) rotate(${pose.angle}rad) translate(-50%, ${-metrics.baseline * size}px)`,
+              transform: `translate(${toX(pose.x)}px, ${toY(pose.y)}px) rotate(${pose.angle}rad) translate(-50%, ${-metrics.baseline * size}px)${glide(moving)}`,
             }}
           >
             {char}

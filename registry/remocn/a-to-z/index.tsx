@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const unbounded = loadFont("normal", {
   weights: ["400", "500"],
@@ -23,7 +23,19 @@ export interface AToZProps {
   finale?: string;
   connector?: string;
   accent?: string;
+  /** Text color of the connector and entries; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Unbounded by default. */
+  fontFamily?: string;
+  /** Frames between wrapped lines of an entry as it rolls. */
+  stagger?: number;
+  /** Frames for each letter and entry roll. */
+  roll?: number;
+  /** Size of the letter and text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -67,12 +79,16 @@ interface Metrics {
   deep: number;
 }
 
-function measure(texts: string[], connector: string): Metrics {
+function measure(
+  texts: string[],
+  connector: string,
+  fontFamily: string,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("a-to-z: no 2d context");
   const em = (s: string, w: number, track: number) => {
-    ctx.font = `${w} ${FONT_PX}px "${unbounded.fontFamily}"`;
+    ctx.font = `${w} ${FONT_PX}px "${fontFamily}"`;
     return (
       ctx.measureText(s).width / FONT_PX +
       track * Math.max(0, Array.from(s).length - 1)
@@ -90,7 +106,7 @@ function measure(texts: string[], connector: string): Metrics {
       if (w && words[w] === undefined) words[w] = em(w, 500, TRACK);
     }
   }
-  ctx.font = `500 ${FONT_PX}px "${unbounded.fontFamily}"`;
+  ctx.font = `500 ${FONT_PX}px "${fontFamily}"`;
   const fm = ctx.measureText("Hgy");
   return {
     letters,
@@ -106,26 +122,30 @@ function measure(texts: string[], connector: string): Metrics {
   };
 }
 
-function useMetrics(texts: string[], connector: string) {
-  const key = `${connector}\u0001${texts.join("\u0002")}`;
+function useMetrics(texts: string[], connector: string, fontFamily: string) {
+  const key = `${fontFamily}\u0003${connector}\u0001${texts.join("\u0002")}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("a-to-z: measuring"));
   const released = useRef(false);
-  const input = useRef({ texts, connector });
-  input.current = { texts, connector };
+  const input = useRef({ texts, connector, fontFamily });
+  input.current = { texts, connector, fontFamily };
   useEffect(() => {
     let live = true;
     Promise.all([
       unbounded.waitUntilDone(),
-      document.fonts.load(`500 100px "${unbounded.fontFamily}"`),
-      document.fonts.load(`400 100px "${unbounded.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         setState({
           key,
-          m: measure(input.current.texts, input.current.connector),
+          m: measure(
+            input.current.texts,
+            input.current.connector,
+            input.current.fontFamily,
+          ),
         });
         if (!released.current) {
           released.current = true;
@@ -135,7 +155,7 @@ function useMetrics(texts: string[], connector: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -208,26 +228,59 @@ function flickDurations(count: number) {
   });
 }
 
+// Layout rounds a baseline to whole pixels, so a line rolled by `top` clicks
+// along pixel by pixel; the roll is a transform on the line instead, marked
+// so its text leans while it moves. The transform stays on at rest, at 0, so
+// the mark is there on every frame the line is shown.
+const lift = (y: number, glide: Glide) => {
+  const moving = Math.abs(y) >= 1e-3;
+  return `translateY(${moving ? y : 0}px)${glide(moving)}`;
+};
+type Glide = ReturnType<typeof useGlide>;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function AToZ({
   entries = DEFAULT_ENTRIES,
   finale = "zero lock-in.",
   connector = "is for",
   accent,
+  ink: inkProp,
   background,
+  fontFamily = unbounded.fontFamily,
+  stagger = STAGGER,
+  roll = ROLL,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: AToZProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const dark = theme === "dark";
   const field = dark ? (accent ?? "#FF5A1F") : "#FFFFFF";
   const stage =
     background === "transparent" ? "transparent" : (background ?? field);
-  const ink = "#000000";
+  const ink = inkProp ?? "#000000";
   const letterInk = dark ? "#000000" : (accent ?? "#E8480F");
 
   const list = entries.length > 0 ? entries : DEFAULT_ENTRIES;
-  const m = useMetrics([...list, finale, ELLIPSIS], connector);
+  const m = useMetrics([...list, finale, ELLIPSIS], connector, fontFamily);
 
   if (!m) {
     return (
@@ -264,7 +317,7 @@ export function AToZ({
   const letterSteps: Step<string>[] = list.map((e, k) => ({
     at: starts[k],
     value: initialOf(e),
-    roll: ROLL,
+    roll,
     ease: EASE_ROLL,
   }));
   let fa = flickAt;
@@ -342,14 +395,14 @@ export function AToZ({
   const textSteps: Step<string[]>[] = list.map((_, k) => ({
     at: starts[k],
     value: lineSets[k],
-    roll: ROLL,
+    roll,
     ease: EASE_ROLL,
   }));
   if (between.length > 0) {
     textSteps.push({
       at: ellipsisAt,
       value: lineSets[list.length],
-      roll: ROLL,
+      roll,
       ease: EASE_ROLL,
     });
   }
@@ -425,11 +478,18 @@ export function AToZ({
             key={k}
             style={{
               position: "absolute",
-              ...(portrait ? { left: 0 } : { right: 0 }),
-              top: textTop + y,
+              // As wide as the window, the letter aligned to its side: the
+              // lean reads a box's laid-out width as a whole number, which on
+              // a box one letter wide is off enough to lean a resting letter,
+              // and to drop the lean again when the flick swaps the letter.
+              left: 0,
+              right: 0,
+              textAlign: portrait ? "left" : "right",
+              top: textTop,
+              transform: lift(y, glide),
               height: lineBox,
               lineHeight: `${lineBox}px`,
-              fontFamily: unbounded.fontFamily,
+              fontFamily,
               fontWeight: 500,
               fontSize: G,
               letterSpacing: `${LETTER_TRACK}em`,
@@ -458,11 +518,14 @@ export function AToZ({
           key={k}
           style={{
             position: "absolute",
+            // Across the window, for the same reason as the letter.
             left: 0,
-            top: (m.tall + 0.05 - m.asc) * size + y,
+            right: 0,
+            top: (m.tall + 0.05 - m.asc) * size,
+            transform: lift(y, glide),
             height: lineBox,
             lineHeight: `${lineBox}px`,
-            fontFamily: unbounded.fontFamily,
+            fontFamily,
             fontWeight: weight,
             fontSize: size,
             letterSpacing: `${TRACK}em`,
@@ -505,10 +568,10 @@ export function AToZ({
     for (let s = 0; s < slots; s++) {
       const base = portrait ? itemTop0 + s * lineH : yB - s * lineH;
       const order = portrait ? s : slots - 1 - s;
-      const delay = order * STAGGER;
+      const lag = order * stagger;
       const p = !prev
-        ? rise(5 + delay)
-        : interpolate(t, [cur.at + delay, cur.at + delay + cur.roll], [0, 1], {
+        ? rise(5 + lag)
+        : interpolate(t, [cur.at + lag, cur.at + lag + cur.roll], [0, 1], {
             ...CLAMP,
             easing: cur.ease,
           });
@@ -530,7 +593,7 @@ export function AToZ({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

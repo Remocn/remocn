@@ -1,0 +1,101 @@
+{
+  "component": "browser-extension",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "night-reader",
+      "label": "Night Reader",
+      "description": "Dark interface on a deep charcoal ground with a soft amber highlight for late-night reading.",
+      "askedAs": [
+        "dark mode reading extension",
+        "night theme web clipper",
+        "moody dark summarizer look",
+        "тёмная тема для расширения",
+        "ночной режим чтения"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "accent": "#f2b45a",
+        "highlightColor": "#5a4423"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper ground with a serif typeface and an olive highlight, like a printed magazine page.",
+      "askedAs": [
+        "magazine style article look",
+        "serif editorial reading",
+        "warm paper print feel",
+        "журнальный стиль со шрифтом с засечками",
+        "как печатная статья"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "ground": "paper-crease",
+        "accent": "#5e6b3a",
+        "highlightColor": "#e8e2b8",
+        "ink": "#2a2620"
+      }
+    },
+    {
+      "id": "quick-clip",
+      "label": "Quick Clip",
+      "description": "Fast, compact cut with a cobalt ground and crisp Geist type for punchy social edits.",
+      "askedAs": [
+        "fast snappy version",
+        "quick social clip",
+        "speed it up and make it tight",
+        "быстрая динамичная версия",
+        "короткий ролик для соцсетей"
+      ],
+      "props": {
+        "speed": 2,
+        "scale": 0.9,
+        "ground": "cobalt-rise",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "research-mono",
+      "label": "Research Mono",
+      "description": "Slow, deliberate pacing in monospace on a cool polar ground with a teal accent, suited to dev and research tools.",
+      "askedAs": [
+        "technical developer look",
+        "monospace research tool",
+        "calm slow walkthrough",
+        "моноширинный шрифт для разработчиков",
+        "спокойный технический стиль"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "polar",
+        "accent": "#0f8b8d",
+        "highlightColor": "#cdedea",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rose-spotlight",
+      "label": "Rose Spotlight",
+      "description": "Large hero framing on a soft petal ground with a muted rose accent and a gentle delayed start.",
+      "askedAs": [
+        "big hero launch shot",
+        "soft pink elegant look",
+        "zoomed in with a pause first",
+        "крупный план для запуска",
+        "мягкий розовый стиль"
+      ],
+      "props": {
+        "scale": 1.2,
+        "ground": "petal-arc",
+        "accent": "#b5476b",
+        "highlightColor": "#f6d6df",
+        "delay": 20,
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

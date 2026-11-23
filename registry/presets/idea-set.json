@@ -1,0 +1,106 @@
+{
+  "component": "idea-set",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper background with an elegant serif and a deep oxblood payoff line, revealed slowly.",
+      "askedAs": [
+        "magazine style serif text",
+        "elegant editorial look",
+        "slow classy reveal on cream paper",
+        "журнальный стиль с засечками",
+        "элегантный шрифт на бежевом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#2a2622",
+        "accent": "#8a2c2c",
+        "wave": 40
+      }
+    },
+    {
+      "id": "terminal-ledger",
+      "label": "Terminal Ledger",
+      "description": "Monospace type on near-black with a muted green accent and a quick, clipped cadence.",
+      "askedAs": [
+        "code terminal style",
+        "monospace developer look",
+        "fast hacker text",
+        "стиль терминала",
+        "моноширинный шрифт как в коде"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#d6dcd8",
+        "accent": "#5fb58a",
+        "speed": 1.75,
+        "wave": 14
+      }
+    },
+    {
+      "id": "keynote-big",
+      "label": "Keynote Big",
+      "description": "Oversized geometric sans in white on deep navy with a bright blue payoff and a long dramatic hold.",
+      "askedAs": [
+        "big keynote stage text",
+        "large bold presentation title",
+        "apple event style",
+        "крупный текст как на презентации",
+        "большой заголовок для кейноута"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "scale": 1.35,
+        "background": "#0b1424",
+        "ink": "#f2f5fa",
+        "accent": "#4c8dff",
+        "hold": 40
+      }
+    },
+    {
+      "id": "calm-minimal",
+      "label": "Calm Minimal",
+      "description": "Small, quiet Inter on pale grey with a slate accent, easing in gently after a short pause.",
+      "askedAs": [
+        "subtle minimal text",
+        "quiet understated look",
+        "soft slow light theme",
+        "спокойный минимализм",
+        "тихий светлый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "scale": 0.8,
+        "accent": "#4a5d73",
+        "speed": 0.75,
+        "delay": 12
+      }
+    },
+    {
+      "id": "studio-punch",
+      "label": "Studio Punch",
+      "description": "Chunky Bricolage Grotesque with a warm orange payoff, snapping in fast with almost no hold.",
+      "askedAs": [
+        "punchy energetic text",
+        "quick bold social clip",
+        "fast playful grotesk",
+        "быстрый энергичный текст",
+        "дерзкий жирный шрифт"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#ff7a3d",
+        "speed": 2,
+        "hold": 6,
+        "scale": 1.15
+      }
+    }
+  ]
+}

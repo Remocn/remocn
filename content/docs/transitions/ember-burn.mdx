@@ -35,10 +35,10 @@ black at the rim, and blows away as sparks that carry the colour of the pixels
 they destroyed. The burn accelerates as it spreads, so it starts as a few small
 holes and finishes in a rush.
 
-Give it room. `linearTiming({ durationInFrames: 40 })` is the recommended
+Give it room. `linearTiming({ durationInFrames: 80 })` at 60 fps is the recommended
 default — this is a transition you are meant to watch, and the detail that
 makes it work (the boil, the rim, the sparks) only registers if each part of
-the frame spends real time in the fire. Under about 24 frames it stops reading
+the frame spends real time in the fire. Under about 48 frames it stops reading
 as fire and turns into a smear.
 
 ```tsx
@@ -47,14 +47,14 @@ import { emberBurn } from "@/components/remocn/ember-burn";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={60}>
+    <TransitionSeries.Sequence durationInFrames={120}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 40 })}
+      timing={linearTiming({ durationInFrames: 80 })}
       presentation={emberBurn()}
     />
-    <TransitionSeries.Sequence durationInFrames={60}>
+    <TransitionSeries.Sequence durationInFrames={120}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

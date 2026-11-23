@@ -1,0 +1,107 @@
+{
+  "component": "stem-stretch",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-luxe-serif",
+      "label": "Slow Luxe",
+      "description": "An unhurried serif reveal with a warm gold glow on deep charcoal.",
+      "askedAs": [
+        "slow elegant gold version",
+        "luxury serif look",
+        "calm premium reveal",
+        "медленно и роскошно с золотом",
+        "элегантный вариант с засечками"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "accent": "#c9a45c",
+        "background": "#141210",
+        "ink": "#f3ede2",
+        "speed": 0.5,
+        "snapGap": 20
+      }
+    },
+    {
+      "id": "rapid-snap",
+      "label": "Rapid Snap",
+      "description": "Fast, punchy stretches with many tight steps and a bold red glow.",
+      "askedAs": [
+        "make it fast and punchy",
+        "quick snappy stretch",
+        "energetic red version",
+        "быстро и резко",
+        "энергичный красный вариант"
+      ],
+      "props": {
+        "speed": 2,
+        "steps": 8,
+        "snapGap": 5,
+        "stagger": 1,
+        "accent": "#e5484d",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Clean light theme on warm off-white with a muted forest-green glow and no grain.",
+      "askedAs": [
+        "light background version",
+        "clean white editorial look",
+        "minimal bright style",
+        "светлая версия",
+        "чистый минималистичный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f3ec",
+        "ink": "#1b1d1a",
+        "accent": "#2f6b4f",
+        "grain": false,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "monumental-violet",
+      "label": "Monumental",
+      "description": "Oversized headline with a smooth single stretch and a deep violet glow.",
+      "askedAs": [
+        "make the number huge",
+        "big dramatic hero text",
+        "oversized violet headline",
+        "огромный заголовок",
+        "крупно и драматично"
+      ],
+      "props": {
+        "scale": 1.4,
+        "steps": 1,
+        "accent": "#7c5cff",
+        "fontFamily": "Bricolage Grotesque",
+        "stagger": 6,
+        "delay": 10
+      }
+    },
+    {
+      "id": "terminal-mint",
+      "label": "Terminal Mint",
+      "description": "Monospaced type on near-black with a cool mint glow and stepped, mechanical motion.",
+      "askedAs": [
+        "techy monospace look",
+        "developer terminal style",
+        "code style with green",
+        "моноширинный технический стиль",
+        "как в терминале"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#e6f2ee",
+        "accent": "#3dd6a3",
+        "steps": 12,
+        "snapGap": 8
+      }
+    }
+  ]
+}

@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="TittleDrop"
     component={TittleDropScene}
-    durationInFrames={225}
-    fps={30}
+    durationInFrames={450}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -69,10 +69,50 @@ The headline fades in word by word with its i and j dots missing, while a bubble
       description: "Which landing dot takes the accent (0-based, negative counts from the end).",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "5",
+      description: "Frames between words setting in.",
+    },
+    {
+      name: "hopGap",
+      type: "number",
+      default: "12",
+      description: "Frames between one dot hopping out of the bubble and the next.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the accented dot.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"DM Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

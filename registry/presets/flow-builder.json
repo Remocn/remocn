@@ -1,0 +1,119 @@
+{
+  "component": "flow-builder",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-ops",
+      "label": "Midnight Ops",
+      "description": "A dark canvas with a cool teal accent and monospace type for a developer-tool feel.",
+      "askedAs": [
+        "dark mode workflow for developers",
+        "terminal style flow builder",
+        "night theme with code font",
+        "тёмная тема для разработчиков",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#2dd4bf",
+        "fontFamily": "JetBrains Mono",
+        "ground": "nightfold",
+        "stagger": 4
+      }
+    },
+    {
+      "id": "quick-build",
+      "label": "Quick Build",
+      "description": "A fast, tight build where nodes snap in almost together for short social cuts.",
+      "askedAs": [
+        "make it faster",
+        "snappy quick version for social",
+        "nodes appear all at once",
+        "быстрее и динамичнее",
+        "ускорить анимацию"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 2,
+        "fontFamily": "Inter",
+        "accent": "#6d28d9"
+      }
+    },
+    {
+      "id": "slow-walkthrough",
+      "label": "Slow Walkthrough",
+      "description": "A calm, enlarged canvas that builds node by node so every step can be narrated.",
+      "askedAs": [
+        "slower for explaining each step",
+        "bigger and more relaxed",
+        "tutorial pace walkthrough",
+        "медленнее, чтобы объяснить шаги",
+        "крупнее и спокойнее"
+      ],
+      "props": {
+        "speed": 0.75,
+        "stagger": 12,
+        "scale": 1.2,
+        "delay": 15,
+        "ground": "paper-crease"
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A warm off-white page with dark ink, a serif face and a muted terracotta accent.",
+      "askedAs": [
+        "warm paper look with serif font",
+        "editorial magazine style",
+        "cream background elegant",
+        "тёплый бумажный стиль",
+        "элегантный вариант с засечками"
+      ],
+      "props": {
+        "background": "#f5f0e6",
+        "ink": "#2b2622",
+        "accent": "#c2410c",
+        "fontFamily": "Fraunces",
+        "stagger": 8
+      }
+    },
+    {
+      "id": "graphite-lime",
+      "label": "Graphite Lime",
+      "description": "A charcoal satin ground with a soft lime accent and geometric grotesk type.",
+      "askedAs": [
+        "charcoal background with green accent",
+        "modern dark product launch",
+        "sleek graphite look",
+        "графитовый фон с зелёным акцентом",
+        "современный тёмный стиль для запуска"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "accent": "#a3e635",
+        "fontFamily": "Space Grotesk",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "polar-compact",
+      "label": "Polar Compact",
+      "description": "A cool, airy light ground with a compact canvas and a crisp sky-blue accent.",
+      "askedAs": [
+        "light icy minimal style",
+        "smaller canvas with lots of space",
+        "clean blue on white",
+        "светлый холодный минимализм",
+        "компактнее и воздушнее"
+      ],
+      "props": {
+        "ground": "polar",
+        "accent": "#0284c7",
+        "scale": 0.8,
+        "fontFamily": "Geist"
+      }
+    }
+  ]
+}

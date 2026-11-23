@@ -1,0 +1,106 @@
+{
+  "component": "photo-fill-type",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A calm magazine-cover look with a cream stage, elegant serif letters and a slow, lingering reveal.",
+      "askedAs": [
+        "magazine cover style title",
+        "elegant serif photo text",
+        "slow classy reveal on light background",
+        "элегантный журнальный заголовок",
+        "светлый фон с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f3eee6",
+        "ink": "#1c1a17",
+        "accent": "#9a6b3f",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-punch",
+      "label": "Quick Punch",
+      "description": "Tight, fast letter entry that snaps open into the image almost immediately.",
+      "askedAs": [
+        "fast photo text reveal",
+        "snappy title for short reels",
+        "quick bold opener",
+        "быстрое появление слова",
+        "резкий динамичный заголовок"
+      ],
+      "props": {
+        "speed": 1.75,
+        "stagger": 1,
+        "expandAt": 40,
+        "scale": 1.2,
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-cinematic",
+      "label": "Slow Cinematic",
+      "description": "A wide, unhurried cascade of letters on deep charcoal that holds the type long before opening up.",
+      "askedAs": [
+        "movie trailer title reveal",
+        "slow dramatic landscape opener",
+        "cinematic letters one by one",
+        "медленное кинематографичное открытие",
+        "как в трейлере фильма"
+      ],
+      "props": {
+        "background": "#0e0f12",
+        "ink": "#e8e4dc",
+        "stagger": 7,
+        "expandAt": 105,
+        "speed": 0.5,
+        "accent": "#c9a46a"
+      }
+    },
+    {
+      "id": "tech-mono",
+      "label": "Tech Mono",
+      "description": "Clean monospace type on a cool slate stage with a crisp teal accent and no grain.",
+      "askedAs": [
+        "tech product launch title",
+        "monospace developer style text",
+        "clean minimal startup opener",
+        "техничный моноширинный шрифт",
+        "минималистичный заголовок для продукта"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#11161c",
+        "ink": "#dce3ea",
+        "accent": "#2bb3a3",
+        "grain": false,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "warm-grotesk",
+      "label": "Warm Grotesk",
+      "description": "Chunky contemporary grotesk on a soft sand background with a terracotta accent and a delayed start.",
+      "askedAs": [
+        "warm friendly bold title",
+        "earthy tones photo lettering",
+        "modern chunky font reveal",
+        "тёплые цвета и жирный шрифт",
+        "песочный фон с крупными буквами"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Bricolage Grotesque",
+        "background": "#eadfcf",
+        "ink": "#2a211b",
+        "accent": "#c0583a",
+        "delay": 15
+      }
+    }
+  ]
+}

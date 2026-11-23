@@ -1,14 +1,15 @@
 "use client";
 
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import { CanvasSceneA } from "@/components/docs/examples/canvas-scenes";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { UnderwaterRipple } from "@/registry/remocn/underwater-ripple";
 
 const SANS =
   "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif";
 
 export function RippleSurfaceExampleScene() {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const amplitude = interpolate(frame, [0, 46, 86, 120], [34, 0, 0, 34]);
 
   return (

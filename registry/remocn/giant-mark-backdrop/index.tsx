@@ -2,6 +2,7 @@
 
 import { loadFont as loadInstrument } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -10,9 +11,9 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -172,6 +173,9 @@ const THEMES: Record<"dark" | "light", Palette> = {
   },
 };
 
+const changing = (at: (f: number) => number, f: number, eps: number) =>
+  Math.abs(at(f + 1) - at(f)) > eps || Math.abs(at(f) - at(f - 1)) > eps;
+
 function Icon({ d, size, color }: { d: string; size: number; color: string }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden>
@@ -242,8 +246,44 @@ export interface GiantMarkBackdropProps {
   accent?: string;
   prompt?: string;
   placeholder?: string;
+  /** Label of the first chip under the prompt. */
+  attachLabel?: string;
+  /** Label of the second chip under the prompt. */
+  stylesLabel?: string;
+  /** Text color in the prompt card; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the prompt card. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Replaces the remocn logo that balloons into the backdrop; it colors through `currentColor`. */
+  logo?: React.ReactNode;
+  /** Size of the logo and card, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the flood. */
+  grain?: boolean;
+  /** Playback multiplier. */
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function GiantMarkBackdrop({
@@ -251,13 +291,25 @@ export function GiantMarkBackdrop({
   accent,
   prompt = "Make a launch film for our v2 release",
   placeholder = "Describe your launch film",
+  attachLabel = "Attach",
+  stylesLabel = "Styles",
+  ink,
+  background,
+  fontFamily = instrument.fontFamily,
+  logo,
+  scale = 1,
+  delay = 0,
+  grain = true,
+  speed = 1,
   ground,
   groundParams,
 }: GiantMarkBackdropProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const base = THEMES[theme];
   const c = accent ? { ...base, accent, mark: accent } : base;
+  const fg = ink ?? c.ink;
   const tall = H > W * 1.1;
   const u = tall ? W / 600 : H / 720;
   const wordW = useWordWidth();
@@ -271,20 +323,33 @@ export function GiantMarkBackdrop({
   const s1 = { x: tall ? W * 0.5 : W / 2, y: tall ? H * 0.5 : H * 0.36 };
 
   const markIn = spring({ frame: frame - B.mark, fps, config: CHIP });
-  const balloon = spring({ frame: frame - B.balloon, fps, config: BALLOON });
-  const pushA = interpolate(frame, [0, B.balloon], [1, 1.04], CLAMP);
-  const pushB = interpolate(frame, [B.balloon + 12, B.end], [1, 1.07], {
-    ...CLAMP,
-    easing: Easing.bezier(0.33, 0, 0.4, 1),
-  });
-  const F = F0 * (F1 / F0) ** balloon * mix(pushA, 1, balloon) * pushB;
+  const balloonAt = (f: number) =>
+    spring({ frame: f - B.balloon, fps, config: BALLOON });
+  const pushBAt = (f: number) =>
+    interpolate(f, [B.balloon + 12, B.end], [1, 1.07], {
+      ...CLAMP,
+      easing: Easing.bezier(0.33, 0, 0.4, 1),
+    });
+  const sizeAt = (f: number) => {
+    const b = balloonAt(f);
+    const pushA = interpolate(f, [0, B.balloon], [1, 1.04], CLAMP);
+    return F0 * (F1 / F0) ** b * mix(pushA, 1, b) * pushBAt(f);
+  };
+  const balloon = balloonAt(frame);
+  const pushB = pushBAt(frame);
+  const F = sizeAt(frame);
+  // The wordmark is SVG text under this transform; it tilts for as long as
+  // the logo still grows or travels (the balloon spring and both pushes).
+  const logoMoving =
+    changing((f) => sizeAt(f) / F0, frame, 1e-6) ||
+    changing(balloonAt, frame, 1e-6);
   const ax = mix(a0.x, a1.x, balloon);
   const ay = mix(a0.y, a1.y, balloon);
   const sx = mix(s0.x, s1.x, balloon);
   const sy = mix(s0.y, s1.y, balloon);
   const markScale = 0.78 + 0.22 * markIn;
   const k = F / EM;
-  const rot = tall ? -90 * balloon : 0;
+  const rot = (tall ? -90 * balloon : 0) + (logoMoving ? 0.05 : 0);
   const logoTransform = `translate(${sx.toFixed(2)} ${sy.toFixed(2)}) rotate(${rot.toFixed(3)}) scale(${k.toFixed(5)}) translate(${(-ax * EM).toFixed(3)} ${(-ay * EM).toFixed(3)})`;
   const markTransform = `translate(${(R_WE * EM) / 2} ${-0.38 * EM}) scale(${markScale.toFixed(4)}) translate(${(-R_WE * EM) / 2} ${0.38 * EM})`;
 
@@ -311,45 +376,87 @@ export function GiantMarkBackdrop({
   const cardX = (W - cardW) / 2;
   const cardY = tall ? H * 0.53 : H * 0.49;
   const cardPush = pushB;
+  const cardMoving =
+    changing(pushBAt, frame, 1e-6) ||
+    changing(
+      (f) => (1 - spring({ frame: f - B.card, fps, config: CARD })) * H * 0.32,
+      frame,
+      1e-3,
+    );
   const fs = (tall ? 27 : 24) * u;
   const small = (tall ? 21 : 17) * u;
   const br = 20 * u;
   const pad = 18 * u;
 
   const svgLogo = (mark: string, word: string, typed: boolean, id: string) => (
-    <svg
-      width={W}
-      height={H}
-      style={{ position: "absolute", left: 0, top: 0 }}
-      aria-hidden
-      key={id}
-    >
-      <g transform={logoTransform}>
-        <g
-          transform={markTransform}
-          opacity={interpolate(markIn, [0, 0.3], [0, 1], CLAMP)}
-        >
-          <path
-            d={REMOCN_R_PATH}
-            fill={mark}
-            transform={`translate(0 ${-0.76 * EM}) scale(${(0.76 * EM) / R_H})`}
-          />
+    <ScaleLayer scale={scale} key={id}>
+      <svg
+        width={W}
+        height={H}
+        style={{ position: "absolute", left: 0, top: 0 }}
+        aria-hidden
+      >
+        <g transform={logoTransform}>
+          {logo ? (
+            <foreignObject
+              x={0}
+              y={-0.76 * EM}
+              width={TW * EM}
+              height={0.76 * EM}
+              opacity={interpolate(markIn, [0, 0.3], [0, 1], CLAMP)}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: mark,
+                }}
+              >
+                {logo}
+              </div>
+            </foreignObject>
+          ) : (
+            <>
+              <g
+                transform={markTransform}
+                opacity={interpolate(markIn, [0, 0.3], [0, 1], CLAMP)}
+              >
+                <path
+                  d={REMOCN_R_PATH}
+                  fill={mark}
+                  transform={`translate(0 ${-0.76 * EM}) scale(${(0.76 * EM) / R_H})`}
+                />
+              </g>
+              <Wordmark word={word} frame={frame} typed={typed} />
+            </>
+          )}
         </g>
-        <Wordmark word={word} frame={frame} typed={typed} />
-      </g>
-    </svg>
+      </svg>
+    </ScaleLayer>
   );
 
   return (
     <AbsoluteFill style={{ backgroundColor: c.backdrop, overflow: "hidden" }}>
       {flood < 1 ? (
         <AbsoluteFill>
-          <GshGround
-            preset={ground ?? (groundParams ? undefined : c.ground)}
-            params={groundParams ?? (ground ? undefined : c.groundParams)}
-            timeOffset={5}
-            timeScale={0.7}
-          />
+          {background === undefined ? (
+            <GshGround
+              preset={ground ?? (groundParams ? undefined : c.ground)}
+              params={groundParams ?? (ground ? undefined : c.groundParams)}
+              timeOffset={5}
+              timeScale={0.7}
+            />
+          ) : (
+            <AbsoluteFill
+              style={{
+                background:
+                  background === "transparent" ? undefined : background,
+              }}
+            />
+          )}
           {svgLogo(c.mark, c.word, false, "outer")}
         </AbsoluteFill>
       ) : null}
@@ -361,138 +468,142 @@ export function GiantMarkBackdrop({
         }}
       >
         {svgLogo(c.giantMark, c.giant, false, "inner")}
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", left: 0, top: 0, opacity: c.grain }}
-          aria-hidden
-        >
-          <filter id="giant-mark-grain">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.9"
-              numOctaves={2}
-              seed={3}
-            />
-            <feColorMatrix type="saturate" values="0" />
-          </filter>
-          <rect width={W} height={H} filter="url(#giant-mark-grain)" />
-        </svg>
+        {grain ? (
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", left: 0, top: 0, opacity: c.grain }}
+            aria-hidden
+          >
+            <filter id="giant-mark-grain">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.9"
+                numOctaves={2}
+                seed={3}
+              />
+              <feColorMatrix type="saturate" values="0" />
+            </filter>
+            <rect width={W} height={H} filter="url(#giant-mark-grain)" />
+          </svg>
+        ) : null}
       </AbsoluteFill>
-      <div
-        style={{
-          position: "absolute",
-          left: cardX,
-          top: cardY,
-          width: cardW,
-          height: cardH,
-          borderRadius: 22 * u,
-          backgroundColor: c.panel,
-          boxShadow: `inset 0 0 0 1px ${c.hairline}, ${c.highlight}, 0 2px 4px rgba(${c.shadow},0.1), 0 18px 40px rgba(${c.shadow},0.18), 0 50px 110px rgba(${c.shadow},0.26)`,
-          fontFamily: instrument.fontFamily,
-          color: c.ink,
-          opacity: interpolate(card, [0, 0.25], [0, 1], CLAMP),
-          transformOrigin: `${W / 2 - cardX}px ${s1.y - cardY}px`,
-          transform: `translateY(${((1 - card) * H * 0.32).toFixed(2)}px) scale(${cardPush.toFixed(4)})`,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: pad + 4 * u,
-            right: pad + 4 * u,
-            top: pad + 2 * u,
-            fontSize: fs,
-            fontWeight: 400,
-            letterSpacing: "-0.01em",
-            lineHeight: 1.32,
-            color: typedN > 0 ? c.ink : c.faint,
-          }}
-        >
-          {typedN > 0 ? prompt.slice(0, typedN) : placeholder}
-          <span
-            style={{
-              display: "inline-block",
-              width: Math.max(2, 2 * u),
-              height: fs * 1.05,
-              marginLeft: 2 * u,
-              verticalAlign: "-0.18em",
-              backgroundColor: c.accent,
-              opacity: caretOn ? 1 : 0,
-            }}
-          />
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: pad,
-            right: pad,
-            bottom: pad,
-            height: br * 2,
-            display: "flex",
-            alignItems: "center",
-            gap: 8 * u,
-            fontSize: small,
-            color: c.muted,
+            left: cardX,
+            top: cardY,
+            width: cardW,
+            height: cardH,
+            borderRadius: 22 * u,
+            backgroundColor: c.panel,
+            boxShadow: `inset 0 0 0 1px ${c.hairline}, ${c.highlight}, 0 2px 4px rgba(${c.shadow},0.1), 0 18px 40px rgba(${c.shadow},0.18), 0 50px 110px rgba(${c.shadow},0.26)`,
+            fontFamily,
+            color: fg,
+            opacity: interpolate(card, [0, 0.25], [0, 1], CLAMP),
+            transformOrigin: `${W / 2 - cardX}px ${s1.y - cardY}px`,
+            transform: `translateY(${((1 - card) * H * 0.32).toFixed(2)}px) scale(${cardPush.toFixed(4)})${glide(cardMoving)}`,
           }}
         >
           <div
             style={{
-              width: 36 * u,
-              height: 36 * u,
-              borderRadius: 99,
-              boxShadow: `inset 0 0 0 1px ${c.hairline}`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              position: "absolute",
+              left: pad + 4 * u,
+              right: pad + 4 * u,
+              top: pad + 2 * u,
+              fontSize: fs,
+              fontWeight: 400,
+              letterSpacing: "-0.01em",
+              lineHeight: 1.32,
+              color: typedN > 0 ? fg : c.faint,
             }}
           >
-            <Icon d={ICONS.plus} size={17 * u} color={c.muted} />
-          </div>
-          {[
-            { label: "Attach", icon: ICONS.clip },
-            { label: "Styles", icon: ICONS.styles },
-          ].map((chip) => (
-            <div
-              key={chip.label}
+            {typedN > 0 ? prompt.slice(0, typedN) : placeholder}
+            <span
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6 * u,
-                padding: `${7 * u}px ${12 * u}px`,
+                display: "inline-block",
+                width: Math.max(2, 2 * u),
+                height: fs * 1.05,
+                marginLeft: 2 * u,
+                verticalAlign: "-0.18em",
+                backgroundColor: c.accent,
+                opacity: caretOn ? 1 : 0,
+              }}
+            />
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: pad,
+              right: pad,
+              bottom: pad,
+              height: br * 2,
+              display: "flex",
+              alignItems: "center",
+              gap: 8 * u,
+              fontSize: small,
+              color: c.muted,
+            }}
+          >
+            <div
+              style={{
+                width: 36 * u,
+                height: 36 * u,
                 borderRadius: 99,
                 boxShadow: `inset 0 0 0 1px ${c.hairline}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              <Icon d={chip.icon} size={15 * u} color={c.muted} />
-              {chip.label}
+              <Icon d={ICONS.plus} size={17 * u} color={c.muted} />
             </div>
-          ))}
-          <div style={{ flex: 1 }} />
-          <Icon d={ICONS.mic} size={19 * u} color={c.muted} />
-          <div
-            style={{
-              width: br * 2,
-              height: br * 2,
-              borderRadius: 99,
-              backgroundColor: sendOn ? c.accent : done ? c.send : c.row,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transform: `scale(${(1 + 0.14 * Math.sin(Math.min(1, send) * Math.PI)).toFixed(4)})`,
-              boxShadow: done
-                ? "inset 0 1px 0 rgba(255,255,255,0.22)"
-                : `inset 0 0 0 1px ${c.hairline}`,
-            }}
-          >
-            <Icon
-              d={ICONS.send}
-              size={18 * u}
-              color={done ? "#ffffff" : c.faint}
-            />
+            {[
+              { label: attachLabel, icon: ICONS.clip },
+              { label: stylesLabel, icon: ICONS.styles },
+            ].map((chip) => (
+              <div
+                key={chip.icon}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6 * u,
+                  padding: `${7 * u}px ${12 * u}px`,
+                  borderRadius: 99,
+                  boxShadow: `inset 0 0 0 1px ${c.hairline}`,
+                }}
+              >
+                <Icon d={chip.icon} size={15 * u} color={c.muted} />
+                {chip.label}
+              </div>
+            ))}
+            <div style={{ flex: 1 }} />
+            <Icon d={ICONS.mic} size={19 * u} color={c.muted} />
+            <div
+              style={{
+                width: br * 2,
+                height: br * 2,
+                borderRadius: 99,
+                backgroundColor: sendOn ? c.accent : done ? c.send : c.row,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transform: `scale(${(1 + 0.14 * Math.sin(Math.min(1, send) * Math.PI)).toFixed(4)})`,
+                boxShadow: done
+                  ? "inset 0 1px 0 rgba(255,255,255,0.22)"
+                  : `inset 0 0 0 1px ${c.hairline}`,
+              }}
+            >
+              <Icon
+                d={ICONS.send}
+                size={18 * u}
+                color={done ? "#ffffff" : c.faint}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

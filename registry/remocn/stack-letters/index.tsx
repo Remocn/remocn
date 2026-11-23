@@ -1,14 +1,11 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
+import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -17,7 +14,23 @@ const { fontFamily: sans } = loadFont("normal", {
 
 export interface StackLettersProps {
   word?: string;
+  /** Frames between letters dropping onto the stack. */
+  stagger?: number;
+  /** Frames the full stack stands before it rocks and topples. */
+  hold?: number;
   accent?: string;
+  /** Letter color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill in place of the lit ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the letters. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the letters, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -217,15 +230,43 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function StackLetters({
   word = "STACK",
+  stagger = DROP_GAP,
+  hold = 9,
   accent = "#3B5BFD",
+  ink: inkColor,
+  background,
+  fontFamily = sans,
+  grain = true,
+  scale: layerScale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: StackLettersProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
+  const glide = useGlide();
   const c = THEMES[theme];
+  const fg = inkColor ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const chars = useMemo(() => Array.from(word), [word]);
   const n = chars.length;
@@ -269,9 +310,9 @@ export function StackLetters({
     };
   }, [boxes, em, F, n]);
 
-  const drop = (k: number) => k * DROP_GAP - 6;
+  const drop = (k: number) => k * stagger - 6;
   const lastStack = drop(n - 1) + FALL;
-  const rockAt = lastStack + 9;
+  const rockAt = lastStack + hold;
   const toppleAt = rockAt + ROCK;
   const toppleDeg = (time: number) => {
     const u = (time - toppleAt) / TOPPLE;
@@ -359,19 +400,29 @@ export function StackLetters({
     };
   };
   const cam0 = fit(toppleAt);
-  let camX = 0;
-  let camY = 0;
-  let scale = 0;
-  for (let d = -CAM_SMOOTH; d <= CAM_SMOOTH; d++) {
-    const f = fit(Math.max(toppleAt, t + d));
-    camX += f.x;
-    camY += f.y;
-    scale += f.s;
-  }
-  const samples = CAM_SMOOTH * 2 + 1;
-  camX /= samples;
-  camY /= samples;
-  scale /= samples;
+  const camAt = (time: number) => {
+    let x = 0;
+    let y = 0;
+    let s = 0;
+    for (let d = -CAM_SMOOTH; d <= CAM_SMOOTH; d++) {
+      const f = fit(Math.max(toppleAt, time + d));
+      x += f.x;
+      y += f.y;
+      s += f.s;
+    }
+    const samples = CAM_SMOOTH * 2 + 1;
+    return { x: x / samples, y: y / samples, s: s / samples };
+  };
+  const { x: camX, y: camY, s: scale } = camAt(t);
+  // The camera carries resting letters too: they lean while it moves.
+  // Measured on screen, against the neighbouring frames.
+  const camDiffers = (a: ReturnType<typeof camAt>) =>
+    Math.abs(a.x - camX) * scale > 1e-3 ||
+    Math.abs(a.y - camY) * scale > 1e-3 ||
+    Math.abs(a.s - scale) * W > 1e-3;
+  const camMoving =
+    t >= toppleAt - CAM_SMOOTH - speed &&
+    (camDiffers(camAt(t + speed)) || camDiffers(camAt(t - speed)));
   const viewTop = cam0.y - H / 2 / cam0.s;
 
   const pose = (k: number) => {
@@ -387,11 +438,12 @@ export function StackLetters({
         rot: 0,
         hit: 0,
         visible: t >= d,
+        falling: u > 0,
       };
     }
     const p = flight(k, t);
     const hit = t < rockAt ? squash(t - settled) : squash(t - landAt(k));
-    return { ...p, hit, visible: true };
+    return { ...p, hit, visible: true, falling: false };
   };
 
   const ruleH = Math.max(2, F * 0.012);
@@ -406,100 +458,107 @@ export function StackLetters({
   });
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: c.ground(10 + 6 * drift, 8 + 4 * drift),
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          transformOrigin: "0 0",
-          transform: `translate(${W / 2}px, ${H / 2}px) scale(${scale}) translate(${-camX}px, ${-camY}px)`,
-          fontFamily: sans,
-          fontWeight: 500,
-          fontSize: F,
-          fontKerning: "none",
-        }}
-      >
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {background === undefined ? (
         <div
           style={{
             position: "absolute",
-            left: -W * 3,
-            top: F * 0.014,
-            width: W * 6,
-            height: ruleH / scale,
-            background: c.rule,
-            opacity: ruleIn,
+            inset: 0,
+            background: c.ground(10 + 6 * drift, 8 + 4 * drift),
           }}
         />
-        {chars.map((_, k) => {
-          const land = landAt(k);
-          const flash = interpolate(t - land, [0, 1, 16], [0, 1, 0], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          const grow = interpolate(t - land, [0, 8], [0.4, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          if (flash <= 0.001) return null;
-          return (
-            <div
-              key={`tick-${k}`}
-              style={{
-                position: "absolute",
-                left: geo.centers[k] - geo.half[k],
-                top: F * 0.014,
-                width: geo.half[k] * 2,
-                height: (ruleH * 2) / scale,
-                background: accent,
-                opacity: flash,
-                transform: `scaleX(${grow})`,
-              }}
-            />
-          );
-        })}
-        {chars.map((ch, k) => {
-          const p = pose(k);
-          if (!p.visible) return null;
-          const box = boxes[k];
-          const ox = (box.l + box.r) / 2;
-          const sy = 1 - 0.09 * p.hit;
-          const sx = 1 + 0.06 * p.hit;
-          return (
-            <div
-              key={`${k}-${ch}`}
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                color: c.fg,
-                transformOrigin: "0 0",
-                transform: `translate(${p.x}px, ${p.y}px) rotate(${p.rot}deg) scale(${sx}, ${sy})`,
-              }}
-            >
-              <span
+      ) : null}
+      <ScaleLayer scale={layerScale}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            transformOrigin: "0 0",
+            transform: `translate(${W / 2}px, ${H / 2}px) scale(${scale}) translate(${-camX}px, ${-camY}px)${glide(camMoving)}`,
+            fontFamily,
+            fontWeight: 500,
+            fontSize: F,
+            fontKerning: "none",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              left: -W * 3,
+              top: F * 0.014,
+              width: W * 6,
+              height: ruleH / scale,
+              background: c.rule,
+              opacity: ruleIn,
+            }}
+          />
+          {chars.map((_, k) => {
+            const land = landAt(k);
+            const flash = interpolate(t - land, [0, 1, 16], [0, 1, 0], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            const grow = interpolate(t - land, [0, 8], [0.4, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            if (flash <= 0.001) return null;
+            return (
+              <div
+                key={`tick-${k}`}
                 style={{
                   position: "absolute",
-                  left: -ox * F,
-                  top: -ASC * F,
-                  lineHeight: LINE,
-                  whiteSpace: "pre",
+                  left: geo.centers[k] - geo.half[k],
+                  top: F * 0.014,
+                  width: geo.half[k] * 2,
+                  height: (ruleH * 2) / scale,
+                  background: accent,
+                  opacity: flash,
+                  transform: `scaleX(${grow})`,
+                }}
+              />
+            );
+          })}
+          {chars.map((ch, k) => {
+            const p = pose(k);
+            if (!p.visible) return null;
+            const box = boxes[k];
+            const ox = (box.l + box.r) / 2;
+            const sy = 1 - 0.09 * p.hit;
+            const sx = 1 + 0.06 * p.hit;
+            // An upright letter that falls or squashes leans; one that rides
+            // the camera leans with it, and a real turn already leaves the grid.
+            const moving = p.rot === 0 && (p.falling || p.hit !== 0);
+            return (
+              <div
+                key={`${k}-${ch}`}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  color: fg,
+                  transformOrigin: "0 0",
+                  transform: `translate(${p.x}px, ${p.y}px) rotate(${p.rot}deg) scale(${sx}, ${sy})${glide(moving)}`,
                 }}
               >
-                {ch}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-      <Grain opacity={c.grain} />
+                <span
+                  style={{
+                    position: "absolute",
+                    left: -ox * F,
+                    top: -ASC * F,
+                    lineHeight: LINE,
+                    whiteSpace: "pre",
+                  }}
+                >
+                  {ch}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

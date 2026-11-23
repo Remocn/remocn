@@ -1,19 +1,16 @@
 "use client";
 
 import type { ReactNode } from "react";
-import {
-  AbsoluteFill,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   FLOW_BG,
   FLOW_GREEN_LOW,
   FLOW_GREEN_MID,
   FLOW_GREEN_TOP,
   FONT,
+  stirring,
+  useGlide,
 } from "../foundation";
 
 const CARD_GRADIENT = `linear-gradient(160deg, ${FLOW_GREEN_TOP} 0%, ${FLOW_GREEN_MID} 55%, ${FLOW_GREEN_LOW} 100%)`;
@@ -26,17 +23,24 @@ function Card({
   f,
   fps,
   children,
+  step,
 }: {
   index: number;
   f: number;
   fps: number;
   children: ReactNode;
+  step: number;
 }) {
-  const enter = spring({
-    frame: f - index * 8,
-    fps,
-    config: { damping: 18, stiffness: 110 },
-  });
+  const glide = useGlide();
+  const enterAt = (g: number) =>
+    spring({
+      frame: g - index * 8,
+      fps,
+      config: { damping: 18, stiffness: 110 },
+    });
+  const enter = enterAt(f);
+  // 70px of rise plus a 10% zoom from the foot of a 360px card.
+  const rising = stirring((g) => enterAt(g) * (70 + 36), f, step);
   const ty = interpolate(enter, [0, 1], [70, 0]);
   const scale = interpolate(enter, [0, 1], [0.9, 1]);
   const opacity = interpolate(enter, [0, 1], [0, 1]);
@@ -57,8 +61,8 @@ function Card({
         opacity,
         translate: `0 ${ty}px`,
         scale: `${scale}`,
+        transform: glide(rising),
         transformOrigin: "center bottom",
-        willChange: "transform, opacity",
       }}
     >
       {children}
@@ -84,8 +88,8 @@ function Label({ children }: { children: ReactNode }) {
 }
 
 export function MetricsCards({ speed = 1 }: { speed?: number }) {
-  const f = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const f = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
 
   return (
     <AbsoluteFill
@@ -96,7 +100,7 @@ export function MetricsCards({ speed = 1 }: { speed?: number }) {
       }}
     >
       <div style={{ display: "flex", flexDirection: "row", gap: CARD_GAP }}>
-        <Card index={0} f={f} fps={fps}>
+        <Card index={0} f={f} fps={fps} step={speed}>
           <Label>AI-Powered Task Management</Label>
           <div
             style={{
@@ -112,7 +116,7 @@ export function MetricsCards({ speed = 1 }: { speed?: number }) {
           </div>
         </Card>
 
-        <Card index={1} f={f} fps={fps}>
+        <Card index={1} f={f} fps={fps} step={speed}>
           <Label>Smart Planning &amp; Scheduling</Label>
           <div
             style={{
@@ -128,7 +132,7 @@ export function MetricsCards({ speed = 1 }: { speed?: number }) {
           </div>
         </Card>
 
-        <Card index={2} f={f} fps={fps}>
+        <Card index={2} f={f} fps={fps} step={speed}>
           <Label>Unified Team Workspace</Label>
           <div
             style={{

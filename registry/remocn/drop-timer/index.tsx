@@ -5,13 +5,9 @@ import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -75,6 +71,18 @@ export interface DropTimerProps {
   url?: string;
   /** The small "live" dot beside the url. */
   accent?: string;
+  /** Text color of the payoff and the label at zero; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the colour-cut grounds; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the label, clock and payoff. Load it yourself; Big Shoulders by default. */
+  fontFamily?: string;
+  /** Frames 00:00:00 holds before the smash. */
+  hold?: number;
+  /** Size of the clock and payoff, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -227,7 +235,25 @@ function shake(d: number, amp: number, seed: number) {
   };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const pad = (n: number) => String(Math.max(0, Math.floor(n))).padStart(2, "0");
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
 
 export function DropTimer({
   label = "DROPS IN",
@@ -239,18 +265,27 @@ export function DropTimer({
   logo,
   url = "remocn.dev",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  hold = ZERO_HOLD,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: DropTimerProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = Math.min(W / 1280, H / 720);
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const fill = background === "transparent" ? "transparent" : background;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const total = Math.max(1, Math.round(from));
   const zeroAt = START + total * tick;
-  const smashAt = zeroAt + ZERO_HOLD;
+  const smashAt = zeroAt + hold;
 
   // ── Clock state ──
   const elapsed = Math.max(0, Math.floor((t - START) / tick));
@@ -285,31 +320,49 @@ export function DropTimer({
 
   // ── Camera ──
   const enter = SLAM(ramp(t, 0, START));
-  const enterScale = 1.3 - 0.3 * enter;
   const enterBlur = (1 - enter) * 16;
-  let bump = 0;
-  let sx = 0;
-  let sy = 0;
-  for (let k = 1; k <= total; k++) {
-    const d = t - (START + k * tick);
-    if (d < -1 || d > 12) continue;
-    // hits grow as the clock runs out
-    const g = 0.7 + (0.6 * k) / total;
-    bump = Math.max(bump, g * kick(d));
-    const s = shake(d, 6 * u * g, k * 1.3);
-    sx += s.x;
-    sy += s.y;
-  }
-  const smashD = t - smashAt;
-  bump = Math.max(bump, 1.4 * kick(smashD - 4));
-  const s3 = shake(smashD - 4, 12 * u, 4.4);
-  sx += s3.x;
-  sy += s3.y;
-  const camScale = 1 + 0.04 * bump;
+  const cameraAt = (tt: number) => {
+    let bump = 0;
+    let sx = 0;
+    let sy = 0;
+    for (let k = 1; k <= total; k++) {
+      const d = tt - (START + k * tick);
+      if (d < -1 || d > 12) continue;
+      // hits grow as the clock runs out
+      const g = 0.7 + (0.6 * k) / total;
+      bump = Math.max(bump, g * kick(d));
+      const s = shake(d, 6 * u * g, k * 1.3);
+      sx += s.x;
+      sy += s.y;
+    }
+    const smashD = tt - smashAt;
+    bump = Math.max(bump, 1.4 * kick(smashD - 4));
+    const s3 = shake(smashD - 4, 12 * u, 4.4);
+    sx += s3.x;
+    sy += s3.y;
+    return { sx, sy, k: 1 + 0.04 * bump };
+  };
+  const cam = cameraAt(t);
+  const { sx, sy } = cam;
+  const camScale = cam.k;
+  // A frame either side, in the clock's own time; the scale is weighed by
+  // the half-width it swings the frame's edge through.
+  const camMoves = (o: ReturnType<typeof cameraAt>) =>
+    Math.abs(o.sx - sx) > 1e-3 ||
+    Math.abs(o.sy - sy) > 1e-3 ||
+    Math.abs(o.k - camScale) * W > 1e-3;
+  const camMoving =
+    camMoves(cameraAt(t + speed)) || camMoves(cameraAt(Math.max(0, t - speed)));
 
   // ── Smash ──
   const rush = RUSH(ramp(t, smashAt, 5));
-  const clockScale = enterScale * (1 + 1.8 * rush);
+  const clockScaleAt = (tt: number) =>
+    (1.3 - 0.3 * SLAM(ramp(tt, 0, START))) *
+    (1 + 1.8 * RUSH(ramp(tt, smashAt, 5)));
+  const clockScale = clockScaleAt(t);
+  const clockMoving =
+    clockScaleAt(t + speed) !== clockScale ||
+    clockScaleAt(Math.max(0, t - speed)) !== clockScale;
   const clockBlur = enterBlur + 26 * rush;
   const clockOpacity = Math.min(ramp(t, 0, 2), 1 - ramp(t, smashAt + 2, 3));
   const liveP = SLAM(ramp(t, smashAt + 1, 7));
@@ -324,6 +377,8 @@ export function DropTimer({
   );
   const after = t >= smashAt + 1;
   const rise = (a: number) => SLAM(ramp(t, a, 16));
+  const lift = (a: number) =>
+    `translateY(${(1 - rise(a)) * 14 * u}px)${glide(midway(ramp(t, a, 16)) && !camMoving)}`;
   const drift = ramp(t, smashAt, 70);
   const haze = SLAM(ramp(t, smashAt + 1, 24));
 
@@ -334,20 +389,21 @@ export function DropTimer({
   const liveBase = H * 0.535 + liveCap * 0.5;
 
   const bgNow = after
-    ? c.zero
+    ? (fill ?? c.zero)
     : isFlash
       ? c.flash
       : atZero
-        ? c.zero
-        : ground.bg;
-  const digitInk = isFlash ? c.flashInk : ground.ink;
-  const labelInk = isFlash ? c.flashInk : atZero ? c.ink : ground.ink;
+        ? (fill ?? c.zero)
+        : (fill ?? ground.bg);
+  const groundInk = fill === undefined ? ground.ink : fg;
+  const digitInk = isFlash ? c.flashInk : groundInk;
+  const labelInk = isFlash ? c.flashInk : atZero ? fg : groundInk;
 
   const heroGrad = `${uid}hero`;
   const zeroGrad = `${uid}zero`;
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: fill ?? c.stage, overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, background: bgNow }} />
       {/* Payoff haze rising from the bottom. */}
       <div
@@ -362,199 +418,204 @@ export function DropTimer({
         }}
       />
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `translate(${sx}px, ${sy}px) scale(${camScale})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        <svg
-          width={W}
-          height={H}
-          viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          role="img"
-          aria-label={after ? `${live} — ${name} ${url}` : `${label} ${clock}`}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `translate(${sx}px, ${sy}px) scale(${camScale})${glide(camMoving)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
-          <defs>
-            <linearGradient
-              id={zeroGrad}
-              gradientUnits="userSpaceOnUse"
-              x1={clockX}
-              y1={baseline - capH}
-              x2={clockX + clockW}
-              y2={baseline}
-            >
-              <stop offset="0" stopColor={c.hero[2]} />
-              <stop offset="0.55" stopColor={c.hero[1]} />
-              <stop offset="1" stopColor={c.hero[0]} />
-            </linearGradient>
-            <linearGradient
-              id={heroGrad}
-              gradientUnits="userSpaceOnUse"
-              x1={W * (0.02 + 0.06 * drift)}
-              y1={liveBase}
-              x2={W * (0.92 + 0.06 * drift)}
-              y2={liveBase - liveCap}
-            >
-              <stop offset="0" stopColor={c.hero[1]} />
-              <stop offset="0.62" stopColor={c.hero[0]} />
-              <stop offset="1" stopColor={c.hero[0]} />
-            </linearGradient>
-          </defs>
+          <svg
+            width={W}
+            height={H}
+            viewBox={`0 0 ${W} ${H}`}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            role="img"
+            aria-label={
+              after ? `${live} — ${name} ${url}` : `${label} ${clock}`
+            }
+          >
+            <defs>
+              <linearGradient
+                id={zeroGrad}
+                gradientUnits="userSpaceOnUse"
+                x1={clockX}
+                y1={baseline - capH}
+                x2={clockX + clockW}
+                y2={baseline}
+              >
+                <stop offset="0" stopColor={c.hero[2]} />
+                <stop offset="0.55" stopColor={c.hero[1]} />
+                <stop offset="1" stopColor={c.hero[0]} />
+              </linearGradient>
+              <linearGradient
+                id={heroGrad}
+                gradientUnits="userSpaceOnUse"
+                x1={W * (0.02 + 0.06 * drift)}
+                y1={liveBase}
+                x2={W * (0.92 + 0.06 * drift)}
+                y2={liveBase - liveCap}
+              >
+                <stop offset="0" stopColor={c.hero[1]} />
+                <stop offset="0.62" stopColor={c.hero[0]} />
+                <stop offset="1" stopColor={c.hero[0]} />
+              </linearGradient>
+            </defs>
 
-          {/* The clock. */}
-          {t < smashAt + 6 ? (
-            <g
-              style={{
-                transform: `scale(${clockScale})`,
-                transformOrigin: `${W / 2}px ${baseline - capH / 2}px`,
-                filter:
-                  clockBlur > 0.2 ? `blur(${clockBlur * u}px)` : undefined,
-              }}
-              opacity={clockOpacity}
-            >
+            {/* The clock. */}
+            {t < smashAt + 6 ? (
+              <g
+                style={{
+                  transform: `scale(${clockScale})${glide(clockMoving && !camMoving)}`,
+                  transformOrigin: `${W / 2}px ${baseline - capH / 2}px`,
+                  filter:
+                    clockBlur > 0.2 ? `blur(${clockBlur * u}px)` : undefined,
+                }}
+                opacity={clockOpacity}
+              >
+                <text
+                  x={W / 2}
+                  y={baseline - capH - 0.075 * H}
+                  textAnchor="middle"
+                  fontFamily={fontFamily}
+                  fontWeight={500}
+                  fontSize={0.068 * H}
+                  fill={labelInk}
+                  style={{ letterSpacing: "0.08em" }}
+                >
+                  {label}
+                </text>
+                <g
+                  fontFamily={fontFamily}
+                  fontWeight={500}
+                  fontSize={fs}
+                  textAnchor="middle"
+                  fill={atZero && !isFlash ? `url(#${zeroGrad})` : digitInk}
+                >
+                  {glyphs.map((g) => (
+                    <text
+                      key={g.i}
+                      x={g.mid}
+                      y={g.ch === ":" ? baseline - 0.035 * fs : baseline}
+                    >
+                      {g.ch}
+                    </text>
+                  ))}
+                </g>
+                <g
+                  fontFamily={mono}
+                  fontWeight={400}
+                  fontSize={0.03 * H}
+                  textAnchor="middle"
+                  fill={labelInk}
+                  opacity={0.8}
+                  style={{ letterSpacing: "0.14em" }}
+                >
+                  {units.map((un, i) => (
+                    <text key={un} x={pairMid[i]} y={baseline + 0.075 * H}>
+                      {un}
+                    </text>
+                  ))}
+                </g>
+              </g>
+            ) : null}
+
+            {/* LIVE NOW, full-bleed. */}
+            {after ? (
               <text
                 x={W / 2}
-                y={baseline - capH - 0.075 * H}
+                y={liveBase}
                 textAnchor="middle"
-                fontFamily={display}
+                fontFamily={fontFamily}
                 fontWeight={500}
-                fontSize={0.068 * H}
-                fill={labelInk}
-                style={{ letterSpacing: "0.08em" }}
+                fontSize={liveFs}
+                fill={`url(#${heroGrad})`}
+                opacity={liveOpacity}
+                style={{
+                  letterSpacing: `${TRACK_LIVE}em`,
+                  transform: `scale(${liveScale})${glide(midway(liveP) && !camMoving)}`,
+                  transformOrigin: `${W / 2}px ${liveBase - liveCap / 2}px`,
+                  filter:
+                    liveBlur > 0.2 ? `blur(${liveBlur * u}px)` : undefined,
+                }}
               >
-                {label}
+                {live.toUpperCase()}
               </text>
-              <g
-                fontFamily={display}
-                fontWeight={500}
-                fontSize={fs}
-                textAnchor="middle"
-                fill={atZero && !isFlash ? `url(#${zeroGrad})` : digitInk}
-              >
-                {glyphs.map((g) => (
-                  <text
-                    key={g.i}
-                    x={g.mid}
-                    y={g.ch === ":" ? baseline - 0.035 * fs : baseline}
-                  >
-                    {g.ch}
-                  </text>
-                ))}
-              </g>
-              <g
-                fontFamily={mono}
-                fontWeight={400}
-                fontSize={0.03 * H}
-                textAnchor="middle"
-                fill={labelInk}
-                opacity={0.8}
-                style={{ letterSpacing: "0.14em" }}
-              >
-                {units.map((un, i) => (
-                  <text key={un} x={pairMid[i]} y={baseline + 0.075 * H}>
-                    {un}
-                  </text>
-                ))}
-              </g>
-            </g>
-          ) : null}
+            ) : null}
+          </svg>
 
-          {/* LIVE NOW, full-bleed. */}
+          {/* Brand over the payoff. */}
           {after ? (
-            <text
-              x={W / 2}
-              y={liveBase}
-              textAnchor="middle"
-              fontFamily={display}
-              fontWeight={500}
-              fontSize={liveFs}
-              fill={`url(#${heroGrad})`}
-              opacity={liveOpacity}
-              style={{
-                letterSpacing: `${TRACK_LIVE}em`,
-                transform: `scale(${liveScale})`,
-                transformOrigin: `${W / 2}px ${liveBase - liveCap / 2}px`,
-                filter: liveBlur > 0.2 ? `blur(${liveBlur * u}px)` : undefined,
-              }}
-            >
-              {live.toUpperCase()}
-            </text>
-          ) : null}
-        </svg>
-
-        {/* Brand over the payoff. */}
-        {after ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: liveBase - liveCap - 0.135 * H,
-              display: "flex",
-              justifyContent: "center",
-              opacity: rise(smashAt + 7),
-              transform: `translateY(${(1 - rise(smashAt + 7)) * 14 * u}px)`,
-            }}
-          >
-            {logo ??
-              (name.trim().toLowerCase() === "remocn" ? (
-                <RemocnLogo fontSize={0.064 * H} color={c.ink} />
-              ) : (
-                <span
-                  style={{
-                    fontFamily: display,
-                    fontWeight: 500,
-                    fontSize: 0.064 * H,
-                    color: c.ink,
-                    lineHeight: 1,
-                  }}
-                >
-                  {name}
-                </span>
-              ))}
-          </div>
-        ) : null}
-
-        {/* Url under the payoff. */}
-        {after ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: liveBase + 0.075 * H,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 12 * u,
-              fontFamily: mono,
-              fontWeight: 400,
-              fontSize: 0.032 * H,
-              letterSpacing: "0.04em",
-              color: c.ink,
-              lineHeight: 1,
-              opacity: rise(smashAt + 11),
-              transform: `translateY(${(1 - rise(smashAt + 11)) * 14 * u}px)`,
-            }}
-          >
             <div
               style={{
-                width: 0.016 * H,
-                height: 0.016 * H,
-                borderRadius: 99,
-                background: accent,
-                opacity:
-                  0.8 + 0.2 * Math.cos(((t - smashAt) / 22) * Math.PI * 2),
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: liveBase - liveCap - 0.135 * H,
+                display: "flex",
+                justifyContent: "center",
+                opacity: rise(smashAt + 7),
+                transform: lift(smashAt + 7),
               }}
-            />
-            {url}
-          </div>
-        ) : null}
-      </div>
+            >
+              {logo ??
+                (name.trim().toLowerCase() === "remocn" ? (
+                  <RemocnLogo fontSize={0.064 * H} color={fg} />
+                ) : (
+                  <span
+                    style={{
+                      fontFamily,
+                      fontWeight: 500,
+                      fontSize: 0.064 * H,
+                      color: fg,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {name}
+                  </span>
+                ))}
+            </div>
+          ) : null}
+
+          {/* Url under the payoff. */}
+          {after ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: liveBase + 0.075 * H,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 12 * u,
+                fontFamily: mono,
+                fontWeight: 400,
+                fontSize: 0.032 * H,
+                letterSpacing: "0.04em",
+                color: fg,
+                lineHeight: 1,
+                opacity: rise(smashAt + 11),
+                transform: lift(smashAt + 11),
+              }}
+            >
+              <div
+                style={{
+                  width: 0.016 * H,
+                  height: 0.016 * H,
+                  borderRadius: 99,
+                  background: accent,
+                  opacity:
+                    0.8 + 0.2 * Math.cos(((t - smashAt) / 22) * Math.PI * 2),
+                }}
+              />
+              {url}
+            </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
 
       {/* The smash flash. */}
       <div

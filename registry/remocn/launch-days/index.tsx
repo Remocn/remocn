@@ -5,14 +5,9 @@ import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { Fragment } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -43,6 +38,18 @@ export interface LaunchDaysProps {
   logo?: React.ReactNode;
   accent?: string;
   background?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Typeface for the titles and copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Frames between title words as the active day writes in. */
+  stagger?: number;
+  /** Corner radius of the day cards, in px at 720p. */
+  radius?: number;
+  /** Size of the header and strip, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
@@ -124,6 +131,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const REMOCN_R_PATH =
   "M 0.01 0.81 C 0.01 1.73, 0.36 2.79, 1.09 4.13 C 4.91 11.04, 13.45 17.16, 21.7 18.9 C 22.94 19.16, 23.18 19.16, 51.39 19.27 C 76.07 19.36, 80.02 19.4, 81.32 19.57 C 89.89 20.69, 96.2 24.68, 99.38 31.01 C 103.19 38.56, 102.53 50.1, 97.91 57.07 C 94.66 61.96, 89.68 64.99, 83.26 66 C 82.81 66.07, 70.18 66.83, 55.2 67.69 C 24.82 69.43, 27.03 69.23, 24.18 70.4 C 19.9 72.15, 14.84 75.7, 10.65 79.89 C 4.86 85.68, 1.3 91.91, 0.25 98.13 C 0.12 98.85, 0.08 103.13, 0.04 116.66 L 0 134.26 9.5 134.26 L 19 134.26 19.05 119.41 C 19.1 103.27, 19.08 103.82, 19.82 101.04 C 21.79 93.65, 27.86 88.75, 36.45 87.63 C 37.23 87.53, 39.41 87.5, 43.57 87.53 C 50.12 87.59, 50.75 87.65, 53.22 88.45 C 56.61 89.56, 59.67 91.86, 62.02 95.07 C 62.52 95.76, 69.35 103.85, 77.2 113.07 C 85.04 122.28, 91.63 130.04, 91.85 130.32 C 92.07 130.59, 92.5 131.34, 92.82 131.97 C 93.52 133.35, 94.11 133.93, 95.06 134.13 C 95.5 134.23, 98.97 134.26, 106.36 134.23 L 117.01 134.19 100.82 113.07 C 91.91 101.45, 84.52 91.78, 84.39 91.57 C 83.36 89.89, 83.66 87.53, 85.09 86 C 85.79 85.25, 86.36 84.94, 88.07 84.38 C 96.18 81.72, 104.15 76.62, 109.97 70.36 C 120.59 58.93, 124.06 44.32, 119.44 30.43 C 114.59 15.81, 101.93 4.02, 87.64 0.83 C 83.93 0.01, 88.09 0.08, 41.85 0.04 L 0.01 0 0.01 0.81 Z";
 
@@ -168,6 +177,22 @@ function estimateEm(text: string) {
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LaunchDays({
   week = "Launch Week 01",
   label = "New today",
@@ -178,15 +203,24 @@ export function LaunchDays({
   logo,
   accent = "#3B5BFD",
   background,
+  ink,
+  fontFamily = hanken.fontFamily,
+  stagger = 3,
+  radius: corner = 16,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: LaunchDaysProps) {
-  const raw = useCurrentFrame();
+  const glide = useGlide();
+  const raw = Math.max(0, useSceneFrame() - delay);
   const frame = raw * speed;
-  const { width, height, fps } = useVideoConfig();
+  const { width, height, fps } = useSceneConfig();
   const p = PALETTES[theme];
+  const fg = ink ?? p.fg;
+  const activeFg = ink ?? p.activeFg;
 
   const list = days.length >= 2 ? days.slice(0, 7) : DEFAULT_DAYS;
   const n = list.length;
@@ -202,7 +236,7 @@ export function LaunchDays({
   const marginX = portrait ? width * 0.07 : width * 0.1;
   const headerH = week || logo !== null ? 64 * u : 0;
   const gap = 8 * u;
-  const radius = 16 * u;
+  const radius = corner * u;
 
   const stripW = width - marginX * 2;
   const stripH = height - margin - headerH - margin * (headerH ? 0 : 1);
@@ -216,23 +250,36 @@ export function LaunchDays({
   const equal = free / n;
   const wide = free - sliver * (n - 1);
 
-  const rise = (i: number) =>
-    swap === null
-      ? spring({ frame: frame - i * 2, fps, config: SPRING_CARD })
-      : 1;
+  const riseAt = (i: number, f: number) =>
+    swap === null ? spring({ frame: f - i * 2, fps, config: SPRING_CARD }) : 1;
+  const rise = (i: number) => riseAt(i, frame);
+  // The card's lift overshoots, so it is "moving" while its px still change.
+  const lifting = (i: number) =>
+    Math.abs(riseAt(i, frame + 1) - riseAt(i, frame)) * 30 * u > 1e-3 ||
+    Math.abs(riseAt(i, frame) - riseAt(i, frame - 1)) * 30 * u > 1e-3;
   const open = spring({
     frame: frame - 14,
     fps,
     config: SPRING_MORPH,
     durationInFrames: 28,
   });
-  const sizeOf = (i: number) => {
+  const sizeAt = (i: number, o: number) => {
     if (swap === null) {
-      return interpolate(open, [0, 1], [equal, i === act ? wide : sliver]);
+      return interpolate(o, [0, 1], [equal, i === act ? wide : sliver]);
     }
     const a = i === swap ? wide : sliver;
     const b = i === act ? wide : sliver;
-    return interpolate(open, [0, 1], [a, b]);
+    return interpolate(o, [0, 1], [a, b]);
+  };
+  const sizeOf = (i: number) => sizeAt(i, open);
+  // Layout rounds every box edge to whole pixels, so cards pushed along by
+  // their neighbours' widths, and labels centred in a card that narrows,
+  // click across pixel by pixel. Each card is laid out where the morph
+  // leaves it and travels there by a transform.
+  const offsetAt = (i: number, o: number) => {
+    let at = 0;
+    for (let k = 0; k < i; k++) at += sizeAt(k, o) + gap;
+    return at;
   };
 
   const eyebrowT = interpolate(frame, [26, 42], [0, 1], {
@@ -240,7 +287,7 @@ export function LaunchDays({
     easing: EASE_OUT,
   });
   const wordT = (i: number) =>
-    interpolate(frame, [30 + i * 3, 48 + i * 3], [0, 1], {
+    interpolate(frame, [30 + i * stagger, 48 + i * stagger], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -291,7 +338,11 @@ export function LaunchDays({
     .filter((i) => litO(i) > 0.001)
     .map((i) => {
       const q = rectOf(i);
-      return rr(q.x, q.y, q.w, q.h, radius);
+      if (scale === 1) return rr(q.x, q.y, q.w, q.h, radius);
+      // The cards sit in the ScaleLayer; the scrim doesn't, so map its holes.
+      const sx = width / 2 + (q.x - width / 2) * scale;
+      const sy = height / 2 + (q.y - height / 2) * scale;
+      return rr(sx, sy, q.w * scale, q.h * scale, radius * scale);
     });
   const scrimD = `M0 0H${width}V${height}H0Z${holes.join("")}`;
 
@@ -305,6 +356,7 @@ export function LaunchDays({
     i: number,
     mode: "in" | "out",
     size: number,
+    carried: boolean,
   ) => {
     const fs = titleFs(d.title);
     const words = d.title.split(/\s+/).filter(Boolean);
@@ -364,7 +416,7 @@ export function LaunchDays({
               fontSize: labelFs * 1.1,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: p.activeFg,
+              color: activeFg,
               opacity: eb,
               transform: `translateX(${(1 - eb) * -16 * u}px)`,
             }}
@@ -396,14 +448,14 @@ export function LaunchDays({
             <span
               style={{
                 display: "inline-block",
-                fontFamily: hanken.fontFamily,
+                fontFamily,
                 fontWeight: 400,
                 fontSize: numFs,
                 lineHeight: 1,
                 letterSpacing: "-0.05em",
                 fontVariantNumeric: "tabular-nums",
-                color: p.activeFg,
-                transform: `translateY(${(1 - numT) * 100}%)`,
+                color: activeFg,
+                transform: `translateY(${(1 - numT) * 100}%)${glide(!carried && midway(numT))}`,
               }}
             >
               {pad2(i + 1)}
@@ -413,12 +465,12 @@ export function LaunchDays({
         <div>
           <div
             style={{
-              fontFamily: hanken.fontFamily,
+              fontFamily,
               fontWeight: 400,
               fontSize: fs,
               lineHeight: 0.98,
               letterSpacing: "-0.045em",
-              color: p.activeFg,
+              color: activeFg,
               textWrap: "balance",
               marginLeft: -fs * 0.04,
             }}
@@ -443,7 +495,7 @@ export function LaunchDays({
                     <span
                       style={{
                         display: "inline-block",
-                        transform: `translateY(${(1 - t) * 105 - o * 105}%)`,
+                        transform: `translateY(${(1 - t) * 105 - o * 105}%)${glide(!carried && (midway(t) || midway(o)))}`,
                       }}
                     >
                       {w}
@@ -458,7 +510,7 @@ export function LaunchDays({
               style={{
                 marginTop: fs * 0.26,
                 maxWidth: Math.min(avail, 620 * u),
-                fontFamily: hanken.fontFamily,
+                fontFamily,
                 fontWeight: 400,
                 fontSize: (portrait ? 30 : 24) * u,
                 lineHeight: 1.35,
@@ -466,7 +518,7 @@ export function LaunchDays({
                 color: p.activeMuted,
                 textWrap: "balance",
                 opacity: descT,
-                transform: `translateY(${(1 - descT) * 12 * u}px)`,
+                transform: `translateY(${(1 - descT) * 12 * u}px)${glide(!carried && midway(descT))}`,
                 filter: `blur(${(1 - descT) * 5 * u}px)`,
               }}
             >
@@ -504,192 +556,217 @@ export function LaunchDays({
           </svg>
         </>
       )}
-      {showHeader ? (
+      <ScaleLayer scale={scale}>
+        {showHeader ? (
+          <div
+            style={{
+              position: "absolute",
+              left: marginX,
+              right: marginX,
+              top: 0,
+              height: headerH + margin * 0.15,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              opacity: headerT,
+              transform: `translateY(${(1 - headerT) * -8 * u}px)${glide(midway(headerT))}`,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: mono.fontFamily,
+                fontWeight: 400,
+                fontSize: labelFs * 1.1,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: fg,
+              }}
+            >
+              {week}
+            </span>
+            {logo === null ? null : (
+              <div style={{ display: "flex", alignItems: "center" }}>
+                {logo ?? <RemocnLogo fontSize={24 * u} color={fg} />}
+              </div>
+            )}
+          </div>
+        ) : null}
+
         <div
           style={{
             position: "absolute",
-            left: marginX,
-            right: marginX,
-            top: 0,
-            height: headerH + margin * 0.15,
+            left: stripX,
+            top: stripY,
+            width: stripW,
+            height: stripH - margin * 0.15,
             display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            opacity: headerT,
-            transform: `translateY(${(1 - headerT) * -8 * u}px)`,
+            flexDirection: portrait ? "column" : "row",
+            gap,
           }}
         >
-          <span
-            style={{
-              fontFamily: mono.fontFamily,
-              fontWeight: 400,
-              fontSize: labelFs * 1.1,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: p.fg,
-            }}
-          >
-            {week}
-          </span>
-          {logo === null ? null : (
-            <div style={{ display: "flex", alignItems: "center" }}>
-              {logo ?? <RemocnLogo fontSize={24 * u} color={p.fg} />}
-            </div>
-          )}
-        </div>
-      ) : null}
-
-      <div
-        style={{
-          position: "absolute",
-          left: stripX,
-          top: stripY,
-          width: stripW,
-          height: stripH - margin * 0.15,
-          display: "flex",
-          flexDirection: portrait ? "column" : "row",
-          gap,
-        }}
-      >
-        {list.map((d, i) => {
-          const size = sizeOf(i);
-          const r = rise(i);
-          const isAct = i === act;
-          const isFrom = i === swap;
-          const groundO = litO(i);
-          const past = i < act;
-          const upcoming = i > act;
-          const sliverTitle = upcoming && !revealUpcoming ? "" : d.title;
-          const labelO = interpolate(
-            size,
-            [equal * 1.05, equal * 1.6],
-            [1, 0],
-            CLAMP,
-          );
-          const numColor = isAct ? p.activeFg : past ? p.fg : p.muted;
-          return (
-            <div
-              key={`${d.day}-${i}`}
-              style={{
-                position: "relative",
-                flex: "none",
-                [portrait ? "height" : "width"]: size,
-                [portrait ? "width" : "height"]: "100%",
-                borderRadius: radius,
-                overflow: "hidden",
-                background: groundO > 0.001 ? undefined : p.panel,
-                boxShadow: `inset 0 0 0 1px ${groundO > 0.5 ? p.litLine : p.line}`,
-                clipPath: `inset(${Math.max(0, 1 - r) * 100}% 0 0 0 round ${radius}px)`,
-                transform: `translateY(${(1 - r) * 30 * u}px)`,
-              }}
-            >
-              {groundO > 0 ? (
-                <>
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background: p.scrim,
-                      opacity: 1 - groundO,
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background: p.shade,
-                      opacity: groundO,
-                    }}
-                  />
-                </>
-              ) : null}
-
+          {list.map((d, i) => {
+            const size = sizeOf(i);
+            const r = rise(i);
+            const isAct = i === act;
+            const isFrom = i === swap;
+            const groundO = litO(i);
+            const past = i < act;
+            const upcoming = i > act;
+            const sliverTitle = upcoming && !revealUpcoming ? "" : d.title;
+            const labelO = interpolate(
+              size,
+              [equal * 1.05, equal * 1.6],
+              [1, 0],
+              CLAMP,
+            );
+            const numColor = isAct ? activeFg : past ? fg : p.muted;
+            const rest = sizeAt(i, 1);
+            const atRest = offsetAt(i, 1);
+            const slide = offsetAt(i, open) - atRest;
+            const grow = (size - rest) / 2;
+            const moving = lifting(i);
+            return (
               <div
+                key={`${d.day}-${i}`}
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  padding: `${18 * u}px ${portrait ? 24 * u : 0}px`,
-                  display: "flex",
-                  flexDirection: portrait ? "row" : "column",
-                  alignItems: portrait ? "center" : "center",
-                  justifyContent: "space-between",
-                  opacity: labelO * interpolate(r, [0.4, 1], [0, 1], CLAMP),
+                  [portrait ? "top" : "left"]: atRest,
+                  [portrait ? "height" : "width"]: size,
+                  [portrait ? "width" : "height"]: "100%",
+                  borderRadius: radius,
+                  overflow: "hidden",
+                  background: groundO > 0.001 ? undefined : p.panel,
+                  boxShadow: `inset 0 0 0 1px ${groundO > 0.5 ? p.litLine : p.line}`,
+                  clipPath: `inset(${Math.max(0, 1 - r) * 100}% 0 0 0 round ${radius}px)`,
+                  transform: `${
+                    Math.abs(slide) < 1e-3
+                      ? ""
+                      : portrait
+                        ? `translateY(${slide}px) `
+                        : `translateX(${slide}px) `
+                  }translateY(${(1 - r) * 30 * u}px)${glide(moving)}`,
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: portrait ? "row" : "column",
-                    alignItems: "center",
-                    gap: 10 * u,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: mono.fontFamily,
-                      fontWeight: 400,
-                      fontSize: labelFs * 1.15,
-                      letterSpacing: "0.04em",
-                      color: numColor,
-                    }}
-                  >
-                    {pad2(i + 1)}
-                  </span>
-                  {past ? (
-                    <span
+                {groundO > 0 ? (
+                  <>
+                    <div
                       style={{
-                        width: 6 * u,
-                        height: 6 * u,
-                        borderRadius: 99,
-                        background: accent,
+                        position: "absolute",
+                        inset: 0,
+                        background: p.scrim,
+                        opacity: 1 - groundO,
                       }}
                     />
-                  ) : null}
-                </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: p.shade,
+                        opacity: groundO,
+                      }}
+                    />
+                  </>
+                ) : null}
+
                 <div
                   style={{
+                    position: "absolute",
+                    // Centred across the width the card settles at; the
+                    // narrowing on the way is a transform.
+                    left: 0,
+                    top: 0,
+                    [portrait ? "width" : "height"]: "100%",
+                    [portrait ? "height" : "width"]: rest,
+                    boxSizing: "border-box",
+                    transform:
+                      Math.abs(grow) < 1e-3
+                        ? undefined
+                        : portrait
+                          ? `translateY(${grow}px)${glide(midway(open) && !moving)}`
+                          : `translateX(${grow}px)`,
+                    padding: `${18 * u}px ${portrait ? 24 * u : 0}px`,
                     display: "flex",
-                    alignItems: "center",
-                    gap: 12 * u,
-                    writingMode: portrait ? undefined : "vertical-rl",
-                    transform: portrait ? undefined : "rotate(180deg)",
-                    whiteSpace: "nowrap",
+                    flexDirection: portrait ? "row" : "column",
+                    alignItems: portrait ? "center" : "center",
+                    justifyContent: "space-between",
+                    opacity: labelO * interpolate(r, [0.4, 1], [0, 1], CLAMP),
                   }}
                 >
-                  <span
+                  <div
                     style={{
-                      fontFamily: mono.fontFamily,
-                      fontWeight: 400,
-                      fontSize: labelFs,
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      color: past ? p.muted : p.faint,
+                      display: "flex",
+                      flexDirection: portrait ? "row" : "column",
+                      alignItems: "center",
+                      gap: 10 * u,
                     }}
                   >
-                    {d.day}
-                  </span>
-                  {sliverTitle ? (
                     <span
                       style={{
-                        fontFamily: hanken.fontFamily,
+                        fontFamily: mono.fontFamily,
                         fontWeight: 400,
-                        fontSize: labelFs * 1.6,
-                        letterSpacing: "-0.02em",
-                        color: past ? p.fg : p.muted,
+                        fontSize: labelFs * 1.15,
+                        letterSpacing: "0.04em",
+                        color: numColor,
                       }}
                     >
-                      {sliverTitle}
+                      {pad2(i + 1)}
                     </span>
-                  ) : null}
+                    {past ? (
+                      <span
+                        style={{
+                          width: 6 * u,
+                          height: 6 * u,
+                          borderRadius: 99,
+                          background: accent,
+                        }}
+                      />
+                    ) : null}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12 * u,
+                      writingMode: portrait ? undefined : "vertical-rl",
+                      transform: portrait ? undefined : "rotate(180deg)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: mono.fontFamily,
+                        fontWeight: 400,
+                        fontSize: labelFs,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: past ? p.muted : p.faint,
+                      }}
+                    >
+                      {d.day}
+                    </span>
+                    {sliverTitle ? (
+                      <span
+                        style={{
+                          fontFamily,
+                          fontWeight: 400,
+                          fontSize: labelFs * 1.6,
+                          letterSpacing: "-0.02em",
+                          color: past ? fg : p.muted,
+                        }}
+                      >
+                        {sliverTitle}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
 
-              {isAct ? renderOpen(d, i, "in", size) : null}
-              {isFrom ? renderOpen(d, i, "out", size) : null}
-            </div>
-          );
-        })}
-      </div>
+                {isAct ? renderOpen(d, i, "in", size, moving) : null}
+                {isFrom ? renderOpen(d, i, "out", size, moving) : null}
+              </div>
+            );
+          })}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

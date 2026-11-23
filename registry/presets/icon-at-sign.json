@@ -1,0 +1,100 @@
+{
+  "component": "icon-at-sign",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow-draw",
+      "label": "Hairline Draw",
+      "description": "A large, fine-lined at sign that slowly traces itself in soft graphite.",
+      "askedAs": [
+        "thin elegant at sign drawing slowly",
+        "minimal line art email icon",
+        "slow delicate outline reveal",
+        "тонкая медленная отрисовка значка собаки",
+        "изящная линия символа @"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#4b5563"
+      }
+    },
+    {
+      "id": "bold-pop",
+      "label": "Bold Pop",
+      "description": "A chunky, heavy-stroked at sign in confident blue that snaps through its action quickly.",
+      "askedAs": [
+        "thick bold at icon fast",
+        "punchy email symbol animation",
+        "heavy blue at sign bounce",
+        "жирный быстрый значок @",
+        "яркая толстая иконка почты"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "size": 96,
+        "speed": 1.75,
+        "color": "#1f6feb"
+      }
+    },
+    {
+      "id": "mention-loop",
+      "label": "Mention Loop",
+      "description": "A compact teal at sign that keeps drawing and moving on a steady loop.",
+      "askedAs": [
+        "looping at sign for mentions",
+        "repeating small email icon",
+        "continuous at symbol animation",
+        "зацикленный значок упоминания",
+        "повторяющаяся анимация @"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#0f766e",
+        "size": 64,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "terracotta-hero",
+      "label": "Terracotta Hero",
+      "description": "An oversized warm terracotta at sign that draws in and settles at a calm, cinematic pace.",
+      "askedAs": [
+        "big warm at sign for title",
+        "huge orange email symbol",
+        "large hero at icon slow",
+        "большой тёплый значок @",
+        "крупная терракотовая собака"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#c2410c",
+        "strokeWidth": 1.5,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-ping",
+      "label": "Quick Ping",
+      "description": "A small plum at sign that fires a brisk action-only ping, like a notification.",
+      "askedAs": [
+        "fast notification at icon",
+        "tiny quick mention ping",
+        "small purple at sign pulse",
+        "быстрый маленький значок уведомления",
+        "короткий пинг упоминания"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 32,
+        "color": "#7c3aed",
+        "speed": 2.5,
+        "strokeWidth": 2.25
+      }
+    }
+  ]
+}

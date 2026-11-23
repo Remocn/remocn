@@ -2,8 +2,9 @@
 
 import type { Caption } from "@remotion/captions";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate } from "remotion";
 import type { CaptionBaseProps } from "@/lib/remocn/caption-core";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface CaptionTimelineProps extends CaptionBaseProps {
   width?: number;
@@ -106,8 +107,8 @@ export function CaptionTimeline({
   shadow = true,
   className,
 }: CaptionTimelineProps) {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps } = useSceneConfig();
   const timeMs = (frame / fps) * 1000;
   const words = useMemo(() => getTimelineWords(captions), [captions]);
   const elements = useRef<(HTMLSpanElement | null)[]>([]);

@@ -2,6 +2,7 @@
 
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont as loadRubik } from "@remotion/google-fonts/Rubik";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -10,9 +11,9 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const rubik = loadRubik("normal", {
   weights: ["400", "500"],
@@ -28,7 +29,19 @@ export interface SequelNumeralProps {
   numeral?: string;
   tagline?: string;
   accent?: string;
+  /** Color of the name; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the numeral and tagline. Load it yourself; Rubik by default. */
+  fontFamily?: string;
+  /** Replaces the remocn logo when `name` is "remocn". */
+  logo?: React.ReactNode;
+  /** Frames the numeral sits as a superscript before it drops and grows. */
+  hold?: number;
+  /** Size of the lockup and tagline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -98,11 +111,18 @@ interface Metrics {
   tagline: number;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const isRemocn = (name: string) => name.trim().toLowerCase() === "remocn";
 
 const baseOf = (asc: number, desc: number) => (1 - (asc + desc)) / 2 + asc;
 
-function measure(name: string, numeral: string, tagline: string): Metrics {
+function measure(
+  name: string,
+  numeral: string,
+  tagline: string,
+  font: string,
+): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) throw new Error("sequel-numeral: no 2d context");
   ctx.font = `600 100px "${manrope.fontFamily}"`;
@@ -118,7 +138,7 @@ function measure(name: string, numeral: string, tagline: string): Metrics {
     nm.fontBoundingBoxDescent / 100,
   );
 
-  ctx.font = `500 100px "${rubik.fontFamily}"`;
+  ctx.font = `500 100px "${font}"`;
   const nmText = numeral || "2";
   const fm = ctx.measureText(nmText);
   const num =
@@ -129,30 +149,35 @@ function measure(name: string, numeral: string, tagline: string): Metrics {
     fm.fontBoundingBoxDescent / 100,
   );
 
-  ctx.font = `400 100px "${rubik.fontFamily}"`;
+  ctx.font = `400 100px "${font}"`;
   const tagW = tagline ? ctx.measureText(tagline).width / 100 : 0;
   return { name: nameW, nameBase, num, numCap, numBase, tagline: tagW };
 }
 
-function useMetrics(name: string, numeral: string, tagline: string) {
-  const key = [name, numeral, tagline].join("\u0001");
+function useMetrics(
+  name: string,
+  numeral: string,
+  tagline: string,
+  font: string,
+) {
+  const key = [name, numeral, tagline, font].join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("sequel-numeral: measuring"));
   const released = useRef(false);
   useEffect(() => {
     let live = true;
-    const [n, nu, tg] = key.split("\u0001");
+    const [n, nu, tg, f] = key.split("\u0001");
     Promise.all([
       rubik.waitUntilDone(),
       manrope.waitUntilDone(),
-      document.fonts.load(`500 100px "${rubik.fontFamily}"`),
-      document.fonts.load(`400 100px "${rubik.fontFamily}"`),
+      document.fonts.load(`500 100px "${f}"`),
+      document.fonts.load(`400 100px "${f}"`),
       document.fonts.load(`600 100px "${manrope.fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(n, nu, tg) });
+        setState({ key, m: measure(n, nu, tg, f) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -165,19 +190,46 @@ function useMetrics(name: string, numeral: string, tagline: string) {
   return state && state.key === key ? state.m : null;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SequelNumeral({
   name = "remocn",
   numeral = "2",
   tagline = "Part two. Out now.",
   accent = RED,
+  ink,
   background,
+  fontFamily = rubik.fontFamily,
+  logo,
+  hold = DROP_AT - SUP_AT,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: SequelNumeralProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
-  const m = useMetrics(name, numeral, tagline);
+  const fg = ink ?? c.ink;
+  const m = useMetrics(name, numeral, tagline, fontFamily);
+  const dropAt = SUP_AT + hold;
+  const growAt = dropAt + (GROW_AT - DROP_AT);
+  const tagAt = growAt + (TAG_AT - GROW_AT);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -208,51 +260,119 @@ export function SequelNumeral({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const supP = interpolate(t, [SUP_AT, SUP_AT + 12], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const drop = interpolate(t, [DROP_AT, DROP_AT + DROP_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_DROP,
-  });
-  const grow = spring({
-    frame: t - GROW_AT,
-    fps,
-    config: { damping: 14, stiffness: 120, mass: 0.9 },
-  });
-  const settle = spring({
-    frame: t - GROW_AT,
-    fps,
-    config: { damping: 200, stiffness: 120, mass: 0.9 },
-    durationInFrames: SETTLE_LEN,
-  });
-  const tagP = interpolate(t, [TAG_AT, TAG_AT + 16], [0, 1], {
+  const supPOf = (f: number) =>
+    interpolate(f, [SUP_AT, SUP_AT + 12], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const supP = supPOf(t);
+  const dropOf = (f: number) =>
+    interpolate(f, [dropAt, dropAt + DROP_LEN], [0, 1], {
+      ...CLAMP,
+      easing: EASE_DROP,
+    });
+  const growOf = (f: number) =>
+    spring({
+      frame: f - growAt,
+      fps,
+      config: { damping: 14, stiffness: 120, mass: 0.9 },
+    });
+  const settleAt = (f: number) =>
+    spring({
+      frame: f - growAt,
+      fps,
+      config: { damping: 200, stiffness: 120, mass: 0.9 },
+      durationInFrames: SETTLE_LEN,
+    });
+  const settle = settleAt(t);
+  // The settle carries the name by hundreds of pixels; a step under 1e-6 of
+  // it is under a thousandth of a pixel.
+  const settling =
+    Math.abs(settleAt(t + speed) - settle) > 1e-6 ||
+    Math.abs(settle - settleAt(t - speed)) > 1e-6;
+  const tagP = interpolate(t, [tagAt, tagAt + 16], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
   const L = L0 + (L1 - L0) * settle;
   const cap = LOGO_CAP * L;
-  const supS = (SUP * cap) / m.numCap;
-  const sizeFree = supS + (S1 - supS) * grow;
-  const gap = gapSup + (gap1 - gapSup) * Math.min(1, Math.max(0, grow));
 
   const lock0 = m.name * L0 + gapSup + m.num * supS0;
   const nameLeft0 = (W - lock0) / 2;
   const nameLeft1 = W - margin - m.num * S1 - gap1 - m.name * L1;
-  const nameLeft = nameLeft0 + (nameLeft1 - nameLeft0) * settle;
-  const numLeft = nameLeft + m.name * L + gap;
+  const nameLeftAt = (k: number) => nameLeft0 + (nameLeft1 - nameLeft0) * k;
+  const nameLeft = nameLeftAt(settle);
 
   const base0 = H / 2 + (LOGO_CAP * L0) / 2;
   const base1 = (H + m.numCap * S1) / 2;
-  const baseY = base0 + (base1 - base0) * settle;
+  const baseYAt = (k: number) => base0 + (base1 - base0) * k;
+  const baseY = baseYAt(settle);
 
-  const supBase = baseY - cap + m.numCap * sizeFree;
-  const numBaseY = supBase + (baseY - supBase) * drop;
-  const size = Math.min(sizeFree, (numBaseY - margin) / m.numCap);
+  // The numeral's box as a function of the frame, so it can be compared with
+  // its neighbours to tell motion from rest.
+  const numeralOf = (st: number, gr: number, dr: number) => {
+    const nL = L0 + (L1 - L0) * st;
+    const nCap = LOGO_CAP * nL;
+    const supS = (SUP * nCap) / m.numCap;
+    const sizeFree = supS + (S1 - supS) * gr;
+    const gap = gapSup + (gap1 - gapSup) * Math.min(1, Math.max(0, gr));
+    const nBase = baseYAt(st);
+    const supBase = nBase - nCap + m.numCap * sizeFree;
+    const numBaseY = supBase + (nBase - supBase) * dr;
+    const size = Math.min(sizeFree, (numBaseY - margin) / m.numCap);
+    return {
+      left: nameLeftAt(st) + m.name * nL + gap,
+      top: numBaseY - m.numBase * size,
+      size,
+      cap: nCap,
+    };
+  };
+  const numeralAt = (f: number) => {
+    const at = numeralOf(settleAt(f), growOf(f), dropOf(f));
+    return { ...at, rise: (1 - supPOf(f)) * at.cap * 0.4 };
+  };
+  const num = numeralAt(t);
+  const numPrev = numeralAt(t - speed);
+  const numNext = numeralAt(t + speed);
+  const numShifts = [numPrev, numNext].some(
+    (o) =>
+      Math.abs(o.left - num.left) > 1e-3 ||
+      Math.abs(o.top - num.top) > 1e-3 ||
+      Math.abs(o.size - num.size) * m.num > 1e-3,
+  );
+  const numRises = [numPrev, numNext].some(
+    (o) =>
+      Math.abs(Number(o.rise.toFixed(2)) - Number(num.rise.toFixed(2))) > 0,
+  );
+  // A font size and a place eased by layout land on whole pixels, baseline
+  // and all, so the drop and the grow step unevenly. The numeral is laid out
+  // once at its final size and place and scaled and shifted to the live ones
+  // from its top-left corner, where size and place both scale from. That is
+  // so all its life: handed back to layout at rest, it would jump by what the
+  // rounding takes. The grow spring leaves a tail far under a pixel.
+  const numRest = numeralOf(1, 1, 1);
+  const numBox = numRest;
+  const settled = (d: number) => (Math.abs(d) > 1e-3 ? d : 0);
+  const numDx = settled(num.left - numRest.left);
+  const numDy = settled(num.top - numRest.top);
+  const numK =
+    Math.abs(num.size - numRest.size) * m.num > 1e-3
+      ? num.size / numRest.size
+      : 1;
 
-  const nameRise = (1 - nameP) * L * 1.2;
+  // The name's font size shrinks as it settles, and layout rounds the box and
+  // the baseline of a growing font to whole pixels. So the block is laid out
+  // once at the settled size and position, and the shrink and the travel are
+  // a transform on it, all its life.
+  const Lb = L1;
+  const blockLeft = nameLeftAt(1) - L1 * 0.1;
+  const blockTop = baseYAt(1) - L1 * 1.1;
+  const blockMove = `translate(${settled(nameLeft - L * 0.1 - blockLeft)}px, ${settled(
+    baseY - L * 1.1 - blockTop,
+  )}px) scale(${L / L1})${glide(settling)}`;
+
+  const nameRise = (1 - nameP) * Lb * 1.2;
   const tagFs = Math.min(
     H * (portrait ? 0.022 : 0.04),
     (W * 0.6) / Math.max(0.1, m.tagline),
@@ -260,90 +380,98 @@ export function SequelNumeral({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: nameLeft - L * 0.1,
-          top: baseY - L * 1.1,
-          width: m.name * L + L * 0.3,
-          height: L * 1.4,
-          overflow: "hidden",
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: L * 0.1,
-            top: L * 1.1 - m.nameBase * L + nameRise,
-            height: L,
-          }}
-        >
-          {isRemocn(name) ? (
-            <RemocnLogo fontSize={L} color={c.ink} />
-          ) : (
-            <div
-              style={{
-                fontFamily: manrope.fontFamily,
-                fontWeight: 600,
-                fontSize: L,
-                lineHeight: 1,
-                letterSpacing: "-0.025em",
-                whiteSpace: "pre",
-                color: c.ink,
-              }}
-            >
-              {name}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div
-        style={{
-          position: "absolute",
-          left: numLeft,
-          top: numBaseY - m.numBase * size,
-          height: size,
-          lineHeight: `${size}px`,
-          whiteSpace: "pre",
-          fontFamily: rubik.fontFamily,
-          fontWeight: 500,
-          fontSize: size,
-          letterSpacing: `${NUM_TRACK}em`,
-          color: accent,
-          opacity: supP,
-          transform: `translateY(${((1 - supP) * cap * 0.4).toFixed(2)}px)`,
-        }}
-      >
-        {numeral}
-      </div>
-
-      {tagline ? (
-        <div
-          style={{
-            position: "absolute",
-            left: margin,
-            top: margin,
-            height: tagFs * 1.3,
+            left: blockLeft,
+            top: blockTop,
+            width: m.name * Lb + Lb * 0.3,
+            height: Lb * 1.4,
             overflow: "hidden",
+            transform: blockMove,
+            transformOrigin: "0 0",
           }}
         >
           <div
             style={{
-              fontFamily: rubik.fontFamily,
-              fontWeight: 400,
-              fontSize: tagFs,
-              lineHeight: `${tagFs * 1.3}px`,
-              letterSpacing: "-0.01em",
-              whiteSpace: "pre",
-              color: c.soft,
-              transform: `translateY(${((1 - tagP) * tagFs * 1.4).toFixed(2)}px)`,
+              position: "absolute",
+              left: Lb * 0.1,
+              // The rise is a transform, not `top`: layout rounds a
+              // baseline to whole pixels, so the name clicked up into place.
+              top: Lb * 1.1 - m.nameBase * Lb,
+              height: Lb,
+              transform: `translateY(${nameRise}px)${glide(midway(nameP) && !settling)}`,
             }}
           >
-            {tagline}
+            {isRemocn(name) ? (
+              (logo ?? <RemocnLogo fontSize={Lb} color={fg} />)
+            ) : (
+              <div
+                style={{
+                  fontFamily: manrope.fontFamily,
+                  fontWeight: 600,
+                  fontSize: Lb,
+                  lineHeight: 1,
+                  letterSpacing: "-0.025em",
+                  whiteSpace: "pre",
+                  color: fg,
+                }}
+              >
+                {name}
+              </div>
+            )}
           </div>
         </div>
-      ) : null}
+
+        <div
+          style={{
+            position: "absolute",
+            left: numBox.left,
+            top: numBox.top,
+            height: numBox.size,
+            lineHeight: `${numBox.size}px`,
+            whiteSpace: "pre",
+            fontFamily,
+            fontWeight: 500,
+            fontSize: numBox.size,
+            letterSpacing: `${NUM_TRACK}em`,
+            color: accent,
+            opacity: supP,
+            transformOrigin: "0 0",
+            transform: `translateY(${((1 - supP) * cap * 0.4).toFixed(2)}px) translate(${numDx}px, ${numDy}px) scale(${numK})${glide(numShifts || numRises)}`,
+          }}
+        >
+          {numeral}
+        </div>
+
+        {tagline ? (
+          <div
+            style={{
+              position: "absolute",
+              left: margin,
+              top: margin,
+              height: tagFs * 1.3,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 400,
+                fontSize: tagFs,
+                lineHeight: `${tagFs * 1.3}px`,
+                letterSpacing: "-0.01em",
+                whiteSpace: "pre",
+                color: c.soft,
+                transform: `translateY(${(1 - tagP) * tagFs * 1.4}px)${glide(midway(tagP))}`,
+              }}
+            >
+              {tagline}
+            </div>
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

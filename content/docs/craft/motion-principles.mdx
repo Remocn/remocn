@@ -81,8 +81,8 @@ Supporting motion that reinforces the primary action without stealing focus.
 
 Frame counts set weight: fast reads light, slow reads heavy. Vary timing for contrast.
 
-- **Mechanic:** budget in frames at the composition fps (Remocn defaults to 30fps; component
-  durations run ~90–300 frames). The `speed` prop scales the animation tier.
+- **Mechanic:** budget in frames at the composition fps (Remocn defaults to 60 fps; component
+  durations run ~90–300 frames counted at 30 fps). The `speed` prop scales the animation tier.
 - **remocn:** every animation-tier component (`speed`); composition `durationInFrames`.
 - **Do/Avoid:** match duration to weight — a heavy hero assemble is slower than a toast. ❌ Don't
   reuse one duration for everything; it kills rhythm.

@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -8,14 +9,14 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const hanken = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -30,6 +31,22 @@ export interface InviteTeamProps {
   images?: string[];
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color of the app and modal copy; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Page heading in the app behind the modal. */
+  pageTitle?: string;
+  /** Label above the email field. */
+  fieldLabel?: string;
+  /** Button label once the invites are sent. */
+  doneLabel?: string;
+  /** Size of the app window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -56,6 +73,10 @@ const tween = (
   len: number,
   easing: (t: number) => number,
 ) => interpolate(f, [from, from + len], [0, 1], { ...CL, easing });
+
+/** Whether `px(f)`, a value in pixels, moves at frame `f`. */
+const stirs = (px: (f: number) => number, f: number, eps = 1e-3) =>
+  Math.abs(px(f + 1) - px(f)) > eps || Math.abs(px(f) - px(f - 1)) > eps;
 
 const BEAT = { window: 0, modal: 6, cursor: 8, focus: 24, type: 28 };
 
@@ -121,6 +142,22 @@ function withAlpha(color: string, alpha: number) {
   if (!/^[0-9a-fA-F]{6}$/.test(full)) return color;
   const n = Number.parseInt(full, 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 function palette(dark: boolean) {
@@ -231,20 +268,32 @@ export function InviteTeam({
   images = DEFAULT_IMAGES,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hanken.fontFamily,
+  pageTitle = "Projects",
+  fieldLabel = "Email addresses",
+  doneLabel = "Invites sent",
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: InviteTeamProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const tall = height > width;
   const SW = tall ? 600 : 1280;
   const SH = tall ? (600 * height) / width : 720;
   const k = width / SW;
   const dark = theme === "dark";
   const pal = palette(dark);
+  const fg = ink ?? pal.text;
+  const spAt = (f: number, at: number, config: Record<string, number>) =>
+    spring({ frame: f - at, fps, config });
   const sp = (at: number, config: Record<string, number>) =>
-    spring({ frame: frame - at, fps, config });
+    spAt(frame, at, config);
 
   const WIN = tall
     ? { x: 20, y: 72, w: SW - 40, h: SH }
@@ -301,21 +350,38 @@ export function InviteTeam({
   const focus =
     tween(frame, BEAT.focus, 4, EASE.enter) *
     (1 - tween(frame, selClick - 2, 4, EASE.enter));
-  const dropIn =
-    clamp01(sp(selClick + 1, SPR.card)) *
-    (1 - tween(frame, optClick + 1, 6, EASE.exit));
+  const dropInAt = (f: number) =>
+    clamp01(spAt(f, selClick + 1, SPR.card)) *
+    (1 - tween(f, optClick + 1, 6, EASE.exit));
+  const dropIn = dropInAt(frame);
   const roleNow = frame >= optClick + 1 ? role : "Member";
   const loading = frame >= btnClick + 2 && frame < doneAt;
   const done = frame >= doneAt;
   const shownChips = chipAt.filter((c) => frame >= c).length;
-  const pressOf = (at: number) =>
-    clamp01(sp(at - 2, SPR.chip) - sp(at + 3, SPR.chip));
+  const pressAt = (f: number, at: number) =>
+    clamp01(spAt(f, at - 2, SPR.chip) - spAt(f, at + 3, SPR.chip));
+  const pressOf = (at: number) => pressAt(frame, at);
   const toast = sp(toastAt, SPR.card);
   const toastOp = tween(frame, toastAt, 6, EASE.enter);
-  const cam =
+  const camAt = (f: number) =>
     1 +
-    0.03 * tween(frame, 8, 70, EASE.camera) -
-    0.03 * tween(frame, outAt - 4, 28, EASE.camera);
+    0.03 * tween(f, 8, 70, EASE.camera) -
+    0.03 * tween(f, outAt - 4, 28, EASE.camera);
+  const cam = camAt(frame);
+  // The camera carries every piece below, so its tilt covers their text; an
+  // inner mover tilts only while the camera holds still.
+  const camMoving = stirs((f) => camAt(f) * 1000, frame);
+  const inner = (px: (f: number) => number, eps?: number) =>
+    !camMoving && stirs(px, frame, eps);
+  const winMoving = inner((f) => spAt(f, BEAT.window, SPR.heavy) * 40);
+  const modalTy = (f: number) =>
+    spAt(f, BEAT.modal, SPR.card) * 18 + tween(f, outAt, 7, EASE.exit) * 10;
+  const modalK = (f: number) =>
+    (0.97 + 0.03 * spAt(f, BEAT.modal, SPR.card)) *
+    (1 - 0.03 * tween(f, outAt, 7, EASE.exit));
+  const modalMoving = inner(modalTy) || inner((f) => (modalK(f) * MW) / 2);
+  // Pieces inside the modal leave the tilt to it while it moves.
+  const inModal = (px: (f: number) => number) => !modalMoving && inner(px);
 
   const field = { x: MX + INPUT.x + INPUT.w * 0.62, y: MY + INPUT.y + 50 };
   const sel = { x: MX + SELECT.x + 120, y: MY + SELECT.y + 26 };
@@ -348,6 +414,11 @@ export function InviteTeam({
     curX += dx * p + (-dy / len) * bend * leg.arc;
     curY += dy * p + (dx / len) * bend * leg.arc;
   }
+  // Layout rounds a box to whole pixels, so a cursor eased by left/top clicks
+  // along; it is laid out where it comes to rest and travels by transform.
+  const curRest = legs[legs.length - 1].to;
+  const curDx = Math.abs(curX - curRest.x) < 1e-3 ? 0 : curX - curRest.x;
+  const curDy = Math.abs(curY - curRest.y) < 1e-3 ? 0 : curY - curRest.y;
   const curPress = Math.max(
     pressOf(BEAT.focus),
     pressOf(selClick),
@@ -395,644 +466,677 @@ export function InviteTeam({
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <GshGround
-        preset={ground ?? (dark ? "europa" : "paper-crease")}
-        params={groundParams}
-        timeOffset={4}
-        timeScale={0.5}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: SW,
-          height: SH,
-          transform: `scale(${k})`,
-          transformOrigin: "0 0",
-        }}
-      >
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? (dark ? "europa" : "paper-crease")}
+          params={groundParams}
+          timeOffset={4}
+          timeScale={0.5}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${cam})`,
-            transformOrigin: `${SW / 2}px ${MY + MODAL_H / 2}px`,
+            left: 0,
+            top: 0,
+            width: SW,
+            height: SH,
+            transform: `scale(${k})`,
+            transformOrigin: "0 0",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: WIN.x,
-              top: WIN.y,
-              width: WIN.w,
-              height: WIN.h,
-              borderRadius: 18,
-              overflow: "hidden",
-              background: pal.win,
-              boxShadow: pal.winShadow,
-              opacity: winOp,
-              transform: `translateY(${(1 - winIn) * 40}px)`,
+              inset: 0,
+              transform: `scale(${cam})${glide(camMoving)}`,
+              transformOrigin: `${SW / 2}px ${MY + MODAL_H / 2}px`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                inset: 0,
-                filter: `blur(${dim * 2.5}px)`,
+                left: WIN.x,
+                top: WIN.y,
+                width: WIN.w,
+                height: WIN.h,
+                borderRadius: 18,
+                overflow: "hidden",
+                background: pal.win,
+                boxShadow: pal.winShadow,
+                opacity: winOp,
+                transform: `translateY(${(1 - winIn) * 40}px)${glide(winMoving)}`,
               }}
             >
               <div
                 style={{
                   position: "absolute",
-                  left: 32,
-                  top: 30,
-                  display: "flex",
-                  alignItems: "baseline",
-                  gap: 12,
+                  inset: 0,
+                  filter: `blur(${dim * 2.5}px)`,
                 }}
               >
-                <span
-                  style={{
-                    fontSize: 30,
-                    letterSpacing: "-0.025em",
-                    color: pal.text,
-                  }}
-                >
-                  Projects
-                </span>
-                <span style={{ fontSize: 17, color: pal.muted }}>
-                  12 videos
-                </span>
-              </div>
-              {EXISTING.map((p, i) => (
                 <div
-                  key={p.initials}
                   style={{
                     position: "absolute",
-                    left: PILE_RIGHT - AV - i * STEP - WIN.x,
-                    top: PILE_Y - WIN.y,
-                    zIndex: 2 - i,
+                    left: 32,
+                    top: 30,
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 12,
                   }}
                 >
-                  <Avatar
-                    label={p.initials}
-                    tone={p.tone}
-                    size={AV}
-                    ring={pal.win}
-                  />
+                  <span
+                    style={{
+                      fontSize: 30,
+                      letterSpacing: "-0.025em",
+                      color: fg,
+                    }}
+                  >
+                    {pageTitle}
+                  </span>
+                  <span style={{ fontSize: 17, color: pal.muted }}>
+                    12 videos
+                  </span>
                 </div>
-              ))}
-              <div
-                style={{
-                  position: "absolute",
-                  left: inviteX - WIN.x,
-                  top: 30,
-                  display: "flex",
-                  gap: 10,
-                }}
-              >
+                {EXISTING.map((p, i) => (
+                  <div
+                    key={p.initials}
+                    style={{
+                      position: "absolute",
+                      left: PILE_RIGHT - AV - i * STEP - WIN.x,
+                      top: PILE_Y - WIN.y,
+                      zIndex: 2 - i,
+                    }}
+                  >
+                    <Avatar
+                      label={p.initials}
+                      tone={p.tone}
+                      size={AV}
+                      ring={pal.win}
+                    />
+                  </div>
+                ))}
                 <div
                   style={{
-                    width: btnInvite.w,
-                    height: 42,
-                    borderRadius: 10,
-                    boxShadow: pal.ghost,
+                    position: "absolute",
+                    left: inviteX - WIN.x,
+                    top: 30,
                     display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    fontSize: 16,
-                    color: pal.text,
+                    gap: 10,
                   }}
                 >
-                  <Icon name="users" size={18} color={pal.text} />
-                  Invite
-                </div>
-                {tall ? null : (
                   <div
                     style={{
-                      width: btnNew.w,
+                      width: btnInvite.w,
                       height: 42,
                       borderRadius: 10,
-                      background: pal.ink,
-                      color: pal.inkText,
+                      boxShadow: pal.ghost,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       gap: 8,
                       fontSize: 16,
+                      color: fg,
                     }}
                   >
-                    <Icon name="plus" size={18} color={pal.inkText} />
-                    New video
+                    <Icon name="users" size={18} color={fg} />
+                    Invite
                   </div>
-                )}
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 32,
-                  top: 104,
-                  width: gridW,
-                  display: "grid",
-                  gridTemplateColumns: `repeat(${cols}, 1fr)`,
-                  columnGap: 20,
-                  rowGap: 22,
-                }}
-              >
-                {shown.map(([title, len, meta], i) => (
-                  <div key={title}>
+                  {tall ? null : (
                     <div
                       style={{
-                        position: "relative",
-                        height: tileH,
-                        borderRadius: 12,
-                        overflow: "hidden",
+                        width: btnNew.w,
+                        height: 42,
+                        borderRadius: 10,
+                        background: pal.ink,
+                        color: pal.inkText,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                        fontSize: 16,
                       }}
                     >
-                      <Img
-                        src={images[i % images.length]}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                      <div
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          borderRadius: 12,
-                          boxShadow: `inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
-                        }}
-                      />
-                      <div
-                        style={{
-                          position: "absolute",
-                          right: 10,
-                          bottom: 10,
-                          fontSize: 15,
-                          fontVariantNumeric: "tabular-nums",
-                          color: "#FFFFFF",
-                          background: "rgba(0,0,0,0.5)",
-                          padding: "2px 8px",
-                          borderRadius: 6,
-                        }}
-                      >
-                        {len}
-                      </div>
+                      <Icon name="plus" size={18} color={pal.inkText} />
+                      New video
                     </div>
-                    <div
-                      style={{ fontSize: 17, color: pal.text, marginTop: 12 }}
-                    >
-                      {title}
-                    </div>
-                    <div
-                      style={{ fontSize: 16, color: pal.muted, marginTop: 2 }}
-                    >
-                      {meta}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: pal.overlay,
-                opacity: dim,
-              }}
-            />
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: MX,
-              top: MY,
-              width: MW,
-              height: MODAL_H,
-              borderRadius: 20,
-              background: pal.modal,
-              boxShadow: pal.modalShadow,
-              opacity: modalOp * (1 - modalOut),
-              transform: `translateY(${(1 - modalIn) * 18 + modalOut * 10}px) scale(${(0.97 + 0.03 * modalIn) * (1 - 0.03 * modalOut)})`,
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                left: 24,
-                top: 24,
-                fontSize: 23,
-                letterSpacing: "-0.02em",
-                color: pal.text,
-              }}
-            >
-              Invite to {workspace}
-            </div>
-            <div style={{ position: "absolute", right: 22, top: 26 }}>
-              <Icon name="x" size={20} color={pal.muted} />
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 24,
-                top: 74,
-                fontSize: 16,
-                color: pal.muted,
-              }}
-            >
-              Email addresses
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: INPUT.x,
-                top: INPUT.y,
-                width: INPUT.w,
-                height: INPUT.h,
-                borderRadius: 12,
-                background: pal.field,
-                boxShadow: `inset 0 0 0 1px ${focus > 0.5 ? withAlpha(accent, 0.9) : pal.strong}, 0 0 0 ${focus * 3}px ${withAlpha(accent, 0.16)}`,
-              }}
-            >
-              {shownChips === 0 && typingIdx < 0 ? (
+                  )}
+                </div>
                 <div
                   style={{
                     position: "absolute",
-                    left: 14,
-                    top: 15,
-                    fontSize: 17,
-                    color: pal.faint,
+                    left: 32,
+                    top: 104,
+                    width: gridW,
+                    display: "grid",
+                    gridTemplateColumns: `repeat(${cols}, 1fr)`,
+                    columnGap: 20,
+                    rowGap: 22,
                   }}
                 >
-                  name@company.com
-                </div>
-              ) : null}
-              {list.map((e, i) => {
-                const cs = chips[i];
-                const pop = sp(chipAt[i], SPR.chip);
-                const typing = frame >= typeStart[i] && frame < chipAt[i] + 1;
-                const typed = Math.floor(
-                  clamp01(
-                    (frame - typeStart[i]) / (chipAt[i] - 2 - typeStart[i]),
-                  ) * e.length,
-                );
-                const flying = frame >= flyAt[i];
-                return (
-                  <div key={e}>
-                    {typing && frame < chipAt[i] ? (
+                  {shown.map(([title, len, meta], i) => (
+                    <div key={title}>
                       <div
                         style={{
-                          position: "absolute",
-                          left: cs.x + 6,
-                          top: cs.y + 6,
-                          fontSize: 17,
-                          lineHeight: "22px",
-                          color: pal.text,
-                          whiteSpace: "nowrap",
-                          display: "flex",
-                          alignItems: "center",
+                          position: "relative",
+                          height: tileH,
+                          borderRadius: 12,
+                          overflow: "hidden",
                         }}
                       >
-                        {e.slice(0, typed)}
-                        <span
+                        <Img
+                          src={images[i % images.length]}
                           style={{
-                            display: "inline-block",
-                            width: 1.5,
-                            height: 20,
-                            marginLeft: 1,
-                            background: accent,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
                           }}
                         />
-                      </div>
-                    ) : null}
-                    {frame >= chipAt[i] ? (
-                      <div
-                        style={{
-                          position: "absolute",
-                          left: cs.x,
-                          top: cs.y,
-                          width: cs.w,
-                          height: CHIP_H,
-                          borderRadius: CHIP_H / 2,
-                          background: pal.chip,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          padding: "0 10px 0 5px",
-                          boxSizing: "border-box",
-                          transform: `scale(${0.85 + 0.15 * pop})`,
-                          transformOrigin: "15% 50%",
-                          opacity: clamp01(pop * 2),
-                        }}
-                      >
-                        <div style={{ opacity: flying ? 0 : 1 }}>
-                          <Avatar
-                            label={e[0].toUpperCase()}
-                            tone={AV_TONES[i % AV_TONES.length]}
-                            size={24}
-                          />
-                        </div>
-                        <span
+                        <div
                           style={{
-                            fontSize: 16,
-                            color: pal.text,
-                            whiteSpace: "nowrap",
-                            flex: 1,
+                            position: "absolute",
+                            inset: 0,
+                            borderRadius: 12,
+                            boxShadow: `inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+                          }}
+                        />
+                        <div
+                          style={{
+                            position: "absolute",
+                            right: 10,
+                            bottom: 10,
+                            fontSize: 15,
+                            fontVariantNumeric: "tabular-nums",
+                            color: "#FFFFFF",
+                            background: "rgba(0,0,0,0.5)",
+                            padding: "2px 8px",
+                            borderRadius: 6,
                           }}
                         >
-                          {e}
-                        </span>
-                        <Icon name="x" size={14} color={pal.muted} />
+                          {len}
+                        </div>
                       </div>
-                    ) : null}
+                      <div style={{ fontSize: 17, color: fg, marginTop: 12 }}>
+                        {title}
+                      </div>
+                      <div
+                        style={{ fontSize: 16, color: pal.muted, marginTop: 2 }}
+                      >
+                        {meta}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: pal.overlay,
+                  opacity: dim,
+                }}
+              />
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: MX,
+                top: MY,
+                width: MW,
+                height: MODAL_H,
+                borderRadius: 20,
+                background: pal.modal,
+                boxShadow: pal.modalShadow,
+                opacity: modalOp * (1 - modalOut),
+                transform: `translateY(${(1 - modalIn) * 18 + modalOut * 10}px) scale(${(0.97 + 0.03 * modalIn) * (1 - 0.03 * modalOut)})${glide(modalMoving)}`,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  left: 24,
+                  top: 24,
+                  fontSize: 23,
+                  letterSpacing: "-0.02em",
+                  color: fg,
+                }}
+              >
+                Invite to {workspace}
+              </div>
+              <div style={{ position: "absolute", right: 22, top: 26 }}>
+                <Icon name="x" size={20} color={pal.muted} />
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 24,
+                  top: 74,
+                  fontSize: 16,
+                  color: pal.muted,
+                }}
+              >
+                {fieldLabel}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: INPUT.x,
+                  top: INPUT.y,
+                  width: INPUT.w,
+                  height: INPUT.h,
+                  borderRadius: 12,
+                  background: pal.field,
+                  boxShadow: `inset 0 0 0 1px ${focus > 0.5 ? withAlpha(accent, 0.9) : pal.strong}, 0 0 0 ${focus * 3}px ${withAlpha(accent, 0.16)}`,
+                }}
+              >
+                {shownChips === 0 && typingIdx < 0 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 14,
+                      top: 15,
+                      fontSize: 17,
+                      color: pal.faint,
+                    }}
+                  >
+                    name@company.com
                   </div>
-                );
-              })}
-              {focus > 0.5 && caretOn && typingIdx < 0 ? (
+                ) : null}
+                {list.map((e, i) => {
+                  const cs = chips[i];
+                  const pop = sp(chipAt[i], SPR.chip);
+                  const typing = frame >= typeStart[i] && frame < chipAt[i] + 1;
+                  const typed = Math.floor(
+                    clamp01(
+                      (frame - typeStart[i]) / (chipAt[i] - 2 - typeStart[i]),
+                    ) * e.length,
+                  );
+                  const flying = frame >= flyAt[i];
+                  return (
+                    <div key={e}>
+                      {typing && frame < chipAt[i] ? (
+                        <div
+                          style={{
+                            position: "absolute",
+                            left: cs.x + 6,
+                            top: cs.y + 6,
+                            fontSize: 17,
+                            lineHeight: "22px",
+                            color: fg,
+                            whiteSpace: "nowrap",
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          {e.slice(0, typed)}
+                          <span
+                            style={{
+                              display: "inline-block",
+                              width: 1.5,
+                              height: 20,
+                              marginLeft: 1,
+                              background: accent,
+                            }}
+                          />
+                        </div>
+                      ) : null}
+                      {frame >= chipAt[i] ? (
+                        <div
+                          style={{
+                            position: "absolute",
+                            left: cs.x,
+                            top: cs.y,
+                            width: cs.w,
+                            height: CHIP_H,
+                            borderRadius: CHIP_H / 2,
+                            background: pal.chip,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            padding: "0 10px 0 5px",
+                            boxSizing: "border-box",
+                            transform: `scale(${0.85 + 0.15 * pop})${glide(inModal((f) => spAt(f, chipAt[i], SPR.chip) * 0.15 * cs.w))}`,
+                            transformOrigin: "15% 50%",
+                            opacity: clamp01(pop * 2),
+                          }}
+                        >
+                          <div style={{ opacity: flying ? 0 : 1 }}>
+                            <Avatar
+                              label={e[0].toUpperCase()}
+                              tone={AV_TONES[i % AV_TONES.length]}
+                              size={24}
+                            />
+                          </div>
+                          <span
+                            style={{
+                              fontSize: 16,
+                              color: fg,
+                              whiteSpace: "nowrap",
+                              flex: 1,
+                            }}
+                          >
+                            {e}
+                          </span>
+                          <Icon name="x" size={14} color={pal.muted} />
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+                {focus > 0.5 && caretOn && typingIdx < 0 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: caretSlot.x + 6,
+                      top: caretSlot.y + 7,
+                      width: 1.5,
+                      height: 20,
+                      background: accent,
+                    }}
+                  />
+                ) : null}
+              </div>
+
+              <div style={{ position: "absolute", left: 24, top: SELECT.y }}>
+                <div style={{ fontSize: 17, color: fg }}>Role</div>
+                <div style={{ fontSize: 16, color: pal.muted, marginTop: 3 }}>
+                  {ROLE_INFO[roleNow] ?? "Custom permissions"}
+                </div>
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: SELECT.x,
+                  top: SELECT.y,
+                  width: SELECT.w,
+                  height: SELECT.h,
+                  borderRadius: 10,
+                  boxShadow: `inset 0 0 0 1px ${dropIn > 0.5 ? withAlpha(accent, 0.9) : pal.strong}, 0 0 0 ${dropIn * 3}px ${withAlpha(accent, 0.16)}`,
+                  background: pal.field,
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "0 12px 0 14px",
+                  fontSize: 17,
+                  color: fg,
+                  transform: `scale(${1 - 0.04 * pressOf(selClick)})${glide(inModal((f) => pressAt(f, selClick) * 0.04 * SELECT.w))}`,
+                }}
+              >
+                {roleNow}
+                <div style={{ marginLeft: "auto" }}>
+                  <Icon name="chev" size={18} color={pal.muted} />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: 284,
+                  height: 1,
+                  background: pal.line,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: 24,
+                  top: BUTTON.y,
+                  height: BUTTON.h,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 16,
+                  color: pal.muted,
+                }}
+              >
+                <Icon name="link" size={18} color={pal.muted} />
+                Copy invite link
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: BUTTON.x,
+                  top: BUTTON.y,
+                  width: BUTTON.w,
+                  height: BUTTON.h,
+                  borderRadius: 10,
+                  background: accent,
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  fontSize: 16,
+                  color: "#FFFFFF",
+                  opacity: shownChips === 0 ? 0.5 : 1,
+                  transform: `scale(${1 - 0.04 * pressOf(btnClick)})${glide(inModal((f) => pressAt(f, btnClick) * 0.04 * BUTTON.w))}`,
+                }}
+              >
+                {loading ? (
+                  <svg
+                    width={18}
+                    height={18}
+                    viewBox="0 0 16 16"
+                    aria-hidden
+                    style={{
+                      transform: `rotate(${(frame - btnClick) * 16}deg)`,
+                    }}
+                  >
+                    <circle
+                      cx={8}
+                      cy={8}
+                      r={6}
+                      stroke="rgba(255,255,255,0.3)"
+                      strokeWidth={1.5}
+                      fill="none"
+                    />
+                    <path
+                      d="M8 2 A6 6 0 0 1 14 8"
+                      stroke="#FFFFFF"
+                      strokeWidth={1.5}
+                      fill="none"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                ) : done ? (
+                  <div style={{ transform: `scale(${sp(doneAt, SPR.chip)})` }}>
+                    <Icon name="check" size={18} color="#FFFFFF" />
+                  </div>
+                ) : null}
+                {loading ? "Sending" : done ? doneLabel : btnLabel}
+              </div>
+
+              {dropIn > 0.01 ? (
                 <div
                   style={{
                     position: "absolute",
-                    left: caretSlot.x + 6,
-                    top: caretSlot.y + 7,
-                    width: 1.5,
-                    height: 20,
-                    background: accent,
+                    left: SELECT.x - 28,
+                    top: SELECT.y + SELECT.h + 6,
+                    width: SELECT.w + 28,
+                    padding: 6,
+                    borderRadius: 14,
+                    background: pal.modal,
+                    boxShadow: pal.pop,
+                    opacity: clamp01(dropIn * 1.6),
+                    transform: `translateY(${(1 - dropIn) * -8}px) scale(${0.96 + 0.04 * dropIn})${glide(inModal((f) => dropInAt(f) * 16))}`,
+                    transformOrigin: "70% 0",
                   }}
-                />
-              ) : null}
-            </div>
-
-            <div style={{ position: "absolute", left: 24, top: SELECT.y }}>
-              <div style={{ fontSize: 17, color: pal.text }}>Role</div>
-              <div style={{ fontSize: 16, color: pal.muted, marginTop: 3 }}>
-                {ROLE_INFO[roleNow] ?? "Custom permissions"}
-              </div>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: SELECT.x,
-                top: SELECT.y,
-                width: SELECT.w,
-                height: SELECT.h,
-                borderRadius: 10,
-                boxShadow: `inset 0 0 0 1px ${dropIn > 0.5 ? withAlpha(accent, 0.9) : pal.strong}, 0 0 0 ${dropIn * 3}px ${withAlpha(accent, 0.16)}`,
-                background: pal.field,
-                display: "flex",
-                alignItems: "center",
-                padding: "0 12px 0 14px",
-                fontSize: 17,
-                color: pal.text,
-                transform: `scale(${1 - 0.04 * pressOf(selClick)})`,
-              }}
-            >
-              {roleNow}
-              <div style={{ marginLeft: "auto" }}>
-                <Icon name="chev" size={18} color={pal.muted} />
-              </div>
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: 284,
-                height: 1,
-                background: pal.line,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                left: 24,
-                top: BUTTON.y,
-                height: BUTTON.h,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                fontSize: 16,
-                color: pal.muted,
-              }}
-            >
-              <Icon name="link" size={18} color={pal.muted} />
-              Copy invite link
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: BUTTON.x,
-                top: BUTTON.y,
-                width: BUTTON.w,
-                height: BUTTON.h,
-                borderRadius: 10,
-                background: accent,
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                fontSize: 16,
-                color: "#FFFFFF",
-                opacity: shownChips === 0 ? 0.5 : 1,
-                transform: `scale(${1 - 0.04 * pressOf(btnClick)})`,
-              }}
-            >
-              {loading ? (
-                <svg
-                  width={18}
-                  height={18}
-                  viewBox="0 0 16 16"
-                  aria-hidden
-                  style={{ transform: `rotate(${(frame - btnClick) * 16}deg)` }}
                 >
-                  <circle
-                    cx={8}
-                    cy={8}
-                    r={6}
-                    stroke="rgba(255,255,255,0.3)"
-                    strokeWidth={1.5}
-                    fill="none"
-                  />
-                  <path
-                    d="M8 2 A6 6 0 0 1 14 8"
-                    stroke="#FFFFFF"
-                    strokeWidth={1.5}
-                    fill="none"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              ) : done ? (
-                <div style={{ transform: `scale(${sp(doneAt, SPR.chip)})` }}>
-                  <Icon name="check" size={18} color="#FFFFFF" />
+                  {roles.map((r, i) => (
+                    <div
+                      key={r}
+                      style={{
+                        height: OPT_H,
+                        borderRadius: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "0 12px",
+                        fontSize: 17,
+                        color: fg,
+                        background: i === hovered ? pal.hover : "transparent",
+                      }}
+                    >
+                      {r}
+                      {r === roleNow ? (
+                        <div style={{ marginLeft: "auto" }}>
+                          <Icon name="check" size={18} color={accent} />
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
                 </div>
               ) : null}
-              {loading ? "Sending" : done ? "Invites sent" : btnLabel}
             </div>
 
-            {dropIn > 0.01 ? (
+            {list.map((e, j) => {
+              if (frame < flyAt[j]) return null;
+              const t = sp(flyAt[j], SPR.card);
+              const from = {
+                x: MX + INPUT.x + chips[j].x + 5,
+                y: MY + INPUT.y + chips[j].y + (CHIP_H - 24) / 2,
+              };
+              const to = {
+                x: PILE_RIGHT - AV - (EXISTING.length + j) * STEP,
+                y: PILE_Y,
+              };
+              const ctrl = {
+                x: from.x + (to.x - from.x) * 0.25 - 40,
+                y: Math.min(from.y, to.y) - 70,
+              };
+              const m = 1 - t;
+              const x = m * m * from.x + 2 * m * t * ctrl.x + t * t * to.x;
+              const y = m * m * from.y + 2 * m * t * ctrl.y + t * t * to.y;
+              const size = 24 + (AV - 24) * clamp01(t);
+              const land = frame >= landAt[j] ? sp(landAt[j], SPR.chip) : 0;
+              const scale =
+                frame >= landAt[j]
+                  ? 1.12 - 0.12 * land
+                  : 1 + 0.1 * Math.sin(clamp01(t) * Math.PI);
+              const lift = Math.sin(clamp01(t) * Math.PI);
+              // Laid out on its seat in the pile at its landed size; the flight
+              // and the growth there are a transform, since layout would round
+              // both to whole pixels. `shift` keeps the grown box where the
+              // smaller one sat.
+              const grow = size / AV;
+              const shift = (size - AV) / 2;
+              const dx =
+                Math.abs(x + shift - to.x) < 1e-3 ? 0 : x + shift - to.x;
+              const dy =
+                Math.abs(y + shift - to.y) < 1e-3 ? 0 : y + shift - to.y;
+              const flying = inner((f) => spAt(f, flyAt[j], SPR.card) * 400);
+              // The letter sits at the centre, so it moves far less than the
+              // rim this measures; a looser threshold drops the tilt as soon
+              // as the letter itself has stopped.
+              const settling = inner(
+                (f) =>
+                  f >= landAt[j] ? spAt(f, landAt[j], SPR.chip) * 0.12 * AV : 0,
+                4e-3,
+              );
+              return (
+                <div
+                  key={e}
+                  style={{
+                    position: "absolute",
+                    left: to.x,
+                    top: to.y,
+                    zIndex: 20 - j,
+                    transform: `translate(${dx}px, ${dy}px) scale(${Math.abs(scale * grow - 1) < 1e-4 ? 1 : scale * grow})${glide(flying || settling)}`,
+                    filter: `drop-shadow(0 ${(8 * lift) / grow}px ${(10 * lift) / grow}px rgba(0,0,0,${0.25 * lift}))`,
+                  }}
+                >
+                  <Avatar
+                    label={e[0].toUpperCase()}
+                    tone={AV_TONES[j % AV_TONES.length]}
+                    size={AV}
+                    ring={pal.win}
+                  />
+                </div>
+              );
+            })}
+
+            {frame >= toastAt ? (
               <div
                 style={{
                   position: "absolute",
-                  left: SELECT.x - 28,
-                  top: SELECT.y + SELECT.h + 6,
-                  width: SELECT.w + 28,
-                  padding: 6,
+                  left: SW / 2 - (tall ? 240 : 220),
+                  top: tall ? SH - 150 : WIN.y + WIN.h - 92,
+                  width: tall ? 480 : 440,
+                  height: 60,
+                  padding: "0 18px",
+                  boxSizing: "border-box",
                   borderRadius: 14,
-                  background: pal.modal,
-                  boxShadow: pal.pop,
-                  opacity: clamp01(dropIn * 1.6),
-                  transform: `translateY(${(1 - dropIn) * -8}px) scale(${0.96 + 0.04 * dropIn})`,
-                  transformOrigin: "70% 0",
+                  background: dark ? "#EDEDEF" : "#18181B",
+                  color: dark ? "#141518" : "#FAFAFA",
+                  boxShadow: dark
+                    ? "0 18px 40px -12px rgba(0,0,0,0.6)"
+                    : "0 2px 6px rgba(24,24,27,0.1), 0 18px 40px -12px rgba(24,24,40,0.45)",
+                  display: "flex",
+                  gap: 12,
+                  alignItems: "center",
+                  opacity: toastOp,
+                  transform: `translateY(${(1 - toast) * 28}px) scale(${0.97 + 0.03 * toast})${glide(
+                    // Its spring rings out below a pixel for a long while; the
+                    // looser bound leaves those near-still frames untilted.
+                    inner((f) => spAt(f, toastAt, SPR.card) * 28, 2e-3),
+                  )}`,
                 }}
               >
-                {roles.map((r, i) => (
-                  <div
-                    key={r}
-                    style={{
-                      height: OPT_H,
-                      borderRadius: 8,
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "0 12px",
-                      fontSize: 17,
-                      color: pal.text,
-                      background: i === hovered ? pal.hover : "transparent",
-                    }}
-                  >
-                    {r}
-                    {r === roleNow ? (
-                      <div style={{ marginLeft: "auto" }}>
-                        <Icon name="check" size={18} color={accent} />
-                      </div>
-                    ) : null}
-                  </div>
-                ))}
+                <Icon
+                  name="check"
+                  size={20}
+                  color={dark ? "#141518" : "#FAFAFA"}
+                />
+                <span style={{ fontSize: 17 }}>
+                  {n} {n === 1 ? "invite" : "invites"} sent
+                </span>
+                <span
+                  style={{
+                    marginLeft: "auto",
+                    fontSize: 16,
+                    color: dark ? "#6B6D74" : "#A1A1AA",
+                  }}
+                >
+                  {role} access
+                </span>
               </div>
             ) : null}
-          </div>
 
-          {list.map((e, j) => {
-            if (frame < flyAt[j]) return null;
-            const t = sp(flyAt[j], SPR.card);
-            const from = {
-              x: MX + INPUT.x + chips[j].x + 5,
-              y: MY + INPUT.y + chips[j].y + (CHIP_H - 24) / 2,
-            };
-            const to = {
-              x: PILE_RIGHT - AV - (EXISTING.length + j) * STEP,
-              y: PILE_Y,
-            };
-            const ctrl = {
-              x: from.x + (to.x - from.x) * 0.25 - 40,
-              y: Math.min(from.y, to.y) - 70,
-            };
-            const m = 1 - t;
-            const x = m * m * from.x + 2 * m * t * ctrl.x + t * t * to.x;
-            const y = m * m * from.y + 2 * m * t * ctrl.y + t * t * to.y;
-            const size = 24 + (AV - 24) * clamp01(t);
-            const land = frame >= landAt[j] ? sp(landAt[j], SPR.chip) : 0;
-            const scale =
-              frame >= landAt[j]
-                ? 1.12 - 0.12 * land
-                : 1 + 0.1 * Math.sin(clamp01(t) * Math.PI);
-            const lift = Math.sin(clamp01(t) * Math.PI);
-            return (
-              <div
-                key={e}
-                style={{
-                  position: "absolute",
-                  left: x,
-                  top: y,
-                  zIndex: 20 - j,
-                  transform: `scale(${scale})`,
-                  filter: `drop-shadow(0 ${8 * lift}px ${10 * lift}px rgba(0,0,0,${0.25 * lift}))`,
-                }}
-              >
-                <Avatar
-                  label={e[0].toUpperCase()}
-                  tone={AV_TONES[j % AV_TONES.length]}
-                  size={size}
-                  ring={pal.win}
-                />
-              </div>
-            );
-          })}
-
-          {frame >= toastAt ? (
-            <div
+            <svg
+              width={26}
+              height={26}
+              viewBox="0 0 24 24"
+              aria-hidden
               style={{
                 position: "absolute",
-                left: SW / 2 - (tall ? 240 : 220),
-                top: tall ? SH - 150 : WIN.y + WIN.h - 92,
-                width: tall ? 480 : 440,
-                height: 60,
-                padding: "0 18px",
-                boxSizing: "border-box",
-                borderRadius: 14,
-                background: dark ? "#EDEDEF" : "#18181B",
-                color: dark ? "#141518" : "#FAFAFA",
-                boxShadow: dark
-                  ? "0 18px 40px -12px rgba(0,0,0,0.6)"
-                  : "0 2px 6px rgba(24,24,27,0.1), 0 18px 40px -12px rgba(24,24,40,0.45)",
-                display: "flex",
-                gap: 12,
-                alignItems: "center",
-                opacity: toastOp,
-                transform: `translateY(${(1 - toast) * 28}px) scale(${0.97 + 0.03 * toast})`,
+                left: curRest.x - 2,
+                top: curRest.y - 2,
+                overflow: "visible",
+                opacity: clamp01(curOp),
+                transform: `translate(${curDx}px, ${curDy}px) scale(${1 - 0.04 * curPress})`,
+                transformOrigin: "2px 2px",
+                filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
+                zIndex: 30,
               }}
             >
-              <Icon
-                name="check"
-                size={20}
-                color={dark ? "#141518" : "#FAFAFA"}
+              <path
+                d="M1 1 L1 18.5 L5.6 14.4 L8.7 21.6 L11.6 20.4 L8.5 13.2 L14.5 13.2 Z"
+                fill="#FFFFFF"
+                stroke="#111111"
+                strokeWidth={1.1}
+                strokeLinejoin="round"
               />
-              <span style={{ fontSize: 17 }}>
-                {n} {n === 1 ? "invite" : "invites"} sent
-              </span>
-              <span
-                style={{
-                  marginLeft: "auto",
-                  fontSize: 16,
-                  color: dark ? "#6B6D74" : "#A1A1AA",
-                }}
-              >
-                {role} access
-              </span>
-            </div>
-          ) : null}
-
-          <svg
-            width={26}
-            height={26}
-            viewBox="0 0 24 24"
-            aria-hidden
-            style={{
-              position: "absolute",
-              left: curX - 2,
-              top: curY - 2,
-              overflow: "visible",
-              opacity: clamp01(curOp),
-              transform: `scale(${1 - 0.04 * curPress})`,
-              transformOrigin: "2px 2px",
-              filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
-              zIndex: 30,
-            }}
-          >
-            <path
-              d="M1 1 L1 18.5 L5.6 14.4 L8.7 21.6 L11.6 20.4 L8.5 13.2 L14.5 13.2 Z"
-              fill="#FFFFFF"
-              stroke="#111111"
-              strokeWidth={1.1}
-              strokeLinejoin="round"
-            />
-          </svg>
+            </svg>
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

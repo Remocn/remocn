@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const pulseLineConfig: ComponentConfig = {
   componentName: "PulseLine",
@@ -42,6 +48,25 @@ export const pulseLineConfig: ComponentConfig = {
       description: "Beats",
       hiddenFromList: false,
     },
+    amplitude: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 2,
+      step: 0.05,
+      description: "Pulse height",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 300,
+      max: 800,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Inter Tight", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="MenuPick"
     component={MenuPickScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -76,6 +76,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Zero-based index of the row that gets selected.",
     },
     {
+      name: "backLabel",
+      type: "string",
+      default: "\"Back\"",
+      description: "Hint next to the B key in the footer.",
+    },
+    {
+      name: "selectLabel",
+      type: "string",
+      default: "\"Select\"",
+      description: "Hint next to the A key in the footer.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between rows as the menu builds.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#E60012\"",
@@ -85,6 +103,29 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "background",
       type: "string",
       description: "Solid background. Use 'transparent' to drop the ground.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Rubik\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

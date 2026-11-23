@@ -1,0 +1,101 @@
+{
+  "component": "launch-anything",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-cobalt",
+      "label": "Midnight Cobalt",
+      "description": "A deep cobalt interface accent at the standard pace for a cool, technical launch feel.",
+      "askedAs": [
+        "blue accent product film",
+        "make it feel more techy and cool",
+        "cobalt blue interface color",
+        "синий акцент для продукта",
+        "сделай в холодных синих тонах"
+      ],
+      "props": {
+        "accentColor": "#1f4fa8"
+      }
+    },
+    {
+      "id": "slow-terracotta",
+      "label": "Slow Terracotta",
+      "description": "A warm terracotta accent with an unhurried camera move for a calm, crafted mood.",
+      "askedAs": [
+        "warm earthy slower version",
+        "slow it down with a warm color",
+        "terracotta calm product video",
+        "тёплый и медленный вариант",
+        "замедлить и сделать теплее"
+      ],
+      "props": {
+        "accentColor": "#b4532a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-teaser",
+      "label": "Quick Teaser",
+      "description": "The original forest-green film played at double speed as a punchy social teaser.",
+      "askedAs": [
+        "short fast teaser cut",
+        "speed it up for social media",
+        "quick version of the product film",
+        "быстрый тизер",
+        "ускорить ролик в два раза"
+      ],
+      "props": {
+        "speed": 2
+      }
+    },
+    {
+      "id": "graphite-mono",
+      "label": "Graphite Mono",
+      "description": "A near-black graphite accent at a slightly brisker pace for a minimal, monochrome look.",
+      "askedAs": [
+        "black and white minimal style",
+        "neutral dark accent no color",
+        "monochrome product showcase",
+        "минималистичный чёрный акцент",
+        "без цвета, строгий стиль"
+      ],
+      "props": {
+        "accentColor": "#2b2d31",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "plum-cinematic",
+      "label": "Plum Cinematic",
+      "description": "A muted plum accent with a slow, cinematic camera drift for a luxurious tone.",
+      "askedAs": [
+        "luxury purple slow motion",
+        "cinematic slow premium version",
+        "deep plum accent color",
+        "люксовый фиолетовый медленный",
+        "кинематографичный медленный вариант"
+      ],
+      "props": {
+        "accentColor": "#5e3a6e",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "ochre-brisk",
+      "label": "Ochre Brisk",
+      "description": "A golden ochre accent at an energetic pace for an upbeat, optimistic launch.",
+      "askedAs": [
+        "yellow gold accent energetic",
+        "upbeat warm fast launch video",
+        "mustard color faster pace",
+        "жёлтый акцент и бодрый темп",
+        "энергичный золотистый вариант"
+      ],
+      "props": {
+        "accentColor": "#b8862b",
+        "speed": 1.5
+      }
+    }
+  ]
+}

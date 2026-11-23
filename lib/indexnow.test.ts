@@ -2,7 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import {
   buildIdOf,
+  fetchWithRetry,
   INDEXNOW_KEY,
+  isSitemapIndex,
   KEY_LOCATION,
   MAX_URLS_PER_REQUEST,
   sitemapUrls,
@@ -77,6 +79,15 @@ describe("submission", () => {
       ),
     ).toEqual(["https://remocn.dev", "https://remocn.dev/blog"]);
   });
+
+  test("tells a sitemap index from a sitemap", () => {
+    expect(
+      isSitemapIndex(
+        "<sitemapindex><sitemap><loc>https://remocn.dev/sitemap/blog.xml</loc></sitemap></sitemapindex>",
+      ),
+    ).toBe(true);
+    expect(isSitemapIndex("<urlset></urlset>")).toBe(false);
+  });
 });
 
 describe("buildIdOf", () => {
@@ -90,5 +101,48 @@ describe("buildIdOf", () => {
 
   test("returns null when the page has none", () => {
     expect(buildIdOf("<html></html>")).toBeNull();
+  });
+});
+
+describe("fetchWithRetry", () => {
+  const answers = (...steps: (number | Error)[]) => {
+    let calls = 0;
+    const fetchImpl = async () => {
+      const step = steps[Math.min(calls++, steps.length - 1)];
+      if (step instanceof Error) throw step;
+      return new Response("", { status: step });
+    };
+    return { fetchImpl, calls: () => calls };
+  };
+
+  test("retries a 502 until the site answers", async () => {
+    const fake = answers(502, 502, 200);
+    const res = await fetchWithRetry("https://x", {}, { ...fake, delayMs: 0 });
+    expect(res.status).toBe(200);
+    expect(fake.calls()).toBe(3);
+  });
+
+  test("retries a network error", async () => {
+    const fake = answers(new Error("ECONNRESET"), 200);
+    const res = await fetchWithRetry("https://x", {}, { ...fake, delayMs: 0 });
+    expect(res.status).toBe(200);
+  });
+
+  test("returns a 4xx at once", async () => {
+    const fake = answers(404, 200);
+    const res = await fetchWithRetry("https://x", {}, { ...fake, delayMs: 0 });
+    expect(res.status).toBe(404);
+    expect(fake.calls()).toBe(1);
+  });
+
+  test("gives up after the last attempt with the last answer", async () => {
+    const fake = answers(502);
+    const res = await fetchWithRetry(
+      "https://x",
+      {},
+      { ...fake, attempts: 3, delayMs: 0 },
+    );
+    expect(res.status).toBe(502);
+    expect(fake.calls()).toBe(3);
   });
 });

@@ -1,0 +1,104 @@
+{
+  "component": "strobe-words",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Tight, aggressive cuts in a crisp grotesk with a warm red accent for a high-energy opener.",
+      "askedAs": [
+        "make it flash really fast",
+        "aggressive hype opener",
+        "quicker cuts with more energy",
+        "очень быстрая смена слов",
+        "агрессивный динамичный интро"
+      ],
+      "props": {
+        "beat": 3,
+        "cuts": 20,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk",
+        "accent": "#e5484d"
+      }
+    },
+    {
+      "id": "editorial-slow",
+      "label": "Editorial Slow",
+      "description": "Unhurried serif words with a muted gold glow and film grain for a luxurious, magazine feel.",
+      "askedAs": [
+        "slower elegant serif version",
+        "luxury fashion style words",
+        "calm premium title sequence",
+        "медленно и элегантно с засечками",
+        "люксовый стиль как в журнале"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "beat": 12,
+        "speed": 0.75,
+        "accent": "#c8a46b",
+        "scale": 1.15,
+        "grain": true
+      }
+    },
+    {
+      "id": "daylight",
+      "label": "Daylight",
+      "description": "A clean light field with deep navy accent, no grain, and neutral sans type for a bright product feel.",
+      "askedAs": [
+        "light background version",
+        "clean white minimal look",
+        "bright corporate opener",
+        "светлая версия без шума",
+        "чистый белый минимализм"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#1e3a8a",
+        "fontFamily": "Inter",
+        "grain": false,
+        "beat": 8
+      }
+    },
+    {
+      "id": "terminal",
+      "label": "Terminal",
+      "description": "Smaller monospaced words cutting briskly over a muted green glow, like a developer tool launch.",
+      "askedAs": [
+        "code style monospace words",
+        "developer tool launch vibe",
+        "hacker terminal look",
+        "моноширинный шрифт как в терминале",
+        "стиль для девелоперского продукта"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb68b",
+        "scale": 0.85,
+        "beat": 5,
+        "grain": false
+      }
+    },
+    {
+      "id": "monument",
+      "label": "Monument",
+      "description": "Few, oversized Fraunces words with long holds and a terracotta glow after a short pause.",
+      "askedAs": [
+        "huge words fewer cuts",
+        "dramatic slow cinematic reveal",
+        "big bold statement opener",
+        "огромные слова и мало смен",
+        "драматичное кинематографичное начало"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "scale": 1.4,
+        "beat": 10,
+        "cuts": 8,
+        "accent": "#d9734a",
+        "delay": 12
+      }
+    }
+  ]
+}

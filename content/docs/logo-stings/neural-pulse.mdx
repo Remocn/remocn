@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="NeuralPulse"
     component={NeuralPulseScene}
-    durationInFrames={230}
-    fps={30}
+    durationInFrames={460}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -78,6 +78,46 @@ The prompt splits into tokens that fly into a network, nodes fire layer by layer
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent colour for the mark and highlights; any CSS colour.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Manrope\"",
+      description: "Typeface for the output. Load the font in your project first.",
+    },
+    {
+      name: "hop",
+      type: "number",
+      default: "15",
+      description: "Frames the pulse takes to hop from one layer of the network to the next.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

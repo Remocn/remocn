@@ -3,13 +3,9 @@
 import { loadFont } from "@remotion/google-fonts/SchibstedGrotesk";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -20,7 +16,23 @@ export interface BaselineDropProps {
   text?: string;
   words?: string[];
   stagger?: number;
+  /** Frames each word takes to fall onto the baseline. */
+  fall?: number;
+  /** Frames after the last word lands before the baseline retracts. */
+  hold?: number;
   accent?: string;
+  /** Text color of the words; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the words. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the row and baseline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -134,17 +146,45 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BaselineDrop({
   text = "Ship the story.",
   words: wordsProp,
   stagger = 11,
+  fall = FALL,
+  hold = RETRACT_AFTER,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: BaselineDropProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const glide = useGlide();
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const words = useMemo(
     () => wordsProp ?? text.trim().split(/\s+/),
@@ -162,7 +202,7 @@ export function BaselineDrop({
 
   const land = (k: number) => FIRST_LAND + k * stagger;
   const lastLand = land(words.length - 1);
-  const retractStart = lastLand + RETRACT_AFTER;
+  const retractStart = lastLand + hold;
 
   const drawn = interpolate(t, DRAW, [0, 1], { ...CLAMP, easing: EASE_IO });
   const retracted = interpolate(
@@ -176,12 +216,12 @@ export function BaselineDrop({
   const dropOf = (k: number) => {
     const tau = t - land(k);
     if (tau >= 0) return { y: landing(tau, F * 0.04), seen: true };
-    const p = interpolate(t, [land(k) - FALL, land(k)], [0, 1], {
+    const p = interpolate(t, [land(k) - fall, land(k)], [0, 1], {
       ...CLAMP,
       easing: EASE_FALL,
     });
     const fallFrom = rowTop + F * 1.4;
-    return { y: -fallFrom * (1 - p), seen: t > land(k) - FALL };
+    return { y: -fallFrom * (1 - p), seen: t > land(k) - fall };
   };
 
   const landed = words.reduce(
@@ -211,7 +251,7 @@ export function BaselineDrop({
         justifyContent: "center",
         gap: SPACE * F,
         whiteSpace: "pre",
-        fontFamily: sans,
+        fontFamily,
         fontWeight: 500,
         fontSize: F,
         lineHeight: 1,
@@ -223,79 +263,84 @@ export function BaselineDrop({
   );
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${1 + push * 0.02})`,
-          transformOrigin: `50% ${(baseY / H) * 100}%`,
-        }}
-      >
-        <div
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: baseY + line,
-            bottom: -H * 0.05,
-            background: ground,
-            opacity: glowLevel * drawn,
-            maskImage: `linear-gradient(90deg, transparent ${(1 - drawn) * 40}%, black ${8 + (1 - drawn) * 40}%, black ${92 - (1 - drawn) * 40}%, transparent ${100 - (1 - drawn) * 40}%)`,
-            WebkitMaskImage: `linear-gradient(90deg, transparent ${(1 - drawn) * 40}%, black ${8 + (1 - drawn) * 40}%, black ${92 - (1 - drawn) * 40}%, transparent ${100 - (1 - drawn) * 40}%)`,
+            // The push carries every word and paints no frame-wide fill of
+            // its own (the ground is masked out at the edges), so one tilt
+            // here covers the falls too.
+            transform: `scale(${1 + push * 0.02})${glide(push > 0 && push < 1)}`,
+            transformOrigin: `50% ${(baseY / H) * 100}%`,
           }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: margin,
-            width: W - margin * 2,
-            top: baseY,
-            height: line,
-            background: c.line,
-            clipPath: `inset(0 ${(1 - drawn) * 100}% 0 ${retracted * 100}%)`,
-          }}
-        />
-        {row((w, k) => (
-          <span
-            key={`c${k}`}
+        >
+          <div
             style={{
-              position: "relative",
-              display: "inline-block",
-              color: "transparent",
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: baseY + line,
+              bottom: -H * 0.05,
+              background: ground,
+              opacity: glowLevel * drawn,
+              maskImage: `linear-gradient(90deg, transparent ${(1 - drawn) * 40}%, black ${8 + (1 - drawn) * 40}%, black ${92 - (1 - drawn) * 40}%, transparent ${100 - (1 - drawn) * 40}%)`,
+              WebkitMaskImage: `linear-gradient(90deg, transparent ${(1 - drawn) * 40}%, black ${8 + (1 - drawn) * 40}%, black ${92 - (1 - drawn) * 40}%, transparent ${100 - (1 - drawn) * 40}%)`,
             }}
-          >
-            {w}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: margin,
+              width: W - margin * 2,
+              top: baseY,
+              height: line,
+              background: c.line,
+              clipPath: `inset(0 ${(1 - drawn) * 100}% 0 ${retracted * 100}%)`,
+            }}
+          />
+          {row((w, k) => (
             <span
+              key={`c${k}`}
               style={{
-                position: "absolute",
-                left: -F * 0.04,
-                right: -F * 0.04,
-                top: BASELINE * F,
-                height: line * 2.5,
-                background: accent,
-                opacity: contact(k) * (1 - retracted),
-                transform: `scaleX(${0.6 + 0.4 * contact(k) ** 0.5})`,
-              }}
-            />
-          </span>
-        ))}
-        {row((w, k) => {
-          const { y, seen } = dropOf(k);
-          return (
-            <span
-              key={`w${k}`}
-              style={{
+                position: "relative",
                 display: "inline-block",
-                color: c.fg,
-                opacity: seen ? 1 : 0,
-                transform: `translateY(${y}px)`,
+                color: "transparent",
               }}
             >
               {w}
+              <span
+                style={{
+                  position: "absolute",
+                  left: -F * 0.04,
+                  right: -F * 0.04,
+                  top: BASELINE * F,
+                  height: line * 2.5,
+                  background: accent,
+                  opacity: contact(k) * (1 - retracted),
+                  transform: `scaleX(${0.6 + 0.4 * contact(k) ** 0.5})`,
+                }}
+              />
             </span>
-          );
-        })}
-      </AbsoluteFill>
-      <Grain opacity={c.grain} />
+          ))}
+          {row((w, k) => {
+            const { y, seen } = dropOf(k);
+            return (
+              <span
+                key={`w${k}`}
+                style={{
+                  display: "inline-block",
+                  color: fg,
+                  opacity: seen ? 1 : 0,
+                  transform: `translateY(${y}px)`,
+                }}
+              >
+                {w}
+              </span>
+            );
+          })}
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

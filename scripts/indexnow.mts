@@ -12,8 +12,10 @@
 import { execFileSync } from "node:child_process";
 import {
   buildIdOf,
+  fetchWithRetry,
   INDEXNOW_ENDPOINT,
   INDEXNOW_KEY,
+  isSitemapIndex,
   KEY_LOCATION,
   SITE_HOST,
   sitemapUrls,
@@ -29,7 +31,9 @@ const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 
 async function fetchText(url: string): Promise<string> {
-  const res = await fetch(url, { headers: { "Cache-Control": "no-cache" } });
+  const res = await fetchWithRetry(url, {
+    headers: { "Cache-Control": "no-cache" },
+  });
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   return res.text();
 }
@@ -67,7 +71,17 @@ function changedFiles(base: string, head: string): string[] {
 async function main() {
   let urls: string[];
   if (args.includes("--all")) {
-    urls = sitemapUrls(await fetchText(`${SITE_URL}/sitemap.xml`));
+    const root = await fetchText(`${SITE_URL}/sitemap.xml`);
+    // /sitemap.xml is an index of per-section sitemaps (lib/sitemap.ts).
+    urls = isSitemapIndex(root)
+      ? (
+          await Promise.all(
+            sitemapUrls(root).map(async (child) =>
+              sitemapUrls(await fetchText(child)),
+            ),
+          )
+        ).flat()
+      : sitemapUrls(root);
   } else {
     const at = args.indexOf("--changed");
     const [base, head] = [args[at + 1], args[at + 2]];
@@ -93,7 +107,7 @@ async function main() {
   }
 
   for (const body of submissionBodies(urls)) {
-    const res = await fetch(INDEXNOW_ENDPOINT, {
+    const res = await fetchWithRetry(INDEXNOW_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=utf-8" },
       body: JSON.stringify(body),

@@ -4,13 +4,9 @@ import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/Oswald";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: oswald } = loadFont("normal", {
   weights: ["400", "500"],
@@ -68,8 +64,24 @@ export interface WalkoutNameProps {
   recordLabel?: string;
   /** Small billing line, top left. */
   billing?: string;
+  /** Width of the spotlight band, as a share of the frame width. */
+  bandWidth?: number;
+  /** Strength of the camera shake on each slam; 0 turns it off. */
+  impact?: number;
+  /** Replaces the remocn mark, bottom right. */
+  logo?: React.ReactNode;
   /** Small markers: the billing tick and the record rule. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the name and stats (the nickname stays serif). Load it yourself; Oswald by default. */
+  fontFamily?: string;
+  /** Size of the poster, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -157,6 +169,22 @@ interface Cam {
   dx: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WalkoutName({
   name = ["The", "Launch", "Kid"],
   nickname = "Ships before lunch",
@@ -164,13 +192,25 @@ export function WalkoutName({
   finishes = "12 KO",
   recordLabel = "Pro record",
   billing = "Main event · Tonight",
+  bandWidth = 0.19,
+  impact = 1,
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = oswald,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: WalkoutNameProps) {
-  const t = useCurrentFrame() * speed + 2;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + 2;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
   const lines = name.slice(0, 4).map((l) => l.toUpperCase());
@@ -252,19 +292,22 @@ export function WalkoutName({
   const lastScale = n > 1 ? 1.7 - 0.7 * slamP : 1;
   const hit = lastShot + SLAM_LEN;
   const inverted = n > 1 && t >= hit && t < hit + speed;
-  const s1 = n > 1 ? shake(t, hit, 9, 14 * u) : { x: 0, y: 0 };
-  const s2 = shake(t, RECORD_AT + SLAM_LEN, 6, 5 * u);
-  const s3 = shake(t, FINISH_AT + SLAM_LEN, 6, 5 * u);
+  const s1 = n > 1 ? shake(t, hit, 9, 14 * u * impact) : { x: 0, y: 0 };
+  const s2 = shake(t, RECORD_AT + SLAM_LEN, 6, 5 * u * impact);
+  const s3 = shake(t, FINISH_AT + SLAM_LEN, 6, 5 * u * impact);
   const shX = s1.x + s2.x + s3.x;
   const shY = s1.y + s2.y + s3.y;
 
   // ── Spotlight band (world coordinates, leaning right) ─────────────────────
-  const bandW = 0.19 * W;
+  const bandW = bandWidth * W;
   const lean = Math.tan((20 * Math.PI) / 180);
   const bandIn = OUT(ramp(t, BAND_AT, BAND_LEN));
   const bandDrift = interpolate(t, [BAND_AT + BAND_LEN, 160], [0, 0.03], CLAMP);
   const bandCx =
     interpolate(bandIn, [0, 1], [-0.35 * W, 0.4 * W]) + bandDrift * W;
+  // The band is laid out where it parks; the swing and the drift are a
+  // transform, since layout would step its painted edges a pixel at a time.
+  const bandRest = 0.4 * W;
   const bandPoly = (cx: number, w: number) => {
     const ext = H * 0.4;
     const yT = -ext;
@@ -294,6 +337,34 @@ export function WalkoutName({
   const nickP = OUT(ramp(t, NICK_AT, 11));
   const metaP = OUT(ramp(t, META_AT, 10));
 
+  // Everything that carries text on a transform, in pixels, so the tilt on
+  // the shake layer can follow it: the camera, the shake, the slams and the
+  // billing and logo rising in.
+  const pose = (tt: number) => {
+    const cm = camAt(tt);
+    const sh = [
+      n > 1 ? shake(tt, hit, 9, 14 * u * impact) : { x: 0, y: 0 },
+      shake(tt, RECORD_AT + SLAM_LEN, 6, 5 * u * impact),
+      shake(tt, FINISH_AT + SLAM_LEN, 6, 5 * u * impact),
+    ];
+    return [
+      W / 2 - cm.s * cm.cx + cm.dx,
+      H / 2 - cm.s * cm.cy,
+      cm.s * W,
+      ...sh.flatMap((v) => [v.x, v.y]),
+      (n > 1 ? 1.7 - 0.7 * SLAM(ramp(tt, lastShot, SLAM_LEN)) : 1) * W,
+      SLAM(ramp(tt, RECORD_AT, SLAM_LEN)) * W,
+      SLAM(ramp(tt, FINISH_AT, SLAM_LEN)) * W,
+      OUT(ramp(tt, META_AT, 10)) * 12 * u,
+    ];
+  };
+  const here = pose(t);
+  const before = pose(t - speed);
+  const after = pose(t + speed);
+  const moving = here.some(
+    (v, i) => Math.abs(after[i] - v) > 1e-3 || Math.abs(v - before[i]) > 1e-3,
+  );
+
   const text = (
     s: string,
     fs: number,
@@ -302,7 +373,7 @@ export function WalkoutName({
   ) => (
     <div
       style={{
-        fontFamily: oswald,
+        fontFamily,
         fontWeight: 500,
         fontSize: fs,
         lineHeight: 1,
@@ -392,7 +463,8 @@ export function WalkoutName({
           <div
             style={{
               position: "absolute",
-              left: bandCx - bandW / 2 - 0.5 * H * lean,
+              left: bandRest - bandW / 2 - 0.5 * H * lean,
+              transform: `translateX(${bandCx - bandRest}px)`,
               width: bandW + H * lean,
               top: 0,
               height: H,
@@ -402,7 +474,7 @@ export function WalkoutName({
           />
         </>
       ) : null}
-      {stack(c.ink, "ink")}
+      {stack(fg, "ink")}
       {showBand ? (
         <div
           style={{
@@ -418,116 +490,44 @@ export function WalkoutName({
   );
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: c.stage,
+          background: stage,
           filter: inverted ? "invert(1)" : undefined,
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            transform: `translate(${shX}px, ${shY}px)`,
-          }}
-        >
-          {ghosts.map((op, k) => {
-            const tt = Math.max(shotStart(t), t - (k + 1) * 0.5);
-            return world(camAt(tt), op, `g${k}`);
-          })}
-          {world(cam, 1, "main")}
+        <ScaleLayer scale={scale}>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              // One tilt for the whole poster: the camera's origin is the
+              // world's corner, far off screen, so the tilt goes here, about
+              // the frame's centre.
+              transform: `translate(${shX}px, ${shY}px)${glide(moving)}`,
+            }}
+          >
+            {ghosts.map((op, k) => {
+              const tt = Math.max(shotStart(t), t - (k + 1) * 0.5);
+              return world(camAt(tt), op, `g${k}`);
+            })}
+            {world(cam, 1, "main")}
 
-          {/* Stats column: screen space, lands after the whip-out. */}
-          {t >= RECORD_AT ? (
-            <div
-              style={{
-                position: "absolute",
-                left: colX,
-                top: recordTop - 44 * u,
-                display: "flex",
-                alignItems: "center",
-                gap: 12 * u,
-                opacity: ramp(t, RECORD_AT, 3),
-                fontFamily: oswald,
-                fontWeight: 400,
-                fontSize: labelFs,
-                letterSpacing: "0.28em",
-                textTransform: "uppercase",
-                color: c.dim,
-              }}
-            >
-              <div
-                style={{ width: 22 * u, height: 3 * u, background: accent }}
-              />
-              {recordLabel}
-            </div>
-          ) : null}
-          {t >= RECORD_AT ? (
-            <div
-              style={{
-                position: "absolute",
-                left: colX,
-                top: recordTop - CAP_TOP * statFs,
-                transform: `scale(${1.55 - 0.55 * recP})`,
-                transformOrigin: `0 ${CAP_TOP * statFs + (CAP * statFs) / 2}px`,
-                opacity: ramp(t, RECORD_AT, 2),
-              }}
-            >
-              {text(record, statFs, c.ink, {
-                fontVariantNumeric: "tabular-nums",
-              })}
-            </div>
-          ) : null}
-          {ruleP > 0 ? (
-            <div
-              style={{
-                position: "absolute",
-                left: colX,
-                top: finishTop - 18 * u,
-                width: 0.3 * W * ruleP,
-                height: 2 * u,
-                background: c.dim,
-                opacity: 0.5,
-              }}
-            />
-          ) : null}
-          {t >= FINISH_AT ? (
-            <div
-              style={{
-                position: "absolute",
-                left: colX,
-                top: finishTop - CAP_TOP * statFs,
-                transform: `scale(${1.55 - 0.55 * finP})`,
-                transformOrigin: `0 ${CAP_TOP * statFs + (CAP * statFs) / 2}px`,
-                opacity: ramp(t, FINISH_AT, 2),
-              }}
-            >
-              {text(finishes, statFs, "transparent", {
-                backgroundImage: c.stat,
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                paddingRight: 8 * u,
-              })}
-            </div>
-          ) : null}
-
-          {/* Billing top left, logo bottom right. */}
-          {metaP > 0 ? (
-            <>
+            {/* Stats column: screen space, lands after the whip-out. */}
+            {t >= RECORD_AT ? (
               <div
                 style={{
                   position: "absolute",
-                  left: x0 + 4 * u,
-                  top: 40 * u,
+                  left: colX,
+                  top: recordTop - 44 * u,
                   display: "flex",
                   alignItems: "center",
                   gap: 12 * u,
-                  opacity: metaP,
-                  transform: `translateY(${(1 - metaP) * -12 * u}px)`,
-                  fontFamily: oswald,
+                  opacity: ramp(t, RECORD_AT, 3),
+                  fontFamily,
                   fontWeight: 400,
                   fontSize: labelFs,
                   letterSpacing: "0.28em",
@@ -536,24 +536,101 @@ export function WalkoutName({
                 }}
               >
                 <div
-                  style={{ width: 9 * u, height: 9 * u, background: accent }}
+                  style={{ width: 22 * u, height: 3 * u, background: accent }}
                 />
-                {billing}
+                {recordLabel}
               </div>
+            ) : null}
+            {t >= RECORD_AT ? (
               <div
                 style={{
                   position: "absolute",
-                  right: x0,
-                  bottom: 40 * u,
-                  opacity: metaP,
-                  transform: `translateY(${(1 - metaP) * 12 * u}px)`,
+                  left: colX,
+                  top: recordTop - CAP_TOP * statFs,
+                  transform: `scale(${1.55 - 0.55 * recP})`,
+                  transformOrigin: `0 ${CAP_TOP * statFs + (CAP * statFs) / 2}px`,
+                  opacity: ramp(t, RECORD_AT, 2),
                 }}
               >
-                <RemocnLogo fontSize={36 * u} color={c.ink} />
+                {text(record, statFs, fg, {
+                  fontVariantNumeric: "tabular-nums",
+                })}
               </div>
-            </>
-          ) : null}
-        </div>
+            ) : null}
+            {ruleP > 0 ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: colX,
+                  top: finishTop - 18 * u,
+                  width: 0.3 * W * ruleP,
+                  height: 2 * u,
+                  background: c.dim,
+                  opacity: 0.5,
+                }}
+              />
+            ) : null}
+            {t >= FINISH_AT ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: colX,
+                  top: finishTop - CAP_TOP * statFs,
+                  transform: `scale(${1.55 - 0.55 * finP})`,
+                  transformOrigin: `0 ${CAP_TOP * statFs + (CAP * statFs) / 2}px`,
+                  opacity: ramp(t, FINISH_AT, 2),
+                }}
+              >
+                {text(finishes, statFs, "transparent", {
+                  backgroundImage: c.stat,
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  paddingRight: 8 * u,
+                })}
+              </div>
+            ) : null}
+
+            {/* Billing top left, logo bottom right. */}
+            {metaP > 0 ? (
+              <>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: x0 + 4 * u,
+                    top: 40 * u,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12 * u,
+                    opacity: metaP,
+                    transform: `translateY(${(1 - metaP) * -12 * u}px)`,
+                    fontFamily,
+                    fontWeight: 400,
+                    fontSize: labelFs,
+                    letterSpacing: "0.28em",
+                    textTransform: "uppercase",
+                    color: c.dim,
+                  }}
+                >
+                  <div
+                    style={{ width: 9 * u, height: 9 * u, background: accent }}
+                  />
+                  {billing}
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    right: x0,
+                    bottom: 40 * u,
+                    opacity: metaP,
+                    transform: `translateY(${(1 - metaP) * 12 * u}px)`,
+                  }}
+                >
+                  {logo ?? <RemocnLogo fontSize={36 * u} color={fg} />}
+                </div>
+              </>
+            ) : null}
+          </div>
+        </ScaleLayer>
       </div>
     </AbsoluteFill>
   );

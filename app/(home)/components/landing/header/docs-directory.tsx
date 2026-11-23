@@ -4,6 +4,7 @@ import {
   AGENTS,
   type AgentMark,
   CATEGORIES,
+  COMPARE,
   CRAFT,
   GUIDES,
   START_HERE,
@@ -18,7 +19,7 @@ import { HoverZone } from "./hover-zone";
 
 function titleOf(href: string) {
   const page = source.getPage(href.split("/").filter(Boolean).slice(1));
-  return page?.data.title ?? href;
+  return page?.data.navTitle ?? page?.data.title ?? href;
 }
 
 function countOf(segment: string) {
@@ -145,6 +146,15 @@ export function DocsDirectory() {
         <p className={LABEL}>Craft</p>
         <ul className="-my-[5px] flex flex-col">
           {CRAFT.map((href) => (
+            <li key={href}>
+              <MenuLink href={href}>{titleOf(href)}</MenuLink>
+            </li>
+          ))}
+        </ul>
+        <span aria-hidden="true" className="h-px shrink-0 bg-divider" />
+        <p className={LABEL}>Compare</p>
+        <ul className="-my-[5px] flex flex-col">
+          {COMPARE.map((href) => (
             <li key={href}>
               <MenuLink href={href}>{titleOf(href)}</MenuLink>
             </li>

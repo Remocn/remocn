@@ -1,0 +1,100 @@
+{
+  "component": "status-page",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "night-ops",
+      "label": "Night Ops",
+      "description": "Dark theme on a deep blue-hour ground with a cool teal accent and monospace type, like an on-call dashboard.",
+      "askedAs": [
+        "dark status page for engineers",
+        "on-call dashboard look",
+        "monospace dark uptime page",
+        "тёмная страница статуса",
+        "как дашборд дежурного инженера"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#2dd4bf",
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "paper-report",
+      "label": "Paper Report",
+      "description": "Warm off-white page with dark ink, serif headings and a calm forest-green accent, read slowly like a printed report.",
+      "askedAs": [
+        "warm editorial status page",
+        "serif printed report style",
+        "slow calm uptime history",
+        "статус в стиле печатного отчёта",
+        "тёплый светлый вариант с засечками"
+      ],
+      "props": {
+        "background": "#f6f3ec",
+        "ink": "#1f2a24",
+        "accent": "#2f7d55",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-check",
+      "label": "Quick Check",
+      "description": "Brisk, slightly enlarged light page with a crisp blue accent that runs through the incident hover fast.",
+      "askedAs": [
+        "fast snappy status page",
+        "quick uptime check for a short cut",
+        "bigger and faster status page",
+        "быстрая версия страницы статуса",
+        "крупнее и динамичнее"
+      ],
+      "props": {
+        "speed": 2,
+        "scale": 1.15,
+        "accent": "#1f6feb",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "graphite-trust",
+      "label": "Graphite Trust",
+      "description": "Charcoal satin ground with a soft violet accent and Manrope type for a premium security-scene feel.",
+      "askedAs": [
+        "premium dark trust scene",
+        "charcoal status page with violet",
+        "security launch look",
+        "премиальный тёмный статус",
+        "графитовый фон для сцены про безопасность"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "accent": "#8b7cf6",
+        "fontFamily": "Manrope",
+        "delay": 12
+      }
+    },
+    {
+      "id": "polar-compact",
+      "label": "Polar Compact",
+      "description": "Cool polar ground with a smaller framed page, Space Grotesk type and a slate-blue accent at a measured pace.",
+      "askedAs": [
+        "small status page with cool backdrop",
+        "icy light uptime card",
+        "compact framed status page",
+        "компактная страница статуса",
+        "холодный светлый фон"
+      ],
+      "props": {
+        "ground": "polar",
+        "scale": 0.8,
+        "accent": "#4a6fa5",
+        "fontFamily": "Space Grotesk",
+        "speed": 0.75
+      }
+    }
+  ]
+}

@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const unbounded = loadFont("normal", {
   weights: ["400", "500"],
@@ -26,7 +26,19 @@ export interface WeekShippedEntry {
 export interface WeekShippedProps {
   entries?: WeekShippedEntry[];
   accent?: string;
+  /** Text color of the items; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Unbounded by default. */
+  fontFamily?: string;
+  /** Frames between one day and the next. */
+  beat?: number;
+  /** Frames the last day holds before the end. */
+  hold?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -71,19 +83,19 @@ interface Metrics {
   deep: number;
 }
 
-function measure(entries: WeekShippedEntry[]): Metrics {
+function measure(entries: WeekShippedEntry[], fontFamily: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("week-shipped: no 2d context");
   const em = (s: string, w: number) => {
-    ctx.font = `${w} ${FONT_PX}px "${unbounded.fontFamily}"`;
+    ctx.font = `${w} ${FONT_PX}px "${fontFamily}"`;
     return (
       ctx.measureText(s).width / FONT_PX +
       TRACK * Math.max(0, Array.from(s).length - 1)
     );
   };
   const itemWords = entries.map((e) => e.item.trim().split(/\s+/));
-  ctx.font = `500 ${FONT_PX}px "${unbounded.fontFamily}"`;
+  ctx.font = `500 ${FONT_PX}px "${fontFamily}"`;
   const fm = ctx.measureText("Hgy");
   return {
     days: entries.map((e) => em(e.day, 400)),
@@ -97,8 +109,8 @@ function measure(entries: WeekShippedEntry[]): Metrics {
   };
 }
 
-function useMetrics(entries: WeekShippedEntry[]) {
-  const key = entries.map((e) => `${e.day}\u0001${e.item}`).join("\u0002");
+function useMetrics(entries: WeekShippedEntry[], fontFamily: string) {
+  const key = `${fontFamily}\u0003${entries.map((e) => `${e.day}\u0001${e.item}`).join("\u0002")}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("week-shipped: measuring"));
   const released = useRef(false);
@@ -108,13 +120,13 @@ function useMetrics(entries: WeekShippedEntry[]) {
     let live = true;
     Promise.all([
       unbounded.waitUntilDone(),
-      document.fonts.load(`500 100px "${unbounded.fontFamily}"`),
-      document.fonts.load(`400 100px "${unbounded.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(input.current) });
+        setState({ key, m: measure(input.current, fontFamily) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -123,7 +135,7 @@ function useMetrics(entries: WeekShippedEntry[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -156,24 +168,47 @@ function wrap(words: string[], widths: number[], space: number, max: number) {
   return best.map((l) => l.join(" "));
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WeekShipped({
   entries = DEFAULT_ENTRIES,
   accent,
+  ink,
   background,
+  fontFamily = unbounded.fontFamily,
+  beat = BEAT,
+  hold = HOLD_MIN,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: WeekShippedProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const dark = theme === "dark";
   const field = dark ? (accent ?? "#FF5A1F") : "#FFFFFF";
   const stage =
     background === "transparent" ? "transparent" : (background ?? field);
-  const ink = "#000000";
-  const dayInk = dark ? "#000000" : (accent ?? "#E8480F");
+  const fg = ink ?? "#000000";
+  const dayInk = dark ? fg : (accent ?? "#E8480F");
 
   const list = entries.length > 0 ? entries : DEFAULT_ENTRIES;
-  const m = useMetrics(list);
+  const m = useMetrics(list, fontFamily);
 
   if (!m) {
     return (
@@ -182,12 +217,12 @@ export function WeekShipped({
   }
 
   const n = list.length;
-  const total = durationInFrames * speed;
+  const total = Math.max(0, durationInFrames - delay) * speed;
   const natural = Array.from({ length: n - 1 }, (_, k) =>
-    k === 0 ? FIRST : k === n - 2 && n > 2 ? BREATH : BEAT,
+    k === 0 ? FIRST : k === n - 2 && n > 2 ? BREATH : beat,
   );
   const sum = natural.reduce((s, d) => s + d, 0);
-  const fit = sum > 0 ? Math.min(1, (total - HOLD_MIN - LAST_ROLL) / sum) : 1;
+  const fit = sum > 0 ? Math.min(1, (total - hold - LAST_ROLL) / sum) : 1;
   const starts: number[] = [0];
   for (let k = 0; k < n - 1; k++)
     starts.push(starts[k] + Math.max(8, Math.round(natural[k] * fit)));
@@ -276,10 +311,14 @@ export function WeekShipped({
           style={{
             position: "absolute",
             left: 0,
-            top: base - size * m.asc - winTop + shift * winH * 1.04,
+            // The roll is a transform, there at rest too: layout rounds a
+            // baseline to whole pixels, so a line eased by `top` clicks along,
+            // and one handed back to layout at rest jumps.
+            top: base - size * m.asc - winTop,
+            transform: `translateY(${shift * winH * 1.04}px)${glide(shift !== 0)}`,
             height: lineBox,
             lineHeight: `${lineBox}px`,
-            fontFamily: unbounded.fontFamily,
+            fontFamily,
             fontWeight: weight,
             fontSize: size,
             letterSpacing: `${TRACK}em`,
@@ -308,7 +347,7 @@ export function WeekShipped({
       const sh = shiftOf(i + 1);
       if (Math.abs(sh) < 1) {
         out.push(
-          line(`${tag}${i}`, tx, L.itemBase + i * lineH, F, 500, ink, sh),
+          line(`${tag}${i}`, tx, L.itemBase + i * lineH, F, 500, fg, sh),
         );
       }
     });
@@ -321,7 +360,7 @@ export function WeekShipped({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

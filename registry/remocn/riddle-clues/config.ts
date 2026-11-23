@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const riddleCluesConfig: ComponentConfig = {
   componentName: "RiddleClues",
@@ -18,6 +24,26 @@ export const riddleCluesConfig: ComponentConfig = {
       default: "Clue",
       description: "Label",
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 400,
+      min: 300,
+      max: 700,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Funnel Display" }),
     speed: {
       type: "number",
       default: 1,

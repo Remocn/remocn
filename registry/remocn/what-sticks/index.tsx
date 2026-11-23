@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const rubik = loadFont("normal", {
   weights: ["400", "500"],
@@ -25,7 +25,17 @@ export interface WhatSticksProps {
   moments?: string[];
   forget?: number[];
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Rubik by default. */
+  fontFamily?: string;
+  /** Frames between lines as the column builds. */
+  stagger?: number;
+  /** Size of the column, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -64,11 +74,11 @@ const CLAMP = {
 
 type Metrics = Record<string, number>;
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], fontFamily: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("what-sticks: no 2d context");
-  ctx.font = `${WGHT} 100px "${rubik.fontFamily}"`;
+  ctx.font = `${WGHT} 100px "${fontFamily}"`;
   const w: Metrics = {};
   for (const s of texts) {
     w[s] = ctx.measureText(s).width / 100 + TRACK * Array.from(s).length;
@@ -76,21 +86,23 @@ function measureAll(texts: string[]): Metrics {
   return w;
 }
 
-function useMetrics(texts: string[]) {
-  const key = texts.join("\u0001");
+function useMetrics(input: string[], fontFamily: string) {
+  const key = `${fontFamily}\u0002${input.join("\u0001")}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("what-sticks: measuring"));
   const released = useRef(false);
+  const texts = useRef(input);
+  texts.current = input;
   useEffect(() => {
     let live = true;
     Promise.all([
       rubik.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${rubik.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureAll(key.split("\u0001")) });
+        setState({ key, m: measureAll(texts.current, fontFamily) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -99,7 +111,7 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -133,6 +145,24 @@ function prefixes(text: string): string[] {
   return out;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const hash = (i: number, salt: number) => {
   const x = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453;
   return x - Math.floor(x);
@@ -144,14 +174,21 @@ export function WhatSticks({
   moments = DEFAULT_MOMENTS,
   forget,
   accent,
+  ink,
   background,
+  fontFamily = rubik.fontFamily,
+  stagger = 5,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: WhatSticksProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -163,7 +200,7 @@ export function WhatSticks({
     Math.max(0, keep ?? Math.min(n - 1, Math.floor(n * 0.7))),
   );
 
-  const m = useMetrics([...list.flatMap(prefixes), ...steps]);
+  const m = useMetrics([...list.flatMap(prefixes), ...steps], fontFamily);
 
   if (!m) {
     return (
@@ -217,8 +254,8 @@ export function WhatSticks({
       : [...others].sort((a, b) => hash(a, n) - hash(b, n));
 
   const stepCount = Math.max(1, steps.length);
-  const span = durationInFrames * speed;
-  const enterOf = (i: number) => 10 + i * 5;
+  const span = Math.max(0, durationInFrames - delay) * speed;
+  const enterOf = (i: number) => 10 + i * stagger;
   const first = enterOf(n - 1) + 18 + 30;
   const gap =
     stepCount > 2
@@ -278,7 +315,7 @@ export function WhatSticks({
           style={{
             width: "100%",
             textAlign: "center",
-            fontFamily: rubik.fontFamily,
+            fontFamily,
             fontWeight: 400,
             fontSize: S,
             lineHeight: `${slugH}px`,
@@ -288,11 +325,11 @@ export function WhatSticks({
               ? interpolateColors(
                   Math.min(Math.max(t, tin + 6), tin + 20),
                   [tin + 6, tin + 20],
-                  [c.ink, hi],
+                  [fg, hi],
                 )
-              : c.ink,
+              : fg,
             opacity: (0.72 + (last ? 0.28 : 0)) * (1 - pout) * pin,
-            transform: `translateY(${((1 - pin) * slugH * 0.6).toFixed(2)}px)`,
+            transform: `translateY(${((1 - pin) * slugH * 0.6).toFixed(2)}px)${glide(midway(pin))}`,
           }}
         >
           {steps[s]}
@@ -330,7 +367,7 @@ export function WhatSticks({
           easing: EASE_IN_OUT,
         })
       : 0;
-    const color = isKept ? interpolateColors(glow, [0, 1], [c.ink, hi]) : c.ink;
+    const color = isKept ? interpolateColors(glow, [0, 1], [fg, hi]) : fg;
     nodes.push(
       <div
         key={`line-${i}`}
@@ -342,14 +379,14 @@ export function WhatSticks({
           height: rows.length * rowH + F * 0.24,
           overflow: "hidden",
           opacity: alpha,
-          transform: `scale(${1 + glow * 0.05})`,
+          transform: `scale(${1 + glow * 0.05})${glide(midway(glow))}`,
           transformOrigin: "50% 50%",
         }}
       >
         <div
           style={{
             paddingTop: F * 0.12,
-            transform: `translateY(${((1 - pin) * rowH * 0.9).toFixed(2)}px)`,
+            transform: `translateY(${((1 - pin) * rowH * 0.9).toFixed(2)}px)${glide(midway(pin) && !midway(glow))}`,
           }}
         >
           {rows.map((r) => (
@@ -359,7 +396,7 @@ export function WhatSticks({
                 width: "100%",
                 height: rowH,
                 textAlign: "center",
-                fontFamily: rubik.fontFamily,
+                fontFamily,
                 fontWeight: WGHT,
                 fontSize: F,
                 lineHeight: `${rowH}px`,
@@ -378,7 +415,7 @@ export function WhatSticks({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

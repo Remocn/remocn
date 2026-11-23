@@ -18,9 +18,14 @@ import {
   random,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+  useSceneFrameCount,
+} from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -185,6 +190,9 @@ function layoutDiscs(W: number, H: number, props: Required<DiscPopProps>) {
 }
 
 const POP = { mass: 0.5, damping: 12, stiffness: 200 };
+
+const changing = (at: (f: number) => number, f: number) =>
+  Math.abs(at(f + 1) - at(f)) > 1e-6 || Math.abs(at(f) - at(f - 1)) > 1e-6;
 const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 
 function Discs({
@@ -196,7 +204,7 @@ function Discs({
   duration: number;
   props: Required<DiscPopProps>;
 }) {
-  const { width: W, height: H, fps } = useVideoConfig();
+  const { width: W, height: H, fps } = useSceneConfig();
   const discs = layoutDiscs(W, H, props);
   const n = discs.length;
   const frame = p * duration;
@@ -266,6 +274,9 @@ const DiscPopPresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
   const props = { ...discPopDefaults, ...passedProps };
   const p = presentationProgress;
 
@@ -301,11 +312,7 @@ const DiscPopPresentation: React.FC<
         {children}
       </AbsoluteFill>
       {p > 0 && p < 1 ? (
-        <Discs
-          p={p}
-          duration={Math.max(1, presentationDurationInFrames)}
-          props={props}
-        />
+        <Discs p={p} duration={Math.max(1, sceneLength)} props={props} />
       ) : null}
     </AbsoluteFill>
   );
@@ -394,21 +401,54 @@ const UI_ICONS = {
   sliders: "M5 7h9M18 7h1M5 17h3M12 17h7M16 5v4M10 15v4",
 };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function PromptScene({
   theme,
   greeting,
   prompt,
   ground,
   groundParams,
+  fileName,
+  fileMeta,
+  fontFamily,
+  ink,
+  background,
+  scale,
+  delay,
+  speed,
 }: {
   theme: Theme;
   greeting: [string, string];
   prompt: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  fileName: string;
+  fileMeta: string;
+  fontFamily: string;
+  ink?: string;
+  background?: string;
+  scale: number;
+  delay: number;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const c = T[theme];
   const tall = H > W;
   const u = tall ? W / 760 : H / 640;
@@ -437,146 +477,161 @@ function PromptScene({
     frame < A_BEATS.send
       ? 1
       : 1 - Math.sin(Math.min(1, press) * Math.PI) * 0.12;
-  const push = interpolate(frame, [0, durationInFrames], [1, 1.04], CLAMP);
+  const pushAt = (f: number) =>
+    interpolate(f, [0, durationInFrames], [1, 1.04], CLAMP);
+  const push = pushAt(frame);
+  // The slow push carries the whole UI, so its tilt covers the greeting, the
+  // card rising inside it and the scene's half of the transition.
+  const pushMoving = changing(pushAt, frame);
   const text: React.CSSProperties = {
-    fontFamily: figtree.fontFamily,
+    fontFamily,
     fontWeight: 400,
-    color: c.ink,
+    color: ink ?? c.ink,
   };
   return (
     <AbsoluteFill>
-      <GshGround
-        preset={ground ?? c.groundA}
-        params={groundParams}
-        timeOffset={3}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 34 * u,
-          transform: `scale(${push})`,
-        }}
-      >
-        <div
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? c.groundA}
+          params={groundParams}
+          timeOffset={3}
+          timeScale={0.5}
+        />
+      ) : (
+        <AbsoluteFill
           style={{
-            ...text,
-            fontWeight: 300,
-            fontSize: (tall ? 64 : 54) * u,
-            letterSpacing: "-0.035em",
-            lineHeight: 1.06,
-            textAlign: "center",
-            transform: `translateY(${(1 - greet) * 24 * u}px)`,
-            opacity: Math.min(1, greet * 1.4),
-            filter: `blur(${(Math.max(0, 1 - greet) * 6).toFixed(2)}px)`,
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 34 * u,
+            transform: `scale(${push})${glide(pushMoving)}`,
           }}
         >
-          {greeting[0]}
-          <br />
-          {greeting[1]}
-          <span style={{ color: c.accent }}>.</span>
-        </div>
-        <div
-          style={{
-            width: cardW,
-            borderRadius: 18 * u,
-            background: c.card,
-            border: `1px solid ${c.line}`,
-            boxShadow: `${c.highlight}, ${c.shadow}`,
-            padding: 16 * u,
-            display: "flex",
-            flexDirection: "column",
-            gap: 14 * u,
-            transform: `translateY(${(1 - card) * 40 * u}px) scale(${0.97 + card * 0.03})`,
-            opacity: Math.min(1, card * 1.5),
-          }}
-        >
-          <div
-            style={{
-              alignSelf: "flex-start",
-              display: "flex",
-              alignItems: "center",
-              gap: 10 * u,
-              padding: `${7 * u}px ${10 * u}px`,
-              borderRadius: 10 * u,
-              border: `1px solid ${c.line}`,
-              background: c.raised,
-            }}
-          >
-            <div
-              style={{
-                width: 30 * u,
-                height: 30 * u,
-                borderRadius: 7 * u,
-                background: "linear-gradient(140deg, #ff8a4c, #ff5a1f)",
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              <Stroke d={UI_ICONS.file} size={16 * u} color="#fff" />
-            </div>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: 2 * u }}
-            >
-              <span style={{ ...text, fontSize: 14 * u }}>brand-kit.zip</span>
-              <span style={{ ...text, fontSize: 12 * u, color: c.faint }}>
-                Logo, colours, 6 shots
-              </span>
-            </div>
-            <Stroke d={UI_ICONS.close} size={14 * u} color={c.faint} />
-          </div>
           <div
             style={{
               ...text,
-              fontSize: 19 * u,
-              lineHeight: 1.45,
-              minHeight: 19 * u * 1.45 * 2,
-              letterSpacing: "-0.005em",
+              fontWeight: 300,
+              fontSize: (tall ? 64 : 54) * u,
+              letterSpacing: "-0.035em",
+              lineHeight: 1.06,
+              textAlign: "center",
+              transform: `translateY(${(1 - greet) * 24 * u}px)`,
+              opacity: Math.min(1, greet * 1.4),
+              filter: `blur(${(Math.max(0, 1 - greet) * 6).toFixed(2)}px)`,
             }}
           >
-            {typed}
-            <span
-              style={{
-                display: "inline-block",
-                width: 2 * u,
-                height: 19 * u * 1.15,
-                marginLeft: 2 * u,
-                verticalAlign: "text-bottom",
-                background: c.accent,
-                opacity: caretOn ? 1 : 0,
-              }}
-            />
+            {greeting[0]}
+            <br />
+            {greeting[1]}
+            <span style={{ color: c.accent }}>.</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 * u }}>
-            <Stroke d={UI_ICONS.plus} size={18 * u} color={c.muted} />
-            <span style={{ ...text, fontSize: 14 * u, color: c.muted }}>
-              Model
-            </span>
-            <Stroke d={UI_ICONS.chevron} size={13 * u} color={c.faint} />
-            <div style={{ flex: 1 }} />
-            <span style={{ ...text, fontSize: 14 * u, color: c.muted }}>
-              Film
-            </span>
-            <Stroke d={UI_ICONS.chevron} size={13 * u} color={c.faint} />
-            <Stroke d={UI_ICONS.mic} size={18 * u} color={c.muted} />
+          <div
+            style={{
+              width: cardW,
+              borderRadius: 18 * u,
+              background: c.card,
+              border: `1px solid ${c.line}`,
+              boxShadow: `${c.highlight}, ${c.shadow}`,
+              padding: 16 * u,
+              display: "flex",
+              flexDirection: "column",
+              gap: 14 * u,
+              transform: `translateY(${(1 - card) * 40 * u}px) scale(${0.97 + card * 0.03})`,
+              opacity: Math.min(1, card * 1.5),
+            }}
+          >
             <div
               style={{
-                width: 34 * u,
-                height: 34 * u,
-                borderRadius: 9 * u,
-                background: c.accent,
-                display: "grid",
-                placeItems: "center",
-                transform: `scale(${pressScale})`,
-                boxShadow: "0 4px 14px rgba(255,90,31,0.35)",
+                alignSelf: "flex-start",
+                display: "flex",
+                alignItems: "center",
+                gap: 10 * u,
+                padding: `${7 * u}px ${10 * u}px`,
+                borderRadius: 10 * u,
+                border: `1px solid ${c.line}`,
+                background: c.raised,
               }}
             >
-              <Stroke d={UI_ICONS.send} size={17 * u} color="#fff" />
+              <div
+                style={{
+                  width: 30 * u,
+                  height: 30 * u,
+                  borderRadius: 7 * u,
+                  background: "linear-gradient(140deg, #ff8a4c, #ff5a1f)",
+                  display: "grid",
+                  placeItems: "center",
+                }}
+              >
+                <Stroke d={UI_ICONS.file} size={16 * u} color="#fff" />
+              </div>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 2 * u }}
+              >
+                <span style={{ ...text, fontSize: 14 * u }}>{fileName}</span>
+                <span style={{ ...text, fontSize: 12 * u, color: c.faint }}>
+                  {fileMeta}
+                </span>
+              </div>
+              <Stroke d={UI_ICONS.close} size={14 * u} color={c.faint} />
+            </div>
+            <div
+              style={{
+                ...text,
+                fontSize: 19 * u,
+                lineHeight: 1.45,
+                minHeight: 19 * u * 1.45 * 2,
+                letterSpacing: "-0.005em",
+              }}
+            >
+              {typed}
+              <span
+                style={{
+                  display: "inline-block",
+                  width: 2 * u,
+                  height: 19 * u * 1.15,
+                  marginLeft: 2 * u,
+                  verticalAlign: "text-bottom",
+                  background: c.accent,
+                  opacity: caretOn ? 1 : 0,
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 * u }}>
+              <Stroke d={UI_ICONS.plus} size={18 * u} color={c.muted} />
+              <span style={{ ...text, fontSize: 14 * u, color: c.muted }}>
+                Model
+              </span>
+              <Stroke d={UI_ICONS.chevron} size={13 * u} color={c.faint} />
+              <div style={{ flex: 1 }} />
+              <span style={{ ...text, fontSize: 14 * u, color: c.muted }}>
+                Film
+              </span>
+              <Stroke d={UI_ICONS.chevron} size={13 * u} color={c.faint} />
+              <Stroke d={UI_ICONS.mic} size={18 * u} color={c.muted} />
+              <div
+                style={{
+                  width: 34 * u,
+                  height: 34 * u,
+                  borderRadius: 9 * u,
+                  background: c.accent,
+                  display: "grid",
+                  placeItems: "center",
+                  transform: `scale(${pressScale})`,
+                  boxShadow: "0 4px 14px rgba(255,90,31,0.35)",
+                }}
+              >
+                <Stroke d={UI_ICONS.send} size={17 * u} color="#fff" />
+              </div>
             </div>
           </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -588,6 +643,12 @@ function PlayerScene({
   title,
   ground,
   groundParams,
+  exportLabel,
+  fontFamily,
+  ink,
+  background,
+  scale,
+  speed,
 }: {
   theme: Theme;
   image: string;
@@ -595,9 +656,16 @@ function PlayerScene({
   title: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  exportLabel: string;
+  fontFamily: string;
+  ink?: string;
+  background?: string;
+  scale: number;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame() * speed;
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const c = T[theme];
   const tall = H > W;
   const u = tall ? W / 760 : H / 640;
@@ -615,7 +683,12 @@ function PlayerScene({
     [0.04, 0.42],
     CLAMP,
   );
-  const push = interpolate(frame, [0, durationInFrames], [1, 1.035], CLAMP);
+  const pushAt = (f: number) =>
+    interpolate(f, [0, durationInFrames], [1, 1.035], CLAMP);
+  const push = pushAt(frame);
+  // As in the prompt scene: one tilt on the push covers the toolbar, the
+  // title rising word by word and this scene's half of the transition.
+  const pushMoving = changing(pushAt, frame);
   const imgDrift = interpolate(
     frame,
     [0, durationInFrames],
@@ -623,9 +696,9 @@ function PlayerScene({
     CLAMP,
   );
   const text: React.CSSProperties = {
-    fontFamily: figtree.fontFamily,
+    fontFamily,
     fontWeight: 400,
-    color: c.ink,
+    color: ink ?? c.ink,
   };
   const chip: React.CSSProperties = {
     ...text,
@@ -641,184 +714,194 @@ function PlayerScene({
   };
   return (
     <AbsoluteFill>
-      <GshGround
-        preset={ground ?? c.groundB}
-        params={groundParams}
-        timeOffset={5}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 16 * u,
-          transform: `scale(${push})`,
-        }}
-      >
-        <div
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? c.groundB}
+          params={groundParams}
+          timeOffset={5}
+          timeScale={0.5}
+        />
+      ) : (
+        <AbsoluteFill
           style={{
-            width: cardW,
-            display: "flex",
-            gap: 10 * u,
-            transform: `translateY(${(1 - bar) * 14 * u}px)`,
-            opacity: Math.min(1, bar * 1.5),
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 16 * u,
+            transform: `scale(${push})${glide(pushMoving)}`,
           }}
         >
-          <div style={chip}>16:9</div>
-          <div style={chip}>
-            <Stroke d={UI_ICONS.sliders} size={15 * u} color={c.muted} />
-            Change details
-          </div>
-          <div style={{ flex: 1 }} />
           <div
             style={{
-              ...chip,
-              background: theme === "dark" ? "#F1F0F5" : "#18171C",
-              color: theme === "dark" ? "#18171C" : "#F1F0F5",
-              border: "none",
-            }}
-          >
-            <Stroke
-              d={UI_ICONS.export}
-              size={15 * u}
-              color={theme === "dark" ? "#18171C" : "#F1F0F5"}
-            />
-            Export
-          </div>
-        </div>
-        <div
-          style={{
-            width: cardW,
-            height: cardH,
-            borderRadius: 16 * u,
-            overflow: "hidden",
-            position: "relative",
-            boxShadow: `0 0 0 1px ${c.line}, ${c.shadow}`,
-          }}
-        >
-          <Img
-            src={image}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              transform: `scale(${imgDrift})`,
-            }}
-          />
-          <AbsoluteFill
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: 28 * u,
-              right: 28 * u,
-              bottom: 64 * u,
+              width: cardW,
               display: "flex",
-              flexDirection: "column",
-              gap: 8 * u,
+              gap: 10 * u,
+              transform: `translateY(${(1 - bar) * 14 * u}px)`,
+              opacity: Math.min(1, bar * 1.5),
             }}
           >
-            <span
-              style={{
-                fontFamily: mono.fontFamily,
-                fontSize: 13 * u,
-                letterSpacing: "0.14em",
-                color: "rgba(255,255,255,0.72)",
-              }}
-            >
-              {overline}
-            </span>
+            <div style={chip}>16:9</div>
+            <div style={chip}>
+              <Stroke d={UI_ICONS.sliders} size={15 * u} color={c.muted} />
+              Change details
+            </div>
+            <div style={{ flex: 1 }} />
             <div
               style={{
-                fontFamily: serif.fontFamily,
-                fontWeight: 400,
-                fontSize: (tall ? 76 : 58) * u,
-                lineHeight: 1,
-                letterSpacing: "-0.02em",
-                color: "#fff",
+                ...chip,
+                background: theme === "dark" ? "#F1F0F5" : "#18171C",
+                color: theme === "dark" ? "#18171C" : "#F1F0F5",
+                border: "none",
               }}
             >
-              {words.map((w, i) => {
-                const s = spring({
-                  frame: frame - B_BEATS.title - i * 3,
-                  fps,
-                  config: { mass: 0.8, damping: 18, stiffness: 160 },
-                });
-                return (
-                  <span
-                    key={`${w}-${i}`}
-                    style={{
-                      display: "inline-block",
-                      overflow: "hidden",
-                      paddingBottom: "0.1em",
-                      marginBottom: "-0.1em",
-                      verticalAlign: "bottom",
-                    }}
-                  >
-                    <span
-                      style={{
-                        display: "inline-block",
-                        transform: `translateY(${(1 - s) * 100}%)`,
-                      }}
-                    >
-                      {w}
-                      {i < words.length - 1 ? " " : ""}
-                    </span>
-                  </span>
-                );
-              })}
+              <Stroke
+                d={UI_ICONS.export}
+                size={15 * u}
+                color={theme === "dark" ? "#18171C" : "#F1F0F5"}
+              />
+              {exportLabel}
             </div>
           </div>
           <div
             style={{
-              position: "absolute",
-              left: 24 * u,
-              right: 24 * u,
-              bottom: 18 * u,
-              display: "flex",
-              alignItems: "center",
-              gap: 14 * u,
+              width: cardW,
+              height: cardH,
+              borderRadius: 16 * u,
+              overflow: "hidden",
+              position: "relative",
+              boxShadow: `0 0 0 1px ${c.line}, ${c.shadow}`,
             }}
           >
-            <Stroke d={UI_ICONS.play} size={18 * u} color="#fff" fill />
-            <Stroke d={UI_ICONS.volume} size={18 * u} color="#fff" />
-            <span
+            <Img
+              src={image}
               style={{
-                fontFamily: mono.fontFamily,
-                fontSize: 13 * u,
-                color: "rgba(255,255,255,0.8)",
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                transform: `scale(${imgDrift})`,
               }}
-            >
-              0:0{Math.min(9, Math.floor(progress * 12))} / 0:12
-            </span>
+            />
+            <AbsoluteFill
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%)",
+              }}
+            />
             <div
               style={{
-                flex: 1,
-                height: 3 * u,
-                borderRadius: 3 * u,
-                background: "rgba(255,255,255,0.25)",
-                position: "relative",
+                position: "absolute",
+                left: 28 * u,
+                right: 28 * u,
+                bottom: 64 * u,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8 * u,
               }}
             >
+              <span
+                style={{
+                  fontFamily: mono.fontFamily,
+                  fontSize: 13 * u,
+                  letterSpacing: "0.14em",
+                  color: "rgba(255,255,255,0.72)",
+                }}
+              >
+                {overline}
+              </span>
               <div
                 style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: `${progress * 100}%`,
-                  borderRadius: 3 * u,
-                  background: "#fff",
+                  fontFamily: serif.fontFamily,
+                  fontWeight: 400,
+                  fontSize: (tall ? 76 : 58) * u,
+                  lineHeight: 1,
+                  letterSpacing: "-0.02em",
+                  color: "#fff",
                 }}
-              />
+              >
+                {words.map((w, i) => {
+                  const s = spring({
+                    frame: frame - B_BEATS.title - i * 3,
+                    fps,
+                    config: { mass: 0.8, damping: 18, stiffness: 160 },
+                  });
+                  return (
+                    <span
+                      key={`${w}-${i}`}
+                      style={{
+                        display: "inline-block",
+                        overflow: "hidden",
+                        paddingBottom: "0.1em",
+                        marginBottom: "-0.1em",
+                        verticalAlign: "bottom",
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-block",
+                          transform: `translateY(${(1 - s) * 100}%)`,
+                        }}
+                      >
+                        {w}
+                        {i < words.length - 1 ? " " : ""}
+                      </span>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: 24 * u,
+                right: 24 * u,
+                bottom: 18 * u,
+                display: "flex",
+                alignItems: "center",
+                gap: 14 * u,
+              }}
+            >
+              <Stroke d={UI_ICONS.play} size={18 * u} color="#fff" fill />
+              <Stroke d={UI_ICONS.volume} size={18 * u} color="#fff" />
+              <span
+                style={{
+                  fontFamily: mono.fontFamily,
+                  fontSize: 13 * u,
+                  color: "rgba(255,255,255,0.8)",
+                }}
+              >
+                0:0{Math.min(9, Math.floor(progress * 12))} / 0:12
+              </span>
+              <div
+                style={{
+                  flex: 1,
+                  height: 3 * u,
+                  borderRadius: 3 * u,
+                  background: "rgba(255,255,255,0.25)",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: `${progress * 100}%`,
+                    borderRadius: 3 * u,
+                    background: "#fff",
+                  }}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -838,6 +921,23 @@ export type DiscPopDemoProps = {
   sceneA?: number;
   sceneB?: number;
   transition?: number;
+  /** Name of the file attached to the prompt in scene A. */
+  fileName?: string;
+  /** Detail line under the attached file name. */
+  fileMeta?: string;
+  /** Label of the export button in scene B. */
+  exportLabel?: string;
+  /** Typeface for the UI copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Text color of the UI copy; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of both gradient grounds; "transparent" drops it. */
+  background?: string;
+  /** Size of the UI in both scenes, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 };
 
 export const DISC_POP_DEMO = { sceneA: 84, sceneB: 84, transition: 30 };
@@ -862,30 +962,59 @@ export function DiscPopDemo({
   sceneA = DISC_POP_DEMO.sceneA,
   sceneB = DISC_POP_DEMO.sceneB,
   transition = DISC_POP_DEMO.transition,
+  fileName = "brand-kit.zip",
+  fileMeta = "Logo, colours, 6 shots",
+  exportLabel = "Export",
+  fontFamily = figtree.fontFamily,
+  ink,
+  background,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: DiscPopDemoProps) {
   const presentation = discPop({
     ...(theme === "light" ? LIGHT_DISCS : {}),
     ...discs,
   });
+  // Speed scales the series itself so the transition keeps pace with the scenes.
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   return (
     <AbsoluteFill
-      style={{ backgroundColor: theme === "light" ? "#eeece8" : "#07060c" }}
+      style={{
+        backgroundColor:
+          background === "transparent"
+            ? undefined
+            : (background ?? (theme === "light" ? "#eeece8" : "#07060c")),
+      }}
     >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={sceneA}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(sceneA)}
+        >
           <PromptScene
             theme={theme}
             greeting={greeting}
             prompt={prompt}
             ground={groundA}
             groundParams={groundAParams}
+            fileName={fileName}
+            fileMeta={fileMeta}
+            fontFamily={fontFamily}
+            ink={ink}
+            background={background}
+            scale={scale}
+            delay={delay}
+            speed={speed}
           />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
           presentation={presentation}
-          timing={linearTiming({ durationInFrames: transition })}
+          timing={linearTiming({ durationInFrames: len(transition) })}
         />
-        <TransitionSeries.Sequence durationInFrames={sceneB}>
+        <TransitionSeries.Sequence durationInFrames={len(sceneB)}>
           <PlayerScene
             theme={theme}
             image={image}
@@ -893,6 +1022,12 @@ export function DiscPopDemo({
             title={title}
             ground={groundB}
             groundParams={groundBParams}
+            exportLabel={exportLabel}
+            fontFamily={fontFamily}
+            ink={ink}
+            background={background}
+            scale={scale}
+            speed={speed}
           />
         </TransitionSeries.Sequence>
       </TransitionSeries>

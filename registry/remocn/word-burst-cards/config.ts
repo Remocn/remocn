@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const wordBurstCardsConfig: ComponentConfig = {
   componentName: "WordBurstCards",
@@ -23,6 +30,24 @@ export const wordBurstCardsConfig: ComponentConfig = {
       default: "Launch films from your product",
       description: "Caption",
     },
+    stagger: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    burstAt: {
+      type: "number",
+      default: 30,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Burst at (frame)",
+      hiddenFromList: false,
+    },
     reverse: {
       type: "boolean",
       default: false,
@@ -40,6 +65,18 @@ export const wordBurstCardsConfig: ComponentConfig = {
       max: 10,
       step: 1,
       description: "Seed",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

@@ -1,0 +1,101 @@
+{
+  "component": "sustained-glitch",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "subtle-flicker",
+      "label": "Subtle Flicker",
+      "description": "Faint, infrequent tears that barely disturb the picture before it settles clean again.",
+      "askedAs": [
+        "light occasional glitch",
+        "barely noticeable signal fault",
+        "gentle glitch now and then",
+        "лёгкий редкий глитч",
+        "едва заметные помехи"
+      ],
+      "props": {
+        "intensity": 0.4,
+        "frequency": 0.4,
+        "slices": 12,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "signal-storm",
+      "label": "Signal Storm",
+      "description": "Heavy, rapid bursts of fine slicing that keep the frame on the edge of collapse.",
+      "askedAs": [
+        "constant heavy glitching",
+        "broken signal chaos",
+        "aggressive fast corruption",
+        "сильный частый глитч",
+        "хаотичные помехи сигнала"
+      ],
+      "props": {
+        "intensity": 1.8,
+        "frequency": 4,
+        "slices": 44,
+        "speed": 2.5,
+        "seed": 7
+      }
+    },
+    {
+      "id": "slow-tear",
+      "label": "Slow Tear",
+      "description": "Wide, chunky bands drift apart in unhurried, sparse hits with long clean rests between.",
+      "askedAs": [
+        "slow chunky glitch",
+        "big blocky tears",
+        "lazy vhs distortion",
+        "медленный крупный глитч",
+        "широкие полосы помех"
+      ],
+      "props": {
+        "intensity": 1.2,
+        "frequency": 0.5,
+        "slices": 8,
+        "speed": 0.5,
+        "seed": 4
+      }
+    },
+    {
+      "id": "data-stutter",
+      "label": "Data Stutter",
+      "description": "Quick, moderate glitches tick in at a steady clip with thin slices like a dropping data stream.",
+      "askedAs": [
+        "rhythmic glitch pulse",
+        "fast small glitches",
+        "terminal data stutter",
+        "ритмичный быстрый глитч",
+        "мелкие частые сбои"
+      ],
+      "props": {
+        "intensity": 0.8,
+        "frequency": 2.5,
+        "slices": 32,
+        "speed": 1.5,
+        "seed": 12
+      }
+    },
+    {
+      "id": "hard-hit",
+      "label": "Hard Hit",
+      "description": "Rare but violent bursts that rip the frame apart in a sudden snap before snapping back.",
+      "askedAs": [
+        "rare strong glitch",
+        "sudden big corruption hit",
+        "dramatic glitch accent",
+        "редкий мощный глитч",
+        "резкий сильный сбой"
+      ],
+      "props": {
+        "intensity": 2,
+        "frequency": 0.3,
+        "slices": 18,
+        "speed": 3,
+        "seed": 17
+      }
+    }
+  ]
+}

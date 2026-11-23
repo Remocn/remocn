@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const instrument = loadInstrument("normal", {
   weights: ["400", "500"],
@@ -23,7 +23,23 @@ export interface StemStretchProps {
   value?: string;
   label?: string;
   steps?: number;
+  /** Frames between the stretch's snaps. */
+  snapGap?: number;
+  /** Frames between label words. */
+  stagger?: number;
   accent?: string;
+  /** Text color of the figure; overrides the theme ink. */
+  ink?: string;
+  /** Background fill in place of the theme ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the figure and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -52,6 +68,7 @@ const SNAP_AT = 26;
 const SNAP_GAP = 12;
 const LABEL_AT = 66;
 const SLICE = 0.5;
+const BLEED = 2;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
@@ -71,12 +88,17 @@ interface Metrics {
   desc: number;
 }
 
-function findCut(ctx: CanvasRenderingContext2D, text: string, cap: number) {
+function findCut(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  cap: number,
+  font: string,
+) {
   const W = Math.ceil(ctx.measureText(text).width) + 40;
   const H = Math.ceil(FONT_PX * 1.4);
   ctx.canvas.width = W;
   ctx.canvas.height = H;
-  ctx.font = `500 ${FONT_PX}px "${instrument.fontFamily}"`;
+  ctx.font = `500 ${FONT_PX}px "${font}"`;
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = "#000";
   const base = Math.round(FONT_PX * 1.1);
@@ -105,11 +127,11 @@ function findCut(ctx: CanvasRenderingContext2D, text: string, cap: number) {
   return best * cap;
 }
 
-function measure(text: string, label: string): Metrics {
+function measure(text: string, label: string, font: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("stem-stretch: no 2d context");
-  ctx.font = `500 ${FONT_PX}px "${instrument.fontFamily}"`;
+  ctx.font = `500 ${FONT_PX}px "${font}"`;
   const chars = Array.from(text);
   const adv = chars.map((ch) => ctx.measureText(ch).width / FONT_PX + TRACK);
   const width =
@@ -123,9 +145,9 @@ function measure(text: string, label: string): Metrics {
     0,
     ctx.measureText(text).actualBoundingBoxDescent / FONT_PX,
   );
-  ctx.font = `400 ${FONT_PX}px "${instrument.fontFamily}"`;
+  ctx.font = `400 ${FONT_PX}px "${font}"`;
   const lab = label ? ctx.measureText(label).width / FONT_PX : 0;
-  const cut = findCut(ctx, text, cap);
+  const cut = findCut(ctx, text, cap, font);
   return {
     width,
     label: lab,
@@ -137,23 +159,23 @@ function measure(text: string, label: string): Metrics {
   };
 }
 
-function useMetrics(text: string, label: string) {
-  const key = `${text}\u0000${label}`;
+function useMetrics(text: string, label: string, font: string) {
+  const key = `${text}\u0000${label}\u0000${font}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("stem-stretch: measuring"));
   const released = useRef(false);
   useEffect(() => {
     let live = true;
-    const [tx, lb] = key.split("\u0000");
+    const [tx, lb, ff] = key.split("\u0000");
     Promise.all([
       instrument.waitUntilDone(),
-      document.fonts.load(`500 100px "${instrument.fontFamily}"`),
-      document.fonts.load(`400 100px "${instrument.fontFamily}"`),
+      document.fonts.load(`500 100px "${ff}"`),
+      document.fonts.load(`400 100px "${ff}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(tx, lb) });
+        setState({ key, m: measure(tx, lb, ff) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -199,47 +221,85 @@ export function StemStretch({
   value = "4 hours",
   label = "back, every week",
   steps = 4,
+  snapGap = SNAP_GAP,
+  stagger = 3,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = instrument.fontFamily,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: StemStretchProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const t = Math.max(0, frame - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
-  const m = useMetrics(value, label);
+  const fg = ink ?? c.ink;
+  const bg = background ?? c.bg;
+  const m = useMetrics(value, label, fontFamily);
 
   if (!m) {
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return <div style={{ position: "absolute", inset: 0, background: bg }} />;
   }
 
   const n = Math.max(1, Math.round(steps));
   const portrait = H > W;
-  const F = Math.min(H * (portrait ? 0.2 : 0.3), (W * 0.84) / m.width);
+  // Scaled through the layout, not a transformed layer: a transform would
+  // isolate the stretch band's blend modes from the background.
+  const F = Math.min(H * (portrait ? 0.2 : 0.3), (W * 0.84) / m.width) * scale;
   const capPx = m.cap * F;
-  const gapMax = Math.max(capPx * 0.6, H * (portrait ? 0.42 : 0.62) - capPx);
+  const gapMax = Math.max(
+    capPx * 0.6,
+    H * (portrait ? 0.42 : 0.62) * scale - capPx,
+  );
   const block = gapMax / n;
 
-  let snapped = 0;
-  for (let k = 0; k < n; k++) {
-    snapped += spring({
-      frame: t - (SNAP_AT + k * SNAP_GAP),
-      fps,
-      config: { damping: 13, stiffness: 210, mass: 0.7 },
-    });
-  }
-  const gap = block * snapped;
+  const gapAt = (f: number) => {
+    const tt = Math.max(0, f - delay) * speed;
+    let snapped = 0;
+    for (let k = 0; k < n; k++) {
+      snapped += spring({
+        frame: tt - (SNAP_AT + k * snapGap),
+        fps,
+        config: { damping: 13, stiffness: 210, mass: 0.7 },
+      });
+    }
+    return block * snapped;
+  };
+  const gap = gapAt(frame);
+  // The snaps overshoot and never quite settle, so motion is read off the
+  // neighbouring frames rather than a progress.
+  const snapping =
+    Math.abs(gapAt(frame + 1) - gap) > 1e-3 ||
+    Math.abs(gap - gapAt(frame - 1)) > 1e-3;
 
   const labelSize = Math.min(
-    Math.max(F * 0.17, H * 0.044),
-    H * 0.056,
-    (W * 0.84) / Math.max(0.1, m.label),
+    Math.max(F * 0.17, H * 0.044 * scale),
+    H * 0.056 * scale,
+    (W * 0.84 * scale) / Math.max(0.1, m.label),
   );
-  const labelGap = label ? Math.max(F * 0.2, H * 0.04) : 0;
-  const groupH = capPx + gap + (label ? labelGap + labelSize : 0);
-  const capTop = (H - groupH) / 2;
+  const labelGap = label ? Math.max(F * 0.2, H * 0.04 * scale) : 0;
+  const capTopAt = (g: number) =>
+    (H - (capPx + g + (label ? labelGap + labelSize : 0))) / 2;
+  const capTop = capTopAt(gap);
   const baseY = capTop + capPx + gap;
   const lineTop0 = capTop + capPx - m.baseline * F;
   const cutY0 = capTop + capPx - m.cut * F;
+  // The group recentres as the gap opens. Each piece is laid out where the
+  // open gap leaves it and rides there by a transform: layout rounds a box
+  // and a baseline to whole pixels, so pieces eased by `top` click along
+  // pixel by pixel, each on its own frame.
+  const gapRest = block * n;
+  const shift = capTop - capTopAt(gapRest);
+  const lower = shift + gap - gapRest;
+  const ride = (dy: number, tilt = true) =>
+    Math.abs(dy) < 1e-3 && !snapping
+      ? undefined
+      : `translateY(${dy}px)${glide(snapping && tilt)}`;
   const left = (W - m.width * F) / 2;
 
   const chars = Array.from(value);
@@ -261,7 +321,7 @@ export function StemStretch({
             position: "absolute",
             left: gx,
             top: 0,
-            transform: `translateY(${((1 - p) * F * 0.9).toFixed(2)}px)`,
+            transform: `translateY(${((1 - p) * F * 0.9).toFixed(2)}px)${glide(p > 0 && p < 1 && !snapping)}`,
             ...style,
           }}
         >
@@ -278,7 +338,7 @@ export function StemStretch({
     height: F,
     lineHeight: `${F}px`,
     whiteSpace: "pre",
-    fontFamily: instrument.fontFamily,
+    fontFamily,
     fontWeight: 500,
     fontSize: F,
     fontFeatureSettings: '"tnum" 1',
@@ -296,26 +356,29 @@ export function StemStretch({
   const labelWords = label ? label.split(" ") : [];
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: GLOW[theme],
-          transform: `translateY(${(Math.sin(drift * 0.3) * H * 0.01).toFixed(2)}px)`,
-        }}
-      />
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      {background === undefined ? (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: GLOW[theme],
+            transform: `translateY(${(Math.sin(drift * 0.3) * H * 0.01).toFixed(2)}px)`,
+          }}
+        />
+      ) : null}
       <div
         style={{
           position: "absolute",
           left: 0,
           width: W,
-          top: maskTop,
+          top: maskTop - shift,
           height: cutY0 - maskTop,
           overflow: "hidden",
+          transform: ride(shift),
         }}
       >
-        <div style={{ ...lineStyle, top: lineTop0 - maskTop, color: c.ink }}>
+        <div style={{ ...lineStyle, top: lineTop0 - maskTop, color: fg }}>
           {glyphs("top", {})}
         </div>
       </div>
@@ -325,52 +388,69 @@ export function StemStretch({
             position: "absolute",
             left: 0,
             width: W,
-            top: cutY0,
-            height: gap,
-            overflow: "hidden",
+            // The band rides by a transform too, so its edges land between
+            // pixels. Where the fill only half covers an edge pixel it leaks
+            // through the blend as a hairline across the frame, so the
+            // group's neutral ground bleeds past the clip and every edge
+            // pixel of the fill sits on solid ground. For the same reason the
+            // band takes no tilt; the stretched glyphs inside carry it.
+            top: cutY0 - shift - BLEED,
+            height: gap + 2 * BLEED,
             isolation: "isolate",
+            transform: ride(shift, false),
             background: groupBg,
             mixBlendMode: theme === "dark" ? "screen" : "multiply",
           }}
         >
           <div
             style={{
-              ...lineStyle,
-              top: -cutLocal,
-              transformOrigin: `0 ${cutLocal}px`,
-              transform: `scaleY(${k.toFixed(3)})`,
-              color: groupInk,
+              position: "absolute",
+              left: 0,
+              top: BLEED,
+              width: W,
+              height: gap,
+              overflow: "hidden",
             }}
           >
-            {glyphs("mid", {})}
+            <div
+              style={{
+                ...lineStyle,
+                top: -cutLocal,
+                transformOrigin: `0 ${cutLocal}px`,
+                transform: `scaleY(${k.toFixed(3)})${glide(snapping)}`,
+                color: groupInk,
+              }}
+            >
+              {glyphs("mid", {})}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                backgroundImage: stretchFill,
+                backgroundSize: "100% 114%",
+                backgroundPosition: `0 ${(50 + Math.sin(drift * 0.5) * 45).toFixed(2)}%`,
+                mixBlendMode: theme === "dark" ? "multiply" : "screen",
+              }}
+            />
+            {Array.from({ length: n - 1 }, (_, j) => {
+              const y = (j + 1) * block;
+              if (y >= gap - 1) return null;
+              return (
+                <div
+                  key={`tick-${j}`}
+                  style={{
+                    position: "absolute",
+                    left: left - F * 0.04,
+                    width: m.width * F + F * 0.08,
+                    top: y - Math.max(1, F * 0.016),
+                    height: Math.max(2, F * 0.032),
+                    background: groupBg,
+                  }}
+                />
+              );
+            })}
           </div>
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              backgroundImage: stretchFill,
-              backgroundSize: "100% 114%",
-              backgroundPosition: `0 ${(50 + Math.sin(drift * 0.5) * 45).toFixed(2)}%`,
-              mixBlendMode: theme === "dark" ? "multiply" : "screen",
-            }}
-          />
-          {Array.from({ length: n - 1 }, (_, j) => {
-            const y = (j + 1) * block;
-            if (y >= gap - 1) return null;
-            return (
-              <div
-                key={`tick-${j}`}
-                style={{
-                  position: "absolute",
-                  left: left - F * 0.04,
-                  width: m.width * F + F * 0.08,
-                  top: y - Math.max(1, F * 0.016),
-                  height: Math.max(2, F * 0.032),
-                  background: groupBg,
-                }}
-              />
-            );
-          })}
         </div>
       ) : null}
       <div
@@ -378,16 +458,17 @@ export function StemStretch({
           position: "absolute",
           left: 0,
           width: W,
-          top: cutY0 + gap,
+          top: cutY0 + gap - lower,
           height: baseY + (m.desc + 0.02) * F - (cutY0 + gap),
           overflow: "hidden",
+          transform: ride(lower),
         }}
       >
         <div
           style={{
             ...lineStyle,
             top: -cutLocal,
-            color: c.ink,
+            color: fg,
           }}
         >
           {glyphs("bot", {})}
@@ -399,9 +480,10 @@ export function StemStretch({
             position: "absolute",
             left: 0,
             width: W,
-            top: baseY + labelGap,
+            top: baseY + labelGap - lower,
+            transform: ride(lower),
             textAlign: "center",
-            fontFamily: instrument.fontFamily,
+            fontFamily,
             fontWeight: 400,
             fontSize: labelSize,
             letterSpacing: "-0.01em",
@@ -413,7 +495,7 @@ export function StemStretch({
           {labelWords.map((w, i) => {
             const p = interpolate(
               t,
-              [LABEL_AT + i * 3, LABEL_AT + i * 3 + 16],
+              [LABEL_AT + i * stagger, LABEL_AT + i * stagger + 16],
               [0, 1],
               { ...CLAMP, easing: EASE_OUT },
             );
@@ -423,7 +505,7 @@ export function StemStretch({
                 style={{
                   display: "inline-block",
                   opacity: p,
-                  transform: `translateY(${((1 - p) * labelSize * 0.6).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - p) * labelSize * 0.6).toFixed(2)}px)${glide(p > 0 && p < 1 && !snapping)}`,
                 }}
               >
                 {w}
@@ -433,7 +515,7 @@ export function StemStretch({
           })}
         </div>
       ) : null}
-      <Grain opacity={c.grain} />
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

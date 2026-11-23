@@ -40,8 +40,8 @@ export const RemotionRoot = () => (
   <Composition
     id="YesRun"
     component={YesRunScene}
-    durationInFrames={150}
-    fps={30}
+    durationInFrames={300}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -65,14 +65,49 @@ Each question in `questions` is answered by the `answer` tag landing next to it,
       description: "Answer shown on the tag.",
     },
     {
+      name: "dwell",
+      type: "number",
+      default: "32",
+      description: "Frames the first question stays; each next one is quicker.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "44",
+      description: "Frames the last answer holds before the end.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Accent color override; falls back to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Unbounded\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

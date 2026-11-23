@@ -1,0 +1,113 @@
+{
+  "component": "shader-warp-cream",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-cream",
+      "label": "Still Cream",
+      "description": "An almost motionless, ultra-smooth wash of peach that sits quietly behind dense copy.",
+      "askedAs": [
+        "barely moving warm background",
+        "calm static peach gradient",
+        "slowest smooth backdrop",
+        "почти неподвижный тёплый фон",
+        "спокойный персиковый градиент"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0,
+        "swirl": 0.1
+      }
+    },
+    {
+      "id": "silk-swirl",
+      "label": "Silk Swirl",
+      "description": "Slow, ribbon-like swirls fold the cream and coral together like poured silk.",
+      "askedAs": [
+        "silky swirling gradient",
+        "flowing ribbon background",
+        "liquid silk warm backdrop",
+        "шёлковый закрученный фон",
+        "плавные завитки градиента"
+      ],
+      "props": {
+        "speed": 0.5,
+        "swirl": 0.85,
+        "distortion": 0.25,
+        "softness": 1.2
+      }
+    },
+    {
+      "id": "coral-bands",
+      "label": "Coral Bands",
+      "description": "Crisper, more defined bands of peach and coral drift by at a steady pace.",
+      "askedAs": [
+        "sharper color bands",
+        "defined gradient stripes warm",
+        "less blurry coral waves",
+        "чёткие полосы градиента",
+        "коралловые волны с резкими краями"
+      ],
+      "props": {
+        "softness": 0.35,
+        "proportion": 0.45,
+        "swirl": 0.3,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "melted-peach",
+      "label": "Melted Peach",
+      "description": "Heavier distortion melts the gradient into organic, wobbling shapes with a lively drift.",
+      "askedAs": [
+        "melting warm gradient",
+        "organic wobbly peach background",
+        "more distorted lively warp",
+        "тающий персиковый фон",
+        "искажённый живой градиент"
+      ],
+      "props": {
+        "distortion": 0.7,
+        "speed": 2,
+        "swirl": 0.55,
+        "softness": 1
+      }
+    },
+    {
+      "id": "pale-dawn",
+      "label": "Pale Dawn",
+      "description": "The lighter cream tone dominates for an airy, washed-out glow with a gentle drift.",
+      "askedAs": [
+        "lighter airy cream background",
+        "mostly pale warm gradient",
+        "soft bright dawn backdrop",
+        "светлый воздушный кремовый фон",
+        "бледный рассветный градиент"
+      ],
+      "props": {
+        "proportion": 0.8,
+        "speed": 0.75,
+        "distortion": 0.05
+      }
+    },
+    {
+      "id": "warm-ember",
+      "label": "Warm Ember",
+      "description": "Coral takes over the frame with deeper, richer tones and an energetic churn.",
+      "askedAs": [
+        "more coral less cream",
+        "richer warm energetic gradient",
+        "fast moving coral background",
+        "насыщенный коралловый фон",
+        "быстрый тёплый градиент"
+      ],
+      "props": {
+        "proportion": 0.25,
+        "speed": 3,
+        "swirl": 0.65,
+        "distortion": 0.4
+      }
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "component": "growth-line",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hockey-stick",
+      "label": "Hockey Stick",
+      "description": "A dramatically steep curve with a thick green line that rockets up at the end.",
+      "askedAs": [
+        "make the curve really steep",
+        "dramatic hockey stick growth",
+        "explosive growth chart",
+        "очень крутой рост графика",
+        "хоккейная клюшка рост"
+      ],
+      "props": {
+        "steepness": 11,
+        "strokeWidth": 5,
+        "accent": "#2fbf71",
+        "fontWeight": 700,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "steady-climb",
+      "label": "Steady Climb",
+      "description": "A gentle, almost linear rise drawn slowly in a thin line on a calm light theme.",
+      "askedAs": [
+        "slow steady growth line",
+        "gentle upward curve",
+        "calm light growth chart",
+        "плавный рост графика",
+        "спокойная линия роста"
+      ],
+      "props": {
+        "theme": "light",
+        "steepness": 1.5,
+        "strokeWidth": 2,
+        "speed": 0.75,
+        "accent": "#2f6f8f"
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A warm cream page with serif type and a deep rust line, like a printed magazine chart.",
+      "askedAs": [
+        "magazine style growth chart",
+        "serif chart on cream paper",
+        "print editorial look",
+        "график в журнальном стиле",
+        "тёплый бумажный фон с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4eee3",
+        "ink": "#2a2420",
+        "accent": "#b5502d",
+        "fontFamily": "Fraunces",
+        "grain": true
+      }
+    },
+    {
+      "id": "terminal-metrics",
+      "label": "Terminal Metrics",
+      "description": "A near-black dashboard with monospace labels and a crisp amber line, without grain.",
+      "askedAs": [
+        "developer dashboard style",
+        "monospace dark chart",
+        "terminal look growth line",
+        "график в стиле терминала",
+        "моноширинный тёмный дашборд"
+      ],
+      "props": {
+        "background": "#0e1012",
+        "ink": "#e6e2d6",
+        "accent": "#f0a830",
+        "fontFamily": "JetBrains Mono",
+        "grain": false,
+        "strokeWidth": 2
+      }
+    },
+    {
+      "id": "bold-keynote",
+      "label": "Bold Keynote",
+      "description": "An oversized, heavy-type chart with a fat violet line that draws fast for a stage reveal.",
+      "askedAs": [
+        "big bold chart for keynote",
+        "large fast growth reveal",
+        "punchy presentation chart",
+        "крупный график для презентации",
+        "быстрый жирный график роста"
+      ],
+      "props": {
+        "scale": 1.3,
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 700,
+        "strokeWidth": 7,
+        "accent": "#7c5cff",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A small, light-weight chart in soft slate tones that eases in after a short pause.",
+      "askedAs": [
+        "minimal subtle growth chart",
+        "small understated graph",
+        "clean quiet chart with delay",
+        "минималистичный график",
+        "спокойный тонкий график"
+      ],
+      "props": {
+        "scale": 0.8,
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "strokeWidth": 1.5,
+        "accent": "#8a9bb0",
+        "delay": 20
+      }
+    }
+  ]
+}

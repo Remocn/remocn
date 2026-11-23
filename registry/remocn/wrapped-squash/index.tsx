@@ -1,15 +1,11 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/BricolageGrotesque";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -22,6 +18,18 @@ export interface WrappedSquashProps {
   accent?: string;
   /** A bolder two-color pair, e.g. `["#FF4632", "#FFD2F2"]`. Replaces the gradient palette. */
   colors?: [string, string];
+  /** Frames between one line arriving and the next. */
+  beat?: number;
+  /** Color of the letters on gradient blocks and of the solid blocks; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the lines. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Size of the blocks, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -151,17 +159,54 @@ function normalize(w: number[]) {
   return w.map((v) => v / sum);
 }
 
+/**
+ * The blocks at `scale`, around the frame's center; nothing extra at 1. An SVG
+ * group, since the grain lives in the same SVG and must stay full-frame.
+ */
+function ScaleGroup({
+  scale,
+  W,
+  H,
+  children,
+}: {
+  scale: number;
+  W: number;
+  H: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <g
+      transform={`translate(${W / 2} ${H / 2}) scale(${scale}) translate(${-W / 2} ${-H / 2})`}
+    >
+      {children}
+    </g>
+  );
+}
+
 export function WrappedSquash({
   lines = ["YOU", "SHIPPED", "A LOT"],
   accent = "#3B5BFD",
   colors,
+  beat = 26,
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: WrappedSquashProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const t = THEMES[theme];
+  const solid = ink ?? t.solid;
+  const onField = ink ?? t.onField;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? t.stage);
 
   const rows = lines
     .slice(0, 3)
@@ -183,8 +228,8 @@ export function WrappedSquash({
     : null;
 
   // Beats: line 1 grows in, each next line arrives on a beat, then the lock.
-  const BEATS = [26, 52].slice(0, n - 1);
-  const LOCK = 26 + 26 * (n - 1);
+  const BEATS = [beat, beat * 2].slice(0, n - 1);
+  const LOCK = beat + beat * (n - 1);
   const intro = interpolate(frame, [0, 16], [0.46, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -210,11 +255,28 @@ export function WrappedSquash({
     const p = arrive[s];
     frac = frac.map((v, i) => v + (stages[s][i] - v) * p);
   }
-  const lock = spring({
-    frame: frame - LOCK,
-    fps,
-    config: { damping: 16, stiffness: 170, mass: 0.9 },
-  });
+  const lockAt = (f: number) =>
+    spring({
+      frame: f - LOCK,
+      fps,
+      config: { damping: 16, stiffness: 170, mass: 0.9 },
+    });
+  const lock = lockAt(frame);
+  // Chrome parks a glyph raster on a whole pixel vertically for as long as
+  // the matrix is axis-aligned, so a word stretched by a slow transform clicks
+  // along pixel by pixel. The words are SVG, so the drawing carries the mark
+  // that takes them off that grid while the blocks move.
+  // The lock spring has a long tail, so it is weighed in px of the frame.
+  const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+  const moving =
+    midway((intro - 0.46) / 0.54) ||
+    arrive.some(midway) ||
+    H *
+      Math.max(
+        Math.abs(lockAt(frame + speed) - lock),
+        Math.abs(lock - lockAt(frame - speed)),
+      ) >
+      1e-3;
   frac = frac.map((v, i) => v + (stages[n][i] - v) * lock);
 
   const margin = Math.round(H * 0.03);
@@ -244,8 +306,14 @@ export function WrappedSquash({
   const glowFill = `url(#${uid}-glow)`;
 
   return (
-    <AbsoluteFill style={{ background: t.stage }}>
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden>
+    <AbsoluteFill style={{ background: stage }}>
+      <svg
+        width={W}
+        height={H}
+        viewBox={`0 0 ${W} ${H}`}
+        style={{ transform: glide(moving) }}
+        aria-hidden
+      >
         <defs>
           <linearGradient
             id={`${uid}-field`}
@@ -278,100 +346,114 @@ export function WrappedSquash({
             />
             <stop offset="1" stopColor={t.glow} stopOpacity={0} />
           </radialGradient>
-          <filter id={`${uid}-grain`} x="0" y="0" width="100%" height="100%">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.85"
-              numOctaves={2}
-              seed={7}
-              stitchTiles="stitch"
-            />
-            <feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.4 -0.2" />
-          </filter>
         </defs>
-        {blocks.map(({ text, i, top, h }) => {
-          if (h < 0.5) return null;
-          const m = metrics[i];
-          const pad = Math.min(W * 0.018, h * 0.12);
-          const innerW = blockW - pad * 2;
-          const innerH = Math.max(0.01, h - pad * 2);
-          const sx = innerW / (m.ink * F);
-          const sy = innerH / (CAP * F);
-          const tx = margin + pad - m.lsb * F * sx;
-          const base = top + h - pad;
-          const isWindow = i % 2 === 0;
-          const flatC = flat ? flat(i) : null;
-          const word = (fill: string) => (
-            <text
-              x={0}
-              y={0}
-              fill={fill}
-              fontFamily={display}
-              fontWeight={500}
-              fontSize={F}
-              textLength={m.adv * F}
-              lengthAdjust="spacingAndGlyphs"
-              style={{ fontKerning: "normal" }}
-              transform={`translate(${tx} ${base}) scale(${sx} ${sy})`}
-            >
-              {text}
-            </text>
-          );
-          const rect = (fill: string, mask?: string) => (
-            <rect
-              x={margin}
-              y={top}
-              width={blockW}
-              height={h}
-              fill={fill}
-              mask={mask}
-            />
-          );
-          return (
-            <g key={`${uid}-${i}`}>
-              {flatC ? (
-                rect(flatC.bg)
-              ) : isWindow ? (
-                <>
-                  {rect(fieldFill)}
-                  {rect(glowFill)}
-                </>
-              ) : (
-                rect(t.solid)
-              )}
-              <svg
+        <ScaleGroup scale={scale} W={W} H={H}>
+          {blocks.map(({ text, i, top, h }) => {
+            if (h < 0.5) return null;
+            const m = metrics[i];
+            const pad = Math.min(W * 0.018, h * 0.12);
+            const innerW = blockW - pad * 2;
+            const innerH = Math.max(0.01, h - pad * 2);
+            const sx = innerW / (m.ink * F);
+            const sy = innerH / (CAP * F);
+            const tx = margin + pad - m.lsb * F * sx;
+            const base = top + h - pad;
+            const isWindow = i % 2 === 0;
+            const flatC = flat ? flat(i) : null;
+            const word = (fill: string) => (
+              <text
+                x={0}
+                y={0}
+                fill={fill}
+                fontFamily={fontFamily}
+                fontWeight={500}
+                fontSize={F}
+                textLength={m.adv * F}
+                lengthAdjust="spacingAndGlyphs"
+                style={{ fontKerning: "normal" }}
+                transform={`translate(${tx} ${base}) scale(${sx} ${sy})`}
+              >
+                {text}
+              </text>
+            );
+            const rect = (fill: string, mask?: string) => (
+              <rect
                 x={margin}
                 y={top}
                 width={blockW}
                 height={h}
-                viewBox={`${margin} ${top} ${blockW} ${h}`}
-                overflow="hidden"
-              >
+                fill={fill}
+                mask={mask}
+              />
+            );
+            return (
+              <g key={`${uid}-${i}`}>
                 {flatC ? (
-                  word(flatC.fg)
+                  rect(flatC.bg)
                 ) : isWindow ? (
-                  word(t.onField)
-                ) : (
                   <>
-                    <mask
-                      id={`${uid}-m${i}`}
-                      maskUnits="userSpaceOnUse"
-                      x={margin}
-                      y={top}
-                      width={blockW}
-                      height={h}
-                    >
-                      {word("#FFFFFF")}
-                    </mask>
-                    {rect(fieldFill, `url(#${uid}-m${i})`)}
-                    {rect(glowFill, `url(#${uid}-m${i})`)}
+                    {rect(fieldFill)}
+                    {rect(glowFill)}
                   </>
+                ) : (
+                  rect(solid)
                 )}
-              </svg>
-            </g>
-          );
-        })}
-        {flat ? null : (
+                <svg
+                  x={margin}
+                  y={top}
+                  width={blockW}
+                  height={h}
+                  viewBox={`${margin} ${top} ${blockW} ${h}`}
+                  overflow="hidden"
+                >
+                  {flatC ? (
+                    word(flatC.fg)
+                  ) : isWindow ? (
+                    word(onField)
+                  ) : (
+                    <>
+                      <mask
+                        id={`${uid}-m${i}`}
+                        maskUnits="userSpaceOnUse"
+                        x={margin}
+                        y={top}
+                        width={blockW}
+                        height={h}
+                      >
+                        {word("#FFFFFF")}
+                      </mask>
+                      {rect(fieldFill, `url(#${uid}-m${i})`)}
+                      {rect(glowFill, `url(#${uid}-m${i})`)}
+                    </>
+                  )}
+                </svg>
+              </g>
+            );
+          })}
+        </ScaleGroup>
+      </svg>
+      {/* The grain overlays everything under it. In a drawing of its own it
+          keeps doing so while the words' drawing leans, which isolates it. */}
+      {flat || !grain ? null : (
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <filter id={`${uid}-grain`} x="0" y="0" width="100%" height="100%">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.85"
+                numOctaves={2}
+                seed={7}
+                stitchTiles="stitch"
+              />
+              <feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.4 -0.2" />
+            </filter>
+          </defs>
           <rect
             width={W}
             height={H}
@@ -379,8 +461,8 @@ export function WrappedSquash({
             opacity={t.grain}
             style={{ mixBlendMode: "overlay" }}
           />
-        )}
-      </svg>
+        </svg>
+      )}
     </AbsoluteFill>
   );
 }

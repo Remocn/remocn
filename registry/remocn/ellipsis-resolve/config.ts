@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const ellipsisResolveConfig: ComponentConfig = {
   componentName: "EllipsisResolve",
@@ -23,6 +29,25 @@ export const ellipsisResolveConfig: ComponentConfig = {
       default: "Shipped",
       description: "Word",
     },
+    resolveAt: {
+      type: "number",
+      default: 40,
+      min: 10,
+      max: 90,
+      step: 1,
+      description: "Resolve at (frame)",
+      hiddenFromList: false,
+    },
+    sweepFrames: {
+      type: "number",
+      default: 26,
+      min: 8,
+      max: 60,
+      step: 1,
+      description: "Sweep (frames)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Instrument Serif", grain: true }),
     speed: {
       type: "number",
       default: 1,

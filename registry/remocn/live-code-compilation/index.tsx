@@ -1,6 +1,6 @@
 "use client";
 
-import { useCurrentFrame } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface LiveCodeCompilationProps {
   accentColor?: string;
@@ -112,7 +112,7 @@ export function LiveCodeCompilation({
   speed = 1,
   className,
 }: LiveCodeCompilationProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
 
   // Build the visible code character-by-character from the auto-staggered
   // timeline. UI state only flips once a fragment is fully typed.

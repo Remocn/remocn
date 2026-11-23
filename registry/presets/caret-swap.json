@@ -1,0 +1,104 @@
+{
+  "component": "caret-swap",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mint",
+      "label": "Terminal Mint",
+      "description": "A cool mint-to-teal caret with medium-weight type that types out at a measured, deliberate pace.",
+      "askedAs": [
+        "terminal style cursor typing",
+        "green teal caret code look",
+        "slower typewriter swap",
+        "бирюзовый курсор как в терминале",
+        "медленная печать в стиле кода"
+      ],
+      "props": {
+        "caretColor": "#5eead4",
+        "caretColorEnd": "#0d9488",
+        "color": "#0f172a",
+        "typeSpeed": 3,
+        "fontWeight": "500"
+      }
+    },
+    {
+      "id": "bold-headline",
+      "label": "Bold Headline",
+      "description": "Oversized heavy type with a warm coral-to-amber caret for a punchy, poster-scale swap.",
+      "askedAs": [
+        "big bold text replace",
+        "huge headline typing effect",
+        "warm orange cursor large font",
+        "крупный жирный заголовок с заменой",
+        "большой текст с оранжевым курсором"
+      ],
+      "props": {
+        "fontSize": 128,
+        "fontWeight": "700",
+        "caretColor": "#fb7185",
+        "caretColorEnd": "#f59e0b",
+        "typeSpeed": 2
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "An early, fast swap that eats and retypes the phrase almost instantly in an electric blue gradient.",
+      "askedAs": [
+        "fast text swap",
+        "quick cursor replace",
+        "snappy typing blue caret",
+        "быстрая замена текста",
+        "резкий набор с синим курсором"
+      ],
+      "props": {
+        "swapAt": 10,
+        "speed": 2,
+        "caretColor": "#38bdf8",
+        "caretColorEnd": "#6366f1",
+        "fontWeight": "600"
+      }
+    },
+    {
+      "id": "quiet-mono",
+      "label": "Quiet Mono",
+      "description": "A restrained graphite caret and soft charcoal text that swap slowly and calmly at a smaller size.",
+      "askedAs": [
+        "minimal gray cursor",
+        "calm slow text change",
+        "subtle monochrome typing",
+        "минималистичный серый курсор",
+        "спокойная медленная смена текста"
+      ],
+      "props": {
+        "caretColor": "#a3a3a3",
+        "caretColorEnd": "#404040",
+        "color": "#262626",
+        "fontSize": 56,
+        "speed": 0.75,
+        "swapAt": 45
+      }
+    },
+    {
+      "id": "ai-aurora",
+      "label": "AI Aurora",
+      "description": "A violet-to-sky caret with semibold type and a long dramatic pause before the swap, evoking AI assistant tools.",
+      "askedAs": [
+        "ai tool cursor look",
+        "purple blue gradient caret",
+        "dramatic pause before replace",
+        "курсор как в ИИ ассистенте",
+        "фиолетово-голубой градиентный курсор"
+      ],
+      "props": {
+        "caretColor": "#c084fc",
+        "caretColorEnd": "#38bdf8",
+        "color": "#1e1b4b",
+        "fontWeight": "600",
+        "swapAt": 70,
+        "typeSpeed": 2
+      }
+    }
+  ]
+}

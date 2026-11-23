@@ -5,14 +5,9 @@ import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
@@ -75,6 +70,20 @@ export interface PriceSlateProps {
   /** Replaces the logo / name at the top. */
   logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the lead, prices and brand; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the prices and copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Frames for the new price's reels to spin and land. */
+  reelLength?: number;
+  /** Digits each reel of the new price spins through before landing. */
+  turns?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -163,6 +172,24 @@ function reel(
   return digit - turns * (1 - k);
 }
 
+const midway = (p: number) => p > 0 && p < 1;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PriceSlate({
   price = "$0",
   was = "$29",
@@ -173,13 +200,24 @@ export function PriceSlate({
   name = "remocn",
   logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  reelLength = REEL_LEN,
+  turns = 13,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PriceSlateProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const newL = layoutPrice(price);
@@ -208,7 +246,7 @@ export function PriceSlate({
   const leadX = leadX0 + (leadX1 - leadX0) * m;
   const oldX = oldX0 + (oldX1 - oldX0) * m;
   const oldSize = P + (S - P) * m;
-  const oldColor = interpolateColors(m, [0, 1], [p.fg, p.muted]);
+  const oldColor = interpolateColors(m, [0, 1], [fg, p.muted]);
 
   const leadIn = interpolate(t, [-6, 12], [0, 1], {
     ...CLAMP,
@@ -220,7 +258,7 @@ export function PriceSlate({
   });
   // the halo sweeps in as the last reel lands
   const reels = newL.glyphs.filter((g) => isDigit(g.ch)).length;
-  const landAt = REEL_AT + Math.max(0, reels - 1) * 3 + REEL_LEN + reels * 2;
+  const landAt = REEL_AT + Math.max(0, reels - 1) * 3 + reelLength + reels * 2;
   const sweep = interpolate(t, [landAt - 4, landAt + 18], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -315,6 +353,51 @@ export function PriceSlate({
     });
   };
 
+  // Every vertical px the SVG text travels at time `tt` (lead lift, old price
+  // size, mark lifts, reel offsets), mirroring renderPrice, so the tilt on the
+  // <svg> stays on exactly while some glyph run still moves.
+  const svgTravel = (tt: number) => {
+    const mm = EASE_IO(Math.max(0, Math.min(1, (tt - MOVE_AT) / MOVE_LEN)));
+    const size = P + (S - P) * mm;
+    const li = interpolate(tt, [-6, 12], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    const out = [size, (1 - li) * 0.2 * S];
+    const prices = [
+      { L: oldL, sz: size, start: 0, len: 20, n: 7, lag: -8 },
+      { L: newL, sz: P, start: REEL_AT, len: reelLength, n: turns, lag: 0 },
+    ];
+    for (const { L, sz, start, len, n, lag } of prices) {
+      const step = (CAP + 0.26) * sz;
+      let di = 0;
+      L.glyphs.forEach((g, i) => {
+        if (!isDigit(g.ch)) {
+          const k = interpolate(
+            tt,
+            [start + lag + i * 2, start + lag + 12 + i * 2],
+            [0, 1],
+            { ...CLAMP, easing: EASE_OUT },
+          );
+          out.push((1 - k) * 0.35 * sz);
+          return;
+        }
+        const s0 = start + di * 3;
+        const extra = n + di * 2;
+        di++;
+        out.push(reel(tt, s0, len + di * 2, Number(g.ch), extra) * step);
+      });
+    }
+    return out;
+  };
+  const travelNow = svgTravel(t);
+  const travelPrev = svgTravel(t - speed);
+  const travelNext = svgTravel(t + speed);
+  const svgMoving = travelNow.some(
+    (v, i) =>
+      Math.abs(v - travelPrev[i]) > 1e-3 || Math.abs(travelNext[i] - v) > 1e-3,
+  );
+
   const newCap = CAP * P;
   const oldCap = CAP * oldSize;
   const strikeY = baseline - oldCap * 0.44;
@@ -323,288 +406,313 @@ export function PriceSlate({
   const strikeT = Math.max(1.5 * u, 0.034 * oldSize);
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        role="img"
-        aria-label={`${lead} ${price}, was ${was}`}
-      >
-        <defs>
-          <linearGradient id={`${uid}feather`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fff" stopOpacity={0} />
-            <stop offset="0.14" stopColor="#fff" />
-            <stop offset="0.86" stopColor="#fff" />
-            <stop offset="1" stopColor="#fff" stopOpacity={0} />
-          </linearGradient>
-          {/* reel windows: one for the old price (it shrinks), one for the new */}
-          <mask
-            id={`${uid}winOld`}
-            maskUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-          >
-            <rect
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{
+            position: "absolute",
+            inset: 0,
+            // the SVG paints no background, so a tilt shows no seam
+            transform: glide(svgMoving).trim(),
+          }}
+          role="img"
+          aria-label={`${lead} ${price}, was ${was}`}
+        >
+          <defs>
+            <linearGradient id={`${uid}feather`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#fff" stopOpacity={0} />
+              <stop offset="0.14" stopColor="#fff" />
+              <stop offset="0.86" stopColor="#fff" />
+              <stop offset="1" stopColor="#fff" stopOpacity={0} />
+            </linearGradient>
+            {/* reel windows: one for the old price (it shrinks), one for the new */}
+            <mask
+              id={`${uid}winOld`}
+              maskUnits="userSpaceOnUse"
               x={0}
-              y={baseline - oldCap - 0.14 * oldSize}
+              y={0}
               width={W}
-              height={oldCap + 0.28 * oldSize}
-              fill={`url(#${uid}feather)`}
-            />
-          </mask>
-          <mask
-            id={`${uid}winNew`}
-            maskUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-          >
-            <rect
+              height={H}
+            >
+              <rect
+                x={0}
+                y={baseline - oldCap - 0.14 * oldSize}
+                width={W}
+                height={oldCap + 0.28 * oldSize}
+                fill={`url(#${uid}feather)`}
+              />
+            </mask>
+            <mask
+              id={`${uid}winNew`}
+              maskUnits="userSpaceOnUse"
               x={0}
-              y={baseline - newCap - 0.14 * P}
+              y={0}
               width={W}
-              height={newCap + 0.28 * P}
-              fill={`url(#${uid}feather)`}
-            />
-          </mask>
-          <linearGradient
-            id={`${uid}halo`}
-            gradientUnits="userSpaceOnUse"
-            x1={newX - newL.width * P * (0.1 - 0.12 * drift)}
-            y1={baseline - newCap}
-            x2={newX + newL.width * P * (1.05 + 0.1 * drift)}
-            y2={baseline}
+              height={H}
+            >
+              <rect
+                x={0}
+                y={baseline - newCap - 0.14 * P}
+                width={W}
+                height={newCap + 0.28 * P}
+                fill={`url(#${uid}feather)`}
+              />
+            </mask>
+            <linearGradient
+              id={`${uid}halo`}
+              gradientUnits="userSpaceOnUse"
+              x1={newX - newL.width * P * (0.1 - 0.12 * drift)}
+              y1={baseline - newCap}
+              x2={newX + newL.width * P * (1.05 + 0.1 * drift)}
+              y2={baseline}
+            >
+              {p.halo.map((c, i) => (
+                <stop key={c} offset={p.stops[i]} stopColor={c} />
+              ))}
+            </linearGradient>
+            {/* the gradient sweeps across the landed price, left to right */}
+            <linearGradient
+              id={`${uid}wipe`}
+              gradientUnits="userSpaceOnUse"
+              x1={newX - 0.4 * P + sweep * (newL.width * P + 0.8 * P)}
+              y1={0}
+              x2={newX + sweep * (newL.width * P + 0.8 * P)}
+              y2={0}
+            >
+              <stop offset="0" stopColor="#fff" />
+              <stop offset="1" stopColor="#fff" stopOpacity={0} />
+            </linearGradient>
+            <mask
+              id={`${uid}sweep`}
+              maskUnits="userSpaceOnUse"
+              x={0}
+              y={0}
+              width={W}
+              height={H}
+            >
+              <rect width={W} height={H} fill={`url(#${uid}wipe)`} />
+            </mask>
+            <linearGradient
+              id={`${uid}wipeInv`}
+              gradientUnits="userSpaceOnUse"
+              x1={newX - 0.4 * P + sweep * (newL.width * P + 0.8 * P)}
+              y1={0}
+              x2={newX + sweep * (newL.width * P + 0.8 * P)}
+              y2={0}
+            >
+              <stop offset="0" stopColor="#fff" stopOpacity={0} />
+              <stop offset="1" stopColor="#fff" />
+            </linearGradient>
+            <mask
+              id={`${uid}ink`}
+              maskUnits="userSpaceOnUse"
+              x={0}
+              y={0}
+              width={W}
+              height={H}
+            >
+              <rect width={W} height={H} fill={`url(#${uid}wipeInv)`} />
+            </mask>
+          </defs>
+
+          {/* lead-in */}
+          <text
+            x={leadX}
+            y={baseline}
+            fontFamily={serif}
+            fontStyle="italic"
+            fontWeight={400}
+            fontSize={S}
+            fill={fg}
+            opacity={leadIn}
+            transform={`translate(0 ${(1 - leadIn) * 0.2 * S})`}
           >
-            {p.halo.map((c, i) => (
-              <stop key={c} offset={p.stops[i]} stopColor={c} />
+            {lead}
+          </text>
+
+          {/* old price, then its strike */}
+          <g
+            fontFamily={fontFamily}
+            fontWeight={300}
+            fontSize={oldSize}
+            textAnchor="middle"
+            fill={oldColor}
+            style={{ fontVariantNumeric: "tabular-nums" }}
+          >
+            <g mask={`url(#${uid}winOld)`}>
+              {renderPrice(oldL, oldX, oldSize, 0, 20, 7, "o", "digits")}
+            </g>
+            {renderPrice(oldL, oldX, oldSize, 0, 20, 7, "o", "marks")}
+          </g>
+          <line
+            x1={strikeX0}
+            x2={strikeX0 + (strikeX1 - strikeX0) * strike}
+            y1={strikeY}
+            y2={strikeY}
+            stroke={interpolateColors(m, [0, 1], [fg, p.muted])}
+            strokeWidth={strikeT}
+            strokeLinecap="round"
+            opacity={strike > 0 ? 1 : 0}
+          />
+
+          {/* new price: ink while it rolls, halo gradient once it lands */}
+          <g
+            fontFamily={fontFamily}
+            fontWeight={300}
+            fontSize={P}
+            textAnchor="middle"
+            fill={fg}
+            style={{ fontVariantNumeric: "tabular-nums" }}
+            mask={sweep > 0 ? `url(#${uid}ink)` : undefined}
+          >
+            <g mask={`url(#${uid}winNew)`}>
+              {renderPrice(
+                newL,
+                newX,
+                P,
+                REEL_AT,
+                reelLength,
+                turns,
+                "n",
+                "digits",
+              )}
+            </g>
+            {renderPrice(
+              newL,
+              newX,
+              P,
+              REEL_AT,
+              reelLength,
+              turns,
+              "n",
+              "marks",
+            )}
+          </g>
+          <g
+            mask={`url(#${uid}sweep)`}
+            fontFamily={fontFamily}
+            fontWeight={300}
+            fontSize={P}
+            textAnchor="middle"
+            fill={`url(#${uid}halo)`}
+            style={{ fontVariantNumeric: "tabular-nums" }}
+            opacity={sweep > 0 ? 1 : 0}
+          >
+            {newL.glyphs.map((g) => (
+              <text
+                key={`h${g.x}${g.ch}`}
+                x={newX + (g.x + g.w / 2) * P}
+                y={baseline}
+              >
+                {g.ch}
+              </text>
             ))}
-          </linearGradient>
-          {/* the gradient sweeps across the landed price, left to right */}
-          <linearGradient
-            id={`${uid}wipe`}
-            gradientUnits="userSpaceOnUse"
-            x1={newX - 0.4 * P + sweep * (newL.width * P + 0.8 * P)}
-            y1={0}
-            x2={newX + sweep * (newL.width * P + 0.8 * P)}
-            y2={0}
-          >
-            <stop offset="0" stopColor="#fff" />
-            <stop offset="1" stopColor="#fff" stopOpacity={0} />
-          </linearGradient>
-          <mask
-            id={`${uid}sweep`}
-            maskUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-          >
-            <rect width={W} height={H} fill={`url(#${uid}wipe)`} />
-          </mask>
-          <linearGradient
-            id={`${uid}wipeInv`}
-            gradientUnits="userSpaceOnUse"
-            x1={newX - 0.4 * P + sweep * (newL.width * P + 0.8 * P)}
-            y1={0}
-            x2={newX + sweep * (newL.width * P + 0.8 * P)}
-            y2={0}
-          >
-            <stop offset="0" stopColor="#fff" stopOpacity={0} />
-            <stop offset="1" stopColor="#fff" />
-          </linearGradient>
-          <mask
-            id={`${uid}ink`}
-            maskUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-          >
-            <rect width={W} height={H} fill={`url(#${uid}wipeInv)`} />
-          </mask>
-        </defs>
-
-        {/* lead-in */}
-        <text
-          x={leadX}
-          y={baseline}
-          fontFamily={serif}
-          fontStyle="italic"
-          fontWeight={400}
-          fontSize={S}
-          fill={p.fg}
-          opacity={leadIn}
-          transform={`translate(0 ${(1 - leadIn) * 0.2 * S})`}
-        >
-          {lead}
-        </text>
-
-        {/* old price, then its strike */}
-        <g
-          fontFamily={sans}
-          fontWeight={300}
-          fontSize={oldSize}
-          textAnchor="middle"
-          fill={oldColor}
-          style={{ fontVariantNumeric: "tabular-nums" }}
-        >
-          <g mask={`url(#${uid}winOld)`}>
-            {renderPrice(oldL, oldX, oldSize, 0, 20, 7, "o", "digits")}
           </g>
-          {renderPrice(oldL, oldX, oldSize, 0, 20, 7, "o", "marks")}
-        </g>
-        <line
-          x1={strikeX0}
-          x2={strikeX0 + (strikeX1 - strikeX0) * strike}
-          y1={strikeY}
-          y2={strikeY}
-          stroke={interpolateColors(m, [0, 1], [p.fg, p.muted])}
-          strokeWidth={strikeT}
-          strokeLinecap="round"
-          opacity={strike > 0 ? 1 : 0}
-        />
+        </svg>
 
-        {/* new price: ink while it rolls, halo gradient once it lands */}
-        <g
-          fontFamily={sans}
-          fontWeight={300}
-          fontSize={P}
-          textAnchor="middle"
-          fill={p.fg}
-          style={{ fontVariantNumeric: "tabular-nums" }}
-          mask={sweep > 0 ? `url(#${uid}ink)` : undefined}
-        >
-          <g mask={`url(#${uid}winNew)`}>
-            {renderPrice(newL, newX, P, REEL_AT, REEL_LEN, 13, "n", "digits")}
-          </g>
-          {renderPrice(newL, newX, P, REEL_AT, REEL_LEN, 13, "n", "marks")}
-        </g>
-        <g
-          mask={`url(#${uid}sweep)`}
-          fontFamily={sans}
-          fontWeight={300}
-          fontSize={P}
-          textAnchor="middle"
-          fill={`url(#${uid}halo)`}
-          style={{ fontVariantNumeric: "tabular-nums" }}
-          opacity={sweep > 0 ? 1 : 0}
-        >
-          {newL.glyphs.map((g) => (
-            <text
-              key={`h${g.x}${g.ch}`}
-              x={newX + (g.x + g.w / 2) * P}
-              y={baseline}
-            >
-              {g.ch}
-            </text>
-          ))}
-        </g>
-      </svg>
-
-      {/* brand + product, top */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: H * 0.115,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "baseline",
-          gap: 12 * u,
-          opacity: rise(-8),
-          transform: `translateY(${(1 - rise(-8)) * 10 * u}px)`,
-          lineHeight: 1,
-        }}
-      >
-        {logo ??
-          (name.trim().toLowerCase() === "remocn" ? (
-            <RemocnLogo fontSize={34 * u} color={p.fg} />
-          ) : (
-            <span
-              style={{
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: 34 * u,
-                letterSpacing: "-0.02em",
-                color: p.fg,
-              }}
-            >
-              {name}
-            </span>
-          ))}
-        {product ? (
-          <span
-            style={{
-              fontFamily: sans,
-              fontWeight: 300,
-              fontSize: 34 * u,
-              letterSpacing: "-0.02em",
-              color: p.fg,
-            }}
-          >
-            {product}
-          </span>
-        ) : null}
-      </div>
-
-      {/* note under the price */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: baseline + 0.2 * P,
-          textAlign: "center",
-          fontFamily: sans,
-          fontWeight: 400,
-          fontSize: 30 * u,
-          letterSpacing: "-0.01em",
-          color: p.muted,
-          opacity: rise(landAt - 2),
-          transform: `translateY(${(1 - rise(landAt - 2)) * 12 * u}px)`,
-          lineHeight: 1,
-        }}
-      >
-        {note}
-      </div>
-
-      {/* availability */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: H * 0.855,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 12 * u,
-          fontFamily: sans,
-          fontWeight: 400,
-          fontSize: 24 * u,
-          letterSpacing: "-0.005em",
-          color: p.fg,
-          opacity: rise(landAt + 6),
-          transform: `translateY(${(1 - rise(landAt + 6)) * 12 * u}px)`,
-          lineHeight: 1,
-        }}
-      >
+        {/* brand + product, top */}
         <div
           style={{
-            width: 8 * u,
-            height: 8 * u,
-            borderRadius: 99,
-            background: accent,
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: H * 0.115,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "baseline",
+            gap: 12 * u,
+            opacity: rise(-8),
+            transform: `translateY(${(1 - rise(-8)) * 10 * u}px)${glide(midway(rise(-8)))}`,
+            lineHeight: 1,
           }}
-        />
-        {availability}
-      </div>
+        >
+          {logo ??
+            (name.trim().toLowerCase() === "remocn" ? (
+              <RemocnLogo fontSize={34 * u} color={fg} />
+            ) : (
+              <span
+                style={{
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 34 * u,
+                  letterSpacing: "-0.02em",
+                  color: fg,
+                }}
+              >
+                {name}
+              </span>
+            ))}
+          {product ? (
+            <span
+              style={{
+                fontFamily,
+                fontWeight: 300,
+                fontSize: 34 * u,
+                letterSpacing: "-0.02em",
+                color: fg,
+              }}
+            >
+              {product}
+            </span>
+          ) : null}
+        </div>
+
+        {/* note under the price */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: baseline + 0.2 * P,
+            textAlign: "center",
+            fontFamily,
+            fontWeight: 400,
+            fontSize: 30 * u,
+            letterSpacing: "-0.01em",
+            color: p.muted,
+            opacity: rise(landAt - 2),
+            transform: `translateY(${(1 - rise(landAt - 2)) * 12 * u}px)${glide(midway(rise(landAt - 2)))}`,
+            lineHeight: 1,
+          }}
+        >
+          {note}
+        </div>
+
+        {/* availability */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: H * 0.855,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 12 * u,
+            fontFamily,
+            fontWeight: 400,
+            fontSize: 24 * u,
+            letterSpacing: "-0.005em",
+            color: fg,
+            opacity: rise(landAt + 6),
+            transform: `translateY(${(1 - rise(landAt + 6)) * 12 * u}px)${glide(midway(rise(landAt + 6)))}`,
+            lineHeight: 1,
+          }}
+        >
+          <div
+            style={{
+              width: 8 * u,
+              height: 8 * u,
+              borderRadius: 99,
+              background: accent,
+            }}
+          />
+          {availability}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

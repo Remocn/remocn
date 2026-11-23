@@ -2,15 +2,11 @@
 
 import { loadFont } from "@remotion/google-fonts/Oswald";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
-const { fontFamily } = loadFont("normal", {
+const oswald = loadFont("normal", {
   weights: ["300", "400", "500"],
   subsets: ["latin"],
 });
@@ -24,7 +20,21 @@ export interface EscalateCardsProps {
   firstBeat?: number;
   /** Each card lasts this share of the one before: below 1 the cuts accelerate. */
   accel?: number;
+  /** Frames after the last cut before the date cuts in. */
+  dateDelay?: number;
+  /** How far the last card pushes in over its hold (0.045 = 4.5%). */
+  push?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill in place of the theme stage and the climax mesh; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the cards. Load it yourself; Oswald by default. Card widths are fitted to Oswald. */
+  fontFamily?: string;
+  /** Size of the cards, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -46,6 +56,10 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 const SETTLE = Easing.bezier(0.22, 1, 0.36, 1);
+
+// The settle is a clamped ramp, exactly 0 or 1 at rest, and moves the
+// line on every frame in between.
+const midway = (p: number) => p > 0 && p < 1;
 
 const THEMES = {
   /** Dark: the climax cuts to the mesh ground, white type on top. */
@@ -123,25 +137,37 @@ function textWidth(text: string, track: number) {
  */
 function Line({
   y,
+  fontFamily,
   size,
   tracking,
   weight,
   color,
   scale,
+  dy = 0,
+  moving = false,
   fill,
   children,
 }: {
   y: number;
+  fontFamily: string;
   size: number;
   tracking: number;
   weight: number;
   color: string;
   scale: number;
+  /** Travel from `y`, as a transform so layout keeps the line still. */
+  dy?: number;
+  moving?: boolean;
   /** A frame-sized background painted through the glyphs. */
   fill?: { image: string; W: number; H: number };
   children: string;
 }) {
+  const glide = useGlide();
   const top = y - size * CAP_MID;
+  // The transform stays on at rest, at identity where nothing is left to
+  // carry: the mark that keeps a resting line's lean rides on it, and a line
+  // dropped back to plain layout would snap to the pixel grid on that frame.
+  const transform = `translateY(${Math.abs(dy) < 1e-3 ? 0 : dy}px) scale(${scale})`;
   const paint: React.CSSProperties = fill
     ? {
         color: "transparent",
@@ -172,7 +198,7 @@ function Line({
         paddingLeft: `${tracking}em`,
         ...paint,
         fontVariantNumeric: "tabular-nums",
-        transform: scale === 1 ? undefined : `scale(${scale})`,
+        transform: `${transform}${glide(moving)}`,
         transformOrigin: `50% ${CAP_MID * 100}%`,
       }}
     >
@@ -181,17 +207,40 @@ function Line({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function EscalateCards({
   words = ["ONE", "CODEBASE", "EVERY", "LAUNCH"],
   date = "OCTOBER 30",
   firstBeat = 26,
   accel = 0.6,
+  dateDelay = DATE_DELAY,
+  push = 0.045,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = oswald.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: EscalateCardsProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const n = Math.max(1, words.length);
   const last = n - 1;
@@ -238,43 +287,56 @@ export function EscalateCards({
     ? interpolate(local, [0, 80], [0, 1], { ...CLAMP, easing: SETTLE })
     : 0;
   const mesh = card.climax ? meshGround(settle, accent, c.pale) : "";
-  const ground = card.climax && !c.clip ? mesh : c.bg;
-  const ink = card.climax && !c.clip ? "#FFFFFF" : c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
+  const onMesh = card.climax && !c.clip && background === undefined;
+  const ground = onMesh ? mesh : stage;
+  const fg = ink ?? (onMesh ? "#FFFFFF" : c.fg);
 
   // A hair of drift keeps each card alive without softening the cut; the
   // climax gets a slow settling push instead.
-  const scale = card.climax
-    ? 1 + 0.045 * settle
+  const zoom = card.climax
+    ? 1 + push * settle
     : 1 + 0.025 * Math.min(1, local / card.length);
-  const showDate = card.climax && date !== "" && local >= DATE_DELAY;
+  const showDate = card.climax && date !== "" && local >= dateDelay;
   const titleY = card.climax && date !== "" ? H * 0.45 : H * 0.5;
   const dateSize = H * 0.032;
 
   return (
     <AbsoluteFill style={{ background: ground, overflow: "hidden" }}>
-      <Line
-        y={titleY}
-        size={card.size}
-        tracking={card.track}
-        weight={card.weight}
-        color={ink}
-        scale={scale}
-        fill={card.climax && c.clip ? { image: mesh, W, H } : undefined}
-      >
-        {card.text}
-      </Line>
-      {showDate ? (
+      <ScaleLayer scale={scale}>
         <Line
-          y={titleY + (lastSize * CAP * scale) / 2 + H * 0.1}
-          size={dateSize}
-          tracking={0.36}
-          weight={400}
-          color={ink}
-          scale={1}
+          y={titleY}
+          fontFamily={fontFamily}
+          size={card.size}
+          tracking={card.track}
+          weight={card.weight}
+          color={fg}
+          scale={zoom}
+          moving={!card.climax || midway(settle)}
+          fill={card.climax && c.clip ? { image: mesh, W, H } : undefined}
         >
-          {date}
+          {card.text}
         </Line>
-      ) : null}
+        {showDate ? (
+          <Line
+            // Laid out where the push leaves it; the ride there follows the
+            // title's zoom by a transform, since layout rounds a baseline to
+            // whole pixels.
+            y={titleY + (lastSize * CAP * (1 + push)) / 2 + H * 0.1}
+            dy={(lastSize * CAP * push * (settle - 1)) / 2}
+            moving={midway(settle)}
+            fontFamily={fontFamily}
+            size={dateSize}
+            tracking={0.36}
+            weight={400}
+            color={fg}
+            scale={1}
+          >
+            {date}
+          </Line>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

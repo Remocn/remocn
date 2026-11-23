@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const dmSans = loadFont("normal", {
   weights: ["400", "500"],
@@ -23,8 +23,20 @@ export interface LoopBreakProps {
   fix?: string;
   highlight?: string;
   passes?: number;
+  /** Frames between words as a line rises in. */
+  stagger?: number;
+  /** Frames a pass holds before it rewinds. */
+  hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines. Load it yourself; DM Sans by default. */
+  fontFamily?: string;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -42,6 +54,7 @@ const LEAD = 1.14;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN = Easing.bezier(0.55, 0, 0.9, 0.4);
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -93,11 +106,11 @@ function layoutWords(s: string, em: (x: string) => number) {
   return out;
 }
 
-function measure(loop: string[], fix: string): Metrics {
+function measure(loop: string[], fix: string, family: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("loop-break: no 2d context");
-  ctx.font = `${WGHT} ${PROBE}px "${dmSans.fontFamily}"`;
+  ctx.font = `${WGHT} ${PROBE}px "${family}"`;
   const em = (x: string) =>
     ctx.measureText(x).width / PROBE + TRACK * Array.from(x).length;
   return {
@@ -111,8 +124,8 @@ function measure(loop: string[], fix: string): Metrics {
   };
 }
 
-function useMetrics(loop: string[], fix: string) {
-  const key = `${loop.join("\u0002")}\u0001${fix}`;
+function useMetrics(loop: string[], fix: string, family: string) {
+  const key = `${loop.join("\u0002")}\u0001${fix}\u0001${family}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("loop-break: measuring"));
   const released = useRef(false);
@@ -122,12 +135,15 @@ function useMetrics(loop: string[], fix: string) {
     let live = true;
     Promise.all([
       dmSans.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${dmSans.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(src.current.loop, src.current.fix) });
+        setState({
+          key,
+          m: measure(src.current.loop, src.current.fix, family),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -136,7 +152,7 @@ function useMetrics(loop: string[], fix: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, family, handle]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -167,7 +183,13 @@ function wrapFix(words: Word[], measure: number) {
   return out;
 }
 
-function schedule(rowCount: number, words: number[], passes: number) {
+function schedule(
+  rowCount: number,
+  words: number[],
+  passes: number,
+  stagger: number,
+  hold: number,
+) {
   const takes: Take[] = [];
   let cursor = START;
   let fixAt = 0;
@@ -197,13 +219,13 @@ function schedule(rowCount: number, words: number[], passes: number) {
     if (final) {
       cursor =
         last.at +
-        (ENTER + WORD_STAGGER * Math.max(0, words[rowCount] - 1)) * last.tempo;
+        (ENTER + stagger * Math.max(0, words[rowCount] - 1)) * last.tempo;
       break;
     }
     cursor =
       last.at +
-      (ENTER + WORD_STAGGER * Math.max(0, words[last.row] - 1)) * s +
-      HOLD * s;
+      (ENTER + stagger * Math.max(0, words[last.row] - 1)) * s +
+      hold * s;
     const back = [...pass].reverse().filter((tk) => tk.row > 0);
     back.forEach((tk, i) => {
       tk.back = cursor + i * REWIND_ROW * s;
@@ -217,26 +239,50 @@ function schedule(rowCount: number, words: number[], passes: number) {
   return { takes, fixAt, end: cursor };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LoopBreak({
   loop = ["Render the cut.", "Spot a typo.", "Start over."],
   fix = "Change one word. Done.",
   highlight = "Done.",
   passes = 3,
+  stagger = WORD_STAGGER,
+  hold = HOLD,
   accent,
+  ink,
   background,
+  fontFamily = dmSans.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: LoopBreakProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const k = Math.min(1, durationInFrames / BASE);
   const t = (frame * speed) / k;
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
   const rows = loop.length >= 2 ? loop : [...loop, "Start over."];
-  const m = useMetrics(rows, fix);
+  const m = useMetrics(rows, fix, fontFamily);
 
   if (!m) {
     return (
@@ -255,7 +301,13 @@ export function LoopBreak({
   const blockTop = (H - total * pitch) / 2;
 
   const words = [...m.rows.map((r) => r.length), m.fix.length];
-  const plan = schedule(R, words, Math.max(2, Math.round(passes)));
+  const plan = schedule(
+    R,
+    words,
+    Math.max(2, Math.round(passes)),
+    stagger,
+    hold,
+  );
   const settled = plan.end + DIM_AFTER;
   const dim = interpolate(t, [settled, settled + 12], [0, 1], {
     ...CLAMP,
@@ -294,20 +346,32 @@ export function LoopBreak({
     const n = list.length;
     const byRow = new Map<number, React.ReactNode[]>();
     list.forEach((w, i) => {
-      const inAt = cur.at + i * WORD_STAGGER * cur.tempo;
-      const rise = interpolate(t, [inAt, inAt + ENTER * cur.tempo], [0, 1], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      });
+      const inAt = cur.at + i * stagger * cur.tempo;
+      const riseAt = (tt: number) =>
+        interpolate(tt, [inAt, inAt + ENTER * cur.tempo], [0, 1], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        });
       const outAt = cur.back + (n - 1 - i) * REWIND_WORD * cur.backTempo;
-      const sink = Number.isFinite(cur.back)
-        ? interpolate(t, [outAt, outAt + REWIND * cur.backTempo], [0, 1], {
-            ...CLAMP,
-            easing: EASE_IN,
-          })
-        : 0;
-      const shown = rise - sink;
+      const sinkAt = (tt: number) =>
+        Number.isFinite(cur.back)
+          ? interpolate(tt, [outAt, outAt + REWIND * cur.backTempo], [0, 1], {
+              ...CLAMP,
+              easing: EASE_IN,
+            })
+          : 0;
+      const rise = riseAt(t);
+      const shown = rise - sinkAt(t);
       if (shown <= 0) return;
+      // The travel is printed to 0.01px, and the ease's tail keeps stepping
+      // that by a hundredth after its progress reads as done; the tilt stays
+      // on while the printed offset still changes from frame to frame.
+      const offsetAt = (tt: number) =>
+        ((1 - (riseAt(tt) - sinkAt(tt))) * pitch).toFixed(2);
+      const offset = offsetAt(t);
+      const moving =
+        offset !== offsetAt(t + speed / k) ||
+        offset !== offsetAt(t - speed / k);
       const lit =
         cur.fix &&
         hiStart >= 0 &&
@@ -315,8 +379,8 @@ export function LoopBreak({
         w.start + w.text.length > hiStart;
       const fade = cur.fix ? 0 : dim * 0.55;
       const color = lit
-        ? `color-mix(in oklab, ${hi} ${(rise * 100).toFixed(1)}%, ${c.ink})`
-        : c.ink;
+        ? `color-mix(in oklab, ${hi} ${(rise * 100).toFixed(1)}%, ${fg})`
+        : fg;
       const bucket = byRow.get(w.row) ?? [];
       bucket.push(
         <div
@@ -328,14 +392,14 @@ export function LoopBreak({
             height: pitch,
             lineHeight: `${pitch}px`,
             whiteSpace: "pre",
-            fontFamily: dmSans.fontFamily,
+            fontFamily,
             fontWeight: WGHT,
             fontSize: F,
             letterSpacing: `${TRACK}em`,
             fontKerning: "normal",
             color,
             opacity: 1 - fade,
-            transform: `translateY(${((1 - shown) * pitch).toFixed(2)}px)`,
+            transform: `translateY(${offset}px)${glide(moving)}`,
           }}
         >
           {w.text}
@@ -350,7 +414,7 @@ export function LoopBreak({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

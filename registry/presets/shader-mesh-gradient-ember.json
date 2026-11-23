@@ -1,0 +1,92 @@
+{
+  "component": "shader-mesh-gradient-ember",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-smolder",
+      "label": "Slow Smolder",
+      "description": "Embers drift lazily with gentle, soft-edged pools of heat for a calm, luxurious backdrop.",
+      "askedAs": [
+        "slow calm warm background",
+        "subtle glowing embers",
+        "gentle lava drift",
+        "медленный тёплый фон",
+        "спокойное тление"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.4,
+        "swirl": 0.2
+      }
+    },
+    {
+      "id": "molten-vortex",
+      "label": "Molten Vortex",
+      "description": "Fast, tightly twisting currents of orange spiral through the oxblood like stirred magma.",
+      "askedAs": [
+        "swirling fire effect",
+        "fast spinning lava",
+        "energetic twisting gradient",
+        "огненный водоворот",
+        "быстрая закрученная лава"
+      ],
+      "props": {
+        "speed": 2.5,
+        "distortion": 1.2,
+        "swirl": 1
+      }
+    },
+    {
+      "id": "liquid-flare",
+      "label": "Liquid Flare",
+      "description": "Heavily warped amber blobs stretch and melt at a brisk pace with little rotation.",
+      "askedAs": [
+        "melting warm blobs",
+        "wobbly liquid orange",
+        "distorted heat waves",
+        "плавящиеся капли",
+        "жидкий оранжевый градиент"
+      ],
+      "props": {
+        "speed": 1.75,
+        "distortion": 1.5,
+        "swirl": 0.15
+      }
+    },
+    {
+      "id": "still-glow",
+      "label": "Still Glow",
+      "description": "Clean, barely moving bands of amber light settle into a near-static, minimal field.",
+      "askedAs": [
+        "almost static warm gradient",
+        "minimal orange glow",
+        "clean background for text",
+        "почти статичный градиент",
+        "минималистичное свечение"
+      ],
+      "props": {
+        "speed": 0.5,
+        "distortion": 0.1,
+        "swirl": 0.05
+      }
+    },
+    {
+      "id": "wildfire",
+      "label": "Wildfire",
+      "description": "Maximum-speed churning flames with strong distortion and swirl for a high-energy reveal.",
+      "askedAs": [
+        "intense fire background",
+        "very fast hot gradient",
+        "explosive announcement",
+        "бушующий огонь",
+        "очень быстрый яркий фон"
+      ],
+      "props": {
+        "speed": 4,
+        "distortion": 1,
+        "swirl": 0.75
+      }
+    }
+  ]
+}

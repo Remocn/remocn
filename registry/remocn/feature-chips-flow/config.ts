@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const featureChipsFlowConfig: ComponentConfig = {
   componentName: "FeatureChipsFlow",
@@ -13,16 +19,35 @@ export const featureChipsFlowConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     name: {
       type: "text-content",
       default: "remocn",
       description: "Name",
     },
+    converge: {
+      type: "number",
+      default: 58,
+      min: 0,
+      max: 120,
+      step: 1,
+      description: "Converge (frames)",
+      hiddenFromList: false,
+    },
+    push: {
+      type: "number",
+      default: 0.045,
+      min: 0,
+      max: 0.2,
+      step: 0.005,
+      description: "Push-in",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,
@@ -35,6 +60,8 @@ export const featureChipsFlowConfig: ComponentConfig = {
   },
   durationInFrames: 170,
   fps: FPS,
+  // Does not hold 60 fps in the browser yet (`audit:playback`: pixels).
+  previewFps: 30,
   compositionWidth: W,
   compositionHeight: H,
 };

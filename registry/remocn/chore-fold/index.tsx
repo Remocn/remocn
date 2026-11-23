@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geologica = loadFont("normal", {
   weights: ["400", "500"],
@@ -25,7 +25,19 @@ export interface ChoreFoldProps {
   result?: string;
   payoff?: string;
   accent?: string;
+  /** Text color of the steps and hero; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Geologica by default. */
+  fontFamily?: string;
+  /** Frames between steps as the list builds. */
+  lineStagger?: number;
+  /** Frames between words within a line. */
+  stagger?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -70,16 +82,18 @@ const SWAP_IN = 18;
 const PAYOFF_AFTER = 16;
 const HOLD = 40;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 type Metrics = Record<string, number>;
 const key = (w: number, s: string) => `${w}\u0002${s}`;
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], fontFamily: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("chore-fold: no 2d context");
   const out: Metrics = {};
   for (const weight of [STEP_W, HERO_W]) {
-    ctx.font = `${weight} ${FONT_PX}px "${geologica.fontFamily}"`;
+    ctx.font = `${weight} ${FONT_PX}px "${fontFamily}"`;
     for (const s of texts) {
       out[key(weight, s)] = ctx.measureText(s).width / FONT_PX;
     }
@@ -87,7 +101,7 @@ function measureAll(texts: string[]): Metrics {
   return out;
 }
 
-function useMetrics(texts: string[]) {
+function useMetrics(texts: string[], fontFamily: string) {
   const id = texts.join("\u0001");
   const [state, setState] = useState<{ id: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("chore-fold: measuring"));
@@ -96,13 +110,13 @@ function useMetrics(texts: string[]) {
     let live = true;
     Promise.all([
       geologica.waitUntilDone(),
-      document.fonts.load(`${STEP_W} 100px "${geologica.fontFamily}"`),
-      document.fonts.load(`${HERO_W} 100px "${geologica.fontFamily}"`),
+      document.fonts.load(`${STEP_W} 100px "${fontFamily}"`),
+      document.fonts.load(`${HERO_W} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ id, m: measureAll(id.split("\u0001")) });
+        setState({ id, m: measureAll(id.split("\u0001"), fontFamily) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -111,7 +125,7 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [id, handle]);
+  }, [id, handle, fontFamily]);
   return state && state.id === id ? state.m : null;
 }
 
@@ -152,6 +166,22 @@ function balanced(
   return greedy(hi);
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ChoreFold({
   steps = DEFAULT_STEPS,
   label = "By hand",
@@ -159,14 +189,22 @@ export function ChoreFold({
   result = "does all of that.",
   payoff = "You just talk.",
   accent,
+  ink,
   background,
+  fontFamily = geologica.fontFamily,
+  lineStagger = LINE_GAP,
+  stagger = WORD_STAGGER,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ChoreFoldProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -175,15 +213,18 @@ export function ChoreFold({
     ...splitWords(name).map((w) => ({ w, lit: true })),
     ...splitWords(result).map((w) => ({ w, lit: false })),
   ];
-  const m = useMetrics([
-    " ",
-    ...list,
-    ...list.flatMap(splitWords),
-    ...heroWords.map((h) => h.w),
-    payoff,
-    ...splitWords(payoff),
-    label,
-  ]);
+  const m = useMetrics(
+    [
+      " ",
+      ...list,
+      ...list.flatMap(splitWords),
+      ...heroWords.map((h) => h.w),
+      payoff,
+      ...splitWords(payoff),
+      label,
+    ],
+    fontFamily,
+  );
 
   if (!m) {
     return (
@@ -220,8 +261,10 @@ export function ChoreFold({
     heroF *= 0.95;
   }
 
+  const easeAt = (at: number, from: number, dur: number, curve = EASE_OUT) =>
+    interpolate(at, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
   const ease = (from: number, dur: number, curve = EASE_OUT) =>
-    interpolate(t, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
+    easeAt(t, from, dur, curve);
 
   const D = (n - 1) / 2;
   const rounds = Math.max(1, Math.ceil(D));
@@ -229,19 +272,30 @@ export function ChoreFold({
   let foldLen = 0;
   for (let r = 0; r < rounds; r++) foldLen += roundDur(r) + ROUND_GAP;
 
-  const linesDone = LINE_AT + (n - 1) * LINE_GAP + 16;
+  const linesDone = LINE_AT + (n - 1) * lineStagger + 16;
   const tail = foldLen + SWAP_LEAD + SWAP_IN + PAYOFF_AFTER + 14 + HOLD;
   const span = durationInFrames * speed;
   const read = Math.min(70, Math.max(18, span - linesDone - tail));
   const foldAt = linesDone + read;
 
-  let p = 0;
+  const foldP = (at: number) => {
+    let acc = 0;
+    let from = foldAt;
+    for (let r = 0; r < rounds; r++) {
+      acc += Math.min(1, D - r) * easeAt(at, from, roundDur(r), EASE_MOVE);
+      from += roundDur(r) + ROUND_GAP;
+    }
+    return acc;
+  };
+  const p = foldP(t);
+  // The in-out fold creeps at both ends of each round, so "moving" is read
+  // off the pixels the outermost line travels, not off a progress.
+  const foldPx = (at: number) => foldP(at) * pitch;
+  const folding =
+    Math.abs(foldPx(t + speed) - foldPx(t)) > 1e-3 ||
+    Math.abs(foldPx(t) - foldPx(t - speed)) > 1e-3;
   let cursor = foldAt;
-  for (let r = 0; r < rounds; r++) {
-    const step = Math.min(1, D - r);
-    p += step * ease(cursor, roundDur(r), EASE_MOVE);
-    cursor += roundDur(r) + ROUND_GAP;
-  }
+  for (let r = 0; r < rounds; r++) cursor += roundDur(r) + ROUND_GAP;
   const foldEnd = cursor;
   const swapAt = foldEnd + SWAP_LEAD - ROUND_GAP;
   const heroAt = swapAt + 4;
@@ -253,6 +307,14 @@ export function ChoreFold({
     const d = Math.abs(i - D);
     return cy + sign * Math.min(d, Math.max(0, D - p)) * pitch;
   });
+  // Where each line sits before the fold, and how far the fold has pulled it
+  // in: exactly 0 until the fold starts.
+  const yRest = list.map((_, i) => cy + (i - D) * pitch);
+  const fold = list.map((_, i) => {
+    const sign = i - D < 0 ? -1 : 1;
+    const d = Math.abs(i - D);
+    return sign * (Math.min(d, Math.max(0, D - p)) - d) * pitch;
+  });
 
   const nodes: React.ReactNode[] = [];
 
@@ -261,6 +323,8 @@ export function ChoreFold({
     const lout = ease(foldAt, 10);
     const labelF = Math.max(12, F * 0.46);
     const top = cy - D * pitch - pitch / 2 - labelF * 1.6;
+    // The pull rides the transform, not `top`: layout rounds a baseline to
+    // whole pixels, so text eased by `top` clicks along pixel by pixel.
     const pull = p * pitch * 0.5;
     nodes.push(
       <div
@@ -269,15 +333,15 @@ export function ChoreFold({
           position: "absolute",
           left: 0,
           width: W,
-          top: top + pull,
+          top,
           textAlign: "center",
-          fontFamily: geologica.fontFamily,
+          fontFamily,
           fontWeight: STEP_W,
           fontSize: labelF,
           lineHeight: 1,
           color: hi,
           opacity: lin * (1 - lout),
-          transform: `translateY(${((1 - lin) * labelF * 0.6).toFixed(2)}px)`,
+          transform: `translateY(${(1 - lin) * labelF * 0.6 + pull}px)${glide(midway(lin) || (folding && lout < 1))}`,
           whiteSpace: "pre",
         }}
       >
@@ -290,7 +354,7 @@ export function ChoreFold({
   const centre = Math.ceil(D);
 
   list.forEach((line, i) => {
-    const enter = LINE_AT + i * LINE_GAP;
+    const enter = LINE_AT + i * lineStagger;
     if (t < enter - 1) return;
     const y = ys[i];
     let clipTop = 0;
@@ -307,15 +371,20 @@ export function ChoreFold({
     const out = lastStanding ? swapOut : 0;
     if (out >= 1) return;
     const words = splitWords(line);
+    const lineMoving = folding || midway(out);
     nodes.push(
       <div
         key={`step-${i}-${line}`}
         style={{
           position: "absolute",
           left: 0,
-          top: y - pitch / 2,
+          // Laid out where the line enters; the fold is a transform, for the
+          // same reason as the label's pull.
+          top: yRest[i] - pitch / 2,
           width: W,
           height: pitch,
+          transform:
+            Math.abs(fold[i]) > 1e-3 ? `translateY(${fold[i]}px)` : undefined,
           clipPath: `inset(${clipTop.toFixed(2)}px 0px ${clipBottom.toFixed(2)}px 0px)`,
           overflow: "hidden",
         }}
@@ -324,26 +393,26 @@ export function ChoreFold({
           style={{
             width: "100%",
             textAlign: "center",
-            fontFamily: geologica.fontFamily,
+            fontFamily,
             fontWeight: STEP_W,
             fontSize: F,
             letterSpacing: `${STEP_TRACK}em`,
             lineHeight: `${pitch}px`,
-            color: c.ink,
+            color: fg,
             whiteSpace: "pre",
             opacity: (1 - out) * tuck,
-            transform: `translateY(${(-out * pitch * 0.7).toFixed(2)}px)`,
+            transform: `translateY(${(-out * pitch * 0.7).toFixed(2)}px)${glide(lineMoving)}`,
           }}
         >
           {words.map((w, wi) => {
-            const e = ease(enter + wi * WORD_STAGGER, WORD_IN);
+            const e = ease(enter + wi * stagger, WORD_IN);
             return (
               <span
                 key={`${w}-${wi}`}
                 style={{
                   display: "inline-block",
                   opacity: e,
-                  transform: `translateY(${((1 - e) * pitch * 0.7).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - e) * pitch * 0.7).toFixed(2)}px)${glide(midway(e) && !lineMoving)}`,
                 }}
               >
                 {wi > 0 ? ` ${w}` : w}
@@ -371,7 +440,7 @@ export function ChoreFold({
           height: blockH + heroF * 0.3,
           overflow: "hidden",
           textAlign: "center",
-          fontFamily: geologica.fontFamily,
+          fontFamily,
           fontWeight: HERO_W,
           fontSize: heroF,
           letterSpacing: `${HERO_TRACK}em`,
@@ -384,14 +453,14 @@ export function ChoreFold({
         {heroLines.map((line) => (
           <div key={line.map((h) => h.w).join(" ")}>
             {line.map((h, wi) => {
-              const e = ease(heroAt + wordIndex++ * WORD_STAGGER, SWAP_IN);
+              const e = ease(heroAt + wordIndex++ * stagger, SWAP_IN);
               return (
                 <span
                   key={`${h.w}-${wi}`}
                   style={{
                     display: "inline-block",
-                    color: h.lit ? hi : c.ink,
-                    transform: `translateY(${((1 - e) * blockH * 1.1).toFixed(2)}px)`,
+                    color: h.lit ? hi : fg,
+                    transform: `translateY(${((1 - e) * blockH * 1.1).toFixed(2)}px)${glide(midway(e))}`,
                   }}
                 >
                   {wi > 0 ? ` ${h.w}` : h.w}
@@ -415,14 +484,14 @@ export function ChoreFold({
             width: W,
             top: top + blockH + pf * 0.9,
             textAlign: "center",
-            fontFamily: geologica.fontFamily,
+            fontFamily,
             fontWeight: STEP_W,
             fontSize: pf,
             letterSpacing: `${STEP_TRACK}em`,
             lineHeight: 1.2,
-            color: c.ink,
+            color: fg,
             opacity: pin * 0.72,
-            transform: `translateY(${((1 - pin) * pf * 0.6).toFixed(2)}px)`,
+            transform: `translateY(${((1 - pin) * pf * 0.6).toFixed(2)}px)${glide(midway(pin))}`,
             whiteSpace: "pre",
           }}
         >
@@ -434,7 +503,7 @@ export function ChoreFold({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

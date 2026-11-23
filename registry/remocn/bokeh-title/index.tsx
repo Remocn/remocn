@@ -6,14 +6,9 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { getLength, getPointAtLength } from "@remotion/paths";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -82,6 +77,24 @@ export interface BokehTitleProps {
   /** Aperture shape of the out-of-focus lights. */
   shape?: "circle" | "hexagon";
   accent?: string;
+  /** Text color of the title and logo; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the title. Load it yourself; Instrument Serif by default. */
+  fontFamily?: string;
+  /** Frames the pattern stays sharp before focus racks back to the title. */
+  hold?: number;
+  /** Number of out-of-focus lights drifting in front of the pattern. */
+  ambient?: number;
+  /** Replaces the remocn mark in the subtitle. */
+  logo?: React.ReactNode;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the lights and title, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   /** Dark = night lights; light = soft daylight bokeh. */
@@ -213,10 +226,20 @@ function Grain({ opacity }: { opacity: number }) {
 const HEX =
   "polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)";
 
-/** One out-of-focus light: a disc with a faintly brighter rim, softened by blur. */
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/**
+ * One out-of-focus light: a disc with a faintly brighter rim, softened by blur.
+ *
+ * `left`/`top` is where layout keeps the box; `dx`/`dy` is how far it has
+ * travelled from there. Layout rounds a box to whole pixels, so a light eased
+ * by `left`/`top` crawls in one-pixel steps; the travel is a transform instead.
+ */
 function Light({
-  x,
-  y,
+  left,
+  top,
+  dx,
+  dy,
   size,
   blur,
   color,
@@ -225,8 +248,10 @@ function Light({
   shape,
   rim,
 }: {
-  x: number;
-  y: number;
+  left: number;
+  top: number;
+  dx: number;
+  dy: number;
   size: number;
   blur: number;
   color: string;
@@ -239,10 +264,11 @@ function Light({
     <div
       style={{
         position: "absolute",
-        left: x - size / 2,
-        top: y - size / 2,
+        left,
+        top,
         width: size,
         height: size,
+        transform: `translate(${dx}px, ${dy}px)`,
         opacity,
         mixBlendMode: blend,
         filter: blur > 0.3 ? `blur(${blur}px)` : undefined,
@@ -265,19 +291,51 @@ function Light({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BokehTitle({
   title = "Launch films, made in code",
   subtitle = "remocn · Spring release",
   pattern = "mark",
   shape = "circle",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = serif,
+  hold = T_FOCUS_OUT[0] - T_FOCUS_IN[1],
+  ambient: ambientCount = AMBIENT,
+  logo,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: BokehTitleProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const p: Palette = PALETTES[theme];
+  const fg = ink ?? p.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
+  const shift = hold - (T_FOCUS_OUT[0] - T_FOCUS_IN[1]);
+  const focusOut = [T_FOCUS_OUT[0] + shift, T_FOCUS_OUT[1] + shift];
+  const titleAt = T_TITLE + shift;
 
   const built = buildTargets(pattern);
   const targets = built.targets;
@@ -288,17 +346,17 @@ export function BokehTitle({
   // focus pull: 0 = lights defocused, 1 = pattern plane sharp
   const focus =
     interpolate(t, T_FOCUS_IN, [0, 1], { ...CLAMP, easing: EASE_IO }) -
-    interpolate(t, T_FOCUS_OUT, [0, 1], { ...CLAMP, easing: EASE_IO });
+    interpolate(t, focusOut, [0, 1], { ...CLAMP, easing: EASE_IO });
   // lens breathing: the frame scales a hair with the focus throw
   const breathe = 1 + focus * 0.025;
   const drift = interpolate(t, [0, 200], [0, 1], { ...CLAMP, easing: EASE_IO });
   const open = interpolate(t, [0, 14], [0.55, 1], CLAMP);
 
-  const titleP = interpolate(t, [T_TITLE, T_TITLE + 40], [0, 1], {
+  const titleP = interpolate(t, [titleAt, titleAt + 40], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const subP = interpolate(t, [T_TITLE + 18, T_TITLE + 46], [0, 1], {
+  const subP = interpolate(t, [titleAt + 18, titleAt + 46], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -328,11 +386,14 @@ export function BokehTitle({
     // lights gather first, then sharpen: reads as a focus pull, not a swarm
     const ease = 1 - (1 - focus) ** 2.4;
     const sharp = focus ** 1.7;
-    const x = sx + (tx - sx) * ease + dx * (1 - ease);
-    const y = sy + (ty - sy) * ease + dy * (1 - ease);
     const big = (22 + (1 - d) ** 2 * 96) * u * crowd;
     const small = unit * built.dot;
     const size = big + (small - big) * sharp;
+    // The box is laid out where it sits in focus, and both the way there and
+    // the shrink around its centre are travel: exactly zero once it is sharp.
+    const grown = ((big - small) * (1 - sharp)) / 2;
+    const offX = (sx - tx + dx) * (1 - ease) - grown;
+    const offY = (sy - ty + dy) * (1 - ease) - grown;
     const blur = (big * 0.075 + 2 * u) * (1 - sharp) ** 1.2;
     const focusColor = interpolateColors(
       tg.g,
@@ -348,8 +409,10 @@ export function BokehTitle({
     lights.push(
       <Light
         key={`p${i}`}
-        x={x}
-        y={y}
+        left={tx - small / 2}
+        top={ty - small / 2}
+        dx={offX}
+        dy={offY}
         size={size}
         blur={blur}
         color={color}
@@ -363,15 +426,20 @@ export function BokehTitle({
 
   // ambient lights in front of the focal plane: they bloom wider as focus racks back
   const ambient: React.ReactNode[] = [];
-  for (let i = 0; i < AMBIENT; i++) {
+  for (let i = 0; i < ambientCount; i++) {
     const d = hash(i * 13 + 400);
     const near = 1 - d;
     const x0 = hash(i * 17 + 401) * width * 1.1 - width * 0.05;
     const y0 = hash(i * 19 + 402) * height * 1.1 - height * 0.05;
     const par = (0.6 + near * 1.4) * u;
-    const x = x0 - 90 * drift * par + Math.sin(t / 70 + i * 2.1) * 5 * par;
-    const y = y0 - 20 * drift * par;
-    const size = (40 + near ** 1.6 * 190) * u * (1 + focus * 0.18);
+    const wide = (40 + near ** 1.6 * 190) * u;
+    const size = wide * (1 + focus * 0.18);
+    // Laid out at its starting place; the drift and the bloom around its
+    // centre are travel.
+    const grown = (size - wide) / 2;
+    const offX =
+      -90 * drift * par + Math.sin(t / 70 + i * 2.1) * 5 * par - grown;
+    const offY = -20 * drift * par - grown;
     const blur = (size * 0.06 + 3 * u) * (1 + focus * 0.6);
     const tint = hash(i * 23 + 403) < 0.08;
     const color = tint
@@ -385,8 +453,10 @@ export function BokehTitle({
     ambient.push(
       <Light
         key={`a${i}`}
-        x={x}
-        y={y}
+        left={x0 - wide / 2}
+        top={y0 - wide / 2}
+        dx={offX}
+        dy={offY}
         size={size}
         blur={blur}
         color={color}
@@ -399,95 +469,102 @@ export function BokehTitle({
   }
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${breathe})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        {lights}
-        {ambient}
-      </AbsoluteFill>
-
-      {/* a soft pool of shade behind the type keeps it crisp over the lights */}
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 46% 26% at 50% 50%, ${p.titleVeil}, transparent 80%)`,
-          opacity: titleP,
-        }}
-      />
-
-      <AbsoluteFill
-        style={{
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          gap: 22 * u,
-          padding: `0 ${width * 0.1}px`,
-        }}
-      >
-        <div
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            fontFamily: serif,
-            fontWeight: 400,
-            fontSize: titleSize,
-            lineHeight: 1,
-            letterSpacing: `${0.08 - titleP * 0.095}em`,
-            color: p.fg,
-            textAlign: "center",
-            textWrap: "balance",
-            whiteSpace: fitsOneLine ? "nowrap" : "normal",
-            maxWidth: fitsOneLine ? undefined : width * 0.84,
-            opacity: titleP,
-            filter:
-              titleP < 0.98 ? `blur(${(1 - titleP) * 10 * u}px)` : undefined,
-            transform: `scale(${1.04 - titleP * 0.04})`,
+            transform: `scale(${breathe})`,
+            transformOrigin: "50% 50%",
           }}
         >
-          {lead ? `${lead} ` : ""}
-          <span style={{ fontFamily: serifItalic, fontStyle: "italic" }}>
-            {last}
-          </span>
-        </div>
-        {subtitle ? (
+          {lights}
+          {ambient}
+        </AbsoluteFill>
+
+        {/* a soft pool of shade behind the type keeps it crisp over the lights */}
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse 46% 26% at 50% 50%, ${p.titleVeil}, transparent 80%)`,
+            opacity: titleP,
+          }}
+        />
+
+        <AbsoluteFill
+          style={{
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: 22 * u,
+            padding: `0 ${width * 0.1}px`,
+          }}
+        >
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 14 * u,
-              fontFamily: sans,
+              fontFamily,
               fontWeight: 400,
-              fontSize: 21 * u,
-              letterSpacing: "-0.005em",
-              color: p.muted,
-              opacity: subP,
-              transform: `translateY(${(1 - subP) * 10 * u}px)`,
+              fontSize: titleSize,
+              lineHeight: 1,
+              letterSpacing: `${0.08 - titleP * 0.095}em`,
+              color: fg,
+              textAlign: "center",
+              textWrap: "balance",
+              whiteSpace: fitsOneLine ? "nowrap" : "normal",
+              maxWidth: fitsOneLine ? undefined : width * 0.84,
+              opacity: titleP,
+              filter:
+                titleP < 0.98 ? `blur(${(1 - titleP) * 10 * u}px)` : undefined,
+              transform: `scale(${1.04 - titleP * 0.04})${glide(midway(titleP))}`,
             }}
           >
-            {subIsBrand ? (
-              <>
-                <RemocnLogo fontSize={24 * u} color={p.fg} />
-                {subRest.length ? (
-                  <>
-                    <div
-                      style={{
-                        width: Math.max(1, u),
-                        height: 18 * u,
-                        background: p.muted,
-                        opacity: 0.5,
-                      }}
-                    />
-                    <span>{subRest.join(" · ")}</span>
-                  </>
-                ) : null}
-              </>
-            ) : (
-              <span>{subtitle}</span>
-            )}
+            {lead ? `${lead} ` : ""}
+            <span
+              style={{
+                fontFamily: fontFamily === serif ? serifItalic : fontFamily,
+                fontStyle: "italic",
+              }}
+            >
+              {last}
+            </span>
           </div>
-        ) : null}
-      </AbsoluteFill>
+          {subtitle ? (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 14 * u,
+                fontFamily: sans,
+                fontWeight: 400,
+                fontSize: 21 * u,
+                letterSpacing: "-0.005em",
+                color: p.muted,
+                opacity: subP,
+                transform: `translateY(${(1 - subP) * 10 * u}px)${glide(midway(subP))}`,
+              }}
+            >
+              {subIsBrand ? (
+                <>
+                  {logo ?? <RemocnLogo fontSize={24 * u} color={fg} />}
+                  {subRest.length ? (
+                    <>
+                      <div
+                        style={{
+                          width: Math.max(1, u),
+                          height: 18 * u,
+                          background: p.muted,
+                          opacity: 0.5,
+                        }}
+                      />
+                      <span>{subRest.join(" · ")}</span>
+                    </>
+                  ) : null}
+                </>
+              ) : (
+                <span>{subtitle}</span>
+              )}
+            </div>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
@@ -497,7 +574,7 @@ export function BokehTitle({
               : "radial-gradient(ellipse 80% 80% at 50% 50%, transparent 60%, rgba(120,105,85,0.12) 100%)",
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

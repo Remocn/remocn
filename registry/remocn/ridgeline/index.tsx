@@ -3,14 +3,9 @@
 import { loadFont } from "@remotion/google-fonts/BricolageGrotesque";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: bricolage } = loadFont("normal", {
   weights: ["400", "500"],
@@ -25,6 +20,20 @@ export interface RidgelineProps {
   axisLabel?: string;
   ticks?: string[];
   accent?: string;
+  /** Color of the hero stat and highlight label; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the labels and stat. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Frames between grey ridges rising. */
+  stagger?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the chart and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -135,6 +144,22 @@ function peakOf(sh: Shape) {
   return best || 1;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function Ridgeline({
   labels = DEFAULT_LABELS,
   highlightLabel = "With remocn",
@@ -143,13 +168,27 @@ export function Ridgeline({
   axisLabel = "videos per team, per month",
   ticks = DEFAULT_TICKS,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = bricolage,
+  stagger = RISE_STAGGER,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: RidgelineProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
+  // Each ridge is backed with the ground colour so it hides the rows behind
+  // it; with no ground the theme colour still has to do that job.
+  const occlude = stage === "transparent" ? p.bg : stage;
 
   const greys = labels.slice(0, 6);
   const n = greys.length + 1;
@@ -161,11 +200,16 @@ export function Ridgeline({
   const greyH = Math.min(gap * 2.3, H * 0.17);
   const accentH = Math.min(gap * 4, H * 0.33);
 
-  const push = interpolate(t, [0, HIT + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const camScale = 0.975 + 0.025 * push;
+  const pushAt = (f: number) =>
+    interpolate(f, [0, HIT + 30], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const push = pushAt(t);
+  const camAt = (f: number) => 0.975 + 0.025 * pushAt(f);
+  const camScale = camAt(t);
+  // The push eases out very flat; a step of 1.5e-6 in scale still moves the
+  // furthest text, ~630px from the origin, by a millipixel.
+  const camMoving =
+    Math.abs(camAt(t + 1) - camScale) > 1.5e-6 ||
+    Math.abs(camScale - camAt(t - 1)) > 1.5e-6;
   const shift = interpolate(t, SHIFT, [0, 1], { ...CLAMP, easing: EASE_IO });
 
   const rows = Array.from({ length: n }, (_, i) => {
@@ -179,7 +223,7 @@ export function Ridgeline({
       ...CLAMP,
       easing: EASE_IO,
     });
-    const riseAt = isHl ? ACCENT_RISE : RISE_AT + i * RISE_STAGGER;
+    const riseAt = isHl ? ACCENT_RISE : RISE_AT + i * stagger;
     const rise = spring({
       frame: t - riseAt,
       fps,
@@ -223,11 +267,16 @@ export function Ridgeline({
     return { line, fill };
   });
 
-  const hit = spring({
-    frame: t - HIT,
-    fps,
-    config: { damping: 16, stiffness: 160, mass: 0.7 },
-  });
+  const hitAt = (f: number) =>
+    spring({
+      frame: f - HIT,
+      fps,
+      config: { damping: 16, stiffness: 160, mass: 0.7 },
+    });
+  const hit = hitAt(t);
+  const hitMoving =
+    Math.abs(hitAt(t + 1) - hit) * 20 * u > 1e-3 ||
+    Math.abs(hit - hitAt(t - 1)) * 20 * u > 1e-3;
   const hitO = interpolate(t, [HIT, HIT + 8], [0, 1], CLAMP);
   const capIn = interpolate(t, [HIT + 8, HIT + 26], [0, 1], {
     ...CLAMP,
@@ -255,7 +304,7 @@ export function Ridgeline({
   const ridgeEls: React.ReactNode[] = rows.map((r, idx) =>
     r.draw <= 0.01 ? null : (
       <g key={r.label + String(idx)}>
-        <path d={paths[idx].fill} fill={p.bg} />
+        <path d={paths[idx].fill} fill={occlude} />
         {r.isHl && (
           <path
             d={paths[idx].fill}
@@ -277,191 +326,193 @@ export function Ridgeline({
   );
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${camScale})`,
-          transformOrigin: "50% 55%",
-        }}
-      >
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${camScale})${glide(camMoving)}`,
+            transformOrigin: "50% 55%",
+          }}
         >
-          <defs>
-            <linearGradient
-              id={`${uid}-aurora`}
-              gradientUnits="userSpaceOnUse"
-              x1={auroraX - auroraW}
-              y1={0}
-              x2={auroraX + auroraW}
-              y2={0}
-            >
-              {auroraStops.map((c, k) => (
-                <stop
-                  key={c}
-                  offset={k / (auroraStops.length - 1)}
-                  stopColor={c}
-                />
-              ))}
-            </linearGradient>
-            <linearGradient id={`${uid}-fadeg`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#fff" stopOpacity={p.tint} />
-              <stop offset="1" stopColor="#fff" stopOpacity={0.03} />
-            </linearGradient>
-            <mask
-              id={`${uid}-fade`}
-              maskUnits="userSpaceOnUse"
-              x={0}
-              y={0}
-              width={W}
-              height={H}
-            >
-              <rect
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={`${uid}-aurora`}
+                gradientUnits="userSpaceOnUse"
+                x1={auroraX - auroraW}
+                y1={0}
+                x2={auroraX + auroraW}
+                y2={0}
+              >
+                {auroraStops.map((c, k) => (
+                  <stop
+                    key={c}
+                    offset={k / (auroraStops.length - 1)}
+                    stopColor={c}
+                  />
+                ))}
+              </linearGradient>
+              <linearGradient id={`${uid}-fadeg`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#fff" stopOpacity={p.tint} />
+                <stop offset="1" stopColor="#fff" stopOpacity={0.03} />
+              </linearGradient>
+              <mask
+                id={`${uid}-fade`}
+                maskUnits="userSpaceOnUse"
                 x={0}
-                y={hl.y - accentH}
+                y={0}
                 width={W}
-                height={accentH}
-                fill={`url(#${uid}-fadeg)`}
-              />
-            </mask>
-          </defs>
-          {ridgeEls}
-          <line
-            x1={x0}
-            x2={x0 + (x1 - x0) * axisIn}
-            y1={axisY}
-            y2={axisY}
-            stroke={p.axis}
-            strokeWidth={stroke}
-          />
+                height={H}
+              >
+                <rect
+                  x={0}
+                  y={hl.y - accentH}
+                  width={W}
+                  height={accentH}
+                  fill={`url(#${uid}-fadeg)`}
+                />
+              </mask>
+            </defs>
+            {ridgeEls}
+            <line
+              x1={x0}
+              x2={x0 + (x1 - x0) * axisIn}
+              y1={axisY}
+              y2={axisY}
+              stroke={p.axis}
+              strokeWidth={stroke}
+            />
+            {ticks.map((tk, k) => {
+              const x = x0 + ((x1 - x0) * k) / Math.max(1, ticks.length - 1);
+              return (
+                <line
+                  key={tk}
+                  x1={x}
+                  x2={x}
+                  y1={axisY}
+                  y2={axisY + 6 * u}
+                  stroke={p.axis}
+                  strokeWidth={stroke}
+                  opacity={axisIn}
+                />
+              );
+            })}
+          </svg>
+
+          {rows.map((r) => (
+            <div
+              key={`lab${r.i}`}
+              style={{
+                position: "absolute",
+                left: x0 - 18 * u - 200 * u,
+                width: 200 * u,
+                top: r.y - 22 * u,
+                textAlign: "right",
+                fontFamily,
+                fontWeight: r.isHl ? 500 : 400,
+                fontSize: 17 * u,
+                lineHeight: `${22 * u}px`,
+                letterSpacing: "-0.01em",
+                color: r.isHl ? fg : p.muted,
+                fontVariantNumeric: "tabular-nums",
+                opacity: r.labelIn * (r.isHl ? 1 : 0.5 + 0.5 * quiet),
+                transform: `translateX(${(1 - r.labelIn) * 8 * u}px)`,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {r.label}
+            </div>
+          ))}
+
           {ticks.map((tk, k) => {
             const x = x0 + ((x1 - x0) * k) / Math.max(1, ticks.length - 1);
             return (
-              <line
-                key={tk}
-                x1={x}
-                x2={x}
-                y1={axisY}
-                y2={axisY + 6 * u}
-                stroke={p.axis}
-                strokeWidth={stroke}
-                opacity={axisIn}
-              />
+              <div
+                key={`t${tk}`}
+                style={{
+                  position: "absolute",
+                  left: x - 40 * u,
+                  width: 80 * u,
+                  top: axisY + 12 * u,
+                  textAlign: "center",
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: 15 * u,
+                  color: p.muted,
+                  fontVariantNumeric: "tabular-nums",
+                  opacity: axisIn,
+                }}
+              >
+                {tk}
+              </div>
             );
           })}
-        </svg>
-
-        {rows.map((r) => (
-          <div
-            key={`lab${r.i}`}
-            style={{
-              position: "absolute",
-              left: x0 - 18 * u - 200 * u,
-              width: 200 * u,
-              top: r.y - 22 * u,
-              textAlign: "right",
-              fontFamily: bricolage,
-              fontWeight: r.isHl ? 500 : 400,
-              fontSize: 17 * u,
-              lineHeight: `${22 * u}px`,
-              letterSpacing: "-0.01em",
-              color: r.isHl ? p.fg : p.muted,
-              fontVariantNumeric: "tabular-nums",
-              opacity: r.labelIn * (r.isHl ? 1 : 0.5 + 0.5 * quiet),
-              transform: `translateX(${(1 - r.labelIn) * 8 * u}px)`,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {r.label}
-          </div>
-        ))}
-
-        {ticks.map((tk, k) => {
-          const x = x0 + ((x1 - x0) * k) / Math.max(1, ticks.length - 1);
-          return (
-            <div
-              key={`t${tk}`}
-              style={{
-                position: "absolute",
-                left: x - 40 * u,
-                width: 80 * u,
-                top: axisY + 12 * u,
-                textAlign: "center",
-                fontFamily: bricolage,
-                fontWeight: 500,
-                fontSize: 15 * u,
-                color: p.muted,
-                fontVariantNumeric: "tabular-nums",
-                opacity: axisIn,
-              }}
-            >
-              {tk}
-            </div>
-          );
-        })}
-        <div
-          style={{
-            position: "absolute",
-            right: W - x1,
-            top: axisY + 38 * u,
-            fontFamily: bricolage,
-            fontWeight: 500,
-            fontSize: 15 * u,
-            color: p.muted,
-            opacity: axisIn,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {axisLabel}
-        </div>
-
-        {value ? (
           <div
             style={{
               position: "absolute",
               right: W - x1,
-              top: H * 0.09,
-              textAlign: "right",
-              opacity: hitO,
-              transform: `translateY(${(1 - hit) * 20 * u}px)`,
+              top: axisY + 38 * u,
+              fontFamily,
+              fontWeight: 500,
+              fontSize: 15 * u,
+              color: p.muted,
+              opacity: axisIn,
+              whiteSpace: "nowrap",
             }}
           >
-            <div
-              style={{
-                fontFamily: bricolage,
-                fontWeight: 400,
-                fontSize: valueSize,
-                lineHeight: 0.95,
-                letterSpacing: "-0.02em",
-                color: p.fg,
-                fontVariantNumeric: "tabular-nums",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {value}
-            </div>
-            <div
-              style={{
-                marginTop: 8 * u,
-                fontFamily: bricolage,
-                fontWeight: 500,
-                fontSize: 20 * u,
-                letterSpacing: "-0.01em",
-                color: p.muted,
-                opacity: capIn,
-                transform: `translateY(${(1 - capIn) * 8 * u}px)`,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {caption}
-            </div>
+            {axisLabel}
           </div>
-        ) : null}
-      </AbsoluteFill>
-      <Grain opacity={p.grain} />
+
+          {value ? (
+            <div
+              style={{
+                position: "absolute",
+                right: W - x1,
+                top: H * 0.09,
+                textAlign: "right",
+                opacity: hitO,
+                transform: `translateY(${(1 - hit) * 20 * u}px)${glide(hitMoving && !camMoving)}`,
+              }}
+            >
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: valueSize,
+                  lineHeight: 0.95,
+                  letterSpacing: "-0.02em",
+                  color: fg,
+                  fontVariantNumeric: "tabular-nums",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {value}
+              </div>
+              <div
+                style={{
+                  marginTop: 8 * u,
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: 20 * u,
+                  letterSpacing: "-0.01em",
+                  color: p.muted,
+                  opacity: capIn,
+                  transform: `translateY(${(1 - capIn) * 8 * u}px)`,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {caption}
+              </div>
+            </div>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

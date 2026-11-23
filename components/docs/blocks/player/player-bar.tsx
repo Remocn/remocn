@@ -1,5 +1,7 @@
 "use client";
 
+import { PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { CallbackListener, PlayerRef } from "@remotion/player";
 import {
   type KeyboardEvent,
@@ -29,13 +31,14 @@ function PlayKey({
       aria-label={`${playing ? "Pause" : "Play"} ${label}`}
       className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-control-sm bg-white text-dark-surface outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-white/50 active:translate-y-px max-md:size-11"
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3.5">
-        {playing ? (
-          <path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z" fill="currentColor" />
-        ) : (
-          <path d="M6 3.5v17l14.5-8.5Z" fill="currentColor" />
-        )}
-      </svg>
+      {/* The free set is stroke-only; the fill keeps the glyph solid. */}
+      <HugeiconsIcon
+        icon={playing ? PauseIcon : PlayIcon}
+        size={14}
+        fill="currentColor"
+        aria-hidden="true"
+        className="shrink-0"
+      />
     </button>
   );
 }

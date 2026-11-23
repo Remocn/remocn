@@ -1,0 +1,113 @@
+{
+  "component": "shader-color-panels",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-glass",
+      "label": "Slow Glass",
+      "description": "A few long panes drifting slowly over a deep ink background for a calm, luxurious feel.",
+      "askedAs": [
+        "slow calm glass panels",
+        "elegant slow moving panes",
+        "luxury background with drifting glass",
+        "медленные стеклянные панели",
+        "спокойный премиальный фон"
+      ],
+      "props": {
+        "speed": 0.5,
+        "density": 2,
+        "length": 2.2,
+        "colorBack": "#0b0d14"
+      }
+    },
+    {
+      "id": "dense-facets",
+      "label": "Dense Facets",
+      "description": "Many short panels layered tightly into a crisp, faceted crystal texture.",
+      "askedAs": [
+        "lots of small overlapping panels",
+        "crystal faceted backdrop",
+        "busy layered glass shards",
+        "много мелких панелей",
+        "кристаллический фон с гранями"
+      ],
+      "props": {
+        "density": 7,
+        "length": 0.7,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "quick-sweep",
+      "label": "Quick Sweep",
+      "description": "Medium panes sliding past briskly for an energetic, promo-style transition backdrop.",
+      "askedAs": [
+        "fast sliding panels",
+        "energetic glass background",
+        "quick moving panes for a promo",
+        "быстрые скользящие панели",
+        "энергичный фон для промо"
+      ],
+      "props": {
+        "speed": 2.75,
+        "density": 4,
+        "length": 1.4
+      }
+    },
+    {
+      "id": "midnight-navy",
+      "label": "Midnight Navy",
+      "description": "Moderate panes over a rich navy ground for a cool, corporate-premium tone.",
+      "askedAs": [
+        "navy blue glass panels",
+        "dark blue corporate backdrop",
+        "cool toned translucent panes",
+        "тёмно-синий фон с панелями",
+        "корпоративный синий фон"
+      ],
+      "props": {
+        "colorBack": "#0e1a33",
+        "density": 3,
+        "length": 1.6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "warm-espresso",
+      "label": "Warm Espresso",
+      "description": "Sparse, wide panes gliding over a warm espresso brown for an editorial, boutique mood.",
+      "askedAs": [
+        "warm brown glass background",
+        "cozy dark panels",
+        "boutique editorial backdrop",
+        "тёплый коричневый фон",
+        "уютные стеклянные панели"
+      ],
+      "props": {
+        "colorBack": "#1e1512",
+        "density": 2,
+        "length": 2.8,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "single-pane",
+      "label": "Single Pane",
+      "description": "One lone panel sweeping across a near-black field for a minimal, architectural statement.",
+      "askedAs": [
+        "minimal single panel",
+        "just one glass pane",
+        "very simple architectural background",
+        "одна панель минимализм",
+        "минималистичный фон"
+      ],
+      "props": {
+        "density": 1,
+        "length": 3,
+        "speed": 1,
+        "colorBack": "#08080b"
+      }
+    }
+  ]
+}

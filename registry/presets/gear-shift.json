@@ -1,0 +1,107 @@
+{
+  "component": "gear-shift",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "race-mode",
+      "label": "Race Mode",
+      "description": "A fast, punchy shift through many gears with almost no pause, on a near-black panel with a signal-red accent.",
+      "askedAs": [
+        "fast racing number shift",
+        "quick aggressive rev up",
+        "sporty speed counter",
+        "быстрый гоночный счётчик",
+        "резкое ускорение цифры"
+      ],
+      "props": {
+        "theme": "dark",
+        "gears": 8,
+        "pause": 1,
+        "speed": 2,
+        "background": "#111214",
+        "accent": "#e5484d"
+      }
+    },
+    {
+      "id": "slow-cruise",
+      "label": "Slow Cruise",
+      "description": "A relaxed climb through a few gears with long holds on a soft cream panel with deep green type.",
+      "askedAs": [
+        "slow calm gear shift",
+        "gentle steady counter",
+        "relaxed light version",
+        "спокойное медленное переключение",
+        "мягкий светлый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "gears": 3,
+        "pause": 12,
+        "speed": 0.5,
+        "background": "#f4efe6",
+        "ink": "#1f3b2d"
+      }
+    },
+    {
+      "id": "dashboard-mono",
+      "label": "Dashboard Mono",
+      "description": "A technical instrument-panel look in monospace type with a graphite background and amber gauge accent.",
+      "askedAs": [
+        "dashboard gauge style",
+        "techy monospace counter",
+        "car instrument cluster look",
+        "стиль приборной панели",
+        "моноширинный технический счётчик"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#1c1e22",
+        "ink": "#e8e6e1",
+        "accent": "#f5a524",
+        "gears": 6,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "An elegant serif figure on a warm paper tone with a terracotta accent, shifting at an unhurried pace.",
+      "askedAs": [
+        "elegant serif number",
+        "magazine style stat",
+        "classy warm counter",
+        "элегантный шрифт с засечками",
+        "журнальный стиль цифры"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#fbf7f2",
+        "ink": "#2a2320",
+        "accent": "#c2593a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "big-bold-violet",
+      "label": "Big Bold",
+      "description": "An oversized, chunky grotesk figure on a deep violet panel with a lilac accent and a delayed entrance.",
+      "askedAs": [
+        "huge bold number",
+        "make it bigger and louder",
+        "oversized playful stat",
+        "огромная жирная цифра",
+        "крупно и ярко"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.35,
+        "background": "#2b1b4a",
+        "ink": "#f5f0ff",
+        "accent": "#b69cff",
+        "delay": 10
+      }
+    }
+  ]
+}

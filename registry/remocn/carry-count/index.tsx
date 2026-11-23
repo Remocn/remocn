@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const nunito = loadFont("normal", {
   weights: ["400", "500"],
@@ -24,7 +24,19 @@ export interface CarryCountProps {
   steps?: number;
   label?: string;
   accent?: string;
+  /** Text color of the number and label; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the number and label. Load it yourself; Nunito by default. */
+  fontFamily?: string;
+  /** Weight of the number and label. */
+  fontWeight?: number;
+  /** Thousands separator in the number. */
+  separator?: string;
+  /** Size of the number and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -71,20 +83,25 @@ interface Metrics {
   desc: number;
 }
 
-function measure(lines: string[]): Metrics {
+function measure(
+  lines: string[],
+  fontFamily: string,
+  fontWeight: number,
+  separator: string,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("carry-count: no 2d context");
-  const fam = `"${nunito.fontFamily}"`;
-  ctx.font = `500 ${FONT_PX}px ${fam}`;
+  const fam = `"${fontFamily}"`;
+  ctx.font = `${fontWeight} ${FONT_PX}px ${fam}`;
   const digit: number[] = [];
   for (let d = 0; d < 10; d++) {
     digit.push(ctx.measureText(String(d)).width / FONT_PX);
   }
   const slot = Math.max(...digit) + TRACK;
-  const comma = ctx.measureText(",").width / FONT_PX + TRACK;
+  const comma = ctx.measureText(separator).width / FONT_PX + TRACK;
   const cap = ctx.measureText("0").actualBoundingBoxAscent / FONT_PX;
-  ctx.font = `500 ${FONT_PX}px ${fam}`;
+  ctx.font = `${fontWeight} ${FONT_PX}px ${fam}`;
   const labelW = lines.map(
     (l) =>
       ctx.measureText(l).width / FONT_PX +
@@ -104,7 +121,12 @@ function measure(lines: string[]): Metrics {
   };
 }
 
-function useMetrics(lines: string[]) {
+function useMetrics(
+  lines: string[],
+  fontFamily: string,
+  fontWeight: number,
+  separator: string,
+) {
   const key = lines.join("\n");
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("carry-count: measuring"));
@@ -113,12 +135,12 @@ function useMetrics(lines: string[]) {
     let live = true;
     Promise.all([
       nunito.waitUntilDone(),
-      document.fonts.load(`500 100px "${nunito.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(key.split("\n")));
+        setMetrics(measure(key.split("\n"), fontFamily, fontWeight, separator));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -127,7 +149,7 @@ function useMetrics(lines: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight, separator]);
   return metrics;
 }
 
@@ -182,6 +204,24 @@ function plan(from: number, value: number, steps: number) {
   return { start: digitsOf(from), changes, carries, cols: cur.length, end };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function impact(u: number) {
   if (u < 0) return 0;
   return Math.exp(-u / 3.2) * Math.cos(u * 0.62);
@@ -193,15 +233,25 @@ export function CarryCount({
   steps = 5,
   label = "scenes students\nbuilt in week one",
   accent,
+  ink,
   background,
+  fontFamily = nunito.fontFamily,
+  fontWeight = 500,
+  separator = ",",
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: CarryCountProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const tAt = (f: number) => Math.max(0, f - delay) * speed;
+  const t = tAt(frame);
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const disc = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const lines = useMemo(
     () =>
       label
@@ -210,7 +260,7 @@ export function CarryCount({
         .filter(Boolean),
     [label],
   );
-  const m = useMetrics(lines);
+  const m = useMetrics(lines, fontFamily, fontWeight, separator);
   const p = useMemo(
     () => plan(Math.min(from, value), Math.max(from, value), steps),
     [from, value, steps],
@@ -269,11 +319,11 @@ export function CarryCount({
     (lh - (m.asc + m.desc) * size) / 2 + m.asc * size;
   const digitTop = base - bo(F, F);
 
-  const digitAt = (i: number) => {
+  const digitAt = (i: number, tt = t) => {
     let d: number | null = i < p.start.length ? p.start[i] : null;
     let last = -1e9;
     for (const ch of p.changes) {
-      if (ch.col === i && ch.at <= t) {
+      if (ch.col === i && ch.at <= tt) {
         d = ch.digit;
         last = ch.at;
       }
@@ -286,21 +336,33 @@ export function CarryCount({
     easing: EASE_OUT,
   });
 
-  const glyphs: React.ReactNode[] = [];
-  for (let i = 0; i < cols; i++) {
-    const { d, last } = digitAt(i);
-    if (d === null) continue;
+  /** A digit's squash at time `tt`, as the string it is rendered with. */
+  const squashAt = (i: number, tt: number) => {
+    const { last } = digitAt(i, tt);
     const born = i >= p.start.length ? last : -1e9;
     const grow =
       born > -1e8
-        ? interpolate(t - born, [0, 7], [0.55, 1], {
+        ? interpolate(tt - born, [0, 7], [0.55, 1], {
             ...CLAMP,
             easing: EASE_OUT,
           })
         : 1;
-    const q = impact(t - last);
+    const q = impact(tt - last);
     const sy = (1 - 0.16 * q) * grow;
     const sx = (1 + 0.1 * q) * grow;
+    return { grow, str: `scale(${sx.toFixed(4)}, ${sy.toFixed(4)})` };
+  };
+
+  const glyphs: React.ReactNode[] = [];
+  for (let i = 0; i < cols; i++) {
+    const { d } = digitAt(i);
+    if (d === null) continue;
+    const { grow, str } = squashAt(i, t);
+    // The impact rings out slowly; it moves for as long as the rendered
+    // squash differs from a neighbouring frame's.
+    const ringing =
+      squashAt(i, tAt(frame - 1)).str !== str ||
+      squashAt(i, tAt(frame + 1)).str !== str;
     const x = colX(i);
     const w = m.digit[d] * F;
     glyphs.push(
@@ -313,11 +375,11 @@ export function CarryCount({
           height: F,
           fontSize: F,
           lineHeight: `${F}px`,
-          fontFamily: nunito.fontFamily,
-          fontWeight: 500,
-          color: c.ink,
+          fontFamily,
+          fontWeight,
+          color: fg,
           whiteSpace: "pre",
-          transform: `scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`,
+          transform: `${str}${glide(ringing)}`,
           transformOrigin: `50% ${bo(F, F).toFixed(1)}px`,
           opacity: intro,
         }}
@@ -337,14 +399,14 @@ export function CarryCount({
             height: F,
             fontSize: F,
             lineHeight: `${F}px`,
-            fontFamily: nunito.fontFamily,
-            fontWeight: 500,
-            color: c.ink,
+            fontFamily,
+            fontWeight,
+            color: fg,
             whiteSpace: "pre",
             opacity: intro * grow,
           }}
         >
-          ,
+          {separator}
         </div>,
       );
     }
@@ -368,7 +430,6 @@ export function CarryCount({
       ...CLAMP,
       easing: EASE_IN,
     });
-    const x = x0 + (x1 - x0) * a;
     const lift = Math.sin(a * Math.PI) * D * 0.55;
     const y =
       startY +
@@ -379,13 +440,16 @@ export function CarryCount({
       interpolate(u, [0, 1.6], [0.5, 1], { ...CLAMP, easing: EASE_OUT }) *
       (1 - 0.35 * dropP);
     const o = interpolate(u, [COL_GAP - 0.4, COL_GAP + 0.6], [1, 0], CLAMP);
+    // Laid out where the disc lands; the flight there is a transform, since
+    // layout rounds a box and its "1" to whole pixels and they'd click along.
+    const yLand = capTop + D * 0.15;
     carryNodes.push(
       <div
         key={`k${k.col}-${k.at}`}
         style={{
           position: "absolute",
-          left: x - D / 2,
-          top: y - D / 2,
+          left: x1 - D / 2,
+          top: yLand - D / 2,
           width: D,
           height: D,
           borderRadius: D,
@@ -394,11 +458,11 @@ export function CarryCount({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: nunito.fontFamily,
-          fontWeight: 500,
+          fontFamily,
+          fontWeight,
           fontSize: D * 0.72,
           lineHeight: 1,
-          transform: `scale(${s.toFixed(3)})`,
+          transform: `translate(${(x1 - x0) * (a - 1)}px, ${y - yLand}px) scale(${s.toFixed(3)})${glide(true)}`,
           opacity: o,
         }}
       >
@@ -428,14 +492,14 @@ export function CarryCount({
       >
         <div
           style={{
-            fontFamily: nunito.fontFamily,
-            fontWeight: 500,
+            fontFamily,
+            fontWeight,
             fontSize: L,
             lineHeight: `${L * 1.45}px`,
             letterSpacing: `${LABEL_TRACK}em`,
-            color: c.ink,
+            color: fg,
             whiteSpace: "pre",
-            transform: `translateY(${((1 - lp) * L * 1.3).toFixed(2)}px)`,
+            transform: `translateY(${((1 - lp) * L * 1.3).toFixed(2)}px)${glide(midway(lp))}`,
           }}
         >
           {line}
@@ -446,9 +510,11 @@ export function CarryCount({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      {glyphs}
-      {carryNodes}
-      {labelNodes}
+      <ScaleLayer scale={scale}>
+        {glyphs}
+        {carryNodes}
+        {labelNodes}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,17 +1,25 @@
 "use client";
 
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface LineReliefProps {
   word?: string;
+  /** Number of horizontal lines in the field. */
+  count?: number;
+  /** Frames the rise takes to sweep from the left edge to the right. */
+  sweep?: number;
   accent?: string;
+  /** Color of the lines and the word; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the dusk sky; "transparent" drops it. */
+  background?: string;
+  /** Size of the line field, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -552,18 +560,32 @@ function Grain({ opacity }: { opacity: number }) {
 
 export function LineRelief({
   word = "LAUNCH",
+  count = LINES,
+  sweep = SWEEP_DELAY,
   accent = "#3B5BFD",
+  ink,
+  background,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: LineReliefProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const p = THEMES[theme];
-  const sky = p.sky.map(
-    ([o, c, k]) =>
-      [o, c === "accent" ? mix(p.sky[1][1], accent, k) : c] as const,
-  );
+  const fg = ink ?? p.fg;
+  const sky =
+    background === undefined
+      ? p.sky.map(
+          ([o, c, k]) =>
+            [o, c === "accent" ? mix(p.sky[1][1], accent, k) : c] as const,
+        )
+      : ([
+          [0, background],
+          [1, background],
+        ] as const);
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const left = width * 0.08;
@@ -571,7 +593,7 @@ export function LineRelief({
   const top = height * 0.2;
   const bottom = height * 0.84;
   const fieldW = right - left;
-  const step = (bottom - top) / (LINES - 1);
+  const step = (bottom - top) / (count - 1);
 
   const glyphs = useMemo(() => layoutWord(word), [word]);
   const unit = Math.min((fieldW * 0.8) / glyphs.width, (height * 0.3) / 6);
@@ -581,7 +603,7 @@ export function LineRelief({
 
   const field = useMemo(() => {
     const rows: number[][] = [];
-    for (let j = 0; j < LINES; j++) {
+    for (let j = 0; j < count; j++) {
       const gy = (top + j * step - wordY) / unit;
       const row: number[] = [];
       for (let i = 0; i <= SAMPLES; i++) {
@@ -595,7 +617,7 @@ export function LineRelief({
       rows.push(row);
     }
     return rows;
-  }, [glyphs, left, fieldW, top, step, unit, wordX, wordY]);
+  }, [glyphs, left, fieldW, top, step, unit, wordX, wordY, count]);
 
   const settle = interpolate(t, SETTLE, [0, 1], { ...CLAMP, easing: EASE_IO });
   const reveal = interpolate(t, REVEAL, [0, 1], { ...CLAMP, easing: EASE_OUT });
@@ -607,7 +629,7 @@ export function LineRelief({
 
   const lines = field.map((row, j) => {
     const base = top + j * step;
-    const ring = Math.abs(j - (LINES - 1) / 2);
+    const ring = Math.abs(j - (count - 1) / 2);
     const reach = interpolate(t, [ring * 0.12, ring * 0.12 + 20], [0.2, 1], {
       ...CLAMP,
       easing: EASE_OUT,
@@ -621,7 +643,7 @@ export function LineRelief({
       if (xn > reach + 0.0001) continue;
       const grow = interpolate(
         t,
-        [GROW[0] + xn * SWEEP_DELAY, GROW[1] + xn * SWEEP_DELAY],
+        [GROW[0] + xn * sweep, GROW[1] + xn * sweep],
         [0, 1],
         {
           ...CLAMP,
@@ -666,9 +688,27 @@ export function LineRelief({
   );
   const strokeW = STROKE * unit;
   const wordShift = (1 - reveal) * -lift * 0.45;
+  // The sky shares one SVG with the lines, so the field scales as an SVG
+  // transform rather than a ScaleLayer; the line fills then need the sky
+  // gradient stretched back so they still match the sky behind them.
+  const scaleT =
+    scale === 1
+      ? undefined
+      : `translate(${width / 2} ${height / 2}) scale(${scale}) translate(${-width / 2} ${-height / 2})`;
+  const occlude = scale === 1 ? `url(#${id}d)` : `url(#${id}f)`;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === undefined
+            ? p.bg
+            : background === "transparent"
+              ? undefined
+              : background,
+        overflow: "hidden",
+      }}
+    >
       <svg
         width={width}
         height={height}
@@ -688,6 +728,20 @@ export function LineRelief({
               <stop key={o} offset={o} stopColor={c} />
             ))}
           </linearGradient>
+          {scaleT ? (
+            <linearGradient
+              id={`${id}f`}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={height / 2 - height / (2 * scale)}
+              x2={0}
+              y2={height / 2 + height / (2 * scale)}
+            >
+              {sky.map(([o, c]) => (
+                <stop key={o} offset={o} stopColor={c} />
+              ))}
+            </linearGradient>
+          ) : null}
           <linearGradient id={`${id}e`} x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stopColor="#fff" stopOpacity={0} />
             <stop offset="0.07" stopColor="#fff" stopOpacity={1} />
@@ -725,14 +779,14 @@ export function LineRelief({
           </mask>
         </defs>
         <rect width={width} height={height} fill={`url(#${id}d)`} />
-        <g mask={`url(#${id}m)`} opacity={enter}>
+        <g mask={`url(#${id}m)`} opacity={enter} transform={scaleT}>
           {lines.map((l) => (
             <g key={l.j}>
-              <path d={l.fill} fill={`url(#${id}d)`} />
+              <path d={l.fill} fill={occlude} />
               <path
                 d={l.d}
                 fill="none"
-                stroke={p.fg}
+                stroke={fg}
                 strokeOpacity={p.line}
                 strokeWidth={1.3 * u}
                 strokeLinejoin="round"
@@ -741,7 +795,7 @@ export function LineRelief({
                 <path
                   d={l.hi}
                   fill="none"
-                  stroke={p.fg}
+                  stroke={fg}
                   strokeOpacity={
                     (p.lift - p.line) * Math.min(1, l.maxLift * 1.4)
                   }
@@ -753,7 +807,7 @@ export function LineRelief({
           ))}
         </g>
         <g
-          transform={`translate(0 ${wordShift})`}
+          transform={`${scaleT ? `${scaleT} ` : ""}translate(0 ${wordShift})`}
           opacity={reveal}
           style={{ filter: `blur(${(1 - reveal) * 6 * u}px)` }}
         >
@@ -762,7 +816,7 @@ export function LineRelief({
               key={d}
               d={d}
               fill="none"
-              stroke={p.fg}
+              stroke={fg}
               strokeWidth={strokeW}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -773,12 +827,12 @@ export function LineRelief({
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 60%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 60%, ${background ?? p.bg} 100%)`,
           opacity: 0.6,
           pointerEvents: "none",
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

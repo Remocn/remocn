@@ -1,0 +1,120 @@
+{
+  "component": "peek-shut",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A fast, punchy beat where the shutter slams early and the words land almost together.",
+      "askedAs": [
+        "make it faster and snappier",
+        "shutter closes quickly",
+        "short punchy teaser",
+        "быстрее и резче",
+        "шторка закрывается быстро"
+      ],
+      "props": {
+        "speed": 1.75,
+        "shutAt": 55,
+        "stagger": 1,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-tease",
+      "label": "Slow Tease",
+      "description": "A lingering, patient reveal with wide word spacing in time and a late, deliberate shut.",
+      "askedAs": [
+        "slower dramatic reveal",
+        "let the peek last longer",
+        "build suspense before closing",
+        "медленнее и драматичнее",
+        "дольше показывать перед закрытием"
+      ],
+      "props": {
+        "speed": 0.75,
+        "shutAt": 105,
+        "stagger": 7,
+        "zoom": 4.5
+      }
+    },
+    {
+      "id": "paper-serif",
+      "label": "Paper Serif",
+      "description": "Warm off-white paper with dark ink and an elegant serif for an editorial coming-soon card.",
+      "askedAs": [
+        "light editorial look",
+        "elegant serif on cream",
+        "magazine style teaser",
+        "светлый вариант с засечками",
+        "элегантный кремовый фон"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1d1a16",
+        "accent": "#b4532a",
+        "fontFamily": "Instrument Serif",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "midnight-blue",
+      "label": "Midnight Blue",
+      "description": "Deep navy backdrop with soft white type and a cool blue accent for a tech launch feel.",
+      "askedAs": [
+        "dark blue tech launch",
+        "navy background with blue accent",
+        "product launch teaser dark",
+        "тёмно-синий фон",
+        "как запуск технологичного продукта"
+      ],
+      "props": {
+        "background": "#0b1426",
+        "ink": "#e8edf5",
+        "accent": "#4c8dff",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Near-black screen with a monospace face and muted green accent, framed tight and small.",
+      "askedAs": [
+        "code style monospace",
+        "developer terminal look",
+        "hacker vibe teaser",
+        "моноширинный шрифт как в терминале",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "background": "#0e0f0d",
+        "ink": "#d8dccf",
+        "accent": "#7fb069",
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.85,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "bold-close-up",
+      "label": "Bold Close Up",
+      "description": "Oversized chunky type pushed in close with a lifted focus and a warm coral accent.",
+      "askedAs": [
+        "bigger bolder text",
+        "zoom in close",
+        "loud playful teaser",
+        "крупнее и жирнее текст",
+        "приблизить камеру"
+      ],
+      "props": {
+        "scale": 1.4,
+        "zoom": 6,
+        "focusY": 0.35,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#ff6b4a"
+      }
+    }
+  ]
+}

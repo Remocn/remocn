@@ -9,9 +9,9 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -39,6 +39,19 @@ export interface TiltSettleListProps {
   theme?: "dark" | "light";
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Frames between title words as the heading builds. */
+  stagger?: number;
+  /** Frames each checklist line stays highlighted before the next one. */
+  step?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 }
@@ -163,6 +176,22 @@ function Reveal({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TiltSettleList({
   title = "Your top scenes",
   accentWord = 1,
@@ -174,11 +203,19 @@ export function TiltSettleList({
   theme = "dark",
   accent,
   ink,
+  background,
+  fontFamily = figtree.fontFamily,
+  stagger = 3,
+  step = STEP,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: TiltSettleListProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const t = THEMES[theme];
   const light = theme === "light";
   const fg = ink ?? t.ink;
@@ -226,16 +263,23 @@ export function TiltSettleList({
   const tx = -W * 0.06 * fly;
   const sc = 1 + 0.12 * fly;
 
-  const push = interpolate(frame, [0, beat("end")], [1, 1.04], {
-    ...CLAMP,
-    easing: EASE_CAMERA,
-  });
+  const pushAt = (f: number) =>
+    interpolate(f, [0, beat("end")], [1, 1.04], {
+      ...CLAMP,
+      easing: EASE_CAMERA,
+    });
+  const push = pushAt(frame);
+  // The camera's ease is very flat at both ends, so "moving" is the scale step
+  // weighed at the frame's edge, against the neighbouring frames.
+  const pushMoving =
+    Math.abs(pushAt(frame + speed) - push) * W * 0.5 > 1e-3 ||
+    Math.abs(push - pushAt(frame - speed)) * W * 0.5 > 1e-3;
   const steps = Math.max(
     0,
-    Math.min(lines.length - 1, Math.floor((frame - beat("step")) / STEP) + 1),
+    Math.min(lines.length - 1, Math.floor((frame - beat("step")) / step) + 1),
   );
   const scrollP = spring({
-    frame: frame - (beat("step") + (steps - 1) * STEP),
+    frame: frame - (beat("step") + (steps - 1) * step),
     fps,
     config: SPRING_HEAVY,
   });
@@ -263,410 +307,434 @@ export function TiltSettleList({
 
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={light ? 2 : 4}
-        timeScale={0.7}
-      />
+      {background === undefined ? (
+        <GshGround
+          preset={preset}
+          params={gParams}
+          timeOffset={light ? 2 : 4}
+          timeScale={0.7}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
       <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden>
         <filter id="tsl-mb" x="-20%" y="-30%" width="140%" height="160%">
           <feGaussianBlur stdDeviation={`${mb * 0.3} ${mb}`} />
         </filter>
       </svg>
-      <AbsoluteFill style={{ transform: `scale(${push})` }}>
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: titleY - titleSize * 0.55,
-            display: "flex",
-            justifyContent: "center",
-            columnGap: "0.24em",
-            fontFamily: figtree.fontFamily,
-            fontWeight: 300,
-            fontSize: titleSize,
-            letterSpacing: "-0.04em",
-            lineHeight: 1.1,
-            color: fg,
-          }}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${push})${glide(pushMoving)}` }}
         >
-          {titleWords.map((word, i) => {
-            const s = beat("title") + i * 3;
-            const p = interpolate(frame, [s, s + 12], [0, 1], {
-              ...CLAMP,
-              easing: EASE_ENTER,
-            });
-            return (
-              <span
-                key={`${word}-${i}`}
-                style={{
-                  display: "inline-block",
-                  overflow: "hidden",
-                  padding: "0.04em 0.04em 0.16em",
-                  margin: "-0.04em -0.04em -0.16em",
-                }}
-              >
-                <span
-                  style={{
-                    display: "inline-block",
-                    transform: `translateY(${(1 - p) * 140}%)`,
-                    filter: `blur(${(1 - p) * 6}px)`,
-                    color: i === accentWord ? acc : undefined,
-                    fontWeight: i === accentWord ? 400 : 300,
-                  }}
-                >
-                  {word}
-                </span>
-              </span>
-            );
-          })}
-        </div>
-        <AbsoluteFill style={{ perspective: portrait ? 2000 : 1300 }}>
           <div
             style={{
               position: "absolute",
-              left: cardX,
-              top: cardY,
-              width: cardW,
-              height: cardH,
-              borderRadius: S * 0.034,
-              backgroundImage: t.card,
-              boxShadow: `inset 0 1px 0 ${t.cardTop}, inset 0 0 0 1px ${t.cardLine}, 0 2px 6px rgba(${t.shadowRgb},${0.3 * k}), 0 ${S * 0.04}px ${S * 0.1}px rgba(${t.shadowRgb},${0.4 * k}), 0 ${S * 0.1}px ${S * 0.24}px rgba(${t.shadowRgb},${0.4 * k})`,
-              transformOrigin: "30% 100%",
-              transform: `translate(${tx}px, ${ty}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${sc})`,
-              filter: mb > 0.4 ? "url(#tsl-mb)" : undefined,
-              overflow: "hidden",
-              fontFamily: figtree.fontFamily,
+              left: 0,
+              width: W,
+              top: titleY - titleSize * 0.55,
+              display: "flex",
+              justifyContent: "center",
+              columnGap: "0.24em",
+              fontFamily,
+              fontWeight: 300,
+              fontSize: titleSize,
+              letterSpacing: "-0.04em",
+              lineHeight: 1.1,
               color: fg,
             }}
           >
+            {titleWords.map((word, i) => {
+              const s = beat("title") + i * stagger;
+              const p = interpolate(frame, [s, s + 12], [0, 1], {
+                ...CLAMP,
+                easing: EASE_ENTER,
+              });
+              return (
+                <span
+                  key={`${word}-${i}`}
+                  style={{
+                    display: "inline-block",
+                    overflow: "hidden",
+                    padding: "0.04em 0.04em 0.16em",
+                    margin: "-0.04em -0.04em -0.16em",
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "inline-block",
+                      transform: `translateY(${(1 - p) * 140}%)`,
+                      filter: `blur(${(1 - p) * 6}px)`,
+                      color: i === accentWord ? acc : undefined,
+                      fontWeight: i === accentWord ? 400 : 300,
+                    }}
+                  >
+                    {word}
+                  </span>
+                </span>
+              );
+            })}
+          </div>
+          <AbsoluteFill style={{ perspective: portrait ? 2000 : 1300 }}>
             <div
               style={{
                 position: "absolute",
-                left: pad,
-                top: pad,
-                width: coverS,
-                height: coverS,
-                borderRadius: S * 0.016,
+                left: cardX,
+                top: cardY,
+                width: cardW,
+                height: cardH,
+                borderRadius: S * 0.034,
+                backgroundImage: t.card,
+                boxShadow: `inset 0 1px 0 ${t.cardTop}, inset 0 0 0 1px ${t.cardLine}, 0 2px 6px rgba(${t.shadowRgb},${0.3 * k}), 0 ${S * 0.04}px ${S * 0.1}px rgba(${t.shadowRgb},${0.4 * k}), 0 ${S * 0.1}px ${S * 0.24}px rgba(${t.shadowRgb},${0.4 * k})`,
+                transformOrigin: "30% 100%",
+                transform: `translate(${tx}px, ${ty}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${sc})`,
+                filter: mb > 0.4 ? "url(#tsl-mb)" : undefined,
                 overflow: "hidden",
-                boxShadow: `0 ${S * 0.012}px ${S * 0.03}px rgba(${t.shadowRgb},${0.4 * k})`,
+                fontFamily,
+                color: fg,
               }}
             >
-              <Img
-                src={cover}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  display: "block",
-                }}
-              />
               <div
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  borderRadius: "inherit",
-                  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.12)",
-                }}
-              />
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: pad,
-                top: pad + coverS + pad * 0.6,
-                width: coverS,
-              }}
-            >
-              <Reveal frame={frame} at={beat("lines") - 2}>
-                <div
-                  style={{
-                    fontSize: lineSize * 1.12,
-                    fontWeight: 400,
-                    letterSpacing: "-0.025em",
-                    lineHeight: 1.15,
-                  }}
-                >
-                  {heroTitle}
-                </div>
-              </Reveal>
-              <Reveal frame={frame} at={beat("lines")}>
-                <div
-                  style={{
-                    fontSize: lineSize * 0.74,
-                    fontWeight: 300,
-                    color: t.sub,
-                    marginTop: lineSize * 0.2,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {heroMeta}
-                </div>
-              </Reveal>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: pad * 2 + coverS,
-                right: pad,
-                top: pad,
-                height: lineH * VISIBLE,
-                overflow: "hidden",
-                maskImage:
-                  "linear-gradient(180deg, transparent 0%, #000 16%, #000 100%)",
-              }}
-            >
-              <div
-                style={{
-                  transform: `translateY(${-scrollIdx * lineH}px)`,
+                  left: pad,
+                  top: pad,
+                  width: coverS,
+                  height: coverS,
+                  borderRadius: S * 0.016,
+                  overflow: "hidden",
+                  boxShadow: `0 ${S * 0.012}px ${S * 0.03}px rgba(${t.shadowRgb},${0.4 * k})`,
                 }}
               >
-                {lines.map((line, i) => {
-                  const on = interpolate(
-                    frame,
-                    [
-                      beat("step") + (i - 1) * STEP,
-                      beat("step") + (i - 1) * STEP + 6,
-                      beat("step") + i * STEP,
-                      beat("step") + i * STEP + 6,
-                    ],
-                    [0, 1, 1, i === lines.length - 1 ? 1 : 0],
-                    { ...CLAMP, easing: EASE_MOVE },
-                  );
-                  return (
-                    <div
-                      key={line}
-                      style={{
-                        height: lineH,
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Reveal frame={frame} at={beat("lines") + i * 2}>
-                        <div
-                          style={{
-                            fontSize: lineSize,
-                            fontWeight: 300,
-                            letterSpacing: "-0.02em",
-                            whiteSpace: "nowrap",
-                            color: fg,
-                            opacity: 0.34 + 0.66 * on,
-                          }}
-                        >
-                          {line}
-                        </div>
-                      </Reveal>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: pad * 2 + coverS,
-                right: pad,
-                bottom: pad,
-                fontFamily: mono.fontFamily,
-                fontSize: Math.max(S * 0.022, lineSize * 0.6),
-                color: t.sub,
-              }}
-            >
-              <div
-                style={{
-                  height: Math.max(3, S * 0.005),
-                  borderRadius: 99,
-                  backgroundColor: t.track,
-                  position: "relative",
-                }}
-              >
-                <div
+                <Img
+                  src={cover}
                   style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: `${progress * 100}%`,
-                    borderRadius: 99,
-                    backgroundColor: fg,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
                   }}
                 />
                 <div
                   style={{
                     position: "absolute",
-                    left: `${progress * 100}%`,
-                    top: "50%",
-                    width: S * 0.016,
-                    height: S * 0.016,
-                    marginLeft: -S * 0.008,
-                    marginTop: -S * 0.008,
-                    borderRadius: 99,
-                    backgroundColor: fg,
+                    inset: 0,
+                    borderRadius: "inherit",
+                    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.12)",
                   }}
                 />
               </div>
               <div
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginTop: S * 0.014,
+                  position: "absolute",
+                  left: pad,
+                  top: pad + coverS + pad * 0.6,
+                  width: coverS,
                 }}
               >
-                <span>{fmt(progress * 6)}</span>
-                <span>-{fmt(6 - progress * 6)}</span>
-              </div>
-            </div>
-          </div>
-        </AbsoluteFill>
-        <div
-          style={{
-            position: "absolute",
-            left: listX,
-            top: listY,
-            width: listW,
-            fontFamily: figtree.fontFamily,
-            color: fg,
-          }}
-        >
-          {list.map((row, i) => {
-            const at = beat("rows") + (ROW_TIMES[i] ?? i * 5);
-            const slide = spring({
-              frame: frame - at,
-              fps,
-              config: SPRING_CARD,
-            });
-            const thumbP = spring({
-              frame: frame - at - 2,
-              fps,
-              config: SPRING_CHIP,
-            });
-            const playP = spring({
-              frame: frame - at - 6,
-              fps,
-              config: SPRING_CHIP,
-            });
-            const divider = interpolate(frame, [at + 4, at + 18], [0, 1], {
-              ...CLAMP,
-              easing: EASE_MOVE,
-            });
-            return (
-              <div
-                key={row.title}
-                style={{
-                  position: "relative",
-                  height: rowH,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: S * 0.022,
-                  transform: `translateX(${(1 - slide) * S * 0.16}px)`,
-                  opacity: Math.min(1, slide * 2.5),
-                }}
-              >
-                <div
-                  style={{
-                    width: rankW,
-                    flexShrink: 0,
-                    fontFamily: mono.fontFamily,
-                    fontSize: rowTitle,
-                    color: t.sub,
-                    textAlign: "right",
-                  }}
-                >
-                  {i + 2}
-                </div>
-                <div
-                  style={{
-                    width: thumb,
-                    height: thumb,
-                    flexShrink: 0,
-                    borderRadius: thumb * 0.16,
-                    overflow: "hidden",
-                    transform: `scale(${thumbP})`,
-                    boxShadow: `0 ${thumb * 0.08}px ${thumb * 0.2}px rgba(${t.shadowRgb},${0.4 * k}), inset 0 0 0 1px rgba(255,255,255,0.1)`,
-                  }}
-                >
-                  <Img
-                    src={row.src ?? cover}
+                <Reveal frame={frame} at={beat("lines") - 2}>
+                  <div
                     style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      display: "block",
+                      fontSize: lineSize * 1.12,
+                      fontWeight: 400,
+                      letterSpacing: "-0.025em",
+                      lineHeight: 1.15,
                     }}
-                  />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <Reveal frame={frame} at={at + 3}>
-                    <div
-                      style={{
-                        fontSize: rowTitle,
-                        fontWeight: 400,
-                        letterSpacing: "-0.02em",
-                        lineHeight: 1.15,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {row.title}
-                    </div>
-                  </Reveal>
-                  <Reveal frame={frame} at={at + 5}>
-                    <div
-                      style={{
-                        fontSize: rowMeta,
-                        fontWeight: 300,
-                        color: t.sub,
-                        marginTop: rowMeta * 0.2,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {row.meta}
-                    </div>
-                  </Reveal>
-                </div>
+                  >
+                    {heroTitle}
+                  </div>
+                </Reveal>
+                <Reveal frame={frame} at={beat("lines")}>
+                  <div
+                    style={{
+                      fontSize: lineSize * 0.74,
+                      fontWeight: 300,
+                      color: t.sub,
+                      marginTop: lineSize * 0.2,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {heroMeta}
+                  </div>
+                </Reveal>
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: pad * 2 + coverS,
+                  right: pad,
+                  top: pad,
+                  height: lineH * VISIBLE,
+                  overflow: "hidden",
+                  maskImage:
+                    "linear-gradient(180deg, transparent 0%, #000 16%, #000 100%)",
+                }}
+              >
                 <div
                   style={{
-                    width: playS,
-                    height: playS,
-                    flexShrink: 0,
-                    borderRadius: 99,
-                    backgroundColor: t.play,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transform: `scale(${playP})`,
-                    boxShadow: `0 ${playS * 0.1}px ${playS * 0.3}px rgba(${t.shadowRgb},${0.35 * k})`,
+                    transform: `translateY(${-scrollIdx * lineH}px)`,
                   }}
                 >
-                  <svg
-                    width={playS * 0.4}
-                    height={playS * 0.4}
-                    viewBox="0 0 24 24"
-                    aria-hidden
-                  >
-                    <path d="M8 5.5v13l10.5-6.5z" fill={t.playIcon} />
-                  </svg>
+                  {lines.map((line, i) => {
+                    const on = interpolate(
+                      frame,
+                      [
+                        beat("step") + (i - 1) * step,
+                        beat("step") + (i - 1) * step + 6,
+                        beat("step") + i * step,
+                        beat("step") + i * step + 6,
+                      ],
+                      [0, 1, 1, i === lines.length - 1 ? 1 : 0],
+                      { ...CLAMP, easing: EASE_MOVE },
+                    );
+                    return (
+                      <div
+                        key={line}
+                        style={{
+                          height: lineH,
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Reveal frame={frame} at={beat("lines") + i * 2}>
+                          <div
+                            style={{
+                              fontSize: lineSize,
+                              fontWeight: 300,
+                              letterSpacing: "-0.02em",
+                              whiteSpace: "nowrap",
+                              color: fg,
+                              opacity: 0.34 + 0.66 * on,
+                            }}
+                          >
+                            {line}
+                          </div>
+                        </Reveal>
+                      </div>
+                    );
+                  })}
                 </div>
-                {i < list.length - 1 ? (
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: pad * 2 + coverS,
+                  right: pad,
+                  bottom: pad,
+                  fontFamily: mono.fontFamily,
+                  fontSize: Math.max(S * 0.022, lineSize * 0.6),
+                  color: t.sub,
+                }}
+              >
+                <div
+                  style={{
+                    height: Math.max(3, S * 0.005),
+                    borderRadius: 99,
+                    backgroundColor: t.track,
+                    position: "relative",
+                  }}
+                >
                   <div
                     style={{
                       position: "absolute",
-                      left: rankW + S * 0.022,
-                      right: 0,
+                      left: 0,
+                      top: 0,
                       bottom: 0,
-                      height: 1,
-                      backgroundColor: t.divider,
-                      transformOrigin: "0 50%",
-                      transform: `scaleX(${divider})`,
+                      width: `${progress * 100}%`,
+                      borderRadius: 99,
+                      backgroundColor: fg,
                     }}
                   />
-                ) : null}
+                  {/* The knob rides the track by a transform, not `left`:
+                      layout rounds a box to whole pixels, so a knob eased by
+                      `left` steps along pixel by pixel. The carrier spans the
+                      track, so its own-width percent is the track's. */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      transform: `translateX(${progress * 100}%)`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: "50%",
+                        width: S * 0.016,
+                        height: S * 0.016,
+                        marginLeft: -S * 0.008,
+                        marginTop: -S * 0.008,
+                        borderRadius: 99,
+                        backgroundColor: fg,
+                      }}
+                    />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: S * 0.014,
+                  }}
+                >
+                  <span>{fmt(progress * 6)}</span>
+                  <span>-{fmt(6 - progress * 6)}</span>
+                </div>
               </div>
-            );
-          })}
-        </div>
-      </AbsoluteFill>
+            </div>
+          </AbsoluteFill>
+          <div
+            style={{
+              position: "absolute",
+              left: listX,
+              top: listY,
+              width: listW,
+              fontFamily,
+              color: fg,
+            }}
+          >
+            {list.map((row, i) => {
+              const at = beat("rows") + (ROW_TIMES[i] ?? i * 5);
+              const slide = spring({
+                frame: frame - at,
+                fps,
+                config: SPRING_CARD,
+              });
+              const thumbP = spring({
+                frame: frame - at - 2,
+                fps,
+                config: SPRING_CHIP,
+              });
+              const playP = spring({
+                frame: frame - at - 6,
+                fps,
+                config: SPRING_CHIP,
+              });
+              const divider = interpolate(frame, [at + 4, at + 18], [0, 1], {
+                ...CLAMP,
+                easing: EASE_MOVE,
+              });
+              return (
+                <div
+                  key={row.title}
+                  style={{
+                    position: "relative",
+                    height: rowH,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: S * 0.022,
+                    transform: `translateX(${(1 - slide) * S * 0.16}px)`,
+                    opacity: Math.min(1, slide * 2.5),
+                  }}
+                >
+                  <div
+                    style={{
+                      width: rankW,
+                      flexShrink: 0,
+                      fontFamily: mono.fontFamily,
+                      fontSize: rowTitle,
+                      color: t.sub,
+                      textAlign: "right",
+                    }}
+                  >
+                    {i + 2}
+                  </div>
+                  <div
+                    style={{
+                      width: thumb,
+                      height: thumb,
+                      flexShrink: 0,
+                      borderRadius: thumb * 0.16,
+                      overflow: "hidden",
+                      transform: `scale(${thumbP})`,
+                      boxShadow: `0 ${thumb * 0.08}px ${thumb * 0.2}px rgba(${t.shadowRgb},${0.4 * k}), inset 0 0 0 1px rgba(255,255,255,0.1)`,
+                    }}
+                  >
+                    <Img
+                      src={row.src ?? cover}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        display: "block",
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Reveal frame={frame} at={at + 3}>
+                      <div
+                        style={{
+                          fontSize: rowTitle,
+                          fontWeight: 400,
+                          letterSpacing: "-0.02em",
+                          lineHeight: 1.15,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {row.title}
+                      </div>
+                    </Reveal>
+                    <Reveal frame={frame} at={at + 5}>
+                      <div
+                        style={{
+                          fontSize: rowMeta,
+                          fontWeight: 300,
+                          color: t.sub,
+                          marginTop: rowMeta * 0.2,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {row.meta}
+                      </div>
+                    </Reveal>
+                  </div>
+                  <div
+                    style={{
+                      width: playS,
+                      height: playS,
+                      flexShrink: 0,
+                      borderRadius: 99,
+                      backgroundColor: t.play,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transform: `scale(${playP})`,
+                      boxShadow: `0 ${playS * 0.1}px ${playS * 0.3}px rgba(${t.shadowRgb},${0.35 * k})`,
+                    }}
+                  >
+                    <svg
+                      width={playS * 0.4}
+                      height={playS * 0.4}
+                      viewBox="0 0 24 24"
+                      aria-hidden
+                    >
+                      <path d="M8 5.5v13l10.5-6.5z" fill={t.playIcon} />
+                    </svg>
+                  </div>
+                  {i < list.length - 1 ? (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: rankW + S * 0.022,
+                        right: 0,
+                        bottom: 0,
+                        height: 1,
+                        backgroundColor: t.divider,
+                        transformOrigin: "0 50%",
+                        transform: `scaleX(${divider})`,
+                      }}
+                    />
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

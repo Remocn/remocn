@@ -1,0 +1,123 @@
+{
+  "component": "hook-uncurl",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-punch",
+      "label": "Snap Punch",
+      "description": "Fast, tight uncurl with oversized caps and a hot coral accent on dark for a punchy social opener.",
+      "askedAs": [
+        "make it fast and punchy",
+        "quick snappy hook for reels",
+        "bigger text, faster animation",
+        "сделай быстрее и резче",
+        "динамичный хук для рилс"
+      ],
+      "props": {
+        "speed": 1.75,
+        "stagger": 1,
+        "answerAt": 22,
+        "scale": 1.2,
+        "accent": "#ff6b4a"
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Warm off-white paper with deep ink and an elegant serif that unfolds at a calm, magazine pace.",
+      "askedAs": [
+        "elegant serif version on light background",
+        "magazine style editorial look",
+        "slow classy light theme",
+        "элегантный журнальный стиль",
+        "светлый фон с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1d1a16",
+        "accent": "#b5482f",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Words drift in with wide spacing and a long pause before the answer lands, building suspense.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "more suspense before the answer",
+        "let the question hang longer",
+        "медленное драматичное появление",
+        "больше паузы перед ответом"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 8,
+        "answerAt": 75,
+        "delay": 12
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced green-on-charcoal type with a steady rhythm, like a developer prompt answering itself.",
+      "askedAs": [
+        "code terminal style",
+        "monospace hacker look",
+        "developer themed hook",
+        "стиль терминала",
+        "моноширинный шрифт как в коде"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#111614",
+        "ink": "#e6efe9",
+        "accent": "#4ade80",
+        "scale": 0.8,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "cobalt-pop",
+      "label": "Cobalt Pop",
+      "description": "Bold cobalt background with cream grotesque type and a sunny yellow accent for a playful, poster-like feel.",
+      "askedAs": [
+        "bright blue playful poster",
+        "colorful fun version",
+        "bold background color",
+        "яркий синий фон",
+        "весёлый постерный стиль"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "background": "#1f3fbf",
+        "ink": "#fbf6ea",
+        "accent": "#ffd447",
+        "speed": 1.25,
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Small, clean Inter type on a soft light theme with a muted slate accent and gentle timing.",
+      "askedAs": [
+        "clean minimal light version",
+        "subtle and understated",
+        "smaller simple text",
+        "минималистичный светлый вариант",
+        "спокойный и сдержанный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "scale": 0.7,
+        "accent": "#475569",
+        "stagger": 4
+      }
+    }
+  ]
+}

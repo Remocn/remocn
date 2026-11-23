@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const saidWhoConfig: ComponentConfig = {
   componentName: "SaidWho",
   importPath: "@/components/remocn/said-who",
+  lists: {
+    details: {
+      default: ["backend engineer", "never edited a video before"],
+      description: "Details",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -28,6 +40,17 @@ export const saidWhoConfig: ComponentConfig = {
       default: "Tobias Lind",
       description: "Name",
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Young Serif" }),
     speed: {
       type: "number",
       default: 1,

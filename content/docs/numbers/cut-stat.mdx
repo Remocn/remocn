@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="CutStat"
     component={CutStatScene}
-    durationInFrames={115}
-    fps={30}
+    durationInFrames={230}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -105,15 +105,56 @@ A bar graph wipes up, then a cut sweeps it down with a flash as the big minus pe
       description: "Label on the shortened bar.",
     },
     {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "Weight of the number.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between the claim's words as they rise in.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for the hero element.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Optional CSS background replacing the theme ground.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

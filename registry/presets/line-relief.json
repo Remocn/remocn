@@ -1,0 +1,102 @@
+{
+  "component": "line-relief",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "fine-topo",
+      "label": "Fine Topo",
+      "description": "Dense hairline rules sweep in slowly for a detailed topographic map feel.",
+      "askedAs": [
+        "dense thin lines slow reveal",
+        "topographic map look",
+        "lots of fine lines",
+        "много тонких линий как на карте",
+        "медленный топографический рельеф"
+      ],
+      "props": {
+        "count": 72,
+        "sweep": 40,
+        "speed": 0.75,
+        "accent": "#6c8aa8"
+      }
+    },
+    {
+      "id": "bold-stripes",
+      "label": "Bold Stripes",
+      "description": "Few chunky bands snap in fast with a warm coral accent and oversized lettering.",
+      "askedAs": [
+        "thick stripes fast",
+        "punchy bold lines",
+        "big chunky striped title",
+        "толстые полосы быстро",
+        "крупные жирные линии"
+      ],
+      "props": {
+        "count": 14,
+        "sweep": 6,
+        "speed": 1.5,
+        "scale": 1.25,
+        "accent": "#e8654a"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A clean light version on warm off-white with charcoal ink and no grain.",
+      "askedAs": [
+        "light version clean",
+        "white background minimal",
+        "no grain bright",
+        "светлая версия без шума",
+        "белый фон минимализм"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1e1e22",
+        "accent": "#2f4bc9",
+        "grain": false
+      }
+    },
+    {
+      "id": "radar-green",
+      "label": "Radar Night",
+      "description": "Deep navy-black field with muted sage lines that sweep in like a radar scan.",
+      "askedAs": [
+        "radar screen look",
+        "dark green scan lines",
+        "night vision style title",
+        "как экран радара",
+        "тёмный фон зелёные линии"
+      ],
+      "props": {
+        "background": "#0b1414",
+        "ink": "#e6efe9",
+        "accent": "#5faf8a",
+        "count": 56,
+        "sweep": 28
+      }
+    },
+    {
+      "id": "slow-dusk",
+      "label": "Slow Dusk",
+      "description": "A delayed, unhurried cinematic reveal in plum and gold at a smaller, elegant scale.",
+      "askedAs": [
+        "slow cinematic reveal",
+        "elegant delayed title",
+        "calm sunset gold",
+        "медленное кинематографичное появление",
+        "элегантный закат с задержкой"
+      ],
+      "props": {
+        "delay": 24,
+        "speed": 0.5,
+        "scale": 0.8,
+        "accent": "#d4a35a",
+        "background": "#1f1426",
+        "ink": "#f5e9d8"
+      }
+    }
+  ]
+}

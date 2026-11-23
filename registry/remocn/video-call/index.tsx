@@ -3,20 +3,14 @@
 import { loadFont } from "@remotion/google-fonts/Onest";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: onest } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -43,7 +37,23 @@ export interface VideoCallProps {
   src?: string;
   /** Custom shared-screen content (wins over `src`). */
   children?: React.ReactNode;
+  /** Call name above the grid in portrait. */
+  callTitle?: string;
+  /** Heading of the built-in shared screen. */
+  screenTitle?: string;
+  /** Label of the red leave button. */
+  leaveLabel?: string;
   accent?: string;
+  /** Text and icon color of the call UI; overrides the default ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Size of the call UI, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -72,6 +82,8 @@ const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
 const CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 function rgb(c: string): [number, number, number] {
   const hex = c.replace("#", "");
@@ -491,7 +503,17 @@ function Person({
   );
 }
 
-function ScreenMock({ frame, accent }: { frame: number; accent: string }) {
+function ScreenMock({
+  frame,
+  accent,
+  title,
+  fontFamily,
+}: {
+  frame: number;
+  accent: string;
+  title: string;
+  fontFamily: string;
+}) {
   const clipId = `vc-c${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const draw = 0.62 + 0.38 * MOVE(clamp(frame / 26));
   const daily = [900, 1120, 1040, 1480, 1390, 1880, 2380, 2290];
@@ -585,7 +607,7 @@ function ScreenMock({ frame, accent }: { frame: number; accent: string }) {
       </div>
       <div style={{ padding: "30px 32px" }}>
         <div style={{ fontSize: 34, fontWeight: 300, letterSpacing: -1 }}>
-          Launch week
+          {title}
         </div>
         <div style={{ fontSize: 15, color: "#777", marginTop: 4 }}>
           Oct 14 – Oct 21 · all channels
@@ -825,10 +847,16 @@ function AudioBadge({
   );
 }
 
+// A tile is laid out at `rest`, the cell it settles in, and rides to `r` on a
+// transform; what hangs off its right or bottom edge is placed from the top
+// left by a transform as well. Layout rounds a box and a baseline to whole
+// pixels, so a tile reflowed by `left`/`top`, with a name pinned to `bottom`,
+// stepped pixel by pixel each time the grid made room.
 function Tile({
   p,
   seed,
   r,
+  rest,
   level,
   appear,
   frame,
@@ -837,6 +865,7 @@ function Tile({
   p: CallParticipant;
   seed: number;
   r: Rect;
+  rest: Rect;
   level: number;
   appear: number;
   frame: number;
@@ -847,6 +876,9 @@ function Tile({
   const small = r.h < 150;
   const radius = small ? 14 : 18;
   const avatar = clamp(Math.min(r.w, r.h) * 0.34, 40, 128);
+  const shade = small ? 48 : 64;
+  const badge = small ? 26 : 30;
+  const badgePad = small ? 8 : 12;
   const pulse = level * (0.55 + 0.45 * wave(frame, seed));
   const blob = (
     x: number,
@@ -858,8 +890,9 @@ function Tile({
     br: string | number = "50%",
   ): React.CSSProperties => ({
     position: "absolute",
-    left: `${x * 100}%`,
-    top: `${y * 100}%`,
+    left: 0,
+    top: 0,
+    transform: `translate(${x * r.w}px, ${y * r.h}px)`,
     width: bw,
     height: bh,
     borderRadius: br,
@@ -870,14 +903,14 @@ function Tile({
     <div
       style={{
         position: "absolute",
-        left: r.x,
-        top: r.y,
+        left: rest.x,
+        top: rest.y,
         width: r.w,
         height: r.h,
         borderRadius: radius,
         overflow: "hidden",
         opacity: clamp(appear * 1.4),
-        transform: `translateY(${(1 - appear) * 18}px) scale(${0.94 + 0.06 * appear})`,
+        transform: `translate(${r.x - rest.x}px, ${r.y - rest.y}px) translateY(${(1 - appear) * 18}px) scale(${0.94 + 0.06 * appear})`,
         boxShadow: "0 24px 50px -24px rgba(0,0,0,0.7)",
         background: p.camera
           ? `linear-gradient(170deg, ${mix(p.color, "#ECE7DF", 0.74)} 0%, ${mix(p.color, "#5E5750", 0.72)} 100%)`
@@ -937,11 +970,11 @@ function Tile({
         <div
           style={{
             position: "absolute",
-            left: "50%",
-            top: "46%",
+            left: 0,
+            top: 0,
             width: avatar,
             height: avatar,
-            transform: "translate(-50%, -50%)",
+            transform: `translate(${r.w * 0.5 - avatar / 2}px, ${r.h * 0.46 - avatar / 2}px)`,
             borderRadius: "50%",
             background: mix(p.color, "#191A20", 0.35),
             boxShadow: `0 0 0 ${pulse * avatar * 0.08}px ${withAlpha(p.color, 0.35)}, inset 0 1px 0 rgba(255,255,255,0.12)`,
@@ -961,8 +994,9 @@ function Tile({
           position: "absolute",
           left: 0,
           right: 0,
-          bottom: 0,
-          height: small ? 48 : 64,
+          top: 0,
+          height: shade,
+          transform: `translateY(${r.h - shade}px)`,
           background:
             "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.12) 40%, rgba(0,0,0,0.42) 100%)",
         }}
@@ -970,8 +1004,9 @@ function Tile({
       <div
         style={{
           position: "absolute",
-          right: small ? 8 : 12,
-          top: small ? 8 : 12,
+          left: 0,
+          top: badgePad,
+          transform: `translateX(${r.w - badgePad - badge}px)`,
         }}
       >
         <AudioBadge
@@ -980,23 +1015,35 @@ function Tile({
           frame={frame}
           seed={seed}
           accent={accent}
-          size={small ? 26 : 30}
+          size={badge}
         />
       </div>
+      {/* The tile's floor: a line at its bottom edge for the name to stand on. */}
       <div
         style={{
           position: "absolute",
-          left: small ? 10 : 14,
-          bottom: small ? 8 : 12,
-          right: 12,
-          color: "#FFFFFF",
-          fontSize: 16,
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
+          left: 0,
+          right: 0,
+          top: 0,
+          height: 0,
+          transform: `translateY(${r.h}px)`,
         }}
       >
-        {p.name}
+        <div
+          style={{
+            position: "absolute",
+            left: small ? 10 : 14,
+            bottom: small ? 8 : 12,
+            right: 12,
+            color: "#FFFFFF",
+            fontSize: 16,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {p.name}
+        </div>
       </div>
       <div
         style={{
@@ -1047,6 +1094,7 @@ function FloatingReaction({
   rise,
   seed,
   fps,
+  carried,
 }: {
   local: number;
   k: number;
@@ -1056,22 +1104,27 @@ function FloatingReaction({
   rise: number;
   seed: number;
   fps: number;
+  /** Something above is already tilted, so the pill adds no tilt of its own. */
+  carried: boolean;
 }) {
+  const glide = useGlide();
   if (local < 0 || local > 84) return null;
   const t = ENTER_SOFT(clamp(local / 84));
   const pop = spring({ frame: local, fps, config: CHIP });
   const fade =
     interpolate(local, [0, 4], [0, 1], { extrapolateRight: "clamp" }) *
     (1 - interpolate(local, [64, 84], [0, 1], { ...CL, easing: EXIT }));
-  const y = bottom - 30 - t * rise;
   const sway = Math.sin(local * 0.11 + seed * 1.7) * 14 * t;
   const r = TRAY[k % TRAY.length];
   return (
     <div
       style={{
         position: "absolute",
-        left: x + sway,
-        top: y,
+        // Laid out where it leaves the bar; the float up is a transform,
+        // because layout rounds the pill and its name to whole pixels and
+        // the slow end of the rise stepped over each one.
+        left: x,
+        top: bottom - 30,
         opacity: fade,
         display: "flex",
         alignItems: "center",
@@ -1081,7 +1134,7 @@ function FloatingReaction({
         background: "rgba(16,16,22,0.62)",
         backdropFilter: "blur(12px)",
         boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.1)",
-        transform: `scale(${0.6 + 0.4 * pop})`,
+        transform: `translate(${sway}px, ${-t * rise}px) scale(${0.6 + 0.4 * pop})${glide(!carried)}`,
         transformOrigin: "20px 50%",
       }}
     >
@@ -1105,6 +1158,22 @@ function FloatingReaction({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function VideoCall({
   participants = DEFAULT_PARTICIPANTS,
   meetingCode = "kqv-mnrt-zpa",
@@ -1113,13 +1182,23 @@ export function VideoCall({
   present = true,
   src,
   children,
+  callTitle = "Launch sync",
+  screenTitle = "Launch week",
+  leaveLabel = "Leave",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = onest,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: VideoCallProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, fps, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const fg = ink ?? INK;
+  const { width, height, fps, durationInFrames } = useSceneConfig();
   const tall = height > width * 1.2;
   const u = tall ? width / 640 : Math.min(width / 1280, height / 720);
   const dw = width / u;
@@ -1203,6 +1282,12 @@ export function VideoCall({
   const badgePop = spring({ frame: frame - lastJoin - 6, fps, config: CHIP });
   const ui = spring({ frame: frame - 6, fps, config: HEAVY });
   const push = interpolate(frame, [0, durationInFrames], [1, 1.03], CL);
+  const pushing = midway(interpolate(frame, [0, durationInFrames], [0, 1], CL));
+  // Where each tile settles: its cell once everyone has joined, then its slot
+  // in the strip.
+  const rests = people.map((_, i) =>
+    pres[i] < 0.5 ? gridRect(S, n, i) : stripRect(S, n, i),
+  );
 
   const M = S.main;
   const fit = Math.min((M.w - 32) / 1280, (M.h - 64) / 800);
@@ -1226,355 +1311,374 @@ export function VideoCall({
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <GshGround
-        preset={ground ?? "velvet-hour"}
-        params={groundParams}
-        timeOffset={6}
-        timeScale={0.35}
-      />
-      <AbsoluteFill
-        style={{
-          background:
-            "radial-gradient(75% 85% at 50% 45%, rgba(4,5,12,0.42), rgba(4,5,12,0.1))",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: dw,
-          height: dh,
-          transform: `scale(${u})`,
-          transformOrigin: "0 0",
-          color: INK,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? "velvet-hour"}
+            params={groundParams}
+            timeOffset={6}
+            timeScale={0.35}
+          />
+          <AbsoluteFill
+            style={{
+              background:
+                "radial-gradient(75% 85% at 50% 45%, rgba(4,5,12,0.42), rgba(4,5,12,0.1))",
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${push})`,
-            transformOrigin: "50% 45%",
+            left: 0,
+            top: 0,
+            width: dw,
+            height: dh,
+            transform: `scale(${u})`,
+            transformOrigin: "0 0",
+            color: fg,
           }}
         >
-          {tall ? (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              // The push runs for the whole clip, so its tilt covers every
+              // label in the call.
+              transform: `scale(${push})${glide(pushing)}`,
+              transformOrigin: "50% 45%",
+            }}
+          >
+            {tall ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: area.x,
+                  top: 36,
+                  width: area.w,
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: 14,
+                  opacity: ui,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 30,
+                    fontWeight: 300,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  {callTitle}
+                </span>
+                <span
+                  style={{
+                    marginLeft: "auto",
+                    fontSize: 18,
+                    color: "rgba(241,241,244,0.6)",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {joined} in call
+                </span>
+              </div>
+            ) : null}
+            {present && screenIn > 0.001 ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: M.x,
+                  top: M.y,
+                  width: M.w,
+                  height: M.h,
+                  borderRadius: 18,
+                  background: "rgba(14,15,20,0.78)",
+                  backdropFilter: "blur(20px)",
+                  boxShadow:
+                    "inset 0 0 0 1px rgba(255,255,255,0.09), 0 30px 70px -30px rgba(0,0,0,0.8)",
+                  overflow: "hidden",
+                  opacity: clamp(screenIn * 1.6),
+                  transform: `translateY(${(1 - screenIn) * 24}px) scale(${0.97 + 0.03 * screenIn})`,
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: (M.w - screenW) / 2,
+                    top: 16,
+                    width: screenW,
+                    height: screenH,
+                    borderRadius: 8,
+                    overflow: "hidden",
+                    boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
+                  }}
+                >
+                  {children ? (
+                    children
+                  ) : src ? (
+                    <Img
+                      src={src}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        transform: `scale(${fit})`,
+                        transformOrigin: "0 0",
+                      }}
+                    >
+                      <ScreenMock
+                        frame={frame - PRESENT_AT - 8}
+                        accent={accent}
+                        title={screenTitle}
+                        fontFamily={fontFamily}
+                      />
+                    </div>
+                  )}
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 18,
+                    bottom: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    color: fg,
+                    fontSize: 16,
+                  }}
+                >
+                  <Icon name="present" size={20} color={fg} />
+                  {people[pi]?.name} is presenting
+                </div>
+              </div>
+            ) : null}
+
+            {people.map((p, i) => (
+              <Tile
+                key={p.name}
+                p={p}
+                seed={i}
+                r={rects[i]}
+                rest={rests[i]}
+                level={levels[i]}
+                appear={appear[i] * vis[i]}
+                frame={frame}
+                accent={accent}
+              />
+            ))}
+
+            {FLOATS.map((r, k) => (
+              <FloatingReaction
+                key={`${r.at}-${r.who}`}
+                local={frame - TRAY_AT - 6 - r.at}
+                k={r.k}
+                name={people[r.who % n]?.name.split(" ")[0] ?? ""}
+                x={floatLeft + r.x * (tall ? area.w : M.w)}
+                bottom={floatBottom}
+                rise={(tall ? 520 : 400) * (0.82 + 0.12 * (k % 3))}
+                seed={k}
+                fps={fps}
+                carried={pushing}
+              />
+            ))}
             <div
               style={{
                 position: "absolute",
-                left: area.x,
-                top: 36,
-                width: area.w,
+                left: reactX,
+                top: ctrlY - 70,
+                transform: `translateX(-50%) translateY(${(1 - trayIn) * 16}px) scale(${0.85 + 0.15 * trayIn})`,
+                transformOrigin: "50% 100%",
+                opacity: clamp(trayIn * 1.5) * (1 - trayOut),
                 display: "flex",
-                alignItems: "baseline",
-                gap: 14,
-                opacity: ui,
+                gap: 6,
+                width: trayW,
+                boxSizing: "border-box",
+                padding: 8,
+                borderRadius: 999,
+                background: "rgba(18,18,24,0.72)",
+                backdropFilter: "blur(16px)",
+                boxShadow:
+                  "inset 0 0 0 1px rgba(255,255,255,0.1), 0 16px 40px -16px rgba(0,0,0,0.7)",
               }}
             >
-              <span
+              {TRAY.map((t, k) => {
+                const sent = FLOATS.find(
+                  (f) =>
+                    f.who === 0 && f.k === k && frame >= TRAY_AT + 6 + f.at,
+                );
+                const b = sent
+                  ? spring({
+                      frame: frame - (TRAY_AT + 6 + sent.at),
+                      fps,
+                      config: CHIP,
+                    })
+                  : 1;
+                return (
+                  <div
+                    key={t.icon}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      background: withAlpha(t.color, 0.18),
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transform: `scale(${(sent ? 1.2 - 0.2 * b : 1) * interpolate(trayIn, [0, 1], [0.8 + k * 0.03, 1])})`,
+                    }}
+                  >
+                    <Icon
+                      name={t.icon}
+                      size={22}
+                      color={mix(t.color, "#FFFFFF", 0.35)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {!tall ? (
+              <div
                 style={{
-                  fontSize: 30,
-                  fontWeight: 300,
-                  letterSpacing: "-0.02em",
+                  position: "absolute",
+                  left: area.x,
+                  top: ctrlY,
+                  height: btnSize,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  fontSize: 17,
+                  fontVariantNumeric: "tabular-nums",
+                  opacity: ui,
                 }}
               >
-                Launch sync
-              </span>
-              <span
+                <span>{time}</span>
+                <span style={{ color: "rgba(241,241,244,0.35)" }}>·</span>
+                <span style={{ color: "rgba(241,241,244,0.6)" }}>
+                  {meetingCode}
+                </span>
+              </div>
+            ) : (
+              <div
                 style={{
-                  marginLeft: "auto",
+                  position: "absolute",
+                  left: 0,
+                  width: dw,
+                  top: ctrlY + btnSize + 22,
+                  textAlign: "center",
                   fontSize: 18,
                   color: "rgba(241,241,244,0.6)",
                   fontVariantNumeric: "tabular-nums",
+                  opacity: ui,
                 }}
               >
-                {joined} in call
-              </span>
-            </div>
-          ) : null}
-          {present && screenIn > 0.001 ? (
+                {time} · {meetingCode}
+              </div>
+            )}
             <div
               style={{
                 position: "absolute",
-                left: M.x,
-                top: M.y,
-                width: M.w,
-                height: M.h,
-                borderRadius: 18,
-                background: "rgba(14,15,20,0.78)",
-                backdropFilter: "blur(20px)",
-                boxShadow:
-                  "inset 0 0 0 1px rgba(255,255,255,0.09), 0 30px 70px -30px rgba(0,0,0,0.8)",
-                overflow: "hidden",
-                opacity: clamp(screenIn * 1.6),
-                transform: `translateY(${(1 - screenIn) * 24}px) scale(${0.97 + 0.03 * screenIn})`,
+                left: dw / 2 - barW / 2,
+                top: ctrlY,
+                display: "flex",
+                gap: 10,
+                opacity: ui,
+                transform: `translateY(${(1 - ui) * 24}px)`,
               }}
             >
-              <div
-                style={{
-                  position: "absolute",
-                  left: (M.w - screenW) / 2,
-                  top: 16,
-                  width: screenW,
-                  height: screenH,
-                  borderRadius: 8,
-                  overflow: "hidden",
-                  boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
-                }}
-              >
-                {children ? (
-                  children
-                ) : src ? (
-                  <Img
-                    src={src}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                ) : (
+              {buttons.map((b) => {
+                const on = b === "react" ? clamp(trayIn) * (1 - trayOut) : 0;
+                return (
                   <div
+                    key={b}
                     style={{
-                      transform: `scale(${fit})`,
-                      transformOrigin: "0 0",
+                      width: btnSize,
+                      height: btnSize,
+                      borderRadius: 999,
+                      background:
+                        on > 0.01
+                          ? mix("#2A2B33", "#F1F1F4", on)
+                          : "rgba(255,255,255,0.1)",
+                      backdropFilter: "blur(12px)",
+                      boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.1)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    <ScreenMock
-                      frame={frame - PRESENT_AT - 8}
-                      accent={accent}
-                    />
+                    <Icon name={b} color={on > 0.5 ? "#15161B" : fg} />
                   </div>
-                )}
+                );
+              })}
+              <div
+                style={{
+                  marginLeft: 10,
+                  width: 104,
+                  height: btnSize,
+                  borderRadius: 999,
+                  background: "#D9443A",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 17,
+                  color: "#FFFFFF",
+                }}
+              >
+                {leaveLabel}
               </div>
+            </div>
+            {!tall ? (
               <div
                 style={{
                   position: "absolute",
-                  left: 18,
-                  bottom: 14,
+                  left: area.x + area.w - 140,
+                  width: 140,
+                  top: ctrlY,
+                  height: btnSize,
                   display: "flex",
                   alignItems: "center",
-                  gap: 10,
-                  color: INK,
-                  fontSize: 16,
+                  justifyContent: "flex-end",
+                  gap: 22,
+                  opacity: ui,
                 }}
               >
-                <Icon name="present" size={20} color={INK} />
-                {people[pi]?.name} is presenting
-              </div>
-            </div>
-          ) : null}
-
-          {people.map((p, i) => (
-            <Tile
-              key={p.name}
-              p={p}
-              seed={i}
-              r={rects[i]}
-              level={levels[i]}
-              appear={appear[i] * vis[i]}
-              frame={frame}
-              accent={accent}
-            />
-          ))}
-
-          {FLOATS.map((r, k) => (
-            <FloatingReaction
-              key={`${r.at}-${r.who}`}
-              local={frame - TRAY_AT - 6 - r.at}
-              k={r.k}
-              name={people[r.who % n]?.name.split(" ")[0] ?? ""}
-              x={floatLeft + r.x * (tall ? area.w : M.w)}
-              bottom={floatBottom}
-              rise={(tall ? 520 : 400) * (0.82 + 0.12 * (k % 3))}
-              seed={k}
-              fps={fps}
-            />
-          ))}
-          <div
-            style={{
-              position: "absolute",
-              left: reactX,
-              top: ctrlY - 70,
-              transform: `translateX(-50%) translateY(${(1 - trayIn) * 16}px) scale(${0.85 + 0.15 * trayIn})`,
-              transformOrigin: "50% 100%",
-              opacity: clamp(trayIn * 1.5) * (1 - trayOut),
-              display: "flex",
-              gap: 6,
-              width: trayW,
-              boxSizing: "border-box",
-              padding: 8,
-              borderRadius: 999,
-              background: "rgba(18,18,24,0.72)",
-              backdropFilter: "blur(16px)",
-              boxShadow:
-                "inset 0 0 0 1px rgba(255,255,255,0.1), 0 16px 40px -16px rgba(0,0,0,0.7)",
-            }}
-          >
-            {TRAY.map((t, k) => {
-              const sent = FLOATS.find(
-                (f) => f.who === 0 && f.k === k && frame >= TRAY_AT + 6 + f.at,
-              );
-              const b = sent
-                ? spring({
-                    frame: frame - (TRAY_AT + 6 + sent.at),
-                    fps,
-                    config: CHIP,
-                  })
-                : 1;
-              return (
                 <div
-                  key={t.icon}
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    background: withAlpha(t.color, 0.18),
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    transform: `scale(${(sent ? 1.2 - 0.2 * b : 1) * interpolate(trayIn, [0, 1], [0.8 + k * 0.03, 1])})`,
+                    gap: 8,
+                    fontSize: 17,
+                    fontVariantNumeric: "tabular-nums",
                   }}
                 >
-                  <Icon
-                    name={t.icon}
-                    size={22}
-                    color={mix(t.color, "#FFFFFF", 0.35)}
-                  />
+                  <Icon name="people" color={fg} />
+                  <span
+                    style={{
+                      display: "inline-block",
+                      transform: `scale(${0.8 + 0.2 * badgePop})`,
+                    }}
+                  >
+                    {joined}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-
-          {!tall ? (
-            <div
-              style={{
-                position: "absolute",
-                left: area.x,
-                top: ctrlY,
-                height: btnSize,
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                fontSize: 17,
-                fontVariantNumeric: "tabular-nums",
-                opacity: ui,
-              }}
-            >
-              <span>{time}</span>
-              <span style={{ color: "rgba(241,241,244,0.35)" }}>·</span>
-              <span style={{ color: "rgba(241,241,244,0.6)" }}>
-                {meetingCode}
-              </span>
-            </div>
-          ) : (
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                width: dw,
-                top: ctrlY + btnSize + 22,
-                textAlign: "center",
-                fontSize: 18,
-                color: "rgba(241,241,244,0.6)",
-                fontVariantNumeric: "tabular-nums",
-                opacity: ui,
-              }}
-            >
-              {time} · {meetingCode}
-            </div>
-          )}
-          <div
-            style={{
-              position: "absolute",
-              left: dw / 2 - barW / 2,
-              top: ctrlY,
-              display: "flex",
-              gap: 10,
-              opacity: ui,
-              transform: `translateY(${(1 - ui) * 24}px)`,
-            }}
-          >
-            {buttons.map((b) => {
-              const on = b === "react" ? clamp(trayIn) * (1 - trayOut) : 0;
-              return (
-                <div
-                  key={b}
-                  style={{
-                    width: btnSize,
-                    height: btnSize,
-                    borderRadius: 999,
-                    background:
-                      on > 0.01
-                        ? mix("#2A2B33", "#F1F1F4", on)
-                        : "rgba(255,255,255,0.1)",
-                    backdropFilter: "blur(12px)",
-                    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.1)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Icon name={b} color={on > 0.5 ? "#15161B" : INK} />
-                </div>
-              );
-            })}
-            <div
-              style={{
-                marginLeft: 10,
-                width: 104,
-                height: btnSize,
-                borderRadius: 999,
-                background: "#D9443A",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 17,
-                color: "#FFFFFF",
-              }}
-            >
-              Leave
-            </div>
-          </div>
-          {!tall ? (
-            <div
-              style={{
-                position: "absolute",
-                left: area.x + area.w - 140,
-                width: 140,
-                top: ctrlY,
-                height: btnSize,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                gap: 22,
-                opacity: ui,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  fontSize: 17,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                <Icon name="people" />
-                <span
-                  style={{
-                    display: "inline-block",
-                    transform: `scale(${0.8 + 0.2 * badgePop})`,
-                  }}
-                >
-                  {joined}
-                </span>
+                <Icon name="chat" color={fg} />
               </div>
-              <Icon name="chat" />
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

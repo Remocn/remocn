@@ -1,0 +1,120 @@
+{
+  "component": "core-sum",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "A near-black console look with phosphor-green accents and JetBrains Mono digits.",
+      "askedAs": [
+        "make it look like a terminal",
+        "green hacker console numbers",
+        "command line style counter",
+        "как в терминале",
+        "зелёный консольный стиль"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0b0f0c",
+        "ink": "#d7f5df",
+        "accent": "#3ddc84",
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "paper-spec",
+      "label": "Paper Spec",
+      "description": "A calm light datasheet style with ink-blue accent and Geist type.",
+      "askedAs": [
+        "clean light spec sheet",
+        "white background technical look",
+        "minimal documentation style",
+        "светлый технический стиль",
+        "как в документации на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f5f1",
+        "ink": "#1a1d24",
+        "accent": "#2b59c3",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "rapid-merge",
+      "label": "Rapid Merge",
+      "description": "A fast, punchy cascade where rows fire almost together and merge in quick snaps.",
+      "askedAs": [
+        "make it faster and snappier",
+        "quick merge animation",
+        "energetic fast count",
+        "быстрее и резче",
+        "быстрое слияние строк"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 0,
+        "mergeGap": 8,
+        "accent": "#ff7a45"
+      }
+    },
+    {
+      "id": "slow-cascade",
+      "label": "Slow Cascade",
+      "description": "An unhurried, widely staggered build with long pauses between each merge for a deliberate reveal.",
+      "askedAs": [
+        "slow dramatic build up",
+        "let each row breathe",
+        "calm deliberate summation",
+        "медленное нарастание",
+        "спокойная плавная анимация"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 6,
+        "mergeGap": 32,
+        "delay": 12
+      }
+    },
+    {
+      "id": "hero-figure",
+      "label": "Hero Figure",
+      "description": "An oversized Space Grotesk total on deep navy with a cool cyan accent for a headline stat.",
+      "askedAs": [
+        "big bold headline number",
+        "make the total huge",
+        "keynote hero stat",
+        "крупная цифра на весь экран",
+        "большой заголовочный показатель"
+      ],
+      "props": {
+        "scale": 1.4,
+        "fontFamily": "Space Grotesk",
+        "background": "#0d1526",
+        "ink": "#e8eef8",
+        "accent": "#5cc8e8"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A refined warm-paper treatment with Fraunces numerals and a muted terracotta accent.",
+      "askedAs": [
+        "elegant serif version",
+        "magazine editorial style",
+        "warm classy numbers",
+        "элегантный стиль с засечками",
+        "журнальный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f3ece2",
+        "ink": "#2a211b",
+        "accent": "#b5532f",
+        "scale": 0.9
+      }
+    }
+  ]
+}

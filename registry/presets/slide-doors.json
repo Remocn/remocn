@@ -1,0 +1,106 @@
+{
+  "component": "slide-doors",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper background with an elegant serif and a deep terracotta accent, paced slowly like a magazine spread.",
+      "askedAs": [
+        "elegant serif version on cream",
+        "slow magazine style reveal",
+        "classy light editorial look",
+        "элегантный шрифт с засечками на светлом фоне",
+        "медленно, как в журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#b4532a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "Monospaced green-accented text on near-black that snaps through each line quickly, like a dev tool.",
+      "askedAs": [
+        "make it look like a terminal",
+        "fast code style monospace",
+        "hacker developer vibe",
+        "как в терминале, моноширинный шрифт",
+        "быстро и по-программистски"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Large heavy grotesk type with a confident blue accent and a longer hold so each line lands.",
+      "askedAs": [
+        "big bold punchy text",
+        "make the words huge and heavy",
+        "strong keynote headline",
+        "крупный жирный текст",
+        "сделай мощно и крупно"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "scale": 1.3,
+        "accent": "#4c8dff",
+        "hold": 40
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Light, thin Inter on soft white with a muted slate accent and an unhurried, airy rhythm.",
+      "askedAs": [
+        "minimal light and calm",
+        "thin clean white version",
+        "subtle understated reveal",
+        "минималистично и спокойно",
+        "тонкий шрифт на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "accent": "#5b6b82",
+        "scale": 0.85,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "midnight-plum",
+      "label": "Midnight Plum",
+      "description": "Deep plum background with soft lavender text and a warm amber highlight in rounded Fraunces.",
+      "askedAs": [
+        "dark purple with gold accent",
+        "moody warm night palette",
+        "rich premium dark look",
+        "тёмно-фиолетовый с золотым акцентом",
+        "премиальный тёмный стиль"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#1e1428",
+        "ink": "#ece6f5",
+        "accent": "#f2b24c",
+        "fontFamily": "Fraunces",
+        "fontWeight": 500
+      }
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "component": "icon-share-2",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked share icon that slowly sketches itself in a soft slate tone.",
+      "askedAs": [
+        "thin line share icon drawing slowly",
+        "elegant minimal share symbol",
+        "big delicate share icon outline",
+        "тонкая иконка поделиться рисуется",
+        "элегантная линейная иконка шаринга"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-pulse",
+      "label": "Bold Pulse",
+      "description": "A heavy-stroked blue share icon that repeats its share gesture on a brisk loop.",
+      "askedAs": [
+        "looping share button animation",
+        "bold blue share icon",
+        "share icon that keeps moving",
+        "жирная синяя иконка поделиться",
+        "зацикленная анимация кнопки шаринга"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 3,
+        "color": "#1f6feb",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "quick-tap",
+      "label": "Quick Tap",
+      "description": "A small, snappy share icon that draws and acts at double speed like a UI micro-interaction.",
+      "askedAs": [
+        "fast tiny share icon",
+        "snappy share micro interaction",
+        "quick share tap animation",
+        "маленькая быстрая иконка поделиться",
+        "микроанимация кнопки поделиться"
+      ],
+      "props": {
+        "size": 32,
+        "speed": 2.5,
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "hero-emerald",
+      "label": "Hero Emerald",
+      "description": "An oversized deep green share icon that draws and gestures at a calm, deliberate pace.",
+      "askedAs": [
+        "huge green share icon",
+        "large hero share symbol",
+        "slow big share animation",
+        "огромная зелёная иконка поделиться",
+        "крупная медленная иконка шаринга"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#047857",
+        "speed": 0.75,
+        "strokeWidth": 1.5
+      }
+    },
+    {
+      "id": "terracotta-loop",
+      "label": "Terracotta Loop",
+      "description": "A warm terracotta share icon that continuously redraws itself in a gentle cycle.",
+      "askedAs": [
+        "warm orange share icon looping",
+        "share icon redraw on repeat",
+        "earthy colored share animation",
+        "тёплая оранжевая иконка поделиться",
+        "иконка шаринга рисуется по кругу"
+      ],
+      "props": {
+        "animation": "draw",
+        "loop": true,
+        "color": "#c2410c",
+        "size": 80,
+        "speed": 0.75
+      }
+    }
+  ]
+}

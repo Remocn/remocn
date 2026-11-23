@@ -1,0 +1,122 @@
+{
+  "component": "t-minus",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "mission-control",
+      "label": "Mission Control",
+      "description": "Classic dark console with amber telemetry, monospaced digits, a measured tick and a strong warm bloom at liftoff.",
+      "askedAs": [
+        "amber nasa control room countdown",
+        "retro mission console look",
+        "warm orange launch clock",
+        "обратный отсчёт в стиле ЦУП",
+        "янтарный пульт управления запуском"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#f2a33a",
+        "fontFamily": "JetBrains Mono",
+        "beat": 12,
+        "bloom": 1.2
+      }
+    },
+    {
+      "id": "clean-room",
+      "label": "Clean Room",
+      "description": "Bright, grain-free light theme in crisp Inter with a cool blue accent and a soft glow instead of a flash.",
+      "askedAs": [
+        "light minimal countdown",
+        "clean white launch timer",
+        "no grain bright product countdown",
+        "светлый минималистичный отсчёт",
+        "чистый белый таймер запуска"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#1f6feb",
+        "fontFamily": "Inter",
+        "grain": false,
+        "flash": false,
+        "bloom": 0.6
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Fast, punchy ticks at a larger scale that slam into an intense full bloom.",
+      "askedAs": [
+        "fast energetic countdown",
+        "quick hype launch timer",
+        "big punchy countdown to liftoff",
+        "быстрый энергичный отсчёт",
+        "динамичный таймер перед запуском"
+      ],
+      "props": {
+        "beat": 4,
+        "speed": 1.5,
+        "scale": 1.15,
+        "bloom": 1.4
+      }
+    },
+    {
+      "id": "editorial-dawn",
+      "label": "Editorial Dawn",
+      "description": "Warm cream paper with deep brown serif type and a terracotta sunrise for a refined, magazine-like launch.",
+      "askedAs": [
+        "elegant serif countdown",
+        "warm cream editorial launch",
+        "classy beige release timer",
+        "элегантный отсчёт с засечками",
+        "тёплый бежевый стиль запуска"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#f4ede4",
+        "ink": "#2a1e17",
+        "accent": "#d9623b",
+        "bloom": 0.8
+      }
+    },
+    {
+      "id": "deep-space",
+      "label": "Deep Space",
+      "description": "Inky navy void with pale text and a lavender accent, counting slowly for a tense, cinematic build.",
+      "askedAs": [
+        "slow cinematic space countdown",
+        "dark navy dramatic launch",
+        "tense slow mission clock",
+        "медленный кинематографичный отсчёт",
+        "тёмно-синий космический таймер"
+      ],
+      "props": {
+        "background": "#070b14",
+        "ink": "#e6edf7",
+        "accent": "#7c8cff",
+        "beat": 16,
+        "speed": 0.75,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "quiet-launch",
+      "label": "Quiet Launch",
+      "description": "Understated, compact countdown in Geist with no flash, no grain and only a faint glow at zero.",
+      "askedAs": [
+        "subtle understated countdown",
+        "calm launch timer without flash",
+        "small minimal liftoff",
+        "спокойный сдержанный отсчёт",
+        "тихий запуск без вспышки"
+      ],
+      "props": {
+        "flash": false,
+        "bloom": 0.3,
+        "fontFamily": "Geist",
+        "scale": 0.85,
+        "grain": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "component": "grid-snap-poster",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "swiss-light",
+      "label": "Swiss Light",
+      "description": "A crisp light poster in Inter with a signal-red accent and no grain, like a modernist print.",
+      "askedAs": [
+        "clean white swiss poster",
+        "light minimal version announcement",
+        "red and white grid poster",
+        "светлый швейцарский постер",
+        "минималистичный белый анонс версии"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#e5372b",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm cream paper with deep ink and an oxblood accent set in Fraunces, slower and more deliberate.",
+      "askedAs": [
+        "magazine style release poster",
+        "serif editorial look",
+        "warm paper vintage announcement",
+        "журнальный постер с засечками",
+        "тёплый редакционный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3ede2",
+        "ink": "#1e1a16",
+        "accent": "#8c2f2b",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "A near-black mono poster with a mint accent and fast, tight grid steps for a developer release feel.",
+      "askedAs": [
+        "developer changelog poster",
+        "monospace hacker release",
+        "fast snappy code style",
+        "постер для разработчиков моноширинный",
+        "быстрый релиз в стиле терминала"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#e6f2ec",
+        "accent": "#3dd68c",
+        "step": 3,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-luxe",
+      "label": "Slow Luxe",
+      "description": "A deep navy, gold-accented Instrument Serif poster that steps in slowly on wide snaps for a luxury reveal.",
+      "askedAs": [
+        "luxury slow reveal",
+        "elegant gold and navy poster",
+        "premium cinematic version launch",
+        "роскошный медленный показ",
+        "элегантный постер золото и синий"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#0e1424",
+        "ink": "#f2ebdd",
+        "accent": "#c9a45c",
+        "step": 12,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-grotesk",
+      "label": "Bold Grotesk",
+      "description": "An oversized Space Grotesk layout with a violet accent and punchy pacing that fills the frame.",
+      "askedAs": [
+        "big bold number poster",
+        "loud energetic launch frame",
+        "huge type violet accent",
+        "крупный жирный постер",
+        "энергичный анонс с большим шрифтом"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "accent": "#7c5cff",
+        "scale": 1.25,
+        "step": 4,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "quiet-outro",
+      "label": "Quiet Outro",
+      "description": "A smaller, softly delayed Manrope poster on charcoal with a muted sage accent for a calm closing frame.",
+      "askedAs": [
+        "calm ending frame",
+        "subtle closing poster",
+        "muted outro with delay",
+        "спокойный финальный кадр",
+        "тихая концовка ролика"
+      ],
+      "props": {
+        "fontFamily": "Manrope",
+        "background": "#1b1d1f",
+        "ink": "#e4e6e3",
+        "accent": "#8fa98a",
+        "scale": 0.85,
+        "delay": 20
+      }
+    }
+  ]
+}

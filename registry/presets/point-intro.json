@@ -1,0 +1,105 @@
+{
+  "component": "point-intro",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, magazine-style reveal in Instrument Serif on warm cream paper with a deep terracotta point.",
+      "askedAs": [
+        "elegant serif headline intro",
+        "magazine style announcement",
+        "slow classy title reveal",
+        "элегантный заголовок с засечками",
+        "журнальный стиль анонса"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#f5efe4",
+        "ink": "#2a2420",
+        "accent": "#b5532e",
+        "stagger": 20,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "midnight-launch",
+      "label": "Midnight Launch",
+      "description": "A dark navy stage with off-white type and a bright amber point that lands like a spotlight.",
+      "askedAs": [
+        "dark mode product launch",
+        "night themed announcement",
+        "dark background with orange dot",
+        "тёмная тема для запуска",
+        "анонс на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0e1424",
+        "ink": "#eef1f6",
+        "accent": "#f2a93b",
+        "soloScale": 2.6
+      }
+    },
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "Fast, tightly staggered monospace words on charcoal with a mint green point for a developer-release feel.",
+      "askedAs": [
+        "code style release intro",
+        "fast monospace headline",
+        "developer changelog opener",
+        "быстрый моноширинный заголовок",
+        "интро в стиле терминала"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "theme": "dark",
+        "background": "#16181c",
+        "ink": "#d8dee4",
+        "accent": "#3dd68c",
+        "stagger": 6
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "An oversized Bricolage Grotesque headline with a large crimson point that punctuates loudly.",
+      "askedAs": [
+        "big bold headline announcement",
+        "huge title with big dot",
+        "loud confident opener",
+        "крупный жирный заголовок",
+        "большая точка в конце"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.4,
+        "soloScale": 3.4,
+        "accent": "#d7263d",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "quiet-sage",
+      "label": "Quiet Sage",
+      "description": "A calm, unhurried Fraunces reveal on soft sage paper with a muted forest green point.",
+      "askedAs": [
+        "calm gentle title reveal",
+        "soft green minimal intro",
+        "slow relaxed announcement",
+        "спокойное мягкое интро",
+        "медленный заголовок в зелёных тонах"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#e8ece3",
+        "ink": "#26302a",
+        "accent": "#4a7a55",
+        "speed": 0.75,
+        "delay": 15
+      }
+    }
+  ]
+}

@@ -1,14 +1,10 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Unbounded";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -22,7 +18,21 @@ export interface LightsOutProps {
   beat?: number;
   /** Frames all five lights stay lit before they go out together. */
   hold?: number;
+  /** Oblique slant of the headline, in degrees. */
+  slant?: number;
+  /** Warm glow that rises from below as the lamps come on. */
+  glow?: boolean;
   accent?: string;
+  /** Text color of the headline; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline. Spacing is measured for Unbounded 500; load it yourself. */
+  fontFamily?: string;
+  /** Size of the lights and headline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -196,17 +206,41 @@ const BANDS = 12;
 // Lag of each band, 0–1: tuned by eye so the bands read as streaks, not noise.
 const LAGS = [0.55, 0.15, 0.85, 0.4, 1, 0.25, 0.7, 0.05, 0.9, 0.35, 0.6, 0.2];
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LightsOut({
   title = "SHIP IT.",
   beat = 10,
   hold = 24,
+  slant = SLANT,
+  glow: showGlow = true,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: LightsOutProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const text = title.trim().toUpperCase() || "GO";
@@ -244,7 +278,7 @@ export function LightsOut({
   const slamStart = outAt - 1;
   // The shear pushes the cap line right; center the sheared ink, not the
   // upright one.
-  const shear = Math.tan((SLANT * Math.PI) / 180);
+  const shear = Math.tan((slant * Math.PI) / 180);
   const restX = (W - inkW) / 2 - lsb * fs - (shear * cap) / 2;
   const from = restX - 0.62 * inkW - 0.12 * W;
   const xAt = (f: number) =>
@@ -260,7 +294,7 @@ export function LightsOut({
   const glyphs = text.split("").map((ch, i) => ({
     ch,
     dx: pens[i] * fs,
-    fill: lastIsDot && i === text.length - 1 ? accent : c.ink,
+    fill: lastIsDot && i === text.length - 1 ? accent : fg,
   }));
 
   const renderWord = (ox: number, key: string) => (
@@ -272,7 +306,7 @@ export function LightsOut({
             x={ox + g.dx}
             y={baseline}
             fill={g.fill}
-            fontFamily={display}
+            fontFamily={fontFamily}
             fontWeight={500}
             fontSize={fs}
             style={{ fontKerning: "none" }}
@@ -297,7 +331,7 @@ export function LightsOut({
     return { cx, on };
   });
   const r = (d / 2) * rowScale;
-  const slantT = `translate(0 ${baseline}) skewX(${-SLANT}) translate(0 ${-baseline})`;
+  const slantT = `translate(0 ${baseline}) skewX(${-slant}) translate(0 ${-baseline})`;
 
   // Ground: a warm "rise" glow from below that builds with every lamp, dies
   // on lights out, and comes back low under the landed headline.
@@ -322,84 +356,93 @@ export function LightsOut({
   const g = c.glow;
 
   return (
-    <AbsoluteFill style={{ background: c.stage }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: glow,
-          background: `radial-gradient(75% 62% at 50% 122%, ${g[0]} 0%, ${g[1]} 30%, ${g[2]} 56%, transparent 82%)`,
-        }}
-      />
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        role="img"
-        aria-label={text}
-      >
-        <rect
-          x={W / 2 - (rowW / 2 + gap * 0.9) * rowScale}
-          y={rowCy - 0.05 * d * rowScale}
-          width={(rowW + gap * 1.8) * rowScale}
-          height={0.1 * d * rowScale}
-          fill={c.rail}
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.stage),
+      }}
+    >
+      {showGlow ? (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: glow,
+            background: `radial-gradient(75% 62% at 50% 122%, ${g[0]} 0%, ${g[1]} 30%, ${g[2]} 56%, transparent 82%)`,
+          }}
         />
-        {lights.map((l, i) => (
-          <circle
-            key={i}
-            cx={l.cx}
-            cy={rowCy}
-            r={r}
-            fill={l.on ? `url(#${uid}-lamp)` : c.off}
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          role="img"
+          aria-label={text}
+        >
+          <rect
+            x={W / 2 - (rowW / 2 + gap * 0.9) * rowScale}
+            y={rowCy - 0.05 * d * rowScale}
+            width={(rowW + gap * 1.8) * rowScale}
+            height={0.1 * d * rowScale}
+            fill={c.rail}
           />
-        ))}
-        <defs>
-          {/* Lamp lens: concentric, centered, so it reads as a flat light and
-              not a lit sphere. */}
-          <radialGradient id={`${uid}-lamp`} cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0" stopColor="#FFF1E2" />
-            <stop offset="0.22" stopColor="#FFC08A" />
-            <stop offset="0.55" stopColor="#FF8A3D" />
-            <stop offset="0.92" stopColor="#D2502A" />
-            <stop offset="1" stopColor="#A3301A" />
-          </radialGradient>
-          {Array.from({ length: BANDS }, (_, k) => (
-            <clipPath key={k} id={`${uid}-b${k}`}>
-              <rect
-                x={0}
-                y={bandTop + k * bandH}
-                width={W}
-                height={bandH + 0.5}
-              />
-            </clipPath>
+          {lights.map((l, i) => (
+            <circle
+              key={i}
+              cx={l.cx}
+              cy={rowCy}
+              r={r}
+              fill={l.on ? `url(#${uid}-lamp)` : c.off}
+            />
           ))}
-        </defs>
-        <g transform={slantT}>
-          {moving
-            ? Array.from({ length: BANDS }, (_, k) => {
-                const lag = LAGS[k % LAGS.length];
-                // Only the long-lag bands streak; the rest just slip, so the
-                // letterforms still read through the smear.
-                const head = x - smear * lag * 0.3;
-                const tail = lag > 0.5 ? smear * lag * 0.85 : 0;
-                const n = Math.min(18, Math.ceil(tail / step));
-                return (
-                  <g key={k} clipPath={`url(#${uid}-b${k})`}>
-                    {Array.from({ length: n + 1 }, (_, j) =>
-                      renderWord(
-                        head - (n ? (tail * (n - j)) / n : 0),
-                        `c${j}`,
-                      ),
-                    )}
-                  </g>
-                );
-              })
-            : null}
-          {out && !moving ? renderWord(x, "w") : null}
-        </g>
-      </svg>
+          <defs>
+            {/* Lamp lens: concentric, centered, so it reads as a flat light and
+              not a lit sphere. */}
+            <radialGradient id={`${uid}-lamp`} cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0" stopColor="#FFF1E2" />
+              <stop offset="0.22" stopColor="#FFC08A" />
+              <stop offset="0.55" stopColor="#FF8A3D" />
+              <stop offset="0.92" stopColor="#D2502A" />
+              <stop offset="1" stopColor="#A3301A" />
+            </radialGradient>
+            {Array.from({ length: BANDS }, (_, k) => (
+              <clipPath key={k} id={`${uid}-b${k}`}>
+                <rect
+                  x={0}
+                  y={bandTop + k * bandH}
+                  width={W}
+                  height={bandH + 0.5}
+                />
+              </clipPath>
+            ))}
+          </defs>
+          <g transform={slantT}>
+            {moving
+              ? Array.from({ length: BANDS }, (_, k) => {
+                  const lag = LAGS[k % LAGS.length];
+                  // Only the long-lag bands streak; the rest just slip, so the
+                  // letterforms still read through the smear.
+                  const head = x - smear * lag * 0.3;
+                  const tail = lag > 0.5 ? smear * lag * 0.85 : 0;
+                  const n = Math.min(18, Math.ceil(tail / step));
+                  return (
+                    <g key={k} clipPath={`url(#${uid}-b${k})`}>
+                      {Array.from({ length: n + 1 }, (_, j) =>
+                        renderWord(
+                          head - (n ? (tail * (n - j)) / n : 0),
+                          `c${j}`,
+                        ),
+                      )}
+                    </g>
+                  );
+                })
+              : null}
+            {out && !moving ? renderWord(x, "w") : null}
+          </g>
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,0 +1,99 @@
+{
+  "component": "light-trail-write",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-signature",
+      "label": "Slow Signature",
+      "description": "A deliberate, unhurried stroke in warm gold over near-black, like a signature written with a sparkler.",
+      "askedAs": [
+        "slow handwritten logo in gold",
+        "elegant slow signature reveal",
+        "luxury gold light writing",
+        "медленная подпись золотым светом",
+        "элегантное написание логотипа"
+      ],
+      "props": {
+        "write": 140,
+        "accent": "#d9a441",
+        "background": "#0a0806",
+        "finish": "accent",
+        "delay": 12
+      }
+    },
+    {
+      "id": "quick-flash",
+      "label": "Quick Flash",
+      "description": "A fast, snappy trace in cool cyan that lands the mark in under a second for short stings.",
+      "askedAs": [
+        "fast logo trace",
+        "quick light sting",
+        "snappy logo write for intro",
+        "быстрое появление логотипа",
+        "короткая световая заставка"
+      ],
+      "props": {
+        "write": 35,
+        "speed": 1.5,
+        "accent": "#4fc3e8",
+        "grain": false
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "A soft coral-orange trail on deep plum that cools like a dying ember, finishing in the accent colour.",
+      "askedAs": [
+        "warm orange glowing trail",
+        "ember style logo reveal",
+        "fiery handwriting effect",
+        "тёплый огненный след",
+        "логотип как тлеющий уголь"
+      ],
+      "props": {
+        "accent": "#f2774b",
+        "background": "#140a10",
+        "finish": "accent",
+        "write": 100
+      }
+    },
+    {
+      "id": "minimal-mono",
+      "label": "Minimal Mono",
+      "description": "A clean, grain-free white stroke on pure charcoal with a smaller, centred mark for a quiet, modern feel.",
+      "askedAs": [
+        "minimal white logo trace",
+        "clean monochrome reveal",
+        "simple understated logo write",
+        "минималистичный белый логотип",
+        "чистая монохромная анимация"
+      ],
+      "props": {
+        "accent": "#e8e8ec",
+        "background": "#111114",
+        "grain": false,
+        "scale": 0.7
+      }
+    },
+    {
+      "id": "emerald-hero",
+      "label": "Emerald Hero",
+      "description": "An oversized, bold emerald trace on deep forest black that fills the frame for a confident opener.",
+      "askedAs": [
+        "big green logo reveal",
+        "large bold logo write",
+        "full screen light signature",
+        "большой зелёный логотип",
+        "крупная световая надпись"
+      ],
+      "props": {
+        "accent": "#2fbf8a",
+        "background": "#04100c",
+        "scale": 1.35,
+        "write": 90,
+        "finish": "accent"
+      }
+    }
+  ]
+}

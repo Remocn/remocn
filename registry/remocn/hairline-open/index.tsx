@@ -3,13 +3,9 @@
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadSerif("normal", {
   weights: ["400"],
@@ -22,6 +18,22 @@ export interface HairlineOpenProps {
   to?: React.ReactNode;
   accent?: string;
   theme?: "dark" | "light";
+  /** Color of the outgoing statement; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the beam of light behind the slit; "transparent" drops it. */
+  background?: string;
+  /** Typeface for both statements. Load it yourself; Instrument Serif by default. */
+  fontFamily?: string;
+  /** Set the incoming statement in italic. */
+  italic?: boolean;
+  /** Frames the drawn hairline holds before the frame splits open. */
+  hold?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of both statements, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
 }
 
@@ -39,6 +51,8 @@ const DRAW = Easing.bezier(0.7, 0, 0.2, 1);
 const SHEAR = Easing.bezier(0.22, 1, 0.36, 1);
 const OPEN = Easing.bezier(0.7, 0, 0.3, 1);
 const SETTLE = Easing.bezier(0.22, 1, 0.36, 1);
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const STAGES = {
   dark: {
@@ -131,13 +145,19 @@ function Title({
   color,
   max,
   italic = false,
+  fontFamily,
+  tilt,
 }: {
   content: React.ReactNode;
   color: string;
   max: number;
   italic?: boolean;
+  fontFamily: string;
+  /** Marks the statement for the lean on every frame; true while it moves. */
+  tilt?: boolean;
 }) {
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   if (typeof content !== "string")
     return <AbsoluteFill>{content}</AbsoluteFill>;
@@ -147,11 +167,14 @@ function Title({
       style={{
         alignItems: "center",
         justifyContent: "center",
+        // The mark stays on at rest too: a statement left off the pixel grid
+        // keeps its lean only under a mark, and dropping it snaps the line.
+        transform: tilt === undefined ? undefined : glide(tilt).trim(),
       }}
     >
       <div
         style={{
-          fontFamily: serif,
+          fontFamily,
           fontStyle: italic ? "italic" : "normal",
           fontWeight: 400,
           fontSize: size,
@@ -169,29 +192,55 @@ function Title({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function HairlineOpen({
   from = "Write the story",
   to = "Ship the film",
   accent = "#3B5BFD",
   theme = "dark",
+  ink,
+  background,
+  fontFamily = serif,
+  italic = true,
+  hold = OPEN_AT - DRAW_END,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
 }: HairlineOpenProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const stage = STAGES[theme];
+  const fg = ink ?? stage.fg;
   const line = Math.max(1.5, 2.5 * u);
+  const openAt = DRAW_END + hold;
+  const openEnd = openAt + (OPEN_END - OPEN_AT);
 
   const draw = DRAW(interpolate(t, [DRAW_AT, DRAW_END], [0, 1], CLAMP));
   const head = draw * W;
   const shear =
-    6 * u * SHEAR(interpolate(t, [DRAW_END - 4, OPEN_AT + 2], [0, 1], CLAMP));
-  const open = OPEN(interpolate(t, [OPEN_AT, OPEN_END], [0, 1], CLAMP));
+    6 * u * SHEAR(interpolate(t, [DRAW_END - 4, openAt + 2], [0, 1], CLAMP));
+  const open = OPEN(interpolate(t, [openAt, openEnd], [0, 1], CLAMP));
   const gap = open * H * 1.24;
   const slide = 0.06 * W * open;
-  const settle = SETTLE(
-    interpolate(t, [OPEN_AT, OPEN_END + 16], [0, 1], CLAMP),
-  );
+  const settle = SETTLE(interpolate(t, [openAt, openEnd + 16], [0, 1], CLAMP));
   const bScale = 1.07 - 0.07 * settle;
   const panelsGone = gap / 2 >= H / 2 + 40 * u;
   const lineOn = draw > 0 && gap < line;
@@ -235,7 +284,18 @@ export function HairlineOpen({
                 background: `radial-gradient(ellipse 80% 90% at 24% 0%, ${stage.light}, transparent 70%)`,
               }}
             />
-            <Title content={from} color={stage.fg} max={176} />
+            <ScaleLayer scale={scale}>
+              {/* The tilt sits on the statement, not the half: a tilted half
+                  would lift its painted corner off the frame edge while the
+                  split is still narrow. */}
+              <Title
+                content={from}
+                color={fg}
+                max={176}
+                fontFamily={fontFamily}
+                tilt={midway(open)}
+              />
+            </ScaleLayer>
           </div>
           <div
             style={{
@@ -254,22 +314,38 @@ export function HairlineOpen({
   };
 
   return (
-    <AbsoluteFill style={{ background: "#02030a", overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? "#02030a"),
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <AbsoluteFill
+          style={{
+            background: beamGround(
+              accent,
+              interpolate(t, [openAt, openEnd + 40], [0, 1], CLAMP),
+            ),
+          }}
+        />
+      ) : null}
       <AbsoluteFill
         style={{
-          background: beamGround(
-            accent,
-            interpolate(t, [OPEN_AT, OPEN_END + 40], [0, 1], CLAMP),
-          ),
-        }}
-      />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${bScale})`,
+          transform: `scale(${bScale})${glide(midway(settle))}`,
           opacity: interpolate(gap, [0.05 * H, 0.32 * H], [0, 1], CLAMP),
         }}
       >
-        <Title content={to} color="#F7F7F5" max={196} italic />
+        <ScaleLayer scale={scale}>
+          <Title
+            content={to}
+            color="#F7F7F5"
+            max={196}
+            italic={italic}
+            fontFamily={fontFamily}
+          />
+        </ScaleLayer>
       </AbsoluteFill>
       {panelsGone ? null : (
         <>
@@ -289,7 +365,7 @@ export function HairlineOpen({
           }}
         />
       ) : null}
-      <Grain opacity={theme === "light" ? 0.04 : 0.055} />
+      {grain ? <Grain opacity={theme === "light" ? 0.04 : 0.055} /> : null}
     </AbsoluteFill>
   );
 }

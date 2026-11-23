@@ -2,15 +2,9 @@
 
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type ImpactShakeColors = {
   background: string;
@@ -76,8 +70,9 @@ export function ImpactShake({
   seed = impactShakeDefaults.seed,
   speed = impactShakeDefaults.speed,
 }: ImpactShakeProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const tilt = useGlide();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const uid = `impact-shake-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const baseColors = { ...impactShakeDefaults.colors, ...colorOverrides };
   const colors = {
@@ -90,31 +85,58 @@ export function ImpactShake({
   const unit = height / 720;
   const since = t - impact;
 
-  // Fall: pure acceleration into the hit, no easing out.
-  const fall = interpolate(t, [0, impact], [-height * 0.85, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.in(Easing.quad),
-  });
-  const falling = since < 0;
-  const stretch = falling
-    ? interpolate(t, [0, impact], [1, 1.18], { extrapolateRight: "clamp" })
-    : 1;
-  const squash = falling
-    ? 0
-    : 1 -
-      spring({ frame: since, fps: 30, config: { damping: 9, stiffness: 260 } });
-  const sx = falling
-    ? 1 / Math.sqrt(stretch)
-    : 1 + 0.16 * squash * Math.min(1, k);
-  const sy = falling ? stretch : 1 - 0.2 * squash * Math.min(1, k);
-
-  // Damped camera shake with incommensurate frequencies so it never looks looped.
-  const decay = since >= 0 ? Math.exp(-since / 3.2) : 0;
   const phase = random(`impact-shake-${seed}`) * Math.PI * 2;
-  const shakeX = decay * Math.sin(since * 2.9 + phase) * 26 * unit * k;
-  const shakeY = decay * Math.cos(since * 3.7 + phase) * 34 * unit * k;
-  const shakeR = decay * Math.sin(since * 2.3 + phase * 2) * 1.6 * k;
+  const motionAt = (tt: number) => {
+    const sinceT = tt - impact;
+    // Fall: pure acceleration into the hit, no easing out.
+    const fall = interpolate(tt, [0, impact], [-height * 0.85, 0], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.in(Easing.quad),
+    });
+    const falling = sinceT < 0;
+    const stretch = falling
+      ? interpolate(tt, [0, impact], [1, 1.18], { extrapolateRight: "clamp" })
+      : 1;
+    const squash = falling
+      ? 0
+      : 1 -
+        spring({
+          frame: sinceT,
+          fps: 30,
+          config: { damping: 9, stiffness: 260 },
+        });
+    const sx = falling
+      ? 1 / Math.sqrt(stretch)
+      : 1 + 0.16 * squash * Math.min(1, k);
+    const sy = falling ? stretch : 1 - 0.2 * squash * Math.min(1, k);
+
+    // Damped camera shake with incommensurate frequencies so it never looks looped.
+    const decay = sinceT >= 0 ? Math.exp(-sinceT / 3.2) : 0;
+    const shakeX = decay * Math.sin(sinceT * 2.9 + phase) * 26 * unit * k;
+    const shakeY = decay * Math.cos(sinceT * 3.7 + phase) * 34 * unit * k;
+    const shakeR = decay * Math.sin(sinceT * 2.3 + phase * 2) * 1.6 * k;
+    return { fall, sx, sy, decay, shakeX, shakeY, shakeR };
+  };
+  const { fall, sx, sy, decay, shakeX, shakeY, shakeR } = motionAt(t);
+  // The squash spring and the shake ring out with no clean progress, so the
+  // word counts as moving while its vertical travel, its height or the
+  // camera's turn still shifts it between neighbouring frames.
+  const step = 30 / fps;
+  const shift = (a: number, b: number) => {
+    const p = motionAt(a);
+    const q = motionAt(b);
+    return (
+      Math.abs(p.fall - q.fall) +
+      Math.abs(p.sy - q.sy) * height +
+      Math.abs(p.shakeY - q.shakeY) +
+      Math.abs(p.decay - q.decay) * 0.04 * k * height +
+      Math.abs(p.shakeR - q.shakeR) * width * 0.01
+    );
+  };
+  const moving =
+    shift(t + speed * step, t) > 1e-3 || shift(t, t - speed * step) > 1e-3;
+  const glide = tilt(moving);
 
   const split =
     since >= 0 && since < 2 ? (1 - since / 2) * 18 * unit * k + 6 * unit : 0;
@@ -163,7 +185,7 @@ export function ImpactShake({
         alignItems: "center",
         justifyContent: "center",
         filter,
-        transform: `translate(${dx}px, ${fall}px) scale(${sx}, ${sy})`,
+        transform: `translate(${dx}px, ${fall}px) scale(${sx}, ${sy})${glide}`,
         transformOrigin: `50% ${(floorY / height) * 100}%`,
         mixBlendMode: filter ? "screen" : undefined,
       }}

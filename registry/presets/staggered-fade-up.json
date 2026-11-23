@@ -1,0 +1,100 @@
+{
+  "component": "staggered-fade-up",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "Bold words pop up fast with a tight stagger and short travel for punchy, energetic reveals.",
+      "askedAs": [
+        "fast word reveal",
+        "snappy punchy text entrance",
+        "quick bold headline animation",
+        "быстрое появление слов",
+        "резкий энергичный текст"
+      ],
+      "props": {
+        "staggerDelay": 2,
+        "distance": 12,
+        "speed": 2,
+        "fontWeight": "700"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Light, airy words drift up slowly from far below with a generous pause between each one.",
+      "askedAs": [
+        "slow elegant word fade",
+        "calm cinematic text reveal",
+        "gentle dreamy headline animation",
+        "медленное плавное появление текста",
+        "спокойный кинематографичный текст"
+      ],
+      "props": {
+        "staggerDelay": 12,
+        "distance": 60,
+        "speed": 0.5,
+        "fontWeight": "400"
+      }
+    },
+    {
+      "id": "editorial-navy",
+      "label": "Editorial Navy",
+      "description": "Medium-weight deep navy body text rises softly at a reading-friendly size and pace.",
+      "askedAs": [
+        "subtitle style word reveal",
+        "smaller body text fade up",
+        "navy editorial text animation",
+        "текст для подзаголовка",
+        "тёмно-синий редакционный текст"
+      ],
+      "props": {
+        "fontSize": 44,
+        "color": "#1e3a5f",
+        "fontWeight": "500",
+        "staggerDelay": 3,
+        "distance": 14
+      }
+    },
+    {
+      "id": "big-statement",
+      "label": "Big Statement",
+      "description": "Oversized heavy charcoal headline words climb in one by one for a poster-like impact.",
+      "askedAs": [
+        "huge headline reveal",
+        "big bold statement text",
+        "large poster title animation",
+        "огромный жирный заголовок",
+        "крупный текст как на постере"
+      ],
+      "props": {
+        "fontSize": 136,
+        "fontWeight": "700",
+        "color": "#111827",
+        "distance": 40,
+        "staggerDelay": 6
+      }
+    },
+    {
+      "id": "warm-whisper",
+      "label": "Warm Whisper",
+      "description": "Soft terracotta words fade in with almost no movement for a subtle, quiet entrance.",
+      "askedAs": [
+        "subtle fade with little motion",
+        "warm colored soft text",
+        "minimal gentle word fade",
+        "мягкое появление без движения",
+        "тёплый терракотовый текст"
+      ],
+      "props": {
+        "distance": 4,
+        "color": "#b4532a",
+        "fontWeight": "400",
+        "speed": 0.75,
+        "staggerDelay": 7
+      }
+    }
+  ]
+}

@@ -11,9 +11,9 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -34,11 +34,26 @@ export interface PanelSplitProps {
   body?: string;
   caption?: string;
   labels?: string[];
+  /** City in the first panel's header. */
+  location?: string;
+  /** Label of the play button in the last panel. */
+  ctaLabel?: string;
   theme?: "dark" | "light";
   accent?: string;
   panel?: string;
+  /** Text color of the name, first headline line and question; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Size of the panels, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const THEMES = {
@@ -98,6 +113,14 @@ const CLAMP = {
 
 type Rect = { x: number; y: number; w: number; h: number };
 
+// Layout rounds a box and a baseline to whole pixels, so anything eased by
+// `left`/`top` steps along pixel by pixel. Moves are laid out at the resting
+// place and carried by this translate, which is dropped once it is spent.
+const shift = (dx: number, dy: number) =>
+  Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3
+    ? `translate(${dx}px, ${dy}px) `
+    : "";
+
 function ArrowIcon({ size, color }: { size: number; color: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
@@ -133,6 +156,7 @@ function Header({
   size,
   pad,
   w,
+  dw = 0,
   ink,
 }: {
   left: ReactNode;
@@ -140,6 +164,8 @@ function Header({
   size: number;
   pad: number;
   w?: number;
+  /** How far the panel is wider than where it settles. */
+  dw?: number;
   ink: string;
 }) {
   const fit =
@@ -149,7 +175,9 @@ function Header({
       style={{
         position: "absolute",
         left: pad,
-        right: pad,
+        // Laid out at the settled width; the right label rides the panel's
+        // change of width as a transform, not as a reflow.
+        right: pad + dw,
         top: pad * 0.8,
         display: "flex",
         alignItems: "center",
@@ -172,8 +200,31 @@ function Header({
       >
         {left}
       </span>
-      <span style={{ opacity: fit }}>{right}</span>
+      <span
+        style={{
+          opacity: fit,
+          transform: Math.abs(dw) > 1e-3 ? `translateX(${dw}px)` : undefined,
+        }}
+      >
+        {right}
+      </span>
     </div>
+  );
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
   );
 }
 
@@ -186,14 +237,23 @@ export function PanelSplit({
   body = "A studio practice built on timing, rhythm and the frames in between.",
   caption = "Horizon, brand film",
   labels = ["Portfolio", "Case 01", "Notes", "Reel"],
+  location = "Lisbon",
+  ctaLabel = "Play reel",
   theme = "dark",
   accent = "#3B5BFD",
   panel,
+  ink,
+  background,
+  fontFamily = sans.fontFamily,
   ground,
   groundParams,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: PanelSplitProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const t = THEMES[theme];
   const portrait = H > W;
   const srcs =
@@ -218,12 +278,6 @@ export function PanelSplit({
   const F = portrait
     ? { c1: 0.58, c3: 0.52, l2: 0.66, l3: 0.58, r2: 0.5, r3: 0.42 }
     : { c1: 0.6, c3: 0.44, l2: 0.64, l3: 0.56, r2: 0.5, r3: 0.62 };
-  const c = 1 - (1 - F.c1) * s1 - (F.c1 - F.c3) * s3;
-  const rL = 1 - (1 - F.l2) * s2 - (F.l2 - F.l3) * s3;
-  const rR = 1 - (1 - F.r2) * s2b - (F.r2 - F.r3) * s3;
-  const gc = G * Math.min(1, s1 * 1.6);
-  const gl = G * Math.min(1, s2 * 1.6);
-  const gr = G * Math.min(1, s2b * 1.6);
 
   const UL = portrait ? R.h : R.w;
   const VL = portrait ? R.w : R.h;
@@ -245,15 +299,31 @@ export function PanelSplit({
       ? { x: R.x + b0, y: R.y + a0, w: b1 - b0, h: a1 - a0 }
       : { x: R.x + a0, y: R.y + b0, w: a1 - a0, h: b1 - b0 };
   };
-  const P1 = toRect(0, 0, c, rL, 0, gc / 2, 0, gl / 2);
-  const P2 = toRect(c, 0, 1, rR, gc / 2, 0, 0, gr / 2);
-  const P3 = toRect(0, rL, c, 1, 0, gc / 2, gl / 2, 0);
-  const P4 = toRect(c, rR, 1, 1, gc / 2, 0, gr / 2, 0);
+  const panelsAt = (s1: number, s2: number, s2b: number, s3: number) => {
+    const c = 1 - (1 - F.c1) * s1 - (F.c1 - F.c3) * s3;
+    const rL = 1 - (1 - F.l2) * s2 - (F.l2 - F.l3) * s3;
+    const rR = 1 - (1 - F.r2) * s2b - (F.r2 - F.r3) * s3;
+    const gc = G * Math.min(1, s1 * 1.6);
+    const gl = G * Math.min(1, s2 * 1.6);
+    const gr = G * Math.min(1, s2b * 1.6);
+    return [
+      toRect(0, 0, c, rL, 0, gc / 2, 0, gl / 2),
+      toRect(c, 0, 1, rR, gc / 2, 0, 0, gr / 2),
+      toRect(0, rL, c, 1, 0, gc / 2, gl / 2, 0),
+      toRect(c, rR, 1, 1, gc / 2, 0, gr / 2, 0),
+    ];
+  };
+  const [P1, P2, P3, P4] = panelsAt(s1, s2, s2b, s3);
+  // Where the split settles; the panels are laid out there.
+  const rest = panelsAt(1, 1, 1, 1);
 
   const openIn = sp(-10, HEAVY);
   const cam =
     (0.84 + 0.16 * sp(beat("dolly"), HEAVY)) *
     interpolate(frame, [0, beat("end")], [1, 1.025]);
+  // The camera never stops pushing in, and it carries every panel, so one
+  // tilt on it covers all the text that scales or rises inside them.
+  const camMoving = frame < beat("end");
   const payPunch = interpolate(
     frame,
     [beat("payoff"), beat("payoff") + 3, beat("payoff") + 12],
@@ -266,11 +336,17 @@ export function PanelSplit({
   const preset = ground ?? (groundParams ? undefined : t.preset);
   const gParams = groundParams ?? (ground ? undefined : t.groundParams);
 
-  const panelStyle = (r: Rect, extra?: React.CSSProperties) =>
+  const panelStyle = (
+    r: Rect,
+    at: Rect,
+    extra?: React.CSSProperties,
+    then = "",
+  ) =>
     ({
       position: "absolute",
-      left: r.x,
-      top: r.y,
+      left: at.x,
+      top: at.y,
+      transform: `${shift(r.x - at.x, r.y - at.y)}${then}`.trim() || undefined,
       width: Math.max(0, r.w),
       height: Math.max(0, r.h),
       borderRadius: radius,
@@ -280,7 +356,16 @@ export function PanelSplit({
       ...extra,
     }) as React.CSSProperties;
 
-  const k1 = 0.62 + 0.38 * Math.min(P1.w / R.w, P1.h / R.h);
+  const k1Of = (r: Rect) => 0.62 + 0.38 * Math.min(r.w / R.w, r.h / R.h);
+  const k1 = k1Of(P1);
+  // The first panel's content box grows and shrinks with the split. Its
+  // bottom- and right-anchored children are laid out against the settled box
+  // and ride the difference as a transform, so layout never rounds the move.
+  const innerW = P1.w / k1;
+  const innerH = P1.h / k1;
+  const innerWRest = rest[0].w / k1Of(rest[0]);
+  const innerHRest = rest[0].h / k1Of(rest[0]);
+  const dH1 = innerH - innerHRest;
   const heroFont = (portrait ? 46 : 44) * u;
   const lineIn = (i: number) =>
     interpolate(frame, [-12 + i * 3, 1 + i * 3], [0, 1], {
@@ -288,6 +373,9 @@ export function PanelSplit({
       easing: TYPE_IN,
     });
   const tile = Math.min((P1.h / k1) * 0.4, 200 * u);
+  const tileRest = Math.min(innerHRest * 0.4, 200 * u);
+  const tileLeft = innerWRest - pad - tileRest;
+  const tileDx = innerW - pad - innerW * 0.16 * (1 - s1) - tile - tileLeft;
   const tileIn = sp(-4, CARD);
 
   const p2In = sp(beat("split1") + 6, CARD);
@@ -302,376 +390,416 @@ export function PanelSplit({
   );
   const playX = pad;
   const playY = P4.h - pad - 40 * u;
+  const playYRest = rest[3].h - pad - 40 * u;
+  const dH2 = P2.h - rest[1].h;
+  const dH3 = P3.h - rest[2].h;
   const floodMax = Math.hypot(P4.w, P4.h) * 1.05;
   const pillPop = sp(beat("payoff") - 2, CHIP);
 
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={t.groundOffset}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${cam}) translateY(${(1 - openIn) * H * 0.06}px)`,
-          opacity: Math.min(1, openIn * 1.6),
-        }}
-      >
-        <div style={panelStyle(P1)}>
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              width: P1.w / k1,
-              height: P1.h / k1,
-              transform: `scale(${k1})`,
-              transformOrigin: "0 0",
-              fontFamily: sans.fontFamily,
-              fontWeight: 400,
-              color: `rgb(${t.ink})`,
-            }}
-          >
-            <Header
-              ink={t.ink}
-              size={label}
-              pad={pad}
-              left={<span>{labels[0]}</span>}
-              right={<span>Lisbon</span>}
-            />
+      {background === undefined ? (
+        <GshGround
+          preset={preset}
+          params={gParams}
+          timeOffset={t.groundOffset}
+          timeScale={0.5}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${cam}) translateY(${(1 - openIn) * H * 0.06}px)${glide(camMoving)}`,
+            opacity: Math.min(1, openIn * 1.6),
+          }}
+        >
+          <div style={panelStyle(P1, rest[0])}>
             <div
               style={{
                 position: "absolute",
-                left: pad,
-                top: pad * 0.8 + label * 2.4,
-                fontSize: label * 1.5,
-                lineHeight: 1.22,
-                letterSpacing: "-0.01em",
-                opacity: lineIn(0),
-                transform: `translateY(${(1 - lineIn(0)) * label}px)`,
+                left: 0,
+                top: 0,
+                width: P1.w / k1,
+                height: P1.h / k1,
+                transform: `scale(${k1})`,
+                transformOrigin: "0 0",
+                fontFamily,
+                fontWeight: 400,
+                color: ink ?? `rgb(${t.ink})`,
               }}
             >
-              <div>{name}</div>
-              <div style={{ color: `rgba(${t.ink},0.5)` }}>{role}</div>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: pad,
-                bottom: pad * 1.1,
-                fontSize: heroFont,
-                lineHeight: 1.06,
-                letterSpacing: "-0.035em",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {headline.map((line, i) => (
-                <div
-                  key={`${line}-${i}`}
-                  style={{
-                    overflow: "hidden",
-                    paddingBottom: "0.08em",
-                    marginBottom: "-0.08em",
-                  }}
-                >
-                  <div
-                    style={{
-                      transform: `translateY(${(1 - lineIn(i + 1)) * 105}%)`,
-                      color: `rgba(${t.ink},${[1, 0.62, 0.42][i] ?? 0.42})`,
-                    }}
-                  >
-                    {line}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                right: pad + (P1.w / k1) * 0.16 * (1 - s1),
-                top: pad * 0.8 + label * 2.4,
-                width: tile,
-                height: tile,
-                borderRadius: tile * 0.22,
-                overflow: "hidden",
-                transform: `scale(${0.7 + 0.3 * tileIn}) rotate(${(1 - tileIn) * -6}deg)`,
-                opacity: Math.min(1, tileIn * 1.5),
-                boxShadow: `0 ${10 * u}px ${30 * u}px ${shadow(0.6)}`,
-              }}
-            >
-              <Img
-                src={img(0)}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              <Header
+                ink={t.ink}
+                size={label}
+                pad={pad}
+                left={<span>{labels[0]}</span>}
+                right={<span>{location}</span>}
               />
               <div
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  borderRadius: "inherit",
-                  boxShadow: `inset 0 0 0 1px ${t.imgEdge}`,
-                }}
-              />
-            </div>
-          </div>
-        </div>
-        {P2.w > 2 && P2.h > 2 ? (
-          <div style={panelStyle(P2)}>
-            <Header
-              ink={t.ink}
-              size={label}
-              pad={pad}
-              w={P2.w}
-              left={<span>{labels[1]}</span>}
-              right={
-                <span style={{ display: "flex" }}>
-                  <ArrowIcon size={label * 1.3} color={`rgba(${t.ink},0.7)`} />
-                </span>
-              }
-            />
-            <div
-              style={{
-                position: "absolute",
-                left: pad,
-                right: pad,
-                top: pad * 0.8 + label * 2.6,
-                bottom: pad + label * 2.2,
-                borderRadius: Math.max(4, radius - pad * 0.5),
-                overflow: "hidden",
-                transform: `translateY(${(1 - p2In) * P2.h * 0.4}px)`,
-                opacity: Math.min(1, p2In * 1.4),
-                outline: `1px solid ${t.imgEdge}`,
-                outlineOffset: -1,
-              }}
-            >
-              <Img
-                src={img(1)}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  transform: `scale(${1.18 - 0.12 * p2In - 0.04 * s3})`,
-                }}
-              />
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: pad,
-                right: pad,
-                bottom: pad * 0.9,
-                display: "flex",
-                justifyContent: "space-between",
-                fontFamily: sans.fontFamily,
-                fontSize: label * 1.08,
-                color: `rgba(${t.ink},0.88)`,
-                whiteSpace: "nowrap",
-                opacity: interpolate(p2In, [0.4, 1], [0, 1], CLAMP),
-              }}
-            >
-              <span>{caption}</span>
-              <span
-                style={{
-                  fontFamily: mono.fontFamily,
-                  fontSize: label * 0.95,
-                  fontVariantNumeric: "tabular-nums",
-                  color: `rgba(${t.ink},0.45)`,
-                  opacity: interpolate(
-                    P2.w,
-                    [label * 22, label * 26],
-                    [0, 1],
-                    CLAMP,
-                  ),
-                }}
-              >
-                2026
-              </span>
-            </div>
-          </div>
-        ) : null}
-        {P3.w > 2 && P3.h > 2 ? (
-          <div style={panelStyle(P3)}>
-            <Header
-              ink={t.ink}
-              size={label}
-              pad={pad}
-              w={P3.w}
-              left={<span>{labels[2]}</span>}
-              right={<span>02</span>}
-            />
-            <div
-              style={{
-                position: "absolute",
-                left: pad,
-                right: pad,
-                bottom: pad * 1.1,
-                transform: `translateY(${(1 - p3In) * P3.h * 0.5}px)`,
-                opacity: Math.min(1, p3In * 1.4),
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: serif.fontFamily,
-                  fontStyle: "italic",
-                  fontWeight: 400,
-                  fontSize: (portrait ? 33 : 34) * u,
-                  lineHeight: 1.04,
+                  left: pad,
+                  top: pad * 0.8 + label * 2.4,
+                  fontSize: label * 1.5,
+                  lineHeight: 1.22,
                   letterSpacing: "-0.01em",
-                  color: `rgb(${t.ink})`,
-                  maxWidth: "12em",
-                  textWrap: "balance",
+                  opacity: lineIn(0),
+                  transform: `translateY(${(1 - lineIn(0)) * label}px)`,
                 }}
               >
-                {question}
+                <div>{name}</div>
+                <div style={{ color: `rgba(${t.ink},0.5)` }}>{role}</div>
               </div>
               <div
                 style={{
-                  marginTop: label * 0.9,
-                  fontFamily: sans.fontFamily,
-                  fontSize: label * 1.04,
-                  lineHeight: 1.4,
-                  color: `rgba(${t.ink},0.55)`,
-                  maxWidth: "26em",
-                  opacity: interpolate(
-                    P3.w,
-                    [label * 22, label * 27],
-                    [0, 1],
-                    CLAMP,
-                  ),
+                  position: "absolute",
+                  left: pad,
+                  bottom: pad * 1.1 + dH1,
+                  transform: shift(0, dH1).trim() || undefined,
+                  fontSize: heroFont,
+                  lineHeight: 1.06,
+                  letterSpacing: "-0.035em",
+                  whiteSpace: "nowrap",
                 }}
               >
-                {body}
+                {headline.map((line, i) => (
+                  <div
+                    key={`${line}-${i}`}
+                    style={{
+                      overflow: "hidden",
+                      paddingBottom: "0.08em",
+                      marginBottom: "-0.08em",
+                    }}
+                  >
+                    <div
+                      style={{
+                        transform: `translateY(${(1 - lineIn(i + 1)) * 105}%)`,
+                        color:
+                          ink !== undefined && i === 0
+                            ? ink
+                            : `rgba(${t.ink},${[1, 0.62, 0.42][i] ?? 0.42})`,
+                      }}
+                    >
+                      {line}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-          </div>
-        ) : null}
-        {P4.w > 2 && P4.h > 2 ? (
-          <div
-            style={panelStyle(P4, {
-              transform: `scale(${1 + payPunch * 0.025})`,
-            })}
-          >
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                backgroundColor: accent,
-                clipPath: `circle(${floodR * floodMax}px at ${playX + 20 * u}px ${playY + 20 * u}px)`,
-              }}
-            />
-            <Header
-              ink={t.ink}
-              size={label}
-              pad={pad}
-              w={P4.w}
-              left={
-                <span
-                  style={{
-                    color: floodR > 0.5 ? "rgba(255,255,255,0.8)" : undefined,
-                  }}
-                >
-                  {labels[3]}
-                </span>
-              }
-              right={
-                <span
-                  style={{
-                    color: floodR > 0.5 ? "rgba(255,255,255,0.8)" : undefined,
-                  }}
-                >
-                  0:42
-                </span>
-              }
-            />
-            {[2, 4, 3].map((ii, i) => {
-              const e = p4In(i);
-              const fan = sp(beat("payoff") + 2 + i * 2, CARD);
-              const cw = Math.min(P4.w * 0.36, P4.h * 0.6);
-              const ch = cw * 1.28;
-              const off = [-1, 1, 0][i] as number;
-              const x =
-                P4.w * 0.56 +
-                off * cw * (0.42 + 0.2 * fan) +
-                (1 - e) * P4.w * 0.6;
-              const y = P4.h * 0.5 + (i === 2 ? -ch * 0.04 : ch * 0.04);
-              const rot = off * (5 + 4 * fan) + (1 - e) * 14;
-              return (
+              <div
+                style={{
+                  position: "absolute",
+                  left: tileLeft,
+                  top: pad * 0.8 + label * 2.4,
+                  width: tile,
+                  height: tile,
+                  borderRadius: tile * 0.22,
+                  overflow: "hidden",
+                  transform: `${shift(tileDx, 0)}scale(${0.7 + 0.3 * tileIn}) rotate(${(1 - tileIn) * -6}deg)`,
+                  opacity: Math.min(1, tileIn * 1.5),
+                  boxShadow: `0 ${10 * u}px ${30 * u}px ${shadow(0.6)}`,
+                }}
+              >
+                <Img
+                  src={img(0)}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
                 <div
-                  key={`c-${ii}`}
                   style={{
                     position: "absolute",
-                    left: x - cw / 2,
-                    top: y - ch / 2,
-                    width: cw,
-                    height: ch,
-                    borderRadius: cw * 0.07,
-                    overflow: "hidden",
-                    transform: `rotate(${rot}deg) scale(${i === 2 ? 1.06 + 0.04 * fan : 1})`,
-                    opacity: Math.min(1, e * 1.5),
-                    zIndex: i === 2 ? 2 : 1,
-                    boxShadow: `0 ${4 * u}px ${10 * u}px rgba(0,0,20,0.28), 0 ${22 * u}px ${44 * u}px rgba(0,0,20,0.3)`,
+                    inset: 0,
+                    borderRadius: "inherit",
+                    boxShadow: `inset 0 0 0 1px ${t.imgEdge}`,
                   }}
-                >
-                  <Img
-                    src={img(ii)}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                </div>
-              );
-            })}
-            <div
-              style={{
-                position: "absolute",
-                left: playX,
-                top: playY,
-                height: 40 * u,
-                display: "flex",
-                alignItems: "center",
-                gap: 10 * u,
-                padding: `0 ${16 * u}px 0 ${4 * u}px`,
-                borderRadius: 40 * u,
-                backgroundColor:
-                  floodR > 0.05
-                    ? "rgba(255,255,255,0.96)"
-                    : `rgba(${t.ink},0.08)`,
-                boxShadow:
-                  floodR > 0.05
-                    ? "0 6px 18px rgba(0,0,40,0.3)"
-                    : `0 0 0 1px rgba(${t.ink},0.14)`,
-                fontFamily: sans.fontFamily,
-                fontSize: label * 1.04,
-                color: floodR > 0.05 ? "#0c0c10" : `rgba(${t.ink},0.9)`,
-                transform: `scale(${0.9 + 0.1 * pillPop})`,
-                transformOrigin: "20% 50%",
-                opacity: Math.min(1, p4In(0) * 1.4),
-                zIndex: 3,
-                whiteSpace: "nowrap",
-              }}
-            >
-              <span
-                style={{
-                  width: 32 * u,
-                  height: 32 * u,
-                  borderRadius: "50%",
-                  backgroundColor:
-                    floodR > 0.05 ? accent : `rgba(${t.ink},0.5)`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <PlayGlyph size={16 * u} color="#ffffff" />
-              </span>
-              Play reel
+                />
+              </div>
             </div>
           </div>
-        ) : null}
-      </AbsoluteFill>
+          {P2.w > 2 && P2.h > 2 ? (
+            <div style={panelStyle(P2, rest[1])}>
+              <Header
+                ink={t.ink}
+                size={label}
+                pad={pad}
+                w={P2.w}
+                dw={P2.w - rest[1].w}
+                left={<span>{labels[1]}</span>}
+                right={
+                  <span style={{ display: "flex" }}>
+                    <ArrowIcon
+                      size={label * 1.3}
+                      color={`rgba(${t.ink},0.7)`}
+                    />
+                  </span>
+                }
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: pad,
+                  right: pad,
+                  top: pad * 0.8 + label * 2.6,
+                  bottom: pad + label * 2.2,
+                  borderRadius: Math.max(4, radius - pad * 0.5),
+                  overflow: "hidden",
+                  transform: `translateY(${(1 - p2In) * P2.h * 0.4}px)`,
+                  opacity: Math.min(1, p2In * 1.4),
+                  outline: `1px solid ${t.imgEdge}`,
+                  outlineOffset: -1,
+                }}
+              >
+                <Img
+                  src={img(1)}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    transform: `scale(${1.18 - 0.12 * p2In - 0.04 * s3})`,
+                  }}
+                />
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: pad,
+                  right: pad,
+                  bottom: pad * 0.9 + dH2,
+                  transform: shift(0, dH2).trim() || undefined,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontFamily,
+                  fontSize: label * 1.08,
+                  color: `rgba(${t.ink},0.88)`,
+                  whiteSpace: "nowrap",
+                  opacity: interpolate(p2In, [0.4, 1], [0, 1], CLAMP),
+                }}
+              >
+                <span>{caption}</span>
+                <span
+                  style={{
+                    fontFamily: mono.fontFamily,
+                    fontSize: label * 0.95,
+                    fontVariantNumeric: "tabular-nums",
+                    color: `rgba(${t.ink},0.45)`,
+                    opacity: interpolate(
+                      P2.w,
+                      [label * 22, label * 26],
+                      [0, 1],
+                      CLAMP,
+                    ),
+                  }}
+                >
+                  2026
+                </span>
+              </div>
+            </div>
+          ) : null}
+          {P3.w > 2 && P3.h > 2 ? (
+            <div style={panelStyle(P3, rest[2])}>
+              <Header
+                ink={t.ink}
+                size={label}
+                pad={pad}
+                w={P3.w}
+                dw={P3.w - rest[2].w}
+                left={<span>{labels[2]}</span>}
+                right={<span>02</span>}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: pad,
+                  right: pad,
+                  bottom: pad * 1.1 + dH3,
+                  transform: `${shift(0, dH3)}translateY(${(1 - p3In) * P3.h * 0.5}px)`,
+                  opacity: Math.min(1, p3In * 1.4),
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: serif.fontFamily,
+                    fontStyle: "italic",
+                    fontWeight: 400,
+                    fontSize: (portrait ? 33 : 34) * u,
+                    lineHeight: 1.04,
+                    letterSpacing: "-0.01em",
+                    color: ink ?? `rgb(${t.ink})`,
+                    maxWidth: "12em",
+                    textWrap: "balance",
+                  }}
+                >
+                  {question}
+                </div>
+                <div
+                  style={{
+                    marginTop: label * 0.9,
+                    fontFamily,
+                    fontSize: label * 1.04,
+                    lineHeight: 1.4,
+                    color: `rgba(${t.ink},0.55)`,
+                    maxWidth: "26em",
+                    opacity: interpolate(
+                      P3.w,
+                      [label * 22, label * 27],
+                      [0, 1],
+                      CLAMP,
+                    ),
+                  }}
+                >
+                  {body}
+                </div>
+              </div>
+            </div>
+          ) : null}
+          {P4.w > 2 && P4.h > 2 ? (
+            <div
+              style={panelStyle(
+                P4,
+                rest[3],
+                undefined,
+                `scale(${1 + payPunch * 0.025})`,
+              )}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  backgroundColor: accent,
+                  clipPath: `circle(${floodR * floodMax}px at ${playX + 20 * u}px ${playY + 20 * u}px)`,
+                }}
+              />
+              <Header
+                ink={t.ink}
+                size={label}
+                pad={pad}
+                w={P4.w}
+                dw={P4.w - rest[3].w}
+                left={
+                  <span
+                    style={{
+                      color: floodR > 0.5 ? "rgba(255,255,255,0.8)" : undefined,
+                    }}
+                  >
+                    {labels[3]}
+                  </span>
+                }
+                right={
+                  <span
+                    style={{
+                      color: floodR > 0.5 ? "rgba(255,255,255,0.8)" : undefined,
+                    }}
+                  >
+                    0:42
+                  </span>
+                }
+              />
+              {[2, 4, 3].map((ii, i) => {
+                const e = p4In(i);
+                const fan = sp(beat("payoff") + 2 + i * 2, CARD);
+                const cw = Math.min(P4.w * 0.36, P4.h * 0.6);
+                const ch = cw * 1.28;
+                const off = [-1, 1, 0][i] as number;
+                const lift = i === 2 ? -0.04 : 0.04;
+                // Laid out where the fan settles in the settled panel; the
+                // slide in, the fan out and the panel's own resize are a
+                // transform, since layout rounds a box's edges to whole
+                // pixels and the card would step along.
+                const R4 = rest[3];
+                const cwR = Math.min(R4.w * 0.36, R4.h * 0.6);
+                const chR = cwR * 1.28;
+                const xRest = R4.w * 0.56 + off * cwR * 0.62;
+                const yRest = R4.h * 0.5 + chR * lift;
+                const dx =
+                  (P4.w - R4.w) * 0.56 +
+                  off * (cw * (0.42 + 0.2 * fan) - cwR * 0.62) +
+                  (1 - e) * P4.w * 0.6;
+                const dy = (P4.h - R4.h) * 0.5 + (ch - chR) * lift;
+                const kRaw = cw / cwR;
+                const k = Math.abs(kRaw - 1) > 1e-6 ? kRaw : 1;
+                const rot = off * (5 + 4 * fan) + (1 - e) * 14;
+                return (
+                  <div
+                    key={`c-${ii}`}
+                    style={{
+                      position: "absolute",
+                      left: xRest - cwR / 2,
+                      top: yRest - chR / 2,
+                      width: cwR,
+                      height: chR,
+                      borderRadius: cwR * 0.07,
+                      overflow: "hidden",
+                      transform: `${shift(dx, dy)}rotate(${rot}deg) scale(${(i === 2 ? 1.06 + 0.04 * fan : 1) * k})`,
+                      opacity: Math.min(1, e * 1.5),
+                      zIndex: i === 2 ? 2 : 1,
+                      // The shadow is drawn inside the scale; undo it there.
+                      boxShadow: `0 ${(4 * u) / k}px ${(10 * u) / k}px rgba(0,0,20,0.28), 0 ${(22 * u) / k}px ${(44 * u) / k}px rgba(0,0,20,0.3)`,
+                    }}
+                  >
+                    <Img
+                      src={img(ii)}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </div>
+                );
+              })}
+              <div
+                style={{
+                  position: "absolute",
+                  left: playX,
+                  top: playYRest,
+                  height: 40 * u,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10 * u,
+                  padding: `0 ${16 * u}px 0 ${4 * u}px`,
+                  borderRadius: 40 * u,
+                  backgroundColor:
+                    floodR > 0.05
+                      ? "rgba(255,255,255,0.96)"
+                      : `rgba(${t.ink},0.08)`,
+                  boxShadow:
+                    floodR > 0.05
+                      ? "0 6px 18px rgba(0,0,40,0.3)"
+                      : `0 0 0 1px rgba(${t.ink},0.14)`,
+                  fontFamily,
+                  fontSize: label * 1.04,
+                  color: floodR > 0.05 ? "#0c0c10" : `rgba(${t.ink},0.9)`,
+                  transform: `${shift(0, playY - playYRest)}scale(${0.9 + 0.1 * pillPop})`,
+                  transformOrigin: "20% 50%",
+                  opacity: Math.min(1, p4In(0) * 1.4),
+                  zIndex: 3,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <span
+                  style={{
+                    width: 32 * u,
+                    height: 32 * u,
+                    borderRadius: "50%",
+                    backgroundColor:
+                      floodR > 0.05 ? accent : `rgba(${t.ink},0.5)`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <PlayGlyph size={16 * u} color="#ffffff" />
+                </span>
+                {ctaLabel}
+              </div>
+            </div>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

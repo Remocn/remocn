@@ -1,0 +1,106 @@
+{
+  "component": "cool-down",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "arctic-light",
+      "label": "Arctic Light",
+      "description": "A pale icy background with deep slate type and a cool blue accent that settles slowly and cleanly.",
+      "askedAs": [
+        "light icy version",
+        "cool blue on white",
+        "clean bright frost look",
+        "светлая ледяная версия",
+        "холодный синий на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#eef3f7",
+        "ink": "#1b2733",
+        "accent": "#3b82b6",
+        "haze": 0.4,
+        "cooldown": 90
+      }
+    },
+    {
+      "id": "server-room",
+      "label": "Server Room",
+      "description": "Near-black terminal styling in JetBrains Mono with a muted teal accent and quick, crisp settling.",
+      "askedAs": [
+        "terminal style",
+        "monospace developer look",
+        "dark hacker console vibe",
+        "как в терминале",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#d7e4df",
+        "accent": "#4fb59a",
+        "cooldown": 40,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "slow-exhale",
+      "label": "Slow Exhale",
+      "description": "An oversized statement that cools down at half speed with heavy shimmer for a calm, meditative beat.",
+      "askedAs": [
+        "make it slower and calmer",
+        "big slow settle",
+        "more heat haze, relaxed",
+        "медленнее и спокойнее",
+        "крупно и плавно"
+      ],
+      "props": {
+        "speed": 0.5,
+        "cooldown": 120,
+        "haze": 2.4,
+        "scale": 1.3,
+        "delay": 15
+      }
+    },
+    {
+      "id": "editorial-calm",
+      "label": "Editorial Calm",
+      "description": "Warm off-white paper with Instrument Serif type in graphite and a soft sage accent for a refined, magazine feel.",
+      "askedAs": [
+        "elegant serif version",
+        "magazine style",
+        "warm paper look",
+        "элегантный шрифт с засечками",
+        "как в журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4f1ea",
+        "ink": "#2a2a28",
+        "accent": "#7a8f78",
+        "haze": 0.6
+      }
+    },
+    {
+      "id": "snap-cool",
+      "label": "Snap Cool",
+      "description": "A fast, punchy Space Grotesk take on deep navy with an ice-blue accent and no shimmer.",
+      "askedAs": [
+        "fast and snappy",
+        "quick no haze",
+        "punchy navy version",
+        "быстро и резко",
+        "без дрожания, тёмно-синий"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "background": "#0e1626",
+        "ink": "#e6edf7",
+        "accent": "#8cc8ff",
+        "speed": 2,
+        "haze": 0
+      }
+    }
+  ]
+}

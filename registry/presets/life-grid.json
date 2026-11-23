@@ -1,0 +1,104 @@
+{
+  "component": "life-grid",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "Dense phosphor-green cells on near-black, like an old CRT monitor computing in real time.",
+      "askedAs": [
+        "green hacker screen look",
+        "retro terminal game of life",
+        "matrix style cells",
+        "зелёный терминал",
+        "как старый монитор"
+      ],
+      "props": {
+        "background": "#0a0f0b",
+        "color": "#5fd38a",
+        "accent": "#d9f7c4",
+        "cols": 64,
+        "gap": 0.1
+      }
+    },
+    {
+      "id": "blueprint-slow",
+      "label": "Slow Blueprint",
+      "description": "Large pale cells on deep blueprint blue, evolving at a calm, contemplative pace.",
+      "askedAs": [
+        "slow calm blue grid",
+        "big cells blueprint style",
+        "relaxed simulation background",
+        "медленная синяя сетка",
+        "спокойный фон с клетками"
+      ],
+      "props": {
+        "background": "#0f2a4a",
+        "color": "#dce8f5",
+        "accent": "#7fb8f0",
+        "cols": 24,
+        "framesPerGeneration": 12
+      }
+    },
+    {
+      "id": "paper-ink",
+      "label": "Paper Ink",
+      "description": "Black ink cells on warm off-white paper with no lattice, clean and editorial.",
+      "askedAs": [
+        "light background version",
+        "black on white cells",
+        "minimal print look",
+        "светлая версия",
+        "чёрные клетки на белом"
+      ],
+      "props": {
+        "background": "#f3efe6",
+        "color": "#1a1a1a",
+        "accent": "#c8553d",
+        "showGrid": false,
+        "gap": 0.06
+      }
+    },
+    {
+      "id": "fine-swarm",
+      "label": "Fine Swarm",
+      "description": "A tiny, fast-churning grid of fine pixels that reads as busy texture.",
+      "askedAs": [
+        "fast tiny pixels",
+        "busy computing texture",
+        "high resolution chaotic grid",
+        "быстрые мелкие пиксели",
+        "плотная мелкая сетка"
+      ],
+      "props": {
+        "cols": 96,
+        "framesPerGeneration": 2,
+        "density": 0.4,
+        "gap": 0.04,
+        "showGrid": false,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "sparse-amber",
+      "label": "Sparse Amber",
+      "description": "A sparse scattering of amber cells on charcoal, quiet enough to sit behind a title.",
+      "askedAs": [
+        "subtle background behind text",
+        "few cells warm orange",
+        "quiet sparse simulation",
+        "редкие оранжевые клетки",
+        "неброский фон под заголовок"
+      ],
+      "props": {
+        "density": 0.1,
+        "background": "#16130f",
+        "color": "#e0a458",
+        "accent": "#fff1d6",
+        "framesPerGeneration": 8,
+        "seed": 23
+      }
+    }
+  ]
+}

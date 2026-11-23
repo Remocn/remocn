@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const phoneScrollConfig: ComponentConfig = {
   componentName: "PhoneScroll",
@@ -12,11 +19,6 @@ export const phoneScrollConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     label: {
       type: "text-content",
@@ -33,6 +35,32 @@ export const phoneScrollConfig: ComponentConfig = {
       default: "remocn for iOS",
       description: "Eyebrow",
     },
+    searchLabel: {
+      type: "text-content",
+      default: "Where to?",
+      description: "Search field",
+    },
+    flickGap: {
+      type: "number",
+      default: 46,
+      min: 20,
+      max: 120,
+      step: 1,
+      description: "Flick gap (frames)",
+      hiddenFromList: false,
+    },
+    motionBlur: {
+      type: "boolean",
+      default: true,
+      description: "Motion blur",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Figtree" }),
     speed: {
       type: "number",
       default: 1,

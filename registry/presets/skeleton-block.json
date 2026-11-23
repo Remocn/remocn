@@ -1,0 +1,113 @@
+{
+  "component": "skeleton-block",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "text-line",
+      "label": "Text Line",
+      "description": "A thin, long bar with soft corners that mimics a single line of body copy.",
+      "askedAs": [
+        "skeleton for a line of text",
+        "thin loading bar for paragraph",
+        "placeholder text line shimmer",
+        "скелетон строки текста",
+        "тонкая полоска загрузки текста"
+      ],
+      "props": {
+        "width": 420,
+        "height": 12,
+        "radius": 6
+      }
+    },
+    {
+      "id": "avatar-circle",
+      "label": "Avatar Circle",
+      "description": "A fully rounded square that reads as a circular profile-picture placeholder.",
+      "askedAs": [
+        "round avatar placeholder",
+        "circle skeleton for profile photo",
+        "loading user picture",
+        "круглый скелетон аватара",
+        "заглушка для фото профиля"
+      ],
+      "props": {
+        "width": 80,
+        "height": 80,
+        "radius": 40
+      }
+    },
+    {
+      "id": "media-card",
+      "label": "Media Card",
+      "description": "A large, gently rounded block with an unhurried shimmer for image or video thumbnails.",
+      "askedAs": [
+        "big image placeholder",
+        "thumbnail loading block",
+        "card image skeleton slow shimmer",
+        "большой скелетон для картинки",
+        "заглушка превью карточки"
+      ],
+      "props": {
+        "width": 480,
+        "height": 120,
+        "radius": 16,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "pill-button",
+      "label": "Pill Button",
+      "description": "A compact capsule shape with a brisk sweep, suited to button or tag placeholders.",
+      "askedAs": [
+        "button skeleton pill",
+        "rounded tag loading placeholder",
+        "small capsule shimmer",
+        "скелетон кнопки в форме таблетки",
+        "заглушка для тега или кнопки"
+      ],
+      "props": {
+        "width": 140,
+        "height": 40,
+        "radius": 20,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "sharp-heading",
+      "label": "Sharp Heading",
+      "description": "A bold, square-cornered heading bar with a calm, slow shimmer for an editorial feel.",
+      "askedAs": [
+        "square heading placeholder",
+        "title skeleton no rounded corners",
+        "slow shimmer header bar",
+        "скелетон заголовка с острыми углами",
+        "медленная заглушка для заголовка"
+      ],
+      "props": {
+        "width": 320,
+        "height": 32,
+        "radius": 0,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "quick-chip",
+      "label": "Quick Chip",
+      "description": "A tiny, fast-shimmering chip for badges and inline metadata.",
+      "askedAs": [
+        "small fast loading badge",
+        "tiny skeleton chip",
+        "quick shimmer label placeholder",
+        "маленький быстрый скелетон бейджа",
+        "крошечная заглушка метки"
+      ],
+      "props": {
+        "width": 60,
+        "height": 16,
+        "radius": 4,
+        "speed": 2.5
+      }
+    }
+  ]
+}

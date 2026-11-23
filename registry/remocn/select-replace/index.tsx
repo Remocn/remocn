@@ -10,9 +10,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", { weights: ["500"], subsets: ["latin"] });
 const serif = loadNewsreader("italic", {
@@ -30,7 +30,21 @@ export interface SelectReplaceEdit {
 export interface SelectReplaceProps {
   text?: string;
   edits?: SelectReplaceEdit[];
+  /** Frames the selection holds before it is typed over. */
+  hold?: number;
+  /** Weight of the line; typed words stay in the italic serif. */
+  fontWeight?: number;
   accent?: string;
+  /** Text color of the line; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line; typed words keep the italic serif. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -125,11 +139,11 @@ function join(...lists: Seg[][]): Seg[] {
   return out;
 }
 
-function useMeasurer() {
+function useMeasurer(fontFamily: string, fontWeight: number) {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("select-replace: measuring"));
   const released = useRef(false);
-  const sansFont = `${WEIGHT} 100px "${geist.fontFamily}"`;
+  const sansFont = `${fontWeight} 100px "${fontFamily}"`;
   const serifFont = `italic 400 100px "${serif.fontFamily}"`;
 
   useEffect(() => {
@@ -188,7 +202,7 @@ interface Step {
   end: number;
 }
 
-function plan(text: string, edits: SelectReplaceEdit[]) {
+function plan(text: string, edits: SelectReplaceEdit[], hold: number) {
   const steps: Step[] = [];
   let line: Seg[] = [{ text, serif: false }];
   let t = INTRO + 2;
@@ -201,7 +215,7 @@ function plan(text: string, edits: SelectReplaceEdit[]) {
     const before = slice(line, 0, a);
     const after = slice(line, b, Number.POSITIVE_INFINITY);
     const selectAt = t + CARET_IN;
-    const deleteAt = selectAt + SELECT + SELECTED_HOLD;
+    const deleteAt = selectAt + SELECT + hold;
     const keys: number[] = [];
     let at = deleteAt + TYPE_DELAY;
     [...edit.to].forEach((_, i) => {
@@ -226,24 +240,53 @@ function plan(text: string, edits: SelectReplaceEdit[]) {
   return { steps, final: line, end: t - BETWEEN };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SelectReplace({
   text = "Draft it next week.",
   edits = [
     { from: "Draft", to: "Ship" },
     { from: "next week", to: "tonight" },
   ],
+  hold = SELECTED_HOLD,
+  fontWeight = WEIGHT,
   accent = "#3B5BFD",
+  ink: textInk,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: SelectReplaceProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
-  const measure = useMeasurer();
-  const { steps } = useMemo(() => plan(text, edits), [text, edits]);
+  const stage = background === "transparent" ? undefined : (background ?? t.bg);
+  const measure = useMeasurer(fontFamily, fontWeight);
+  const { steps } = useMemo(() => plan(text, edits, hold), [text, edits, hold]);
 
   if (!measure)
-    return <div style={{ position: "absolute", inset: 0, background: t.bg }} />;
+    return (
+      <div style={{ position: "absolute", inset: 0, background: stage }} />
+    );
 
   const typed = (s: Step, n: number): Seg[] => [
     { text: [...s.to].slice(0, n).join(""), serif: true },
@@ -299,16 +342,29 @@ export function SelectReplace({
 
   // Line re-centers by easing between each state's centered position.
   const leftFor = (l: Seg[]) => (width - em(measure(l))) / 2;
-  let left = leftFor(states[0].line);
-  for (let i = 1; i < states.length; i++) {
-    const p = interpolate(
-      frame,
-      [states[i].at, states[i].at + RECENTER],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
-    );
-    left += (leftFor(states[i].line) - leftFor(states[i - 1].line)) * p;
-  }
+  // `settled` lands every started re-centering at once: the place the line
+  // is heading for, and exactly `left` once it is there.
+  const leftAt = (settled: boolean) => {
+    let x = leftFor(states[0].line);
+    for (let i = 1; i < states.length; i++) {
+      const p = settled
+        ? frame >= states[i].at
+          ? 1
+          : 0
+        : interpolate(frame, [states[i].at, states[i].at + RECENTER], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
+      x += (leftFor(states[i].line) - leftFor(states[i - 1].line)) * p;
+    }
+    return x;
+  };
+  const left = leftAt(false);
+  // Layout rounds a box to whole pixels, so a line eased by `left` clicks
+  // sideways pixel by pixel. Everything is laid out where the line is
+  // heading and the wrapper carries the rest of the way as a transform.
+  const anchor = leftAt(true);
+  const shift = left - anchor;
 
   const cy = height / 2;
   const lineTop = cy - em(0.5);
@@ -372,15 +428,15 @@ export function SelectReplace({
 
   const lineStyle: React.CSSProperties = {
     position: "absolute",
-    left,
+    left: anchor,
     top: lineTop,
-    fontFamily: geist.fontFamily,
-    fontWeight: WEIGHT,
+    fontFamily,
+    fontWeight,
     fontSize: size,
     lineHeight: 1,
     letterSpacing: `${TRACK}em`,
     whiteSpace: "pre",
-    color: t.fg,
+    color: textInk ?? t.fg,
     fontKerning: "normal",
   };
 
@@ -426,57 +482,61 @@ export function SelectReplace({
   };
 
   return (
-    <AbsoluteFill style={{ background: t.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: 0.15 + 0.85 * intro,
-          transform: `translateY(${em(0.12) * (1 - intro)}px)`,
-        }}
-      >
-        {selection ? (
-          <div
-            style={{
-              position: "absolute",
-              left: left + em(selection.a),
-              top: barTop,
-              width: Math.max(0, em(selection.b - selection.a)),
-              height: barH,
-              backgroundImage: `radial-gradient(60% 90% at ${22 + 10 * drift}% 0%, color-mix(in oklab, ${t.bandLight} ${t.bandLightAlpha}%, transparent) 0%, transparent 70%), linear-gradient(in oklab ${96 + 8 * drift}deg, ${band[0]} 0%, ${band[1]} 55%, ${band[2]} ${t.bandEnd}%)`,
-              // Sized to the whole word, so the gradient is revealed, not stretched.
-              backgroundSize: `${em(selection.full)}px 100%`,
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-        ) : null}
-        <div style={lineStyle}>{runs(line)}</div>
-        {selection ? (
-          <div
-            style={{
-              ...lineStyle,
-              clipPath: `inset(0 ${Math.max(0, em(measure(line)) - em(selection.b))}px 0 ${em(selection.a)}px)`,
-            }}
-          >
-            {runs(line, t.onSelect)}
-          </div>
-        ) : null}
-        {selection
-          ? [
-              bar(left + em(selection.a), "a", "top"),
-              bar(left + em(selection.b), "b", "bottom"),
-            ]
-          : null}
-        {caretOn && caretAt !== null
-          ? bar(
-              left +
-                em(measure(caretAt)) +
-                // Clear the italic overhang when the caret follows a typed word.
-                (caretAt[caretAt.length - 1]?.serif ? em(0.06) : 0),
-              "caret",
-            )
-          : null}
-      </div>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: 0.15 + 0.85 * intro,
+            transform: `${
+              Math.abs(shift) > 1e-3 ? `translateX(${shift}px) ` : ""
+            }translateY(${em(0.12) * (1 - intro)}px)${glide(midway(intro))}`,
+          }}
+        >
+          {selection ? (
+            <div
+              style={{
+                position: "absolute",
+                left: anchor + em(selection.a),
+                top: barTop,
+                width: Math.max(0, em(selection.b - selection.a)),
+                height: barH,
+                backgroundImage: `radial-gradient(60% 90% at ${22 + 10 * drift}% 0%, color-mix(in oklab, ${t.bandLight} ${t.bandLightAlpha}%, transparent) 0%, transparent 70%), linear-gradient(in oklab ${96 + 8 * drift}deg, ${band[0]} 0%, ${band[1]} 55%, ${band[2]} ${t.bandEnd}%)`,
+                // Sized to the whole word, so the gradient is revealed, not stretched.
+                backgroundSize: `${em(selection.full)}px 100%`,
+                backgroundRepeat: "no-repeat",
+              }}
+            />
+          ) : null}
+          <div style={lineStyle}>{runs(line)}</div>
+          {selection ? (
+            <div
+              style={{
+                ...lineStyle,
+                clipPath: `inset(0 ${Math.max(0, em(measure(line)) - em(selection.b))}px 0 ${em(selection.a)}px)`,
+              }}
+            >
+              {runs(line, t.onSelect)}
+            </div>
+          ) : null}
+          {selection
+            ? [
+                bar(anchor + em(selection.a), "a", "top"),
+                bar(anchor + em(selection.b), "b", "bottom"),
+              ]
+            : null}
+          {caretOn && caretAt !== null
+            ? bar(
+                anchor +
+                  em(measure(caretAt)) +
+                  // Clear the italic overhang when the caret follows a typed word.
+                  (caretAt[caretAt.length - 1]?.serif ? em(0.06) : 0),
+                "caret",
+              )
+            : null}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

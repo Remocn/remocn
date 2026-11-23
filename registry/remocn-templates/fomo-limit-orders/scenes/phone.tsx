@@ -1,5 +1,13 @@
 import type { SceneProps } from "../content";
-import { key, phoneBorderPoint, ramp, travel, tween } from "../motion";
+import {
+  key,
+  midway,
+  phoneBorderPoint,
+  ramp,
+  travel,
+  tween,
+  useGlide,
+} from "../motion";
 import { AssetIcon, Badge, Layer, muted, row } from "../ui";
 
 function PhoneUI({ t, content: c, theme }: SceneProps) {
@@ -291,6 +299,13 @@ export function Phone(props: SceneProps) {
   const s = openingScale + 0.18 * push - 0.28 * pull + 0.55 * orbit;
   const x = tween(t, 3.4, 4.3, 62, 75) - 67 * push + 134 * pull + 95 * orbit;
   const y = tween(t, 3.4, 4.3, 9, 45) - 435 * push - 13 * pull - 309 * orbit;
+  // The phone carries its screen text through four camera moves.
+  const glide = useGlide();
+  const cameraMoving =
+    midway(ramp(t, 3.4, 4.3)) ||
+    midway(ramp(t, 4.63, 5.18)) ||
+    midway(ramp(t, 6.04, 6.92)) ||
+    midway(ramp(t, 6.92, 7.7));
   const dotTimes = [
     6.55, 6.75, 7, 7.25, 7.5, 7.65, 7.75, 7.8, 7.85, 7.9, 7.95, 8,
   ];
@@ -310,12 +325,13 @@ export function Phone(props: SceneProps) {
         style={{ background: "black", opacity: ramp(t, 2.7, 2.9) }}
       />
       <Layer
-        x={x}
-        y={y}
         w={400}
         h={680}
         style={{
-          transform: `scale(${s})`,
+          // The camera is a transform, not `left`/`top`: layout rounds a box
+          // and a baseline to whole pixels of the 480×270 stage, which is then
+          // scaled up, so a phone eased by layout clicks along in coarse steps.
+          transform: `translate(${x}px, ${y}px) scale(${s})${glide(cameraMoving)}`,
           transformOrigin: "0 0",
           opacity: ramp(t, 2.7, 3),
           filter: `blur(${Math.sin(push * Math.PI) * 1.1}px)`,
@@ -372,11 +388,12 @@ export function Phone(props: SceneProps) {
       {t >= 6.55 && (
         <>
           <Layer
-            x={dotX - radius * 2}
-            y={dotY - radius * 2}
             w={radius * 4}
             h={radius * 4}
             style={{
+              // Placed by a transform for the same reason as the phone.
+              transform: `translate(${dotX - radius * 2}px, ${dotY - radius * 2}px)`,
+              transformOrigin: "0 0",
               background: "#eed7a6",
               borderRadius: "50%",
               filter: `blur(${Math.min(10, radius)}px)`,
@@ -384,11 +401,11 @@ export function Phone(props: SceneProps) {
             }}
           />
           <Layer
-            x={dotX - radius}
-            y={dotY - radius}
             w={radius * 2}
             h={radius * 2}
             style={{
+              transform: `translate(${dotX - radius}px, ${dotY - radius}px)`,
+              transformOrigin: "0 0",
               background: "#fff",
               borderRadius: "50%",
               boxShadow: "0 0 4px #f6e3bf",

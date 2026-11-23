@@ -10,9 +10,9 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -98,8 +98,41 @@ export interface GridToAppProps {
   pageTitle?: string;
   images?: string[];
   products?: { name: string; price: string }[];
+  /** Label of the top-bar button before the store goes live. */
+  publishLabel?: string;
+  /** Label of the same button once the store is live. */
+  liveLabel?: string;
+  /** Label of the primary button next to the page title. */
+  addLabel?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  /** Size of the window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function GridToApp({
@@ -127,18 +160,29 @@ export function GridToApp({
     { name: "Travertine bench", price: "$420.00" },
     { name: "Olive planter", price: "$64.00" },
   ],
+  publishLabel = "Publish",
+  liveLabel = "Store live",
+  addLabel = "Add product",
+  ink: inkProp,
+  background,
+  fontFamily = inter.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: GridToAppProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const clock = useSceneFrame() - delay;
+  const frame = Math.max(0, clock) * speed;
+  const { width, height, fps } = useSceneConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 720 : 1280;
   const stageH = portrait ? 1280 : 720;
   const k = width / stageW;
 
-  const ink = dark ? "#f6efe9" : "#1b1714";
+  const ink = inkProp ?? (dark ? "#f6efe9" : "#1b1714");
   const muted = dark ? "rgba(246,239,233,0.54)" : "rgba(27,23,20,0.52)";
   const faint = dark ? "rgba(246,239,233,0.3)" : "rgba(27,23,20,0.3)";
   const hair = dark ? "rgba(255,236,222,0.09)" : "rgba(60,36,20,0.09)";
@@ -289,535 +333,550 @@ export function GridToApp({
   );
 
   return (
-    <AbsoluteFill style={{ fontFamily: inter.fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedPreset}
-        params={resolvedParams}
-        timeOffset={4}
-        timeScale={0.45}
-      />
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <GshGround
+          preset={resolvedPreset}
+          params={resolvedParams}
+          timeOffset={4}
+          timeScale={0.45}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
       <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
         <filter id="gta-cam" x="-5%" y="-5%" width="110%" height="110%">
           <feGaussianBlur stdDeviation={`${camBlur * 0.6} ${camBlur}`} />
         </filter>
       </svg>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${k})`,
-          transformOrigin: "0 0",
-          perspective: 2200,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: stageW / 2,
-            top: stageH / 2,
-            width: 0,
-            height: 0,
-            transformStyle: "preserve-3d",
-            transform: `translate(${-fx * z}px, ${-fy * z}px) rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg) scale(${z})`,
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${k})`,
+            transformOrigin: "0 0",
+            perspective: 2200,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: -winW / 2,
-              top: -winH / 2,
-              width: winW,
-              height: winH,
-              borderRadius: 20,
-              background: winBg,
-              border: `1px solid ${hair}`,
-              boxShadow: shadow,
-              opacity: chrome,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: -winW / 2,
-              top: -winH / 2,
-              width: winW,
-              height: winH,
-              borderRadius: 20,
-              overflow: "hidden",
-              filter: camBlur > 0.4 ? "url(#gta-cam)" : undefined,
+              left: stageW / 2,
+              top: stageH / 2,
+              width: 0,
+              height: 0,
+              transformStyle: "preserve-3d",
+              // The camera's turns start from level on the first frame, where
+              // the zoomed cards would sit on whole pixels; the camera never
+              // holds once it starts, so it is marked as moving from then on.
+              transform: `translate(${-fx * z}px, ${-fy * z}px) rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg) scale(${z})${glide(clock >= 0)}`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: sideW,
-                top: topH,
-                right: 0,
-                bottom: 0,
-                background: mainBg,
+                left: -winW / 2,
+                top: -winH / 2,
+                width: winW,
+                height: winH,
+                borderRadius: 20,
+                background: winBg,
+                border: `1px solid ${hair}`,
+                boxShadow: shadow,
                 opacity: chrome,
               }}
             />
             <div
               style={{
                 position: "absolute",
-                left: 0,
-                top: topH,
-                width: sideW,
-                bottom: 0,
-                background: sideBg,
-                borderRight: `1px solid ${hair}`,
-                opacity: chrome,
-                padding: portrait ? "18px 12px" : "18px 14px",
-                boxSizing: "border-box",
-                display: "flex",
-                flexDirection: "column",
-                gap: 4,
+                left: -winW / 2,
+                top: -winH / 2,
+                width: winW,
+                height: winH,
+                borderRadius: 20,
+                overflow: "hidden",
+                filter: camBlur > 0.4 ? "url(#gta-cam)" : undefined,
               }}
             >
-              {navItems.map((it, i) => navRow(it, i))}
-              {portrait ? (
-                <div
-                  style={{ height: 1, background: hair, margin: "12px 6px" }}
-                />
-              ) : (
-                <div
-                  style={{
-                    fontSize: 13,
-                    color: faint,
-                    letterSpacing: "0.04em",
-                    padding: "20px 12px 8px",
-                    ...chromeStyle(5),
-                  }}
-                >
-                  Sales channels
-                </div>
-              )}
-              {channelItems.map((it, i) => navRow(it, i + 6))}
-              <div style={{ flex: 1 }} />
-              {portrait ? null : (
-                <div
-                  style={{
-                    borderRadius: 14,
-                    border: `1px solid ${hair}`,
-                    background: fill,
-                    padding: 14,
-                    ...chromeStyle(8),
-                  }}
-                >
-                  <div style={{ fontSize: 15, color: ink }}>Setup guide</div>
-                  <div style={{ fontSize: 13, color: muted, marginTop: 4 }}>
-                    4 of 6 tasks done
-                  </div>
-                  <div
-                    style={{
-                      height: 5,
-                      borderRadius: 3,
-                      background: fill,
-                      marginTop: 10,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: `${mix(50, 67, ramp(frame, B.count, 18))}%`,
-                        height: "100%",
-                        borderRadius: 3,
-                        background: accent,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: 0,
-                height: topH,
-                borderBottom: `1px solid ${hair}`,
-                display: "flex",
-                alignItems: "center",
-                padding: "0 16px",
-                gap: 14,
-                opacity: chrome,
-                transform: `translateY(${mix(-12, 0, chrome)}px)`,
-              }}
-            >
-              <div style={{ display: "flex", gap: 8 }}>
-                {[0, 1, 2].map((i) => (
-                  <span
-                    key={i}
-                    style={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: 6,
-                      background: fill,
-                      border: `1px solid ${hair}`,
-                    }}
-                  />
-                ))}
-              </div>
               <div
                 style={{
+                  position: "absolute",
+                  left: sideW,
+                  top: topH,
+                  right: 0,
+                  bottom: 0,
+                  background: mainBg,
+                  opacity: chrome,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: topH,
+                  width: sideW,
+                  bottom: 0,
+                  background: sideBg,
+                  borderRight: `1px solid ${hair}`,
+                  opacity: chrome,
+                  padding: portrait ? "18px 12px" : "18px 14px",
+                  boxSizing: "border-box",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                }}
+              >
+                {navItems.map((it, i) => navRow(it, i))}
+                {portrait ? (
+                  <div
+                    style={{ height: 1, background: hair, margin: "12px 6px" }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      fontSize: 13,
+                      color: faint,
+                      letterSpacing: "0.04em",
+                      padding: "20px 12px 8px",
+                      ...chromeStyle(5),
+                    }}
+                  >
+                    Sales channels
+                  </div>
+                )}
+                {channelItems.map((it, i) => navRow(it, i + 6))}
+                <div style={{ flex: 1 }} />
+                {portrait ? null : (
+                  <div
+                    style={{
+                      borderRadius: 14,
+                      border: `1px solid ${hair}`,
+                      background: fill,
+                      padding: 14,
+                      ...chromeStyle(8),
+                    }}
+                  >
+                    <div style={{ fontSize: 15, color: ink }}>Setup guide</div>
+                    <div style={{ fontSize: 13, color: muted, marginTop: 4 }}>
+                      4 of 6 tasks done
+                    </div>
+                    <div
+                      style={{
+                        height: 5,
+                        borderRadius: 3,
+                        background: fill,
+                        marginTop: 10,
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${mix(50, 67, ramp(frame, B.count, 18))}%`,
+                          height: "100%",
+                          borderRadius: 3,
+                          background: accent,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  height: topH,
+                  borderBottom: `1px solid ${hair}`,
                   display: "flex",
                   alignItems: "center",
-                  gap: 10,
-                  marginLeft: 8,
-                  fontSize: 16,
-                  color: ink,
+                  padding: "0 16px",
+                  gap: 14,
+                  opacity: chrome,
+                  transform: `translateY(${mix(-12, 0, chrome)}px)`,
+                }}
+              >
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      style={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: 6,
+                        background: fill,
+                        border: `1px solid ${hair}`,
+                      }}
+                    />
+                  ))}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    marginLeft: 8,
+                    fontSize: 16,
+                    color: ink,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: 7,
+                      background: accent,
+                      color: "#fff",
+                      fontSize: 14,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3)",
+                    }}
+                  >
+                    {storeName.slice(0, 1)}
+                  </span>
+                  {portrait ? null : storeName}
+                  {portrait ? null : (
+                    <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden>
+                      <path d="m7 10 5 5 5-5" {...line(muted)} />
+                    </svg>
+                  )}
+                </div>
+                <div
+                  style={{ flex: 1, display: "flex", justifyContent: "center" }}
+                >
+                  {portrait ? null : (
+                    <div
+                      style={{
+                        width: 360,
+                        height: 34,
+                        borderRadius: 10,
+                        background: fill,
+                        border: `1px solid ${hair}`,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "0 12px",
+                        fontSize: 15,
+                        color: faint,
+                      }}
+                    >
+                      <Icon d={ICONS.search} color={muted} size={16} />
+                      <span style={{ flex: 1 }}>Search products</span>
+                      <span
+                        style={{ fontFamily: mono.fontFamily, fontSize: 13 }}
+                      >
+                        ⌘K
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <Icon d={ICONS.bell} color={muted} />
+                <div
+                  style={{
+                    height: 34,
+                    padding: "0 14px",
+                    borderRadius: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 15,
+                    color: live ? "#fff" : ink,
+                    background: live ? accent : fill,
+                    border: live ? "none" : `1px solid ${hair}`,
+                    transform: `scale(${live ? mix(0.82, 1, pub) : pubDip})`,
+                    boxShadow: live
+                      ? `inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 22px color-mix(in oklab, ${accent} 45%, transparent)`
+                      : undefined,
+                  }}
+                >
+                  {live ? (
+                    <span
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: 4,
+                        background: "#fff",
+                      }}
+                    />
+                  ) : null}
+                  {live ? liveLabel : publishLabel}
+                </div>
+                <span
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    background: dark ? "#3a2b24" : "#f1e2d6",
+                    color: ink,
+                    fontSize: 13,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  AS
+                </span>
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: sideW + pad,
+                  right: pad,
+                  top: headTop,
+                  height: 46,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  opacity: chrome,
+                  transform: `translateY(${mix(14, 0, chrome)}px)`,
                 }}
               >
                 <span
                   style={{
-                    width: 26,
+                    fontSize: portrait ? 32 : 36,
+                    fontWeight: 300,
+                    color: ink,
+                    letterSpacing: "-0.04em",
+                  }}
+                >
+                  {pageTitle}
+                </span>
+                <span
+                  style={{
                     height: 26,
-                    borderRadius: 7,
-                    background: accent,
-                    color: "#fff",
+                    minWidth: 26,
+                    padding: "0 8px",
+                    borderRadius: 8,
+                    background: fill,
+                    border: `1px solid ${hair}`,
+                    fontFamily: mono.fontFamily,
                     fontSize: 14,
+                    color: muted,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3)",
+                    overflow: "hidden",
                   }}
                 >
-                  {storeName.slice(0, 1)}
+                  {countVal}
                 </span>
-                {portrait ? null : storeName}
+                <span style={{ flex: 1 }} />
                 {portrait ? null : (
-                  <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden>
-                    <path d="m7 10 5 5 5-5" {...line(muted)} />
-                  </svg>
-                )}
-              </div>
-              <div
-                style={{ flex: 1, display: "flex", justifyContent: "center" }}
-              >
-                {portrait ? null : (
-                  <div
-                    style={{
-                      width: 360,
-                      height: 34,
-                      borderRadius: 10,
-                      background: fill,
-                      border: `1px solid ${hair}`,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      padding: "0 12px",
-                      fontSize: 15,
-                      color: faint,
-                    }}
-                  >
-                    <Icon d={ICONS.search} color={muted} size={16} />
-                    <span style={{ flex: 1 }}>Search products</span>
-                    <span style={{ fontFamily: mono.fontFamily, fontSize: 13 }}>
-                      ⌘K
-                    </span>
-                  </div>
-                )}
-              </div>
-              <Icon d={ICONS.bell} color={muted} />
-              <div
-                style={{
-                  height: 34,
-                  padding: "0 14px",
-                  borderRadius: 10,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  fontSize: 15,
-                  color: live ? "#fff" : ink,
-                  background: live ? accent : fill,
-                  border: live ? "none" : `1px solid ${hair}`,
-                  transform: `scale(${live ? mix(0.82, 1, pub) : pubDip})`,
-                  boxShadow: live
-                    ? `inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 22px color-mix(in oklab, ${accent} 45%, transparent)`
-                    : undefined,
-                }}
-              >
-                {live ? (
                   <span
                     style={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: 4,
-                      background: "#fff",
+                      height: 38,
+                      padding: "0 16px",
+                      borderRadius: 11,
+                      border: `1px solid ${hair}`,
+                      fontSize: 15,
+                      color: ink,
+                      display: "flex",
+                      alignItems: "center",
                     }}
-                  />
-                ) : null}
-                {live ? "Store live" : "Publish"}
-              </div>
-              <span
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  background: dark ? "#3a2b24" : "#f1e2d6",
-                  color: ink,
-                  fontSize: 13,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                AS
-              </span>
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: sideW + pad,
-                right: pad,
-                top: headTop,
-                height: 46,
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                opacity: chrome,
-                transform: `translateY(${mix(14, 0, chrome)}px)`,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: portrait ? 32 : 36,
-                  fontWeight: 300,
-                  color: ink,
-                  letterSpacing: "-0.04em",
-                }}
-              >
-                {pageTitle}
-              </span>
-              <span
-                style={{
-                  height: 26,
-                  minWidth: 26,
-                  padding: "0 8px",
-                  borderRadius: 8,
-                  background: fill,
-                  border: `1px solid ${hair}`,
-                  fontFamily: mono.fontFamily,
-                  fontSize: 14,
-                  color: muted,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  overflow: "hidden",
-                }}
-              >
-                {countVal}
-              </span>
-              <span style={{ flex: 1 }} />
-              {portrait ? null : (
+                  >
+                    Import
+                  </span>
+                )}
                 <span
                   style={{
                     height: 38,
                     padding: "0 16px",
                     borderRadius: 11,
-                    border: `1px solid ${hair}`,
+                    background: ink,
+                    color: winBg,
                     fontSize: 15,
-                    color: ink,
                     display: "flex",
                     alignItems: "center",
+                    gap: 8,
                   }}
                 >
-                  Import
+                  <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden>
+                    <path d="M12 5v14M5 12h14" {...line(winBg, 2)} />
+                  </svg>
+                  {addLabel}
                 </span>
-              )}
-              <span
+              </div>
+
+              <div
                 style={{
-                  height: 38,
-                  padding: "0 16px",
-                  borderRadius: 11,
-                  background: ink,
-                  color: winBg,
-                  fontSize: 15,
+                  position: "absolute",
+                  left: sideW + pad,
+                  right: pad,
+                  top: tabsTop,
+                  height: 40,
                   display: "flex",
-                  alignItems: "center",
-                  gap: 8,
+                  alignItems: "flex-end",
+                  gap: 26,
+                  borderBottom: `1px solid ${hair}`,
+                  opacity: chrome,
                 }}
               >
-                <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden>
-                  <path d="M12 5v14M5 12h14" {...line(winBg, 2)} />
-                </svg>
-                Add product
-              </span>
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: sideW + pad,
-                right: pad,
-                top: tabsTop,
-                height: 40,
-                display: "flex",
-                alignItems: "flex-end",
-                gap: 26,
-                borderBottom: `1px solid ${hair}`,
-                opacity: chrome,
-              }}
-            >
-              {["All", "Active", "Drafts", "Archived"].map((t, i) => (
-                <span
-                  key={t}
-                  style={{
-                    fontSize: 16,
-                    color: i === 0 ? ink : muted,
-                    paddingBottom: 11,
-                    borderBottom:
-                      i === 0
-                        ? `1.5px solid ${ink}`
-                        : "1.5px solid transparent",
-                    marginBottom: -1,
-                  }}
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-
-            {products.slice(0, cols * (portrait ? 3 : 2)).map((p, i) => {
-              const pos = cardPos(i);
-              const firstRow = i < 4;
-              const at = firstRow
-                ? (B.row1[i] ?? 0)
-                : (B.row2[(i - 4) % B.row2.length] ?? 50) +
-                  Math.floor((i - 4) / B.row2.length) * 6;
-              const pop = spring({ frame: frame - at, fps, config: CARD });
-              const shown = frame >= at;
-              return (
-                <div
-                  key={p.name}
-                  style={{
-                    position: "absolute",
-                    left: pos.x,
-                    top: pos.y,
-                    width: cardW,
-                    height: cardH,
-                    borderRadius: 16,
-                    background: cardBg,
-                    border: `1px solid ${hair}`,
-                    boxShadow: dark
-                      ? "inset 0 1px 0 rgba(255,240,225,0.05), 0 10px 26px rgba(0,0,0,0.35)"
-                      : "0 1px 2px rgba(60,36,20,0.05), 0 10px 24px rgba(120,60,20,0.07)",
-                    overflow: "hidden",
-                    opacity: shown ? Math.min(1, pop * 1.8) : 0,
-                    transform: `translateY(${mix(firstRow ? 60 : 40, 0, pop)}px) scale(${mix(0.86, 1, pop)})`,
-                  }}
-                >
-                  <div
+                {["All", "Active", "Drafts", "Archived"].map((t, i) => (
+                  <span
+                    key={t}
                     style={{
-                      position: "absolute",
-                      left: 8,
-                      top: 8,
-                      width: cardW - 16,
-                      height: imgH - 16,
-                      borderRadius: 10,
-                      overflow: "hidden",
+                      fontSize: 16,
+                      color: i === 0 ? ink : muted,
+                      paddingBottom: 11,
+                      borderBottom:
+                        i === 0
+                          ? `1.5px solid ${ink}`
+                          : "1.5px solid transparent",
+                      marginBottom: -1,
                     }}
                   >
-                    <Img
-                      src={images[i % images.length]}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        transform: `scale(${1.06 - 0.06 * ramp(frame, at, 60, Easing.linear)})`,
-                      }}
-                    />
-                    {i === 1 ? (
-                      <span
-                        style={{
-                          position: "absolute",
-                          left: 8,
-                          top: 8,
-                          height: 24,
-                          padding: "0 9px",
-                          borderRadius: 7,
-                          background: "rgba(255,255,255,0.88)",
-                          color: "#1b1714",
-                          fontSize: 13,
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                      >
-                        New
-                      </span>
-                    ) : null}
-                  </div>
+                    {t}
+                  </span>
+                ))}
+              </div>
+
+              {products.slice(0, cols * (portrait ? 3 : 2)).map((p, i) => {
+                const pos = cardPos(i);
+                const firstRow = i < 4;
+                const at = firstRow
+                  ? (B.row1[i] ?? 0)
+                  : (B.row2[(i - 4) % B.row2.length] ?? 50) +
+                    Math.floor((i - 4) / B.row2.length) * 6;
+                const pop = spring({ frame: frame - at, fps, config: CARD });
+                const shown = frame >= at;
+                return (
                   <div
+                    key={p.name}
                     style={{
                       position: "absolute",
-                      left: 14,
-                      right: 14,
-                      top: imgH + 2,
+                      left: pos.x,
+                      top: pos.y,
+                      width: cardW,
+                      height: cardH,
+                      borderRadius: 16,
+                      background: cardBg,
+                      border: `1px solid ${hair}`,
+                      boxShadow: dark
+                        ? "inset 0 1px 0 rgba(255,240,225,0.05), 0 10px 26px rgba(0,0,0,0.35)"
+                        : "0 1px 2px rgba(60,36,20,0.05), 0 10px 24px rgba(120,60,20,0.07)",
+                      overflow: "hidden",
+                      opacity: shown ? Math.min(1, pop * 1.8) : 0,
+                      transform: `translateY(${mix(firstRow ? 60 : 40, 0, pop)}px) scale(${mix(0.86, 1, pop)})`,
                     }}
                   >
                     <div
                       style={{
-                        fontSize: 17,
-                        color: ink,
-                        whiteSpace: "nowrap",
+                        position: "absolute",
+                        left: 8,
+                        top: 8,
+                        width: cardW - 16,
+                        height: imgH - 16,
+                        borderRadius: 10,
                         overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        letterSpacing: "-0.01em",
                       }}
                     >
-                      {p.name}
+                      <Img
+                        src={images[i % images.length]}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          transform: `scale(${1.06 - 0.06 * ramp(frame, at, 60, Easing.linear)})`,
+                        }}
+                      />
+                      {i === 1 ? (
+                        <span
+                          style={{
+                            position: "absolute",
+                            left: 8,
+                            top: 8,
+                            height: 24,
+                            padding: "0 9px",
+                            borderRadius: 7,
+                            background: "rgba(255,255,255,0.88)",
+                            color: "#1b1714",
+                            fontSize: 13,
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          New
+                        </span>
+                      ) : null}
                     </div>
                     <div
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        marginTop: 6,
+                        position: "absolute",
+                        left: 14,
+                        right: 14,
+                        top: imgH + 2,
                       }}
                     >
-                      <span
+                      <div
                         style={{
-                          fontFamily: mono.fontFamily,
-                          fontSize: 15,
-                          color: muted,
+                          fontSize: 17,
+                          color: ink,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          letterSpacing: "-0.01em",
                         }}
                       >
-                        {p.price}
-                      </span>
-                      <span
+                        {p.name}
+                      </div>
+                      <div
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: 6,
-                          fontSize: 14,
-                          color: muted,
+                          justifyContent: "space-between",
+                          marginTop: 6,
                         }}
                       >
                         <span
                           style={{
-                            width: 7,
-                            height: 7,
-                            borderRadius: 4,
-                            background: i % 5 === 3 ? faint : "#3fb37f",
+                            fontFamily: mono.fontFamily,
+                            fontSize: 15,
+                            color: muted,
                           }}
-                        />
-                        {i % 5 === 3 ? "Draft" : "Active"}
-                      </span>
+                        >
+                          {p.price}
+                        </span>
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            fontSize: 14,
+                            color: muted,
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 7,
+                              height: 7,
+                              borderRadius: 4,
+                              background: i % 5 === 3 ? faint : "#3fb37f",
+                            }}
+                          />
+                          {i % 5 === 3 ? "Draft" : "Active"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

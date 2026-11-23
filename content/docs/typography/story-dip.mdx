@@ -43,8 +43,8 @@ export const RemotionRoot = () => (
   <Composition
     id="StoryDip"
     component={StoryDipScene}
-    durationInFrames={180}
-    fps={30}
+    durationInFrames={360}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -74,14 +74,49 @@ Three timestamped lines enter side by side, or in two columns on a tall frame. T
       description: "Third beat; it climbs to the top in the accent color.",
     },
     {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "Weight of the story lines.",
+    },
+    {
+      name: "dim",
+      type: "number",
+      default: "0.62",
+      description: "Opacity the snag beat dims to as it falls.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of the timestamps and the lit resolution line.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Afacad\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

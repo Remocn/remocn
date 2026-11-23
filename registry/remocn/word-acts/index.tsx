@@ -3,14 +3,9 @@
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Geist";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["100", "200", "300", "400", "500"],
@@ -32,9 +27,20 @@ export interface WordActsProps {
    * strokes, so it supports lowercase a–z only.
    */
   acts?: WordActBeat[];
+  /** Words for the acts, in order; each replaces its act's word. */
+  words?: string[];
   /** Extra frames the final word holds as a poster. */
   hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the words. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the words, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -96,13 +102,20 @@ interface ActProps {
   ink: string[];
   guide: string;
   fps: number;
+  fontFamily: string;
 }
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const fitSize = (word: string, target: number, maxWidth: number) =>
   Math.min(target, maxWidth / Math.max(1, word.length * ADVANCE));
 
-const wordStyle = (size: number, weight: number): React.CSSProperties => ({
-  fontFamily: display,
+const wordStyle = (
+  size: number,
+  weight: number,
+  fontFamily: string,
+): React.CSSProperties => ({
+  fontFamily,
   fontWeight: weight,
   fontSize: size,
   lineHeight: 1,
@@ -110,7 +123,8 @@ const wordStyle = (size: number, weight: number): React.CSSProperties => ({
   whiteSpace: "nowrap",
 });
 
-function Stretch({ word, t, W, H, fg }: ActProps) {
+function Stretch({ word, t, W, H, fg, fontFamily }: ActProps) {
+  const glide = useGlide();
   const size = fitSize(word, H * 0.3, W * 0.42);
   const p = interpolate(t, [2, 17], [0, 1], { ...CLAMP, easing: EASE_IO });
   const sx = 1 + p * 0.95;
@@ -122,10 +136,10 @@ function Stretch({ word, t, W, H, fg }: ActProps) {
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
       <div
         style={{
-          ...wordStyle(size, 500),
+          ...wordStyle(size, 500, fontFamily),
           fontVariationSettings: `"wght" ${wght}`,
           color: fg,
-          transform: `scale(${sx}, ${sy})`,
+          transform: `scale(${sx}, ${sy})${glide(midway(p))}`,
         }}
       >
         {word}
@@ -134,7 +148,8 @@ function Stretch({ word, t, W, H, fg }: ActProps) {
   );
 }
 
-function Split({ word, t, W, H, fg, ink }: ActProps) {
+function Split({ word, t, W, H, fg, ink, fontFamily }: ActProps) {
+  const glide = useGlide();
   const size = fitSize(word, H * 0.4, W * 0.6);
   const draw = interpolate(t, [2, 8], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const open = interpolate(t, [8, 19], [0, 1], { ...CLAMP, easing: EASE_OUT });
@@ -151,12 +166,12 @@ function Split({ word, t, W, H, fg, ink }: ActProps) {
         top: top ? 0 : X_MID * size,
         height: top ? X_MID * size : size * 0.6,
         overflow: "hidden",
-        transform: `translate(${top ? -dx : dx}px, ${top ? -dy : dy}px)`,
+        transform: `translate(${top ? -dx : dx}px, ${top ? -dy : dy}px)${glide(midway(open))}`,
       }}
     >
       <div
         style={{
-          ...wordStyle(size, 500),
+          ...wordStyle(size, 500, fontFamily),
           color: fg,
           textAlign: "center",
           marginTop: top ? 0 : -X_MID * size,
@@ -187,7 +202,8 @@ function Split({ word, t, W, H, fg, ink }: ActProps) {
   );
 }
 
-function Heavy({ word, t, W, H, fg, ink, fps }: ActProps) {
+function Heavy({ word, t, W, H, fg, ink, fps, fontFamily }: ActProps) {
+  const glide = useGlide();
   const size = fitSize(word, H * 0.36, W * 0.58);
   const LAND = 9;
   const fall = interpolate(t, [0, LAND], [0, 1], {
@@ -196,18 +212,33 @@ function Heavy({ word, t, W, H, fg, ink, fps }: ActProps) {
   });
   const restTop = H * 0.5 - size * 0.55;
   const startTop = -size * 0.62;
-  const impact = spring({
-    frame: t - LAND,
-    fps,
-    config: { damping: 9, stiffness: 260, mass: 0.7 },
-  });
   // impact: 0 → 1 with a small ring; squash peaks right at contact.
-  const ring = t < LAND ? 0 : 1 - impact;
-  const squash = Math.max(-0.05, ring) * 0.16;
+  const squashAt = (tt: number) => {
+    const impact = spring({
+      frame: tt - LAND,
+      fps,
+      config: { damping: 9, stiffness: 260, mass: 0.7 },
+    });
+    const r = tt < LAND ? 0 : 1 - impact;
+    return { ring: r, squash: Math.max(-0.05, r) * 0.16 };
+  };
+  const { squash } = squashAt(t);
+  // The ring is a spring with a long tail, so it counts as moving while the
+  // squash still shifts the word's top, not by its progress.
+  const ringing =
+    Math.abs(squashAt(t + 1).squash - squash) * size > 1e-3 ||
+    Math.abs(squash - squashAt(t - 1).squash) * size > 1e-3;
   const sy = 1 - squash;
   const sx = 1 + squash * 0.45;
   const top = startTop + (restTop - startTop) * fall;
-  const ruleDip = t < LAND ? 0 : ring * H * 0.018;
+  const dipAt = (tt: number) => (tt < LAND ? 0 : squashAt(tt).ring * H * 0.018);
+  const ruleDip = dipAt(t);
+  // Layout rounds a box edge to whole pixels, so a rule bounced by `top`
+  // steps unevenly; while it rings it sits at its rest and dips by transform.
+  // The faint tail keeps the plain layout, so resting frames are untouched.
+  const dipping =
+    Math.abs(dipAt(t + 1) - ruleDip) > 1e-3 ||
+    Math.abs(ruleDip - dipAt(t - 1)) > 1e-3;
   const ruleWidth = word.length * ADVANCE * size * 1.12;
   const baseline = restTop + BASELINE * size;
   return (
@@ -219,11 +250,11 @@ function Heavy({ word, t, W, H, fg, ink, fps }: ActProps) {
           right: 0,
           top,
           textAlign: "center",
-          ...wordStyle(size, 500),
+          ...wordStyle(size, 500, fontFamily),
           // Weight builds with the fall, hairline to 500; the face is variable.
           fontVariationSettings: `"wght" ${Math.round(100 + fall * 400)}`,
           color: fg,
-          transform: `scale(${sx}, ${sy})`,
+          transform: `scale(${sx}, ${sy})${glide(ringing)}`,
           transformOrigin: `50% ${BASELINE * 100}%`,
         }}
       >
@@ -234,8 +265,9 @@ function Heavy({ word, t, W, H, fg, ink, fps }: ActProps) {
           position: "absolute",
           left: (W - ruleWidth) / 2,
           width: ruleWidth,
-          top: baseline + size * 0.27 + ruleDip,
+          top: baseline + size * 0.27 + (dipping ? 0 : ruleDip),
           height: Math.max(3, H * 0.006),
+          transform: dipping ? `translateY(${ruleDip}px)` : undefined,
           backgroundImage: `linear-gradient(90deg, ${ink.join(", ")})`,
         }}
       />
@@ -243,7 +275,7 @@ function Heavy({ word, t, W, H, fg, ink, fps }: ActProps) {
   );
 }
 
-function Faster({ word, t, W, H, fg, ink }: ActProps) {
+function Faster({ word, t, W, H, fg, ink, fontFamily }: ActProps) {
   const size = fitSize(word, H * 0.34, W * 0.6);
   const SNAP = 7;
   const overshoot = -W * 0.018;
@@ -278,7 +310,7 @@ function Faster({ word, t, W, H, fg, ink }: ActProps) {
       >
         <div
           style={{
-            ...wordStyle(size, 500),
+            ...wordStyle(size, 500, fontFamily),
             color: fg,
             transform: `skewX(${skew}deg)`,
           }}
@@ -587,16 +619,40 @@ const ACTS: Record<WordAct, (p: ActProps) => React.ReactElement> = {
   rebuilt: Rebuilt,
 };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WordActs({
   acts = DEFAULT_ACTS,
+  words,
   hold = 32,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: WordActsProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   let start = 0;
   let index = acts.length - 1;
@@ -617,21 +673,24 @@ export function WordActs({
   const Act = ACTS[beat.act];
 
   return (
-    <AbsoluteFill style={{ backgroundColor: c.bg, overflow: "hidden" }}>
-      {beat ? (
-        <Act
-          word={beat.word}
-          t={local}
-          dur={dur}
-          W={W}
-          H={H}
-          fg={c.fg}
-          accent={accent}
-          ink={inkStops(theme)}
-          guide={c.guide}
-          fps={fps}
-        />
-      ) : null}
+    <AbsoluteFill style={{ backgroundColor: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        {beat ? (
+          <Act
+            word={words?.[index] ?? beat.word}
+            t={local}
+            dur={dur}
+            W={W}
+            H={H}
+            fg={ink ?? c.fg}
+            accent={accent}
+            ink={inkStops(theme)}
+            guide={c.guide}
+            fps={fps}
+            fontFamily={fontFamily}
+          />
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

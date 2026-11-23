@@ -1,0 +1,100 @@
+{
+  "component": "icon-alert-triangle",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "urgent-pulse",
+      "label": "Urgent Pulse",
+      "description": "A large amber warning that shakes quickly on a continuous loop.",
+      "askedAs": [
+        "looping warning shake",
+        "fast blinking alert icon",
+        "attention grabbing warning sign",
+        "мигающий значок предупреждения",
+        "быстрое тревожное предупреждение"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "size": 96,
+        "color": "#d97706",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "slow-sketch",
+      "label": "Slow Sketch",
+      "description": "A fine-lined slate triangle that draws itself in slowly and calmly.",
+      "askedAs": [
+        "slow drawn warning outline",
+        "thin line alert drawing",
+        "calm hand drawn caution icon",
+        "медленная отрисовка треугольника",
+        "тонкий контур предупреждения"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "color": "#475569",
+        "speed": 0.5,
+        "size": 72
+      }
+    },
+    {
+      "id": "bold-error",
+      "label": "Bold Error",
+      "description": "A heavy-stroked deep red triangle at hero scale for critical errors.",
+      "askedAs": [
+        "big red error triangle",
+        "thick critical warning icon",
+        "large danger alert",
+        "большой красный значок ошибки",
+        "жирный знак опасности"
+      ],
+      "props": {
+        "size": 160,
+        "color": "#b91c1c",
+        "strokeWidth": 3,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "inline-hint",
+      "label": "Inline Hint",
+      "description": "A small muted gray icon that animates briskly for subtle inline notices.",
+      "askedAs": [
+        "small subtle warning icon",
+        "tiny inline alert",
+        "quiet gray caution sign",
+        "маленький значок предупреждения",
+        "незаметное предупреждение в тексте"
+      ],
+      "props": {
+        "size": 28,
+        "color": "#6b7280",
+        "strokeWidth": 1.75,
+        "speed": 2
+      }
+    },
+    {
+      "id": "steady-caution",
+      "label": "Steady Caution",
+      "description": "A medium ochre triangle that draws and nudges gently on a relaxed loop.",
+      "askedAs": [
+        "gentle looping caution icon",
+        "soft yellow warning loop",
+        "calm repeating alert",
+        "плавное повторяющееся предупреждение",
+        "жёлтый знак внимания в цикле"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#ca8a04",
+        "size": 64,
+        "speed": 0.75,
+        "strokeWidth": 2.25
+      }
+    }
+  ]
+}

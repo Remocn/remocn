@@ -2,14 +2,9 @@
 
 import { loadFont as loadInstrument } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadJetBrains } from "@remotion/google-fonts/JetBrainsMono";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -52,6 +47,14 @@ const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   });
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+
+// Layout rounds a box and a baseline to whole pixels, so anything eased by
+// `left`/`top` clicks along pixel by pixel. Movers below are laid out where
+// they land and travel there by transform, dropped once under 1/1000px.
+const shift = (dx: number, dy: number) =>
+  Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3
+    ? `translate(${dx}px, ${dy}px) `
+    : "";
 
 function FileTile({
   kind,
@@ -135,6 +138,39 @@ export interface DropUploadProps {
   history?: { name: string; kind: string; size: string; ago: string }[];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Line inside the empty drop zone, before the "browse" link. */
+  dropLabel?: string;
+  /** Line that replaces it while the file hovers over the zone. */
+  releaseLabel?: string;
+  /** Status shown once the progress bar fills. */
+  doneLabel?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Size of the drop zone and file, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function DropUpload({
@@ -156,16 +192,25 @@ export function DropUpload({
   ],
   ground,
   groundParams,
+  dropLabel = "Drag and drop a file, or",
+  releaseLabel = "Release to upload",
+  doneLabel = "Uploaded",
+  ink: inkProp,
+  background,
+  fontFamily = instrument.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed: rate = 1,
 }: DropUploadProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * rate;
+  const { width, height, fps } = useSceneConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 760 : 1280;
   const stageH = portrait ? 1351 : 720;
   const sc = width / stageW;
 
-  const ink = dark ? "#f1f2fb" : "#151824";
+  const ink = inkProp ?? (dark ? "#f1f2fb" : "#151824");
   const soft = dark ? "rgba(225,228,250,0.7)" : "rgba(21,24,36,0.66)";
   const muted = dark ? "rgba(225,228,250,0.46)" : "rgba(21,24,36,0.44)";
   const dash = dark ? "rgba(225,228,250,0.34)" : "rgba(21,24,36,0.26)";
@@ -287,397 +332,414 @@ export function DropUpload({
         });
 
   return (
-    <AbsoluteFill
-      style={{ fontFamily: instrument.fontFamily, overflow: "hidden" }}
-    >
-      <GshGround
-        preset={resolvedGround}
-        params={resolvedParams}
-        timeOffset={2}
-        timeScale={0.5}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${sc})`,
-          transformOrigin: "0 0",
-          perspective: 2000,
-        }}
-      >
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <GshGround
+          preset={resolvedGround}
+          params={resolvedParams}
+          timeOffset={2}
+          timeScale={0.5}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transformStyle: "preserve-3d",
-            transformOrigin: `${cx}px ${cy}px`,
-            transform: `translateY(${-camY * push}px) scale(${push}) rotateX(${rotX}deg) rotateY(${rotY}deg)`,
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${sc})`,
+            transformOrigin: "0 0",
+            perspective: 2000,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: 40,
-              right: 40,
-              top: titleTop,
-              height: titleSize * 1.25,
-              overflow: "hidden",
-              textAlign: "center",
+              inset: 0,
+              transformStyle: "preserve-3d",
+              transformOrigin: `${cx}px ${cy}px`,
+              transform: `translateY(${-camY * push}px) scale(${push}) rotateX(${rotX}deg) rotateY(${rotY}deg)`,
             }}
           >
-            <div
-              style={{
-                fontSize: titleSize,
-                lineHeight: 1.15,
-                letterSpacing: "-0.035em",
-                fontWeight: 400,
-                color: ink,
-                transform: `translateY(${mix(105, 0, titleIn)}%)`,
-              }}
-            >
-              {title}
-            </div>
-          </div>
-
-          <div
-            style={{
-              position: "absolute",
-              left: zL,
-              top: zT,
-              width: zW,
-              height: zH,
-              borderRadius: radius,
-              background: `linear-gradient(${tint}, ${tint}), color-mix(in oklab, ${base} ${Math.round(mix(dark ? 58 : 52, 100, solid))}%, transparent)`,
-              boxShadow: rowShadow(solid),
-              opacity: ramp(frame, -6, 8),
-              transform: `translateY(${mix(60, 0, zoneIn)}px) scale(${mix(0.94, 1, zoneIn) * (1 + breathe + dropPunch)})`,
-              overflow: "hidden",
-            }}
-          >
-            <svg
-              width={zW}
-              height={zH}
-              style={{ position: "absolute", inset: 0, opacity: zoneContent }}
-              aria-hidden
-            >
-              <rect
-                x={0.75}
-                y={0.75}
-                width={Math.max(0, zW - 1.5)}
-                height={Math.max(0, zH - 1.5)}
-                rx={radius - 0.75}
-                fill="none"
-                stroke={
-                  highlight > 0.02
-                    ? accentMix(Math.round(85 * highlight), dash)
-                    : dash
-                }
-                strokeWidth={1.5}
-                strokeDasharray="9 7"
-                strokeDashoffset={-frame * 0.7 * (0.25 + highlight)}
-              />
-            </svg>
             <div
               style={{
                 position: "absolute",
-                inset: 0,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 14,
-                opacity: zoneContent,
-                transform: `translateY(${36 * highlight}px) scale(${mix(0.94, 1, zoneContent)})`,
+                left: 40,
+                right: 40,
+                top: titleTop1,
+                height: titleSize * 1.25,
+                transform: shift(0, titleTop - titleTop1) || undefined,
+                overflow: "hidden",
+                textAlign: "center",
               }}
             >
               <div
                 style={{
-                  width: 44,
-                  height: 44,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transform: `scale(${mix(1, 0.6, highlight)})`,
-                  opacity: 1 - highlight,
+                  fontSize: titleSize,
+                  lineHeight: 1.15,
+                  letterSpacing: "-0.035em",
+                  fontWeight: 400,
+                  color: ink,
+                  transform: `translateY(${mix(105, 0, titleIn)}%)`,
                 }}
               >
-                <svg viewBox="0 0 24 24" width={34} height={34} aria-hidden>
-                  <path
-                    d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 14v4.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V14"
-                    fill="none"
-                    stroke={soft}
-                    strokeWidth={1.5}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-              <div
-                style={{
-                  position: "relative",
-                  height: 28,
-                  width: zW - 60,
-                  textAlign: "center",
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    fontSize: 21,
-                    color: ink,
-                    letterSpacing: "-0.01em",
-                    opacity: 1 - highlight,
-                    transform: `translateY(${-8 * highlight}px)`,
-                  }}
-                >
-                  Drag and drop a file, or{" "}
-                  <span
-                    style={{
-                      color: dark ? accentMix(50, "#ffffff") : accent,
-                      textDecoration: "underline",
-                      textUnderlineOffset: 4,
-                      textDecorationThickness: 1,
-                    }}
-                  >
-                    browse
-                  </span>
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    fontSize: 21,
-                    color: dark ? "#ffffff" : accent,
-                    opacity: highlight,
-                    transform: `translateY(${8 * (1 - highlight)}px)`,
-                  }}
-                >
-                  Release to upload
-                </div>
-              </div>
-              <div
-                style={{
-                  fontFamily: jetbrains.fontFamily,
-                  fontSize: 17,
-                  color: muted,
-                }}
-              >
-                {hint}
+                {title}
               </div>
             </div>
 
             <div
               style={{
                 position: "absolute",
-                left: 26 + iconW + 20,
-                right: 26,
-                top: 0,
-                height: rowH,
-                opacity: info,
-                display: frame >= B.info ? "block" : "none",
+                left: cx - rowW / 2,
+                top: cy - rowH / 2,
+                width: zW,
+                height: zH,
+                borderRadius: radius,
+                background: `linear-gradient(${tint}, ${tint}), color-mix(in oklab, ${base} ${Math.round(mix(dark ? 58 : 52, 100, solid))}%, transparent)`,
+                boxShadow: rowShadow(solid),
+                opacity: ramp(frame, -6, 8),
+                transform: `${shift(zL - (cx - rowW / 2), zT - (cy - rowH / 2))}translateY(${mix(60, 0, zoneIn)}px) scale(${mix(0.94, 1, zoneIn) * (1 + breathe + dropPunch)})`,
+                overflow: "hidden",
               }}
             >
+              <svg
+                width={zW}
+                height={zH}
+                style={{ position: "absolute", inset: 0, opacity: zoneContent }}
+                aria-hidden
+              >
+                <rect
+                  x={0.75}
+                  y={0.75}
+                  width={Math.max(0, zW - 1.5)}
+                  height={Math.max(0, zH - 1.5)}
+                  rx={radius - 0.75}
+                  fill="none"
+                  stroke={
+                    highlight > 0.02
+                      ? accentMix(Math.round(85 * highlight), dash)
+                      : dash
+                  }
+                  strokeWidth={1.5}
+                  strokeDasharray="9 7"
+                  strokeDashoffset={-frame * 0.7 * (0.25 + highlight)}
+                />
+              </svg>
               <div
                 style={{
                   position: "absolute",
-                  left: 0,
-                  right: 64,
-                  top: 24,
+                  inset: 0,
                   display: "flex",
-                  alignItems: "baseline",
-                  gap: 12,
-                  transform: `translateY(${mix(12, 0, info)}px)`,
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 14,
+                  opacity: zoneContent,
+                  transform: `translateY(${36 * highlight}px) scale(${mix(0.94, 1, zoneContent)})`,
                 }}
               >
-                <span
-                  style={{ fontSize: 21, color: ink, letterSpacing: "-0.01em" }}
-                >
-                  {fileName}
-                </span>
-                <span
+                <div
                   style={{
-                    fontFamily: jetbrains.fontFamily,
-                    fontSize: 17,
-                    color: muted,
+                    width: 44,
+                    height: 44,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transform: `scale(${mix(1, 0.6, highlight)})`,
+                    opacity: 1 - highlight,
                   }}
                 >
-                  {fileSize}
-                </span>
-                <div style={{ flex: 1 }} />
-                <span
+                  <svg viewBox="0 0 24 24" width={34} height={34} aria-hidden>
+                    <path
+                      d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 14v4.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V14"
+                      fill="none"
+                      stroke={soft}
+                      strokeWidth={1.5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div
                   style={{
                     position: "relative",
-                    fontSize: 17,
-                    color: soft,
-                    width: 110,
-                    textAlign: "right",
+                    height: 28,
+                    width: zW - 60,
+                    textAlign: "center",
                   }}
                 >
-                  <span
+                  <div
                     style={{
                       position: "absolute",
-                      right: 0,
-                      opacity: 1 - doneIn,
+                      inset: 0,
+                      fontSize: 21,
+                      color: ink,
+                      letterSpacing: "-0.01em",
+                      opacity: 1 - highlight,
+                      transform: `translateY(${-8 * highlight}px)`,
                     }}
                   >
-                    Uploading
-                  </span>
-                  <span
+                    {dropLabel}{" "}
+                    <span
+                      style={{
+                        color: dark ? accentMix(50, "#ffffff") : accent,
+                        textDecoration: "underline",
+                        textUnderlineOffset: 4,
+                        textDecorationThickness: 1,
+                      }}
+                    >
+                      browse
+                    </span>
+                  </div>
+                  <div
                     style={{
                       position: "absolute",
-                      right: 0,
-                      color: dark ? accentMix(45, "#ffffff") : accent,
-                      opacity: doneIn,
-                      transform: `translateY(${mix(8, 0, doneIn)}px)`,
+                      inset: 0,
+                      fontSize: 21,
+                      color: dark ? "#ffffff" : accent,
+                      opacity: highlight,
+                      transform: `translateY(${8 * (1 - highlight)}px)`,
                     }}
                   >
-                    Uploaded
-                  </span>
-                </span>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 64,
-                  top: 64,
-                  height: 6,
-                  borderRadius: 3,
-                  background: dark
-                    ? "rgba(255,255,255,0.08)"
-                    : "rgba(20,24,48,0.07)",
-                  overflow: "hidden",
-                }}
-              >
+                    {releaseLabel}
+                  </div>
+                </div>
                 <div
                   style={{
-                    width: `${prog * 100}%`,
-                    height: "100%",
-                    borderRadius: 3,
-                    background: accent,
-                  }}
-                />
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  top: (rowH - 40) / 2,
-                  width: 40,
-                  height: 40,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <span
-                  style={{
-                    position: "absolute",
                     fontFamily: jetbrains.fontFamily,
                     fontSize: 17,
                     color: muted,
-                    opacity: 1 - doneIn,
-                    fontVariantNumeric: "tabular-nums",
                   }}
                 >
-                  {pct}%
-                </span>
+                  {hint}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: 26 + iconW + 20,
+                  right: 26,
+                  top: 0,
+                  height: rowH,
+                  opacity: info,
+                  display: frame >= B.info ? "block" : "none",
+                }}
+              >
                 <div
                   style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 64,
+                    top: 24,
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 12,
+                    transform: `translateY(${mix(12, 0, info)}px)`,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 21,
+                      color: ink,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {fileName}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: jetbrains.fontFamily,
+                      fontSize: 17,
+                      color: muted,
+                    }}
+                  >
+                    {fileSize}
+                  </span>
+                  <div style={{ flex: 1 }} />
+                  <span
+                    style={{
+                      position: "relative",
+                      fontSize: 17,
+                      color: soft,
+                      width: 110,
+                      textAlign: "right",
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: "absolute",
+                        right: 0,
+                        opacity: 1 - doneIn,
+                      }}
+                    >
+                      Uploading
+                    </span>
+                    <span
+                      style={{
+                        position: "absolute",
+                        right: 0,
+                        color: dark ? accentMix(45, "#ffffff") : accent,
+                        opacity: doneIn,
+                        transform: `translateY(${mix(8, 0, doneIn)}px)`,
+                      }}
+                    >
+                      {doneLabel}
+                    </span>
+                  </span>
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 64,
+                    top: 64,
+                    height: 6,
+                    borderRadius: 3,
+                    background: dark
+                      ? "rgba(255,255,255,0.08)"
+                      : "rgba(20,24,48,0.07)",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${prog * 100}%`,
+                      height: "100%",
+                      borderRadius: 3,
+                      background: accent,
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: (rowH - 40) / 2,
                     width: 40,
                     height: 40,
-                    borderRadius: 20,
-                    background: accent,
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
-                    transform: `scale(${done})`,
-                    opacity: doneIn,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <svg viewBox="0 0 24 24" width={22} height={22} aria-hidden>
-                    <path
-                      d="m6 12.5 4 4 8-9"
-                      fill="none"
-                      stroke="#fff"
-                      strokeWidth={2.2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeDasharray={20}
-                      strokeDashoffset={20 * (1 - ramp(frame, B.done + 2, 8))}
-                    />
-                  </svg>
+                  <span
+                    style={{
+                      position: "absolute",
+                      fontFamily: jetbrains.fontFamily,
+                      fontSize: 17,
+                      color: muted,
+                      opacity: 1 - doneIn,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {pct}%
+                  </span>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      background: accent,
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
+                      transform: `scale(${done})`,
+                      opacity: doneIn,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" width={22} height={22} aria-hidden>
+                      <path
+                        d="m6 12.5 4 4 8-9"
+                        fill="none"
+                        stroke="#fff"
+                        strokeWidth={2.2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeDasharray={20}
+                        strokeDashoffset={20 * (1 - ramp(frame, B.done + 2, 8))}
+                      />
+                    </svg>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {shown.map((h, i) => {
-            const at = B.info + 2 + i * 5;
-            const k = spring({ frame: frame - at, fps, config: CARD });
-            return (
-              <div
-                key={h.name}
-                style={{
-                  position: "absolute",
-                  left: cx - rowW / 2,
-                  top: cy + rowH / 2 + histGap + i * (histH + histGap),
-                  width: rowW,
-                  height: histH,
-                  borderRadius: 20,
-                  background: base,
-                  boxShadow: rowShadow(0.55),
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 20,
-                  padding: "0 26px 0 32px",
-                  opacity: ramp(frame, at, 8),
-                  transform: `translateY(${mix(28, 0, k)}px)`,
-                }}
-              >
-                <FileTile kind={h.kind} accent={accent} w={38} />
-                <span
-                  style={{ fontSize: 21, color: ink, letterSpacing: "-0.01em" }}
-                >
-                  {h.name}
-                </span>
-                <span
+            {shown.map((h, i) => {
+              const at = B.info + 2 + i * 5;
+              const k = spring({ frame: frame - at, fps, config: CARD });
+              return (
+                <div
+                  key={h.name}
                   style={{
-                    fontFamily: jetbrains.fontFamily,
-                    fontSize: 17,
-                    color: muted,
+                    position: "absolute",
+                    left: cx - rowW / 2,
+                    top: cy + rowH / 2 + histGap + i * (histH + histGap),
+                    width: rowW,
+                    height: histH,
+                    borderRadius: 20,
+                    background: base,
+                    boxShadow: rowShadow(0.55),
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 20,
+                    padding: "0 26px 0 32px",
+                    opacity: ramp(frame, at, 8),
+                    transform: `translateY(${mix(28, 0, k)}px)`,
                   }}
                 >
-                  {h.size}
-                </span>
-                <div style={{ flex: 1 }} />
-                <span style={{ fontSize: 17, color: muted }}>{h.ago}</span>
-              </div>
-            );
-          })}
+                  <FileTile kind={h.kind} accent={accent} w={38} />
+                  <span
+                    style={{
+                      fontSize: 21,
+                      color: ink,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {h.name}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: jetbrains.fontFamily,
+                      fontSize: 17,
+                      color: muted,
+                    }}
+                  >
+                    {h.size}
+                  </span>
+                  <div style={{ flex: 1 }} />
+                  <span style={{ fontSize: 17, color: muted }}>{h.ago}</span>
+                </div>
+              );
+            })}
 
-          <div
-            style={{
-              position: "absolute",
-              left: tx - tileW / 2,
-              top: ty - (tileW * 1.26) / 2,
-              transform: `rotate(${rot}deg) scale(${tileScale})`,
-              filter: [
-                tileBlur > 0.3 ? `blur(${tileBlur}px)` : "",
-                `drop-shadow(0 ${mix(4, 34, shadowAmt)}px ${mix(6, 36, shadowAmt)}px rgba(4,6,30,${dark ? 0.55 : 0.22}))`,
-              ].join(" "),
-              opacity: ramp(frame, B.fly, 4),
-            }}
-          >
-            <FileTile kind={fileKind} accent={accent} w={tileW} />
+            <div
+              style={{
+                position: "absolute",
+                left: iconX - tileW / 2,
+                top: iconY - (tileW * 1.26) / 2,
+                transform: `${shift(tx - iconX, ty - iconY)}rotate(${rot}deg) scale(${tileScale})`,
+                filter: [
+                  tileBlur > 0.3 ? `blur(${tileBlur}px)` : "",
+                  `drop-shadow(0 ${mix(4, 34, shadowAmt)}px ${mix(6, 36, shadowAmt)}px rgba(4,6,30,${dark ? 0.55 : 0.22}))`,
+                ].join(" "),
+                opacity: ramp(frame, B.fly, 4),
+              }}
+            >
+              <FileTile kind={fileKind} accent={accent} w={tileW} />
+            </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

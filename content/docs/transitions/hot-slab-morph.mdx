@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="HotSlabMorphDemo"
     component={HotSlabMorphDemoScene}
-    durationInFrames={126}
-    fps={30}
+    durationInFrames={252}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -70,6 +70,22 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Accent color; defaults to the theme accent",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color of both scenes; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of both gradient grounds; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hanken Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
       name: "lineA",
       type: "string",
       default: "\"Start from a template\"",
@@ -86,6 +102,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "string",
       default: "\"A 30-second launch film for our new editor\"",
       description: "Text typed into the prompt card",
+    },
+    {
+      name: "placeholder",
+      type: "string",
+      default: "\"Describe your launch film\"",
+      description: "Prompt box text before typing starts",
+    },
+    {
+      name: "searchLabel",
+      type: "string",
+      default: "\"Search templates\"",
+      description: "Search field label at the top of the template panel",
     },
     {
       name: "ground",
@@ -111,6 +139,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "transition",
       type: "HotSlabMorphProps",
       description: "Overrides for the transition presentation props",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of both scenes' heading and panels around the frame's center; the grounds stay put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

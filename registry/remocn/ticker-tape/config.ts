@@ -1,8 +1,37 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const tickerTapeConfig: ComponentConfig = {
   componentName: "TickerTape",
   importPath: "@/components/remocn/ticker-tape",
+  lists: {
+    symbols: {
+      default: [
+        "KTBS",
+        "KEYF",
+        "EASE",
+        "SPRG",
+        "TWEN",
+        "FRMS",
+        "SEQN",
+        "MOTN",
+        "BLUR",
+        "PXLS",
+        "KERN",
+        "GLYF",
+        "WIPE",
+        "CRVE",
+        "TIMR",
+        "FADE",
+      ],
+      description: "Symbols",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -42,6 +71,21 @@ export const tickerTapeConfig: ComponentConfig = {
       description: "Change",
       hiddenFromList: false,
     },
+    label: {
+      type: "text-content",
+      default: "MARKET CLOSE",
+      description: "Status label",
+    },
+    blur: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 2,
+      step: 0.1,
+      description: "Motion blur",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Oswald" }),
     speed: {
       type: "number",
       default: 1,

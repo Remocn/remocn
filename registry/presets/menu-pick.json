@@ -1,0 +1,121 @@
+{
+  "component": "menu-pick",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "retro-console",
+      "label": "Retro Console",
+      "description": "Monospace type on a near-black screen with a classic red bar and deliberate, menu-by-menu row reveals.",
+      "askedAs": [
+        "old game console menu",
+        "retro pixel-era select screen",
+        "arcade style menu pick",
+        "ретро меню как в приставке",
+        "игровое меню в старом стиле"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "background": "#101014",
+        "ink": "#f2f2f2",
+        "stagger": 6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "paper-menu",
+      "label": "Paper Menu",
+      "description": "A light, paper-textured ground with warm serif type and a burnt-orange highlight bar.",
+      "askedAs": [
+        "light warm menu on paper",
+        "soft printed look selection",
+        "cream background serif menu",
+        "светлое меню на бумаге",
+        "тёплый бумажный стиль выбора"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Fraunces",
+        "accent": "#c2410c",
+        "ink": "#1c1917"
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "Rows land almost together at double speed in bold grotesk type, slightly enlarged for punch.",
+      "askedAs": [
+        "fast punchy menu",
+        "snappy quick selection",
+        "make it pop faster and bigger",
+        "быстрое резкое меню",
+        "сделай выбор быстрее и крупнее"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "scale": 1.1,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "cobalt-calm",
+      "label": "Cobalt Calm",
+      "description": "A deep cobalt gradient ground with a cool blue bar, clean Inter type and an unhurried cascade.",
+      "askedAs": [
+        "calm blue tech menu",
+        "corporate blue selection",
+        "slow cool toned pick",
+        "спокойное синее меню",
+        "холодный синий стиль"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "accent": "#3b82f6",
+        "fontFamily": "Inter",
+        "speed": 0.75,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Large elegant serif rows on warm off-white with a dark forest-green highlight, like a magazine menu.",
+      "askedAs": [
+        "elegant magazine style menu",
+        "classy serif options list",
+        "refined editorial pick",
+        "элегантное меню с засечками",
+        "журнальный стиль выбора"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1a1a1a",
+        "accent": "#1f3a2e",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "ember-night",
+      "label": "Ember Night",
+      "description": "A glowing ember ground with an amber bar and chunky grotesk type that enters after a short beat.",
+      "askedAs": [
+        "warm dark glowing menu",
+        "amber orange night selection",
+        "moody fire toned pick",
+        "тёплое тёмное меню с янтарём",
+        "огненный ночной стиль"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#f59e0b",
+        "fontFamily": "Bricolage Grotesque",
+        "delay": 15
+      }
+    }
+  ]
+}

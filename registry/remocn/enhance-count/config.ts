@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const enhanceCountConfig: ComponentConfig = {
   componentName: "EnhanceCount",
@@ -23,6 +29,35 @@ export const enhanceCountConfig: ComponentConfig = {
       default: "sharp.",
       description: "Highlight",
     },
+    fontWeight: {
+      type: "number",
+      default: 440,
+      min: 100,
+      max: 900,
+      step: 10,
+      description: "Final weight",
+      hiddenFromList: false,
+    },
+    draftWeight: {
+      type: "number",
+      default: 100,
+      min: 100,
+      max: 900,
+      step: 10,
+      description: "Draft weight",
+      hiddenFromList: false,
+    },
+    span: {
+      type: "number",
+      default: 34,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Sweep (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Inter Tight" }),
     speed: {
       type: "number",
       default: 1,

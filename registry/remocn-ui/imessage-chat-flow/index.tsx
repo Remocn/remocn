@@ -1,9 +1,10 @@
 "use client";
 
 import { ArrowUp, ChevronLeft, Plus, Video } from "lucide-react";
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate, spring } from "remotion";
 import { Caret } from "@/components/remocn/caret";
 import { TypingIndicator } from "@/components/remocn/typing-indicator";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { type RemocnTheme, revealedText } from "@/lib/remocn-ui";
 
 export interface ImessageMessage {
@@ -231,7 +232,7 @@ export function ImessageChatFlow({
   accentColor,
   speed = 1,
 }: ImessageChatFlowProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const eff = frame * speed;
   const accent = accentColor ?? IMESSAGE_BLUE;
 
@@ -454,7 +455,7 @@ function ImessageRow({
   accent: string;
   showDelivered: boolean;
 }) {
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   const outgoing = item.from === "me";
   const showTyping =
     item.from === "them" &&

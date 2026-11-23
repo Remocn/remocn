@@ -2,12 +2,8 @@
 
 import { Dithering, type DitheringProps } from "@paper-design/shaders-react";
 import { useCallback, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface ShaderDitheringProps
   extends Omit<DitheringProps, "frame" | "ref"> {}
@@ -22,8 +18,8 @@ export function ShaderDithering({
   className,
   ...rest
 }: ShaderDitheringProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
 
   const [handle] = useState(() => delayRender("shader-dithering"));
   const gate = useCallback(

@@ -1,0 +1,120 @@
+{
+  "component": "voice-agent",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "night-ops",
+      "label": "Night Ops",
+      "description": "A dark console look with mono type, a cool cyan accent and a deep blue-hour ground.",
+      "askedAs": [
+        "dark terminal style call transcript",
+        "developer console look for voice agent",
+        "monospace dark theme",
+        "тёмная тема как терминал",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#4fd1c5",
+        "ground": "blue-hour"
+      }
+    },
+    {
+      "id": "concierge-serif",
+      "label": "Concierge",
+      "description": "A warm hospitality feel with serif type, cream paper and a deep garnet accent, paced gently.",
+      "askedAs": [
+        "elegant restaurant booking look",
+        "warm serif hotel concierge style",
+        "slow luxurious transcript",
+        "элегантный стиль для ресторана",
+        "тёплый вариант с засечками"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#f6f1e8",
+        "ink": "#2a2320",
+        "accent": "#9b2c3b",
+        "stagger": 3.4,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "A fast, punchy cut where words snap in quickly and the call wraps in a few seconds.",
+      "askedAs": [
+        "make it faster for a short teaser",
+        "quick snappy transcript",
+        "speed up the call for social",
+        "быстрее для короткого ролика",
+        "ускорить анимацию"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1.2,
+        "accent": "#ff5a36",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "hero-closeup",
+      "label": "Hero Closeup",
+      "description": "An enlarged, slower read on a cobalt ground for a launch-video hero moment.",
+      "askedAs": [
+        "bigger text for launch hero",
+        "zoomed in transcript",
+        "large readable call for keynote",
+        "крупнее для главного кадра",
+        "увеличить масштаб"
+      ],
+      "props": {
+        "scale": 1.3,
+        "ground": "cobalt-rise",
+        "theme": "dark",
+        "speed": 0.75,
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "clean-support",
+      "label": "Clean Support",
+      "description": "A calm, neutral light look with a green success accent suited to customer-support demos.",
+      "askedAs": [
+        "clean minimal support demo",
+        "light neutral theme with green",
+        "calm customer service look",
+        "светлый минималистичный стиль",
+        "спокойный вариант для поддержки"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#14845c",
+        "ground": "polar",
+        "delay": 12
+      }
+    },
+    {
+      "id": "afterhours-glow",
+      "label": "Afterhours",
+      "description": "A moody late-night palette with amber accent on a warm afterhours ground.",
+      "askedAs": [
+        "moody late night booking",
+        "warm dark cinematic look",
+        "amber accent on dark",
+        "ночная атмосферная тема",
+        "тёмный тёплый стиль"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "afterhours",
+        "accent": "#f2a541",
+        "fontFamily": "Manrope",
+        "stagger": 3
+      }
+    }
+  ]
+}

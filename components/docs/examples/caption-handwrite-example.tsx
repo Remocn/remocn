@@ -1,7 +1,8 @@
 "use client";
 
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { previewCaptions } from "@/components/docs/examples/caption-fixture";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { CaptionHandwrite } from "@/registry/remocn/caption-handwrite";
 
 interface CaptionHandwriteExampleProps {
@@ -25,7 +26,7 @@ export function CaptionHandwriteExampleScene({
   holdMs,
   shadow,
 }: CaptionHandwriteExampleProps) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   return (
     <AbsoluteFill
       style={{

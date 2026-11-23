@@ -1,0 +1,107 @@
+{
+  "component": "baton-word",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Cream paper background with ink-black Instrument Serif and a burnt-orange baton word that glides slowly between lines.",
+      "askedAs": [
+        "elegant serif magazine style",
+        "slow classy word handoff on cream",
+        "literary manifesto typography",
+        "элегантный шрифт с засечками на светлом фоне",
+        "медленная журнальная типографика"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#c2410c"
+      }
+    },
+    {
+      "id": "punchy-launch",
+      "label": "Punchy Launch",
+      "description": "Heavy, oversized Bricolage Grotesque with a snappy baton jump and tight word stagger for high-energy launch beats.",
+      "askedAs": [
+        "fast bold launch text",
+        "big chunky words that snap quickly",
+        "energetic product announcement typography",
+        "быстрый жирный текст для запуска",
+        "энергичная крупная типографика"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 800,
+        "scale": 1.25,
+        "travel": 12,
+        "stagger": 1,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Developer-flavoured JetBrains Mono on near-black with a mint baton word and a steady, word-by-word cadence.",
+      "askedAs": [
+        "code terminal style words",
+        "monospace developer launch video",
+        "green on dark hacker typography",
+        "моноширинный шрифт как в терминале",
+        "стиль кода для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "stagger": 6,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "calm-minimal",
+      "label": "Calm Minimal",
+      "description": "Light Inter on soft white with a muted blue accent and a long, unhurried baton travel for thoughtful statements.",
+      "askedAs": [
+        "calm clean minimal text",
+        "slow gentle word transitions",
+        "quiet corporate manifesto look",
+        "спокойный минималистичный текст",
+        "медленная плавная смена слов"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 400,
+        "accent": "#3b5bdb",
+        "travel": 44,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Deep indigo backdrop with bold Space Grotesk in pale lavender-white and a soft violet baton word.",
+      "askedAs": [
+        "dark purple bold typography",
+        "moody night tech text",
+        "violet accent on deep blue",
+        "тёмно-фиолетовый фон с жирным текстом",
+        "ночная техно типографика"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "background": "#14112b",
+        "ink": "#f1eefc",
+        "accent": "#a78bfa",
+        "stagger": 4
+      }
+    }
+  ]
+}

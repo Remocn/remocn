@@ -1,0 +1,119 @@
+{
+  "component": "screenshot-tour",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "night-shift",
+      "label": "Night Shift",
+      "description": "Dark interface on a deep blue-hour ground with a cool cyan accent and heavier dimming around each region.",
+      "askedAs": [
+        "dark mode product tour",
+        "moody night walkthrough",
+        "screenshot tour on dark background",
+        "тёмный тур по скриншоту",
+        "ночная тема для обзора интерфейса"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#5cc8e8",
+        "dim": 0.85
+      }
+    },
+    {
+      "id": "slow-editorial",
+      "label": "Slow Editorial",
+      "description": "Unhurried stops with serif captions and a warm terracotta accent on a soft paper ground.",
+      "askedAs": [
+        "slow elegant walkthrough",
+        "editorial serif product tour",
+        "calm paced screenshot tour",
+        "медленный элегантный тур",
+        "спокойный обзор с шрифтом с засечками"
+      ],
+      "props": {
+        "framesPerStop": 90,
+        "speed": 0.75,
+        "fontFamily": "Instrument Serif",
+        "accent": "#c2562f",
+        "ground": "paper-crease"
+      }
+    },
+    {
+      "id": "quick-glance",
+      "label": "Quick Glance",
+      "description": "Snappy short stops with no pull-back between regions and light dimming for a fast social-friendly tour.",
+      "askedAs": [
+        "fast screenshot tour",
+        "quick product walkthrough for social",
+        "snappy zoom between regions",
+        "быстрый тур по интерфейсу",
+        "короткий динамичный обзор"
+      ],
+      "props": {
+        "framesPerStop": 24,
+        "speed": 1.5,
+        "pullBack": false,
+        "dim": 0.35
+      }
+    },
+    {
+      "id": "dev-console",
+      "label": "Dev Console",
+      "description": "Monospace captions on a near-black charcoal ground with a muted green accent for a technical feel.",
+      "askedAs": [
+        "developer style product tour",
+        "terminal look walkthrough",
+        "monospace screenshot tour",
+        "тур в стиле для разработчиков",
+        "моноширинный шрифт тёмный обзор"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#4fb37a"
+      }
+    },
+    {
+      "id": "spotlight-focus",
+      "label": "Spotlight Focus",
+      "description": "Strong dimming and a larger frame put hard focus on each region under a spotlight ground with a crisp violet accent.",
+      "askedAs": [
+        "dramatic focus on each region",
+        "heavy spotlight walkthrough",
+        "zoomed in tour with dark surroundings",
+        "акцент на каждой области интерфейса",
+        "драматичный тур с затемнением"
+      ],
+      "props": {
+        "dim": 1.3,
+        "ground": "spotlight",
+        "scale": 1.2,
+        "accent": "#7c5cfa",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "soft-studio",
+      "label": "Soft Studio",
+      "description": "Airy light tour on a pale polar background with dark slate text, gentle dimming and a calm teal accent.",
+      "askedAs": [
+        "light clean minimal tour",
+        "soft pastel product walkthrough",
+        "airy bright screenshot tour",
+        "светлый минималистичный тур",
+        "мягкий светлый обзор продукта"
+      ],
+      "props": {
+        "background": "#f3f6f8",
+        "ink": "#1e2a33",
+        "ground": "polar",
+        "accent": "#178a8a",
+        "dim": 0.3,
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

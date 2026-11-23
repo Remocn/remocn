@@ -1,14 +1,10 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/JetBrainsMono";
-import {
-  AbsoluteFill,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, spring } from "remotion";
 import { Caret } from "@/components/remocn/caret";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import { useTypewriter } from "@/lib/remocn-ui";
 
 const { fontFamily: MONO_FAMILY } = loadFont();
@@ -95,8 +91,9 @@ export function OpenCode({
   accentColor = "#2B7FFF",
   speed = 1,
 }: OpenCodeProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const t = THEMES.dark;
 
   const refW = 1280;
@@ -115,6 +112,25 @@ export function OpenCode({
   const hintsFade = fadeUpAt(frame * speed, [20, 38]);
 
   const boxWidth = 1000;
+
+  // The box rides an overshooting spring and a fade-up at once, so whether
+  // it moves is read off the neighbouring frames: its travel in px, and its
+  // scale weighed by the reach from its top-centre origin to its far corner.
+  const boxAt = (f: number) => {
+    const i = introBounceIn(f * speed, fps);
+    const b = fadeUpAt(f * speed, [12, 30]);
+    return { y: b.translateY + i.translateY * 0.6, k: i.scale };
+  };
+  const boxStep = (a: number, b: number) => {
+    const p = boxAt(a);
+    const q = boxAt(b);
+    return Math.abs(p.y - q.y) > 1e-3 || Math.abs(p.k - q.k) * 520 > 1e-3;
+  };
+  const boxMoving = boxStep(frame, frame + 1) || boxStep(frame - 1, frame);
+  const hintsAt = (f: number) => fadeUpAt(f * speed, [20, 38]).translateY;
+  const hintsMoving =
+    Math.abs(hintsAt(frame + 1) - hintsAt(frame)) > 1e-3 ||
+    Math.abs(hintsAt(frame) - hintsAt(frame - 1)) > 1e-3;
 
   return (
     <AbsoluteFill style={{ background: "transparent" }}>
@@ -204,8 +220,7 @@ export function OpenCode({
             justifyContent: "center",
             gap: 26,
             opacity: boxFade.opacity,
-            translate: `0 ${boxFade.translateY + intro.translateY * 0.6}px`,
-            scale: `${intro.scale}`,
+            transform: `translateY(${boxFade.translateY + intro.translateY * 0.6}px) scale(${intro.scale})${glide(boxMoving)}`,
             transformOrigin: "center top",
           }}
         >
@@ -261,7 +276,7 @@ export function OpenCode({
             fontFamily: MONO_FAMILY,
             fontSize: 18,
             opacity: hintsFade.opacity,
-            translate: `0 ${hintsFade.translateY}px`,
+            transform: `translateY(${hintsFade.translateY}px)${glide(hintsMoving)}`,
           }}
         >
           <span style={{ display: "inline-flex", gap: 8 }}>

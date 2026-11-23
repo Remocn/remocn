@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geologica = loadFont("normal", {
   weights: ["400", "500"],
@@ -26,8 +26,20 @@ export interface NameGlossPart {
 export interface NameGlossProps {
   parts?: NameGlossPart[];
   why?: string;
+  /** Frames between words as a gloss writes in. */
+  stagger?: number;
+  /** Frames held on the finished card; the glosses space out to fit the rest. */
+  hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the name and glosses. Load it yourself; Geologica by default. */
+  fontFamily?: string;
+  /** Size of the card, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -69,13 +81,13 @@ const DIM = 0.38;
 type Metrics = Record<string, number>;
 const key = (w: number, s: string) => `${w}\u0002${s}`;
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], family: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("name-gloss: no 2d context");
   const out: Metrics = {};
   for (const weight of [NAME_W, BODY_W]) {
-    ctx.font = `${weight} ${FONT_PX}px "${geologica.fontFamily}"`;
+    ctx.font = `${weight} ${FONT_PX}px "${family}"`;
     for (const s of texts) {
       out[key(weight, s)] = ctx.measureText(s).width / FONT_PX;
     }
@@ -83,8 +95,8 @@ function measureAll(texts: string[]): Metrics {
   return out;
 }
 
-function useMetrics(texts: string[]) {
-  const id = texts.join("\u0001");
+function useMetrics(texts: string[], family: string) {
+  const id = `${family}\u0003${texts.join("\u0001")}`;
   const [state, setState] = useState<{ id: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("name-gloss: measuring"));
   const released = useRef(false);
@@ -92,13 +104,16 @@ function useMetrics(texts: string[]) {
     let live = true;
     Promise.all([
       geologica.waitUntilDone(),
-      document.fonts.load(`${NAME_W} 100px "${geologica.fontFamily}"`),
-      document.fonts.load(`${BODY_W} 100px "${geologica.fontFamily}"`),
+      document.fonts.load(`${NAME_W} 100px "${family}"`),
+      document.fonts.load(`${BODY_W} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ id, m: measureAll(id.split("\u0001")) });
+        setState({
+          id,
+          m: measureAll(id.split("\u0003")[1].split("\u0001"), family),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -107,7 +122,7 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [id, handle]);
+  }, [id, family, handle]);
   return state && state.id === id ? state.m : null;
 }
 
@@ -158,28 +173,55 @@ interface Placed {
   glossTop: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function NameGloss({
   parts = DEFAULT_PARTS,
   why = DEFAULT_WHY,
+  stagger = WORD_STAGGER,
+  hold = HOLD,
   accent,
+  ink,
   background,
+  fontFamily = geologica.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: NameGlossProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const list = parts.length > 0 ? parts : DEFAULT_PARTS;
-  const m = useMetrics([
-    " ",
-    ...list.map((p) => p.word),
-    ...list.flatMap((p) => splitWords(p.gloss)),
-    ...splitWords(why),
-  ]);
+  const m = useMetrics(
+    [
+      " ",
+      ...list.map((p) => p.word),
+      ...list.flatMap((p) => splitWords(p.gloss)),
+      ...splitWords(why),
+    ],
+    fontFamily,
+  );
 
   if (!m) {
     return (
@@ -203,15 +245,21 @@ export function NameGloss({
 
   const span = durationInFrames * speed;
   const glossStart = NAME_IN + NAME_HOLD + MOVE - 6;
-  const fixed = glossStart + WHY_AFTER + 24 + HOLD;
+  const fixed = glossStart + WHY_AFTER + 24 + hold;
   const glossGap =
     n > 1 ? Math.min(44, Math.max(18, (span - fixed) / (n - 1))) : 0;
   const glossAt = (i: number) => glossStart + i * glossGap;
   const whyAt = glossAt(n - 1) + WHY_AFTER;
   const moveAt = NAME_IN + NAME_HOLD;
 
+  const easeAt = (tt: number, from: number, dur: number, curve = EASE_OUT) =>
+    interpolate(tt, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
   const ease = (from: number, dur: number, curve = EASE_OUT) =>
-    interpolate(t, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
+    easeAt(t, from, dur, curve);
+  // Whether a rise of `px` that starts at `from` is still travelling.
+  const rising = (from: number, dur: number, px: number) =>
+    Math.abs(easeAt(t + 1, from, dur) - easeAt(t, from, dur)) * px > 1e-3 ||
+    Math.abs(easeAt(t, from, dur) - easeAt(t - 1, from, dur)) * px > 1e-3;
 
   let G = H * (portrait ? 0.05 : 0.085);
   let F = 0;
@@ -311,13 +359,16 @@ export function NameGloss({
   }
 
   const move = ease(moveAt, MOVE, EASE_MOVE);
+  // Layout rounds a box and a baseline to whole pixels, so a word carried by
+  // `left`/`top` steps along, and one handed back to layout when it stops
+  // jumps. It is laid out in its column for its whole life and rides there
+  // by transform.
+  const moving = move > 0 && move < 1;
   const nodes: React.ReactNode[] = [];
 
   placed.forEach((pl, i) => {
     const p = list[i];
     const inE = ease(i * 3, NAME_IN);
-    const x = pl.x0 + (pl.x1 - pl.x0) * move;
-    const y = pl.y0 + (pl.y1 - pl.y0) * move;
     const active = ease(glossAt(i) - 4, 10);
     const done = ease(whyAt - 6, 14);
     const waiting = ease(moveAt + MOVE - 8, 10);
@@ -328,18 +379,19 @@ export function NameGloss({
         key={`word-${p.word}-${i}`}
         style={{
           position: "absolute",
-          left: x - F * 0.05,
-          top: y - F * 0.12,
+          left: pl.x1 - F * 0.05,
+          top: pl.y1 - F * 0.12,
+          transform: `translate(${(pl.x0 - pl.x1) * (1 - move)}px, ${(pl.y0 - pl.y1) * (1 - move)}px)${glide(moving)}`,
           height: F * 1.3,
           paddingLeft: F * 0.05,
           paddingRight: F * 0.12,
           overflow: "hidden",
-          fontFamily: geologica.fontFamily,
+          fontFamily,
           fontWeight: NAME_W,
           fontSize: F,
           letterSpacing: `${NAME_TRACK}em`,
           lineHeight: `${F * 1.3}px`,
-          color: c.ink,
+          color: fg,
           opacity,
           whiteSpace: "pre",
         }}
@@ -347,7 +399,7 @@ export function NameGloss({
         <span
           style={{
             display: "inline-block",
-            transform: `translateY(${((1 - inE) * F * 1.2).toFixed(2)}px)`,
+            transform: `translateY(${((1 - inE) * F * 1.2).toFixed(2)}px)${glide(rising(i * 3, NAME_IN, F * 1.2))}`,
           }}
         >
           {p.word}
@@ -366,26 +418,27 @@ export function NameGloss({
           left: pl.x1 + F * 0.03,
           top: pl.glossTop,
           width: pl.colW + gutter * 0.5,
-          fontFamily: geologica.fontFamily,
+          fontFamily,
           fontWeight: BODY_W,
           fontSize: G,
           letterSpacing: `${BODY_TRACK}em`,
           lineHeight: `${BODY_LH * G}px`,
-          color: c.ink,
+          color: fg,
           whiteSpace: "pre",
         }}
       >
         {pl.gloss.map((line) => (
           <div key={line.join(" ")}>
             {line.map((w, k) => {
-              const e = ease(at + wi++ * WORD_STAGGER, WORD_IN);
+              const from = at + wi++ * stagger;
+              const e = ease(from, WORD_IN);
               return (
                 <span
                   key={`${w}-${k}`}
                   style={{
                     display: "inline-block",
                     opacity: e * 0.86,
-                    transform: `translateY(${((1 - e) * G * 0.7).toFixed(2)}px)`,
+                    transform: `translateY(${((1 - e) * G * 0.7).toFixed(2)}px)${glide(rising(from, WORD_IN, G * 0.7))}`,
                   }}
                 >
                   {k > 0 ? ` ${w}` : w}
@@ -408,7 +461,7 @@ export function NameGloss({
           left: margin + F * 0.03,
           top: whyTop,
           width: avail + whyF,
-          fontFamily: geologica.fontFamily,
+          fontFamily,
           fontWeight: NAME_W,
           fontSize: whyF,
           letterSpacing: `${BODY_TRACK}em`,
@@ -420,14 +473,15 @@ export function NameGloss({
         {whyLines.map((line) => (
           <div key={line.join(" ")}>
             {line.map((w, k) => {
-              const e = ease(whyAt + wi++ * WORD_STAGGER, WORD_IN);
+              const from = whyAt + wi++ * stagger;
+              const e = ease(from, WORD_IN);
               return (
                 <span
                   key={`${w}-${k}`}
                   style={{
                     display: "inline-block",
                     opacity: e,
-                    transform: `translateY(${((1 - e) * whyF * 0.7).toFixed(2)}px)`,
+                    transform: `translateY(${((1 - e) * whyF * 0.7).toFixed(2)}px)${glide(rising(from, WORD_IN, whyF * 0.7))}`,
                   }}
                 >
                   {k > 0 ? ` ${w}` : w}
@@ -442,7 +496,7 @@ export function NameGloss({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

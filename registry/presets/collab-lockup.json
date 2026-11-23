@@ -1,0 +1,106 @@
+{
+  "component": "collab-lockup",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "A light, warm paper backdrop with an elegant serif caption and an ampersand joiner, unhurried and literary.",
+      "askedAs": [
+        "elegant light partnership card",
+        "serif collab end card on cream",
+        "classy editorial co-branding look",
+        "светлая элегантная заставка с партнером",
+        "коллаб в журнальном стиле с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "fontFamily": "Instrument Serif",
+        "joiner": "&",
+        "accent": "#b5502e"
+      }
+    },
+    {
+      "id": "terminal-integration",
+      "label": "Dev Integration",
+      "description": "A near-black monospace lockup with a mint accent and a quick, crisp reveal for developer-tool integrations.",
+      "askedAs": [
+        "developer integration announcement",
+        "monospace dark collab card",
+        "techy fast partnership reveal",
+        "анонс интеграции для разработчиков",
+        "моноширинный тёмный коллаб"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#e6f2ee",
+        "accent": "#3ddc97",
+        "speed": 1.5,
+        "grain": false
+      }
+    },
+    {
+      "id": "bold-launch",
+      "label": "Bold Launch",
+      "description": "An oversized, heavy grotesk lockup with a hot coral glow that lands fast and loud.",
+      "askedAs": [
+        "big bold partnership reveal",
+        "punchy launch end card",
+        "large heavy logo collab",
+        "крупный яркий анонс партнерства",
+        "жирный энергичный финальный кадр"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 800,
+        "scale": 1.3,
+        "accent": "#ff5a4e",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A small, light-weight lockup on clean white with no grain or trail, slowed down for a calm, understated finish.",
+      "askedAs": [
+        "minimal clean white collab",
+        "subtle quiet partner end card",
+        "understated slow logo lockup",
+        "минималистичная белая заставка",
+        "спокойный сдержанный коллаб"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "scale": 0.8,
+        "trail": false,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-cinematic",
+      "label": "Midnight Cinematic",
+      "description": "A deep navy, grainy frame with a soft violet glow and a delayed, slow-motion reveal like a film title card.",
+      "askedAs": [
+        "cinematic slow collab reveal",
+        "moody dark partnership title",
+        "film style co-brand ending",
+        "кинематографичная медленная заставка",
+        "тёмный атмосферный коллаб"
+      ],
+      "props": {
+        "background": "#0a0f24",
+        "ink": "#e8e6f5",
+        "accent": "#8b7cf6",
+        "fontFamily": "Fraunces",
+        "speed": 0.5,
+        "delay": 20
+      }
+    }
+  ]
+}

@@ -5,13 +5,9 @@ import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -77,7 +73,23 @@ export interface StatSequenceProps {
   logo?: React.ReactNode;
   /** Frames each stat owns before the next one cuts in. */
   beat?: number;
+  /** Frames the last stat holds as a hero before the summary row assembles. */
+  hold?: number;
+  /** Frames between digits as a number rolls in. */
+  stagger?: number;
   accent?: string;
+  /** Text color, and a solid fill for the numbers in place of the gradient; overrides the theme. */
+  ink?: string;
+  /** Background fill in place of the theme ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the stats and lockup, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -268,6 +280,10 @@ function Figure({
   u,
   c,
   accent,
+  fg,
+  solid,
+  font,
+  stagger,
 }: {
   stat: Stat;
   t: number;
@@ -277,9 +293,14 @@ function Figure({
   u: number;
   c: Theme;
   accent: string;
+  fg: string;
+  /** Paint the digits in `fg` instead of the theme gradient. */
+  solid: boolean;
+  font: string;
+  stagger: number;
 }) {
   const unitIndex = [...stat.value].length;
-  const ug = glyph(t, unitIndex + 1, enter, exit, 1.6);
+  const ug = glyph(t, unitIndex + 1, enter, exit, stagger);
   return (
     <div
       style={{
@@ -287,13 +308,13 @@ function Figure({
         alignItems: "flex-start",
         overflow: "hidden",
         padding: `${0.06 * size}px ${0.04 * size}px ${0.02 * size}px 0`,
-        fontFamily: sans,
+        fontFamily: font,
         fontWeight: 400,
         fontSize: size,
         lineHeight: 1,
         letterSpacing: "-0.042em",
         fontVariantNumeric: "tabular-nums",
-        color: c.fg,
+        color: fg,
       }}
     >
       <SlotText
@@ -301,15 +322,19 @@ function Figure({
         t={t}
         enter={enter}
         exit={exit}
-        stagger={1.6}
+        stagger={stagger}
         u={u}
-        glyphStyle={{
-          backgroundImage: c.ink,
-          backgroundSize: "100% 100%",
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-          color: "transparent",
-        }}
+        glyphStyle={
+          solid
+            ? undefined
+            : {
+                backgroundImage: c.ink,
+                backgroundSize: "100% 100%",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+              }
+        }
       />
       {stat.unit ? (
         <span
@@ -345,6 +370,8 @@ function Caption({
   labelSize,
   detailSize = labelSize * 0.56,
   c,
+  fg,
+  font,
 }: {
   stat: Stat;
   t: number;
@@ -353,6 +380,8 @@ function Caption({
   labelSize: number;
   detailSize?: number;
   c: Theme;
+  fg: string;
+  font: string;
 }) {
   const line = (k: number) => {
     const e = interpolate(t, [enter + k * 3, enter + k * 3 + 14], [0, 1], {
@@ -377,12 +406,12 @@ function Caption({
         <div
           style={{
             transform: line(0),
-            fontFamily: sans,
+            fontFamily: font,
             fontWeight: 500,
             fontSize: labelSize,
             lineHeight: 1.05,
             letterSpacing: "-0.025em",
-            color: c.fg,
+            color: fg,
             whiteSpace: "nowrap",
           }}
         >
@@ -394,7 +423,7 @@ function Caption({
           <div
             style={{
               transform: line(1),
-              fontFamily: sans,
+              fontFamily: font,
               fontWeight: 400,
               fontSize: detailSize,
               lineHeight: 1.2,
@@ -411,27 +440,53 @@ function Caption({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function StatSequence({
   stats = DEFAULT_STATS,
   name = "remocn",
   eyebrow = "in numbers",
   logo,
   beat = 26,
+  hold = 42,
+  stagger = 1.6,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: StatSequenceProps) {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width, height } = useSceneConfig();
   const t = frame * speed;
   const u = Math.min(width / 1280, height / 720);
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
   const n = Math.max(1, stats.length);
 
   const START = 8;
   const inAt = (i: number) => START + i * beat;
   const lastIn = inAt(n - 1);
-  const M = lastIn + 42; // the hero stat starts moving into the summary row
+  const M = lastIn + hold; // the hero stat starts moving into the summary row
   const MORPH = 24;
 
   const F = 196 * u; // monumental size
@@ -487,251 +542,273 @@ export function StatSequence({
   const idxSize = 15 * u;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{ background: background ?? c.bg, overflow: "hidden" }}
+    >
       {/* mesh ground: three soft blobs that drift a few % over the shot */}
-      <AbsoluteFill
-        style={{
-          background: c.mesh.join(", "),
-          transform: `translate(${drift * 3}%, ${-drift * 2}%) scale(${1.04 + drift * 0.04})`,
-        }}
-      />
-
-      <AbsoluteFill
-        style={{
-          transform: `scale(${1 + drift * 0.025}) translateX(${-drift * 6 * u}px)`,
-          transformOrigin: "40% 50%",
-        }}
-      >
-        {/* corner lockup */}
-        <div
+      {background === undefined ? (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: L,
-            top: 52 * u,
-            display: "flex",
-            alignItems: "center",
-            gap: 10 * u,
-            fontFamily: sans,
-            fontSize: 17 * u,
-            lineHeight: 1,
-            opacity: interpolate(t, [0, 12], [0, 1], CLAMP),
-            transform: `translateY(${interpolate(t, [0, 16], [8, 0], { ...CLAMP, easing: EASE_OUT }) * u}px)`,
-          }}
-        >
-          {logo ??
-            (name.trim().toLowerCase() === "remocn" ? (
-              <RemocnLogo fontSize={21 * u} color={c.fg} />
-            ) : (
-              <span
-                style={{
-                  color: c.fg,
-                  fontWeight: 500,
-                  fontSize: 19 * u,
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                {name}
-              </span>
-            ))}
-          <span
-            style={{
-              width: Math.max(1, u),
-              height: 16 * u,
-              background: c.hair,
-              margin: `0 ${2 * u}px`,
-            }}
-          />
-          <span style={{ color: c.muted, fontWeight: 400 }}>{eyebrow}</span>
-        </div>
-
-        {/* the accent cut bar */}
-        <div
-          style={{
-            position: "absolute",
-            left: L,
-            top: barTop,
-            width: 5 * u,
-            height: barH,
-            borderRadius: 3 * u,
-            background: c.bar,
-            transform: `scaleY(${barScale})`,
-            transformOrigin: barOrigin,
+            background: c.mesh.join(", "),
+            transform: `translate(${drift * 3}%, ${-drift * 2}%) scale(${1.04 + drift * 0.04})`,
           }}
         />
+      ) : null}
 
-        {/* one monumental stat at a time */}
-        {stats.map((stat, i) => {
-          const isLast = i === n - 1;
-          const enter = inAt(i);
-          const exit = isLast ? 1e9 : inAt(i + 1) - 5;
-          if (t < enter - 1 || t > exit + 14) return null;
-          const tx = isLast ? (n - 1) * colW * mp : 0;
-          const ty = isLast ? (rowTop - bigTop) * mp : 0;
-          const sc = isLast ? 1 + (S - 1) * mp : 1;
-          return (
-            <div
-              key={i}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            // Chrome parks a glyph raster on a whole pixel while its matrix is
+            // axis-aligned, so text under the slow drift clicks along. The
+            // drift outlasts the hero's move into the row, so this mark covers
+            // every stat while anything on screen travels.
+            transform: `scale(${1 + drift * 0.025}) translateX(${-drift * 6 * u}px)${glide(drift > 0 && drift < 1)}`,
+            transformOrigin: "40% 50%",
+          }}
+        >
+          {/* corner lockup */}
+          <div
+            style={{
+              position: "absolute",
+              left: L,
+              top: 52 * u,
+              display: "flex",
+              alignItems: "center",
+              gap: 10 * u,
+              fontFamily,
+              fontSize: 17 * u,
+              lineHeight: 1,
+              opacity: interpolate(t, [0, 12], [0, 1], CLAMP),
+              transform: `translateY(${interpolate(t, [0, 16], [8, 0], { ...CLAMP, easing: EASE_OUT }) * u}px)`,
+            }}
+          >
+            {logo ??
+              (name.trim().toLowerCase() === "remocn" ? (
+                <RemocnLogo fontSize={21 * u} color={fg} />
+              ) : (
+                <span
+                  style={{
+                    color: fg,
+                    fontWeight: 500,
+                    fontSize: 19 * u,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  {name}
+                </span>
+              ))}
+            <span
               style={{
-                position: "absolute",
-                left: L + pad,
-                top: bigTop,
-                display: "flex",
-                alignItems: "flex-end",
-                gap: 34 * u,
-                transformOrigin: "0 0",
-                transform: `translate(${tx}px, ${ty}px) scale(${sc})`,
+                width: Math.max(1, u),
+                height: 16 * u,
+                background: c.hair,
+                margin: `0 ${2 * u}px`,
               }}
-            >
-              <Figure
-                stat={stat}
-                t={t}
-                enter={enter}
-                exit={exit}
-                size={F}
-                u={u}
-                c={c}
-                accent={accent}
-              />
-              <div style={{ paddingBottom: 0.2 * F }}>
-                <Caption
-                  stat={stat}
-                  t={t}
-                  enter={enter + 5}
-                  exit={isLast ? M - 6 : exit}
-                  labelSize={34 * u}
-                  c={c}
-                />
-              </div>
-            </div>
-          );
-        })}
+            />
+            <span style={{ color: c.muted, fontWeight: 400 }}>{eyebrow}</span>
+          </div>
 
-        {/* summary row: column rules, the other figures, labels below */}
-        {stats.map((stat, i) => {
-          const colLeft = L + i * colW;
-          const ruleP = interpolate(
-            t,
-            [M + 6 + i * 3, M + 24 + i * 3],
-            [0, 1],
-            { ...CLAMP, easing: EASE_OUT },
-          );
-          const isLast = i === n - 1;
-          const figEnter = M + 8 + i * 4;
-          return (
-            <div key={`row-${i}`}>
+          {/* the accent cut bar */}
+          <div
+            style={{
+              position: "absolute",
+              left: L,
+              top: barTop,
+              width: 5 * u,
+              height: barH,
+              borderRadius: 3 * u,
+              background: c.bar,
+              transform: `scaleY(${barScale})`,
+              transformOrigin: barOrigin,
+            }}
+          />
+
+          {/* one monumental stat at a time */}
+          {stats.map((stat, i) => {
+            const isLast = i === n - 1;
+            const enter = inAt(i);
+            const exit = isLast ? 1e9 : inAt(i + 1) - 5;
+            if (t < enter - 1 || t > exit + 14) return null;
+            const tx = isLast ? (n - 1) * colW * mp : 0;
+            const ty = isLast ? (rowTop - bigTop) * mp : 0;
+            const sc = isLast ? 1 + (S - 1) * mp : 1;
+            return (
               <div
+                key={i}
                 style={{
                   position: "absolute",
-                  left: colLeft,
-                  top: rowTop - 6 * u,
-                  width: Math.max(1, u),
-                  height: F * S + 120 * u,
-                  background: c.hair,
-                  transform: `scaleY(${ruleP})`,
-                  transformOrigin: "top",
+                  left: L + pad,
+                  top: bigTop,
+                  display: "flex",
+                  alignItems: "flex-end",
+                  gap: 34 * u,
+                  transformOrigin: "0 0",
+                  transform: `translate(${tx}px, ${ty}px) scale(${sc})`,
                 }}
-              />
-              {!isLast && t >= figEnter - 1 ? (
+              >
+                <Figure
+                  stat={stat}
+                  t={t}
+                  enter={enter}
+                  exit={exit}
+                  size={F}
+                  u={u}
+                  c={c}
+                  accent={accent}
+                  fg={fg}
+                  solid={ink !== undefined}
+                  font={fontFamily}
+                  stagger={stagger}
+                />
+                <div style={{ paddingBottom: 0.2 * F }}>
+                  <Caption
+                    stat={stat}
+                    t={t}
+                    enter={enter + 5}
+                    exit={isLast ? M - 6 : exit}
+                    labelSize={34 * u}
+                    c={c}
+                    fg={fg}
+                    font={fontFamily}
+                  />
+                </div>
+              </div>
+            );
+          })}
+
+          {/* summary row: column rules, the other figures, labels below */}
+          {stats.map((stat, i) => {
+            const colLeft = L + i * colW;
+            const ruleP = interpolate(
+              t,
+              [M + 6 + i * 3, M + 24 + i * 3],
+              [0, 1],
+              { ...CLAMP, easing: EASE_OUT },
+            );
+            const isLast = i === n - 1;
+            const figEnter = M + 8 + i * 4;
+            return (
+              <div key={`row-${i}`}>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: colLeft,
+                    top: rowTop - 6 * u,
+                    width: Math.max(1, u),
+                    height: F * S + 120 * u,
+                    background: c.hair,
+                    transform: `scaleY(${ruleP})`,
+                    transformOrigin: "top",
+                  }}
+                />
+                {!isLast && t >= figEnter - 1 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: colLeft + pad,
+                      top: rowTop,
+                      transformOrigin: "0 0",
+                      transform: `scale(${S})`,
+                    }}
+                  >
+                    <Figure
+                      stat={stat}
+                      t={t}
+                      enter={figEnter}
+                      exit={1e9}
+                      size={F}
+                      u={u}
+                      c={c}
+                      accent={accent}
+                      fg={fg}
+                      solid={ink !== undefined}
+                      font={fontFamily}
+                      stagger={stagger}
+                    />
+                  </div>
+                ) : null}
                 <div
                   style={{
                     position: "absolute",
                     left: colLeft + pad,
-                    top: rowTop,
-                    transformOrigin: "0 0",
-                    transform: `scale(${S})`,
+                    top: rowTop + F * S * 1.12 + 14 * u,
                   }}
                 >
-                  <Figure
+                  <Caption
                     stat={stat}
                     t={t}
-                    enter={figEnter}
+                    enter={M + 16 + i * 4}
                     exit={1e9}
-                    size={F}
-                    u={u}
+                    labelSize={22 * u}
+                    detailSize={15 * u}
                     c={c}
-                    accent={accent}
+                    fg={fg}
+                    font={fontFamily}
                   />
                 </div>
-              ) : null}
-              <div
-                style={{
-                  position: "absolute",
-                  left: colLeft + pad,
-                  top: rowTop + F * S * 1.12 + 14 * u,
-                }}
-              >
-                <Caption
-                  stat={stat}
-                  t={t}
-                  enter={M + 16 + i * 4}
-                  exit={1e9}
-                  labelSize={22 * u}
-                  detailSize={15 * u}
-                  c={c}
-                />
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
 
-        {/* index ticker */}
-        <div
-          style={{
-            position: "absolute",
-            left: L,
-            bottom: 48 * u,
-            display: "flex",
-            alignItems: "center",
-            gap: 8 * u,
-            fontFamily: mono,
-            fontWeight: 400,
-            fontSize: idxSize,
-            lineHeight: 1,
-            fontVariantNumeric: "tabular-nums",
-            color: c.muted,
-            opacity:
-              interpolate(t, [2, 12], [0, 1], CLAMP) *
-              interpolate(t, [M, M + 10], [1, 0], CLAMP),
-          }}
-        >
-          <span
+          {/* index ticker */}
+          <div
             style={{
-              position: "relative",
-              display: "inline-block",
-              overflow: "hidden",
-              height: idxSize * 1.15,
-              width: idxSize * 1.4,
-              color: c.fg,
+              position: "absolute",
+              left: L,
+              bottom: 48 * u,
+              display: "flex",
+              alignItems: "center",
+              gap: 8 * u,
+              fontFamily: mono,
+              fontWeight: 400,
+              fontSize: idxSize,
+              lineHeight: 1,
+              fontVariantNumeric: "tabular-nums",
+              color: c.muted,
+              opacity:
+                interpolate(t, [2, 12], [0, 1], CLAMP) *
+                interpolate(t, [M, M + 10], [1, 0], CLAMP),
             }}
           >
-            {stats.map((_, i) => (
-              <span
-                key={i}
-                style={{ position: "absolute", left: 0, top: idxSize * 0.06 }}
-              >
-                <SlotText
-                  text={String(i + 1).padStart(2, "0")}
-                  t={t}
-                  enter={i === 0 ? 2 : inAt(i)}
-                  exit={i === n - 1 ? 1e9 : inAt(i + 1) - 5}
-                  stagger={1}
-                  u={u * 0.3}
-                />
-              </span>
-            ))}
-          </span>
-          <span
-            style={{
-              width: 18 * u,
-              height: Math.max(1, u),
-              background: c.hair,
-            }}
-          />
-          <span>{String(n).padStart(2, "0")}</span>
-        </div>
-      </AbsoluteFill>
+            <span
+              style={{
+                position: "relative",
+                display: "inline-block",
+                overflow: "hidden",
+                height: idxSize * 1.15,
+                width: idxSize * 1.4,
+                color: fg,
+              }}
+            >
+              {stats.map((_, i) => (
+                <span
+                  key={i}
+                  style={{ position: "absolute", left: 0, top: idxSize * 0.06 }}
+                >
+                  <SlotText
+                    text={String(i + 1).padStart(2, "0")}
+                    t={t}
+                    enter={i === 0 ? 2 : inAt(i)}
+                    exit={i === n - 1 ? 1e9 : inAt(i + 1) - 5}
+                    stagger={1}
+                    u={u * 0.3}
+                  />
+                </span>
+              ))}
+            </span>
+            <span
+              style={{
+                width: 18 * u,
+                height: Math.max(1, u),
+                background: c.hair,
+              }}
+            />
+            <span>{String(n).padStart(2, "0")}</span>
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
 
-      <Grain opacity={c.grain} />
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

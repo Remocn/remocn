@@ -55,9 +55,9 @@ describe("home JSON-LD", () => {
   });
 
   test("leads with a product term from the page title", () => {
-    expect("Remocn - Make a product demo video with your AI agent").toContain(
-      HOME_KEYWORDS[0],
-    );
+    expect(
+      "Remocn - shadcn/ui for Remotion: AI-made product demo videos",
+    ).toContain(HOME_KEYWORDS[0]);
   });
 });
 
@@ -104,6 +104,20 @@ describe("docs page JSON-LD", () => {
       "https://remocn.dev/docs/transitions/zoom-blur",
     ]);
     expect(items.map((item) => item.position)).toEqual([1, 2, 3]);
+  });
+
+  test("states dateModified only when the page gives one", () => {
+    expect(find("TechArticle")?.dateModified).toBeUndefined();
+    const dated = docsPageJsonLd({
+      url: "/docs/x",
+      title: "X",
+      crumbs: [],
+      image: "/hero.png",
+      dateModified: "2026-11-19",
+    })["@graph"] as Node[];
+    expect(dated.find((n) => n["@type"] === "TechArticle")?.dateModified).toBe(
+      "2026-11-19",
+    );
   });
 
   test("adds an FAQPage only when the page has questions", () => {

@@ -10,14 +10,14 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: hanken } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -48,7 +48,25 @@ export interface TimelineEditorProps {
   title?: string;
   /** Name of the audio clip that lands on A1. */
   audioName?: string;
+  /** Tagline under the logo in the intro clip. */
+  tagline?: string;
+  /** Headline of the end-card clip. */
+  headline?: string;
+  /** Link on the end-card clip's second button. */
+  url?: string;
+  /** Replaces the remocn mark in the intro clip. */
+  logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the editor window; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the editor window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -88,6 +106,18 @@ const hash = (n: number) => {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return x - Math.floor(x);
 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+/** Whether a value changes between `t` and either of its neighbours. */
+const differs = (
+  at: (t: number) => number,
+  t: number,
+  before: number,
+  after: number,
+) => Math.abs(at(after) - at(t)) > 1e-5 || Math.abs(at(t) - at(before)) > 1e-5;
+// A spring never quite arrives. Under a thousandth of a pixel the leftover is
+// dropped, so a landed box is laid out with no transform at all.
+const landed = (px: number) => (Math.abs(px) < 1e-3 ? 0 : px);
 function withAlpha(color: string, alpha: number) {
   const hex = color.replace("#", "");
   const full = hex.length === 3 ? hex.replace(/(.)/g, "$1$1") : hex;
@@ -232,7 +262,24 @@ function Icon({
   );
 }
 
-function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
+/**
+ * The pointer, laid out at `x`/`y` where it comes to rest and carried `dx`/`dy`
+ * from there by a transform: layout rounds a box to whole pixels, so a cursor
+ * eased by `left`/`top` creeps into each stop one pixel at a time.
+ */
+function Cursor({
+  x,
+  y,
+  dx,
+  dy,
+  press,
+}: {
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
+  press: number;
+}) {
   return (
     <svg
       width={24}
@@ -243,7 +290,7 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
         left: x - 1.4,
         top: y - 1.4,
         transformOrigin: "1px 1px",
-        transform: `scale(${1 - 0.12 * press})`,
+        transform: `${dx || dy ? `translate(${dx}px, ${dy}px) ` : ""}scale(${1 - 0.12 * press})`,
         filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.35))",
         overflow: "visible",
         zIndex: 40,
@@ -261,19 +308,36 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
   );
 }
 
+interface ArtCopy {
+  logo?: React.ReactNode;
+  tagline: string;
+  headline: string;
+  url: string;
+}
+
 const sp = (t: number, delay: number, damping = 16, stiffness = 120) =>
   spring({ frame: t * 30 - delay, fps: 30, config: { damping, stiffness } });
 
 function SceneArt({
   scene,
   t,
+  before,
+  after,
   accent,
+  art,
 }: {
   scene: EditorScene;
   t: number;
+  /** Scene time one frame earlier and one later; equal to `t` on a still. */
+  before: number;
+  after: number;
   accent: string;
+  art: ArtCopy;
 }) {
+  const glide = useGlide();
   const abs: React.CSSProperties = { position: "absolute", inset: 0 };
+  const moving = (delay: number, damping: number, stiffness: number) =>
+    differs((x) => sp(x, delay, damping, stiffness), t, before, after);
   if (scene === "logo") {
     const m = sp(t, 0, 11, 130);
     const w = sp(t, 7, 18, 110);
@@ -300,10 +364,10 @@ function SceneArt({
           <div
             style={{
               opacity: clamp01(m * 2),
-              transform: `translateY(${(1 - w) * 10}px) scale(${0.82 + m * 0.18})`,
+              transform: `translateY(${(1 - w) * 10}px) scale(${0.82 + m * 0.18})${glide(moving(0, 11, 130) || moving(7, 18, 110))}`,
             }}
           >
-            <RemocnLogo fontSize={44} color="#fff" />
+            {art.logo ?? <RemocnLogo fontSize={44} color="#fff" />}
           </div>
         </div>
         <div
@@ -319,7 +383,7 @@ function SceneArt({
             textTransform: "uppercase",
           }}
         >
-          Launch videos, built in code
+          {art.tagline}
         </div>
       </div>
     );
@@ -348,7 +412,7 @@ function SceneArt({
             padding: "11px 12px",
             boxSizing: "border-box",
             opacity: card,
-            transform: `translateY(${(1 - card) * 26}px)`,
+            transform: `translateY(${(1 - card) * 26}px)${glide(moving(0, 17, 110))}`,
           }}
         >
           <div style={{ fontSize: 7.5, color: "#7a7f8c", fontWeight: 400 }}>
@@ -427,7 +491,7 @@ function SceneArt({
             color: "#14161c",
             fontWeight: 400,
             opacity: chip,
-            transform: `translateY(${(1 - chip) * -10}px) scale(${0.9 + chip * 0.1})`,
+            transform: `translateY(${(1 - chip) * -10}px) scale(${0.9 + chip * 0.1})${glide(moving(26, 14, 140))}`,
           }}
         >
           <div
@@ -471,10 +535,10 @@ function SceneArt({
           fontWeight: 300,
           letterSpacing: "-0.03em",
           opacity: a,
-          transform: `translateY(${(1 - a) * 14}px)`,
+          transform: `translateY(${(1 - a) * 14}px)${glide(moving(0, 18, 120))}`,
         }}
       >
-        Ship your launch video
+        {art.headline}
       </div>
       <div
         style={{
@@ -482,7 +546,7 @@ function SceneArt({
           color: "rgba(255,255,255,0.6)",
           marginTop: 5,
           opacity: b,
-          transform: `translateY(${(1 - b) * 10}px)`,
+          transform: `translateY(${(1 - b) * 10}px)${glide(moving(6, 18, 120))}`,
         }}
       >
         in minutes, not weeks.
@@ -493,7 +557,7 @@ function SceneArt({
           gap: 6,
           marginTop: 14,
           opacity: c,
-          transform: `scale(${0.94 + c * 0.06})`,
+          transform: `scale(${0.94 + c * 0.06})${glide(moving(12, 12, 150))}`,
         }}
       >
         <div
@@ -516,7 +580,7 @@ function SceneArt({
             fontFamily: mono,
           }}
         >
-          remocn.dev
+          {art.url}
         </div>
       </div>
     </div>
@@ -526,14 +590,25 @@ function SceneArt({
 function Scene({
   scene,
   t,
+  before = t,
+  after = t,
   accent,
   w,
+  art,
+  carried = false,
 }: {
   scene: EditorScene;
   t: number;
+  before?: number;
+  after?: number;
   accent: string;
   w: number;
+  art: ArtCopy;
+  /** Something above (the camera, the window) is moving the scene. */
+  carried?: boolean;
 }) {
+  const glide = useGlide();
+  const k = w / 320;
   return (
     <div
       style={{
@@ -549,11 +624,20 @@ function Scene({
           position: "absolute",
           width: 320,
           height: 180,
-          transform: `scale(${w / 320})`,
+          // A thumbnail draws the scene at a third of its size or less; its
+          // text leans by what that size needs while something carries it.
+          transform: `scale(${k})${glide(carried && k < 0.6)}`,
           transformOrigin: "0 0",
         }}
       >
-        <SceneArt scene={scene} t={t} accent={accent} />
+        <SceneArt
+          scene={scene}
+          t={t}
+          before={before}
+          after={after}
+          accent={accent}
+          art={art}
+        />
       </div>
     </div>
   );
@@ -605,21 +689,35 @@ function ClipBlock({
   clip,
   w,
   h,
+  hRest,
   accent,
   selected,
   glow,
+  art,
+  carried,
 }: {
   clip: EditorClip;
   w: number;
   h: number;
+  /** Height the block settles at; its filmstrip is laid out for this one. */
+  hRest: number;
   accent: string;
   selected: boolean;
   glow: number;
+  art: ArtCopy;
+  carried: boolean;
 }) {
   const band = Math.min(24, h * 0.42);
   const fh = h - band;
   const tw = (fh * 16) / 9;
   const n = Math.max(1, Math.ceil(w / tw));
+  // The filmstrip is laid out once, at the settled height, and follows a
+  // block that is still changing size by a transform. Sized from the live
+  // height it would reflow every frame, and layout rounds each of its frames
+  // and baselines to whole pixels.
+  const bandRest = Math.min(24, hRest * 0.42);
+  const fhRest = hRest - bandRest;
+  const twRest = (fhRest * 16) / 9;
   return (
     <div
       style={{
@@ -632,7 +730,20 @@ function ClipBlock({
         boxShadow: `0 0 0 ${glow * 2}px ${withAlpha(accent, glow)}`,
       }}
     >
-      <div style={{ display: "flex", height: fh, marginTop: band }}>
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          top: bandRest,
+          display: "flex",
+          height: fhRest,
+          transformOrigin: "0 0",
+          transform:
+            h === hRest
+              ? undefined
+              : `translateY(${band - bandRest}px) scale(${fh / fhRest})`,
+        }}
+      >
         {Array.from({ length: n }, (_, k) => (
           <div
             key={k}
@@ -645,7 +756,9 @@ function ClipBlock({
               scene={clip.scene}
               t={1.2 + k * 0.5}
               accent={accent}
-              w={tw}
+              w={twRest}
+              art={art}
+              carried={carried}
             />
           </div>
         ))}
@@ -760,25 +873,53 @@ function layoutFor(tall: boolean, dw: number, dh: number): Layout {
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TimelineEditor({
   clips = DEFAULT_CLIPS,
   projectName = "Launch video",
   title = "Meet remocn",
   audioName = "soundtrack.wav",
+  tagline = "Launch videos, built in code",
+  headline = "Ship your launch video",
+  url = "remocn.dev",
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hanken,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: TimelineEditorProps) {
-  const f = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const f = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const tall = height > width * 1.2;
   const u = tall ? width / 640 : Math.min(width / 1280, height / 720);
   const dw = width / u;
   const dh = height / u;
   const L = layoutFor(tall, dw, dh);
   const c: Palette = theme === "light" ? LIGHT : DARK;
+  const fg = ink ?? c.text;
+  const art: ArtCopy = { logo, tagline, headline, url };
   const list = clips.slice(0, 3);
   const starts = list.map((_, i) =>
     list.slice(0, i).reduce((a, k) => a + k.seconds, 0),
@@ -810,8 +951,15 @@ export function TimelineEditor({
   const scrubFr = scrubPts.map(
     (_, i) => SCRUB_AT + 2 + ((SCRUB_END - SCRUB_AT - 2) * i) / list.length,
   );
-  const p = interpolate(f, scrubFr, scrubPts, { ...clamp, easing: MOVE });
+  const pAt = (t: number) =>
+    interpolate(t, scrubFr, scrubPts, { ...clamp, easing: MOVE });
+  const p = pAt(f);
   const headX = TX + p * PPS;
+  // The playhead is laid out where the scrub leaves it and gets there by a
+  // transform, for the same reason as the cursor.
+  const headRest = TX + scrubPts[scrubPts.length - 1] * PPS;
+  const headShift = landed(headX - headRest);
+  const still = (at: (t: number) => number) => !differs(at, f, f - 1, f + 1);
 
   type Key = { t: number; x: number; y: number };
   const startPt = { x: L.win.w * 0.62, y: L.win.h + 60 };
@@ -854,6 +1002,7 @@ export function TimelineEditor({
     return keys[keys.length - 1];
   };
   const cur = cursorAt(f);
+  const curRest = keys[keys.length - 1];
   const pressAt = (k: number, release: number) => {
     if (f < k - 3) return 0;
     if (f < k) return interpolate(f, [k - 3, k], [0, 1], clamp);
@@ -903,6 +1052,11 @@ export function TimelineEditor({
   const titleFlash = flashes[flashes.length - 1].v;
   const titleIn = spring({ frame: f - TITLE_AT, fps, config: CARD });
   const audioIn = spring({ frame: f - AUDIO_AT, fps, config: CARD });
+  // Both clips sit in their lanes in layout and drop in by a transform:
+  // layout rounds a box and a baseline to whole pixels, so a clip settling by
+  // `top` clicks into place.
+  const titleDrop = landed(-(1 - titleIn) * 30);
+  const audioRise = landed((1 - audioIn) * 30);
   const wave = interpolate(f, [AUDIO_AT + 2, AUDIO_AT + 30], [0, 1], {
     ...clamp,
     easing: ENTER,
@@ -915,9 +1069,11 @@ export function TimelineEditor({
   const lastPlaced = list.findLastIndex((_, i) => placed(i));
   const preview = f < SCRUB_AT && lastPlaced >= 0;
   const shown = preview ? lastPlaced : active;
-  const shownT = preview
-    ? (f - T[lastPlaced].drop) / 30 + 0.05
-    : p - (starts[shown] ?? 0);
+  const shownAt = (t: number) =>
+    preview
+      ? (t - T[lastPlaced].drop) / 30 + 0.05
+      : pAt(t) - (starts[shown] ?? 0);
+  const shownT = shownAt(f);
   const monIn = preview
     ? interpolate(f - T[lastPlaced].drop, [0, 6], [0.35, 1], {
         ...clamp,
@@ -943,19 +1099,23 @@ export function TimelineEditor({
   const btnPress = pressAt(CLICK_AT, CLICK_AT);
   const exporting = f >= CLICK_AT && f < DONE_AT;
 
-  const enter = spring({ frame: f, fps, config: HEAVY });
-  const camA = interpolate(
-    f,
-    [12, 42, lastDrop + 6, SCRUB_AT + 4],
-    [1, 1.04, 1.04, 1],
-    { ...clamp, easing: CAMERA },
-  );
-  const camB = interpolate(f, [CLICK_AT - 24, CLICK_AT + 4], [1, 1.05], {
-    ...clamp,
-    easing: CAMERA,
-  });
+  const enterAt = (t: number) => spring({ frame: t, fps, config: HEAVY });
+  const enter = enterAt(f);
+  const camAt = (t: number) =>
+    t > CLICK_AT - 30
+      ? interpolate(t, [CLICK_AT - 24, CLICK_AT + 4], [1, 1.05], {
+          ...clamp,
+          easing: CAMERA,
+        })
+      : interpolate(
+          t,
+          [12, 42, lastDrop + 6, SCRUB_AT + 4],
+          [1, 1.04, 1.04, 1],
+          { ...clamp, easing: CAMERA },
+        );
   const exportPhase = f > CLICK_AT - 30;
-  const cam = exportPhase ? camB : camA;
+  const cam = camAt(f);
+  const carried = !still(camAt) || !still(enterAt);
   const origin = exportPhase
     ? `${L.win.x + L.win.w - 120}px ${L.win.y + 80}px`
     : `${L.win.x + 300}px ${L.win.y + L.tlTop + 100}px`;
@@ -972,684 +1132,743 @@ export function TimelineEditor({
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <GshGround
-        preset={ground ?? (c.dark ? "film-blue" : "paper-crease")}
-        params={groundParams}
-        timeOffset={c.dark ? 3 : 5}
-        timeScale={0.35}
-      />
-      <AbsoluteFill style={{ background: c.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: dw,
-          height: dh,
-          transform: `scale(${u})`,
-          transformOrigin: "0 0",
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (c.dark ? "film-blue" : "paper-crease")}
+            params={groundParams}
+            timeOffset={c.dark ? 3 : 5}
+            timeScale={0.35}
+          />
+          <AbsoluteFill style={{ background: c.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${cam})`,
-            transformOrigin: origin,
+            left: 0,
+            top: 0,
+            width: dw,
+            height: dh,
+            transform: `scale(${u})`,
+            transformOrigin: "0 0",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: L.win.x,
-              top: L.win.y,
-              width: L.win.w,
-              height: L.win.h,
-              borderRadius: 20,
-              background: c.win,
-              backdropFilter: c.dark ? "blur(30px)" : undefined,
-              boxShadow: c.depth,
-              color: c.text,
-              opacity: interpolate(f, [0, 10], [0, 1], {
-                ...clamp,
-                easing: ENTER_SOFT,
-              }),
-              transform: `translateY(${(1 - enter) * 40}px) scale(${0.97 + 0.03 * enter})`,
+              inset: 0,
+              transform: `scale(${cam})${glide(!still(camAt))}`,
+              transformOrigin: origin,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: 0,
-                right: 0,
-                top: 0,
-                height: L.topH,
-                boxShadow: `inset 0 -1px 0 ${c.rule}`,
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                padding: "0 20px",
-                fontSize: 18,
+                left: L.win.x,
+                top: L.win.y,
+                width: L.win.w,
+                height: L.win.h,
+                borderRadius: 20,
+                background: c.win,
+                backdropFilter: c.dark ? "blur(30px)" : undefined,
+                boxShadow: c.depth,
+                color: fg,
+                opacity: interpolate(f, [0, 10], [0, 1], {
+                  ...clamp,
+                  easing: ENTER_SOFT,
+                }),
+                transform: `translateY(${(1 - enter) * 40}px) scale(${0.97 + 0.03 * enter})${glide(!still(enterAt))}`,
               }}
             >
-              <span>{projectName}</span>
-              <span style={{ color: c.faint, fontSize: 16 }}>Saved</span>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: L.btn.x,
-                top: L.btn.y,
-                width: L.btn.w,
-                height: L.btn.h,
-                borderRadius: 12,
-                background: interpolateColors(doneT, [0, 1], [c.solid, GREEN]),
-                color: interpolateColors(doneT, [0, 1], [c.onSolid, "#FFFFFF"]),
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                fontSize: 17,
-                transform: `scale(${1 - 0.04 * btnPress})`,
-              }}
-            >
-              <Icon
-                d={doneT > 0.5 ? ICONS.check : ICONS.download}
-                size={18}
-                color={doneT > 0.5 ? "#FFFFFF" : c.onSolid}
-              />
-              {doneT > 0.5 ? "Exported" : exporting ? "Exporting" : "Export"}
-            </div>
-
-            {L.binDivider ? (
               <div
                 style={{
                   position: "absolute",
-                  left: L.binDivider.x,
-                  top: L.binDivider.y0,
-                  width: 1,
-                  height: L.binDivider.y1 - L.binDivider.y0,
-                  background: c.rule,
-                }}
-              />
-            ) : null}
-            <div
-              style={{
-                position: "absolute",
-                left: L.binHeader.x,
-                top: L.binHeader.y,
-                fontSize: 16,
-                color: c.muted,
-              }}
-            >
-              Media
-            </div>
-            {[...list, null].map((k, i) => {
-              const pos = L.item(i);
-              const isPlaced = k ? placed(i) : f >= AUDIO_AT;
-              const lifted = k ? f >= T[i].press && f < T[i].drop : false;
-              const check = spring({
-                frame: f - (k ? T[i].drop : AUDIO_AT),
-                fps,
-                config: CHIP,
-              });
-              const name = k ? k.name : audioName;
-              const meta = k ? `0:0${Math.round(k.seconds)}` : "0:11";
-              return (
-                <div key={name}>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: pos.x,
-                      top: pos.y,
-                      width: L.thumb.w,
-                      height: L.thumb.h,
-                      borderRadius: 8,
-                      overflow: "hidden",
-                      background: k ? "#151826" : c.audioBg,
-                      opacity: lifted ? 0.35 : 1,
-                      boxShadow: `inset 0 0 0 1px ${c.rule}`,
-                    }}
-                  >
-                    {k ? (
-                      <Scene
-                        scene={k.scene}
-                        t={2.2}
-                        accent={accent}
-                        w={L.thumb.w}
-                      />
-                    ) : (
-                      <div style={{ padding: "0 6px", marginTop: 10 }}>
-                        <Waveform
-                          w={L.thumb.w - 12}
-                          h={L.thumb.h - 20}
-                          color={c.wave}
-                          seed={3}
-                        />
-                      </div>
-                    )}
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        borderRadius: 8,
-                        boxShadow: `inset 0 0 0 1px ${c.dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
-                      }}
-                    />
-                  </div>
-                  {isPlaced ? (
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: pos.x + L.thumb.w - 26,
-                        top: pos.y + 6,
-                        width: 20,
-                        height: 20,
-                        borderRadius: 10,
-                        background: accent,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transform: `scale(${check})`,
-                      }}
-                    >
-                      <Icon d={ICONS.check} size={13} color="#FFFFFF" sw={2} />
-                    </div>
-                  ) : null}
-                  <div
-                    style={
-                      L.namesBelow
-                        ? {
-                            position: "absolute",
-                            left: pos.x,
-                            top: pos.y + L.thumb.h + 8,
-                            width: L.thumb.w,
-                            fontSize: 16,
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            color: c.muted,
-                          }
-                        : {
-                            position: "absolute",
-                            left: pos.x + L.thumb.w + 14,
-                            top: pos.y + 6,
-                            width: 150,
-                          }
-                    }
-                  >
-                    <div
-                      style={{
-                        fontSize: L.namesBelow ? 16 : 17,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {name}
-                    </div>
-                    {L.namesBelow ? null : (
-                      <div
-                        style={{
-                          marginTop: 4,
-                          fontFamily: mono,
-                          fontSize: 16,
-                          color: c.faint,
-                        }}
-                      >
-                        {meta}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-
-            <div
-              style={{
-                position: "absolute",
-                left: L.mon.x,
-                top: L.mon.y,
-                width: L.mon.w,
-                height: monH,
-                borderRadius: 10,
-                overflow: "hidden",
-                background: c.well,
-                boxShadow: `0 0 0 1px ${c.rule}`,
-              }}
-            >
-              {shown >= 0 ? (
-                <div style={{ opacity: monIn }}>
-                  <Scene
-                    scene={list[shown].scene}
-                    t={shownT}
-                    accent={accent}
-                    w={L.mon.w}
-                  />
-                </div>
-              ) : (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 16,
-                    color: c.faint,
-                  }}
-                >
-                  Drop a clip to start
-                </div>
-              )}
-              {titleOn >= 0 ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    bottom: monH * 0.1,
-                    textAlign: "center",
-                    color: "#FFFFFF",
-                    fontSize: L.mon.w * 0.05,
-                    fontWeight: 300,
-                    letterSpacing: "-0.02em",
-                    textShadow: "0 2px 12px rgba(0,0,0,0.4)",
-                    opacity: interpolate(titleOn, [0, 0.3], [0, 1], {
-                      ...clamp,
-                      easing: ENTER,
-                    }),
-                    transform: `translateY(${interpolate(titleOn, [0, 0.4], [10, 0], { ...clamp, easing: ENTER })}px)`,
-                  }}
-                >
-                  {title}
-                </div>
-              ) : null}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: L.mon.x,
-                top: L.transportY,
-                width: L.mon.w,
-                height: 28,
-                display: "flex",
-                alignItems: "center",
-                fontFamily: mono,
-                fontSize: 16,
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              <span>{timecode(p)}</span>
-              <div
-                style={{
-                  flex: 1,
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  height: L.topH,
+                  boxShadow: `inset 0 -1px 0 ${c.rule}`,
                   display: "flex",
-                  justifyContent: "center",
-                  gap: 18,
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "0 20px",
+                  fontSize: 18,
                 }}
               >
-                <Icon d={ICONS.back} size={18} color={c.muted} />
-                <Icon d={ICONS.play} size={18} color={c.text} fill={c.text} />
-                <Icon d={ICONS.fwd} size={18} color={c.muted} />
+                <span>{projectName}</span>
+                <span style={{ color: c.faint, fontSize: 16 }}>Saved</span>
               </div>
-              <span style={{ color: c.faint }}>{timecode(total)}</span>
-            </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: L.btn.x,
+                  top: L.btn.y,
+                  width: L.btn.w,
+                  height: L.btn.h,
+                  borderRadius: 12,
+                  background: interpolateColors(
+                    doneT,
+                    [0, 1],
+                    [c.solid, GREEN],
+                  ),
+                  color: interpolateColors(
+                    doneT,
+                    [0, 1],
+                    [c.onSolid, "#FFFFFF"],
+                  ),
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  fontSize: 17,
+                  transform: `scale(${1 - 0.04 * btnPress})${glide(midway(btnPress))}`,
+                }}
+              >
+                <Icon
+                  d={doneT > 0.5 ? ICONS.check : ICONS.download}
+                  size={18}
+                  color={doneT > 0.5 ? "#FFFFFF" : c.onSolid}
+                />
+                {doneT > 0.5 ? "Exported" : exporting ? "Exporting" : "Export"}
+              </div>
 
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: L.tlTop,
-                height: 1,
-                background: c.rule,
-              }}
-            />
-            {Array.from({ length: ticks + 1 }, (_, s) => (
-              <div key={s}>
+              {L.binDivider ? (
                 <div
                   style={{
                     position: "absolute",
-                    left: TX + s * PPS,
-                    top: L.rulerY + 16,
+                    left: L.binDivider.x,
+                    top: L.binDivider.y0,
                     width: 1,
-                    height: 8,
-                    background: c.tick,
+                    height: L.binDivider.y1 - L.binDivider.y0,
+                    background: c.rule,
                   }}
                 />
-                {s % L.tickEvery === 0 ? (
+              ) : null}
+              <div
+                style={{
+                  position: "absolute",
+                  left: L.binHeader.x,
+                  top: L.binHeader.y,
+                  fontSize: 16,
+                  color: c.muted,
+                }}
+              >
+                Media
+              </div>
+              {[...list, null].map((k, i) => {
+                const pos = L.item(i);
+                const isPlaced = k ? placed(i) : f >= AUDIO_AT;
+                const lifted = k ? f >= T[i].press && f < T[i].drop : false;
+                const check = spring({
+                  frame: f - (k ? T[i].drop : AUDIO_AT),
+                  fps,
+                  config: CHIP,
+                });
+                const name = k ? k.name : audioName;
+                const meta = k ? `0:0${Math.round(k.seconds)}` : "0:11";
+                return (
+                  <div key={name}>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: pos.x,
+                        top: pos.y,
+                        width: L.thumb.w,
+                        height: L.thumb.h,
+                        borderRadius: 8,
+                        overflow: "hidden",
+                        background: k ? "#151826" : c.audioBg,
+                        opacity: lifted ? 0.35 : 1,
+                        boxShadow: `inset 0 0 0 1px ${c.rule}`,
+                      }}
+                    >
+                      {k ? (
+                        <Scene
+                          scene={k.scene}
+                          t={2.2}
+                          accent={accent}
+                          w={L.thumb.w}
+                          art={art}
+                          carried={carried}
+                        />
+                      ) : (
+                        <div style={{ padding: "0 6px", marginTop: 10 }}>
+                          <Waveform
+                            w={L.thumb.w - 12}
+                            h={L.thumb.h - 20}
+                            color={c.wave}
+                            seed={3}
+                          />
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          borderRadius: 8,
+                          boxShadow: `inset 0 0 0 1px ${c.dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+                        }}
+                      />
+                    </div>
+                    {isPlaced ? (
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: pos.x + L.thumb.w - 26,
+                          top: pos.y + 6,
+                          width: 20,
+                          height: 20,
+                          borderRadius: 10,
+                          background: accent,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transform: `scale(${check})`,
+                        }}
+                      >
+                        <Icon
+                          d={ICONS.check}
+                          size={13}
+                          color="#FFFFFF"
+                          sw={2}
+                        />
+                      </div>
+                    ) : null}
+                    <div
+                      style={
+                        L.namesBelow
+                          ? {
+                              position: "absolute",
+                              left: pos.x,
+                              top: pos.y + L.thumb.h + 8,
+                              width: L.thumb.w,
+                              fontSize: 16,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              color: c.muted,
+                            }
+                          : {
+                              position: "absolute",
+                              left: pos.x + L.thumb.w + 14,
+                              top: pos.y + 6,
+                              width: 150,
+                            }
+                      }
+                    >
+                      <div
+                        style={{
+                          fontSize: L.namesBelow ? 16 : 17,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {name}
+                      </div>
+                      {L.namesBelow ? null : (
+                        <div
+                          style={{
+                            marginTop: 4,
+                            fontFamily: mono,
+                            fontSize: 16,
+                            color: c.faint,
+                          }}
+                        >
+                          {meta}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: L.mon.x,
+                  top: L.mon.y,
+                  width: L.mon.w,
+                  height: monH,
+                  borderRadius: 10,
+                  overflow: "hidden",
+                  background: c.well,
+                  boxShadow: `0 0 0 1px ${c.rule}`,
+                }}
+              >
+                {shown >= 0 ? (
+                  <div style={{ opacity: monIn }}>
+                    <Scene
+                      scene={list[shown].scene}
+                      t={shownT}
+                      before={shownAt(f - 1)}
+                      after={shownAt(f + 1)}
+                      accent={accent}
+                      w={L.mon.w}
+                      art={art}
+                      carried={carried}
+                    />
+                  </div>
+                ) : (
                   <div
                     style={{
                       position: "absolute",
-                      left: TX + s * PPS + 5,
-                      top: L.rulerY,
-                      fontFamily: mono,
+                      inset: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       fontSize: 16,
                       color: c.faint,
                     }}
                   >
-                    {s === 0 ? "0" : `${s}s`}
+                    Drop a clip to start
+                  </div>
+                )}
+                {titleOn >= 0 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      bottom: monH * 0.1,
+                      textAlign: "center",
+                      color: "#FFFFFF",
+                      fontSize: L.mon.w * 0.05,
+                      fontWeight: 300,
+                      letterSpacing: "-0.02em",
+                      textShadow: "0 2px 12px rgba(0,0,0,0.4)",
+                      opacity: interpolate(titleOn, [0, 0.3], [0, 1], {
+                        ...clamp,
+                        easing: ENTER,
+                      }),
+                      transform: `translateY(${interpolate(titleOn, [0, 0.4], [10, 0], { ...clamp, easing: ENTER })}px)${glide(titleOn > 0 && titleOn < 0.4 && !still(pAt))}`,
+                    }}
+                  >
+                    {title}
                   </div>
                 ) : null}
               </div>
-            ))}
-            {[
-              ["V2", L.v2],
-              ["V1", L.v1],
-              ["A1", L.a1],
-            ].map(([n, tr]) => {
-              const t = tr as { y: number; h: number };
-              return (
-                <div key={n as string}>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 20,
-                      top: t.y + t.h / 2 - 11,
-                      fontFamily: mono,
-                      fontSize: 16,
-                      color: c.muted,
-                    }}
-                  >
-                    {n as string}
-                  </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: TX,
-                      right: 12,
-                      top: t.y,
-                      height: t.h,
-                      borderRadius: 10,
-                      background: c.lane,
-                    }}
-                  />
-                </div>
-              );
-            })}
-
-            {f >= TITLE_AT ? (
               <div
                 style={{
                   position: "absolute",
-                  left: TX + TITLE_SPAN.start * PPS,
-                  top: L.v2.y + 3 - (1 - titleIn) * 30,
-                  width: TITLE_SPAN.len * PPS,
-                  height: L.v2.h - 6,
-                  borderRadius: 8,
-                  background: c.titleBg,
-                  boxShadow: `inset 0 0 0 1px ${titleFlash > 0.05 ? withAlpha(accent, 0.5 + titleFlash * 0.5) : c.titleRing}`,
-                  opacity: clamp01(titleIn * 3),
+                  left: L.mon.x,
+                  top: L.transportY,
+                  width: L.mon.w,
+                  height: 28,
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
-                  padding: "0 10px",
+                  fontFamily: mono,
                   fontSize: 16,
-                  color: c.titleText,
-                  boxSizing: "border-box",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                }}
-              >
-                <Icon d={ICONS.type} size={16} color={c.titleText} />
-                {title}
-              </div>
-            ) : null}
-            {f >= AUDIO_AT ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: TX,
-                  top: L.a1.y + 3 + (1 - audioIn) * 30,
-                  width: total * PPS,
-                  height: L.a1.h - 6,
-                  borderRadius: 8,
-                  background: c.audioBg,
-                  boxShadow: `inset 0 0 0 1px ${c.audioRing}`,
-                  opacity: clamp01(audioIn * 3),
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 10,
-                    top: 24,
-                    clipPath: `inset(0 ${(1 - wave) * 100}% 0 0)`,
-                    opacity: 0.85,
-                  }}
-                >
-                  <Waveform
-                    w={total * PPS - 20}
-                    h={L.a1.h - 32}
-                    color={c.wave}
-                    seed={7}
-                  />
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 10,
-                    top: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 16,
-                    color: c.audioText,
-                  }}
-                >
-                  <Icon d={ICONS.music} size={14} color={c.audioText} />
-                  {audioName}
-                </div>
-              </div>
-            ) : null}
-            {flashes.map((fl, i) =>
-              fl.v > 0.01 ? (
-                <div
-                  key={`${fl.x}-${i}`}
-                  style={{
-                    position: "absolute",
-                    left: fl.x - 0.75,
-                    top: L.rulerY + 20,
-                    width: 1.5,
-                    height: tlEnd - L.rulerY - 20,
-                    background: accent,
-                    opacity: fl.v,
-                  }}
-                />
-              ) : null,
-            )}
-            {rects.map((r, i) =>
-              r ? (
-                <div
-                  key={list[i].name}
-                  style={{
-                    position: "absolute",
-                    left: r.x,
-                    top: r.y,
-                    zIndex: r.flying ? 30 : 5,
-                    filter: r.flying
-                      ? "drop-shadow(0 18px 30px rgba(0,0,0,0.45))"
-                      : undefined,
-                    transform: r.flying ? "rotate(-1.5deg)" : undefined,
-                  }}
-                >
-                  <ClipBlock
-                    clip={list[i]}
-                    w={r.w}
-                    h={r.h}
-                    accent={accent}
-                    selected={!r.flying && i === shown && f >= SCRUB_AT}
-                    glow={flashes[i].v}
-                  />
-                </div>
-              ) : null,
-            )}
-            {f >= SCRUB_AT - 6 ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: headX - 0.75,
-                  top: L.rulerY + 4,
-                  width: 1.5,
-                  height: tlEnd - L.rulerY,
-                  background: accent,
-                  zIndex: 20,
-                  opacity: interpolate(f, [SCRUB_AT - 6, SCRUB_AT], [0, 1], {
-                    ...clamp,
-                    easing: ENTER,
-                  }),
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    left: -6,
-                    top: -2,
-                    width: 13,
-                    height: 16,
-                    borderRadius: 4,
-                    background: accent,
-                  }}
-                />
-              </div>
-            ) : null}
-
-            {f >= CLICK_AT ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: L.pop.x,
-                  top: L.pop.y,
-                  width: L.pop.w,
-                  borderRadius: 16,
-                  background: c.popBg,
-                  boxShadow: c.pop,
-                  padding: 18,
-                  boxSizing: "border-box",
-                  zIndex: 35,
-                  opacity: clamp01(pop * 1.4),
-                  transform: `translateY(${(1 - pop) * -10}px) scale(${0.95 + pop * 0.05})`,
-                  transformOrigin: "80% 0",
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{ position: "relative", width: 56, height: 56 }}>
-                    <svg width={56} height={56} viewBox="0 0 56 56" aria-hidden>
-                      <circle
-                        cx={28}
-                        cy={28}
-                        r={25}
-                        stroke={c.rule}
-                        strokeWidth={2.5}
-                        fill="none"
-                      />
-                      <circle
-                        cx={28}
-                        cy={28}
-                        r={25}
-                        stroke={interpolateColors(
-                          doneT,
-                          [0, 1],
-                          [accent, GREEN],
-                        )}
-                        strokeWidth={2.5}
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeDasharray={2 * Math.PI * 25}
-                        strokeDashoffset={2 * Math.PI * 25 * (1 - prog)}
-                        transform="rotate(-90 28 28)"
-                      />
-                    </svg>
+                <span>{timecode(p)}</span>
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: 18,
+                  }}
+                >
+                  <Icon d={ICONS.back} size={18} color={c.muted} />
+                  <Icon d={ICONS.play} size={18} color={fg} fill={fg} />
+                  <Icon d={ICONS.fwd} size={18} color={c.muted} />
+                </div>
+                <span style={{ color: c.faint }}>{timecode(total)}</span>
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: L.tlTop,
+                  height: 1,
+                  background: c.rule,
+                }}
+              />
+              {Array.from({ length: ticks + 1 }, (_, s) => (
+                <div key={s}>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: TX + s * PPS,
+                      top: L.rulerY + 16,
+                      width: 1,
+                      height: 8,
+                      background: c.tick,
+                    }}
+                  />
+                  {s % L.tickEvery === 0 ? (
                     <div
                       style={{
                         position: "absolute",
-                        inset: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        left: TX + s * PPS + 5,
+                        top: L.rulerY,
                         fontFamily: mono,
                         fontSize: 16,
-                        opacity: 1 - doneT,
+                        color: c.faint,
                       }}
                     >
-                      {Math.round(prog * 100)}
+                      {s === 0 ? "0" : `${s}s`}
                     </div>
+                  ) : null}
+                </div>
+              ))}
+              {[
+                ["V2", L.v2],
+                ["V1", L.v1],
+                ["A1", L.a1],
+              ].map(([n, tr]) => {
+                const t = tr as { y: number; h: number };
+                return (
+                  <div key={n as string}>
                     <div
                       style={{
                         position: "absolute",
-                        inset: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        opacity: doneT,
-                        transform: `scale(${0.6 + done * 0.4})`,
-                      }}
-                    >
-                      <Icon d={ICONS.check} size={22} color={GREEN} sw={2} />
-                    </div>
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 18 }}>
-                      {doneT > 0.5 ? "Export complete" : "Exporting"}
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 3,
+                        left: 20,
+                        top: t.y + t.h / 2 - 11,
                         fontFamily: mono,
                         fontSize: 16,
                         color: c.muted,
-                        whiteSpace: "nowrap",
                       }}
                     >
-                      {fileName}
+                      {n as string}
                     </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: TX,
+                        right: 12,
+                        top: t.y,
+                        height: t.h,
+                        borderRadius: 10,
+                        background: c.lane,
+                      }}
+                    />
                   </div>
-                </div>
+                );
+              })}
+
+              {f >= TITLE_AT ? (
                 <div
                   style={{
-                    marginTop: 16,
-                    paddingTop: 14,
-                    boxShadow: `inset 0 1px 0 ${c.rule}`,
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr 1fr",
+                    position: "absolute",
+                    left: TX + TITLE_SPAN.start * PPS,
+                    top: L.v2.y + 3,
+                    transform: `translateY(${titleDrop}px)${glide(titleDrop !== 0)}`,
+                    width: TITLE_SPAN.len * PPS,
+                    height: L.v2.h - 6,
+                    borderRadius: 8,
+                    background: c.titleBg,
+                    boxShadow: `inset 0 0 0 1px ${titleFlash > 0.05 ? withAlpha(accent, 0.5 + titleFlash * 0.5) : c.titleRing}`,
+                    opacity: clamp01(titleIn * 3),
+                    display: "flex",
+                    alignItems: "center",
                     gap: 8,
+                    padding: "0 10px",
+                    fontSize: 16,
+                    color: c.titleText,
+                    boxSizing: "border-box",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
                   }}
                 >
-                  {[
-                    ["Size", doneT > 0.5 ? "24.6 MB" : "—"],
-                    ["Res", "1080p"],
-                    [
-                      doneT > 0.5 ? "Time" : "Left",
-                      doneT > 0.5
-                        ? "8.4 s"
-                        : `${Math.max(1, Math.ceil((1 - prog) * 9))} s`,
-                    ],
-                  ].map(([k, v]) => (
-                    <div key={k}>
-                      <div style={{ fontSize: 16, color: c.faint }}>{k}</div>
+                  <Icon d={ICONS.type} size={16} color={c.titleText} />
+                  {title}
+                </div>
+              ) : null}
+              {f >= AUDIO_AT ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: TX,
+                    top: L.a1.y + 3,
+                    transform: `translateY(${audioRise}px)${glide(audioRise !== 0)}`,
+                    width: total * PPS,
+                    height: L.a1.h - 6,
+                    borderRadius: 8,
+                    background: c.audioBg,
+                    boxShadow: `inset 0 0 0 1px ${c.audioRing}`,
+                    opacity: clamp01(audioIn * 3),
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 10,
+                      top: 24,
+                      clipPath: `inset(0 ${(1 - wave) * 100}% 0 0)`,
+                      opacity: 0.85,
+                    }}
+                  >
+                    <Waveform
+                      w={total * PPS - 20}
+                      h={L.a1.h - 32}
+                      color={c.wave}
+                      seed={7}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 10,
+                      top: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 16,
+                      color: c.audioText,
+                    }}
+                  >
+                    <Icon d={ICONS.music} size={14} color={c.audioText} />
+                    {audioName}
+                  </div>
+                </div>
+              ) : null}
+              {flashes.map((fl, i) =>
+                fl.v > 0.01 ? (
+                  <div
+                    key={`${fl.x}-${i}`}
+                    style={{
+                      position: "absolute",
+                      left: fl.x - 0.75,
+                      top: L.rulerY + 20,
+                      width: 1.5,
+                      height: tlEnd - L.rulerY - 20,
+                      background: accent,
+                      opacity: fl.v,
+                    }}
+                  />
+                ) : null,
+              )}
+              {rects.map((r, i) =>
+                r ? (
+                  <div
+                    key={list[i].name}
+                    style={{
+                      position: "absolute",
+                      // In flight the clip is laid out in its slot and
+                      // carried under the cursor by a transform; `left`/`top`
+                      // would step it there pixel by pixel.
+                      left: r.flying ? slot[i].x : r.x,
+                      top: r.flying ? slot[i].y : r.y,
+                      zIndex: r.flying ? 30 : 5,
+                      filter: r.flying
+                        ? "drop-shadow(0 18px 30px rgba(0,0,0,0.45))"
+                        : undefined,
+                      transform: r.flying
+                        ? `translate(${r.x - slot[i].x}px, ${r.y - slot[i].y}px) rotate(-1.5deg)`
+                        : undefined,
+                    }}
+                  >
+                    <ClipBlock
+                      clip={list[i]}
+                      w={r.w}
+                      h={r.h}
+                      hRest={clipH}
+                      accent={accent}
+                      selected={!r.flying && i === shown && f >= SCRUB_AT}
+                      glow={flashes[i].v}
+                      art={art}
+                      carried={carried && !r.flying}
+                    />
+                  </div>
+                ) : null,
+              )}
+              {f >= SCRUB_AT - 6 ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: headRest - 0.75,
+                    top: L.rulerY + 4,
+                    width: 1.5,
+                    height: tlEnd - L.rulerY,
+                    transform: headShift
+                      ? `translateX(${headShift}px)`
+                      : undefined,
+                    background: accent,
+                    zIndex: 20,
+                    opacity: interpolate(f, [SCRUB_AT - 6, SCRUB_AT], [0, 1], {
+                      ...clamp,
+                      easing: ENTER,
+                    }),
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: -6,
+                      top: -2,
+                      width: 13,
+                      height: 16,
+                      borderRadius: 4,
+                      background: accent,
+                    }}
+                  />
+                </div>
+              ) : null}
+
+              {f >= CLICK_AT ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: L.pop.x,
+                    top: L.pop.y,
+                    width: L.pop.w,
+                    borderRadius: 16,
+                    background: c.popBg,
+                    boxShadow: c.pop,
+                    padding: 18,
+                    boxSizing: "border-box",
+                    zIndex: 35,
+                    opacity: clamp01(pop * 1.4),
+                    transform: `translateY(${(1 - pop) * -10}px) scale(${0.95 + pop * 0.05})${glide(!still((t) => spring({ frame: t - CLICK_AT - 2, fps, config: CARD })))}`,
+                    transformOrigin: "80% 0",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 14 }}
+                  >
+                    <div
+                      style={{ position: "relative", width: 56, height: 56 }}
+                    >
+                      <svg
+                        width={56}
+                        height={56}
+                        viewBox="0 0 56 56"
+                        aria-hidden
+                      >
+                        <circle
+                          cx={28}
+                          cy={28}
+                          r={25}
+                          stroke={c.rule}
+                          strokeWidth={2.5}
+                          fill="none"
+                        />
+                        <circle
+                          cx={28}
+                          cy={28}
+                          r={25}
+                          stroke={interpolateColors(
+                            doneT,
+                            [0, 1],
+                            [accent, GREEN],
+                          )}
+                          strokeWidth={2.5}
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeDasharray={2 * Math.PI * 25}
+                          strokeDashoffset={2 * Math.PI * 25 * (1 - prog)}
+                          transform="rotate(-90 28 28)"
+                        />
+                      </svg>
                       <div
                         style={{
-                          marginTop: 2,
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                           fontFamily: mono,
                           fontSize: 16,
+                          opacity: 1 - doneT,
                         }}
                       >
-                        {v}
+                        {Math.round(prog * 100)}
+                      </div>
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          opacity: doneT,
+                          transform: `scale(${0.6 + done * 0.4})`,
+                        }}
+                      >
+                        <Icon d={ICONS.check} size={22} color={GREEN} sw={2} />
                       </div>
                     </div>
-                  ))}
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 18 }}>
+                        {doneT > 0.5 ? "Export complete" : "Exporting"}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 3,
+                          fontFamily: mono,
+                          fontSize: 16,
+                          color: c.muted,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {fileName}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 16,
+                      paddingTop: 14,
+                      boxShadow: `inset 0 1px 0 ${c.rule}`,
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 1fr",
+                      gap: 8,
+                    }}
+                  >
+                    {[
+                      ["Size", doneT > 0.5 ? "24.6 MB" : "—"],
+                      ["Res", "1080p"],
+                      [
+                        doneT > 0.5 ? "Time" : "Left",
+                        doneT > 0.5
+                          ? "8.4 s"
+                          : `${Math.max(1, Math.ceil((1 - prog) * 9))} s`,
+                      ],
+                    ].map(([k, v]) => (
+                      <div key={k}>
+                        <div style={{ fontSize: 16, color: c.faint }}>{k}</div>
+                        <div
+                          style={{
+                            marginTop: 2,
+                            fontFamily: mono,
+                            fontSize: 16,
+                          }}
+                        >
+                          {v}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : null}
+            </div>
+            {f >= 4 ? (
+              <Cursor
+                x={L.win.x + curRest.x}
+                y={L.win.y + curRest.y}
+                dx={cur.x - curRest.x}
+                dy={cur.y - curRest.y}
+                press={press}
+              />
             ) : null}
           </div>
-          {f >= 4 ? (
-            <Cursor x={L.win.x + cur.x} y={L.win.y + cur.y} press={press} />
-          ) : null}
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

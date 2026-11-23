@@ -2,6 +2,7 @@
 
 import { loadFont as loadSans } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -9,9 +10,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 /** Film-title serif for the hero, its sans sibling for the caption. */
 const serif = loadSerif("normal", { weights: ["400"], subsets: ["latin"] });
@@ -25,6 +26,20 @@ export interface AspectSlitProps {
   /** Height of the narrowest slit, as a share of the frame height. */
   slit?: number;
   accent?: string;
+  /** Text color of the title; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the lit gradient; "transparent" drops it. */
+  background?: string;
+  /** Color of the letterbox bars. */
+  barColor?: string;
+  /** Typeface for the title. Load it yourself; Instrument Serif by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the title and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -74,13 +89,13 @@ interface TitleMetrics {
   width: number;
 }
 
-function measureTitle(title: string): TitleMetrics {
+function measureTitle(title: string, fontFamily: string): TitleMetrics {
   const ctx = document.createElement("canvas").getContext("2d");
   const n = Math.max(1, [...title].length);
   if (!ctx) {
     return { capTop: 0.2, baseline: 0.85, descent: 0.22, width: n * 0.42 };
   }
-  ctx.font = `400 200px "${serif.fontFamily}"`;
+  ctx.font = `400 200px "${fontFamily}"`;
   const box = ctx.measureText("H");
   const run = ctx.measureText(title);
   const asc = box.fontBoundingBoxAscent / 200;
@@ -94,7 +109,7 @@ function measureTitle(title: string): TitleMetrics {
   };
 }
 
-function useTitleMetrics(title: string) {
+function useTitleMetrics(title: string, fontFamily: string) {
   const [metrics, setMetrics] = useState<TitleMetrics | null>(null);
   const [handle] = useState(() => delayRender("aspect-slit: measuring"));
   const released = useRef(false);
@@ -103,12 +118,12 @@ function useTitleMetrics(title: string) {
     Promise.all([
       serif.waitUntilDone(),
       sans.waitUntilDone(),
-      document.fonts.load(`400 100px "${serif.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measureTitle(title));
+        setMetrics(measureTitle(title, fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -117,7 +132,7 @@ function useTitleMetrics(title: string) {
     return () => {
       live = false;
     };
-  }, [title, handle]);
+  }, [title, handle, fontFamily]);
   return metrics;
 }
 
@@ -189,44 +204,72 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function AspectSlit({
   title = "Now showing.",
   caption = "A launch film, built in React.",
   slit = 0.125,
   accent = "#3B5BFD",
+  ink,
+  background,
+  barColor = "#0A0A0B",
+  fontFamily = serif.fontFamily,
+  grain = true,
+  scale: zoom = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: AspectSlitProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const raw = Math.max(0, useSceneFrame() - delay);
+  const frame = raw * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
-  const metrics = useTitleMetrics(title);
+  const fg = ink ?? c.ink;
+  const metrics = useTitleMetrics(title, fontFamily);
 
   // Bar height per side.
   const scopeBar = Math.max(0, (H - W / 2.39) / 2);
   const slitH = Math.round(H * slit);
   const slitBar = (H - slitH) / 2;
-  const toScope = interpolate(frame, [SCOPE_AT, SCOPE_END], [0, 1], {
-    ...CLAMP,
-    easing: BARS,
-  });
-  const toSlit = interpolate(frame, [SLIT_AT, SLIT_END], [0, 1], {
-    ...CLAMP,
-    easing: BARS,
-  });
-  const open = interpolate(frame, [OPEN_AT, OPEN_END], [0, 1], {
-    ...CLAMP,
-    easing: OPEN,
-  });
-  const closed = toScope * scopeBar + toSlit * (slitBar - scopeBar);
-  const bar = closed * (1 - open);
-  const opening = H - 2 * bar;
+  const barAt = (fr: number) => {
+    const toScope = interpolate(fr, [SCOPE_AT, SCOPE_END], [0, 1], {
+      ...CLAMP,
+      easing: BARS,
+    });
+    const toSlit = interpolate(fr, [SLIT_AT, SLIT_END], [0, 1], {
+      ...CLAMP,
+      easing: BARS,
+    });
+    const open = interpolate(fr, [OPEN_AT, OPEN_END], [0, 1], {
+      ...CLAMP,
+      easing: OPEN,
+    });
+    const closed = toScope * scopeBar + toSlit * (slitBar - scopeBar);
+    return closed * (1 - open);
+  };
+  const bar = barAt(frame);
 
   const drift = (k: number) => ({
     x: Math.sin(frame / 44 + k * 1.7) * 3,
     y: Math.cos(frame / 57 + k * 2.3) * 2.5,
   });
-  const ground = [
+  const lit = [
     ...BLOBS[theme].map((b, k) => {
       const o = drift(k);
       const col = b.color === "#ACCENT" ? accent : b.color;
@@ -234,6 +277,12 @@ export function AspectSlit({
     }),
     c.ground,
   ].join(", ");
+  const ground =
+    background === undefined
+      ? lit
+      : background === "transparent"
+        ? undefined
+        : background;
 
   const bars = (
     <>
@@ -244,7 +293,7 @@ export function AspectSlit({
           top: 0,
           width: W,
           height: Math.ceil(bar),
-          backgroundColor: c.bars,
+          backgroundColor: barColor,
         }}
       />
       <div
@@ -254,7 +303,7 @@ export function AspectSlit({
           bottom: 0,
           width: W,
           height: Math.ceil(bar),
-          backgroundColor: c.bars,
+          backgroundColor: barColor,
         }}
       />
     </>
@@ -280,47 +329,68 @@ export function AspectSlit({
   // spans most of the width.
   const slitSize = (slitH * 0.5) / (BASELINE - CAP_TOP);
   const heroSize = Math.min(H * 0.3, (W * 0.78) / metrics.width);
-  const grow = interpolate(frame, [GROW_AT, GROW_END], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  // A slow push while it sits in the slit, so the hold is never frozen.
-  const push = interpolate(frame, [RISE_END - 6, OPEN_AT + 4], [0, 1], CLAMP);
-  const wanted = slitSize * (1 + 0.035 * push) + (heroSize - slitSize) * grow;
-  // Framed, never clipped: the ink stays inside the opening with room to spare.
-  const size = Math.min(
-    wanted,
-    (opening * 0.6) / (BASELINE + metrics.descent - CAP_TOP),
-  );
-  const scale = size / heroSize;
-
-  const rise = interpolate(frame, [RISE_AT, RISE_END], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const tracking = interpolate(
-    frame,
-    [RISE_AT, OPEN_AT, GROW_END],
-    [0.01, -0.012, HERO_TRACK],
-    CLAMP,
-  );
-
-  const captionIn = interpolate(frame, [CAPTION_AT, CAPTION_END], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
   const captionSize = H * 0.034;
   const captionGap = H * 0.028;
+  const geometry = (fr: number) => {
+    const opening = H - 2 * barAt(fr);
+    const grow = interpolate(fr, [GROW_AT, GROW_END], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    // A slow push while it sits in the slit, so the hold is never frozen.
+    const push = interpolate(fr, [RISE_END - 6, OPEN_AT + 4], [0, 1], CLAMP);
+    const wanted = slitSize * (1 + 0.035 * push) + (heroSize - slitSize) * grow;
+    // Framed, never clipped: the ink stays inside the opening with room to spare.
+    const size = Math.min(
+      wanted,
+      (opening * 0.6) / (BASELINE + metrics.descent - CAP_TOP),
+    );
+    const scale = size / heroSize;
 
-  // Cap-height centre of the title sits on the frame centre, then the group
-  // (title + caption) recentres as the caption arrives.
-  const capMid = ((CAP_TOP + BASELINE) / 2) * size;
-  const descender = metrics.descent * size;
-  const groupShift = -captionIn * (descender + captionGap + captionSize) * 0.5;
-  // Starts with its cap line just behind the lower bar's edge, wherever it is.
-  const riseFrom = opening / 2 + ((BASELINE - CAP_TOP) / 2) * size + 2;
-  const titleTop = H / 2 - capMid + groupShift + (1 - rise) * riseFrom;
-  const baseline = titleTop + BASELINE * size;
+    const rise = interpolate(fr, [RISE_AT, RISE_END], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    const tracking = interpolate(
+      fr,
+      [RISE_AT, OPEN_AT, GROW_END],
+      [0.01, -0.012, HERO_TRACK],
+      CLAMP,
+    );
+
+    const captionIn = interpolate(fr, [CAPTION_AT, CAPTION_END], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+
+    // Cap-height centre of the title sits on the frame centre, then the group
+    // (title + caption) recentres as the caption arrives.
+    const capMid = ((CAP_TOP + BASELINE) / 2) * size;
+    const descender = metrics.descent * size;
+    const groupShift =
+      -captionIn * (descender + captionGap + captionSize) * 0.5;
+    // Starts with its cap line just behind the lower bar's edge, wherever it is.
+    const riseFrom = opening / 2 + ((BASELINE - CAP_TOP) / 2) * size + 2;
+    const titleTop = H / 2 - capMid + groupShift + (1 - rise) * riseFrom;
+    const baseline = titleTop + BASELINE * size;
+    const captionTop = baseline + descender + captionGap - captionSize * 0.2;
+    return { scale, rise, tracking, captionIn, titleTop, captionTop };
+  };
+  const { scale, rise, tracking, captionIn, titleTop, captionTop } =
+    geometry(frame);
+  // Layout rounds a box and a baseline to whole pixels, so a title eased by
+  // `top` clicks along pixel by pixel. The title and the caption are laid out
+  // where they finally rest and travel by a transform all their life: handing
+  // them back to layout at a stop would snap them to the nearest pixel.
+  const rest = geometry(Number.MAX_SAFE_INTEGER);
+  const moving = [raw - 1, raw + 1].some((f) => {
+    const g = geometry(f * speed);
+    return (
+      Math.abs(g.titleTop - titleTop) > 1e-3 ||
+      Math.abs(g.scale - scale) * heroSize > 1e-3 ||
+      Math.abs(g.captionTop - captionTop) > 1e-3
+    );
+  });
 
   const body =
     c.accentPeriod && title.endsWith(".") ? title.slice(0, -1) : title;
@@ -328,61 +398,64 @@ export function AspectSlit({
 
   return (
     <AbsoluteFill style={{ background: ground, overflow: "hidden" }}>
-      <Grain opacity={c.grain} />
-      {rise > 0 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: titleTop,
-            height: heroSize,
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
+      {grain ? <Grain opacity={c.grain} /> : null}
+      <ScaleLayer scale={zoom}>
+        {rise > 0 ? (
           <div
             style={{
-              fontFamily: serif.fontFamily,
-              fontWeight: 400,
-              fontSize: heroSize,
-              lineHeight: 1,
-              letterSpacing: `${tracking}em`,
-              color: c.ink,
-              whiteSpace: "nowrap",
-              transform: `scale(${scale})`,
-              transformOrigin: "50% 0%",
-              // letter-spacing trails the last glyph; pad it back to centre the ink
-              paddingRight: `${-tracking}em`,
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: rest.titleTop,
+              transform: `translateY(${titleTop - rest.titleTop}px)${glide(moving)}`,
+              height: heroSize,
+              display: "flex",
+              justifyContent: "center",
             }}
           >
-            {body}
-            {period ? <span style={{ color: accent }}>.</span> : null}
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 400,
+                fontSize: heroSize,
+                lineHeight: 1,
+                letterSpacing: `${tracking}em`,
+                color: fg,
+                whiteSpace: "nowrap",
+                transform: `scale(${scale})`,
+                transformOrigin: "50% 0%",
+                // letter-spacing trails the last glyph; pad it back to centre the ink
+                paddingRight: `${-tracking}em`,
+              }}
+            >
+              {body}
+              {period ? <span style={{ color: accent }}>.</span> : null}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {caption && captionIn > 0 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: baseline + descender + captionGap - captionSize * 0.2,
-            textAlign: "center",
-            fontFamily: sans.fontFamily,
-            fontWeight: 400,
-            fontSize: captionSize,
-            lineHeight: 1.2,
-            letterSpacing: "-0.005em",
-            color: c.caption,
-            opacity: captionIn,
-            transform: `translateY(${(1 - captionIn) * H * 0.012}px)`,
-          }}
-        >
-          {caption}
-        </div>
-      ) : null}
+        {caption && captionIn > 0 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: rest.captionTop,
+              textAlign: "center",
+              fontFamily: sans.fontFamily,
+              fontWeight: 400,
+              fontSize: captionSize,
+              lineHeight: 1.2,
+              letterSpacing: "-0.005em",
+              color: c.caption,
+              opacity: captionIn,
+              transform: `translateY(${captionTop - rest.captionTop + (1 - captionIn) * H * 0.012}px)${glide(moving)}`,
+            }}
+          >
+            {caption}
+          </div>
+        ) : null}
+      </ScaleLayer>
 
       {bars}
     </AbsoluteFill>

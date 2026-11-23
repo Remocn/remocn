@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const taglineJustifyConfig: ComponentConfig = {
   componentName: "TaglineJustify",
@@ -13,11 +19,6 @@ export const taglineJustifyConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     text: {
       type: "text-content",
       default: "Your launch deserves a film as good as the product.",
@@ -28,6 +29,21 @@ export const taglineJustifyConfig: ComponentConfig = {
       default: "film",
       description: "Highlight",
     },
+    stagger: {
+      type: "number",
+      default: 6,
+      min: 1,
+      max: 16,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Inter Tight", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const slashWipeConfig: ComponentConfig = {
   componentName: "SlashWipe",
@@ -13,11 +19,6 @@ export const slashWipeConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     every: {
       type: "number",
       default: 56,
@@ -27,6 +28,21 @@ export const slashWipeConfig: ComponentConfig = {
       description: "Every",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 300,
+      max: 700,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Bricolage Grotesque" }),
     speed: {
       type: "number",
       default: 1,

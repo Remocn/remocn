@@ -4,13 +4,9 @@ import { loadFont as loadFraunces } from "@remotion/google-fonts/Fraunces";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 // Manrope: small labels (500) and the remocn.dev logo (600, the brand asset).
 const { fontFamily: sans } = loadManrope("normal", {
@@ -30,6 +26,22 @@ export interface PaperPlaneProps {
   /** Shown under the lockup once the plane has landed. */
   url?: string;
   accent?: string;
+  /** Color of the step words and the lockup; overrides the theme ink. */
+  ink?: string;
+  /** Plain fill in place of the paper and its ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the step words. Load it yourself; Fraunces by default. */
+  fontFamily?: string;
+  /** Frame the plane touches down; the flight stretches or tightens to fit. */
+  land?: number;
+  /** The dashed trail behind the plane. */
+  trail?: boolean;
+  /** Size of the world, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "light" | "dark";
@@ -37,6 +49,8 @@ export interface PaperPlaneProps {
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -225,18 +239,18 @@ function headingAt(tr: Track, s: number) {
 }
 
 /** Glide speed: already airborne at frame 0, eases off into the landing. */
-function velocity(t: number) {
-  return interpolate(t, [LAND - 36, LAND], [1, 0.14], {
+function velocity(t: number, land: number) {
+  return interpolate(t, [land - 36, land], [1, 0.14], {
     ...CLAMP,
     easing: Easing.bezier(0.45, 0, 0.55, 1),
   });
 }
 
-function buildDistance() {
+function buildDistance(land: number) {
   const table = [0];
   let sum = 0;
-  for (let i = 1; i <= LAND * 2; i++) {
-    sum += velocity((i - 0.5) / 2) / 2;
+  for (let i = 1; i <= land * 2; i++) {
+    sum += velocity((i - 0.5) / 2, land) / 2;
     table.push(sum);
   }
   return table.map((v) => v / sum);
@@ -398,17 +412,29 @@ function StepLabel({
   );
 }
 
-function BigWord({ text, u, pal }: { text: string; u: number; pal: Palette }) {
+function BigWord({
+  text,
+  u,
+  pal,
+  font,
+  ink,
+}: {
+  text: string;
+  u: number;
+  pal: Palette;
+  font: string;
+  ink?: string;
+}) {
   return (
     <div
       style={{
-        fontFamily: display,
+        fontFamily: font,
         fontWeight: 400,
         fontSize: 140 * u,
         lineHeight: 0.95,
         letterSpacing: "-0.035em",
         fontVariationSettings: '"opsz" 144, "SOFT" 50, "WONK" 0',
-        color: pal.stopInk,
+        color: ink ?? pal.stopInk,
         marginTop: 14 * u,
         whiteSpace: "nowrap",
       }}
@@ -573,6 +599,22 @@ function FilmStrip({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 
 export function PaperPlane({
@@ -580,11 +622,23 @@ export function PaperPlane({
   logo,
   url = "remocn.dev",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  land = LAND,
+  trail = true,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "light",
 }: PaperPlaneProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const tAt = (f: number) => Math.max(0, f - delay) * speed;
+  const t = tAt(frame);
+  const transparent = background === "transparent";
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const pal = THEMES[theme];
   const W = width;
@@ -630,10 +684,10 @@ export function PaperPlane({
       dot,
     ]);
   }, [W, D, u, dotX, dotY, lockX, lockY, lockW]);
-  const dist = useMemo(buildDistance, []);
+  const dist = useMemo(() => buildDistance(land), [land]);
 
   const sAt = (time: number) => {
-    const x = Math.min(LAND, Math.max(0, time)) * 2;
+    const x = Math.min(land, Math.max(0, time)) * 2;
     const i = Math.floor(x);
     const f = x - i;
     const a = dist[Math.min(i, dist.length - 1)];
@@ -652,39 +706,54 @@ export function PaperPlane({
   const tilt = 0.95 + Math.sin(t / 21) * 0.08;
 
   // camera: follows the plane with a soft lag, then settles on the lockup
-  let lagX = 0;
-  let lagY = 0;
-  for (let k = 0; k < 6; k++) {
-    const p = sampleTrack(track, sAt(t - 6 - k * 3));
-    lagX += p.x / 6;
-    lagY += p.y / 6;
-  }
   const softMax = (a: number, b: number, k: number) =>
     (a + b + Math.sqrt((a - b) ** 2 + k * k)) / 2;
-  const settle = interpolate(t, [LAND - 60, LAND + 6], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const followX = softMax(lagX + 0.08 * W, 0, 180 * u);
-  const camX = followX + (2 * D - followX) * settle;
-  const camY = lagY * 0.28 * (1 - settle);
-  const zoom = 1 + 0.035 * settle;
+  const cameraAt = (time: number) => {
+    let lagX = 0;
+    let lagY = 0;
+    for (let k = 0; k < 6; k++) {
+      const p = sampleTrack(track, sAt(time - 6 - k * 3));
+      lagX += p.x / 6;
+      lagY += p.y / 6;
+    }
+    const settle = interpolate(time, [land - 60, land + 6], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    const followX = softMax(lagX + 0.08 * W, 0, 180 * u);
+    return {
+      camX: followX + (2 * D - followX) * settle,
+      camY: lagY * 0.28 * (1 - settle),
+      zoom: 1 + 0.035 * settle,
+    };
+  };
+  const { camX, camY, zoom } = cameraAt(t);
+  // The camera eases onto the lockup slowly, so it counts as moving while any
+  // text on screen, at most ~800px from the centre, shifts by a thousandth of
+  // a pixel between frames.
+  const camMoving = [cameraAt(tAt(frame - 1)), cameraAt(tAt(frame + 1))].some(
+    (o) =>
+      Math.abs(o.camX - camX) * zoom +
+        Math.abs(o.camY - camY) * zoom +
+        Math.abs(o.zoom - zoom) * 800 >
+      1e-3,
+  );
 
   // landing: the plane folds itself into the accent dot
-  const morph = interpolate(t, [LAND - 14, LAND], [0, 1], {
+  const morph = interpolate(t, [land - 14, land], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.55, 0, 1, 0.45),
   });
   const planeSize = 62 * u * (1 - morph * 0.86);
-  const height3d = interpolate(t, [LAND - 40, LAND], [1, 0], {
+  const height3d = interpolate(t, [land - 40, land], [1, 0], {
     ...CLAMP,
     easing: Easing.bezier(0.55, 0, 1, 0.45),
   });
   const lift = { x: 10 * u * height3d + 2 * u, y: 30 * u * height3d + 3 * u };
   const facets = planeFacets(heading, bank, tilt, planeSize, lift);
   const accentRgb = hexRgb(accent);
-  const dotIn = interpolate(t, [LAND - 3, LAND + 4], [0, 1], CLAMP);
-  const dotPop = interpolate(t, [LAND, LAND + 6, LAND + 16], [1, 1.12, 1], {
+  const dotIn = interpolate(t, [land - 3, land + 4], [0, 1], CLAMP);
+  const dotPop = interpolate(t, [land, land + 6, land + 16], [1, 1.12, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -695,7 +764,7 @@ export function PaperPlane({
   const gap = 9 * u;
   const chunks: React.ReactNode[] = [];
   const CH = 140 * u;
-  const trailDim = interpolate(t, [LAND - 6, LAND + 30], [1, 0.4], CLAMP);
+  const trailDim = interpolate(t, [land - 6, land + 30], [1, 0.4], CLAMP);
   for (let c0 = 0; c0 < trailEnd; c0 += CH) {
     const c1 = Math.min(trailEnd, c0 + CH);
     const pts: string[] = [];
@@ -742,232 +811,255 @@ export function PaperPlane({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const urlIn = interpolate(t, [LAND + 8, LAND + 28], [0, 1], {
+  const urlIn = interpolate(t, [land + 8, land + 28], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const rise = (p: number) => ({
     opacity: p,
-    transform: `translateY(${(1 - p) * 16 * u}px)`,
+    transform: `translateY(${(1 - p) * 16 * u}px)${glide(midway(p) && !camMoving)}`,
   });
 
   const shadowBlur = (2 + height3d * 5) * u;
   const svgId = `pp${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   return (
-    <AbsoluteFill style={{ background: pal.bg, overflow: "hidden" }}>
-      {pal.texture > 0 && (
-        <AbsoluteFill
-          style={{
-            backgroundImage: PAPER_TEX,
-            backgroundSize: `${240 * u}px ${240 * u}px`,
-            backgroundPosition: `${-camX * 0.98}px ${-camY}px`,
-          }}
-        />
-      )}
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 70% 80% at 40% 30%, ${
-            theme === "light"
-              ? "rgba(255,255,255,0.6)"
-              : "rgba(255,255,255,0.035)"
-          }, transparent 100%)`,
-        }}
-      />
+    <AbsoluteFill
+      style={{
+        background: transparent ? "transparent" : (background ?? pal.bg),
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          {pal.texture > 0 && (
+            <AbsoluteFill
+              style={{
+                backgroundImage: PAPER_TEX,
+                backgroundSize: `${240 * u}px ${240 * u}px`,
+                backgroundPosition: `${-camX * 0.98}px ${-camY}px`,
+              }}
+            />
+          )}
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(ellipse 70% 80% at 40% 30%, ${
+                theme === "light"
+                  ? "rgba(255,255,255,0.6)"
+                  : "rgba(255,255,255,0.035)"
+              }, transparent 100%)`,
+            }}
+          />
 
-      <AbsoluteFill
-        style={{ backgroundImage: groundFill(theme, camX / (2 * D)) }}
-      />
+          <AbsoluteFill
+            style={{ backgroundImage: groundFill(theme, camX / (2 * D)) }}
+          />
+        </>
+      ) : null}
 
       {/* world */}
-      <div
-        style={{
-          position: "absolute",
-          left: W / 2,
-          top: height / 2,
-          width: 0,
-          height: 0,
-          transform: `scale(${zoom}) translate(${-camX}px, ${-camY}px)`,
-        }}
-      >
-        {/* stop 1: write */}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: -0.36 * W,
-            top: -150 * u,
-            ...rise(s1),
+            left: W / 2,
+            top: height / 2,
+            width: 0,
+            height: 0,
+            transform: `scale(${zoom}) translate(${-camX}px, ${-camY}px)${glide(camMoving)}`,
           }}
         >
-          <StepLabel index="01" u={u} pal={pal} />
-          <BigWord text={steps[0]} u={u} pal={pal} />
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: 0.07 * W,
-            top: -110 * u,
-            transform: `rotate(-3deg) translateY(${(1 - s1) * 20 * u}px)`,
-            opacity: s1,
-          }}
-        >
-          <WriteCard p={writeP} t={t} u={u} pal={pal} accent={accent} />
-        </div>
+          {/* stop 1: write */}
+          <div
+            style={{
+              position: "absolute",
+              left: -0.36 * W,
+              top: -150 * u,
+              ...rise(s1),
+            }}
+          >
+            <StepLabel index="01" u={u} pal={pal} />
+            <BigWord
+              text={steps[0]}
+              u={u}
+              pal={pal}
+              font={fontFamily}
+              ink={ink}
+            />
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: 0.07 * W,
+              top: -110 * u,
+              transform: `rotate(-3deg) translateY(${(1 - s1) * 20 * u}px)`,
+              opacity: s1,
+            }}
+          >
+            <WriteCard p={writeP} t={t} u={u} pal={pal} accent={accent} />
+          </div>
 
-        {/* stop 2: render */}
-        <div
-          style={{
-            position: "absolute",
-            left: D - 0.3 * W,
-            top: -150 * u,
-            ...rise(s2),
-          }}
-        >
-          <FilmStrip p={renderP} u={u} pal={pal} accent={accent} />
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: D - 0.3 * W,
-            top: -10 * u,
-            ...rise(s2),
-          }}
-        >
-          <StepLabel index="02" u={u} pal={pal} />
-          <BigWord text={steps[1]} u={u} pal={pal} />
-        </div>
+          {/* stop 2: render */}
+          <div
+            style={{
+              position: "absolute",
+              left: D - 0.3 * W,
+              top: -150 * u,
+              ...rise(s2),
+            }}
+          >
+            <FilmStrip p={renderP} u={u} pal={pal} accent={accent} />
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: D - 0.3 * W,
+              top: -10 * u,
+              ...rise(s2),
+            }}
+          >
+            <StepLabel index="02" u={u} pal={pal} />
+            <BigWord
+              text={steps[1]}
+              u={u}
+              pal={pal}
+              font={fontFamily}
+              ink={ink}
+            />
+          </div>
 
-        {/* stop 3: launch, the lockup the plane lands in */}
-        <div
-          style={{
-            position: "absolute",
-            left: lockX,
-            width: lockW,
-            display: "flex",
-            justifyContent: "flex-end",
-            top: baseY - 0.72 * F - 64 * u,
-            ...rise(s3),
-          }}
-        >
-          <StepLabel index="03" text={steps[2]} u={u} pal={pal} />
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: lockX,
-            top: baseY - LOGO_BASELINE * F,
-            height: F,
-            display: "flex",
-            alignItems: "baseline",
-            color: pal.fg,
-            fontFamily: sans,
-            fontWeight: 600,
-            fontSize: F,
-            lineHeight: 1,
-            letterSpacing: "-0.025em",
-          }}
-        >
-          {logo ?? (
-            <>
-              <svg
-                viewBox="0 0 124.06 134.26"
-                style={{
-                  height: "0.76em",
-                  width: "auto",
-                  opacity: s3,
-                  transform: `translateY(${(1 - s3) * 16 * u}px)`,
-                }}
-                aria-hidden
-              >
-                <path fill="currentColor" d={REMOCN_R_PATH} />
-              </svg>
-              <span
-                style={{
-                  marginLeft: "0.04em",
-                  clipPath: `inset(-20% ${(1 - wordReveal) * 100}% -20% 0)`,
-                  transform: `translateX(${(1 - wordReveal) * -20 * u}px)`,
-                }}
-              >
-                emocn
-              </span>
-            </>
-          )}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: lockX,
-            width: lockW,
-            top: baseY + 44 * u,
-            textAlign: "center",
-            fontFamily: sans,
-            fontSize: 21 * u,
-            fontWeight: 500,
-            letterSpacing: "-0.01em",
-            color: pal.muted,
-            ...rise(urlIn),
-          }}
-        >
-          {url}
-        </div>
+          {/* stop 3: launch, the lockup the plane lands in */}
+          <div
+            style={{
+              position: "absolute",
+              left: lockX,
+              width: lockW,
+              display: "flex",
+              justifyContent: "flex-end",
+              top: baseY - 0.72 * F - 64 * u,
+              ...rise(s3),
+            }}
+          >
+            <StepLabel index="03" text={steps[2]} u={u} pal={pal} />
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: lockX,
+              top: baseY - LOGO_BASELINE * F,
+              height: F,
+              display: "flex",
+              alignItems: "baseline",
+              color: ink ?? pal.fg,
+              fontFamily: sans,
+              fontWeight: 600,
+              fontSize: F,
+              lineHeight: 1,
+              letterSpacing: "-0.025em",
+            }}
+          >
+            {logo ?? (
+              <>
+                <svg
+                  viewBox="0 0 124.06 134.26"
+                  style={{
+                    height: "0.76em",
+                    width: "auto",
+                    opacity: s3,
+                    transform: `translateY(${(1 - s3) * 16 * u}px)`,
+                  }}
+                  aria-hidden
+                >
+                  <path fill="currentColor" d={REMOCN_R_PATH} />
+                </svg>
+                <span
+                  style={{
+                    marginLeft: "0.04em",
+                    clipPath: `inset(-20% ${(1 - wordReveal) * 100}% -20% 0)`,
+                    transform: `translateX(${(1 - wordReveal) * -20 * u}px)`,
+                  }}
+                >
+                  emocn
+                </span>
+              </>
+            )}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: lockX,
+              width: lockW,
+              top: baseY + 44 * u,
+              textAlign: "center",
+              fontFamily: sans,
+              fontSize: 21 * u,
+              fontWeight: 500,
+              letterSpacing: "-0.01em",
+              color: pal.muted,
+              ...rise(urlIn),
+            }}
+          >
+            {url}
+          </div>
 
-        {/* trail + plane */}
-        <svg
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            overflow: "visible",
-          }}
-          width={1}
-          height={1}
-          aria-hidden
-        >
-          <defs>
-            <filter id={svgId} x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation={shadowBlur} />
-            </filter>
-          </defs>
-          {chunks}
-          {morph < 1 && (
-            <g transform={`translate(${pos.x} ${pos.y})`}>
-              <g filter={`url(#${svgId})`} opacity={1 - morph}>
+          {/* trail + plane */}
+          <svg
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              overflow: "visible",
+            }}
+            width={1}
+            height={1}
+            aria-hidden
+          >
+            <defs>
+              <filter id={svgId} x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation={shadowBlur} />
+              </filter>
+            </defs>
+            {trail ? chunks : null}
+            {morph < 1 && (
+              <g transform={`translate(${pos.x} ${pos.y})`}>
+                <g filter={`url(#${svgId})`} opacity={1 - morph}>
+                  {facets.map((fc, i) => (
+                    <polygon
+                      key={`s${i}`}
+                      points={fc.shadowPts}
+                      fill={pal.shadow}
+                      opacity={0.22 + (1 - height3d) * 0.3}
+                    />
+                  ))}
+                </g>
                 {facets.map((fc, i) => (
                   <polygon
-                    key={`s${i}`}
-                    points={fc.shadowPts}
-                    fill={pal.shadow}
-                    opacity={0.22 + (1 - height3d) * 0.3}
+                    key={i}
+                    points={fc.pts}
+                    fill={rgb(
+                      mix(mix(pal.fold, pal.paper, fc.lit), accentRgb, morph),
+                    )}
+                    stroke={pal.edge}
+                    strokeWidth={0.6 * u}
+                    strokeLinejoin="round"
                   />
                 ))}
               </g>
-              {facets.map((fc, i) => (
-                <polygon
-                  key={i}
-                  points={fc.pts}
-                  fill={rgb(
-                    mix(mix(pal.fold, pal.paper, fc.lit), accentRgb, morph),
-                  )}
-                  stroke={pal.edge}
-                  strokeWidth={0.6 * u}
-                  strokeLinejoin="round"
-                />
-              ))}
-            </g>
-          )}
-          {dotIn > 0 && (
-            <circle
-              cx={dot.x}
-              cy={dot.y}
-              r={dotR * dotPop}
-              fill={accent}
-              opacity={dotIn}
-            />
-          )}
-        </svg>
-      </div>
+            )}
+            {dotIn > 0 && (
+              <circle
+                cx={dot.x}
+                cy={dot.y}
+                r={dotR * dotPop}
+                fill={accent}
+                opacity={dotIn}
+              />
+            )}
+          </svg>
+        </div>
+      </ScaleLayer>
 
-      <Grain opacity={pal.grain} />
+      {!transparent && grain ? <Grain opacity={pal.grain} /> : null}
     </AbsoluteFill>
   );
 }

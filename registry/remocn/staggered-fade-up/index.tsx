@@ -1,6 +1,8 @@
 "use client";
 
-import { interpolate, useCurrentFrame } from "remotion";
+import { interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface StaggeredFadeUpProps {
   text: string;
@@ -23,7 +25,8 @@ export function StaggeredFadeUp({
   speed = 1,
   className,
 }: StaggeredFadeUpProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
+  const glide = useGlide();
 
   const words = text.split(" ");
 
@@ -66,7 +69,7 @@ export function StaggeredFadeUp({
                 display: "inline-block",
                 marginRight: "0.25em",
                 opacity,
-                translate: `0 ${y}px`,
+                transform: `translateY(${y}px)${glide(local > 0 && local < 12)}`,
               }}
             >
               {word}

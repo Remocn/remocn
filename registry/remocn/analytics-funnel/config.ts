@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const analyticsFunnelConfig: ComponentConfig = {
   componentName: "AnalyticsFunnel",
@@ -12,11 +19,6 @@ export const analyticsFunnelConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -33,6 +35,21 @@ export const analyticsFunnelConfig: ComponentConfig = {
       default: "Last 30 days",
       description: "Date range",
     },
+    totalLabel: {
+      type: "text-content",
+      default: "Total conversion",
+      description: "Total label",
+    },
+    allUsersLabel: {
+      type: "text-content",
+      default: "All users",
+      description: "All users label",
+    },
+    controlLabel: {
+      type: "text-content",
+      default: "Control",
+      description: "Control label",
+    },
     tooltipStep: {
       type: "number",
       default: 2,
@@ -42,6 +59,13 @@ export const analyticsFunnelConfig: ComponentConfig = {
       description: "Tooltip step",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

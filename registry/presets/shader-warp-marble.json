@@ -1,0 +1,95 @@
+{
+  "component": "shader-warp-marble",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-gallery",
+      "label": "Still Gallery",
+      "description": "Slow, softly blended veins that drift like polished stone under museum light.",
+      "askedAs": [
+        "slow calm marble background",
+        "subtle elegant stone texture",
+        "barely moving marble",
+        "медленный спокойный мрамор",
+        "мягкий мраморный фон"
+      ],
+      "props": {
+        "speed": 0.25,
+        "softness": 0.8,
+        "swirl": 0.5,
+        "distortion": 0.1
+      }
+    },
+    {
+      "id": "sharp-veins",
+      "label": "Sharp Veins",
+      "description": "Crisp, high-contrast charcoal veining with tight edges like cut Carrara.",
+      "askedAs": [
+        "crisp marble with sharp lines",
+        "high contrast stone veins",
+        "defined marble pattern",
+        "чёткие прожилки мрамора",
+        "контрастный мрамор"
+      ],
+      "props": {
+        "softness": 0,
+        "distortion": 0.5,
+        "proportion": 0.4
+      }
+    },
+    {
+      "id": "liquid-ink",
+      "label": "Liquid Ink",
+      "description": "Fast, heavily swirled flow where charcoal ink churns through cream.",
+      "askedAs": [
+        "fast swirling ink marble",
+        "energetic liquid marble",
+        "dynamic flowing stone",
+        "быстрый жидкий мрамор",
+        "закрученные чернила"
+      ],
+      "props": {
+        "speed": 2.5,
+        "swirl": 1,
+        "distortion": 0.7,
+        "proportion": 0.5
+      }
+    },
+    {
+      "id": "cream-haze",
+      "label": "Cream Haze",
+      "description": "Mostly cream field with faint, diffused grey wisps for a light airy backdrop.",
+      "askedAs": [
+        "light mostly white marble",
+        "airy pale stone background",
+        "soft cream texture",
+        "светлый кремовый мрамор",
+        "нежный светлый фон"
+      ],
+      "props": {
+        "proportion": 0.1,
+        "softness": 1,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "straight-strata",
+      "label": "Straight Strata",
+      "description": "Unswirled, gently rippling bands that read like layered sediment.",
+      "askedAs": [
+        "marble without swirls",
+        "layered stone stripes",
+        "flat banded texture",
+        "мрамор без завихрений",
+        "слоистый камень"
+      ],
+      "props": {
+        "swirl": 0,
+        "distortion": 0.4,
+        "softness": 0.2,
+        "speed": 0.75
+      }
+    }
+  ]
+}

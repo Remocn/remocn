@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const shapeMorphOConfig: ComponentConfig = {
   componentName: "ShapeMorphO",
@@ -13,11 +19,6 @@ export const shapeMorphOConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     word: {
       type: "text-content",
       default: "remocn",
@@ -28,6 +29,30 @@ export const shapeMorphOConfig: ComponentConfig = {
       default: true,
       description: "Mark",
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 300,
+      max: 800,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    beat: {
+      type: "number",
+      default: 16,
+      min: 6,
+      max: 30,
+      step: 1,
+      description: "Shape beat (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Manrope" }),
     speed: {
       type: "number",
       default: 1,

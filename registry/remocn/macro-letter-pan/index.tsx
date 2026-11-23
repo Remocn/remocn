@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Geist";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -9,9 +10,9 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -31,6 +32,17 @@ export interface MacroLetterPanProps {
   groundParams?: Partial<GradientParams>;
   firstShot?: number;
   maxShots?: number;
+  /** Frames of the pull-back from the close-ups to the full line. */
+  pullLen?: number;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -92,9 +104,9 @@ interface Metrics {
   xh: number;
 }
 
-function buildMetrics(_version: number): Metrics {
+function buildMetrics(_version: number, family: string): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
-  const font = `400 ${FONT_PX}px "${geist.fontFamily}"`;
+  const font = `400 ${FONT_PX}px "${family}"`;
   const box = (s: string) => {
     if (!ctx) return 0.7;
     ctx.font = font;
@@ -117,7 +129,7 @@ function buildMetrics(_version: number): Metrics {
   };
 }
 
-function useMetrics() {
+function useMetrics(family: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("macro-letter-pan: measuring"));
   const released = useRef(false);
@@ -129,7 +141,7 @@ function useMetrics() {
     document.fonts.addEventListener("loadingdone", bump);
     Promise.all([
       geist.waitUntilDone(),
-      document.fonts.load(`400 ${FONT_PX}px "${geist.fontFamily}"`),
+      document.fonts.load(`400 ${FONT_PX}px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -143,8 +155,8 @@ function useMetrics() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMetrics(version), [version]);
+  }, [handle, family]);
+  return useMemo(() => buildMetrics(version, family), [version, family]);
 }
 
 export const macroLetterPanLength = (
@@ -162,6 +174,22 @@ export const macroLetterPanLength = (
   return total + BEAT.pullLen + BEAT.hold;
 };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MacroLetterPan({
   line = "Ready to launch.",
   word = "launch",
@@ -172,18 +200,31 @@ export function MacroLetterPan({
   groundParams,
   firstShot = 15,
   maxShots = 6,
+  pullLen = BEAT.pullLen,
+  background,
+  fontFamily = geist.fontFamily,
+  scale: zoom = 1,
+  delay = 0,
+  speed = 1,
 }: MacroLetterPanProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
   const bg = gshParams(preset, gParams).background;
+  const stage =
+    background === undefined
+      ? bg
+      : background === "transparent"
+        ? undefined
+        : background;
   const portrait = H > W * 1.1;
   const u = Math.min(W, H) / 720;
-  const m = useMetrics();
+  const m = useMetrics(fontFamily);
 
   const found = word ? line.indexOf(word) : -1;
   const text = found >= 0 ? line : word || line;
@@ -243,7 +284,7 @@ export function MacroLetterPan({
   }, [m, portrait, before, text, ws, W, H]);
 
   if (!m || !layout) {
-    return <AbsoluteFill style={{ background: bg }} />;
+    return <AbsoluteFill style={{ background: stage }} />;
   }
   const { F, rows, base, charX } = layout;
 
@@ -271,17 +312,17 @@ export function MacroLetterPan({
     frame: frame - pullStart,
     fps,
     config: { mass: 1, damping: 26, stiffness: 120 },
-    durationInFrames: BEAT.pullLen,
+    durationInFrames: pullLen,
   });
   const pullPrev = spring({
     frame: frame - 1 - pullStart,
     fps,
     config: { mass: 1, damping: 26, stiffness: 120 },
-    durationInFrames: BEAT.pullLen,
+    durationInFrames: pullLen,
   });
   const hold = interpolate(
     frame,
-    [pullStart + BEAT.pullLen - 6, pullStart + BEAT.pullLen + BEAT.hold],
+    [pullStart + pullLen - 6, pullStart + pullLen + BEAT.hold],
     [0, 1],
     { ...CLAMP, easing: HOLD },
   );
@@ -318,7 +359,6 @@ export function MacroLetterPan({
     const v = Math.abs(pull - pullPrev) * Math.log(s0);
     blur = Math.min(7 * u, v * 26 * u);
   }
-
   const dof = interpolate(frame, [pullStart, pullStart + 16], [1, 0], {
     ...CLAMP,
     easing: COLOR,
@@ -345,6 +385,7 @@ export function MacroLetterPan({
   const mutedFill = mix(inkC, c.muted, reveal);
 
   const fs = F * scale;
+  const dotK = 0.35 + 0.65 * dot;
   const toX = (x: number) => ox + x * scale;
   const toY = (y: number) => oy + y * scale;
   const periodX = charX(we + tail.length);
@@ -355,7 +396,14 @@ export function MacroLetterPan({
       width={W}
       height={H}
       viewBox={`0 0 ${W} ${H}`}
-      style={{ position: "absolute", inset: 0, overflow: "visible" }}
+      style={{
+        position: "absolute",
+        inset: 0,
+        overflow: "visible",
+        // This drawing is under the camera all its life and rests under the
+        // camera's last scale, off the pixel grid, so its mark never changes.
+        transform: glide(true),
+      }}
       aria-hidden
     >
       {rows.map((r, ri) => {
@@ -374,7 +422,7 @@ export function MacroLetterPan({
             key={r.offset}
             x={toX(r.x)}
             y={toY(r.y)}
-            fontFamily={geist.fontFamily}
+            fontFamily={fontFamily}
             fontWeight={400}
             fontSize={fs}
             letterSpacing={`${TRACK}em`}
@@ -389,15 +437,19 @@ export function MacroLetterPan({
         );
       })}
       {period ? (
+        // The pop grows the glyph by its font size rather than by a scale
+        // on the group: the lean the drawing gets is measured at the
+        // drawing's own size, and a glyph shrunk by a transform would need
+        // more of it to leave the pixel grid.
         <g
-          transform={`translate(${toX(periodX + m.width(period) * F * 0.32)} ${toY(base)}) scale(${0.35 + 0.65 * dot}) translate(${-m.width(period) * fs * 0.32} 0)`}
+          transform={`translate(${toX(periodX + m.width(period) * F * 0.32)} ${toY(base)})`}
         >
           <text
-            x={0}
+            x={-m.width(period) * fs * 0.32 * dotK}
             y={0}
-            fontFamily={geist.fontFamily}
+            fontFamily={fontFamily}
             fontWeight={400}
-            fontSize={fs}
+            fontSize={fs * dotK}
             fill={mix(inkC, hi, colorHit)}
             opacity={interpolate(dot, [0, 0.3], [0, 1], CLAMP)}
           >
@@ -413,37 +465,48 @@ export function MacroLetterPan({
   const softMask = `radial-gradient(${ell} at 50% 48%, transparent ${44 + 56 * (1 - dof)}%, #000 100%)`;
 
   return (
-    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.55}
-      />
+    <AbsoluteFill
+      style={{
+        background: background === undefined ? bg : undefined,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <GshGround
+          preset={preset}
+          params={gParams}
+          timeOffset={c.groundOffset}
+          timeScale={0.55}
+        />
+      ) : (
+        <AbsoluteFill style={{ background: stage }} />
+      )}
       <AbsoluteFill
         style={{
           background: `radial-gradient(${portrait ? "92% 50%" : "70% 66%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
         }}
       />
-      <AbsoluteFill
-        style={{
-          filter: `blur(${16 * dof * u + blur}px)`,
-          opacity: dof > 0.001 ? 1 : 0,
-          WebkitMaskImage: softMask,
-          maskImage: softMask,
-        }}
-      >
-        {renderText("soft")}
-      </AbsoluteFill>
-      <AbsoluteFill
-        style={{
-          filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
-          WebkitMaskImage: dof > 0.001 ? sharpMask : undefined,
-          maskImage: dof > 0.001 ? sharpMask : undefined,
-        }}
-      >
-        {renderText("sharp")}
-      </AbsoluteFill>
+      <ScaleLayer scale={zoom}>
+        <AbsoluteFill
+          style={{
+            filter: `blur(${16 * dof * u + blur}px)`,
+            opacity: dof > 0.001 ? 1 : 0,
+            WebkitMaskImage: softMask,
+            maskImage: softMask,
+          }}
+        >
+          {renderText("soft")}
+        </AbsoluteFill>
+        <AbsoluteFill
+          style={{
+            filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
+            WebkitMaskImage: dof > 0.001 ? sharpMask : undefined,
+            maskImage: dof > 0.001 ? sharpMask : undefined,
+          }}
+        >
+          {renderText("sharp")}
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

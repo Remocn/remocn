@@ -1,0 +1,112 @@
+---
+title: "How to make a video for your SaaS when you can't edit video"
+navTitle: "I can't edit video"
+description: "Need a demo or promo video for your SaaS but you're not a video editor and don't want to pay one every time? Describe the video to a coding agent and it builds it from ready-made parts you can change later."
+---
+
+_Last updated: November 18, 2026_
+
+If you can't edit video and don't want to pay an editor every time, describe the video in words to a
+coding agent such as Claude Code or Codex and let it build the video from ready-made parts. With
+Remocn the agent writes your video as React code from tuned building blocks (titles, app screens,
+transitions, end cards) and renders an MP4 on your computer. You never open a timeline. To change a
+line next month, you ask again in a sentence.
+
+It is free: Remocn's components are MIT-licensed and need no account.
+
+## What a finished one looks like
+
+<GuideVideo
+  src="https://cdn.remocn.dev/videos/remocn-v3.mp4"
+  poster="https://cdn.remocn.dev/posters/remocn-v3.png"
+  label="The Remocn 3 release film, built from Remocn components and rendered to MP4"
+  duration={175}
+/>
+
+[Download the MP4](https://cdn.remocn.dev/videos/remocn-v3.mp4) · [Poster image](https://cdn.remocn.dev/posters/remocn-v3.png)
+
+This is the Remocn 3 release film: about three minutes of countdowns, counters, charts, a tournament
+bracket and product screens, built from Remocn components and rendered to MP4. Nobody dragged a clip
+on a timeline. Every scene in it is a component you can install into your own project. A first video
+doesn't need to be this long: the [Launch video](/docs/guides/launch-video) guide is a 35-second
+recipe.
+
+## Why the usual options keep failing you
+
+- **Learning After Effects or Premiere** works, but it is a new profession. Weeks before your first
+  video looks like you meant it.
+- **Hiring a freelancer** gets one good video. The next one (a new feature, a pricing change) starts
+  the brief, the invoice and the waiting from scratch.
+- **Template apps** (Canva, CapCut) are quick, and everyone recognises the templates. Product UI also
+  ends up as a pasted screenshot that doesn't move.
+- **AI video generators** make cinematic clips, but they can't show your actual interface with your
+  actual labels.
+
+What you want is closer to how you already build the product: describe what you need and get
+something you can change cheaply later.
+
+## The fix: describe it, an agent assembles it
+
+Remocn is a library of video building blocks for [Remotion](https://www.remotion.dev), the tool that
+renders video from React code. You don't write that code. Your coding agent does, and it picks blocks
+that were already tuned by hand (timing, easing, type) instead of improvising animation from scratch.
+
+Here is one of those blocks, playing live from its source:
+
+<ComponentPreview name="whats-new-modal" />
+
+That's [What's New Modal](/docs/product-scenes/whats-new-modal): a product dashboard dims, a modal
+pages through feature slides and a cursor clicks the call to action. It isn't a recording. The agent
+fills in your feature names and colors.
+
+## Do it in three steps
+
+1. **Set up once (about ten minutes).** Install the Remocn plugin in Claude Code:
+
+   ```text
+   /plugin install remocn --marketplace Remocn/remocn
+   ```
+
+   In Codex: `codex plugin marketplace add Remocn/remocn`, then `codex plugin add remocn@remocn`.
+   The [Setup](/docs/guides/setup) guide walks through the rest, including creating the Remotion
+   project.
+
+2. **Describe the video in one line,** from your product's folder:
+
+   ```text
+   /remocn:video 35-second launch video for Tasklane: the problem, the product, three features, the URL
+   ```
+
+   The agent reads your README and landing copy, shows you a storyboard and waits for your go-ahead.
+
+3. **Watch it and say what's wrong,** in plain sentences: "the second title goes by too fast", "use
+   our green". Then ask it to "Render the video." You get an `.mp4` in the project folder.
+
+## When this isn't the right fix
+
+- **You need to cut footage you already shot.** Remocn makes motion graphics; it is not an editor for
+  camera footage. Use a video editor.
+- **You never want to touch a terminal.** The agent runs in a terminal or in
+  [Remocn Studio](https://remocn.studio) (macOS and Linux), and a Node.js project lives on your disk.
+  A hosted video tool fits better.
+- **You need a voiceover generated for you.** Remocn doesn't make voices. Record your own, or see
+  [Make a demo without your face or voice](/docs/guides/demo-without-face-or-voice).
+
+<Faq>
+
+**Do I need to know React?**
+No. The agent writes the code. Knowing React helps if you want to tweak a file by hand, but every
+change can be asked for in words.
+
+**How much does it cost?**
+Remocn is free and MIT-licensed. You need a coding agent subscription (Claude Code or Codex).
+Remotion, which renders the video, is free for individuals and small companies; larger companies
+need a [company license](https://www.remotion.dev/license).
+
+**How long does the first video take?**
+About ten minutes of setup, then a few rounds of feedback on the storyboard and the preview.
+
+</Faq>
+
+**Next:** pick a recipe: [Launch video](/docs/guides/launch-video),
+[Product demo](/docs/guides/product-demo) or [Feature announcement](/docs/guides/feature-announcement).

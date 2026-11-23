@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const onApproachConfig: ComponentConfig = {
   componentName: "OnApproach",
   importPath: "@/components/remocn/on-approach",
+  lists: {
+    steps: {
+      default: ["in June.", "next week.", "tomorrow.", "today."],
+      description: "Steps",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -27,6 +39,17 @@ export const onApproachConfig: ComponentConfig = {
       description: "Interval",
       hiddenFromList: false,
     },
+    swapAt: {
+      type: "number",
+      default: 36,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "First swap (frame)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Red Hat Display" }),
     speed: {
       type: "number",
       default: 1,

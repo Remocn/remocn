@@ -4,14 +4,9 @@ import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
 import { loadFont as loadDisplay } from "@remotion/google-fonts/SpaceGrotesk";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -28,6 +23,22 @@ export interface CrosshairLockProps {
   label?: string;
   value?: string;
   accent?: string;
+  /** Text color of the callout value and readouts; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the callout value. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Weight of the callout value. */
+  fontWeight?: number;
+  /** Frames the crosshair takes to glide onto the peak. */
+  slide?: number;
+  /** Size of the chart and callout, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -43,9 +54,6 @@ const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const V_AT = 14;
 const H_AT = 18;
 const SLIDE = 26;
-const LOCK = H_AT + SLIDE;
-const LEAD_AT = LOCK + 8;
-const POP_AT = LEAD_AT + 10;
 
 const THEMES = {
   dark: {
@@ -125,19 +133,49 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CrosshairLock({
   x = 0.7,
   y = 0.94,
   label = "Peak",
   value = "2.4k/min",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  fontWeight = 500,
+  slide = SLIDE,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: CrosshairLockProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage = background ?? p.bg;
+  const LOCK = H_AT + slide;
+  const LEAD_AT = LOCK + 8;
+  const POP_AT = LEAD_AT + 10;
 
   const left = 0.14 * W;
   const right = 0.9 * W;
@@ -170,8 +208,8 @@ export function CrosshairLock({
   const px = left + peakCol * step;
   const py = bottom - (peakRows - 1) * step;
 
-  const vk = EASE_IO(interpolate(t, [V_AT, V_AT + SLIDE], [0, 1], CLAMP));
-  const hk = EASE_IO(interpolate(t, [H_AT, H_AT + SLIDE], [0, 1], CLAMP));
+  const vk = EASE_IO(interpolate(t, [V_AT, V_AT + slide], [0, 1], CLAMP));
+  const hk = EASE_IO(interpolate(t, [H_AT, H_AT + slide], [0, 1], CLAMP));
   const fromLeft = fx > 0.5;
   const vStart = fromLeft ? left - 0.07 * W : right + 0.07 * W;
   const vx = vStart + (px - vStart) * vk;
@@ -209,11 +247,18 @@ export function CrosshairLock({
   const endX = elbowX + dir * run;
   const leadLen = Math.SQRT2 * diag + run;
   const lead = EASE_IO(interpolate(t, [LEAD_AT, LEAD_AT + 14], [0, 1], CLAMP));
-  const pop = spring({
-    frame: t - POP_AT,
-    fps,
-    config: { damping: 16, stiffness: 200, mass: 0.6 },
-  });
+  const popAt = (tt: number) =>
+    spring({
+      frame: tt - POP_AT,
+      fps,
+      config: { damping: 16, stiffness: 200, mass: 0.6 },
+    });
+  const pop = popAt(t);
+  // The spring has a long tail, so the test is on its neighbours, not on a
+  // progress window.
+  const popMoving =
+    Math.abs(popAt(t + speed) - pop) > 1e-6 ||
+    Math.abs(pop - popAt(t - speed)) > 1e-6;
   const popOp = interpolate(t, [POP_AT, POP_AT + 8], [0, 1], CLAMP);
   const { head, tail } = splitValue(value);
   const gradId = `mesh${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -256,217 +301,219 @@ export function CrosshairLock({
   };
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <svg width={W} height={H} style={{ position: "absolute", inset: 0 }}>
-        <defs>
-          <radialGradient
-            id={gradId}
-            gradientUnits="userSpaceOnUse"
-            cx={px}
-            cy={py}
-            r={bloomR}
-            gradientTransform={`translate(${px} ${py}) scale(1.35 1) translate(${-px} ${-py})`}
-          >
-            <stop offset="0" stopColor={p.mesh[0]} stopOpacity={bloom} />
-            <stop
-              offset="0.28"
-              stopColor={p.mesh[1]}
-              stopOpacity={0.95 * bloom}
-            />
-            <stop offset="0.62" stopColor={p.mesh[2]} stopOpacity={0.6} />
-            <stop offset="1" stopColor={p.dotRGB} stopOpacity={p.dotA} />
-          </radialGradient>
-        </defs>
-        <line
-          x1={left - 8 * u}
-          x2={right + 8 * u}
-          y1={bottom + 14 * u}
-          y2={bottom + 14 * u}
-          stroke={p.axis}
-          strokeWidth={hair}
-          opacity={interpolate(t, [0, 10], [0, 1], CLAMP)}
-        />
-        {dots}
-        <line
-          x1={vx}
-          x2={vx}
-          y1={top - 24 * u}
-          y2={bottom + 14 * u}
-          stroke={p.hair}
-          strokeWidth={hair}
-          opacity={vOn}
-        />
-        <line
-          x1={left - 8 * u}
-          x2={right + 8 * u}
-          y1={hy}
-          y2={hy}
-          stroke={p.hair}
-          strokeWidth={hair}
-          opacity={hOn}
-        />
-        <line
-          x1={vx}
-          x2={vx}
-          y1={bottom + 14 * u}
-          y2={bottom + 22 * u}
-          stroke={p.fg}
-          strokeWidth={hair * 1.6}
-          opacity={vOn}
-        />
-        <line
-          x1={left - 16 * u}
-          x2={left - 8 * u}
-          y1={hy}
-          y2={hy}
-          stroke={p.fg}
-          strokeWidth={hair * 1.6}
-          opacity={hOn}
-        />
-        {locked ? (
-          <>
-            <circle
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <svg width={W} height={H} style={{ position: "absolute", inset: 0 }}>
+          <defs>
+            <radialGradient
+              id={gradId}
+              gradientUnits="userSpaceOnUse"
               cx={px}
               cy={py}
-              r={(10 + 34 * ring) * u}
+              r={bloomR}
+              gradientTransform={`translate(${px} ${py}) scale(1.35 1) translate(${-px} ${-py})`}
+            >
+              <stop offset="0" stopColor={p.mesh[0]} stopOpacity={bloom} />
+              <stop
+                offset="0.28"
+                stopColor={p.mesh[1]}
+                stopOpacity={0.95 * bloom}
+              />
+              <stop offset="0.62" stopColor={p.mesh[2]} stopOpacity={0.6} />
+              <stop offset="1" stopColor={p.dotRGB} stopOpacity={p.dotA} />
+            </radialGradient>
+          </defs>
+          <line
+            x1={left - 8 * u}
+            x2={right + 8 * u}
+            y1={bottom + 14 * u}
+            y2={bottom + 14 * u}
+            stroke={p.axis}
+            strokeWidth={hair}
+            opacity={interpolate(t, [0, 10], [0, 1], CLAMP)}
+          />
+          {dots}
+          <line
+            x1={vx}
+            x2={vx}
+            y1={top - 24 * u}
+            y2={bottom + 14 * u}
+            stroke={p.hair}
+            strokeWidth={hair}
+            opacity={vOn}
+          />
+          <line
+            x1={left - 8 * u}
+            x2={right + 8 * u}
+            y1={hy}
+            y2={hy}
+            stroke={p.hair}
+            strokeWidth={hair}
+            opacity={hOn}
+          />
+          <line
+            x1={vx}
+            x2={vx}
+            y1={bottom + 14 * u}
+            y2={bottom + 22 * u}
+            stroke={fg}
+            strokeWidth={hair * 1.6}
+            opacity={vOn}
+          />
+          <line
+            x1={left - 16 * u}
+            x2={left - 8 * u}
+            y1={hy}
+            y2={hy}
+            stroke={fg}
+            strokeWidth={hair * 1.6}
+            opacity={hOn}
+          />
+          {locked ? (
+            <>
+              <circle
+                cx={px}
+                cy={py}
+                r={(10 + 34 * ring) * u}
+                fill="none"
+                stroke={accent}
+                strokeWidth={2 * u}
+                opacity={0.9 * (1 - ring)}
+              />
+              <circle
+                cx={px}
+                cy={py}
+                r={(14 - 3 * lock) * u}
+                fill={stage}
+                stroke={accent}
+                strokeWidth={2 * u}
+                opacity={Math.min(1, lock * 1.4)}
+              />
+              <circle cx={px} cy={py} r={(3 + 2 * lock) * u} fill={accent} />
+            </>
+          ) : null}
+          {lead > 0 ? (
+            <path
+              d={`M ${px + dir * 14 * u * Math.SQRT1_2} ${py - 14 * u * Math.SQRT1_2} L ${elbowX} ${labelY} L ${endX} ${labelY}`}
               fill="none"
               stroke={accent}
-              strokeWidth={2 * u}
-              opacity={0.9 * (1 - ring)}
+              strokeWidth={1.75 * u}
+              strokeDasharray={leadLen}
+              strokeDashoffset={leadLen * (1 - lead)}
             />
-            <circle
-              cx={px}
-              cy={py}
-              r={(14 - 3 * lock) * u}
-              fill={p.bg}
-              stroke={accent}
-              strokeWidth={2 * u}
-              opacity={Math.min(1, lock * 1.4)}
-            />
-            <circle cx={px} cy={py} r={(3 + 2 * lock) * u} fill={accent} />
-          </>
-        ) : null}
-        {lead > 0 ? (
-          <path
-            d={`M ${px + dir * 14 * u * Math.SQRT1_2} ${py - 14 * u * Math.SQRT1_2} L ${elbowX} ${labelY} L ${endX} ${labelY}`}
-            fill="none"
-            stroke={accent}
-            strokeWidth={1.75 * u}
-            strokeDasharray={leadLen}
-            strokeDashoffset={leadLen * (1 - lead)}
-          />
-        ) : null}
-        {lead > 0.98 ? (
-          <circle cx={endX} cy={labelY} r={3 * u} fill={accent} />
-        ) : null}
-      </svg>
+          ) : null}
+          {lead > 0.98 ? (
+            <circle cx={endX} cy={labelY} r={3 * u} fill={accent} />
+          ) : null}
+        </svg>
 
-      <div
-        style={{
-          ...readout,
-          left: vx,
-          top: bottom + 30 * u,
-          transform: "translateX(-50%)",
-          color: locked ? p.fg : p.muted,
-          opacity: vOn,
-        }}
-      >
-        {xRead}
-      </div>
-      <div
-        style={{
-          ...readout,
-          right: W - left + 24 * u,
-          top: hy,
-          transform: "translateY(-50%)",
-          color: locked ? p.fg : p.muted,
-          opacity: hOn,
-        }}
-      >
-        {yRead}
-      </div>
+        <div
+          style={{
+            ...readout,
+            left: vx,
+            top: bottom + 30 * u,
+            transform: "translateX(-50%)",
+            color: locked ? fg : p.muted,
+            opacity: vOn,
+          }}
+        >
+          {xRead}
+        </div>
+        <div
+          style={{
+            ...readout,
+            right: W - left + 24 * u,
+            top: hy,
+            transform: "translateY(-50%)",
+            color: locked ? fg : p.muted,
+            opacity: hOn,
+          }}
+        >
+          {yRead}
+        </div>
 
-      <div
-        style={{
-          position: "absolute",
-          ...(dir < 0
-            ? { right: W - (endX - 18 * u) }
-            : { left: endX + 18 * u }),
-          top: labelY - valueSize * 0.5,
-          height: valueSize,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: dir < 0 ? "flex-end" : "flex-start",
-          opacity: popOp,
-          transform: `translateX(${dir * (1 - pop) * 14 * u}px) scale(${0.96 + 0.04 * pop})`,
-          transformOrigin: dir < 0 ? "100% 50%" : "0% 50%",
-        }}
-      >
         <div
           style={{
             position: "absolute",
-            bottom: "100%",
-            marginBottom: 2 * u,
+            ...(dir < 0
+              ? { right: W - (endX - 18 * u) }
+              : { left: endX + 18 * u }),
+            top: labelY - valueSize * 0.5,
+            height: valueSize,
             display: "flex",
-            alignItems: "center",
-            gap: 8 * u,
-            fontFamily: mono,
-            fontWeight: 500,
-            fontSize: 13 * u,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: p.muted,
-            whiteSpace: "nowrap",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: dir < 0 ? "flex-end" : "flex-start",
+            opacity: popOp,
+            transform: `translateX(${dir * (1 - pop) * 14 * u}px) scale(${0.96 + 0.04 * pop})${glide(popMoving)}`,
+            transformOrigin: dir < 0 ? "100% 50%" : "0% 50%",
           }}
         >
-          <span
+          <div
             style={{
-              width: 6 * u,
-              height: 6 * u,
-              borderRadius: "50%",
-              background: accent,
-            }}
-          />
-          {label}
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            fontFamily: display,
-            fontWeight: 500,
-            lineHeight: 1,
-            fontVariantNumeric: "tabular-nums",
-            whiteSpace: "nowrap",
-          }}
-        >
-          <span
-            style={{
-              fontSize: valueSize,
-              letterSpacing: "-0.04em",
-              color: p.fg,
+              position: "absolute",
+              bottom: "100%",
+              marginBottom: 2 * u,
+              display: "flex",
+              alignItems: "center",
+              gap: 8 * u,
+              fontFamily: mono,
+              fontWeight: 500,
+              fontSize: 13 * u,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: p.muted,
+              whiteSpace: "nowrap",
             }}
           >
-            {head}
-          </span>
-          {tail ? (
             <span
               style={{
-                fontSize: valueSize * 0.36,
-                fontWeight: 400,
-                letterSpacing: "-0.01em",
-                marginLeft: 0.08 * valueSize,
-                color: p.muted,
+                width: 6 * u,
+                height: 6 * u,
+                borderRadius: "50%",
+                background: accent,
+              }}
+            />
+            {label}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              fontFamily,
+              fontWeight,
+              lineHeight: 1,
+              fontVariantNumeric: "tabular-nums",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span
+              style={{
+                fontSize: valueSize,
+                letterSpacing: "-0.04em",
+                color: fg,
               }}
             >
-              {tail}
+              {head}
             </span>
-          ) : null}
+            {tail ? (
+              <span
+                style={{
+                  fontSize: valueSize * 0.36,
+                  fontWeight: 400,
+                  letterSpacing: "-0.01em",
+                  marginLeft: 0.08 * valueSize,
+                  color: p.muted,
+                }}
+              >
+                {tail}
+              </span>
+            ) : null}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
 
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

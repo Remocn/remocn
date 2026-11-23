@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Figtree";
+import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -10,9 +11,9 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -27,6 +28,20 @@ export interface StoryTextProps {
   text?: string;
   measure?: number;
   accent?: string;
+  /** Text and sticker color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the text. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Frames between words as they type in. */
+  stagger?: number;
+  /** Frames the typed text holds before the sticker styles cycle. */
+  hold?: number;
+  /** Size of the sticker, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -80,20 +95,20 @@ const FIRST_WORD = -2;
 const WORD_GAP = 5;
 const WORD_IN = 8;
 
-function measureWith(_version: number) {
+function measureWith(_version: number, family: string) {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   return (s: string) => {
     if (cache[s] === undefined) {
       if (!ctx) return s.length * 0.52;
-      ctx.font = `400 ${FONT_PX}px "${sans}"`;
+      ctx.font = `400 ${FONT_PX}px "${family}"`;
       cache[s] = ctx.measureText(s).width / FONT_PX + TRACK * [...s].length;
     }
     return cache[s];
   };
 }
 
-function useMeasure() {
+function useMeasure(family: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("story-text: measuring"));
   const released = useRef(false);
@@ -105,7 +120,7 @@ function useMeasure() {
     document.fonts.addEventListener("loadingdone", bump);
     Promise.all([
       figtree.waitUntilDone(),
-      document.fonts.load(`400 ${FONT_PX}px "${sans}"`),
+      document.fonts.load(`400 ${FONT_PX}px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -119,8 +134,8 @@ function useMeasure() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => measureWith(version), [version]);
+  }, [handle, family]);
+  return useMemo(() => measureWith(version, family), [version, family]);
 }
 
 function wrap(widths: number[], space: number, max: number) {
@@ -184,20 +199,49 @@ function roundedPath(raw: Pt[], R: number) {
   return `${d}Z`;
 }
 
+// The word ramps are clamped, so exactly 0 or 1 at rest; the ease-out's last
+// frame still moves a word by a hundredth of a pixel, so it counts.
+const midway = (p: number) => p > 0 && p < 1;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function StoryText({
   text = "okay, it’s live — the update you kept asking for is finally here",
   measure,
   accent = "#3B5BFD",
+  ink: inkColor,
+  background,
+  fontFamily = sans,
+  stagger = WORD_GAP,
+  hold = 14,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   ground,
   groundParams,
   speed = 1,
 }: StoryTextProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const t = THEMES[theme];
+  const fg = inkColor ?? t.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const width = useMeasure();
+  const width = useMeasure(fontFamily);
   const tall = H > W;
 
   const words = text.split(/\s+/).filter(Boolean);
@@ -219,7 +263,7 @@ export function StoryText({
     Math.max(
       0,
       spring({
-        frame: frame - (FIRST_WORD + i * WORD_GAP),
+        frame: frame - (FIRST_WORD + i * stagger),
         fps,
         config: CARD,
       }),
@@ -228,14 +272,14 @@ export function StoryText({
   const ink = words.map((_, i) =>
     interpolate(
       frame,
-      [FIRST_WORD + i * WORD_GAP + 2, FIRST_WORD + i * WORD_GAP + WORD_IN + 1],
+      [FIRST_WORD + i * stagger + 2, FIRST_WORD + i * stagger + WORD_IN + 1],
       [0, 1],
       { ...CLAMP, easing: ENTER },
     ),
   );
-  const typedEnd = FIRST_WORD + (words.length - 1) * WORD_GAP + WORD_IN;
+  const typedEnd = FIRST_WORD + (words.length - 1) * stagger + WORD_IN;
 
-  const C1 = typedEnd + 14;
+  const C1 = typedEnd + hold;
   const C2 = C1 + 22;
   const C3 = C2 + 22;
   const step = (a: number) =>
@@ -245,10 +289,22 @@ export function StoryText({
   const toFill = step(C3);
   const fillAmt = 1 - toOutline + toFill;
   const strokeAmt = toOutline * (1 - toNone);
-  const textColor = interpolateColors(fillAmt, [0, 1], [t.fg, t.onFill]);
-  const pop = spring({ frame: frame - C3, fps, config: CARD });
-  const settle =
-    frame >= C3 ? 1 + 0.035 * Math.sin(Math.min(1, pop) * Math.PI) : 1;
+  const textColor = interpolateColors(fillAmt, [0, 1], [fg, t.onFill]);
+  const settleAt = (f: number) =>
+    f >= C3
+      ? 1 +
+        0.035 *
+          Math.sin(
+            Math.min(1, spring({ frame: f - C3, fps, config: CARD })) * Math.PI,
+          )
+      : 1;
+  const settle = settleAt(frame);
+  // The pop is a spring, so it has no clean end: compare the scale with the
+  // neighbouring frames, weighed by the reach from the centre to the far text.
+  const reach = Math.max(W, H) / 2;
+  const settling =
+    Math.abs(settleAt(frame + speed) - settle) * reach > 1e-3 ||
+    Math.abs(settle - settleAt(frame - speed)) * reach > 1e-3;
 
   const lines = Array.from({ length: lineCount }, (_, l) => {
     const idx = words.map((_, i) => i).filter((i) => lineOf[i] === l);
@@ -315,118 +371,141 @@ export function StoryText({
   const push = interpolate(frame, [0, 200], [1, 1.04], CLAMP);
 
   return (
-    <AbsoluteFill style={{ background: t.base, overflow: "hidden" }}>
-      <AbsoluteFill style={{ transform: `scale(${push})` }}>
-        <GshGround
-          preset={groundParams ? undefined : (ground ?? t.ground)}
-          params={
-            groundParams ??
-            (theme === "light" && !ground ? LIGHT_GROUND : undefined)
-          }
-          timeOffset={theme === "dark" ? 3 : 5}
-          timeScale={0.4}
-        />
-      </AbsoluteFill>
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${tall ? "90% 40%" : "60% 55%"} at 50% 50%, rgba(${t.scrim},${t.scrimA}) 0%, rgba(${t.scrim},0) 100%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{ transform: `scale(${settle})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
-        >
-          {path ? (
-            <>
-              <defs>
-                <filter
-                  id={`${uid}-lift`}
-                  x="-20%"
-                  y="-40%"
-                  width="140%"
-                  height="180%"
-                >
-                  <feDropShadow
-                    dx="0"
-                    dy={F * 0.12}
-                    stdDeviation={F * 0.22}
-                    floodColor={t.lift}
-                  />
-                </filter>
-              </defs>
-              <path
-                d={path}
-                fill={t.sticker}
-                opacity={Math.min(1, fillAmt)}
-                filter={`url(#${uid}-lift)`}
-              />
-              <path
-                d={path}
-                fill="none"
-                stroke={t.fg}
-                strokeWidth={Math.max(2, F * 0.045)}
-                opacity={strokeAmt}
-              />
-            </>
-          ) : null}
-        </svg>
-        <div
+    <AbsoluteFill
+      style={{
+        background: background === undefined ? t.base : undefined,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <AbsoluteFill style={{ transform: `scale(${push})` }}>
+            <GshGround
+              preset={groundParams ? undefined : (ground ?? t.ground)}
+              params={
+                groundParams ??
+                (theme === "light" && !ground ? LIGHT_GROUND : undefined)
+              }
+              timeOffset={theme === "dark" ? 3 : 5}
+              timeScale={0.4}
+            />
+          </AbsoluteFill>
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${tall ? "90% 40%" : "60% 55%"} at 50% 50%, rgba(${t.scrim},${t.scrimA}) 0%, rgba(${t.scrim},0) 100%)`,
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            inset: 0,
-            fontFamily: sans,
-            fontWeight: 400,
-            clipPath: path ? `path("${path}")` : undefined,
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${settle})${glide(settling)}`,
+            transformOrigin: "50% 50%",
           }}
         >
-          {geo.map((g) =>
-            g.idx.map((i, k) => {
-              const a = ink[i];
-              if (a <= 0) return null;
-              return (
-                <span
-                  key={`w-${i}`}
-                  style={{
-                    position: "absolute",
-                    left: W / 2 - g.w / 2 + g.xs[k],
-                    top: g.top + (lh - F) / 2,
-                    fontSize: F,
-                    lineHeight: 1,
-                    letterSpacing: `${TRACK}em`,
-                    whiteSpace: "pre",
-                    color: textColor,
-                    textShadow: fillAmt < 0.5 ? t.shadow : undefined,
-                    opacity: a,
-                    transformOrigin: "0% 80%",
-                    transform: `translateY(${(1 - a) * F * 0.22}px) scale(${0.9 + 0.1 * a})`,
-                  }}
-                >
-                  {words[i]}
-                </span>
-              );
-            }),
-          )}
-          {caret ? (
-            <div
-              style={{
-                position: "absolute",
-                left: caret.x,
-                top: caret.top,
-                width: Math.max(2, F * 0.045),
-                height: F * 1.08,
-                borderRadius: F,
-                background: accent,
-                opacity: caretOpacity,
-              }}
-            />
-          ) : null}
-        </div>
-      </AbsoluteFill>
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            {path ? (
+              <>
+                <defs>
+                  <filter
+                    id={`${uid}-lift`}
+                    x="-20%"
+                    y="-40%"
+                    width="140%"
+                    height="180%"
+                  >
+                    <feDropShadow
+                      dx="0"
+                      dy={F * 0.12}
+                      stdDeviation={F * 0.22}
+                      floodColor={t.lift}
+                    />
+                  </filter>
+                </defs>
+                <path
+                  d={path}
+                  fill={inkColor ?? t.sticker}
+                  opacity={Math.min(1, fillAmt)}
+                  filter={`url(#${uid}-lift)`}
+                />
+                <path
+                  d={path}
+                  fill="none"
+                  stroke={fg}
+                  strokeWidth={Math.max(2, F * 0.045)}
+                  opacity={strokeAmt}
+                />
+              </>
+            ) : null}
+          </svg>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              fontFamily,
+              fontWeight: 400,
+              clipPath: path ? `path("${path}")` : undefined,
+            }}
+          >
+            {geo.map((g) =>
+              g.idx.map((i, k) => {
+                const a = ink[i];
+                if (a <= 0) return null;
+                return (
+                  <span
+                    key={`w-${i}`}
+                    style={{
+                      position: "absolute",
+                      left: W / 2 - g.w / 2 + g.xs[k],
+                      top: g.top + (lh - F) / 2,
+                      fontSize: F,
+                      lineHeight: 1,
+                      letterSpacing: `${TRACK}em`,
+                      whiteSpace: "pre",
+                      color: textColor,
+                      textShadow: fillAmt < 0.5 ? t.shadow : undefined,
+                      opacity: a,
+                      transformOrigin: "0% 80%",
+                      transform: `translateY(${(1 - a) * F * 0.22}px) scale(${0.9 + 0.1 * a})${glide(midway(a) && !settling)}`,
+                    }}
+                  >
+                    {words[i]}
+                  </span>
+                );
+              }),
+            )}
+            {caret ? (
+              <div
+                style={{
+                  position: "absolute",
+                  // Layout rounds a box's edges to whole pixels, so a caret
+                  // carried by `left`/`top` steps; it rides a transform.
+                  left: 0,
+                  top: 0,
+                  transform: `translate(${caret.x}px, ${caret.top}px)`,
+                  width: Math.max(2, F * 0.045),
+                  height: F * 1.08,
+                  borderRadius: F,
+                  background: accent,
+                  opacity: caretOpacity,
+                }}
+              />
+            ) : null}
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

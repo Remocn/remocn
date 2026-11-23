@@ -2,17 +2,13 @@
 
 import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadVariableFont } from "@remotion/google-fonts/Newsreader";
+import type React from "react";
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: geist } = loadFont("normal", {
   weights: ["500"],
   subsets: ["latin"],
 });
@@ -27,7 +23,20 @@ export interface ScrubRevealProps {
    * gradient. Pass "" for none.
    */
   highlight?: string;
+  /** Frames the reveal front takes to cross the text. */
+  scrub?: number;
+  fontWeight?: number;
   accent?: string;
+  /** Text color of the lit words; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the statement; the highlight keeps its italic serif. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the paragraph, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -105,28 +114,58 @@ function smooth(x: number) {
   return t * t * (3 - 2 * t);
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ScrubReveal({
   text = "Every frame is code. Every cut is yours. Ship the film your product deserves.",
   highlight = "Every cut is yours.",
+  scrub = SCROLL_END - SCROLL_START,
+  fontWeight = 500,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ScrubRevealProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const late = scrub - (SCROLL_END - SCROLL_START);
 
   const words = useMemo(() => splitWords(text, highlight), [text, highlight]);
   const lastStart = words.length ? words[words.length - 1].start : 0;
 
-  const scroll = interpolate(frame, [SCROLL_START, SCROLL_END], [0, 1], {
+  const scroll = interpolate(frame, [SCROLL_START, SCROLL_END + late], [0, 1], {
     ...CLAMP,
     easing: SCROLL,
   });
-  const settle = interpolate(frame, [SETTLE_START, SETTLE_END], [0, 1], {
-    ...CLAMP,
-    easing: SETTLE,
-  });
+  const settle = interpolate(
+    frame,
+    [SETTLE_START + late, SETTLE_END + late],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: SETTLE,
+    },
+  );
 
   // The front starts just before the first word and parks past the last one.
   const front = interpolate(scroll, [0, 1], [-SOFT * 0.15, lastStart + SOFT]);
@@ -135,16 +174,19 @@ export function ScrubReveal({
   const climb = interpolate(scroll, [0, 1], [H * 0.15, 0]);
   const tail = interpolate(
     frame,
-    [SCROLL_END, SCROLL_END + 90],
+    [SCROLL_END + late, SCROLL_END + late + 90],
     [0, -H * 0.012],
     {
       ...CLAMP,
     },
   );
 
+  // The climb hands over to the drift, which outlasts the default length.
+  const moving = frame > SCROLL_START && frame < SCROLL_END + late + 90;
+
   const size = Math.round(Math.min(W * 0.064, H * 0.114));
   const measure = Math.min(W * 0.8, size * 13.2);
-  const restColor = interpolateColors(settle, [0, 1], [c.fg, c.rest]);
+  const restColor = interpolateColors(settle, [0, 1], [ink ?? c.fg, c.rest]);
   const [dr, dg, db] = c.dim;
   const dimColor = `rgb(${dr},${dg},${db})`;
   const stops = c.halo(accent);
@@ -207,42 +249,50 @@ export function ScrubReveal({
   const index = (w: Word) => words.indexOf(w);
 
   return (
-    <AbsoluteFill style={{ backgroundColor: c.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: (W - measure) / 2,
-          top: H / 2,
-          width: measure,
-          transform: `translateY(calc(-50% + ${climb + tail}px))`,
-          fontFamily,
-          fontWeight: 500,
-          fontSize: size,
-          lineHeight: 1.12,
-          letterSpacing: "-0.03em",
-          textWrap: "balance",
-        }}
-      >
-        {before.map((w) => word(w, index(w)))}
-        {first ? (
-          <span
-            style={{
-              fontFamily: serif.fontFamily,
-              fontStyle: "italic",
-              fontWeight: 400,
-              // the serif's x-height is smaller; match it to the grotesk
-              fontSize: "1.12em",
-              lineHeight: 0,
-              letterSpacing: "-0.015em",
-              paddingRight: "0.06em",
-            }}
-          >
-            {accentWords.map((w) => word(w, index(w)))}
-          </span>
-        ) : null}
-        {first && after.length ? " " : ""}
-        {after.map((w) => word(w, index(w)))}
-      </div>
+    <AbsoluteFill
+      style={{
+        backgroundColor:
+          background === "transparent" ? undefined : (background ?? c.bg),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: (W - measure) / 2,
+            top: H / 2,
+            width: measure,
+            transform: `translateY(calc(-50% + ${climb + tail}px))${glide(moving)}`,
+            fontFamily,
+            fontWeight,
+            fontSize: size,
+            lineHeight: 1.12,
+            letterSpacing: "-0.03em",
+            textWrap: "balance",
+          }}
+        >
+          {before.map((w) => word(w, index(w)))}
+          {first ? (
+            <span
+              style={{
+                fontFamily: serif.fontFamily,
+                fontStyle: "italic",
+                fontWeight: 400,
+                // the serif's x-height is smaller; match it to the grotesk
+                fontSize: "1.12em",
+                lineHeight: 0,
+                letterSpacing: "-0.015em",
+                paddingRight: "0.06em",
+              }}
+            >
+              {accentWords.map((w) => word(w, index(w)))}
+            </span>
+          ) : null}
+          {first && after.length ? " " : ""}
+          {after.map((w) => word(w, index(w)))}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,0 +1,123 @@
+{
+  "component": "caret-dolly",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-push",
+      "label": "Terminal Push",
+      "description": "A monospace prompt on near-black with a mint caret and a tight, fast dolly that feels like a developer console.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace code prompt dark",
+        "fast hacker typing close-up",
+        "как терминал с моноширинным шрифтом",
+        "быстрый ввод в консоли"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#d7e4df",
+        "accent": "#3ecf8e",
+        "zoom": 1.3,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "A light, serif prompt on warm paper with a slow, gentle camera glide for a calm editorial feel.",
+      "askedAs": [
+        "light elegant serif version",
+        "slow calm typing on paper",
+        "editorial magazine prompt look",
+        "светлая версия с засечками",
+        "спокойный медленный ввод"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "ink": "#1f1b16",
+        "accent": "#b4532a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "extreme-closeup",
+      "label": "Extreme Close-Up",
+      "description": "A maximum-zoom dolly that rides right on the caret with heavy motion blur for dramatic launch tension.",
+      "askedAs": [
+        "zoom in really close on the text",
+        "dramatic cinematic close-up typing",
+        "intense launch teaser prompt",
+        "максимальный зум на курсор",
+        "драматичный крупный план"
+      ],
+      "props": {
+        "zoom": 1.5,
+        "scale": 1.2,
+        "ground": "spotlight",
+        "accent": "#7c8cff",
+        "delay": 12
+      }
+    },
+    {
+      "id": "wide-steady",
+      "label": "Wide Steady",
+      "description": "A pulled-back, blur-free view with a smaller prompt box so the whole sentence reads clearly at an even pace.",
+      "askedAs": [
+        "show the whole sentence wide",
+        "no motion blur clean view",
+        "less zoom more readable",
+        "показать всю фразу целиком",
+        "без размытия и зума"
+      ],
+      "props": {
+        "zoom": 0.6,
+        "motionBlur": false,
+        "scale": 0.85,
+        "fontFamily": "Inter",
+        "ground": "lunar"
+      }
+    },
+    {
+      "id": "ember-night",
+      "label": "Ember Night",
+      "description": "A warm after-dark palette with copper accents and a bold grotesque type for a moody product reveal.",
+      "askedAs": [
+        "warm dark moody prompt",
+        "orange glow night launch",
+        "copper accent bold type",
+        "тёплая тёмная атмосфера",
+        "оранжевый акцент ночью"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#e8894a",
+        "fontFamily": "Space Grotesk",
+        "ink": "#f5ebe0",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "cobalt-launch",
+      "label": "Cobalt Launch",
+      "description": "A crisp cobalt gradient with Geist type and a quick, punchy dolly for a confident AI announcement.",
+      "askedAs": [
+        "blue tech launch style",
+        "clean modern AI announcement",
+        "snappy fast blue prompt",
+        "синий технологичный стиль",
+        "быстрая презентация ИИ"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "fontFamily": "Geist",
+        "accent": "#8ab4ff",
+        "speed": 2,
+        "zoom": 1.15
+      }
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "component": "venn-merge",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "A bright, airy editorial look with fine rings, a deep ink accent and an unhurried merge.",
+      "askedAs": [
+        "light minimal venn diagram",
+        "clean white editorial overlap",
+        "elegant bright version with thin lines",
+        "светлая минималистичная версия",
+        "белый фон, тонкие линии"
+      ],
+      "props": {
+        "theme": "light",
+        "ringWidth": 1.5,
+        "accent": "#1e2a5a",
+        "slide": 60,
+        "grain": false
+      }
+    },
+    {
+      "id": "snappy-tech",
+      "label": "Snappy Tech",
+      "description": "A fast, crisp product-launch feel in Geist with bold rings and a vivid blue lens.",
+      "askedAs": [
+        "quick punchy startup style",
+        "fast modern tech look",
+        "energetic sans-serif overlap",
+        "быстрая динамичная анимация",
+        "современный техно стиль"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "speed": 2,
+        "slide": 20,
+        "ringWidth": 4,
+        "grain": false
+      }
+    },
+    {
+      "id": "warm-editorial",
+      "label": "Warm Editorial",
+      "description": "A cream paper background with espresso type in Fraunces and a terracotta lens, slow and literary.",
+      "askedAs": [
+        "warm vintage magazine look",
+        "cream paper with serif type",
+        "cozy earthy tones",
+        "тёплый винтажный стиль",
+        "кремовый фон с засечками"
+      ],
+      "props": {
+        "background": "#f3ece0",
+        "ink": "#2b1f17",
+        "accent": "#b5532e",
+        "fontFamily": "Fraunces",
+        "speed": 0.75,
+        "theme": "light"
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "A near-black navy stage with soft ivory text and a muted gold lens for a luxury reveal.",
+      "askedAs": [
+        "luxury dark and gold",
+        "premium black gold look",
+        "high-end brand reveal",
+        "тёмный с золотом",
+        "люксовый премиальный вид"
+      ],
+      "props": {
+        "background": "#0b0f1a",
+        "ink": "#f2ede3",
+        "accent": "#c9a24a",
+        "slide": 70,
+        "delay": 12
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A developer-flavoured take in JetBrains Mono with a mint lens on graphite and thin rings.",
+      "askedAs": [
+        "code editor style",
+        "monospace developer look",
+        "hacker green on dark",
+        "стиль редактора кода",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#15171c",
+        "ink": "#d8dee6",
+        "accent": "#3fbf8f",
+        "ringWidth": 1
+      }
+    },
+    {
+      "id": "big-statement",
+      "label": "Big Statement",
+      "description": "An oversized, heavy-ringed diagram in Bricolage Grotesque that fills the frame for a bold beat.",
+      "askedAs": [
+        "make it huge and bold",
+        "large poster style overlap",
+        "thick lines big circles",
+        "крупно и жирно",
+        "большие круги на весь экран"
+      ],
+      "props": {
+        "scale": 1.35,
+        "ringWidth": 6,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#e2553b",
+        "speed": 1.25
+      }
+    }
+  ]
+}

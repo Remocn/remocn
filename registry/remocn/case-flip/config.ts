@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const caseFlipConfig: ComponentConfig = {
   componentName: "CaseFlip",
@@ -12,11 +18,6 @@ export const caseFlipConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     text: {
       type: "text-content",
@@ -42,6 +43,30 @@ export const caseFlipConfig: ComponentConfig = {
       description: "Stagger",
       hiddenFromList: false,
     },
+    flip: {
+      type: "number",
+      default: 10,
+      min: 4,
+      max: 30,
+      step: 1,
+      description: "Flip (frames)",
+      hiddenFromList: false,
+    },
+    pause: {
+      type: "number",
+      default: 12,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Pause between waves (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Bricolage Grotesque" }),
     speed: {
       type: "number",
       default: 1,

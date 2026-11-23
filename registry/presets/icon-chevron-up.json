@@ -1,0 +1,115 @@
+{
+  "component": "icon-chevron-up",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked chevron that slowly sketches itself in.",
+      "askedAs": [
+        "thin slow drawing arrow up",
+        "elegant line chevron",
+        "minimal outline arrow animation",
+        "тонкая стрелка вверх рисуется",
+        "медленная линейная стрелка"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-bounce",
+      "label": "Bold Bounce",
+      "description": "A heavy, punchy chevron that snaps upward quickly and repeats.",
+      "askedAs": [
+        "thick bouncing up arrow",
+        "fast looping scroll up icon",
+        "chunky arrow nudge",
+        "жирная прыгающая стрелка вверх",
+        "быстрая стрелка вверх по кругу"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 3,
+        "speed": 2
+      }
+    },
+    {
+      "id": "ocean-hint",
+      "label": "Ocean Hint",
+      "description": "A calm blue chevron that gently loops as a scroll-up cue.",
+      "askedAs": [
+        "blue scroll to top hint",
+        "calm looping up arrow",
+        "soft blue chevron",
+        "синяя стрелка наверх",
+        "спокойная подсказка прокрутки вверх"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "loop": true,
+        "speed": 0.75,
+        "size": 64
+      }
+    },
+    {
+      "id": "growth-green",
+      "label": "Growth Green",
+      "description": "A large emerald chevron that draws and lifts to signal an increase.",
+      "askedAs": [
+        "green arrow going up",
+        "growth indicator chevron",
+        "positive trend icon",
+        "зелёная стрелка роста",
+        "стрелка вверх для прибыли"
+      ],
+      "props": {
+        "color": "#16a34a",
+        "size": 96,
+        "strokeWidth": 2.5,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "muted-small",
+      "label": "Muted Small",
+      "description": "A compact slate-grey chevron with a quick, subtle motion for UI details.",
+      "askedAs": [
+        "small grey up arrow",
+        "subtle tiny chevron",
+        "quiet interface icon",
+        "маленькая серая стрелка",
+        "незаметная иконка вверх"
+      ],
+      "props": {
+        "color": "#64748b",
+        "size": 32,
+        "strokeWidth": 1.5,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "amber-alert",
+      "label": "Amber Pulse",
+      "description": "A warm amber chevron that draws in steadily and loops to draw attention.",
+      "askedAs": [
+        "orange looping up arrow",
+        "warm attention chevron",
+        "amber arrow animation",
+        "оранжевая стрелка вверх",
+        "тёплая мигающая стрелка"
+      ],
+      "props": {
+        "color": "#d97706",
+        "animation": "draw",
+        "loop": true,
+        "size": 80
+      }
+    }
+  ]
+}

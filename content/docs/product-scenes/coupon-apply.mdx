@@ -39,8 +39,8 @@ export const RemotionRoot = () => (
   <Composition
     id="CouponApply"
     component={CouponApplyScene}
-    durationInFrames={180}
-    fps={30}
+    durationInFrames={360}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -108,6 +108,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Cardholder name shown in the payment form.",
     },
     {
+      name: "formTitle",
+      type: "string",
+      default: "\"Pay with card\"",
+      description: "Heading of the payment column.",
+    },
+    {
+      name: "placeholder",
+      type: "string",
+      default: "\"Add promotion code\"",
+      description: "Placeholder in the empty promo field.",
+    },
+    {
+      name: "errorLabel",
+      type: "string",
+      default: "\"That code isn’t valid.\"",
+      description: "Message under the field when the first code is rejected.",
+    },
+    {
       name: "theme",
       type: "\"light\" | \"dark\"",
       default: "\"light\"",
@@ -120,6 +138,29 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Accent color for the pay button and focus states.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
       name: "speed",
       type: "number",
       default: "1",
@@ -129,6 +170,11 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "ground",
       type: "GshPresetId",
       description: "Preset id for the shader background.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
     },
     {
       name: "groundParams",

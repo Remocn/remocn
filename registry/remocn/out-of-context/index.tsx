@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Outfit";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -8,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const outfit = loadFont("normal", {
   weights: ["400", "500"],
@@ -20,8 +21,20 @@ const outfit = loadFont("normal", {
 export interface OutOfContextProps {
   claim?: string;
   rest?: string;
+  /** Frame the claim's full stop drops away. */
+  dropAt?: number;
+  /** Frames of the pull-back that reveals the rest of the line. */
+  pullLen?: number;
   accent?: string;
+  /** Text color of the claim; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the line. Load it yourself; Outfit by default. */
+  fontFamily?: string;
+  /** Size of the line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -44,6 +57,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const IN_LEN = 14;
 const IN_STAGGER = 4;
 const DROP_AT = 40;
@@ -57,13 +72,16 @@ const MOTION_END = 100;
 const MIN_HOLD = 24;
 
 let measureCtx: CanvasRenderingContext2D | null = null;
+// Set by buildLayout before it measures; layout runs synchronously, so em()
+// and balanced() never see another instance's face mid-layout.
+let measureFamily = outfit.fontFamily;
 
 function ctx2d() {
   if (!measureCtx) {
     measureCtx = document.createElement("canvas").getContext("2d");
   }
   if (!measureCtx) throw new Error("out-of-context: no 2d context");
-  measureCtx.font = `${WGHT} ${MEASURE_PX}px "${outfit.fontFamily}"`;
+  measureCtx.font = `${WGHT} ${MEASURE_PX}px "${measureFamily}"`;
   return measureCtx;
 }
 
@@ -73,7 +91,7 @@ function em(s: string) {
   );
 }
 
-function useFontsReady() {
+function useFontsReady(family: string) {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("out-of-context: fonts"));
   const released = useRef(false);
@@ -81,7 +99,7 @@ function useFontsReady() {
     let live = true;
     Promise.all([
       outfit.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${outfit.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -94,7 +112,7 @@ function useFontsReady() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, family]);
   return ready;
 }
 
@@ -150,7 +168,9 @@ function buildLayout(
   rest: string,
   W: number,
   H: number,
+  family: string,
 ): Layout {
+  measureFamily = family;
   const portrait = H > W * 1.1;
   const clean = claim.trim().replace(/[.!?…,;:]+$/u, "");
   const explicit = clean
@@ -249,25 +269,49 @@ function buildLayout(
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function OutOfContext({
   claim = "Stop making\nlaunch videos",
   rest = "by hand.",
+  dropAt = DROP_AT,
+  pullLen = PULL_LEN,
   accent,
+  ink,
   background,
+  fontFamily = outfit.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: OutOfContextProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const ready = useFontsReady();
+  const ready = useFontsReady(fontFamily);
 
   const layout = useMemo(
-    () => (ready ? buildLayout(claim, rest, W, H) : null),
-    [ready, claim, rest, W, H],
+    () => (ready ? buildLayout(claim, rest, W, H, fontFamily) : null),
+    [ready, claim, rest, W, H, fontFamily],
   );
 
   if (!layout) {
@@ -291,19 +335,37 @@ export function OutOfContext({
   const f0 = visual(layout.claimLines, layout.claimW);
   const f1 = visual(layout.lineCount, layout.blockW);
 
-  const p = interpolate(t, [PULL_AT, PULL_AT + PULL_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_CAM,
-  });
-  const creep = interpolate(t, [IN_LEN, PULL_AT], [0, 0.018], CLAMP);
-  const s = Math.exp(Math.log(sEnd) * p) * (1 + creep * (1 - p));
-  const fx = f0.x + (f1.x - f0.x) * p;
-  const fy = f0.y + (f1.y - f0.y) * p;
-  const camera = `translate(${(W / 2).toFixed(2)}px, ${(H / 2).toFixed(2)}px) scale(${s.toFixed(5)}) translate(${(-fx).toFixed(2)}px, ${(-fy).toFixed(2)}px)`;
+  const cameraAt = (tt: number) => {
+    const p = interpolate(tt, [PULL_AT, PULL_AT + pullLen], [0, 1], {
+      ...CLAMP,
+      easing: EASE_CAM,
+    });
+    const creep = interpolate(tt, [IN_LEN, PULL_AT], [0, 0.018], CLAMP);
+    return {
+      s: Math.exp(Math.log(sEnd) * p) * (1 + creep * (1 - p)),
+      fx: f0.x + (f1.x - f0.x) * p,
+      fy: f0.y + (f1.y - f0.y) * p,
+    };
+  };
+  const { s, fx, fy } = cameraAt(t);
+  // A step of the camera, weighed by the ~1000px from the frame's centre to
+  // the furthest text.
+  const dt = speed / k;
+  const step = (a: { s: number; fx: number; fy: number }) =>
+    Math.abs(a.s - s) * 1000 + Math.abs(a.fx - fx) + Math.abs(a.fy - fy);
+  const cameraMoving =
+    step(cameraAt(t + dt)) > 1e-3 || step(cameraAt(t - dt)) > 1e-3;
+  // The tilt pivots on the frame's centre: the camera's origin sits far off
+  // screen under the zoom.
+  const camera = `translate(${(W / 2).toFixed(2)}px, ${(H / 2).toFixed(2)}px)${glide(cameraMoving)} scale(${s.toFixed(5)}) translate(${(-fx).toFixed(2)}px, ${(-fy).toFixed(2)}px)`;
 
   const clipTop = (baseline - 1.0) * R;
   const clipH = 1.3 * R;
   const travel = 1.15 * R;
+  // The rise is hundreds of pixels long, so its ease-out tail still moves a
+  // word by a fraction of a pixel after the progress counts as done; it is
+  // weighed in px.
+  const rising = (r: number) => r > 0 && (1 - r) * travel > 1e-3;
 
   const lineIn = (li: number) =>
     interpolate(t, [li * IN_STAGGER, li * IN_STAGGER + IN_LEN], [0, 1], {
@@ -311,14 +373,14 @@ export function OutOfContext({
       easing: EASE_OUT,
     });
   const restIn = (i: number) => {
-    const at = PULL_AT + PULL_LEN * REST_AT + i * REST_STAGGER;
+    const at = PULL_AT + pullLen * REST_AT + i * REST_STAGGER;
     return interpolate(t, [at, at + REST_LEN], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
   };
 
-  const drop = interpolate(t, [DROP_AT, DROP_AT + DROP_LEN], [0, 1], {
+  const drop = interpolate(t, [dropAt, dropAt + DROP_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_DROP,
   });
@@ -327,7 +389,7 @@ export function OutOfContext({
     position: "absolute" as const,
     top: 0,
     height: R,
-    fontFamily: outfit.fontFamily,
+    fontFamily,
     fontWeight: WGHT,
     fontSize: R,
     lineHeight: `${R}px`,
@@ -340,66 +402,68 @@ export function OutOfContext({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          transformOrigin: "0 0",
-          transform: camera,
-        }}
-      >
-        {lines.map((li) => {
-          const q = li < layout.claimLines ? lineIn(li) : 1;
-          return (
-            <div
-              key={li}
-              style={{
-                position: "absolute",
-                left: -0.2 * R,
-                top: li * PITCH * R + clipTop,
-                width: (layout.blockW + 0.6) * R,
-                height: clipH,
-                overflow: "hidden",
-              }}
-            >
-              {layout.words
-                .filter((w) => w.line === li)
-                .map((w) => {
-                  const r = w.rest ? restIn(w.order) : q;
-                  return (
-                    <div
-                      key={`${w.rest ? "r" : "c"}-${w.order}-${w.x.toFixed(3)}`}
-                      style={{
-                        ...glyphStyle,
-                        left: (w.x + 0.2) * R,
-                        top: -clipTop,
-                        color: w.rest ? hi : c.ink,
-                        transform: `translateY(${((1 - r) * travel).toFixed(2)}px)`,
-                      }}
-                    >
-                      {w.text}
-                    </div>
-                  );
-                })}
-              {li === lastClaim && drop < 1 ? (
-                <div
-                  style={{
-                    ...glyphStyle,
-                    left: (layout.dotX + 0.2) * R,
-                    top: -clipTop,
-                    color: c.ink,
-                    opacity: 1 - drop,
-                    transform: `translateY(${((1 - q) * travel + drop * 0.5 * R).toFixed(2)}px)`,
-                  }}
-                >
-                  .
-                </div>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            transformOrigin: "0 0",
+            transform: camera,
+          }}
+        >
+          {lines.map((li) => {
+            const q = li < layout.claimLines ? lineIn(li) : 1;
+            return (
+              <div
+                key={li}
+                style={{
+                  position: "absolute",
+                  left: -0.2 * R,
+                  top: li * PITCH * R + clipTop,
+                  width: (layout.blockW + 0.6) * R,
+                  height: clipH,
+                  overflow: "hidden",
+                }}
+              >
+                {layout.words
+                  .filter((w) => w.line === li)
+                  .map((w) => {
+                    const r = w.rest ? restIn(w.order) : q;
+                    return (
+                      <div
+                        key={`${w.rest ? "r" : "c"}-${w.order}-${w.x.toFixed(3)}`}
+                        style={{
+                          ...glyphStyle,
+                          left: (w.x + 0.2) * R,
+                          top: -clipTop,
+                          color: w.rest ? hi : fg,
+                          transform: `translateY(${((1 - r) * travel).toFixed(2)}px)${glide(rising(r) && !cameraMoving)}`,
+                        }}
+                      >
+                        {w.text}
+                      </div>
+                    );
+                  })}
+                {li === lastClaim && drop < 1 ? (
+                  <div
+                    style={{
+                      ...glyphStyle,
+                      left: (layout.dotX + 0.2) * R,
+                      top: -clipTop,
+                      color: fg,
+                      opacity: 1 - drop,
+                      transform: `translateY(${((1 - q) * travel + drop * 0.5 * R).toFixed(2)}px)${glide((rising(q) || midway(drop)) && !cameraMoving)}`,
+                    }}
+                  >
+                    .
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,0 +1,123 @@
+{
+  "component": "squeeze-out",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-press",
+      "label": "Snap Press",
+      "description": "A hard, fast squeeze that snaps into place in a few frames for punchy, energetic cuts.",
+      "askedAs": [
+        "fast punchy squeeze text",
+        "quick snappy headline",
+        "energetic pressed title",
+        "быстрый резкий заголовок",
+        "энергичный текст со сжатием"
+      ],
+      "props": {
+        "squeeze": 0.12,
+        "relax": 8,
+        "speed": 1.5,
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "soft-ease",
+      "label": "Soft Ease",
+      "description": "A gentle, barely-pressed serif that relaxes slowly on a warm cream page.",
+      "askedAs": [
+        "slow elegant serif headline",
+        "gentle soft text reveal",
+        "calm editorial title",
+        "мягкий медленный заголовок",
+        "элегантный текст с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "squeeze": 0.6,
+        "relax": 52,
+        "background": "#f4efe6",
+        "ink": "#2a2420"
+      }
+    },
+    {
+      "id": "print-shop",
+      "label": "Print Shop",
+      "description": "Black condensed type on newsprint paper with a deep red accent, like a fresh press run.",
+      "askedAs": [
+        "newspaper print look",
+        "fresh print headline red accent",
+        "poster style condensed text",
+        "газетный стиль заголовка",
+        "как свежий оттиск"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ece8df",
+        "ink": "#141414",
+        "accent": "#c8322b",
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "midnight-mono",
+      "label": "Midnight Mono",
+      "description": "Small monospace lines on deep navy with a cool teal highlight and an unhurried rhythm.",
+      "askedAs": [
+        "code style text dark blue",
+        "monospace tech headline",
+        "terminal look tagline",
+        "моноширинный текст на тёмном",
+        "технический стиль заголовка"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1525",
+        "ink": "#dbe4f0",
+        "accent": "#4fb7a8",
+        "scale": 0.8,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "bold-grotesk",
+      "label": "Bold Grotesk",
+      "description": "Oversized modern grotesk on charcoal with a citrus accent and a medium squeeze.",
+      "askedAs": [
+        "big modern bold headline",
+        "large grotesk title dark",
+        "oversized statement text",
+        "крупный современный заголовок",
+        "большой жирный текст"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.4,
+        "squeeze": 0.35,
+        "background": "#1b1b1d",
+        "ink": "#f5f3ee",
+        "accent": "#e8b83a"
+      }
+    },
+    {
+      "id": "slow-press",
+      "label": "Slow Press",
+      "description": "A deliberate, delayed reveal in clean Inter that presses out at half speed.",
+      "askedAs": [
+        "slow minimal text reveal",
+        "clean delayed headline",
+        "calm minimalist title",
+        "медленное появление текста",
+        "минималистичный спокойный заголовок"
+      ],
+      "props": {
+        "fontFamily": "Inter",
+        "speed": 0.5,
+        "delay": 20,
+        "relax": 44,
+        "accent": "#5b7cfa"
+      }
+    }
+  ]
+}

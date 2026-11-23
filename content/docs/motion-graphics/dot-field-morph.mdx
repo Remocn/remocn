@@ -40,8 +40,8 @@ export const RemotionRoot = () => (
   <Composition
     id="DotFieldMorph"
     component={DotFieldMorphScene}
-    durationInFrames={250}
-    fps={30}
+    durationInFrames={500}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -71,10 +71,56 @@ A scattered field of dots drifts, then swirls into the first shape, holds with a
       description: "Number of dots; 1,500 to 2,500 reads as a field.",
     },
     {
+      name: "hold",
+      type: "number",
+      default: "22",
+      description: "Frames each shape holds before the next morph.",
+    },
+    {
+      name: "morph",
+      type: "number",
+      default: "30",
+      description: "Frames of each morph between shapes; the last morph keeps its own length.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of accent-flagged parts of a shape.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Manrope\"",
+      description: "Typeface for the labels. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

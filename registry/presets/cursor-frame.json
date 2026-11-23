@@ -1,0 +1,104 @@
+{
+  "component": "cursor-frame",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "figma-dark",
+      "label": "Studio Dark",
+      "description": "A dark canvas with a soft violet selection frame and medium-weight Inter, like a pro design tool at night.",
+      "askedAs": [
+        "dark design tool look",
+        "night mode editor selection",
+        "figma style dark canvas",
+        "тёмный режим как в фигме",
+        "тёмная тема редактора"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#8b7cf6",
+        "fontFamily": "Inter",
+        "fontWeight": 500
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm paper background with deep ink Instrument Serif and a terracotta frame, slowed for a calm magazine feel.",
+      "askedAs": [
+        "elegant serif headline being resized",
+        "magazine layout editing feel",
+        "slow warm paper look",
+        "элегантный шрифт с засечками",
+        "журнальный стиль медленно"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#c2562e",
+        "speed": 0.75,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "bold-snappy",
+      "label": "Bold Snappy",
+      "description": "Heavy Space Grotesk at a larger scale with a fast, punchy drag and a crisp coral frame.",
+      "askedAs": [
+        "fast punchy resize",
+        "big bold headline drag",
+        "energetic quick selection",
+        "быстро и жирным шрифтом",
+        "крупный энергичный заголовок"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "scale": 1.3,
+        "speed": 1.75,
+        "accent": "#f25c54"
+      }
+    },
+    {
+      "id": "dev-mono",
+      "label": "Code Mono",
+      "description": "JetBrains Mono on a graphite background with a mint frame and no cursor, like a developer's layout inspector.",
+      "askedAs": [
+        "monospace developer style",
+        "terminal look selection box",
+        "code editor inspector feel",
+        "моноширинный шрифт как в коде",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "theme": "dark",
+        "background": "#16181d",
+        "ink": "#e6e8ec",
+        "accent": "#3dd6a3",
+        "showCursor": false
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A small, light-weight Manrope headline with a muted slate frame that moves slowly after a short pause.",
+      "askedAs": [
+        "subtle minimal resize",
+        "small light text slow",
+        "calm understated selection",
+        "минимализм тонкий шрифт",
+        "спокойно и медленно"
+      ],
+      "props": {
+        "fontFamily": "Manrope",
+        "fontWeight": 300,
+        "scale": 0.8,
+        "accent": "#5b6b7f",
+        "speed": 0.5,
+        "delay": 20
+      }
+    }
+  ]
+}

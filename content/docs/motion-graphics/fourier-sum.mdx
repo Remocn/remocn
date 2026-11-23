@@ -40,8 +40,8 @@ export const RemotionRoot = () => (
   <Composition
     id="FourierSum"
     component={FourierSumScene}
-    durationInFrames={175}
-    fps={30}
+    durationInFrames={350}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -71,10 +71,56 @@ Rows of sine waves draw in one by one. They then merge in order into a summed wa
       description: "How many wave periods fit across the width.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "11",
+      description: "Frames between harmonics folding into the sum.",
+    },
+    {
+      name: "waveFill",
+      type: "boolean",
+      default: "true",
+      description: "Tinted area under the final wave.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the row labels.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Newsreader\"",
+      description: "Typeface for the title. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

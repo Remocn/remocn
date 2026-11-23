@@ -1,0 +1,107 @@
+{
+  "component": "flow-field",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "silk-mist",
+      "label": "Silk Mist",
+      "description": "Dense, fine hairline trails drift slowly across deep charcoal for a whisper-quiet texture.",
+      "askedAs": [
+        "very subtle slow lines background",
+        "thin delicate flowing threads",
+        "calm minimal texture behind a quote",
+        "тонкие медленные линии на фоне",
+        "спокойная едва заметная текстура"
+      ],
+      "props": {
+        "particles": 700,
+        "strokeWidth": 0.6,
+        "trailLength": 110,
+        "speed": 0.5,
+        "accentRatio": 0,
+        "loopFrames": 600
+      }
+    },
+    {
+      "id": "paper-ink",
+      "label": "Paper Ink",
+      "description": "Graphite strokes on warm off-white paper with a few deep navy accent strands.",
+      "askedAs": [
+        "light background flowing ink lines",
+        "dark lines on white paper look",
+        "editorial bright generative texture",
+        "тёмные линии на светлом фоне",
+        "как чернила на бумаге"
+      ],
+      "props": {
+        "background": "#f4f1ea",
+        "color": "#2b2b2b",
+        "accent": "#1e3a5f",
+        "accentRatio": 0.15,
+        "strokeWidth": 1.1,
+        "seed": 12
+      }
+    },
+    {
+      "id": "midnight-network",
+      "label": "Midnight Network",
+      "description": "Cool slate trails on deep navy with teal accents, evoking data and AI flowing through a network.",
+      "askedAs": [
+        "tech data flow background blue",
+        "AI network generative backdrop",
+        "dark blue flowing particles",
+        "фон для темы данных и ИИ",
+        "синие потоки частиц"
+      ],
+      "props": {
+        "background": "#0b1220",
+        "color": "#9fb3c8",
+        "accent": "#2ec4b6",
+        "accentRatio": 0.25,
+        "particles": 450,
+        "seed": 23
+      }
+    },
+    {
+      "id": "bold-currents",
+      "label": "Bold Currents",
+      "description": "Sparse, thick, short strokes race across black for an energetic graphic sweep.",
+      "askedAs": [
+        "fast thick lines moving",
+        "energetic bold flow background",
+        "dynamic chunky streaks",
+        "быстрые толстые линии",
+        "энергичный динамичный фон"
+      ],
+      "props": {
+        "particles": 120,
+        "strokeWidth": 3.2,
+        "trailLength": 28,
+        "speed": 2.5,
+        "loopFrames": 180,
+        "seed": 7
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "Warm sand trails on espresso brown with a generous share of amber accents.",
+      "askedAs": [
+        "warm golden flowing lines",
+        "cozy brown and amber texture",
+        "luxury warm generative background",
+        "тёплые золотистые линии",
+        "уютный тёплый фон с потоками"
+      ],
+      "props": {
+        "background": "#1c1512",
+        "color": "#d9c7b0",
+        "accent": "#e09f3e",
+        "accentRatio": 0.35,
+        "speed": 0.75,
+        "seed": 34
+      }
+    }
+  ]
+}

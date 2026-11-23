@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const beeswarmConfig: ComponentConfig = {
   componentName: "Beeswarm",
@@ -12,11 +18,6 @@ export const beeswarmConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     axisLabel: {
       type: "text-content",
@@ -46,6 +47,30 @@ export const beeswarmConfig: ComponentConfig = {
       description: "Tick step",
       hiddenFromList: false,
     },
+    split: {
+      type: "number",
+      default: 32,
+      min: 8,
+      max: 80,
+      step: 1,
+      description: "Split (frames)",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 400,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "DM Sans", grain: true }),
     speed: {
       type: "number",
       default: 1,

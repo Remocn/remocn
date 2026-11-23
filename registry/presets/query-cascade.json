@@ -1,0 +1,106 @@
+{
+  "component": "query-cascade",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-rush",
+      "label": "Terminal Rush",
+      "description": "Monospace queries streak past fast on near-black with a crisp green accent, like a live search log.",
+      "askedAs": [
+        "fast hacker terminal search",
+        "monospace code style queries",
+        "quick dark developer look",
+        "быстрый терминальный стиль поиска",
+        "моноширинный шрифт как в консоли"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "speed": 1.75,
+        "motionBlur": 1.6,
+        "background": "#0b0f0c",
+        "ink": "#d7e4da",
+        "accent": "#3fb950"
+      }
+    },
+    {
+      "id": "editorial-calm",
+      "label": "Editorial Calm",
+      "description": "A slow, serif cascade on warm paper that lands the hero query like a magazine headline.",
+      "askedAs": [
+        "slow elegant serif version",
+        "light paper editorial look",
+        "calm magazine style search",
+        "спокойный светлый вариант с засечками",
+        "медленно и элегантно как в журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75,
+        "motionBlur": 0.4,
+        "ground": "paper-crease",
+        "accent": "#b4532a"
+      }
+    },
+    {
+      "id": "cobalt-launch",
+      "label": "Cobalt Launch",
+      "description": "Big, bold Space Grotesk queries over a deep cobalt glow with an electric blue accent for product launches.",
+      "askedAs": [
+        "bold blue launch opener",
+        "large text tech keynote style",
+        "punchy product announcement",
+        "яркий синий запуск продукта",
+        "крупный текст для презентации"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "fontFamily": "Space Grotesk",
+        "scale": 1.25,
+        "accent": "#4c8dff",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Small, clean Inter type on soft white with no blur and no logo for an understated, crisp read.",
+      "askedAs": [
+        "minimal clean white version",
+        "no motion blur simple look",
+        "subtle understated search",
+        "минималистичный белый вариант",
+        "без размытия и без логотипа"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "motionBlur": 0,
+        "scale": 0.85,
+        "showLogo": false,
+        "accent": "#1f6feb"
+      }
+    },
+    {
+      "id": "ember-night",
+      "label": "Ember Night",
+      "description": "Warm late-night palette with copper accent and Fraunces type, delayed for a moody, cinematic start.",
+      "askedAs": [
+        "warm moody cinematic intro",
+        "dark orange night vibe",
+        "slow dramatic reveal",
+        "тёплый тёмный кинематографичный стиль",
+        "атмосферное вступление с задержкой"
+      ],
+      "props": {
+        "ground": "ember",
+        "fontFamily": "Fraunces",
+        "accent": "#e08a4f",
+        "delay": 20,
+        "speed": 0.75,
+        "motionBlur": 1.3
+      }
+    }
+  ]
+}

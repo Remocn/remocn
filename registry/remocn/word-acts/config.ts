@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const wordActsConfig: ComponentConfig = {
   componentName: "WordActs",
   importPath: "@/components/remocn/word-acts",
+  lists: {
+    words: {
+      default: ["stretch", "split", "heavy", "faster", "rebuilt"],
+      description: "Words",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -13,11 +25,6 @@ export const wordActsConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     hold: {
       type: "number",
       default: 32,
@@ -27,6 +34,12 @@ export const wordActsConfig: ComponentConfig = {
       description: "Hold",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

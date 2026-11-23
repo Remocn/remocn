@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="HatchShade"
     component={HatchShadeScene}
-    durationInFrames={155}
-    fps={30}
+    durationInFrames={310}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -67,6 +67,52 @@ A serif number is drawn in with pen-stroke hatch lines in three passes - two cro
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for the copper pass.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill in place of the copper plate; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Fraunces\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "Weight of the figure.",
+    },
+    {
+      name: "density",
+      type: "number",
+      default: "1",
+      description: "Hatch density; 2 packs the lines twice as tight.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

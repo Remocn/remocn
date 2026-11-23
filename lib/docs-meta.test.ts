@@ -17,6 +17,9 @@ const UNDOCUMENTED: Record<string, string> = {
   "scene-motion": "shared motion vocabulary lib",
   "canvas-presentation": "shared html-in-canvas scaffolding lib",
   "caption-core": "shared caption paging and timing lib",
+  glide: "shared lib that keeps moving text off the pixel grid",
+  "frame-rate":
+    "shared lib that keeps timings in 30 fps frames at any frame rate",
   brush: "ribbon primitive consumed by the ink marks, not used on its own",
   "select-item": "folds into the select page",
   "dropdown-menu-item": "folds into the dropdown-menu page",
@@ -376,6 +379,32 @@ describe("previews are built outside the site's bundler", () => {
   });
 });
 
+describe("components count time on the 30 fps timeline", () => {
+  // Timings in the registry are 30 fps frames. Read through Remotion's own
+  // hooks they change meaning with the composition's frame rate, so a
+  // component reads the frame and the config from `@/lib/remocn/frame-rate`.
+  // Templates carry their own frame rate and convert it themselves.
+  it("no component reads the frame or the config straight from remotion", () => {
+    const offenders = ["remocn", "remocn-ui", "remocn-icons"]
+      .flatMap((space) => [
+        ...new Glob(`registry/${space}/**/*.{ts,tsx}`).scanSync("."),
+      ])
+      .filter(
+        (file) =>
+          !file.includes("/__tests__/") &&
+          !/\.test\.tsx?$/.test(file) &&
+          !file.startsWith("registry/remocn/frame-rate/"),
+      )
+      .filter((file) =>
+        /import\s*\{[^}]*\b(useCurrentFrame|useVideoConfig)\b[^}]*\}\s*from\s*"remotion"/.test(
+          readFileSync(file, "utf8"),
+        ),
+      );
+
+    expect(offenders).toEqual([]);
+  });
+});
+
 describe("the transitions library page stays complete", () => {
   // /docs/transitions answers "is there a transitions library for Remotion?"
   // with a count and a table of every transition. A new transition page has
@@ -445,11 +474,35 @@ describe("stated text effect counts match the docs", () => {
   });
 });
 
+describe("lastModified matches the page's own date", () => {
+  // The sitemap's lastmod and the article's dateModified come from the
+  // frontmatter; the reader sees the "Last updated" line. Edit one, edit both.
+  it("agrees with the _Last updated_ line", () => {
+    const wrong: string[] = [];
+    for (const page of pages) {
+      const stated = page.frontmatter.lastModified;
+      if (stated === undefined) continue;
+      const iso = new Date(stated as string | Date).toISOString().slice(0, 10);
+      const line = /_Last updated: ([A-Z][a-z]+ \d{1,2}, \d{4})\./.exec(
+        readFileSync(page.file, "utf8"),
+      );
+      if (!line) continue;
+      const shown = new Date(`${line[1]} UTC`).toISOString().slice(0, 10);
+      if (shown !== iso)
+        wrong.push(`${page.file}: lastModified ${iso}, page says ${shown}`);
+    }
+
+    expect(wrong).toEqual([]);
+  });
+});
+
 describe("stated catalog size matches the registry", () => {
   const STATED = [
     "content/docs/getting-started/introduction.mdx",
     "content/docs/guides/after-effects-alternatives-for-developers.mdx",
     "content/docs/guides/remotion-mcp-servers.mdx",
+    "content/docs/guides/hyperframes-alternatives.mdx",
+    "content/docs/guides/remotion-component-libraries.mdx",
     "README.md",
   ];
 

@@ -2,14 +2,11 @@
 
 import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -29,7 +26,18 @@ export interface SplitFlashProps {
   label?: string;
   /** Label once the clock freezes. */
   flashLabel?: string;
+  /** Frame the clock freezes on the final time. */
+  freezeAt?: number;
   accent?: string;
+  /** Text color of the running clock; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the clock and the delta. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -119,27 +127,50 @@ function formatTime(ms: number, frame: number, frozen: boolean) {
   return `${min}:${String(sec).padStart(2, "0")}.${String(body).padStart(3, "0")}`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SplitFlash({
   time = "1:12.408",
   delta = "−0.412",
   label = "Lap time",
   flashLabel = "Fastest lap",
+  freezeAt = RUN,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: SplitFlashProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const glide = useGlide();
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const finalMs = parseTime(time);
-  const frozen = t >= RUN || finalMs === null;
+  const frozen = t >= freezeAt || finalMs === null;
   const face =
     finalMs === null
       ? time
       : formatTime(
-          finalMs - (Math.max(0, RUN - t) * 1000) / 30,
+          finalMs - (Math.max(0, freezeAt - t) * 1000) / 30,
           Math.floor(t),
           frozen,
         );
@@ -168,16 +199,42 @@ export function SplitFlash({
   const baseline = bandY + (bandH + cap) / 2;
   const bandBottom = bandY + bandH;
 
-  const since = t - RUN;
+  const since = t - freezeAt;
   const bandOn =
     frozen &&
     finalMs !== null &&
     !(since >= BLINK_AT && since < BLINK_AT + BLINK_LEN);
-  const progress = finalMs === null ? 1 : Math.min(1, Math.max(0, t / RUN));
-  const push = 0.955 + 0.045 * PUSH(progress);
-  const drop = DROP(
-    interpolate(since, [DELTA_AT, DELTA_AT + DELTA_LEN], [0, 1], CLAMP),
-  );
+  const progress =
+    finalMs === null ? 1 : Math.min(1, Math.max(0, t / freezeAt));
+  const pushAt = (tt: number) =>
+    0.955 +
+    0.045 *
+      PUSH(finalMs === null ? 1 : Math.min(1, Math.max(0, tt / freezeAt)));
+  const push = pushAt(t);
+  // SVG text under a scaling group steps pixel by pixel while the matrix is
+  // axis-aligned, so the drawing leans while the clock creeps closer. Moving: the push changes against either neighbouring
+  // frame by more than a thousandth of a pixel at the clock's edge.
+  const pushMoving =
+    !frozen &&
+    (Math.abs(pushAt(t + speed) - push) * (W / 2) > 1e-3 ||
+      Math.abs(push - pushAt(t - speed)) * (W / 2) > 1e-3);
+  const dropAt = (tt: number) =>
+    DROP(
+      interpolate(
+        tt - freezeAt,
+        [DELTA_AT, DELTA_AT + DELTA_LEN],
+        [0, 1],
+        CLAMP,
+      ),
+    );
+  const drop = dropAt(t);
+
+  const deltaYAt = (tt: number) =>
+    bandBottom + deltaFs * (0.28 + CAP) - deltaFs * 1.1 * (1 - dropAt(tt));
+  const deltaY = deltaYAt(t);
+  const dropMoving =
+    Math.abs(deltaYAt(t + speed) - deltaY) > 1e-3 ||
+    Math.abs(deltaY - deltaYAt(t - speed)) > 1e-3;
 
   const lineH = Math.max(3, 0.0065 * H);
   // The band grows up out of the sector line, then blinks.
@@ -185,7 +242,7 @@ export function SplitFlash({
   const bandNowH = lineH + (bandH - lineH) * grow;
   // Gentle sheen drift across the band while it holds.
   const drift = interpolate(since, [0, 60], [-0.08, 0.04], CLAMP);
-  const onBand = bandOn ? "#F7F5FF" : c.ink;
+  const onBand = bandOn ? "#F7F5FF" : (ink ?? c.ink);
   const cx = W / 2;
   const cy = bandY + bandH / 2;
 
@@ -197,110 +254,115 @@ export function SplitFlash({
   });
 
   return (
-    <AbsoluteFill style={{ background: c.stage }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        role="img"
-        aria-label={`${frozen ? flashLabel : label} ${time} ${delta}`}
-      >
-        <defs>
-          <linearGradient
-            id={`${uid}-band`}
-            x1="0"
-            y1="0"
-            x2="1"
-            y2="0.35"
-            gradientTransform={`translate(${drift} 0)`}
-          >
-            <stop offset="0" stopColor={VOID[2]} />
-            <stop offset="0.55" stopColor={VOID[1]} />
-            <stop offset="1" stopColor="#9F80FF" />
-          </linearGradient>
-          <clipPath id={`${uid}-under`}>
-            <rect x={0} y={bandBottom} width={W} height={H} />
-          </clipPath>
-        </defs>
-        {bandOn ? (
-          <rect
-            x={0}
-            y={bandBottom - bandNowH}
-            width={W}
-            height={bandNowH}
-            fill={`url(#${uid}-band)`}
-          />
-        ) : null}
-        <g
-          transform={`translate(${cx} ${cy}) scale(${frozen ? 1 : push}) translate(${-cx} ${-cy})`}
+    <AbsoluteFill style={{ background: background ?? c.stage }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          // SVG text placed by attributes leans with its whole drawing.
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(pushMoving || dropMoving),
+          }}
+          role="img"
+          aria-label={`${frozen ? flashLabel : label} ${time} ${delta}`}
         >
-          {!frozen ? (
-            <>
-              <rect
-                x={inkL}
-                y={bandBottom - lineH}
-                width={inkW}
-                height={lineH}
-                fill={c.line}
-              />
-              <rect
-                x={inkL}
-                y={bandBottom - lineH}
-                width={inkW * progress}
-                height={lineH}
-                fill={accent}
-              />
-            </>
+          <defs>
+            <linearGradient
+              id={`${uid}-band`}
+              x1="0"
+              y1="0"
+              x2="1"
+              y2="0.35"
+              gradientTransform={`translate(${drift} 0)`}
+            >
+              <stop offset="0" stopColor={VOID[2]} />
+              <stop offset="0.55" stopColor={VOID[1]} />
+              <stop offset="1" stopColor="#9F80FF" />
+            </linearGradient>
+            <clipPath id={`${uid}-under`}>
+              <rect x={0} y={bandBottom} width={W} height={H} />
+            </clipPath>
+          </defs>
+          {bandOn ? (
+            <rect
+              x={0}
+              y={bandBottom - bandNowH}
+              width={W}
+              height={bandNowH}
+              fill={`url(#${uid}-band)`}
+            />
           ) : null}
-          <text
-            x={inkL}
-            y={bandY - 0.5 * labelFs}
-            fill={frozen ? c.flash : c.dim}
-            fontFamily={mono}
-            fontWeight={500}
-            fontSize={labelFs}
-            style={{ letterSpacing: "0.08em", textTransform: "uppercase" }}
+          <g
+            transform={`translate(${cx} ${cy}) scale(${frozen ? 1 : push}) translate(${-cx} ${-cy})`}
           >
-            {frozen ? flashLabel : label}
-          </text>
-          {glyphs.map((g, i) => (
+            {!frozen ? (
+              <>
+                <rect
+                  x={inkL}
+                  y={bandBottom - lineH}
+                  width={inkW}
+                  height={lineH}
+                  fill={c.line}
+                />
+                <rect
+                  x={inkL}
+                  y={bandBottom - lineH}
+                  width={inkW * progress}
+                  height={lineH}
+                  fill={accent}
+                />
+              </>
+            ) : null}
             <text
-              key={i}
-              x={g.x}
-              y={baseline}
-              fill={onBand}
-              fontFamily={display}
+              x={inkL}
+              y={bandY - 0.5 * labelFs}
+              fill={frozen ? c.flash : c.dim}
+              fontFamily={mono}
               fontWeight={500}
-              fontSize={fs}
-              style={{ fontFeatureSettings: '"tnum" 1', fontKerning: "none" }}
+              fontSize={labelFs}
+              style={{ letterSpacing: "0.08em", textTransform: "uppercase" }}
             >
-              {g.ch}
+              {frozen ? flashLabel : label}
             </text>
-          ))}
-        </g>
-        {delta && drop > 0 ? (
-          <g clipPath={`url(#${uid}-under)`}>
-            <text
-              x={inkL + inkW}
-              y={
-                bandBottom + deltaFs * (0.28 + CAP) - deltaFs * 1.1 * (1 - drop)
-              }
-              textAnchor="end"
-              fill={c.flash}
-              fontFamily={display}
-              fontWeight={500}
-              fontSize={deltaFs}
-              style={{
-                fontFeatureSettings: '"tnum" 1',
-                letterSpacing: "-0.02em",
-              }}
-            >
-              {delta}
-            </text>
+            {glyphs.map((g, i) => (
+              <text
+                key={i}
+                x={g.x}
+                y={baseline}
+                fill={onBand}
+                fontFamily={fontFamily}
+                fontWeight={500}
+                fontSize={fs}
+                style={{ fontFeatureSettings: '"tnum" 1', fontKerning: "none" }}
+              >
+                {g.ch}
+              </text>
+            ))}
           </g>
-        ) : null}
-      </svg>
+          {delta && drop > 0 ? (
+            <g clipPath={`url(#${uid}-under)`}>
+              <text
+                x={inkL + inkW}
+                y={deltaY}
+                textAnchor="end"
+                fill={c.flash}
+                fontFamily={fontFamily}
+                fontWeight={500}
+                fontSize={deltaFs}
+                style={{
+                  fontFeatureSettings: '"tnum" 1',
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {delta}
+              </text>
+            </g>
+          ) : null}
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -2,20 +2,20 @@
 
 import { loadFont } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: instrumentSans } = loadFont("normal", {
   weights: ["400"],
   subsets: ["latin"],
 });
@@ -44,6 +44,20 @@ export interface TestimonialStackProps {
   speed?: number;
   title?: string;
   framesPerQuote?: number;
+  /** Text color of the cards and title; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the cards and title. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Corner radius of the cards, in px. */
+  radius?: number;
+  /** Rotation of the piled cards; 0 lays them straight. */
+  tilt?: number;
+  /** Size of the stack, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 }
@@ -170,17 +184,21 @@ function QuoteCard({
   lit,
   c,
   dim,
+  fontFamily,
+  fg,
 }: {
   quote: TestimonialQuote;
   lit: number;
   c: Palette;
   dim: number;
+  fontFamily: string;
+  fg: string;
 }) {
   const idx = quote.highlight ? quote.text.indexOf(quote.highlight) : -1;
   const before = idx >= 0 ? quote.text.slice(0, idx) : quote.text;
   const marked = idx >= 0 ? (quote.highlight as string) : "";
   const after = idx >= 0 ? quote.text.slice(idx + marked.length) : "";
-  const markColor = interpolateColors(lit, [0, 1], [c.body, c.ink]);
+  const markColor = interpolateColors(lit, [0, 1], [c.body, fg]);
   const sub = quote.handle ? `${quote.handle} · ${quote.role}` : quote.role;
 
   return (
@@ -194,7 +212,7 @@ function QuoteCard({
         flexDirection: "column",
         fontFamily,
         fontWeight: 400,
-        color: c.ink,
+        color: fg,
         WebkitFontSmoothing: "antialiased",
         opacity: 1 - dim * 0.9,
       }}
@@ -299,6 +317,22 @@ function QuoteCard({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TestimonialStack({
   quotes = DEFAULT_QUOTES,
   ending = "pile",
@@ -306,11 +340,18 @@ export function TestimonialStack({
   theme = "light",
   speed = 1,
   framesPerQuote = 50,
+  ink,
+  background,
+  fontFamily = instrumentSans,
+  radius = RADIUS,
+  tilt = 1,
+  scale: sceneScale = 1,
+  delay = 0,
   ground,
   groundParams,
 }: TestimonialStackProps) {
-  const rawFrame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const rawFrame = Math.max(0, useSceneFrame() - delay);
+  const { fps, width, height } = useSceneConfig();
   const frame = rawFrame * speed;
   const tall = height > width;
   const SW = tall ? 700 : 1280;
@@ -371,124 +412,150 @@ export function TestimonialStack({
   const pileScale = 1;
 
   return (
-    <AbsoluteFill style={{ backgroundColor: c.base, overflow: "hidden" }}>
-      <GshGround
-        preset={groundParams ? undefined : (ground ?? c.ground)}
-        params={groundParams}
-        timeOffset={theme === "dark" ? 6 : 4}
-        timeScale={0.35}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: SW,
-          height: stageH,
-          transform: `scale(${k})`,
-          transformOrigin: "0 0",
-        }}
-      >
+    <AbsoluteFill
+      style={{
+        backgroundColor: background === undefined ? c.base : undefined,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <GshGround
+          preset={groundParams ? undefined : (ground ?? c.ground)}
+          params={groundParams}
+          timeOffset={theme === "dark" ? 6 : 4}
+          timeScale={0.35}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={sceneScale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${cam})`,
-            transformOrigin: "50% 50%",
+            left: 0,
+            top: 0,
+            width: SW,
+            height: stageH,
+            transform: `scale(${k})`,
+            transformOrigin: "0 0",
           }}
         >
-          {ending === "fan" && title ? (
-            <div
-              style={{
-                position: "absolute",
-                left: tall ? 30 : 0,
-                right: tall ? 30 : 0,
-                top: stageH / 2 + wallTop,
-                textAlign: "center",
-                fontFamily,
-                fontSize: tall ? 44 : 38,
-                lineHeight: 1.1,
-                fontWeight: 400,
-                letterSpacing: "-0.03em",
-                textWrap: "balance",
-                WebkitFontSmoothing: "antialiased",
-                color: c.title,
-                opacity: titleIn,
-                transform: `translateY(${(1 - titleIn) * 10}px)`,
-                filter:
-                  titleIn < 1 ? `blur(${(1 - titleIn) * 4}px)` : undefined,
-              }}
-            >
-              {title}
-            </div>
-          ) : null}
-          {quotes.map((quote, i) => {
-            if (frame < startOf(i)) return null;
-            const p = lands[i];
-            const dx = i % 2 === 0 ? -1 : 1;
-            const finalRot = dx * (1 + hash(i + 1) * 1.8);
-            const jitterX = (hash(i + 7) - 0.5) * (tall ? 20 : 36);
-            const jitterY = (hash(i + 13) - 0.5) * 10;
-
-            let depth = 0;
-            for (let j = i + 1; j < n; j++) depth += covers[j];
-            const visibleDepth = Math.min(depth, 3);
-
-            let x = interpolate(p, [0, 1], [dx * SW * 0.78, jitterX]);
-            let y =
-              interpolate(
-                p,
-                [0, 1],
-                [stageH * 0.58 + hash(i + 3) * 120, jitterY],
-              ) -
-              visibleDepth * 12;
-            let rot = interpolate(p, [0, 1], [finalRot + dx * 12, finalRot]);
-            let scale =
-              interpolate(p, [0, 1], [1.06, 1]) *
-              (1 - visibleDepth * 0.045) *
-              pileScale;
-            let dim = Math.min(1, depth);
-            let opacity = depth > 3 ? Math.max(0, 4 - depth) : 1;
-
-            if (ending === "fan") {
-              const f = fanOf(i);
-              const col = i % cols;
-              const r = Math.floor(i / cols);
-              const tx = (col - (cols - 1) / 2) * cellW;
-              const ty =
-                wallTop + titleBlock + r * cellH + (CARD_H * fanScale) / 2;
-              x = interpolate(f, [0, 1], [x, tx]);
-              y = interpolate(f, [0, 1], [y, ty]);
-              rot = interpolate(f, [0, 1], [rot, 0]);
-              scale = interpolate(f, [0, 1], [scale, fanScale]);
-              dim = interpolate(f, [0, 1], [dim, 0]);
-              opacity = interpolate(f, [0, 1], [opacity, 1]);
-            }
-
-            const air = 1 - Math.min(1, p);
-            const lit = ramp(frame - startOf(i), 14, 30, MOVE);
-
-            return (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              transform: `scale(${cam})`,
+              transformOrigin: "50% 50%",
+            }}
+          >
+            {ending === "fan" && title ? (
               <div
-                key={`${quote.name}-${i}`}
                 style={{
                   position: "absolute",
-                  left: SW / 2,
-                  top: stageH / 2,
-                  transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${rot}deg) scale(${scale})`,
-                  opacity,
-                  zIndex: i,
-                  borderRadius: RADIUS,
-                  background: c.card,
-                  boxShadow: c.shadow(air),
+                  left: tall ? 30 : 0,
+                  right: tall ? 30 : 0,
+                  top: stageH / 2 + wallTop,
+                  textAlign: "center",
+                  fontFamily,
+                  fontSize: tall ? 44 : 38,
+                  lineHeight: 1.1,
+                  fontWeight: 400,
+                  letterSpacing: "-0.03em",
+                  textWrap: "balance",
+                  WebkitFontSmoothing: "antialiased",
+                  color: ink ?? c.title,
+                  opacity: titleIn,
+                  transform: `translateY(${(1 - titleIn) * 10}px)`,
+                  filter:
+                    titleIn < 1 ? `blur(${(1 - titleIn) * 4}px)` : undefined,
                 }}
               >
-                <QuoteCard quote={quote} lit={lit} c={c} dim={dim} />
+                {title}
               </div>
-            );
-          })}
+            ) : null}
+            {quotes.map((quote, i) => {
+              if (frame < startOf(i)) return null;
+              const p = lands[i];
+              const dx = i % 2 === 0 ? -1 : 1;
+              const finalRot = dx * (1 + hash(i + 1) * 1.8) * tilt;
+              const jitterX = (hash(i + 7) - 0.5) * (tall ? 20 : 36);
+              const jitterY = (hash(i + 13) - 0.5) * 10;
+
+              let depth = 0;
+              for (let j = i + 1; j < n; j++) depth += covers[j];
+              const visibleDepth = Math.min(depth, 3);
+
+              let x = interpolate(p, [0, 1], [dx * SW * 0.78, jitterX]);
+              let y =
+                interpolate(
+                  p,
+                  [0, 1],
+                  [stageH * 0.58 + hash(i + 3) * 120, jitterY],
+                ) -
+                visibleDepth * 12;
+              let rot = interpolate(
+                p,
+                [0, 1],
+                [finalRot + dx * 12 * tilt, finalRot],
+              );
+              let scale =
+                interpolate(p, [0, 1], [1.06, 1]) *
+                (1 - visibleDepth * 0.045) *
+                pileScale;
+              let dim = Math.min(1, depth);
+              let opacity = depth > 3 ? Math.max(0, 4 - depth) : 1;
+
+              if (ending === "fan") {
+                const f = fanOf(i);
+                const col = i % cols;
+                const r = Math.floor(i / cols);
+                const tx = (col - (cols - 1) / 2) * cellW;
+                const ty =
+                  wallTop + titleBlock + r * cellH + (CARD_H * fanScale) / 2;
+                x = interpolate(f, [0, 1], [x, tx]);
+                y = interpolate(f, [0, 1], [y, ty]);
+                rot = interpolate(f, [0, 1], [rot, 0]);
+                scale = interpolate(f, [0, 1], [scale, fanScale]);
+                dim = interpolate(f, [0, 1], [dim, 0]);
+                opacity = interpolate(f, [0, 1], [opacity, 1]);
+              }
+
+              const air = 1 - Math.min(1, p);
+              const lit = ramp(frame - startOf(i), 14, 30, MOVE);
+
+              return (
+                <div
+                  key={`${quote.name}-${i}`}
+                  style={{
+                    position: "absolute",
+                    left: SW / 2,
+                    top: stageH / 2,
+                    transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${rot}deg) scale(${scale})`,
+                    opacity,
+                    zIndex: i,
+                    borderRadius: radius,
+                    background: c.card,
+                    boxShadow: c.shadow(air),
+                  }}
+                >
+                  <QuoteCard
+                    quote={quote}
+                    lit={lit}
+                    c={c}
+                    dim={dim}
+                    fontFamily={fontFamily}
+                    fg={ink ?? c.ink}
+                  />
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

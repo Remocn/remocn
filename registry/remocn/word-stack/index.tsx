@@ -1,17 +1,23 @@
 "use client";
 
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface WordStackProps {
   words?: string[];
+  /** Frames between one word pushing in and the next. */
+  beat?: number;
   accent?: string;
+  /** Color of the stacked words; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Size of the stack, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -536,16 +542,40 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WordStack({
   words = ["Even", "solo", "builders", "deserve", "cinematic", "launches"],
+  beat = INTERVAL,
   accent = "#3B5BFD",
+  ink,
+  background,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: WordStackProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const clipId = `w${uid}`;
   const heroClip = `h${uid}`;
@@ -616,10 +646,7 @@ export function WordStack({
     return s;
   }
 
-  const step = Math.max(
-    -1,
-    Math.min(n - 1, Math.floor((t - START) / INTERVAL)),
-  );
+  const step = Math.max(-1, Math.min(n - 1, Math.floor((t - START) / beat)));
   // Before the first push (frames 0–1) both ends are the off-screen state.
   const from = states[Math.max(0, step)];
   const to = states[step + 1];
@@ -629,8 +656,8 @@ export function WordStack({
       : interpolate(
           t,
           [
-            START + step * INTERVAL,
-            START + step * INTERVAL + DURATION + (step === n - 1 ? 4 : 0),
+            START + step * beat,
+            START + step * beat + DURATION + (step === n - 1 ? 4 : 0),
           ],
           [0, 1],
           { ...CLAMP, easing: EASE_PUSH },
@@ -638,7 +665,7 @@ export function WordStack({
   const ys = to.map((v, i) => from[i] + (v - from[i]) * p);
 
   // The silk sheen eases across the closing word as it lands and holds.
-  const lastAt = START + (n - 1) * INTERVAL;
+  const lastAt = START + (n - 1) * beat;
   const sheen = interpolate(t, [lastAt, lastAt + 70], [0.28, 0.62], {
     ...CLAMP,
     easing: EASE_PUSH,
@@ -650,81 +677,83 @@ export function WordStack({
   const hero = set[n - 1];
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 75% 85% at 35% 30%, ${c.key}, transparent 70%)`,
         }}
       />
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <clipPath id={clipId}>
-            <rect x={0} y={m} width={W} height={Hc} />
-          </clipPath>
-          <clipPath id={heroClip}>
-            {hero.glyphs.map((g, gi) => (
-              <path
-                key={`${gi}-${g.x}`}
-                d={g.d}
-                transform={`translate(${g.x} 0)`}
-              />
-            ))}
-          </clipPath>
-          <linearGradient
-            id={heroFill}
-            gradientUnits="userSpaceOnUse"
-            x1={hero.left}
-            y1={-hero.top}
-            x2={hero.left + hero.ink}
-            y2={hero.bot + hero.ink * 0.12}
-          >
-            <stop offset={0} stopColor={stops[0]} />
-            <stop offset={sheen} stopColor={stops[1]} />
-            <stop offset={1} stopColor={stops[2]} />
-          </linearGradient>
-        </defs>
-        <g clipPath={`url(#${clipId})`}>
-          {set.map((word, i) => {
-            const y = ys[i];
-            if (y > H || y + heights[i] < 0) return null;
-            const s = widths[i] / word.ink;
-            const x = (W - widths[i]) / 2 - word.left * s;
-            const at = `translate(${x} ${y + word.top * s}) scale(${s})`;
-            if (n > 1 && i === n - 1) {
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <clipPath id={clipId}>
+              <rect x={0} y={m} width={W} height={Hc} />
+            </clipPath>
+            <clipPath id={heroClip}>
+              {hero.glyphs.map((g, gi) => (
+                <path
+                  key={`${gi}-${g.x}`}
+                  d={g.d}
+                  transform={`translate(${g.x} 0)`}
+                />
+              ))}
+            </clipPath>
+            <linearGradient
+              id={heroFill}
+              gradientUnits="userSpaceOnUse"
+              x1={hero.left}
+              y1={-hero.top}
+              x2={hero.left + hero.ink}
+              y2={hero.bot + hero.ink * 0.12}
+            >
+              <stop offset={0} stopColor={stops[0]} />
+              <stop offset={sheen} stopColor={stops[1]} />
+              <stop offset={1} stopColor={stops[2]} />
+            </linearGradient>
+          </defs>
+          <g clipPath={`url(#${clipId})`}>
+            {set.map((word, i) => {
+              const y = ys[i];
+              if (y > H || y + heights[i] < 0) return null;
+              const s = widths[i] / word.ink;
+              const x = (W - widths[i]) / 2 - word.left * s;
+              const at = `translate(${x} ${y + word.top * s}) scale(${s})`;
+              if (n > 1 && i === n - 1) {
+                return (
+                  <g key={`${i}-${list[i]}`} transform={at}>
+                    <rect
+                      x={word.left - 40}
+                      y={-word.top - 40}
+                      width={word.ink + 80}
+                      height={word.top + word.bot + 80}
+                      fill={`url(#${heroFill})`}
+                      clipPath={`url(#${heroClip})`}
+                    />
+                  </g>
+                );
+              }
               return (
-                <g key={`${i}-${list[i]}`} transform={at}>
-                  <rect
-                    x={word.left - 40}
-                    y={-word.top - 40}
-                    width={word.ink + 80}
-                    height={word.top + word.bot + 80}
-                    fill={`url(#${heroFill})`}
-                    clipPath={`url(#${heroClip})`}
-                  />
+                <g key={`${i}-${list[i]}`} transform={at} fill={ink ?? c.fg}>
+                  {word.glyphs.map((g, gi) => (
+                    <path
+                      key={`${gi}-${g.x}`}
+                      d={g.d}
+                      transform={`translate(${g.x} 0)`}
+                    />
+                  ))}
                 </g>
               );
-            }
-            return (
-              <g key={`${i}-${list[i]}`} transform={at} fill={c.fg}>
-                {word.glyphs.map((g, gi) => (
-                  <path
-                    key={`${gi}-${g.x}`}
-                    d={g.d}
-                    transform={`translate(${g.x} 0)`}
-                  />
-                ))}
-              </g>
-            );
-          })}
-        </g>
-      </svg>
-      <Grain opacity={c.grain} />
+            })}
+          </g>
+        </svg>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

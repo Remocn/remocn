@@ -2,13 +2,9 @@
 
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { useId } from "react";
-import {
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -165,8 +161,9 @@ export function TypeRepeater({
   speed = typeRepeaterDefaults.speed,
   className,
 }: TypeRepeaterProps) {
-  const frame = useCurrentFrame();
-  const { fps, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const { fps, height } = useSceneConfig();
   const outlineId = `type-repeater-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const unit = height / 720;
   const size = fontSize * unit;
@@ -175,6 +172,9 @@ export function TypeRepeater({
   const intro = getTypeRepeaterIntro(t);
   const count = Math.max(1, Math.round(finite(copies, 12)));
   const pivot = (typeRepeaterModes[mode] ?? typeRepeaterModes.spiral).pivot;
+  // The intro hands straight over to the unfold, the breathing and the
+  // collapse, so the copies move from the first frame to the last beat.
+  const moving = t > 0 && t < typeRepeaterLength;
 
   return (
     <div
@@ -209,7 +209,7 @@ export function TypeRepeater({
         style={{
           position: "relative",
           opacity: intro,
-          transform: `scale(${0.9 + 0.1 * intro})`,
+          transform: `scale(${0.9 + 0.1 * intro})${glide(moving)}`,
         }}
       >
         {Array.from({ length: count }, (_, i) => count - 1 - i).map((i) => {

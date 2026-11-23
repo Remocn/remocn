@@ -73,7 +73,7 @@ import { SecurityCam } from "@/components/remocn/security-cam";
 
 export const Opening = () => {
   const frame = useCurrentFrame();
-  const intensity = interpolate(frame, [0, 40, 44], [1, 1, 0], {
+  const intensity = interpolate(frame, [0, 80, 88], [1, 1, 0], {
     extrapolateRight: "clamp",
   });
 
@@ -116,10 +116,10 @@ things going wrong.
 <ComponentExample name="security-bitrate" />
 
 ```tsx
-const starve = interpolate(frame, [0, 36], [0.15, 1], {
+const starve = interpolate(frame, [0, 72], [0.15, 1], {
   extrapolateRight: "clamp",
 });
-const block = interpolate(frame, [0, 36], [6, 26], {
+const block = interpolate(frame, [0, 72], [6, 26], {
   extrapolateRight: "clamp",
 });
 ```

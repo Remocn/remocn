@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const pointIntroConfig: ComponentConfig = {
   componentName: "PointIntro",
@@ -28,6 +34,25 @@ export const pointIntroConfig: ComponentConfig = {
       default: "Animated components for Remotion. Free and open source.",
       description: "Subline",
     },
+    stagger: {
+      type: "number",
+      default: 13,
+      min: 4,
+      max: 30,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    soloScale: {
+      type: "number",
+      default: 2.1,
+      min: 1,
+      max: 4,
+      step: 0.1,
+      description: "Solo point size",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Figtree" }),
     speed: {
       type: "number",
       default: 1,

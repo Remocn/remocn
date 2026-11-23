@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="PhotoHalo"
     component={PhotoHaloScene}
-    durationInFrames={138}
-    fps={30}
+    durationInFrames={276}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -71,6 +71,12 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Index of the word drawn in the accent colour.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between headline words as they rise.",
+    },
+    {
       name: "images",
       type: "string[]",
       description: "Photo URLs; falls back to Remocn's demo photos when empty.",
@@ -90,6 +96,40 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "ink",
       type: "string",
       description: "Headline text colour.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Colour of the accent word; overrides the theme accent.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Inter Tight\"",
+      description: "Typeface for the headline. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
     {
       name: "blooms",

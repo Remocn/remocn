@@ -1,14 +1,10 @@
 "use client";
 
 import { loadVariableFont } from "@remotion/google-fonts/Jost";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const jost = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -16,7 +12,18 @@ export interface AbsorbStackProps {
   lines?: string[];
   accentLine?: number;
   accent?: string;
+  /** Text color of the lines; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines. Load it yourself; Jost by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between rings of lines as they settle, center out. */
+  stagger?: number;
+  /** Size of the stack, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -37,18 +44,44 @@ const CLAMP = {
 } as const;
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function AbsorbStack({
   lines = ["made to", "sink into", "your cut,", "not sit", "on top."],
   accentLine,
   accent,
+  ink: inkProp,
   background,
+  fontFamily = jost.fontFamily,
+  fontWeight = WEIGHT,
+  stagger = RING_GAP,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: AbsorbStackProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const c = THEMES[theme];
   const hot = accent ?? c.accent;
+  const fg = inkProp ?? c.ink;
   const bg = background ?? c.bg;
   const n = Math.max(1, lines.length);
   const hotIndex = accentLine ?? n - 1;
@@ -61,61 +94,74 @@ export function AbsorbStack({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      {lines.map((line, i) => {
-        const offset = i - mid;
-        const ring = Math.abs(offset);
-        const enter = interpolate(
-          frame,
-          [ring * 3, ring * 3 + ENTER_LEN],
-          [0, 1],
-          {
-            ...CLAMP,
-            easing: EASE_OUT,
-          },
-        );
-        const settle = spring({
-          frame: frame - SETTLE_AT - ring * RING_GAP,
-          fps,
-          config: { damping: 20, stiffness: 70, mass: 1 },
-        });
-        const from = centreY + offset * spreadPitch;
-        const to = centreY + offset * pitch;
-        const y = from + (to - from) * settle;
-        const drift = interpolate(
-          enter,
-          [0, 1],
-          [offset >= 0 ? 0.25 : -0.25, 0],
-        );
-        const sat = interpolate(settle, [0, 1], [72, 100], CLAMP);
-        const ink = i === hotIndex ? hot : c.ink;
-        return (
-          <div
-            key={`${i}-${line}`}
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: y - pitch / 2,
-              height: pitch,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontFamily: jost.fontFamily,
-              fontWeight: WEIGHT,
-              fontSize: fs,
-              lineHeight: 1,
-              letterSpacing: "-0.025em",
-              textTransform: "lowercase",
-              whiteSpace: "pre",
-              color: `color-mix(in oklab, ${ink} ${sat.toFixed(1)}%, ${bg})`,
-              opacity: enter,
-              transform: `translateY(${(drift * fs).toFixed(2)}px)`,
-            }}
-          >
-            {line}
-          </div>
-        );
-      })}
+      <ScaleLayer scale={scale}>
+        {lines.map((line, i) => {
+          const offset = i - mid;
+          const ring = Math.abs(offset);
+          const enter = interpolate(
+            frame,
+            [ring * 3, ring * 3 + ENTER_LEN],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: EASE_OUT,
+            },
+          );
+          const settleAt = (f: number) =>
+            spring({
+              frame: f - SETTLE_AT - ring * stagger,
+              fps,
+              config: { damping: 20, stiffness: 70, mass: 1 },
+            });
+          const settle = settleAt(frame);
+          const from = centreY + offset * spreadPitch;
+          const to = centreY + offset * pitch;
+          // The settle is a transform from where the line lands, not `top`:
+          // layout rounds a baseline to whole pixels, so a line eased by `top`
+          // clicks along pixel by pixel. Layout holds the landing place for the
+          // line's whole life, so no frame hands it back to layout's rounding.
+          const travelAt = (f: number) => (from - to) * (1 - settleAt(f));
+          const travel = travelAt(frame);
+          const moving =
+            Math.abs(travelAt(frame + 1) - travel) > 1e-5 ||
+            Math.abs(travel - travelAt(frame - 1)) > 1e-5 ||
+            midway(enter);
+          const drift = interpolate(
+            enter,
+            [0, 1],
+            [offset >= 0 ? 0.25 : -0.25, 0],
+          );
+          const sat = interpolate(settle, [0, 1], [72, 100], CLAMP);
+          const ink = i === hotIndex ? hot : fg;
+          return (
+            <div
+              key={`${i}-${line}`}
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: to - pitch / 2,
+                height: pitch,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily,
+                fontWeight,
+                fontSize: fs,
+                lineHeight: 1,
+                letterSpacing: "-0.025em",
+                textTransform: "lowercase",
+                whiteSpace: "pre",
+                color: `color-mix(in oklab, ${ink} ${sat.toFixed(1)}%, ${bg})`,
+                opacity: enter,
+                transform: `translateY(${travel + drift * fs}px)${glide(moving)}`,
+              }}
+            >
+              {line}
+            </div>
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

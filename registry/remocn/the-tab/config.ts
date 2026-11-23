@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const theTabConfig: ComponentConfig = {
   componentName: "TheTab",
@@ -28,6 +34,18 @@ export const theTabConfig: ComponentConfig = {
       default: "one Sunday morning.",
       description: "Total",
     },
+    stagger: {
+      type: "number",
+      default: 5,
+      min: 0,
+      max: 15,
+      step: 1,
+      description: "Total word stagger",
+      hiddenFromList: false,
+    },
+    leaders: { type: "boolean", default: true, description: "Dotted leaders" },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Albert Sans" }),
     speed: {
       type: "number",
       default: 1,

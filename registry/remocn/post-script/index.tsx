@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Lexend";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -8,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const lexend = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -23,8 +24,20 @@ export interface PostScriptProps {
   label?: string;
   ps?: string;
   install?: string;
+  /** Frames between words of the sign-off as they rise in. */
+  stagger?: number;
+  /** Frames the sign-off takes to shrink away and hand the stage to the P.S. */
+  flip?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Lexend by default. */
+  fontFamily?: string;
+  /** Size of the copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -44,13 +57,17 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 interface Spec {
   text: string;
   weight: number;
 }
 
-function useWidths(specs: Spec[]) {
-  const key = specs.map((s) => `${s.weight}|${s.text}`).join("\u0001");
+function useWidths(specs: Spec[], family: string) {
+  const key = [family, ...specs.map((s) => `${s.weight}|${s.text}`)].join(
+    "\u0001",
+  );
   const [state, setState] = useState<{
     key: string;
     w: Record<string, number>;
@@ -64,9 +81,7 @@ function useWidths(specs: Spec[]) {
     const weights = Array.from(new Set(ref.current.map((s) => s.weight)));
     Promise.all([
       lexend.waitUntilDone(),
-      ...weights.map((wt) =>
-        document.fonts.load(`${wt} 100px "${lexend.fontFamily}"`),
-      ),
+      ...weights.map((wt) => document.fonts.load(`${wt} 100px "${family}"`)),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -76,7 +91,7 @@ function useWidths(specs: Spec[]) {
         for (const s of ref.current) {
           const k = `${s.weight}|${s.text}`;
           if (ctx) {
-            ctx.font = `${s.weight} 100px "${lexend.fontFamily}"`;
+            ctx.font = `${s.weight} 100px "${family}"`;
             w[k] = ctx.measureText(s.text).width / 100;
           } else {
             w[k] = s.text.length * 0.56;
@@ -91,7 +106,7 @@ function useWidths(specs: Spec[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, family]);
   return state && state.key === key ? state.w : null;
 }
 
@@ -139,34 +154,61 @@ function balanced(
 
 const splitWords = (s: string) => s.split(/\s+/).filter(Boolean);
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PostScript({
   signoff = "Thanks for watching.",
   signature = "— the remocn team",
   label = "P.S.",
   ps = "The next launch film is yours.",
   install = "npx shadcn add @remocn/zoom-blur",
+  stagger = 3,
+  flip = 30,
   accent,
+  ink,
   background,
+  fontFamily = lexend.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PostScriptProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
-  const Tt = durationInFrames * speed;
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const Tt = (durationInFrames - delay) * speed;
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const soWords = splitWords(signoff);
   const psWords = [label, ...splitWords(ps)].filter(Boolean);
-  const w = useWidths([
-    { text: " ", weight: 500 },
-    ...soWords.map((text) => ({ text, weight: 500 })),
-    ...psWords.map((text) => ({ text, weight: 500 })),
-    { text: signature, weight: 300 },
-    { text: install, weight: 400 },
-  ]);
+  const w = useWidths(
+    [
+      { text: " ", weight: 500 },
+      ...soWords.map((text) => ({ text, weight: 500 })),
+      ...psWords.map((text) => ({ text, weight: 500 })),
+      { text: signature, weight: 300 },
+      { text: install, weight: 400 },
+    ],
+    fontFamily,
+  );
 
   if (!w) {
     return (
@@ -233,11 +275,11 @@ export function PostScript({
   const soTopB = psTopB - fB * 0.4 - L.blockH * sB;
 
   const soStart = 4;
-  const soStagger = 3;
+  const soStagger = stagger;
   const sigAt = soStart + soWords.length * soStagger + 8;
   const psAt = sigAt + (signature ? 14 : 0);
   const flipAt = Math.max(psAt + 24, Math.min(Tt * 0.36, psAt + 48));
-  const flipDur = 30;
+  const flipDur = flip;
   const installAt = flipAt + flipDur - 2;
 
   const p = interpolate(t, [flipAt, flipAt + flipDur], [0, 1], {
@@ -251,6 +293,10 @@ export function PostScript({
   const soDim = lerp(1, 0.7);
   const psTop = lerp(psTopA, psTopB);
   const psScale = lerp(L.sA, 1);
+  const flipping = midway(p);
+  // Rounding the flip to 4 places steps the scale by whole pixels across the
+  // frame, so it is dropped while the flip runs; resting frames keep it.
+  const fix = (v: number, d: number) => (flipping ? `${v}` : v.toFixed(d));
 
   const rise = (start: number, dur = 18) =>
     interpolate(t, [start, start + dur], [0, 1], {
@@ -274,7 +320,7 @@ export function PostScript({
         whiteSpace: "pre",
         letterSpacing: `${TRACK}em`,
         fontWeight: 500,
-        color: c.ink,
+        color: fg,
       }}
     >
       {line.map((word, wi) => {
@@ -287,7 +333,7 @@ export function PostScript({
               style={{
                 display: "inline-block",
                 opacity: e,
-                transform: `translateY(${((1 - e) * fB * 0.32).toFixed(2)}px)`,
+                transform: `translateY(${((1 - e) * fB * 0.32).toFixed(2)}px)${glide(midway(e))}`,
               }}
             >
               {word}
@@ -327,7 +373,7 @@ export function PostScript({
             {wi > 0 ? " " : ""}
             <span
               style={{
-                color: isLabel ? hi : c.ink,
+                color: isLabel ? hi : fg,
                 fontWeight: isLabel ? 400 : 500,
               }}
             >
@@ -349,87 +395,89 @@ export function PostScript({
       style={{
         background: stage,
         overflow: "hidden",
-        fontFamily: lexend.fontFamily,
+        fontFamily,
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: W,
-          height: L.blockH,
-          transform: `translateY(${soTop.toFixed(2)}px) scale(${soScale.toFixed(4)})`,
-          transformOrigin: `${W / 2}px 0px`,
-          opacity: soDim,
-        }}
-      >
-        {soNodes}
-        {signature ? (
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: W,
+            height: L.blockH,
+            transform: `translateY(${fix(soTop, 2)}px) scale(${fix(soScale, 4)})${glide(flipping)}`,
+            transformOrigin: `${W / 2}px 0px`,
+            opacity: soDim,
+          }}
+        >
+          {soNodes}
+          {signature ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                width: W,
+                top: L.soH + L.gapSig,
+                height: L.sigH,
+                lineHeight: `${L.sigH}px`,
+                fontSize: fS,
+                fontWeight: 300,
+                textAlign: "center",
+                whiteSpace: "pre",
+                letterSpacing: `${SMALL_TRACK}em`,
+                color: fg,
+                opacity: sigE,
+                transform: `translateY(${((1 - sigE) * fS * 0.5).toFixed(2)}px)${glide(midway(sigE))}`,
+              }}
+            >
+              {signature}
+            </div>
+          ) : null}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: W,
+            height: L.psH,
+            transform: `translateY(${fix(psTop + (1 - psE) * fS * 0.6, 2)}px) scale(${fix(psScale, 4)})${glide(flipping || midway(psE))}`,
+            transformOrigin: `${W / 2}px 0px`,
+            opacity: psE,
+          }}
+        >
+          {psNodes}
+        </div>
+        {install ? (
           <div
             style={{
               position: "absolute",
               left: 0,
               width: W,
-              top: L.soH + L.gapSig,
-              height: L.sigH,
-              lineHeight: `${L.sigH}px`,
-              fontSize: fS,
-              fontWeight: 300,
+              top: installTop,
+              height: L.installH,
+              lineHeight: `${L.installH}px`,
+              fontSize: fI,
+              fontWeight: 400,
               textAlign: "center",
               whiteSpace: "pre",
               letterSpacing: `${SMALL_TRACK}em`,
-              color: c.ink,
-              opacity: sigE,
-              transform: `translateY(${((1 - sigE) * fS * 0.5).toFixed(2)}px)`,
+              color: hi,
             }}
           >
-            {signature}
+            <span
+              style={{
+                display: "inline-block",
+                clipPath: `inset(-20% ${((1 - wipe) * 100).toFixed(2)}% -20% 0)`,
+                transform: `translateX(${((1 - wipe) * -fI * 0.6).toFixed(2)}px)`,
+              }}
+            >
+              {install}
+            </span>
           </div>
         ) : null}
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: W,
-          height: L.psH,
-          transform: `translateY(${(psTop + (1 - psE) * fS * 0.6).toFixed(2)}px) scale(${psScale.toFixed(4)})`,
-          transformOrigin: `${W / 2}px 0px`,
-          opacity: psE,
-        }}
-      >
-        {psNodes}
-      </div>
-      {install ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: installTop,
-            height: L.installH,
-            lineHeight: `${L.installH}px`,
-            fontSize: fI,
-            fontWeight: 400,
-            textAlign: "center",
-            whiteSpace: "pre",
-            letterSpacing: `${SMALL_TRACK}em`,
-            color: hi,
-          }}
-        >
-          <span
-            style={{
-              display: "inline-block",
-              clipPath: `inset(-20% ${((1 - wipe) * 100).toFixed(2)}% -20% 0)`,
-              transform: `translateX(${((1 - wipe) * -fI * 0.6).toFixed(2)}px)`,
-            }}
-          >
-            {install}
-          </span>
-        </div>
-      ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

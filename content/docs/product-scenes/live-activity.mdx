@@ -43,8 +43,8 @@ export const RemotionRoot = () => (
   <Composition
     id="LiveActivity"
     component={LiveActivityScene}
-    durationInFrames={285}
-    fps={30}
+    durationInFrames={570}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -70,10 +70,50 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Date line shown on the lock screen",
     },
     {
+      name: "time",
+      type: "string",
+      default: "\"9:41\"",
+      description: "Clock in the status bar and on the Lock Screen.",
+    },
+    {
+      name: "remainingLabel",
+      type: "string",
+      default: "\"remaining\"",
+      description: "Word under the countdown on the activity card.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hanken Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

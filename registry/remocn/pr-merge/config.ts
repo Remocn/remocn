@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const prMergeConfig: ComponentConfig = {
   componentName: "PrMerge",
@@ -12,11 +19,6 @@ export const prMergeConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     repo: {
       type: "text-content",
@@ -53,6 +55,16 @@ export const prMergeConfig: ComponentConfig = {
       default: "3f2a9c1",
       description: "Merge sha",
     },
+    mergeLabel: {
+      type: "text-content",
+      default: "Merge",
+      description: "Merge button",
+    },
+    confirmLabel: {
+      type: "text-content",
+      default: "Confirm merge",
+      description: "Confirm button",
+    },
     number: {
       type: "number",
       default: 312,
@@ -60,6 +72,31 @@ export const prMergeConfig: ComponentConfig = {
       max: 936,
       step: 1,
       description: "Number",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 12,
+      min: 2,
+      max: 30,
+      step: 1,
+      description: "Check stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

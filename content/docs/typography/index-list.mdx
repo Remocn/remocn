@@ -43,8 +43,8 @@ export const RemotionRoot = () => (
   <Composition
     id="IndexList"
     component={IndexListScene}
-    durationInFrames={130}
-    fps={30}
+    durationInFrames={260}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -74,15 +74,61 @@ Hairline rules draw across and a numbered list rises row by row under a logo and
       description: "Header text shown beside the logo.",
     },
     {
+      name: "countLabel",
+      type: "string",
+      default: "\"features\"",
+      description: "Word after the item count in the top-right corner.",
+    },
+    {
       name: "logo",
       type: "React.ReactNode",
       description: "Header logo node; defaults to the Remocn wordmark, so pass your own.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between rows as the list builds.",
     },
     {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the travelling highlight band.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hanken Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

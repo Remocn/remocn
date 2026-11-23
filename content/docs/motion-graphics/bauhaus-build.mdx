@@ -67,8 +67,9 @@ export const Opener = () => (
 `getBauhausBuildField` returns the open band in composition pixels. The band
 spans the full frame width and the middle third of the poster, and it stays
 vertically centered at every aspect ratio. Pass it the same `scale` as the
-component. The band is clear from `bauhausBuildTimeline.clear` (frame 116 at
-30 fps) and stays clear while the handoff holds.
+component. The band is clear from `bauhausBuildTimeline.clear` (frame 116 in 30 fps
+frames, so the code doubles it for a 60 fps composition) and stays clear while
+the handoff holds.
 
 ```tsx
 import { Sequence, useVideoConfig } from "remotion";
@@ -91,7 +92,7 @@ export const Opener = () => {
       shadow=""
     >
       <BauhausBuild />
-      <Sequence from={bauhausBuildTimeline.clear}>
+      <Sequence from={bauhausBuildTimeline.clear * 2}>
         <div
           style={{
             position: "absolute",
@@ -120,7 +121,7 @@ export const Opener = () => {
 
 ## Timing
 
-At 30 fps and `speed={1}`:
+In 30 fps frames, at `speed={1}`:
 
 | Frames | Motion |
 | --- | --- |

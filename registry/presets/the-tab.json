@@ -1,0 +1,103 @@
+{
+  "component": "the-tab",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "thermal-paper",
+      "label": "Thermal Paper",
+      "description": "A warm off-white till receipt in monospace type with dark ink and dotted leaders.",
+      "askedAs": [
+        "make it look like a real shop receipt",
+        "monospace receipt on paper",
+        "cash register printout style",
+        "как настоящий чек из магазина",
+        "чек моноширинным шрифтом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "JetBrains Mono",
+        "background": "#f5f1e8",
+        "ink": "#2b2824",
+        "accent": "#b4532a"
+      }
+    },
+    {
+      "id": "bistro-bill",
+      "label": "Bistro Bill",
+      "description": "An elegant serif bill on deep green with a soft gold accent, revealed slowly.",
+      "askedAs": [
+        "fancy restaurant check look",
+        "elegant serif menu style",
+        "slow classy reveal on dark green",
+        "как счёт в дорогом ресторане",
+        "элегантный шрифт с засечками"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#14261f",
+        "ink": "#efe9dc",
+        "accent": "#c9a45c",
+        "speed": 0.75,
+        "stagger": 9
+      }
+    },
+    {
+      "id": "quick-tally",
+      "label": "Quick Tally",
+      "description": "A brisk, punchy dark receipt that snaps in fast with a crisp blue total.",
+      "askedAs": [
+        "faster snappier receipt",
+        "quick list for a short clip",
+        "energetic tech pricing close",
+        "быстрый резкий чек",
+        "побыстрее и поживее"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 2,
+        "fontFamily": "Space Grotesk",
+        "accent": "#4c8dff"
+      }
+    },
+    {
+      "id": "clean-sheet",
+      "label": "Clean Sheet",
+      "description": "A minimal white layout without leaders, set in Inter at a larger size.",
+      "askedAs": [
+        "minimal white version without dots",
+        "bigger clean feature list",
+        "simple light layout no dotted lines",
+        "минималистичный белый вариант",
+        "без точек и покрупнее"
+      ],
+      "props": {
+        "theme": "light",
+        "leaders": false,
+        "fontFamily": "Inter",
+        "scale": 1.2,
+        "accent": "#1f6feb"
+      }
+    },
+    {
+      "id": "midnight-ledger",
+      "label": "Midnight Ledger",
+      "description": "A compact navy ledger in Fraunces with a muted coral total and a delayed start.",
+      "askedAs": [
+        "dark navy ledger look",
+        "smaller receipt with warm accent",
+        "wait a moment then reveal the list",
+        "тёмно-синий стиль бухгалтерской книги",
+        "компактнее и с задержкой"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#101a2e",
+        "ink": "#e6e9f0",
+        "accent": "#e07a5f",
+        "scale": 0.85,
+        "delay": 20
+      }
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+---
+title: "Best Remotion Component Libraries (2026): Remocn vs snapcn and 3 More Compared"
+navTitle: Remotion component libraries
+description: "The best Remotion component libraries in 2026, compared: Remocn vs snapcn side by side (components, licence, price, install, MCP, agent skill, templates, apps), plus Remotion Elements, RemotionUI and React Video Editor, with when each one is the better pick."
+lastModified: "2026-11-19"
+---
+
+_Last updated: November 19, 2026. Remocn wrote this page, and Remocn is one of the libraries compared, so weigh our view accordingly. Facts about the other libraries come from their own sites, docs and repositories; see [Sources](#sources)._
+
+**Short answer:** the best Remotion component libraries in 2026 are Remocn, snapcn, Remotion Elements,
+RemotionUI and React Video Editor's free templates, and the right one depends on the video. Remocn vs
+snapcn: pick Remocn for range and a free agent toolchain (934 MIT-licensed components, a free MCP server
+with no key), and pick snapcn when the video is a product demo built around your own screen recording in
+a phone or laptop frame.
+
+Remotion Elements is Remotion's official set, installed from inside Remotion Studio. RemotionUI is a
+free, MIT alternative with its own CLI. React Video Editor is a paid video editor you embed in your app,
+with a free template catalog on the side. Most of these copy source into your project, so you can mix
+them in one video.
+
+## Remocn vs snapcn
+
+Both are shadcn registries of Remotion components: `npx shadcn@latest add` copies plain `.tsx` source
+into your Remotion project, and you own the code. The difference is scope and price. Remocn is a large
+catalog that is free end to end, agent tooling included. snapcn is a smaller catalog of product-demo
+shots with a free MIT tier and a paid Pro tier that unlocks more components, templates and its MCP server.
+
+Checked on November 19, 2026. Prices change; follow the links before you commit.
+
+| | Remocn | snapcn |
+|---|---|---|
+| Components | 934, all free: 787 motion components, 46 UI primitives, 101 icons | 62 free + 81 Pro |
+| Licence | MIT, every item, client work included | Free components MIT. Pro components under snapcn's licence: Pro and Lifetime cover your own products; client work needs Commercial |
+| Price | Free. No paid tier, no account | Free tier; Pro $179/year, Lifetime $279, Commercial $499 one-time for up to 5 people |
+| Install | `npx shadcn@latest add @remocn/<name>` | `npx shadcn@latest add @snapcn/<name>` |
+| MCP server | **Free, no auth.** Hosted at `https://remocn.dev/mcp`, no key, no account. 4 read-only tools | **Pro key.** Local, `npx -y @snapcn/mcp@latest`. 6 tools; its preview renders still frames |
+| Agent skill | `npx skills add Remocn/remocn`, free | `npx skills add snapcndev/snapcn`: a catalog skill plus 6 workflow skills, free |
+| Plugin | Claude Code and Codex: `/plugin install remocn --marketplace Remocn/remocn`, then `/remocn:video <brief>`. Free | Claude Code plugin with the skills, free. The MCP plugin needs Pro |
+| Templates | 5 full-video templates, free: Product Showcase, Brand Guidelines, Order Flow, Release Teaser, Workflow Console | 10+ video templates, in Pro |
+| App | [Remocn Studio](https://remocn.studio): free, open-source macOS app where your own coding agent builds the video, with live preview and export | Browser video editor: compose snapcn clips, export MP4. 720p with a small mark free, 1080p without it in Pro |
+| Add to Remotion Studio | Yes, for primitives, shaders, effects, filters and icons; compositions install with the CLI | Yes, every free component |
+| Built for | Range: text effects, transitions, backgrounds, shaders, camera and physics shots, app-screen and AI chat simulations, captions, filters, icons | Product demo shots: AI prompts, terminals, screen recordings, devices, cursors, captions, logo stings |
+| GitHub stars | About 1.8k ([Remocn/remocn](https://github.com/Remocn/remocn)) | About 660 ([shadcn-labs/snapcn](https://github.com/shadcn-labs/snapcn)) |
+
+Remocn's count covers every installable item; snapcn's is the split snapcn states on its pricing page.
+snapcn's own comparison, dated September 24, 2026, lists Remocn at about 308 components and snapcn at 42
+free + 50 Pro. Both catalogs have grown since; the table above has today's numbers.
+
+## Where snapcn is the better choice
+
+- **Your demo is your own screen recording in a device.** snapcn ships the shots for it:
+  `screen-recording` (a camera move over a recording), `phone-frame` (an iPhone-style frame with a dynamic
+  island, flat, tilted or on a 3D crane move), `laptop-frame` (a MacBook-style laptop that opens and dives
+  into its screen) and `cursor-track`. Remocn's device scenes ([Device Morph](/docs/media/device-morph),
+  [Phone Scroll](/docs/product-scenes/phone-scroll)) take a screenshot or your own JSX and simulate the
+  app. Remocn has no dedicated component that plays a screen recording inside a device frame.
+- **You want the agent to work from a recording.** snapcn's `remotion-product-demo` skill builds demos
+  from a real screen recording, and its Pro MCP server can analyze a recording.
+- **You want the agent to look at rendered frames.** snapcn's MCP preview renders still frames with your
+  Remotion CLI during the session. Remocn's MCP server is read-only and renders nothing.
+- **You want to try it with no Remotion project.** snapcn's browser editor exports an MP4 with no
+  install. Remocn plays live previews in the browser, but exporting needs Remotion or the macOS app.
+- **Your scenes should follow your shadcn theme.** snapcn says its components take shadcn theme tokens
+  (`theme`, `mode`), so a scene matches your app's inputs and buttons without restyling.
+
+## Where Remocn is the better choice
+
+- **You need range.** Transitions for `TransitionSeries`, shaders and backgrounds, camera and physics
+  shots, filters, caption styles and animated icons, categories snapcn covers lightly or not at all.
+  See [Transitions](/docs/transitions) and [Remotion text animations](/docs/guides/remotion-text-animations).
+- **You want everything free.** Components, templates, the MCP server, the skill, the plugin and Remocn
+  Studio cost nothing, and MIT covers client work with no extra tier.
+- **Your agent should plan and build the whole video.** The free MCP server's `plan_video` turns a brief
+  into a storyboard, every component page states its natural length in frames, and `/remocn:video`
+  builds and renders the video from one brief. See [Remotion MCP servers compared](/docs/guides/remotion-mcp-servers).
+- **You are demoing an AI or developer product.** Remocn has ready simulations of AI chat and CLI
+  screens, such as [Claude Code](/docs/ai/claude-code), [ChatGPT](/docs/ai/chat-gpt), [v0](/docs/ai/v0)
+  and a [terminal simulator](/docs/ui-blocks/terminal-simulator).
+- **You want a full video to start from.** Five complete [templates](/docs/templates) are free.
+
+## Can I use Remocn and snapcn together?
+
+Yes. Both install with the shadcn CLI under their own namespaces (`@remocn` and `@snapcn`), copy plain
+React files into your project and depend on Remotion alone, so components from both sit in one
+`<Series>`:
+
+```bash
+npx shadcn@latest add @remocn/zoom-blur
+npx shadcn@latest add @snapcn/screen-recording
+```
+
+A common split: snapcn for the screen-recording and device shots, Remocn for the transitions, titles,
+backgrounds and stat beats around them.
+
+## Best Remotion component libraries (2026)
+
+Checked on November 19, 2026.
+
+| Library | What it is for | Size | Price and licence | Install | Agent tooling |
+|---|---|---|---|---|---|
+| [Remocn](/docs/getting-started/introduction) | Range: motion, transitions, shaders, UI and AI-screen simulations, captions, icons, full templates | 934 items | Free, MIT | `npx shadcn@latest add @remocn/<name>`, or Add to Studio | Free hosted MCP (no key), agent skill, Claude Code and Codex plugin, llms.txt, Remocn Studio |
+| [snapcn](https://snapcn.dev) | Product demo shots: prompts, terminals, screen recordings, devices, cursors | 62 free + 81 Pro | Free tier MIT; Pro from $179/year | `npx shadcn@latest add @snapcn/<name>`, or Add to Studio | Free agent skills and plugin; MCP server needs Pro; browser editor |
+| [Remotion Elements](https://www.remotion.dev/elements) | Remotion's official drop-in building blocks: audio, backgrounds, captions, charts, maps, overlays, text effects, YouTube | 45 elements | Part of Remotion; Remotion's licence applies | Browse Elements panel in Remotion Studio, or `npx remotion elements use <url>` | Studio installs into the open composition |
+| [RemotionUI](https://remotionui.com) | Scenes, compositions, text effects, transitions, captions, maps, audio visualization | About 250 components | Free, MIT | Its own CLI: `npx remotion-ui@latest add <name>` | Free local MCP (`npx remotion-ui-mcp`), project skill, llms.txt |
+| [React Video Editor](https://www.reactvideoeditor.com) | A video editor to embed in your own app; plus a free Remotion template catalog | Full editor; dozens of free templates | Templates free; RVE Pro source from $149 one-time (sale price), SDK plans separate | Copy template source; editor as a source template or SDK | Free hosted template MCP; agent skill for its SDK |
+
+### Remocn
+
+A shadcn-style registry for Remotion with 934 MIT-licensed components: text effects, transitions,
+backgrounds, shaders, camera and physics shots, UI primitives, app-screen and AI chat simulations,
+captions, filters, icons and five full-video templates. Install any piece with
+`npx shadcn@latest add @remocn/<name>`; there is no runtime dependency. The agent tooling is free: a
+hosted [MCP server](/docs/getting-started/mcp-server), an [agent skill](/docs/getting-started/agent-skill)
+and a [plugin](/docs/getting-started/plugin) for Claude Code and Codex. Use it for launch, product demo,
+feature announcement, changelog and social videos.
+
+### snapcn
+
+A shadcn registry from Shadcn Labs, built around the shots a software video is made of: a prompt typed
+and sent, an answer streaming, a terminal, a screen recording, a phone or laptop, captions and logo
+stings. The free tier is MIT; Pro adds components, templates, the MCP server and 1080p editor exports.
+Use it for product demos built from a real recording.
+
+### Remotion Elements
+
+The official catalog from the Remotion team. Elements install from the Browse Elements panel inside
+Remotion Studio, which copies the source into your project and places the element on the open
+composition. Studio can also add third-party Element Libraries; Remotion's
+[Element Libraries page](https://www.remotion.dev/elements/libraries) lists Remocn and snapcn. Start
+here if you edit in Remotion Studio and want blocks that track Remotion's own API.
+
+### RemotionUI
+
+An MIT registry with its own CLI (`npx remotion-ui@latest init`, then `add <name>`) that copies source
+into your repo. It covers compositions, scenes, transitions, captions, maps and audio visualization, and
+has a free local MCP server. A good second source of free components; it does not use the shadcn CLI.
+
+### React Video Editor
+
+Not a component library. RVE is a complete video editor built on Remotion, with a timeline, captions and
+MP4 export, sold as a source template (RVE Pro) or a maintained SDK. Separately, it publishes free
+Remotion templates (charts, text, transitions, logos, intros) with source and a free hosted MCP server
+over that catalog. Buy the editor if your users edit video inside your product; use the free templates
+for single scenes.
+
+## Which Remotion component library should I use?
+
+- **One product demo built from your screen recording:** snapcn, and fill gaps from Remocn.
+- **Transitions, shaders, backgrounds, text effects or captions:** Remocn or RemotionUI.
+- **A whole video planned and built by Claude Code or Codex, free:** Remocn's plugin or MCP server.
+- **You work inside Remotion Studio's editor:** Remotion Elements first; Remocn and snapcn also install
+  from Studio.
+- **Your users make videos inside your app:** React Video Editor.
+
+They don't conflict. Each copies source into your project, so a single composition can use pieces from
+all of them.
+
+## Sources
+
+Checked on November 19, 2026.
+
+- snapcn: [pricing](https://snapcn.dev/docs/pricing), [licence](https://snapcn.dev/docs/getting-started/license), [agent skill](https://snapcn.dev/docs/getting-started/agent-skill), [Remotion Studio](https://snapcn.dev/docs/remotion-studio), [video editor](https://snapcn.dev/docs/video-editor), [llms.txt](https://snapcn.dev/llms.txt), and its own comparisons: [snapcn vs remocn](https://snapcn.dev/snapcn-vs-remocn) and [best Remotion component libraries](https://snapcn.dev/best-remotion-component-libraries)
+- Remotion Elements: [remotion.dev/elements](https://www.remotion.dev/elements), [Creating Elements](https://www.remotion.dev/docs/elements), [Browse Elements in Studio](https://www.remotion.dev/docs/studio/browse-elements), [Element Libraries](https://www.remotion.dev/elements/libraries)
+- RemotionUI: [remotionui.com/llms.txt](https://remotionui.com/llms.txt), its [MCP server docs](https://remotionui.com/docs/mcp) and its component index at `remotionui.com/ai/components.json`
+- React Video Editor: [llms.txt](https://www.reactvideoeditor.com/llms.txt), [RVE Pro pricing](https://www.reactvideoeditor.com/products/pro), [Remotion templates](https://www.reactvideoeditor.com/remotion-templates)
+- Remotion's [list of resources](https://www.remotion.dev/docs/resources), which lists Remocn, snapcn, RemotionUI and React Video Editor under component libraries
+- GitHub stars from the GitHub API; Remocn's counts from this site's registry
+
+## FAQ
+
+<Faq>
+
+**What is the best Remotion component library?**
+It depends on the video. Remocn is the largest free one, with 934 MIT-licensed components and a free MCP server. snapcn is built for product demos made from a screen recording. Remotion Elements is the official set and installs from Remotion Studio. RemotionUI is another free MIT option with its own CLI. React Video Editor is for embedding an editor in your app.
+
+**What is the difference between Remocn and snapcn?**
+Both are shadcn registries of Remotion components that copy source into your project. Remocn is broader (934 items: motion components, UI primitives and icons) and entirely free, including its MCP server, skill, plugin and templates. snapcn is narrower, focused on product-demo shots such as screen recordings, device frames and AI prompts, with 62 free MIT components and 81 Pro components.
+
+**Is Remocn free?**
+Yes. Every Remocn component, template and icon is MIT licensed, and the MCP server, agent skill, plugin and Remocn Studio are free. There is no paid tier and no account.
+
+**Is Remocn official?**
+No. Remocn is an independent open-source project, not affiliated with Remotion or with shadcn, and it is not the official shadcn registry for Remotion. Remotion lists it on its resources page and its Element Libraries page. Remotion's own catalog is Remotion Elements.
+
+**Does Remocn need Remotion's license?**
+Remocn itself is MIT and costs nothing. It runs inside a Remotion project, and Remotion keeps its own licence: free for individuals and teams of up to 3 people, with a paid Company License above that. That applies to every library on this page, because all of them render with Remotion.
+
+**Is snapcn free?**
+Partly. snapcn's 62 free components are MIT. Pro ($179 a year or $279 lifetime) adds 81 components, templates and the MCP server for your own products; client work needs the $499 Commercial plan.
+
+**Can I use Remocn and snapcn in the same project?**
+Yes. Both install with the shadcn CLI under different namespaces (`@remocn/<name>` and `@snapcn/<name>`), copy plain React files and depend only on Remotion.
+
+**Which Remotion component library has a free MCP server?**
+Remocn: `https://remocn.dev/mcp` is hosted, free and needs no key or account. RemotionUI has a free local server (`npx remotion-ui-mcp`), and React Video Editor's template MCP is free to call. snapcn's MCP server needs a Pro key.
+
+**Are there free Remotion templates?**
+Yes. Remocn's five full-video [templates](/docs/templates) are free and MIT, React Video Editor publishes free template scenes, and `npx create-video@latest` offers Remotion's own starters. snapcn's templates are part of Pro.
+
+</Faq>
+
+## What's next
+
+- [Installation](/docs/getting-started/installation): add Remocn to a Remotion project with the shadcn CLI
+- [Remotion MCP servers compared](/docs/guides/remotion-mcp-servers): which MCP servers are free, which need a key, which render frames
+- [Make a product demo video](/docs/guides/product-demo): the agent builds a demo from your codebase

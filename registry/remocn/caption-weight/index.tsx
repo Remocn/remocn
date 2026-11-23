@@ -10,6 +10,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionWeightProps extends CaptionBaseProps {
   activeWeight?: number;
@@ -23,6 +24,8 @@ const RAMP_MS = 150;
 const RELEASE_MS = 220;
 const LEGIBILITY_SHADOW =
   "0 2px 3px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35)";
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const enterEasing = Easing.bezier(0.2, 0.8, 0.2, 1);
 const rampEasing = Easing.bezier(0.2, 0.8, 0.3, 1);
@@ -44,6 +47,7 @@ export function CaptionWeight({
   shadow = true,
   className,
 }: CaptionWeightProps) {
+  const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -106,7 +110,7 @@ export function CaptionWeight({
         lineHeight: 1.2,
         textAlign: "center",
         opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)`,
+        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
       }}
     >
       {words.map((word, w) => {

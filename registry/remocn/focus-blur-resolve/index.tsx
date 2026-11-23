@@ -1,6 +1,8 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface FocusBlurResolveProps {
   text: string;
@@ -12,6 +14,8 @@ export interface FocusBlurResolveProps {
   className?: string;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export function FocusBlurResolve({
   text,
   blur = 14,
@@ -21,8 +25,9 @@ export function FocusBlurResolve({
   speed = 1,
   className,
 }: FocusBlurResolveProps) {
-  const frame = useCurrentFrame() * speed;
-  const { durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
 
   const enterDur = 23;
   const exitDur = 16;
@@ -102,8 +107,9 @@ export function FocusBlurResolve({
           display: "inline-block",
           transformOrigin: "50% 50%",
           opacity,
-          translate: `0 ${y}px`,
-          scale: `${scale}`,
+          // One `transform` rather than `translate` and `scale`: the mark
+          // that leans the line while it rises rides on `transform` only.
+          transform: `translate(0px, ${y}px) scale(${scale})${glide(midway(enterP) || midway(exitP))}`,
           filter: `blur(${blurVal}px)`,
         }}
       >

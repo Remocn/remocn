@@ -3,13 +3,8 @@
 import { loadFont as loadAnton } from "@remotion/google-fonts/Anton";
 import { loadFont as loadInter } from "@remotion/google-fonts/Inter";
 import { useId } from "react";
-import {
-  Easing,
-  interpolate,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { Easing, interpolate, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: INTER } = loadInter("normal", {
   weights: ["900"],
@@ -175,8 +170,8 @@ export function TypeWall({
   speed = typeWallDefaults.speed,
   className,
 }: TypeWallProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
   const unit = height / 720;
   const rowHeight = Math.max(8, fontSize * unit);
   const t = getTypeWallTime(frame, { fps, speed });

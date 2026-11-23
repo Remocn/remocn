@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="RadarCompare"
     component={RadarCompareScene}
-    durationInFrames={165}
-    fps={30}
+    durationInFrames={330}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -92,10 +92,61 @@ A radar grid appears and the competitor outline draws and fills. The brand polyg
       description: "Optional line of text under the names.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "1.8",
+      description: "Frames between brand vertices growing out.",
+    },
+    {
+      name: "rings",
+      type: "number",
+      default: "4",
+      description: "Number of grid rings.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Highlight colour of the brand polygon.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

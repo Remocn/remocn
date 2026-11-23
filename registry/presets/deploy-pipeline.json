@@ -1,0 +1,117 @@
+{
+  "component": "deploy-pipeline",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A dark, monospaced console look with a green accent on a deep charcoal ground.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace hacker style deploy",
+        "green console logs",
+        "как терминал",
+        "моноширинный шрифт и зелёный"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb950",
+        "ground": "charcoal-satin",
+        "theme": "dark"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A clean light theme on a soft paper ground with an ink-blue accent and Inter type.",
+      "askedAs": [
+        "light mode version",
+        "clean white deploy page",
+        "bright minimal look",
+        "светлая тема",
+        "белый чистый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accent": "#1f4fd8",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "instant-ship",
+      "label": "Instant Ship",
+      "description": "A fast, punchy cut where the build races through at double speed on a cobalt ground.",
+      "askedAs": [
+        "make it super fast",
+        "quick deploy for a short clip",
+        "speed it up a lot",
+        "сделай быстрее",
+        "мгновенный деплой"
+      ],
+      "props": {
+        "speed": 2,
+        "ground": "cobalt-rise",
+        "accent": "#5b8cff",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "ember-launch",
+      "label": "Ember Launch",
+      "description": "A warm dark launch with a copper-orange accent glowing over an ember ground.",
+      "askedAs": [
+        "warm orange launch",
+        "fiery dramatic deploy",
+        "dark with orange accent",
+        "тёплый оранжевый вариант",
+        "огненный запуск"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#f28c38",
+        "fontFamily": "Manrope",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "slow-showcase",
+      "label": "Slow Showcase",
+      "description": "A calm, enlarged presentation with a slower build and editorial serif type on a velvet ground.",
+      "askedAs": [
+        "slow and cinematic",
+        "bigger and calmer",
+        "elegant keynote style",
+        "медленно и крупно",
+        "как на презентации"
+      ],
+      "props": {
+        "speed": 0.75,
+        "scale": 1.2,
+        "fontFamily": "Instrument Serif",
+        "ground": "velvet-hour",
+        "accent": "#b9a6ff",
+        "delay": 15
+      }
+    },
+    {
+      "id": "polar-compact",
+      "label": "Polar Compact",
+      "description": "A small, cool-toned card on an icy polar ground with a teal accent and a quick build.",
+      "askedAs": [
+        "smaller cool blue version",
+        "compact icy look",
+        "teal minimal deploy",
+        "компактный холодный вариант",
+        "маленький голубой"
+      ],
+      "props": {
+        "scale": 0.8,
+        "ground": "polar",
+        "accent": "#14b8a6",
+        "buildSeconds": 9
+      }
+    }
+  ]
+}

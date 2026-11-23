@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const gabarito = loadFont("normal", {
   weights: ["400", "500"],
@@ -22,8 +22,18 @@ export interface TheyAreYouProps {
   facts?: string[];
   from?: string;
   to?: string;
+  /** Frames between one fact's pronoun flipping and the next. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the facts. Load it yourself; Gabarito by default. */
+  fontFamily?: string;
+  /** Size of the facts, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -70,16 +80,21 @@ interface Metrics {
   desc: number;
 }
 
-function measure(texts: string[], from: string, to: string): Metrics {
+function measure(
+  texts: string[],
+  from: string,
+  to: string,
+  fontFamily: string,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("they-are-you: no 2d context");
-  ctx.font = `${PRO_W} ${FONT_PX}px "${gabarito.fontFamily}"`;
+  ctx.font = `${PRO_W} ${FONT_PX}px "${fontFamily}"`;
   const em = (s: string) =>
     ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
   const wFrom = em(from);
   const wTo = em(to);
-  ctx.font = `${REST_W} ${FONT_PX}px "${gabarito.fontFamily}"`;
+  ctx.font = `${REST_W} ${FONT_PX}px "${fontFamily}"`;
   const cache: Record<string, number> = {};
   for (const s of texts) cache[s] = em(s);
   const fm = ctx.measureText("Hxg");
@@ -95,7 +110,12 @@ function measure(texts: string[], from: string, to: string): Metrics {
   };
 }
 
-function useMetrics(facts: string[], from: string, to: string) {
+function useMetrics(
+  facts: string[],
+  from: string,
+  to: string,
+  fontFamily: string,
+) {
   const key = [from, to, ...facts].join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("they-are-you: measuring"));
@@ -104,14 +124,14 @@ function useMetrics(facts: string[], from: string, to: string) {
     let live = true;
     Promise.all([
       gabarito.waitUntilDone(),
-      document.fonts.load(`${REST_W} 100px "${gabarito.fontFamily}"`),
-      document.fonts.load(`${PRO_W} 100px "${gabarito.fontFamily}"`),
+      document.fonts.load(`${REST_W} 100px "${fontFamily}"`),
+      document.fonts.load(`${PRO_W} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const [f, tt, ...rest] = key.split("\u0001");
-        setState({ key, m: measure(rest, f, tt) });
+        setState({ key, m: measure(rest, f, tt, fontFamily) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -120,7 +140,7 @@ function useMetrics(facts: string[], from: string, to: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, fontFamily, handle]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -147,6 +167,34 @@ function wrap(
   return lines;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/**
+ * Travel as a transform, kept at zero once it has arrived: the mark rides on
+ * it, and text that lost its transform at rest would snap to the pixel grid.
+ */
+const lift = (
+  dy: number,
+  moving: boolean,
+  glide: ReturnType<typeof useGlide>,
+) => `translateY(${Math.abs(dy) < 1e-3 ? 0 : dy}px)${glide(moving)}`;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TheyAreYou({
   facts = [
     "They write React for a living.",
@@ -155,17 +203,24 @@ export function TheyAreYou({
   ],
   from = "They",
   to = "You",
+  stagger = 6,
   accent,
+  ink,
   background,
+  fontFamily = gabarito.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: TheyAreYouProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const t = frame * speed;
   const D = Math.max(100, durationInFrames);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
   const list = facts.length > 0 ? facts : [`${from} build things.`];
@@ -174,6 +229,7 @@ export function TheyAreYou({
     parsed.map((p) => p.rest),
     from,
     to,
+    fontFamily,
   );
 
   if (!m) {
@@ -214,7 +270,7 @@ export function TheyAreYou({
   const gapIn = Math.min(22, Math.max(12, (D * 0.3) / list.length));
   const lastIn = inStart + (list.length - 1) * gapIn;
   const flipStart = Math.max(lastIn + 26, D * 0.44);
-  const flipStagger = 6;
+  const flipStagger = stagger;
   const flipLen = 11;
 
   const base: React.CSSProperties = {
@@ -222,12 +278,13 @@ export function TheyAreYou({
     height: F,
     lineHeight: `${F}px`,
     whiteSpace: "pre",
-    fontFamily: gabarito.fontFamily,
+    fontFamily,
     fontSize: F,
     letterSpacing: `${TRACK}em`,
   };
 
   let shift = 0;
+  let shifting = false;
   layout.forEach((lines, k) => {
     if (k === 0) return;
     const e = interpolate(
@@ -240,10 +297,15 @@ export function TheyAreYou({
       },
     );
     shift += ((1 - e) * (lines.length * LH + FACT_GAP) * F) / 2;
+    shifting ||= midway(e);
   });
 
+  // Layout rounds a box and a baseline to whole pixels, so lines eased by
+  // `top` click along pixel by pixel. Each line sits where the settled block
+  // leaves it and travels by transform; the recentring rides on the line's
+  // clip, the rise on the text inside it.
   const nodes: React.ReactNode[] = [];
-  let y = blockTop + shift;
+  let y = blockTop;
   layout.forEach((lines, k) => {
     const p = parsed[k];
     const appear = inStart + k * gapIn;
@@ -267,6 +329,7 @@ export function TheyAreYou({
         },
       );
       const offset = (1 - rise) * lineBox;
+      const rising = midway(rise);
       const lineX = marginX + (j === 0 ? proNow * F : 0);
       nodes.push(
         <div
@@ -278,15 +341,17 @@ export function TheyAreYou({
             top: y,
             height: lineBox,
             overflow: "hidden",
+            transform: lift(shift, shifting, glide),
           }}
         >
           <div
             style={{
               ...base,
               left: lineX,
-              top: textTop + offset,
+              top: textTop,
+              transform: lift(offset, rising && !shifting, glide),
               fontWeight: REST_W,
-              color: c.ink,
+              color: fg,
             }}
           >
             {ln}
@@ -296,9 +361,10 @@ export function TheyAreYou({
               style={{
                 ...base,
                 left: marginX,
-                top: textTop + offset,
+                top: textTop,
+                transform: lift(offset, rising && !shifting, glide),
                 fontWeight: PRO_W,
-                color: c.ink,
+                color: fg,
               }}
             >
               {from}
@@ -313,9 +379,14 @@ export function TheyAreYou({
             style={{
               ...base,
               left: marginX,
-              top: y + textTop - out * F * 0.32,
+              top: y + textTop,
+              transform: lift(
+                shift - out * F * 0.32,
+                shifting || midway(out),
+                glide,
+              ),
               fontWeight: PRO_W,
-              color: c.ink,
+              color: fg,
               opacity: 1 - out,
             }}
           >
@@ -326,7 +397,12 @@ export function TheyAreYou({
             style={{
               ...base,
               left: marginX,
-              top: y + textTop + (1 - inn) * F * 0.32,
+              top: y + textTop,
+              transform: lift(
+                shift + (1 - inn) * F * 0.32,
+                shifting || midway(inn),
+                glide,
+              ),
               fontWeight: PRO_W,
               color: hi,
               opacity: inn,
@@ -343,7 +419,7 @@ export function TheyAreYou({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

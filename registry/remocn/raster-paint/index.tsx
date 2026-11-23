@@ -1,14 +1,11 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400"],
@@ -19,6 +16,22 @@ export interface RasterPaintProps {
   title?: string;
   label?: string;
   accent?: string;
+  /** Color of the label; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the label. Load it yourself; Geist Mono by default. */
+  fontFamily?: string;
+  /** Frames for the scan line to paint the whole figure. */
+  scanLength?: number;
+  /** Frames a pixel takes to cool from the hot accent to its final color. */
+  trail?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the figure and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -60,7 +73,6 @@ const SCAN_AT = 10;
 const SCAN_DUR = 58;
 const SWEEP = 4;
 const TRAIL = 12;
-const LABEL_AT = SCAN_AT + SCAN_DUR + 6;
 
 const GLYPHS: Record<string, string[]> = {
   "0": [".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."],
@@ -205,18 +217,47 @@ function ramp(stops: number[][], k: number) {
   return mix(stops[i], stops[i + 1], x - i);
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RasterPaint({
   title = "10x",
   label = "Faster renders in remocn 2.0",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = mono,
+  scanLength = SCAN_DUR,
+  trail = TRAIL,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: RasterPaintProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];
+  const fg = ink ?? pal.muted;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? pal.bg);
+  const labelAt = SCAN_AT + scanLength + 6;
 
   const bitmap = useMemo(() => scale2x(rasterize(title)), [title]);
   const rows = bitmap.length;
@@ -237,7 +278,7 @@ export function RasterPaint({
   const haloRgb = pal.halo.map((c) => parseHex(c) ?? accRgb);
   const drift = interpolate(t, [0, 120], [-0.06, 0.06], CLAMP);
 
-  const scanK = interpolate(t, [SCAN_AT, SCAN_AT + SCAN_DUR], [0, 1], CLAMP);
+  const scanK = interpolate(t, [SCAN_AT, SCAN_AT + scanLength], [0, 1], CLAMP);
   const headRow = -1.5 + SCAN(scanK) * (rows + 3);
   const headY = top + headRow * p;
   const rowTime = (r: number) => {
@@ -249,7 +290,7 @@ export function RasterPaint({
       if (SCAN(mid) < target) lo = mid;
       else hi = mid;
     }
-    return SCAN_AT + lo * SCAN_DUR + 1 + hash(r * 3.17) * 2.4;
+    return SCAN_AT + lo * scanLength + 1 + hash(r * 3.17) * 2.4;
   };
 
   const rects: React.ReactNode[] = [];
@@ -263,7 +304,7 @@ export function RasterPaint({
       const age = t - tp;
       if (age < 0) continue;
       const on = EASE_OUT(interpolate(age, [0, 3], [0, 1], CLAMP));
-      const cool = EASE_OUT(interpolate(age, [1, TRAIL], [0, 1], CLAMP));
+      const cool = EASE_OUT(interpolate(age, [1, trail], [0, 1], CLAMP));
       const settled = ramp(
         haloRgb,
         (r / rows) * 0.72 + (c / cols) * 0.28 + drift,
@@ -294,7 +335,7 @@ export function RasterPaint({
   );
   const lineOut = interpolate(
     t,
-    [SCAN_AT + SCAN_DUR - 6, SCAN_AT + SCAN_DUR + 2],
+    [SCAN_AT + scanLength - 6, SCAN_AT + scanLength + 2],
     [1, 0],
     CLAMP,
   );
@@ -302,143 +343,158 @@ export function RasterPaint({
   const halfLen = (blockW / 2 + over) * lineIn;
   const bandH = p * 7;
   const labelK = EASE_OUT(
-    interpolate(t, [LABEL_AT, LABEL_AT + 16], [0, 1], CLAMP),
+    interpolate(t, [labelAt, labelAt + 16], [0, 1], CLAMP),
   );
-  const cam = interpolate(t, [0, LABEL_AT + 30], [1.03, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const camAt = (f: number) =>
+    interpolate(f, [0, labelAt + 30], [1.03, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const cam = camAt(t);
+  // The label rides the slow camera, which counts as moving while it still
+  // moves the frame's far edge by a thousandth of a pixel.
+  const reach = Math.hypot(W, H) / 2;
+  const camMoving =
+    Math.abs(camAt(t + speed) - cam) * reach > 1e-3 ||
+    Math.abs(cam - camAt(t - speed)) * reach > 1e-3;
   const tick = 6 * u;
 
   return (
-    <AbsoluteFill style={{ background: pal.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 55% 60% at 50% 46%, ${pal.light}, transparent 75%)`,
         }}
       />
-      <AbsoluteFill
-        style={{ transform: `scale(${cam})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={W}
-          height={H}
-          viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${cam})${glide(camMoving)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
-          <defs>
-            <linearGradient id={`${uid}-band`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor={accent} stopOpacity={0} />
-              <stop offset="1" stopColor={accent} stopOpacity={pal.band} />
-            </linearGradient>
-          </defs>
-          <g opacity={lineIn * lineOut}>
-            {Array.from({ length: cols }, (_, c) => (
-              <rect
-                key={`s${c}`}
-                x={left + c * p + (p - sq) / 2}
-                y={headY + (p - sq) / 2 - p * 0.5}
-                width={sq}
-                height={sq}
-                fill={pal.slot}
-              />
-            ))}
-          </g>
-          {rects}
-          <g opacity={lineAlpha}>
-            <rect
-              x={W / 2 - halfLen}
-              y={headY - bandH}
-              width={halfLen * 2}
-              height={bandH}
-              fill={`url(#${uid}-band)`}
-            />
-            <rect
-              x={W / 2 - halfLen}
-              y={headY - 1.25 * u}
-              width={halfLen * 2}
-              height={2.5 * u}
-              fill={accent}
-            />
-            <rect
-              x={W / 2 - halfLen}
-              y={headY - tick}
-              width={2.5 * u}
-              height={tick * 2}
-              fill={accent}
-              opacity={lineIn}
-            />
-            <rect
-              x={W / 2 + halfLen - 2.5 * u}
-              y={headY - tick}
-              width={2.5 * u}
-              height={tick * 2}
-              fill={accent}
-              opacity={lineIn}
-            />
-          </g>
-        </svg>
-        {label ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              width: W,
-              top: top + blockH + labelGap,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 14 * u,
-              opacity: labelK,
-              transform: `translateY(${(1 - labelK) * 10 * u}px)`,
-            }}
+          <svg
+            width={W}
+            height={H}
+            viewBox={`0 0 ${W} ${H}`}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
           >
+            <defs>
+              <linearGradient id={`${uid}-band`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor={accent} stopOpacity={0} />
+                <stop offset="1" stopColor={accent} stopOpacity={pal.band} />
+              </linearGradient>
+            </defs>
+            <g opacity={lineIn * lineOut}>
+              {Array.from({ length: cols }, (_, c) => (
+                <rect
+                  key={`s${c}`}
+                  x={left + c * p + (p - sq) / 2}
+                  y={headY + (p - sq) / 2 - p * 0.5}
+                  width={sq}
+                  height={sq}
+                  fill={pal.slot}
+                />
+              ))}
+            </g>
+            {rects}
+            <g opacity={lineAlpha}>
+              <rect
+                x={W / 2 - halfLen}
+                y={headY - bandH}
+                width={halfLen * 2}
+                height={bandH}
+                fill={`url(#${uid}-band)`}
+              />
+              <rect
+                x={W / 2 - halfLen}
+                y={headY - 1.25 * u}
+                width={halfLen * 2}
+                height={2.5 * u}
+                fill={accent}
+              />
+              <rect
+                x={W / 2 - halfLen}
+                y={headY - tick}
+                width={2.5 * u}
+                height={tick * 2}
+                fill={accent}
+                opacity={lineIn}
+              />
+              <rect
+                x={W / 2 + halfLen - 2.5 * u}
+                y={headY - tick}
+                width={2.5 * u}
+                height={tick * 2}
+                fill={accent}
+                opacity={lineIn}
+              />
+            </g>
+          </svg>
+          {label ? (
             <div
               style={{
-                width: 11 * u,
-                height: 11 * u,
-                background: accent,
-              }}
-            />
-            <div
-              style={{
-                fontFamily: mono,
-                fontWeight: 400,
-                fontSize: labelSize,
-                lineHeight: 1.2,
-                letterSpacing: "-0.01em",
-                color: pal.muted,
+                position: "absolute",
+                left: 0,
+                width: W,
+                top: top + blockH + labelGap,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 14 * u,
+                opacity: labelK,
+                transform: `translateY(${(1 - labelK) * 10 * u}px)`,
               }}
             >
-              {label}
+              <div
+                style={{
+                  width: 11 * u,
+                  height: 11 * u,
+                  background: accent,
+                }}
+              />
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: labelSize,
+                  lineHeight: 1.2,
+                  letterSpacing: "-0.01em",
+                  color: fg,
+                }}
+              >
+                {label}
+              </div>
             </div>
-          </div>
-        ) : null}
-      </AbsoluteFill>
-      <svg
-        width="100%"
-        height="100%"
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: pal.grain,
-          pointerEvents: "none",
-        }}
-        aria-hidden
-      >
-        <filter id={`${uid}-grain`}>
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.9"
-            numOctaves={2}
-            seed={21}
-            stitchTiles="stitch"
-          />
-          <feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.9 0" />
-        </filter>
-        <rect width="100%" height="100%" filter={`url(#${uid}-grain)`} />
-      </svg>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? (
+        <svg
+          width="100%"
+          height="100%"
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: pal.grain,
+            pointerEvents: "none",
+          }}
+          aria-hidden
+        >
+          <filter id={`${uid}-grain`}>
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.9"
+              numOctaves={2}
+              seed={21}
+              stitchTiles="stitch"
+            />
+            <feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.9 0" />
+          </filter>
+          <rect width="100%" height="100%" filter={`url(#${uid}-grain)`} />
+        </svg>
+      ) : null}
     </AbsoluteFill>
   );
 }

@@ -36,8 +36,8 @@ incoming scene on its own beat around the midpoint, so the cut itself is torn
 rather than flat. Both ends of the transition settle to untouched pixels, so
 nothing bleeds into the scenes on either side.
 
-It is built for short timings. `linearTiming({ durationInFrames: 12 })` is the
-recommended default; past roughly 20 frames the tearing stops reading as an
+It is built for short timings. `linearTiming({ durationInFrames: 24 })` at 60 fps is the
+recommended default; past roughly 40 frames the tearing stops reading as an
 artifact and starts reading as an effect.
 
 ```tsx
@@ -46,14 +46,14 @@ import { glitchCut } from "@/components/remocn/glitch-cut";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={45}>
+    <TransitionSeries.Sequence durationInFrames={90}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 12 })}
+      timing={linearTiming({ durationInFrames: 24 })}
       presentation={glitchCut()}
     />
-    <TransitionSeries.Sequence durationInFrames={45}>
+    <TransitionSeries.Sequence durationInFrames={90}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

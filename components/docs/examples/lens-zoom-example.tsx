@@ -1,7 +1,9 @@
 "use client";
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useCompositionFrames, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import {
   LENS_ZOOM_DURATION_IN_FRAMES,
   lensZoom,
@@ -19,7 +21,8 @@ function Scene({
   background: string;
   squeezeAt?: number;
 }) {
-  const frame = useCurrentFrame();
+  const glide = useGlide();
+  const frame = useSceneFrame();
   const scale =
     squeezeAt === undefined
       ? 1
@@ -44,7 +47,11 @@ function Scene({
           fontWeight: 600,
           letterSpacing: "-0.03em",
           color: "#f2f2f2",
-          transform: `scale(${scale})`,
+          transform: `scale(${scale})${glide(
+            squeezeAt !== undefined &&
+              frame > squeezeAt &&
+              frame < squeezeAt + 7,
+          )}`,
         }}
       >
         {label}
@@ -66,14 +73,15 @@ export function LensZoomExampleScene({
   shakeAmount,
   shakeTranslatePx,
 }: LensZoomExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <Scene label="Scene A" background="#141318" squeezeAt={35} />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
         timing={linearTiming({
-          durationInFrames: LENS_ZOOM_DURATION_IN_FRAMES,
+          durationInFrames: toFrames(LENS_ZOOM_DURATION_IN_FRAMES),
         })}
         presentation={lensZoom({
           lensSteps,
@@ -82,7 +90,7 @@ export function LensZoomExampleScene({
           shakeTranslatePx,
         })}
       />
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <Scene label="Lens Zoom" background="#1a1922" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -100,14 +108,14 @@ import { lensZoom, LENS_ZOOM_DURATION_IN_FRAMES } from "@/components/remocn/lens
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: LENS_ZOOM_DURATION_IN_FRAMES })}
+      timing={linearTiming({ durationInFrames: LENS_ZOOM_DURATION_IN_FRAMES * 2 })}
       presentation={lensZoom({ lensSteps: ${lensSteps}, blurSamples: ${blurSamples}, shakeAmount: ${shakeAmount} })}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

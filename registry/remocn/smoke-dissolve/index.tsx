@@ -7,6 +7,7 @@ import type {
 import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { ShaderSmokeRing } from "@/components/remocn/shader-smoke-ring";
+import { useGlide } from "@/lib/remocn/glide";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
@@ -21,6 +22,8 @@ export type SmokeDissolveProps = {
   speed?: number;
 };
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const SmokeDissolvePresentation: React.FC<
   TransitionPresentationComponentProps<SmokeDissolveProps>
 > = ({
@@ -29,6 +32,7 @@ const SmokeDissolvePresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
+  const glide = useGlide();
   const {
     colorBack = "#141318",
     colors = DEFAULT_COLORS,
@@ -41,13 +45,14 @@ const SmokeDissolvePresentation: React.FC<
   const scale = interpolate(p, [0, 1], [1, 2], clampOpts);
   const thickness = interpolate(p, [0, 1], [1, 1.5], clampOpts);
 
+  const grow = interpolate(p, [0.55, 1], [0.3, 1], {
+    ...clampOpts,
+    easing: Easing.out(Easing.cubic),
+  });
   const childStyle: React.CSSProperties = entering
     ? {
         opacity: interpolate(p, [0.55, 0.68], [0, 1], clampOpts),
-        scale: `${interpolate(p, [0.55, 1], [0.3, 1], {
-          ...clampOpts,
-          easing: Easing.out(Easing.cubic),
-        })}`,
+        transform: `scale(${grow})${glide(midway(interpolate(p, [0.55, 1], [0, 1], clampOpts)))}`,
         filter: `blur(${interpolate(p, [0.55, 0.75], [10, 0], clampOpts)}px)`,
       }
     : { opacity: interpolate(p, [0.06, 0.13], [1, 0], clampOpts) };

@@ -1,5 +1,6 @@
 import { evolvePath } from "@remotion/paths";
-import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface IconAnimationProps {
   animation?: "draw" | "action" | "both";
@@ -108,8 +109,8 @@ export function useIconAnimation(
   props: IconAnimationProps,
   timings: IconTimings,
 ): IconTimeline {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps } = useSceneConfig();
   const speed = props.speed ?? 1;
   return iconTimeline(frame * speed, fps, props, timings);
 }

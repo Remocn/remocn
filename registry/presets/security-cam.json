@@ -1,0 +1,95 @@
+{
+  "component": "security-cam",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "lobby-feed",
+      "label": "Lobby Feed",
+      "description": "A clean, well-lit corporate camera with light compression, fine blocks and barely any grain.",
+      "askedAs": [
+        "subtle cctv look",
+        "clean security camera footage",
+        "light surveillance filter",
+        "лёгкий эффект камеры наблюдения",
+        "чистая запись с камеры охраны"
+      ],
+      "props": {
+        "compression": 0.3,
+        "blockSize": 6,
+        "noise": 0.25,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "night-shift",
+      "label": "Night Shift",
+      "description": "A dark parking-garage camera where crushed shadows boil with heavy sensor noise over moderate blocking.",
+      "askedAs": [
+        "grainy night surveillance",
+        "low light cctv noise",
+        "dark security footage",
+        "ночная камера наблюдения с шумом",
+        "зернистая запись ночью"
+      ],
+      "props": {
+        "noise": 1.6,
+        "compression": 0.6,
+        "blockSize": 8,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "starved-stream",
+      "label": "Starved Stream",
+      "description": "A bandwidth-choked feed that collapses into large chunky macroblocks with smeared detail.",
+      "askedAs": [
+        "heavily compressed video",
+        "blocky broken stream",
+        "low bitrate feed falling apart",
+        "сильно сжатое видео с блоками",
+        "поток разваливается на квадраты"
+      ],
+      "props": {
+        "compression": 1,
+        "blockSize": 24,
+        "noise": 0.4
+      }
+    },
+    {
+      "id": "gas-station",
+      "label": "Gas Station",
+      "description": "A cheap all-night corner-shop recorder with mid-size blocks, steady grain and a jittery fast flicker.",
+      "askedAs": [
+        "cheap store camera footage",
+        "convenience store cctv",
+        "jittery budget recorder look",
+        "дешёвая камера в магазине",
+        "запись с камеры заправки"
+      ],
+      "props": {
+        "compression": 0.85,
+        "blockSize": 14,
+        "noise": 1,
+        "speed": 2
+      }
+    },
+    {
+      "id": "faint-trace",
+      "label": "Faint Trace",
+      "description": "A half-strength recorder tint that hints at captured footage while keeping the scene mostly intact.",
+      "askedAs": [
+        "hint of surveillance effect",
+        "half strength cctv overlay",
+        "barely noticeable camera degradation",
+        "едва заметный эффект камеры",
+        "слабый налёт записи с видеонаблюдения"
+      ],
+      "props": {
+        "intensity": 0.45,
+        "compression": 0.5,
+        "speed": 0.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "component": "caption-outline",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "shorts-punch",
+      "label": "Shorts Punch",
+      "description": "Oversized black-weight words with a chunky outline and a hot red active word, shown a couple of words at a time.",
+      "askedAs": [
+        "big bold tiktok captions",
+        "huge captions few words at a time",
+        "red highlighted word shorts style",
+        "крупные субтитры как в шортсах",
+        "жирные титры по паре слов"
+      ],
+      "props": {
+        "fontSize": 104,
+        "fontWeight": 900,
+        "strokeWidth": 0.18,
+        "activeColor": "#ef4444",
+        "combineTokensWithinMilliseconds": 500,
+        "holdMs": 300
+      }
+    },
+    {
+      "id": "single-word",
+      "label": "Single Word",
+      "description": "One word on screen at a time in large type, with a fresh mint highlight that keeps fast edits in rhythm.",
+      "askedAs": [
+        "one word at a time captions",
+        "word by word fast subtitles",
+        "rapid single word captions",
+        "субтитры по одному слову",
+        "быстрые титры слово за словом"
+      ],
+      "props": {
+        "fontSize": 120,
+        "fontWeight": 900,
+        "activeColor": "#4ade80",
+        "combineTokensWithinMilliseconds": 0,
+        "holdMs": 150
+      }
+    },
+    {
+      "id": "soft-documentary",
+      "label": "Soft Documentary",
+      "description": "Smaller medium-weight captions with a thin charcoal outline and a warm cream highlight, showing full lines that linger.",
+      "askedAs": [
+        "subtle readable subtitles",
+        "calm documentary captions",
+        "thin outline small captions",
+        "спокойные субтитры для документалки",
+        "аккуратные тонкие титры"
+      ],
+      "props": {
+        "fontSize": 48,
+        "fontWeight": 600,
+        "strokeColor": "#1f2937",
+        "strokeWidth": 0.06,
+        "activeColor": "#fde68a",
+        "combineTokensWithinMilliseconds": 2400
+      }
+    },
+    {
+      "id": "inverted-ink",
+      "label": "Inverted Ink",
+      "description": "Near-black words wrapped in a heavy white outline, with a deep blue active word for bright or snowy footage.",
+      "askedAs": [
+        "black text with white outline",
+        "captions for bright footage",
+        "dark subtitles white stroke",
+        "чёрный текст с белой обводкой",
+        "субтитры для светлого видео"
+      ],
+      "props": {
+        "color": "#111827",
+        "strokeColor": "#ffffff",
+        "strokeWidth": 0.16,
+        "activeColor": "#1d4ed8",
+        "fontSize": 72
+      }
+    },
+    {
+      "id": "neon-night",
+      "label": "Violet Night",
+      "description": "Soft lavender words with a deep indigo outline and a pink active word, tuned for moody night-time edits.",
+      "askedAs": [
+        "purple aesthetic captions",
+        "night vibe subtitles",
+        "pink highlight captions purple outline",
+        "фиолетовые субтитры для ночного видео",
+        "эстетичные розовые титры"
+      ],
+      "props": {
+        "color": "#ede9fe",
+        "strokeColor": "#1e1b4b",
+        "activeColor": "#f472b6",
+        "strokeWidth": 0.14,
+        "holdMs": 900
+      }
+    }
+  ]
+}

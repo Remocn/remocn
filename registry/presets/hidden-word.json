@@ -1,0 +1,127 @@
+{
+  "component": "hidden-word",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper background with dark ink and a refined serif that reveals at an unhurried pace.",
+      "askedAs": [
+        "magazine style serif reveal",
+        "warm paper editorial look",
+        "slow classy headline reveal",
+        "редакционный стиль с засечками",
+        "тёплый бумажный фон и серифный шрифт"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#9a3b2e",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy canvas with soft ivory text and a muted gold accent for a luxury announcement feel.",
+      "askedAs": [
+        "luxury dark gold reveal",
+        "premium navy and gold",
+        "elegant announcement dark",
+        "люксовый тёмный с золотом",
+        "премиальный тёмно-синий стиль"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0e1424",
+        "ink": "#ede6d6",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "stagger": 9
+      }
+    },
+    {
+      "id": "swift-tech",
+      "label": "Swift Tech",
+      "description": "Fast, tight mono reveal on near-black with a cool mint accent and no grain.",
+      "askedAs": [
+        "fast techy word reveal",
+        "code style monospace headline",
+        "quick clean dev look",
+        "быстрый технический стиль",
+        "моноширинный шрифт без зерна"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "speed": 2,
+        "stagger": 2,
+        "grain": false,
+        "background": "#0b0d0f",
+        "accent": "#5fd3a8"
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "Crisp white layout with Inter, a graphite ink and restrained blue accent, grain off for a clean product look.",
+      "askedAs": [
+        "clean white minimal reveal",
+        "simple product message style",
+        "no texture bright version",
+        "минималистичный светлый вариант",
+        "чистый белый без шума"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "background": "#ffffff",
+        "ink": "#1f2328",
+        "grain": false,
+        "accent": "#2f6feb"
+      }
+    },
+    {
+      "id": "slow-manifesto",
+      "label": "Slow Manifesto",
+      "description": "Oversized, deliberately slow letter-by-letter reveal with a delayed start and a deep crimson accent.",
+      "askedAs": [
+        "dramatic slow big reveal",
+        "manifesto style large text",
+        "cinematic delayed headline",
+        "медленное драматичное появление",
+        "крупный текст как манифест"
+      ],
+      "props": {
+        "scale": 1.3,
+        "speed": 0.5,
+        "stagger": 14,
+        "delay": 20,
+        "accent": "#b23a48",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "sage-compact",
+      "label": "Sage Compact",
+      "description": "Smaller, calm composition on soft sage with forest-green ink in Manrope.",
+      "askedAs": [
+        "calm green soft look",
+        "compact muted natural style",
+        "gentle earthy reveal",
+        "спокойный зелёный стиль",
+        "мягкие природные тона"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#e3e8df",
+        "ink": "#1f3a2e",
+        "accent": "#4e7a5b",
+        "fontFamily": "Manrope",
+        "scale": 0.8
+      }
+    }
+  ]
+}

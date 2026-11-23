@@ -1,0 +1,115 @@
+{
+  "component": "chaos-to-order",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "clean-daylight",
+      "label": "Clean Daylight",
+      "description": "A bright light-theme workspace with a calm green accent and Geist type for a friendly, airy reveal.",
+      "askedAs": [
+        "light version with green accent",
+        "bright clean workspace look",
+        "make it white and calm",
+        "светлая версия с зелёным акцентом",
+        "чистый светлый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#16a34a",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "rapid-snap",
+      "label": "Rapid Snap",
+      "description": "Clutter piles in fast and snaps into order quickly with a short hold, for punchy social cuts.",
+      "askedAs": [
+        "make it faster and snappier",
+        "quick version for reels",
+        "speed up the chaos",
+        "сделай быстрее и резче",
+        "быстрая версия для соцсетей"
+      ],
+      "props": {
+        "speed": 2,
+        "hold": 40,
+        "accent": "#f97316"
+      }
+    },
+    {
+      "id": "slow-tension",
+      "label": "Slow Tension",
+      "description": "A slowed-down build with a lingering hold and a deep crimson accent that lets the clutter breathe before the reveal.",
+      "askedAs": [
+        "slow dramatic version",
+        "let the mess build up longer",
+        "cinematic slow reveal",
+        "медленная драматичная версия",
+        "дольше показывать хаос"
+      ],
+      "props": {
+        "speed": 0.5,
+        "hold": 100,
+        "delay": 12,
+        "accent": "#e11d48"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A near-black developer look with JetBrains Mono, mint accent and soft grey text.",
+      "askedAs": [
+        "developer terminal style",
+        "monospace hacker look",
+        "code editor vibe",
+        "стиль терминала для разработчиков",
+        "моноширинный шрифт и тёмный фон"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#d4ded9",
+        "accent": "#34d399"
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A warm off-white paper background with Fraunces serif type and an ink-blue accent for a refined, editorial feel.",
+      "askedAs": [
+        "warm paper serif look",
+        "elegant editorial style",
+        "beige background with serif font",
+        "тёплый бумажный стиль с засечками",
+        "элегантный редакционный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f0e6",
+        "ink": "#1f1b16",
+        "fontFamily": "Fraunces",
+        "accent": "#1e3a8a"
+      }
+    },
+    {
+      "id": "big-violet",
+      "label": "Big Violet",
+      "description": "A zoomed-in, larger composition on deep indigo with a violet accent and Space Grotesk for bold product launches.",
+      "askedAs": [
+        "bigger bolder version",
+        "zoomed in purple look",
+        "make everything larger",
+        "крупнее и ярче",
+        "фиолетовый крупный вариант"
+      ],
+      "props": {
+        "scale": 1.25,
+        "background": "#14112b",
+        "ink": "#edebff",
+        "accent": "#8b5cf6",
+        "fontFamily": "Space Grotesk"
+      }
+    }
+  ]
+}

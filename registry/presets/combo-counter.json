@@ -1,0 +1,121 @@
+{
+  "component": "combo-counter",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "arcade-rush",
+      "label": "Arcade Rush",
+      "description": "A fast, oversized combo with a hot coral accent on deep navy, like a fighting-game HUD.",
+      "askedAs": [
+        "make it fast and punchy like an arcade game",
+        "bigger, faster combo counter",
+        "fighting game style hit counter",
+        "быстрый аркадный счётчик комбо",
+        "сделай крупнее и быстрее как в игре"
+      ],
+      "props": {
+        "speed": 1.75,
+        "scale": 1.25,
+        "accent": "#ff5a4e",
+        "background": "#0e1430",
+        "ink": "#f4f6ff",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "clean-daylight",
+      "label": "Clean Daylight",
+      "description": "A light, airy version with crisp Inter type and a calm blue accent at a measured pace.",
+      "askedAs": [
+        "light background version",
+        "clean minimal combo counter for a product video",
+        "white and blue, less gamey",
+        "светлая версия счётчика",
+        "минималистичный светлый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#2f6bff",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A developer-flavoured take in JetBrains Mono with a mint accent on near-black.",
+      "askedAs": [
+        "code style monospace counter",
+        "hacker terminal look",
+        "green on black dev vibe",
+        "моноширинный шрифт как в терминале",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3ddc97",
+        "background": "#0b0f0d",
+        "ink": "#e6f2ec",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "slow-burn",
+      "label": "Slow Burn",
+      "description": "A slowed, dramatic build with an amber accent and a short delay before the first hit.",
+      "askedAs": [
+        "slower dramatic build up",
+        "cinematic finale combo",
+        "warm orange slow counter",
+        "медленное драматичное нарастание",
+        "тёплый оранжевый, помедленнее"
+      ],
+      "props": {
+        "speed": 0.5,
+        "delay": 20,
+        "accent": "#f5a524",
+        "background": "#17120c",
+        "ink": "#fff3e0",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "editorial-pop",
+      "label": "Editorial Pop",
+      "description": "A playful serif twist with Fraunces on warm cream and a berry accent.",
+      "askedAs": [
+        "serif font fancy version",
+        "magazine style counter",
+        "cream background with pink accent",
+        "версия с засечками",
+        "журнальный стиль на кремовом фоне"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "theme": "light",
+        "background": "#f6f0e6",
+        "ink": "#2a1e1a",
+        "accent": "#c2366b"
+      }
+    },
+    {
+      "id": "compact-violet",
+      "label": "Compact Violet",
+      "description": "A smaller, snappy corner-HUD counter with a soft violet accent in Geist.",
+      "askedAs": [
+        "smaller counter for a corner",
+        "purple compact combo",
+        "subtle little hit counter",
+        "маленький фиолетовый счётчик",
+        "компактный вариант в углу"
+      ],
+      "props": {
+        "scale": 0.7,
+        "speed": 1.25,
+        "accent": "#8b5cf6",
+        "fontFamily": "Geist"
+      }
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "component": "icon-award",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gold-medal",
+      "label": "Gold Medal",
+      "description": "A large warm-gold award that draws in and celebrates at a measured pace.",
+      "askedAs": [
+        "gold award icon",
+        "make the medal golden",
+        "winner trophy look",
+        "золотая медаль",
+        "сделай награду золотой"
+      ],
+      "props": {
+        "color": "#b8862b",
+        "size": 120,
+        "strokeWidth": 2.25,
+        "animation": "both"
+      }
+    },
+    {
+      "id": "quiet-line",
+      "label": "Quiet Line",
+      "description": "A slow, thin slate outline that simply draws itself on once.",
+      "askedAs": [
+        "subtle thin award",
+        "slow elegant line drawing",
+        "minimal outline badge",
+        "тонкая медленная иконка",
+        "минималистичный контур награды"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#475569",
+        "size": 96
+      }
+    },
+    {
+      "id": "bold-badge",
+      "label": "Bold Badge",
+      "description": "A chunky, heavy-stroked navy award sized for big headline moments.",
+      "askedAs": [
+        "big thick award icon",
+        "heavy bold badge",
+        "huge medal for title",
+        "большая жирная медаль",
+        "крупная иконка награды"
+      ],
+      "props": {
+        "size": 180,
+        "strokeWidth": 3,
+        "color": "#1e3a8a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "pulse-loop",
+      "label": "Pulse Loop",
+      "description": "A snappy crimson award that repeats its celebratory action on a continuous loop.",
+      "askedAs": [
+        "looping award animation",
+        "keep the medal bouncing",
+        "fast repeating badge",
+        "зацикленная анимация медали",
+        "быстро повторяющаяся награда"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 1.75,
+        "color": "#b91c1c",
+        "size": 72
+      }
+    },
+    {
+      "id": "bronze-quick",
+      "label": "Bronze Quick",
+      "description": "A small bronze icon that draws and acts in a brisk inline flash.",
+      "askedAs": [
+        "small quick award",
+        "fast bronze medal",
+        "tiny inline badge icon",
+        "маленькая бронзовая медаль",
+        "быстрая мелкая иконка"
+      ],
+      "props": {
+        "color": "#9a5b34",
+        "size": 32,
+        "speed": 2.5,
+        "strokeWidth": 1.75
+      }
+    }
+  ]
+}

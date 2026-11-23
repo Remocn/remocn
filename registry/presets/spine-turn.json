@@ -1,0 +1,104 @@
+{
+  "component": "spine-turn",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "library-serif",
+      "label": "Library Serif",
+      "description": "A warm light page with Fraunces titles and an unhurried, bookish turn in deep oxblood.",
+      "askedAs": [
+        "slow elegant book style",
+        "serif titles on cream paper",
+        "classic library look",
+        "книжный стиль с засечками",
+        "медленно и элегантно на светлом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f4efe6",
+        "accent": "#8a2c2c",
+        "hold": 40,
+        "turn": 36
+      }
+    },
+    {
+      "id": "snap-agenda",
+      "label": "Snap Agenda",
+      "description": "Fast, crisp spine turns in Inter with a bright cobalt accent for quick agenda beats.",
+      "askedAs": [
+        "fast agenda transitions",
+        "quick snappy chapter list",
+        "speed it up for social",
+        "быстрая повестка",
+        "резкие быстрые переходы"
+      ],
+      "props": {
+        "fontFamily": "Inter",
+        "turn": 12,
+        "hold": 14,
+        "speed": 1.5,
+        "accent": "#3b82f6"
+      }
+    },
+    {
+      "id": "terminal-index",
+      "label": "Terminal Index",
+      "description": "Monospaced titles on near-black navy with a soft mint accent, like a code chapter index.",
+      "askedAs": [
+        "code style chapters",
+        "monospace dev look",
+        "technical dark sections",
+        "моноширинный шрифт как в коде",
+        "тёмный технический стиль"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "accent": "#5fd3a6",
+        "fontWeight": 400,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "editorial-large",
+      "label": "Editorial Large",
+      "description": "Oversized Instrument Serif titles on stone white with a calm, deliberate pace.",
+      "askedAs": [
+        "big magazine style titles",
+        "large editorial headings",
+        "calm serif with big text",
+        "крупные заголовки как в журнале",
+        "большой текст в редакционном стиле"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "scale": 1.35,
+        "background": "#f7f6f2",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "grotesk-amber",
+      "label": "Grotesk Amber",
+      "description": "Bold Space Grotesk spines on charcoal with a warm amber wrap-up and a short lead-in.",
+      "askedAs": [
+        "modern grotesk with orange accent",
+        "warm dark tech look",
+        "bold sans with amber",
+        "современный гротеск с оранжевым",
+        "тёплый тёмный стиль"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "background": "#1c1b19",
+        "accent": "#e8a33d",
+        "delay": 12,
+        "turn": 20
+      }
+    }
+  ]
+}

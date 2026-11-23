@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const replayWipeConfig: ComponentConfig = {
   componentName: "ReplayWipe",
@@ -13,10 +19,20 @@ export const replayWipeConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
+    liveLabel: {
+      type: "text-content",
+      default: "LIVE",
+      description: "Live word",
+    },
+    replayLabel: {
+      type: "text-content",
+      default: "REPLAY",
+      description: "Replay word",
+    },
+    slowMoLabel: {
+      type: "text-content",
+      default: "Super slow-mo",
+      description: "Replay tag",
     },
     wipeLength: {
       type: "number",
@@ -27,6 +43,12 @@ export const replayWipeConfig: ComponentConfig = {
       description: "Wipe length",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Barlow Condensed" }),
     speed: {
       type: "number",
       default: 1,

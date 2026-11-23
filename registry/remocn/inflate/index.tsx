@@ -1,14 +1,8 @@
 "use client";
 
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type InflateProps = {
   /** Wordmark revealed beside the mark once it settles. */
@@ -45,8 +39,8 @@ export function Inflate(props: InflateProps) {
     ...inflateDefaults,
     ...props,
   };
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const t = frame * Math.max(0, speed);
   const size = Math.round(Math.min(width, height) * 0.22);
 

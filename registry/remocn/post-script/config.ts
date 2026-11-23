@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const postScriptConfig: ComponentConfig = {
   componentName: "PostScript",
@@ -38,6 +44,26 @@ export const postScriptConfig: ComponentConfig = {
       default: "npx shadcn add @remocn/zoom-blur",
       description: "Install",
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    flip: {
+      type: "number",
+      default: 30,
+      min: 10,
+      max: 60,
+      step: 1,
+      description: "Flip (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Lexend" }),
     speed: {
       type: "number",
       default: 1,

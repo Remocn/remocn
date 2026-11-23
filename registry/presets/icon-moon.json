@@ -1,0 +1,100 @@
+{
+  "component": "icon-moon",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "night-sky-hero",
+      "label": "Night Sky Hero",
+      "description": "A large, fine-lined moon in soft indigo that draws itself in slowly and gracefully.",
+      "askedAs": [
+        "big slow moon in blue",
+        "large elegant moon icon",
+        "calm night moon drawing",
+        "большая медленная луна",
+        "спокойная синяя луна"
+      ],
+      "props": {
+        "size": 160,
+        "color": "#3b4a8c",
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "animation": "draw"
+      }
+    },
+    {
+      "id": "bedtime-loop",
+      "label": "Bedtime Loop",
+      "description": "A medium moon in warm muted gold that gently rocks on a continuous loop.",
+      "askedAs": [
+        "looping sleepy moon",
+        "gold moon that keeps moving",
+        "moon animation on repeat for sleep app",
+        "зацикленная луна для сна",
+        "золотая луна по кругу"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#c9a24a",
+        "size": 96,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "bold-badge",
+      "label": "Bold Badge",
+      "description": "A chunky, heavy-stroked charcoal moon that snaps in quickly for punchy UI moments.",
+      "askedAs": [
+        "thick bold moon icon",
+        "fast punchy moon",
+        "heavy line moon for dark mode toggle",
+        "жирная иконка луны",
+        "быстрая толстая луна"
+      ],
+      "props": {
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 72,
+        "color": "#1f2937"
+      }
+    },
+    {
+      "id": "tiny-hint",
+      "label": "Tiny Hint",
+      "description": "A small, delicate slate-grey moon that appears briskly as an inline cue.",
+      "askedAs": [
+        "small subtle moon",
+        "tiny grey moon icon",
+        "minimal inline moon",
+        "маленькая незаметная луна",
+        "крошечная серая луна"
+      ],
+      "props": {
+        "size": 28,
+        "strokeWidth": 1.5,
+        "color": "#64748b",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "lunar-sketch",
+      "label": "Lunar Sketch",
+      "description": "A thin lavender outline that draws itself on repeat like a hand-sketched loop.",
+      "askedAs": [
+        "moon drawing over and over",
+        "thin purple moon outline loop",
+        "sketchy moon line animation",
+        "луна рисуется в цикле",
+        "тонкая сиреневая луна"
+      ],
+      "props": {
+        "animation": "draw",
+        "loop": true,
+        "color": "#7c6fb0",
+        "strokeWidth": 1,
+        "size": 120
+      }
+    }
+  ]
+}

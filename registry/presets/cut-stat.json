@@ -1,0 +1,107 @@
+{
+  "component": "cut-stat",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-report",
+      "label": "Paper Report",
+      "description": "Light warm paper background with a serif number and deep navy bar, like a printed annual report.",
+      "askedAs": [
+        "make it look like a printed report",
+        "light serif version",
+        "classic editorial stat",
+        "светлый вариант с засечками",
+        "как в годовом отчёте"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1c1b19",
+        "accent": "#1e3a8a",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-metric",
+      "label": "Terminal Metric",
+      "description": "Near-black screen with monospace type and a muted green bar, snappy like a dashboard readout.",
+      "askedAs": [
+        "monospace dashboard look",
+        "make it feel like a terminal",
+        "dev metrics style",
+        "как в терминале",
+        "моноширинный шрифт и зелёный"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#e6ede8",
+        "accent": "#3fb67a",
+        "fontWeight": 400,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "bold-punch",
+      "label": "Bold Punch",
+      "description": "Oversized heavy grotesque in coral on charcoal that hits fast with no word stagger.",
+      "askedAs": [
+        "bigger and punchier",
+        "fast bold number",
+        "make the stat hit hard",
+        "крупнее и жирнее",
+        "быстро и мощно"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 700,
+        "scale": 1.3,
+        "accent": "#ff6b4a",
+        "stagger": 0,
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Small, light-weight type on clean white with a slate bar and slow, gentle word reveals, no grain.",
+      "askedAs": [
+        "calm minimal version",
+        "subtle and clean",
+        "slower and lighter",
+        "минималистично и спокойно",
+        "медленнее и тоньше"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "accent": "#64748b",
+        "grain": false,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Deep indigo background with a soft violet bar and geometric sans, revealed with a beat of delay and wide stagger.",
+      "askedAs": [
+        "purple dark theme",
+        "moody night look",
+        "delayed dramatic reveal",
+        "тёмно-фиолетовый вариант",
+        "драматичное появление"
+      ],
+      "props": {
+        "background": "#14122b",
+        "ink": "#edebfa",
+        "accent": "#8b7cf6",
+        "fontFamily": "Space Grotesk",
+        "stagger": 8,
+        "delay": 15
+      }
+    }
+  ]
+}

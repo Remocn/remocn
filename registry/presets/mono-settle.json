@@ -1,0 +1,101 @@
+{
+  "component": "mono-settle",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Code-style lines resolve into an elegant serif on warm paper, with a slow, graceful sweep.",
+      "askedAs": [
+        "code turning into elegant serif",
+        "magazine style settle on cream background",
+        "slow refined type transition light"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1d1b18",
+        "accent": "#b4532a",
+        "sweep": 44
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "Monospace snaps almost instantly into crisp Inter for a fast, punchy reveal.",
+      "askedAs": [
+        "fast snappy type change",
+        "quick switch from code font",
+        "short punchy settle animation",
+        "быстрая смена шрифта",
+        "резкий переход из моноширинного"
+      ],
+      "props": {
+        "settleAt": 14,
+        "sweep": 8,
+        "speed": 1.5,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "terminal-night",
+      "label": "Terminal Night",
+      "description": "Deep navy terminal with a soft green accent that lingers in mono before a slow settle.",
+      "askedAs": [
+        "terminal look dark green",
+        "hacker style code to text",
+        "linger on monospace longer",
+        "тёмный терминал с зелёным",
+        "как в консоли"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "settleAt": 62,
+        "sweep": 36
+      }
+    },
+    {
+      "id": "bold-grotesk",
+      "label": "Bold Grotesk",
+      "description": "Oversized lines settle into characterful Bricolage Grotesque on a clean light ground.",
+      "askedAs": [
+        "big bold headline settle",
+        "large expressive type",
+        "oversized text light theme",
+        "крупный жирный заголовок",
+        "большой выразительный шрифт"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3,
+        "accent": "#2f5bea"
+      }
+    },
+    {
+      "id": "quiet-drift",
+      "label": "Quiet Drift",
+      "description": "A smaller, unhurried Fraunces settle on charcoal that begins after a calm pause.",
+      "askedAs": [
+        "slow calm subtle reveal",
+        "delayed gentle type morph",
+        "small understated text dark",
+        "медленно и спокойно",
+        "тихая плавная анимация текста"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#1c1c1e",
+        "ink": "#ece8e1",
+        "scale": 0.8,
+        "delay": 20,
+        "speed": 0.5
+      }
+    }
+  ]
+}

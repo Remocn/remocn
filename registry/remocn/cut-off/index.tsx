@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const syne = loadFont("normal", {
   weights: ["400", "500"],
@@ -23,7 +23,19 @@ export interface CutOffProps {
   reply?: string;
   highlight?: string;
   accent?: string;
+  /** Text color of the cut-off line; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Fill that cuts in behind the reply; overrides the theme. */
+  replyBackground?: string;
+  /** Typeface for the copy. Load it yourself; Syne by default. */
+  fontFamily?: string;
+  /** Frames per letter as the last word is typed. */
+  charFrames?: number;
+  /** Size of the copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -68,7 +80,7 @@ const HIT = 8;
 const HIT_GAP = 9;
 const MIN_HOLD = 40;
 
-function useEm(textsA: string[], textsB: string[]) {
+function useEm(textsA: string[], textsB: string[], family: string) {
   const key = `${textsA.join("\u0001")}\u0002${textsB.join("\u0001")}`;
   const [state, setState] = useState<{
     key: string;
@@ -81,8 +93,8 @@ function useEm(textsA: string[], textsB: string[]) {
     let live = true;
     Promise.all([
       syne.waitUntilDone(),
-      document.fonts.load(`400 100px "${syne.fontFamily}"`),
-      document.fonts.load(`500 100px "${syne.fontFamily}"`),
+      document.fonts.load(`400 100px "${family}"`),
+      document.fonts.load(`500 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -93,13 +105,13 @@ function useEm(textsA: string[], textsB: string[]) {
         const a: Record<string, number> = {};
         const b: Record<string, number> = {};
         if (ctx) {
-          ctx.font = `400 ${FONT_PX}px "${syne.fontFamily}"`;
+          ctx.font = `400 ${FONT_PX}px "${family}"`;
           for (const s of ka.split("\u0001")) {
             a[s] =
               ctx.measureText(s).width / FONT_PX +
               TRACK_A * Array.from(s).length;
           }
-          ctx.font = `500 ${FONT_PX}px "${syne.fontFamily}"`;
+          ctx.font = `500 ${FONT_PX}px "${family}"`;
           for (const s of kb.split("\u0001")) {
             b[s] =
               ctx.measureText(s).width / FONT_PX +
@@ -115,7 +127,7 @@ function useEm(textsA: string[], textsB: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, family]);
   return state && state.key === key ? state : null;
 }
 
@@ -147,19 +159,45 @@ function wrap(
 const bare = (w: string) =>
   w.toLowerCase().replace(/^[“"'‘(]+|[.,!?;:…”"'’)—–]+$/g, "");
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CutOff({
   line = "So first I export the clips, redo all the captions, then line up the mus",
   reply = "Or let the code cut it.",
   highlight = "the code",
   accent,
+  ink,
   background,
+  replyBackground,
+  fontFamily = syne.fontFamily,
+  charFrames = LETTER,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: CutOffProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.dim;
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
 
@@ -170,6 +208,7 @@ export function CutOff({
   const em = useEm(
     runs([...aWords.slice(0, -1), `${fragment}—`]),
     runs(bWords),
+    fontFamily,
   );
 
   if (!em) {
@@ -205,7 +244,8 @@ export function CutOff({
   const bTop = bBottom - bLines.length * LH_B * fB;
 
   const fragLetters = Array.from(fragment).length;
-  const fixedTail = fragLetters * LETTER + DASH_HOLD + HIT_GAP + HIT + MIN_HOLD;
+  const fixedTail =
+    fragLetters * charFrames + DASH_HOLD + HIT_GAP + HIT + MIN_HOLD;
   const gap = Math.max(
     3,
     Math.min(
@@ -214,7 +254,7 @@ export function CutOff({
     ),
   );
   const fragAt = LEAD_IN + (aWords.length - 1) * gap;
-  const dashAt = fragAt + fragLetters * LETTER;
+  const dashAt = fragAt + fragLetters * charFrames;
   const cutAt = dashAt + DASH_HOLD;
 
   const hlTokens = highlight.split(" ").filter(Boolean).map(bare);
@@ -243,7 +283,7 @@ export function CutOff({
   ): React.CSSProperties => ({
     position: "absolute",
     whiteSpace: "pre",
-    fontFamily: syne.fontFamily,
+    fontFamily,
     fontWeight: wght,
     fontSize: size,
     lineHeight: `${size * lh}px`,
@@ -271,7 +311,7 @@ export function CutOff({
           const letters = Array.from(fragment);
           const typed = Math.max(
             0,
-            Math.min(letters.length, Math.floor((t - fragAt) / LETTER) + 1),
+            Math.min(letters.length, Math.floor((t - fragAt) / charFrames) + 1),
           );
           content = letters.slice(0, typed).join("");
           p = t >= fragAt ? 1 : 0;
@@ -284,9 +324,10 @@ export function CutOff({
               ...textBase(fA, 400, TRACK_A, LH_A),
               left: aLeft + x * fA,
               top: aTop + li * LH_A * fA,
-              color: c.dim,
+              color: fg,
               opacity: p,
-              transform: `translateY(${((1 - p) * fA * 0.35).toFixed(2)}px)`,
+              // Unrounded: a rise rounded to 0.01px parks the word as well.
+              transform: `translateY(${(1 - p) * fA * 0.35}px)${glide(midway(p))}`,
             }}
           >
             {content}
@@ -328,7 +369,8 @@ export function CutOff({
                 position: "relative",
                 top: fB * 0.1,
                 color: hlFlags[i] ? hi : c.replyInk,
-                transform: `translateY(${((1 - p) * fB * 0.22).toFixed(2)}px) scale(${(1 + (1 - p) * 0.05).toFixed(4)})`,
+                // The hit overshoots past 1, so the tilt follows its window.
+                transform: `translateY(${(1 - p) * fB * 0.22}px) scale(${(1 + (1 - p) * 0.05).toFixed(4)})${glide(t < at + HIT)}`,
                 transformOrigin: "0% 100%",
               }}
             >
@@ -339,10 +381,14 @@ export function CutOff({
       });
     });
 
-  const field = before ? stage : transparent ? "transparent" : c.replyBg;
+  const field = before
+    ? stage
+    : transparent
+      ? "transparent"
+      : (replyBackground ?? c.replyBg);
   return (
     <AbsoluteFill style={{ background: field, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,8 +1,24 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const layoutSwapConfig: ComponentConfig = {
   componentName: "LayoutSwap",
   importPath: "@/components/remocn/layout-swap",
+  lists: {
+    headlines: {
+      default: [
+        "Animations.",
+        "Animations, transitions, backgrounds.",
+        "Animations, transitions and backgrounds, ready to install.",
+      ],
+      description: "Headlines",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +28,6 @@ export const layoutSwapConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     highlight: {
       type: "text-content",
@@ -50,6 +61,21 @@ export const layoutSwapConfig: ComponentConfig = {
       description: "Move",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 400,
+      max: 500,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Inter Tight" }),
     speed: {
       type: "number",
       default: 1,

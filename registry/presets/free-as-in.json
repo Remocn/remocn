@@ -1,0 +1,107 @@
+{
+  "component": "free-as-in",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper background with dark ink set in a light Instrument Serif and an unhurried rhythm.",
+      "askedAs": [
+        "magazine style serif text",
+        "elegant light theme typography",
+        "slow classy word gloss",
+        "элегантный шрифт с засечками",
+        "светлый журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "hold": 64
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced lines on near-black with a soft green accent, read like a developer's changelog.",
+      "askedAs": [
+        "code style monospace text",
+        "open source developer look",
+        "hacker terminal typography",
+        "моноширинный шрифт как в терминале",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1110",
+        "ink": "#d8e3dc",
+        "accent": "#6fcf97",
+        "fontWeight": 400,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "bold-punch",
+      "label": "Bold Punch",
+      "description": "Heavy oversized Bricolage Grotesque that snaps through each line fast with a warm orange highlight.",
+      "askedAs": [
+        "big bold fast text",
+        "punchy heavy headline",
+        "energetic pricing reveal",
+        "крупный жирный текст быстро",
+        "энергичная подача"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 800,
+        "scale": 1.3,
+        "speed": 1.75,
+        "hold": 28,
+        "accent": "#ff7a45"
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Small, thin Inter on a cool white ground with a calm slow pace and a muted blue accent.",
+      "askedAs": [
+        "minimal light clean text",
+        "calm slow subtle typography",
+        "apple style white minimal",
+        "минималистичный светлый стиль",
+        "спокойно и медленно"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "scale": 0.8,
+        "speed": 0.75,
+        "accent": "#3b6ea8"
+      }
+    },
+    {
+      "id": "midnight-fraunces",
+      "label": "Midnight Fraunces",
+      "description": "Deep navy background with cream Fraunces type and a gold accent for a premium closing beat.",
+      "askedAs": [
+        "dark premium serif ending",
+        "navy and gold luxury text",
+        "elegant dark closing message",
+        "тёмно-синий с золотом",
+        "премиальная концовка"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "fontWeight": 600,
+        "background": "#101a2e",
+        "ink": "#f2eadb",
+        "accent": "#d4a853",
+        "delay": 12
+      }
+    }
+  ]
+}

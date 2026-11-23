@@ -267,6 +267,8 @@ for (const ns of ["remocn", "remocn-icons"] as const) {
         : "#ffffff";
     const props: Record<string, unknown> = {};
     for (const [key, ctrl] of Object.entries(config.controls)) {
+      // Auto colours stay unset: the component picks them from its theme.
+      if (ctrl.type === "color" && ctrl.default === "") continue;
       const numericSelect =
         ctrl.type === "select" &&
         /^\d+(\.\d+)?$/.test(ctrl.default) &&

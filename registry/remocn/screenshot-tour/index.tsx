@@ -3,20 +3,14 @@
 import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -50,8 +44,22 @@ export interface ScreenshotTourProps {
   dim?: number;
   /** Pull back to the full shot after the last stop. */
   pullBack?: boolean;
+  /** Workspace name in the built-in mock's sidebar. */
+  brand?: string;
+  /** Replaces the remocn mark in the built-in mock's sidebar. */
+  logo?: React.ReactNode;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color of the stop labels; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the stop labels. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the screenshot and labels, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   /** gradients.sh preset for the ground. Defaults to "earthshine" (dark) or "glasswork" (light). */
   ground?: GshPresetId;
@@ -99,6 +107,10 @@ interface Cam {
 const clamp = (v: number, lo: number, hi: number) =>
   Math.min(hi, Math.max(lo, v));
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+/** A spring still on its way to 1, overshoot included. */
+const unsettled = (p: number) => p > 5e-4 && Math.abs(p - 1) > 5e-4;
+
 function travel(a: Cam, b: Cam, p: number, pull: number): Cam {
   const s =
     Math.exp(Math.log(a.s) + (Math.log(b.s) - Math.log(a.s)) * p) *
@@ -107,6 +119,22 @@ function travel(a: Cam, b: Cam, p: number, pull: number): Cam {
   const dy = b.y - a.y;
   const bend = Math.sin(Math.PI * p) * 0.16;
   return { x: a.x + dx * p - dy * bend, y: a.y + dy * p + dx * bend, s };
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function ScreenshotTour({
@@ -118,14 +146,22 @@ export function ScreenshotTour({
   framesPerStop = 45,
   dim = 0.55,
   pullBack = true,
+  brand = "remocn",
+  logo,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale: layerScale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: ScreenshotTourProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const sw = screenshotWidth;
   const sh = screenshotHeight;
   const tall = H > W * 1.2;
@@ -158,43 +194,49 @@ export function ScreenshotTour({
     s: keys[i].s * (1 + (i === 0 ? 0.012 : DRIFT)),
   });
 
-  let cam: Cam;
-  let spotRect: TourStop = stops[0] ?? {
-    x: 0,
-    y: 0,
-    width: sw,
-    height: sh,
-    label: "",
-  };
-  let spotAmount = 0;
   const tourEnd = ESTABLISH + n * F;
-  if (frame < ESTABLISH || n === 0) {
-    cam = { ...home, s: home.s * (1 + 0.012 * clamp(frame / ESTABLISH, 0, 1)) };
-  } else if (frame < tourEnd) {
-    const i = Math.floor((frame - ESTABLISH) / F);
-    const local = frame - ESTABLISH - i * F;
-    const p = MOVE(clamp(local / T, 0, 1));
-    cam = travel(drifted(i), keys[i + 1], p, i > 0 ? 0.12 : 0);
-    cam.s *= 1 + DRIFT * clamp((local - T) / (F - T), 0, 1);
-    const prev = stops[Math.max(0, i - 1)];
-    const next = stops[i];
-    spotRect = {
-      x: prev.x + (next.x - prev.x) * p,
-      y: prev.y + (next.y - prev.y) * p,
-      width: prev.width + (next.width - prev.width) * p,
-      height: prev.height + (next.height - prev.height) * p,
-      label: next.label,
+  // The shot as a function of the frame, so the camera can be compared with
+  // its neighbours to tell a move from a hold.
+  const shot = (f: number) => {
+    let cam: Cam;
+    let spotRect: TourStop = stops[0] ?? {
+      x: 0,
+      y: 0,
+      width: sw,
+      height: sh,
+      label: "",
     };
-    spotAmount =
-      i === 0
-        ? interpolate(p, [0.3, 1], [0, 1], { extrapolateLeft: "clamp" })
-        : 1;
-  } else {
-    const p = MOVE(clamp((frame - tourEnd) / RETURN, 0, 1));
-    spotRect = stops[n - 1];
-    cam = pullBack ? travel(drifted(n), home, p, 0) : drifted(n);
-    spotAmount = pullBack ? 1 - p : 1;
-  }
+    let spotAmount = 0;
+    if (f < ESTABLISH || n === 0) {
+      cam = { ...home, s: home.s * (1 + 0.012 * clamp(f / ESTABLISH, 0, 1)) };
+    } else if (f < tourEnd) {
+      const i = Math.floor((f - ESTABLISH) / F);
+      const local = f - ESTABLISH - i * F;
+      const p = MOVE(clamp(local / T, 0, 1));
+      cam = travel(drifted(i), keys[i + 1], p, i > 0 ? 0.12 : 0);
+      cam.s *= 1 + DRIFT * clamp((local - T) / (F - T), 0, 1);
+      const prev = stops[Math.max(0, i - 1)];
+      const next = stops[i];
+      spotRect = {
+        x: prev.x + (next.x - prev.x) * p,
+        y: prev.y + (next.y - prev.y) * p,
+        width: prev.width + (next.width - prev.width) * p,
+        height: prev.height + (next.height - prev.height) * p,
+        label: next.label,
+      };
+      spotAmount =
+        i === 0
+          ? interpolate(p, [0.3, 1], [0, 1], { extrapolateLeft: "clamp" })
+          : 1;
+    } else {
+      const p = MOVE(clamp((f - tourEnd) / RETURN, 0, 1));
+      spotRect = stops[n - 1];
+      cam = pullBack ? travel(drifted(n), home, p, 0) : drifted(n);
+      spotAmount = pullBack ? 1 - p : 1;
+    }
+    return { cam, spotRect, spotAmount };
+  };
+  const { cam, spotRect, spotAmount } = shot(frame);
 
   const enter = spring({ frame: frame + 2, fps, config: HEAVY });
   const enterScale = interpolate(enter, [0, 1], [0.94, 1]);
@@ -206,6 +248,18 @@ export function ScreenshotTour({
     y: (y - cam.y) * scale + cy + lift,
   });
 
+  // Where the screenshot sits at a frame: its offset and its scale.
+  const placed = (f: number) => {
+    const c = shot(f).cam;
+    const e = spring({ frame: f + 2, fps, config: HEAVY });
+    const k = c.s * interpolate(e, [0, 1], [0.94, 1]);
+    return [W / 2 - c.x * k, cy + (1 - e) * 0.05 * H - c.y * k, k];
+  };
+  const here = placed(frame);
+  const apart = (other: number[]) =>
+    other.some((v, i) => Math.abs(v - here[i]) > 1e-5);
+  const camMoving = apart(placed(frame + 1)) || apart(placed(frame - 1));
+
   const content = src ? (
     <Img
       src={src}
@@ -213,7 +267,14 @@ export function ScreenshotTour({
     />
   ) : (
     (children ?? (
-      <IssuesMock theme={theme} accent={accent} width={sw} height={sh} />
+      <IssuesMock
+        theme={theme}
+        accent={accent}
+        width={sw}
+        height={sh}
+        brand={brand}
+        logo={logo}
+      />
     ))
   );
 
@@ -236,7 +297,12 @@ export function ScreenshotTour({
     h: (spotRect.height + pad) * scale + slack * 2,
   };
   const r = 10 * u;
-  const hole = `M0 0H${W}V${H}H0Z M${ring.x + r} ${ring.y}H${ring.x + ring.w - r}A${r} ${r} 0 0 1 ${ring.x + ring.w} ${ring.y + r}V${ring.y + ring.h - r}A${r} ${r} 0 0 1 ${ring.x + ring.w - r} ${ring.y + ring.h}H${ring.x + r}A${r} ${r} 0 0 1 ${ring.x} ${ring.y + ring.h - r}V${ring.y + r}A${r} ${r} 0 0 1 ${ring.x + r} ${ring.y}Z`;
+  // Scaled down, the veil's outer edge would show; reach past the frame instead.
+  const outer =
+    layerScale === 1
+      ? `M0 0H${W}V${H}H0Z`
+      : `M${-W} ${-H}H${2 * W}V${2 * H}H${-W}Z`;
+  const hole = `${outer} M${ring.x + r} ${ring.y}H${ring.x + ring.w - r}A${r} ${r} 0 0 1 ${ring.x + ring.w} ${ring.y + r}V${ring.y + ring.h - r}A${r} ${r} 0 0 1 ${ring.x + ring.w - r} ${ring.y + ring.h}H${ring.x + r}A${r} ${r} 0 0 1 ${ring.x} ${ring.y + ring.h - r}V${ring.y + r}A${r} ${r} 0 0 1 ${ring.x + r} ${ring.y}Z`;
 
   const zoomed = clamp((cam.s / s0 - 1) / 0.8, 0, 1);
   const veil = dark ? "#040507" : "#F3F3F5";
@@ -257,86 +323,207 @@ export function ScreenshotTour({
         fontFamily,
         overflow: "hidden",
         WebkitFontSmoothing: "antialiased",
-        background: dark ? "#02040a" : "#eef0f6",
+        background:
+          background === undefined ? (dark ? "#02040a" : "#eef0f6") : undefined,
       }}
     >
-      <AbsoluteFill style={{ transform: `scale(${1.04 + 0.06 * zoomed})` }}>
-        <GshGround
-          preset={ground ?? (dark ? "earthshine" : "glasswork")}
-          params={groundParams}
-          timeOffset={3}
-          timeScale={0.5}
-        />
-      </AbsoluteFill>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: sw,
-          height: sh,
-          transformOrigin: "0 0",
-          transform: `translate(${W / 2 - cam.x * scale}px, ${cy + lift - cam.y * scale}px) scale(${scale})`,
-          opacity: interpolate(enter, [0, 0.5], [0, 1], {
-            extrapolateRight: "clamp",
-          }),
-        }}
-      >
-        <div
-          style={{
-            position: "relative",
-            width: sw,
-            height: sh,
-            borderRadius: 14,
-            overflow: "hidden",
-            boxShadow: dark
-              ? "0 0 0 1px rgba(255,255,255,0.1), 0 30px 80px -20px rgba(0,0,0,0.8)"
-              : "0 0 0 1px rgba(16,24,40,0.08), 0 2px 4px rgba(16,24,40,0.05), 0 30px 80px -24px rgba(16,24,40,0.28)",
-          }}
-        >
-          {content}
-        </div>
-      </div>
-      {spotAmount > 0 && n > 0 && (
-        <>
-          <svg
-            width={W}
-            height={H}
-            style={{ position: "absolute", inset: 0 }}
-            aria-hidden
-          >
-            <path
-              d={hole}
-              fillRule="evenodd"
-              fill={veil}
-              opacity={dim * spotAmount}
-            />
-          </svg>
-          <div
-            style={{
-              position: "absolute",
-              left: ring.x,
-              top: ring.y,
-              width: ring.w,
-              height: ring.h,
-              boxSizing: "border-box",
-              borderRadius: r,
-              border: `${1.5 * u}px solid ${accent}`,
-              opacity: spotAmount,
-            }}
+      {background === undefined ? (
+        <AbsoluteFill style={{ transform: `scale(${1.04 + 0.06 * zoomed})` }}>
+          <GshGround
+            preset={ground ?? (dark ? "earthshine" : "glasswork")}
+            params={groundParams}
+            timeOffset={3}
+            timeScale={0.5}
           />
-        </>
+        </AbsoluteFill>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
       )}
-      {tall && n > 0 ? (
+      <ScaleLayer scale={layerScale}>
         <div
           style={{
             position: "absolute",
-            left: W * 0.08,
-            right: W * 0.08,
-            top: H * 0.1,
+            left: 0,
+            top: 0,
+            width: sw,
+            height: sh,
+            transformOrigin: "0 0",
+            transform: `translate(${W / 2 - cam.x * scale}px, ${cy + lift - cam.y * scale}px) scale(${scale})${glide(camMoving)}`,
+            opacity: interpolate(enter, [0, 0.5], [0, 1], {
+              extrapolateRight: "clamp",
+            }),
           }}
         >
-          {stops.map((st, i) => {
+          <div
+            style={{
+              position: "relative",
+              width: sw,
+              height: sh,
+              borderRadius: 14,
+              overflow: "hidden",
+              boxShadow: dark
+                ? "0 0 0 1px rgba(255,255,255,0.1), 0 30px 80px -20px rgba(0,0,0,0.8)"
+                : "0 0 0 1px rgba(16,24,40,0.08), 0 2px 4px rgba(16,24,40,0.05), 0 30px 80px -24px rgba(16,24,40,0.28)",
+            }}
+          >
+            {content}
+          </div>
+        </div>
+        {spotAmount > 0 && n > 0 && (
+          <>
+            <svg
+              width={W}
+              height={H}
+              style={{
+                position: "absolute",
+                inset: 0,
+                overflow: layerScale === 1 ? undefined : "visible",
+              }}
+              aria-hidden
+            >
+              <path
+                d={hole}
+                fillRule="evenodd"
+                fill={veil}
+                opacity={dim * spotAmount}
+              />
+            </svg>
+            <div
+              style={{
+                position: "absolute",
+                left: ring.x,
+                top: ring.y,
+                width: ring.w,
+                height: ring.h,
+                boxSizing: "border-box",
+                borderRadius: r,
+                border: `${1.5 * u}px solid ${accent}`,
+                opacity: spotAmount,
+              }}
+            />
+          </>
+        )}
+        {tall && n > 0 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: W * 0.08,
+              right: W * 0.08,
+              top: H * 0.1,
+            }}
+          >
+            {stops.map((st, i) => {
+              const a = arrivals[i];
+              const exitAt =
+                i < n - 1
+                  ? ESTABLISH + (i + 1) * F
+                  : pullBack
+                    ? tourEnd
+                    : Number.POSITIVE_INFINITY;
+              const e = EXIT(clamp((frame - exitAt) / 6, 0, 1));
+              const opacity = clamp(a, 0, 1) * (1 - e);
+              if (opacity <= 0.001) return null;
+              return (
+                <div
+                  key={`${st.label}-${i}`}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    opacity,
+                    transform: `translateY(${((1 - a) * 0.03 - e * 0.02) * H}px)${glide(unsettled(a) || midway(e))}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: mono,
+                      fontSize: 0.024 * H,
+                      letterSpacing: "0.04em",
+                      color: dark
+                        ? "rgba(244,244,245,0.55)"
+                        : "rgba(20,21,24,0.5)",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {step(i)}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 0.018 * H,
+                      fontSize: 0.042 * H,
+                      fontWeight: 300,
+                      lineHeight: 1.08,
+                      letterSpacing: "-0.03em",
+                      color: ink ?? (dark ? "#F4F4F5" : "#141518"),
+                      textWrap: "balance",
+                    }}
+                  >
+                    {st.label}
+                  </div>
+                </div>
+              );
+            })}
+            {pullBack
+              ? stops.map((st, i) => {
+                  const a = spring({
+                    frame: frame - (tourEnd + 4 + i * 3),
+                    fps,
+                    config: CARD,
+                  });
+                  if (a <= 0.001) return null;
+                  return (
+                    <div
+                      key={`recap-${st.label}`}
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        top: i * 0.072 * H,
+                        display: "flex",
+                        alignItems: "baseline",
+                        gap: 0.03 * W,
+                        paddingBottom: 0.022 * H,
+                        borderBottom: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(20,21,24,0.12)"}`,
+                        opacity: clamp(a, 0, 1),
+                        transform: `translateY(${(1 - a) * 0.025 * H}px)${glide(unsettled(a))}`,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: mono,
+                          fontSize: 0.022 * H,
+                          color: dark
+                            ? "rgba(244,244,245,0.5)"
+                            : "rgba(20,21,24,0.45)",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 0.03 * H,
+                          fontWeight: 300,
+                          letterSpacing: "-0.02em",
+                          whiteSpace: "nowrap",
+                          color: ink ?? (dark ? "#F4F4F5" : "#141518"),
+                        }}
+                      >
+                        {st.label}
+                      </span>
+                    </div>
+                  );
+                })
+              : null}
+          </div>
+        ) : null}
+        {!tall &&
+          stops.map((st, i) => {
             const a = arrivals[i];
             const exitAt =
               i < n - 1
@@ -347,170 +534,84 @@ export function ScreenshotTour({
             const e = EXIT(clamp((frame - exitAt) / 6, 0, 1));
             const opacity = clamp(a, 0, 1) * (1 - e);
             if (opacity <= 0.001) return null;
+            const fs = 18 * u;
+            const cardW = (st.label.length * fs * 0.5 + 92 * u) | 0;
+            const cardH = 48 * u;
+            const gap = 14 * u;
+            const bottom = toScreen(
+              st.x + st.width / 2,
+              st.y + st.height + pad,
+            );
+            const top = toScreen(st.x, st.y - pad);
+            const below = bottom.y + gap + cardH < H - 20 * u;
+            const y = below ? bottom.y + gap : top.y - gap - cardH;
+            const x = clamp(
+              bottom.x,
+              cardW / 2 + 24 * u,
+              W - cardW / 2 - 24 * u,
+            );
+            // The card is laid out where the settled camera puts it and
+            // follows the live camera by a transform: layout rounds a box and
+            // a baseline to whole pixels, so a card carried by `left`/`top`
+            // clicks along as the camera drifts.
+            const key = keys[i + 1];
+            const restY = below
+              ? (st.y + st.height + pad - key.y) * key.s + cy + gap
+              : (st.y - pad - key.y) * key.s + cy - gap - cardH;
+            const restX = clamp(
+              (st.x + st.width / 2 - key.x) * key.s + W / 2,
+              cardW / 2 + 24 * u,
+              W - cardW / 2 - 24 * u,
+            );
             return (
               <div
                 key={`${st.label}-${i}`}
                 style={{
                   position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 0,
+                  left: restX,
+                  top: restY,
+                  height: cardH,
+                  boxSizing: "border-box",
+                  transformOrigin: below ? "50% 0%" : "50% 100%",
+                  transform: `translate(${x - restX}px, ${y - restY}px) translate(-50%, ${((1 - a) * 10 - e * 6) * u * (below ? 1 : -1)}px) scale(${interpolate(a, [0, 1], [0.94, 1])})${glide(camMoving || unsettled(a) || midway(e))}`,
                   opacity,
-                  transform: `translateY(${((1 - a) * 0.03 - e * 0.02) * H}px)`,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14 * u,
+                  padding: `0 ${18 * u}px`,
+                  borderRadius: 12 * u,
+                  whiteSpace: "nowrap",
+                  background: card.bg,
+                  boxShadow: card.edge,
+                  color: ink ?? card.ink,
+                  fontSize: fs,
+                  fontWeight: 400,
+                  letterSpacing: "-0.01em",
                 }}
               >
-                <div
+                <span
                   style={{
                     fontFamily: mono,
-                    fontSize: 0.024 * H,
-                    letterSpacing: "0.04em",
-                    color: dark
-                      ? "rgba(244,244,245,0.55)"
-                      : "rgba(20,21,24,0.5)",
+                    fontSize: 16 * u,
+                    color: card.sub,
                     fontVariantNumeric: "tabular-nums",
                   }}
                 >
                   {step(i)}
-                </div>
-                <div
+                </span>
+                <span
                   style={{
-                    marginTop: 0.018 * H,
-                    fontSize: 0.042 * H,
-                    fontWeight: 300,
-                    lineHeight: 1.08,
-                    letterSpacing: "-0.03em",
-                    color: dark ? "#F4F4F5" : "#141518",
-                    textWrap: "balance",
+                    width: 1,
+                    alignSelf: "stretch",
+                    margin: `${14 * u}px 0`,
+                    background: "rgba(255,255,255,0.12)",
                   }}
-                >
-                  {st.label}
-                </div>
+                />
+                {st.label}
               </div>
             );
           })}
-          {pullBack
-            ? stops.map((st, i) => {
-                const a = spring({
-                  frame: frame - (tourEnd + 4 + i * 3),
-                  fps,
-                  config: CARD,
-                });
-                if (a <= 0.001) return null;
-                return (
-                  <div
-                    key={`recap-${st.label}`}
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      top: i * 0.072 * H,
-                      display: "flex",
-                      alignItems: "baseline",
-                      gap: 0.03 * W,
-                      paddingBottom: 0.022 * H,
-                      borderBottom: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(20,21,24,0.12)"}`,
-                      opacity: clamp(a, 0, 1),
-                      transform: `translateY(${(1 - a) * 0.025 * H}px)`,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: mono,
-                        fontSize: 0.022 * H,
-                        color: dark
-                          ? "rgba(244,244,245,0.5)"
-                          : "rgba(20,21,24,0.45)",
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 0.03 * H,
-                        fontWeight: 300,
-                        letterSpacing: "-0.02em",
-                        whiteSpace: "nowrap",
-                        color: dark ? "#F4F4F5" : "#141518",
-                      }}
-                    >
-                      {st.label}
-                    </span>
-                  </div>
-                );
-              })
-            : null}
-        </div>
-      ) : null}
-      {!tall &&
-        stops.map((st, i) => {
-          const a = arrivals[i];
-          const exitAt =
-            i < n - 1
-              ? ESTABLISH + (i + 1) * F
-              : pullBack
-                ? tourEnd
-                : Number.POSITIVE_INFINITY;
-          const e = EXIT(clamp((frame - exitAt) / 6, 0, 1));
-          const opacity = clamp(a, 0, 1) * (1 - e);
-          if (opacity <= 0.001) return null;
-          const fs = 18 * u;
-          const cardW = (st.label.length * fs * 0.5 + 92 * u) | 0;
-          const cardH = 48 * u;
-          const gap = 14 * u;
-          const bottom = toScreen(st.x + st.width / 2, st.y + st.height + pad);
-          const top = toScreen(st.x, st.y - pad);
-          const below = bottom.y + gap + cardH < H - 20 * u;
-          const y = below ? bottom.y + gap : top.y - gap - cardH;
-          const x = clamp(bottom.x, cardW / 2 + 24 * u, W - cardW / 2 - 24 * u);
-          return (
-            <div
-              key={`${st.label}-${i}`}
-              style={{
-                position: "absolute",
-                left: x,
-                top: y,
-                height: cardH,
-                boxSizing: "border-box",
-                transformOrigin: below ? "50% 0%" : "50% 100%",
-                transform: `translate(-50%, ${((1 - a) * 10 - e * 6) * u * (below ? 1 : -1)}px) scale(${interpolate(a, [0, 1], [0.94, 1])})`,
-                opacity,
-                display: "flex",
-                alignItems: "center",
-                gap: 14 * u,
-                padding: `0 ${18 * u}px`,
-                borderRadius: 12 * u,
-                whiteSpace: "nowrap",
-                background: card.bg,
-                boxShadow: card.edge,
-                color: card.ink,
-                fontSize: fs,
-                fontWeight: 400,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: mono,
-                  fontSize: 16 * u,
-                  color: card.sub,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {step(i)}
-              </span>
-              <span
-                style={{
-                  width: 1,
-                  alignSelf: "stretch",
-                  margin: `${14 * u}px 0`,
-                  background: "rgba(255,255,255,0.12)",
-                }}
-              />
-              {st.label}
-            </div>
-          );
-        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -915,6 +1016,8 @@ interface IssuesMockProps {
   width?: number;
   height?: number;
   headerExtra?: React.ReactNode;
+  brand?: string;
+  logo?: React.ReactNode;
 }
 
 function IssuesMock({
@@ -923,6 +1026,8 @@ function IssuesMock({
   width = MOCK_W,
   height = MOCK_H,
   headerExtra,
+  brand = "remocn",
+  logo,
 }: IssuesMockProps) {
   const c = MOCK_COLORS[theme];
   const box = (size: number) => ({
@@ -939,7 +1044,7 @@ function IssuesMock({
         height,
         background: c.app,
         display: "flex",
-        fontFamily,
+        fontFamily: sans,
         color: c.text,
         position: "relative",
         overflow: "hidden",
@@ -972,11 +1077,13 @@ function IssuesMock({
               background: accent,
             }}
           >
-            <svg viewBox="0 0 124.06 134.26" height={11} aria-hidden>
-              <path fill="#fff" d={REMOCN_R_PATH} />
-            </svg>
+            {logo ?? (
+              <svg viewBox="0 0 124.06 134.26" height={11} aria-hidden>
+                <path fill="#fff" d={REMOCN_R_PATH} />
+              </svg>
+            )}
           </div>
-          <span style={{ fontSize: 13.5, fontWeight: 400 }}>remocn</span>
+          <span style={{ fontSize: 13.5, fontWeight: 400 }}>{brand}</span>
           <Glyph name="chevron" size={12} color={c.sub} />
           <div style={{ flex: 1 }} />
           <Glyph name="search" size={15} color={c.sub} />

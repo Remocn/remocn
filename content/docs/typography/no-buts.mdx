@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="NoButs"
     component={NoButsScene}
-    durationInFrames={255}
-    fps={30}
+    durationInFrames={510}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -63,14 +63,49 @@ Each exchange builds a muted objection word by word at the top right, then a lar
       description: "Objection and reply pairs, played in order.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "2.5",
+      description: "Frames between words of a reply rising in.",
+    },
+    {
+      name: "pause",
+      type: "number",
+      default: "26",
+      description: "Frames between one reply landing and the next objection.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of the final reply; overrides the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hubot Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

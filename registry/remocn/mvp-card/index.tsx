@@ -2,13 +2,9 @@
 
 import { loadFont } from "@remotion/google-fonts/Antonio";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: antonio } = loadFont("normal", {
   weights: ["400", "500"],
@@ -74,6 +70,21 @@ export interface MvpCardProps {
   stats?: MvpStat[];
   /** Small markers: kicker tick and stat ticks. */
   accent?: string;
+  /** Text color of the event line, logo and stat values; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Antonio by default. */
+  fontFamily?: string;
+  /** Frames between stat rows as they start counting. */
+  stagger?: number;
+  /** Frames each stat takes to count to its value. */
+  countDuration?: number;
+  /** Replaces the remocn mark in the name row. */
+  logo?: React.ReactNode;
+  /** Size of the card and title, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -167,6 +178,24 @@ function kick(d: number, len = 8) {
   return k * k;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MvpCard({
   title = "MVP",
   kicker = "Most valuable player",
@@ -179,12 +208,24 @@ export function MvpCard({
     { value: 100, suffix: "%", label: "Uptime" },
   ],
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = antonio,
+  stagger = 8,
+  countDuration = 22,
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: MvpCardProps) {
-  const t = useCurrentFrame() * speed + 1;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + 1;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
   // ── Layout ────────────────────────────────────────────────────────────────
@@ -226,305 +267,322 @@ export function MvpCard({
   const kickerIn = OUT(ramp(t, 13, 10));
   const lettersAt = (i: number) => 5 + i * 3;
   const lastLetter = lettersAt(letters.length - 1) + 5;
-  const hit = Math.max(kick(t - 4, 8), kick(t - lastLetter, 9) * 0.8);
+  const hitAt = (tt: number) =>
+    Math.max(kick(tt - 4, 8), kick(tt - lastLetter, 9) * 0.8);
+  const hit = hitAt(t);
+  // The hits jump up in one frame and ease back, with no clean progress:
+  // compare the zoom with the neighbouring frames, weighed by the reach from
+  // the centre to the far corner of the copy. While it moves its tilt covers
+  // everything inside, so the inner movers skip theirs.
+  const reach = Math.hypot(W, H) / 2;
+  const hitting =
+    Math.abs(hitAt(t + speed) - hit) * 0.012 * reach > 1e-3 ||
+    Math.abs(hit - hitAt(t - speed)) * 0.012 * reach > 1e-3;
   const drift = interpolate(t, [0, 120], [0, 8], CLAMP);
 
-  const statAt = (i: number) => 18 + i * 8;
-  const statLen = 22;
+  const statAt = (i: number) => 18 + i * stagger;
+  const statLen = countDuration;
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `scale(${1 + 0.012 * hit})`,
-        }}
-      >
-        {/* Kicker and event line, top right. */}
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: titleLeft + 6 * u,
-            top: cardY + 4 * u,
-            opacity: kickerIn,
-            transform: `translateX(${(1 - kickerIn) * 30 * u}px)`,
+            inset: 0,
+            transform: `scale(${1 + 0.012 * hit})${glide(hitting)}`,
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 14 * u,
-              fontFamily: antonio,
-              fontWeight: 500,
-              fontSize: 24 * u,
-              lineHeight: 1,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              color: c.dim,
-              whiteSpace: "nowrap",
-            }}
-          >
-            <div style={{ width: 30 * u, height: 4 * u, background: accent }} />
-            {kicker}
-          </div>
-          <div
-            style={{
-              marginTop: 14 * u,
-              fontFamily: antonio,
-              fontWeight: 400,
-              fontSize: 78 * u,
-              lineHeight: 1,
-              letterSpacing: "-0.01em",
-              textTransform: "uppercase",
-              color: c.ink,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {event}
-          </div>
-        </div>
-
-        {/* The giant title, rising letter by letter, cap bottom on the card bottom. */}
-        <div
-          style={{
-            position: "absolute",
-            left: titleLeft,
-            width: titleW,
-            top: capBottom - (CAP + 0.03) * titleFs,
-            height: (CAP + 0.03) * titleFs + 2 * u,
-            overflow: "hidden",
-          }}
-        >
-          {letters.map((ch, i) => {
-            const p = SLAM(ramp(t, lettersAt(i), 9));
-            return (
-              <span
-                key={`${i}-${ch}`}
-                style={{
-                  position: "absolute",
-                  left: letterX[i],
-                  top: (CAP + 0.03) * titleFs - BASELINE * titleFs,
-                  fontFamily: antonio,
-                  fontWeight: 500,
-                  fontSize: titleFs,
-                  lineHeight: 1,
-                  backgroundImage: c.title(drift),
-                  backgroundSize: `${titleW}px ${titleFs * 1.1}px`,
-                  backgroundPosition: `${-letterX[i]}px ${0.1 * titleFs}px`,
-                  backgroundRepeat: "no-repeat",
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  color: "transparent",
-                  transform: `translateY(${(1 - p) * (CAP + 0.06) * titleFs}px)`,
-                  whiteSpace: "pre",
-                }}
-              >
-                {ch}
-              </span>
-            );
-          })}
-        </div>
-
-        {/* The card. */}
-        <div
-          style={{
-            position: "absolute",
-            left: cardX,
-            top: cardY,
-            width: cardW,
-            height: cardH,
-            transform: `translateY(${cardLift}px) scale(${cardScale})`,
-            clipPath: `inset(${50 * (1 - open)}% 0 ${50 * (1 - open)}% 0)`,
-          }}
-        >
+          {/* Kicker and event line, top right. */}
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              clipPath: `polygon(0 0, calc(100% - ${corner}px) 0, 100% ${corner}px, 100% 100%, 0 100%)`,
-              background: c.card,
-              boxShadow: `inset 0 0 0 ${1.5 * u}px ${c.edge}`,
+              left: titleLeft + 6 * u,
+              top: cardY + 4 * u,
+              opacity: kickerIn,
+              transform: `translateX(${(1 - kickerIn) * 30 * u}px)`,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 14 * u,
+                fontFamily,
+                fontWeight: 500,
+                fontSize: 24 * u,
+                lineHeight: 1,
+                letterSpacing: "0.22em",
+                textTransform: "uppercase",
+                color: c.dim,
+                whiteSpace: "nowrap",
+              }}
+            >
+              <div
+                style={{ width: 30 * u, height: 4 * u, background: accent }}
+              />
+              {kicker}
+            </div>
+            <div
+              style={{
+                marginTop: 14 * u,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 78 * u,
+                lineHeight: 1,
+                letterSpacing: "-0.01em",
+                textTransform: "uppercase",
+                color: fg,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {event}
+            </div>
+          </div>
+
+          {/* The giant title, rising letter by letter, cap bottom on the card bottom. */}
+          <div
+            style={{
+              position: "absolute",
+              left: titleLeft,
+              width: titleW,
+              top: capBottom - (CAP + 0.03) * titleFs,
+              height: (CAP + 0.03) * titleFs + 2 * u,
               overflow: "hidden",
             }}
           >
-            {/* Portrait: the R mark as the player. */}
+            {letters.map((ch, i) => {
+              const p = SLAM(ramp(t, lettersAt(i), 9));
+              return (
+                <span
+                  key={`${i}-${ch}`}
+                  style={{
+                    position: "absolute",
+                    left: letterX[i],
+                    top: (CAP + 0.03) * titleFs - BASELINE * titleFs,
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: titleFs,
+                    lineHeight: 1,
+                    backgroundImage: c.title(drift),
+                    backgroundSize: `${titleW}px ${titleFs * 1.1}px`,
+                    backgroundPosition: `${-letterX[i]}px ${0.1 * titleFs}px`,
+                    backgroundRepeat: "no-repeat",
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    color: "transparent",
+                    transform: `translateY(${(1 - p) * (CAP + 0.06) * titleFs}px)`,
+                    whiteSpace: "pre",
+                  }}
+                >
+                  {ch}
+                </span>
+              );
+            })}
+          </div>
+
+          {/* The card. */}
+          <div
+            style={{
+              position: "absolute",
+              left: cardX,
+              top: cardY,
+              width: cardW,
+              height: cardH,
+              transform: `translateY(${cardLift}px) scale(${cardScale})${glide(midway(settle) && !hitting)}`,
+              clipPath: `inset(${50 * (1 - open)}% 0 ${50 * (1 - open)}% 0)`,
+            }}
+          >
             <div
               style={{
                 position: "absolute",
-                left: 0,
-                top: 0,
-                width: cardW,
-                height: portraitH,
+                inset: 0,
+                clipPath: `polygon(0 0, calc(100% - ${corner}px) 0, 100% ${corner}px, 100% 100%, 0 100%)`,
+                background: c.card,
+                boxShadow: `inset 0 0 0 ${1.5 * u}px ${c.edge}`,
                 overflow: "hidden",
-                background: [
-                  `radial-gradient(70% 80% at ${78 - drift}% 18%, ${FLUTED[2]} 0%, transparent 62%)`,
-                  `radial-gradient(60% 70% at ${70 - drift * 0.5}% 6%, ${FLUTED[3]}cc 0%, transparent 46%)`,
-                  `radial-gradient(90% 90% at ${14 + drift}% 96%, ${FLUTED[1]} 0%, transparent 70%)`,
-                  `linear-gradient(160deg, #B2507A 0%, ${FLUTED[0]} 100%)`,
-                ].join(", "),
               }}
             >
-              <svg
-                viewBox="0 0 124.06 134.26"
-                height={234 * u}
-                width={(234 * u * 124.06) / 134.26}
+              {/* Portrait: the R mark as the player. */}
+              <div
                 style={{
                   position: "absolute",
-                  left: cardW / 2 - (234 * u * 124.06) / 134.26 / 2 + 6 * u,
-                  bottom: -26 * u,
-                  transform: `translateY(${(1 - nameIn) * 30 * u}px)`,
+                  left: 0,
+                  top: 0,
+                  width: cardW,
+                  height: portraitH,
+                  overflow: "hidden",
+                  background: [
+                    `radial-gradient(70% 80% at ${78 - drift}% 18%, ${FLUTED[2]} 0%, transparent 62%)`,
+                    `radial-gradient(60% 70% at ${70 - drift * 0.5}% 6%, ${FLUTED[3]}cc 0%, transparent 46%)`,
+                    `radial-gradient(90% 90% at ${14 + drift}% 96%, ${FLUTED[1]} 0%, transparent 70%)`,
+                    `linear-gradient(160deg, #B2507A 0%, ${FLUTED[0]} 100%)`,
+                  ].join(", "),
                 }}
-                aria-hidden
               >
-                <path fill="#FFFFFF" d={REMOCN_R_PATH} />
-              </svg>
+                <svg
+                  viewBox="0 0 124.06 134.26"
+                  height={234 * u}
+                  width={(234 * u * 124.06) / 134.26}
+                  style={{
+                    position: "absolute",
+                    left: cardW / 2 - (234 * u * 124.06) / 134.26 / 2 + 6 * u,
+                    bottom: -26 * u,
+                    transform: `translateY(${(1 - nameIn) * 30 * u}px)`,
+                  }}
+                  aria-hidden
+                >
+                  <path fill="#FFFFFF" d={REMOCN_R_PATH} />
+                </svg>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: pad,
+                    top: pad - 4 * u,
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: 64 * u,
+                    lineHeight: 1,
+                    letterSpacing: "-0.01em",
+                    color: "#FFFFFF",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {number}
+                </div>
+              </div>
+
+              {/* Name row. */}
               <div
                 style={{
                   position: "absolute",
                   left: pad,
-                  top: pad - 4 * u,
-                  fontFamily: antonio,
-                  fontWeight: 500,
-                  fontSize: 64 * u,
-                  lineHeight: 1,
-                  letterSpacing: "-0.01em",
-                  color: "#FFFFFF",
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {number}
-              </div>
-            </div>
-
-            {/* Name row. */}
-            <div
-              style={{
-                position: "absolute",
-                left: pad,
-                right: pad,
-                top: portraitH,
-                height: nameH,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderBottom: `${1.5 * u}px solid ${c.rule}`,
-                opacity: nameIn,
-                transform: `translateX(${(1 - nameIn) * 24 * u}px)`,
-              }}
-            >
-              <RemocnLogo fontSize={54 * u} color={c.ink} />
-              <div
-                style={{
+                  right: pad,
+                  top: portraitH,
+                  height: nameH,
                   display: "flex",
                   alignItems: "center",
-                  gap: 10 * u,
-                  height: 36 * u,
-                  padding: `0 ${14 * u}px`,
-                  background: accent,
-                  fontFamily: antonio,
-                  fontWeight: 500,
-                  fontSize: 23 * u,
-                  letterSpacing: "0.16em",
-                  textTransform: "uppercase",
-                  color: "#FFFFFF",
-                  paddingTop: 2 * u,
+                  justifyContent: "space-between",
+                  borderBottom: `${1.5 * u}px solid ${c.rule}`,
+                  opacity: nameIn,
+                  transform: `translateX(${(1 - nameIn) * 24 * u}px)`,
                 }}
               >
-                {role}
-              </div>
-            </div>
-
-            {/* Stats. */}
-            {stats.map((s, i) => {
-              const at = statAt(i);
-              const p = COUNT(ramp(t, at, statLen));
-              const from = s.from ?? 0;
-              const v = from + (s.value - from) * p;
-              const dec = s.decimals ?? 0;
-              const shown = `${v.toFixed(dec)}${s.suffix ?? ""}`;
-              const rowIn = OUT(ramp(t, at - 2, 8));
-              const land = kick(t - at - statLen, 9);
-              return (
+                {logo ?? <RemocnLogo fontSize={54 * u} color={fg} />}
                 <div
-                  key={`${i}-${s.label}`}
                   style={{
-                    position: "absolute",
-                    left: pad,
-                    right: pad,
-                    top: portraitH + nameH + i * rowH,
-                    height: rowH,
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "space-between",
-                    borderBottom:
-                      i < stats.length - 1
-                        ? `${1.5 * u}px solid ${c.rule}`
-                        : "none",
-                    opacity: rowIn,
-                    transform: `translateY(${(1 - rowIn) * 16 * u}px)`,
+                    gap: 10 * u,
+                    height: 36 * u,
+                    padding: `0 ${14 * u}px`,
+                    background: accent,
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: 23 * u,
+                    letterSpacing: "0.16em",
+                    textTransform: "uppercase",
+                    color: "#FFFFFF",
+                    paddingTop: 2 * u,
                   }}
                 >
+                  {role}
+                </div>
+              </div>
+
+              {/* Stats. */}
+              {stats.map((s, i) => {
+                const at = statAt(i);
+                const p = COUNT(ramp(t, at, statLen));
+                const from = s.from ?? 0;
+                const v = from + (s.value - from) * p;
+                const dec = s.decimals ?? 0;
+                const shown = `${v.toFixed(dec)}${s.suffix ?? ""}`;
+                const rowIn = OUT(ramp(t, at - 2, 8));
+                const land = kick(t - at - statLen, 9);
+                const landing =
+                  kick(t + speed - at - statLen, 9) !== land ||
+                  kick(t - speed - at - statLen, 9) !== land;
+                return (
                   <div
+                    key={`${i}-${s.label}`}
                     style={{
-                      fontFamily: antonio,
-                      fontWeight: 500,
-                      fontSize: 78 * u,
-                      lineHeight: 1,
-                      letterSpacing: "-0.01em",
-                      fontVariantNumeric: "tabular-nums",
-                      color: c.ink,
-                      paddingTop: 4 * u,
-                      transform: `scale(${1 + 0.06 * land})`,
-                      transformOrigin: "left center",
-                    }}
-                  >
-                    {shown}
-                  </div>
-                  <div
-                    style={{
+                      position: "absolute",
+                      left: pad,
+                      right: pad,
+                      top: portraitH + nameH + i * rowH,
+                      height: rowH,
                       display: "flex",
                       alignItems: "center",
-                      gap: 10 * u,
-                      fontFamily: antonio,
-                      fontWeight: 500,
-                      fontSize: 24 * u,
-                      letterSpacing: "0.16em",
-                      textTransform: "uppercase",
-                      color: c.dim,
+                      justifyContent: "space-between",
+                      borderBottom:
+                        i < stats.length - 1
+                          ? `${1.5 * u}px solid ${c.rule}`
+                          : "none",
+                      opacity: rowIn,
+                      transform: `translateY(${(1 - rowIn) * 16 * u}px)${glide(midway(rowIn) && !hitting)}`,
                     }}
                   >
-                    {s.label}
                     <div
                       style={{
-                        width: 8 * u,
-                        height: 8 * u,
-                        background: p >= 1 ? accent : c.rule,
+                        fontFamily,
+                        fontWeight: 500,
+                        fontSize: 78 * u,
+                        lineHeight: 1,
+                        letterSpacing: "-0.01em",
+                        fontVariantNumeric: "tabular-nums",
+                        color: fg,
+                        paddingTop: 4 * u,
+                        transform: `scale(${1 + 0.06 * land})${glide(landing && !hitting)}`,
+                        transformOrigin: "left center",
                       }}
-                    />
+                    >
+                      {shown}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10 * u,
+                        fontFamily,
+                        fontWeight: 500,
+                        fontSize: 24 * u,
+                        letterSpacing: "0.16em",
+                        textTransform: "uppercase",
+                        color: c.dim,
+                      }}
+                    >
+                      {s.label}
+                      <div
+                        style={{
+                          width: 8 * u,
+                          height: 8 * u,
+                          background: p >= 1 ? accent : c.rule,
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
 
-            {/* Light sweep across the face. */}
-            <div
-              style={{
-                position: "absolute",
-                top: -cardH * 0.2,
-                height: cardH * 1.4,
-                left: sweep * cardW - cardW * 0.35,
-                width: cardW * 0.7,
-                transform: "skewX(-18deg)",
-                background:
-                  "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 46%, rgba(255,255,255,0.75) 50%, rgba(255,255,255,0.5) 54%, rgba(255,255,255,0) 100%)",
-                opacity: sweep > -0.6 && sweep < 1.6 ? 0.85 : 0,
-              }}
-            />
+              {/* Light sweep across the face. */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: -cardH * 0.2,
+                  height: cardH * 1.4,
+                  left: sweep * cardW - cardW * 0.35,
+                  width: cardW * 0.7,
+                  transform: "skewX(-18deg)",
+                  background:
+                    "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 46%, rgba(255,255,255,0.75) 50%, rgba(255,255,255,0.5) 54%, rgba(255,255,255,0) 100%)",
+                  opacity: sweep > -0.6 && sweep < 1.6 ? 0.85 : 0,
+                }}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

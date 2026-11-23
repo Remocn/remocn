@@ -1,4 +1,4 @@
-import { useCurrentFrame, useVideoConfig } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { Step } from "./types";
 
 export function framesFor(
@@ -46,8 +46,8 @@ export function useTypewriter(
   options: TypewriterOptions = {},
 ): TypewriterState {
   const { cps = 20, speed = 1, startFrame = 0 } = options;
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps } = useSceneConfig();
   const local = frame * speed - startFrame;
   const count = local <= 0 ? 0 : revealCount(local, fps, full.length, cps);
   return {
@@ -63,7 +63,7 @@ export function useCurrentState<S extends string>(
   defaultState: S,
   speed = 1,
 ): S {
-  const effectiveFrame = useCurrentFrame() * speed;
+  const effectiveFrame = useSceneFrame() * speed;
   let current = defaultState;
   let bestAt = -Infinity;
   steps.forEach((step) => {
@@ -81,7 +81,7 @@ export function useStateTransition<S extends string>(
   speed = 1,
   defaultDuration = 8,
 ): { from: S; to: S; progress: number } {
-  const effectiveFrame = useCurrentFrame() * speed;
+  const effectiveFrame = useSceneFrame() * speed;
   const started = steps
     .map((step, index) => ({ step, index }))
     .sort((a, b) => a.step.at - b.step.at || a.index - b.index)

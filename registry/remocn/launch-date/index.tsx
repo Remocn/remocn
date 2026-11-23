@@ -3,13 +3,9 @@
 import { loadFont } from "@remotion/google-fonts/Sora";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -50,6 +46,19 @@ export interface LaunchDateProps {
   /** "month-day" renders 10.30, "day-month" renders 30.10. */
   order?: "month-day" | "day-month";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Sora by default. */
+  fontFamily?: string;
+  /** Weight of the day numbers and the date lockup. */
+  fontWeight?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -181,6 +190,9 @@ interface CellProps {
   heroCol: number;
   p: Palette;
   u: number;
+  fg: string;
+  fontFamily: string;
+  fontWeight: number;
 }
 
 function DayCell({
@@ -196,6 +208,9 @@ function DayCell({
   heroCol,
   p,
   u,
+  fg,
+  fontFamily,
+  fontWeight,
 }: CellProps) {
   // settle in with the grid
   const appear = interpolate(t, [8 + row * 2.5, 24 + row * 2.5], [0, 1], {
@@ -248,12 +263,12 @@ function DayCell({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontFamily: sora,
-            fontWeight: 300,
+            fontFamily,
+            fontWeight,
             fontSize: cellH * 0.3,
             fontVariantNumeric: "tabular-nums",
             letterSpacing: "-0.02em",
-            color: p.fg,
+            color: fg,
             opacity: numO,
           }}
         >
@@ -264,18 +279,43 @@ function DayCell({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LaunchDate({
   date = { month: 10, day: 30, year: 2026 },
   label = "Coming soon",
   order = "month-day",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sora,
+  fontWeight = 300,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: LaunchDateProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const p: Palette = PALETTES[theme];
+  const fg = ink ?? p.fg;
 
   const month = Math.min(12, Math.max(1, Math.round(date.month)));
   const total = daysIn(date.year, month);
@@ -315,6 +355,11 @@ export function LaunchDate({
     y: cy + (gy - fy) * s,
   });
   const gridOrigin = toScreen(0, 0);
+  // Where the camera leaves the grid once the push lands. The grid is laid
+  // out there and the camera's travel is a transform: layout rounds a box and
+  // a baseline to whole pixels, so a grid eased by `left`/`top` steps.
+  const gridRestX = cx - heroGX * S;
+  const gridRestY = cy - heroGY * S;
   const dof = interpolate(push, [0.35, 1], [0, 2.4 * u], CLAMP);
   const linesOut = interpolate(t, [86, 104], [1, 0], CLAMP);
   const headOut = interpolate(t, [60, 84], [1, 0], CLAMP);
@@ -341,7 +386,10 @@ export function LaunchDate({
   const heroX = interpolate(hand, [0, 1], [heroCell.x, daySlotX]);
   const heroY = interpolate(hand, [0, 1], [heroCell.y, lockCY]);
   const heroFont = interpolate(hand, [0, 1], [heroFont0, F]);
-  const heroWeight = 300;
+  const heroWeight = fontWeight;
+  // The day is laid out once at its lockup size and slot; the ride there and
+  // the growth are a transform, for the same reason as the grid.
+  const heroK = heroFont / F;
   const heroTrack = interpolate(hand, [0, 1], [-0.02, -0.06]);
   const heroAppear = interpolate(
     t,
@@ -463,312 +511,339 @@ export function LaunchDate({
         heroCol={heroCol}
         p={p}
         u={u}
+        fg={fg}
+        fontFamily={fontFamily}
+        fontWeight={fontWeight}
       />,
     );
   }
 
   // a slow push that never quite stops, so the hold stays alive
   const drift = interpolate(t, [90, 195], [1, 1.035], CLAMP);
+  // The camera moves until 90 and the drift takes over from there, so the
+  // whole foreground is in motion from the first frame to the last.
+  const moving = t > 0 && t < 195;
   const headIn = interpolate(t, [4, 26], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? p.bg),
+        overflow: "hidden",
+      }}
+    >
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 60% 70% at 50% 40%, ${p.stage}, transparent 75%)`,
         }}
       />
 
-      <AbsoluteFill style={{ transform: `scale(${drift})` }}>
-        {echoO > 0 ? (
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill style={{ transform: `scale(${drift})${glide(moving)}` }}>
+          {echoO > 0 ? (
+            <svg
+              width={width}
+              height={height}
+              style={{ position: "absolute", inset: 0, overflow: "visible" }}
+              aria-hidden
+            >
+              <defs>
+                <linearGradient
+                  id={haloId}
+                  gradientUnits="userSpaceOnUse"
+                  x1={dotX - echoR}
+                  y1={lockCY - echoR}
+                  x2={dotX + echoR}
+                  y2={lockCY + echoR}
+                  gradientTransform={`rotate(${haloSpin} ${dotX} ${lockCY})`}
+                >
+                  <stop offset="0%" stopColor={p.haloStops[0]} />
+                  <stop offset="38%" stopColor={p.haloStops[1]} />
+                  <stop offset="70%" stopColor={p.haloStops[2]} />
+                  <stop offset="100%" stopColor={accent} />
+                </linearGradient>
+                <filter
+                  id={blurId}
+                  x="-50%"
+                  y="-50%"
+                  width="200%"
+                  height="200%"
+                >
+                  <feGaussianBlur stdDeviation={16 * u} />
+                </filter>
+              </defs>
+              <g opacity={echoO * p.halo}>
+                <circle
+                  cx={dotX}
+                  cy={lockCY}
+                  r={echoR}
+                  fill="none"
+                  stroke={`url(#${haloId})`}
+                  strokeWidth={34 * u}
+                  filter={`url(#${blurId})`}
+                  opacity={0.55}
+                />
+                <circle
+                  cx={dotX}
+                  cy={lockCY}
+                  r={echoR}
+                  fill="none"
+                  stroke={`url(#${haloId})`}
+                  strokeWidth={interpolate(echo, [0, 1], [4, 1.6]) * u}
+                />
+              </g>
+            </svg>
+          ) : null}
+          {/* the month, in grid space under the camera */}
+          <div
+            style={{
+              position: "absolute",
+              left: gridRestX,
+              top: gridRestY,
+              width: gridW,
+              height: gridH,
+              transformOrigin: "0 0",
+              transform: `translate(${gridOrigin.x - gridRestX}px, ${gridOrigin.y - gridRestY}px) scale(${s})`,
+              filter: dof > 0.05 ? `blur(${dof / s}px)` : undefined,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                left: cellW * 0.12,
+                right: cellW * 0.12,
+                top: 0,
+                height: headH,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                opacity: headIn * headOut,
+                transform: `translateY(${(1 - headIn) * 10 * u}px)`,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: cellH * 0.5,
+                  letterSpacing: "-0.04em",
+                  color: fg,
+                }}
+              >
+                {MONTHS[month - 1]}
+              </span>
+              <span
+                style={{
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: cellH * 0.3,
+                  letterSpacing: "-0.02em",
+                  fontVariantNumeric: "tabular-nums",
+                  color: p.muted,
+                }}
+              >
+                {date.year}
+              </span>
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: headH,
+                width: gridW,
+                height: dowH,
+                display: "flex",
+                opacity: headIn * headOut,
+              }}
+            >
+              {WEEKDAYS.map((w, i) => (
+                <div
+                  key={w}
+                  style={{
+                    width: cellW,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontFamily,
+                    fontWeight: 400,
+                    fontSize: cellH * 0.17,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: i > 4 ? p.faint : p.muted,
+                  }}
+                >
+                  {w.slice(0, 3)}
+                </div>
+              ))}
+            </div>
+            <div style={{ position: "absolute", inset: 0, opacity: linesOut }}>
+              {lines}
+            </div>
+            <div style={{ position: "absolute", left: 0, top: bodyTop }}>
+              {cells}
+            </div>
+          </div>
+
+          {/* accent ring → full stop */}
           <svg
-            width={width}
-            height={height}
-            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            width={ringBox * 2}
+            height={ringBox * 2}
+            viewBox={`${-ringBox} ${-ringBox} ${ringBox * 2} ${ringBox * 2}`}
+            style={{
+              position: "absolute",
+              left: ringX - ringBox,
+              top: ringY - ringBox,
+              overflow: "visible",
+            }}
             aria-hidden
           >
             <defs>
               <linearGradient
-                id={haloId}
+                id={ringId}
                 gradientUnits="userSpaceOnUse"
-                x1={dotX - echoR}
-                y1={lockCY - echoR}
-                x2={dotX + echoR}
-                y2={lockCY + echoR}
-                gradientTransform={`rotate(${haloSpin} ${dotX} ${lockCY})`}
+                x1={-ringBox}
+                y1={-ringBox}
+                x2={ringBox}
+                y2={ringBox}
               >
-                <stop offset="0%" stopColor={p.haloStops[0]} />
-                <stop offset="38%" stopColor={p.haloStops[1]} />
-                <stop offset="70%" stopColor={p.haloStops[2]} />
-                <stop offset="100%" stopColor={accent} />
+                <stop offset="8%" stopColor={HALO[1]} />
+                <stop offset="50%" stopColor={HALO[2]} />
+                <stop offset="92%" stopColor={accent} />
               </linearGradient>
-              <filter id={blurId} x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation={16 * u} />
-              </filter>
             </defs>
-            <g opacity={echoO * p.halo}>
-              <circle
-                cx={dotX}
-                cy={lockCY}
-                r={echoR}
-                fill="none"
-                stroke={`url(#${haloId})`}
-                strokeWidth={34 * u}
-                filter={`url(#${blurId})`}
-                opacity={0.55}
-              />
-              <circle
-                cx={dotX}
-                cy={lockCY}
-                r={echoR}
-                fill="none"
-                stroke={`url(#${haloId})`}
-                strokeWidth={interpolate(echo, [0, 1], [4, 1.6]) * u}
-              />
-            </g>
+            <circle
+              r={ringR}
+              fill="none"
+              stroke={`url(#${ringId})`}
+              strokeWidth={ringW}
+              strokeLinecap="round"
+              strokeDasharray={circ}
+              strokeDashoffset={circ * (1 - draw)}
+              transform="rotate(-118)"
+            />
           </svg>
-        ) : null}
-        {/* the month, in grid space under the camera */}
-        <div
-          style={{
-            position: "absolute",
-            left: gridOrigin.x,
-            top: gridOrigin.y,
-            width: gridW,
-            height: gridH,
-            transformOrigin: "0 0",
-            transform: `scale(${s})`,
-            filter: dof > 0.05 ? `blur(${dof / s}px)` : undefined,
-          }}
-        >
+
+          {/* the launch day, in screen space so it can leave the grid */}
           <div
             style={{
               position: "absolute",
-              left: cellW * 0.12,
-              right: cellW * 0.12,
-              top: 0,
-              height: headH,
+              left: daySlotX - F * 2,
+              top: lockCY - F,
+              width: F * 4,
+              height: F * 2,
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
-              opacity: headIn * headOut,
-              transform: `translateY(${(1 - headIn) * 10 * u}px)`,
+              justifyContent: "center",
+              fontFamily,
+              fontWeight: heroWeight,
+              fontSize: F,
+              lineHeight: 1,
+              letterSpacing: `${heroTrack}em`,
+              fontVariantNumeric: "tabular-nums",
+              color: fg,
+              opacity: heroAppear * heroLit,
+              transform:
+                hand < 1
+                  ? `translate(${heroX - daySlotX}px, ${heroY - lockCY}px) scale(${heroK})${glide(t > 0)}`
+                  : undefined,
+              // the filter is drawn before the scale, so its radius is undone
+              filter:
+                dof > 0.05 && hand < 0.01
+                  ? `blur(${(dof * 0.15) / heroK}px)`
+                  : undefined,
             }}
           >
-            <span
-              style={{
-                fontFamily: sora,
-                fontWeight: 500,
-                fontSize: cellH * 0.5,
-                letterSpacing: "-0.04em",
-                color: p.fg,
-              }}
-            >
-              {MONTHS[month - 1]}
-            </span>
-            <span
-              style={{
-                fontFamily: sora,
-                fontWeight: 400,
-                fontSize: cellH * 0.3,
-                letterSpacing: "-0.02em",
-                fontVariantNumeric: "tabular-nums",
-                color: p.muted,
-              }}
-            >
-              {date.year}
-            </span>
+            {pad(launchDay)}
           </div>
+
+          {/* the other half of the lockup, revealed from behind the full stop */}
+          <div
+            style={{
+              position: "absolute",
+              left: dayFirst ? cx + dotW / 2 : lockLeft,
+              top: lockCY - F,
+              width: groupW,
+              height: F * 2,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily,
+                fontWeight,
+                fontSize: F,
+                lineHeight: 1,
+                letterSpacing: "-0.06em",
+                fontVariantNumeric: "tabular-nums",
+                color: fg,
+                opacity: other,
+                transform: `translateX(${(dayFirst ? -1 : 1) * (1 - other) * groupW * 0.55}px)`,
+              }}
+            >
+              {otherValue}
+            </div>
+          </div>
+
+          {/* label */}
           <div
             style={{
               position: "absolute",
               left: 0,
-              top: headH,
-              width: gridW,
-              height: dowH,
+              right: 0,
+              top: labelTop,
               display: "flex",
-              opacity: headIn * headOut,
-            }}
-          >
-            {WEEKDAYS.map((w, i) => (
-              <div
-                key={w}
-                style={{
-                  width: cellW,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: sora,
-                  fontWeight: 400,
-                  fontSize: cellH * 0.17,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: i > 4 ? p.faint : p.muted,
-                }}
-              >
-                {w.slice(0, 3)}
-              </div>
-            ))}
-          </div>
-          <div style={{ position: "absolute", inset: 0, opacity: linesOut }}>
-            {lines}
-          </div>
-          <div style={{ position: "absolute", left: 0, top: bodyTop }}>
-            {cells}
-          </div>
-        </div>
-
-        {/* accent ring → full stop */}
-        <svg
-          width={ringBox * 2}
-          height={ringBox * 2}
-          viewBox={`${-ringBox} ${-ringBox} ${ringBox * 2} ${ringBox * 2}`}
-          style={{
-            position: "absolute",
-            left: ringX - ringBox,
-            top: ringY - ringBox,
-            overflow: "visible",
-          }}
-          aria-hidden
-        >
-          <defs>
-            <linearGradient
-              id={ringId}
-              gradientUnits="userSpaceOnUse"
-              x1={-ringBox}
-              y1={-ringBox}
-              x2={ringBox}
-              y2={ringBox}
-            >
-              <stop offset="8%" stopColor={HALO[1]} />
-              <stop offset="50%" stopColor={HALO[2]} />
-              <stop offset="92%" stopColor={accent} />
-            </linearGradient>
-          </defs>
-          <circle
-            r={ringR}
-            fill="none"
-            stroke={`url(#${ringId})`}
-            strokeWidth={ringW}
-            strokeLinecap="round"
-            strokeDasharray={circ}
-            strokeDashoffset={circ * (1 - draw)}
-            transform="rotate(-118)"
-          />
-        </svg>
-
-        {/* the launch day, in screen space so it can leave the grid */}
-        <div
-          style={{
-            position: "absolute",
-            left: heroX - F * 2,
-            top: heroY - F,
-            width: F * 4,
-            height: F * 2,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: sora,
-            fontWeight: heroWeight,
-            fontSize: heroFont,
-            lineHeight: 1,
-            letterSpacing: `${heroTrack}em`,
-            fontVariantNumeric: "tabular-nums",
-            color: p.fg,
-            opacity: heroAppear * heroLit,
-            filter:
-              dof > 0.05 && hand < 0.01 ? `blur(${dof * 0.15}px)` : undefined,
-          }}
-        >
-          {pad(launchDay)}
-        </div>
-
-        {/* the other half of the lockup, revealed from behind the full stop */}
-        <div
-          style={{
-            position: "absolute",
-            left: dayFirst ? cx + dotW / 2 : lockLeft,
-            top: lockCY - F,
-            width: groupW,
-            height: F * 2,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
               justifyContent: "center",
-              fontFamily: sora,
-              fontWeight: 300,
-              fontSize: F,
+              alignItems: "center",
+              gap: 16 * u,
+              fontFamily,
+              fontSize: 21 * u,
               lineHeight: 1,
-              letterSpacing: "-0.06em",
-              fontVariantNumeric: "tabular-nums",
-              color: p.fg,
-              opacity: other,
-              transform: `translateX(${(dayFirst ? -1 : 1) * (1 - other) * groupW * 0.55}px)`,
             }}
           >
-            {otherValue}
+            <span
+              style={{
+                color: fg,
+                fontWeight: 500,
+                letterSpacing: "-0.02em",
+                opacity: labelP(0),
+                transform: `translateY(${(1 - labelP(0)) * 12 * u}px)`,
+              }}
+            >
+              {label}
+            </span>
+            <div
+              style={{
+                width: Math.max(1, u),
+                height: 20 * u,
+                background: p.line,
+                transform: `scaleY(${labelP(3)})`,
+              }}
+            />
+            <span
+              style={{
+                color: p.muted,
+                fontWeight: 400,
+                letterSpacing: "-0.015em",
+                fontVariantNumeric: "tabular-nums",
+                opacity: labelP(6),
+                transform: `translateY(${(1 - labelP(6)) * 12 * u}px)`,
+              }}
+            >
+              {fullDate}
+            </span>
           </div>
-        </div>
-
-        {/* label */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: labelTop,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 16 * u,
-            fontFamily: sora,
-            fontSize: 21 * u,
-            lineHeight: 1,
-          }}
-        >
-          <span
-            style={{
-              color: p.fg,
-              fontWeight: 500,
-              letterSpacing: "-0.02em",
-              opacity: labelP(0),
-              transform: `translateY(${(1 - labelP(0)) * 12 * u}px)`,
-            }}
-          >
-            {label}
-          </span>
-          <div
-            style={{
-              width: Math.max(1, u),
-              height: 20 * u,
-              background: p.line,
-              transform: `scaleY(${labelP(3)})`,
-            }}
-          />
-          <span
-            style={{
-              color: p.muted,
-              fontWeight: 400,
-              letterSpacing: "-0.015em",
-              fontVariantNumeric: "tabular-nums",
-              opacity: labelP(6),
-              transform: `translateY(${(1 - labelP(6)) * 12 * u}px)`,
-            }}
-          >
-            {fullDate}
-          </span>
-        </div>
-      </AbsoluteFill>
-      <Grain opacity={p.grain} />
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

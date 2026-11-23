@@ -1,0 +1,106 @@
+{
+  "component": "shed-weight",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "swiss-specimen",
+      "label": "Swiss Specimen",
+      "description": "A clean light specimen sheet in Inter with a crisp red accent and no grain.",
+      "askedAs": [
+        "clean light type specimen",
+        "swiss style font sizes on white",
+        "minimal print specimen look",
+        "светлый швейцарский образец шрифта",
+        "чистый типографский лист на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#d93a2b",
+        "grain": false,
+        "ratio": 1.3
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced sizes on a deep green-black ground with soft mint text, stepping in tight increments.",
+      "askedAs": [
+        "code terminal font ladder",
+        "monospace developer look",
+        "hacker style type sizes",
+        "моноширинный шрифт как в терминале",
+        "стиль консоли для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b1210",
+        "ink": "#cfe8dc",
+        "accent": "#4fd18b",
+        "sizes": 9,
+        "ratio": 1.18
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm cream page with light Instrument Serif lines growing slowly and elegantly.",
+      "askedAs": [
+        "elegant serif magazine look",
+        "slow classy font reveal",
+        "editorial cream paper typography",
+        "элегантный шрифт с засечками",
+        "медленная журнальная типографика"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#f3ede2",
+        "ink": "#2a2420",
+        "accent": "#9c4a2f",
+        "fontWeight": 300,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "heavy-punch",
+      "label": "Heavy Punch",
+      "description": "Bold Space Grotesk in a few dramatic size jumps, played fast and scaled up.",
+      "askedAs": [
+        "bold fast big type",
+        "punchy heavy font jumps",
+        "dramatic size ladder",
+        "жирный крупный шрифт быстро",
+        "резкие скачки размера текста"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 720,
+        "sizes": 4,
+        "ratio": 1.72,
+        "speed": 1.5,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "midnight-geist",
+      "label": "Midnight Geist",
+      "description": "Geist on a cool navy background with an icy blue accent and labels hidden for a quieter stack.",
+      "askedAs": [
+        "dark blue tech typography",
+        "sleek navy font stack without labels",
+        "modern product launch type",
+        "тёмно-синий технологичный стиль",
+        "современный шрифт без подписей размеров"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "background": "#0d1424",
+        "ink": "#e6ecf5",
+        "accent": "#6ea8ff",
+        "showSizes": false,
+        "grain": false
+      }
+    }
+  ]
+}

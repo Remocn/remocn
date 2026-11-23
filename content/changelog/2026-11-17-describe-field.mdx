@@ -1,0 +1,13 @@
+---
+title: Describe the look, watch it tune
+date: 2026-11-17
+---
+
+Every component page now has a **Describe** dock at the bottom of the screen. Type what you want, "slower, dark background, serif" or "сделай цифры тоньше и акцент мятным", and an agent walks the Customize panel for you: it opens the groups, the color pickers and the menus, slides each value into place, and scrolls back to the preview when it's done. One undo puts everything back.
+
+### New
+
+- **Describe dock.** A sentence in English or Russian sets the component's props. Most requests are read on the spot, without any AI model; the rest go to Claude Haiku, which only answers with prop values the component's controls accept.
+- **Presets for every component.** Each of the 919 components has five or six presets, from Editorial Serif to Terminal Mono, as chips under the field, next to shared looks like Cinematic, Calm and Dark.
+- **The agent at work.** Changes go through the same ui-sdk agent bridge a browser agent uses, one control at a time, with a cursor that shows where it is. With reduced motion turned on, the values change at once.
+- **History.** Applied requests are kept in your browser; pick one to run it again or rework it.

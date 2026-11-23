@@ -57,7 +57,7 @@ renders the same way.
 The field and every particle's life cycle repeat every `loopFrames / speed`
 frames, 300 frames (10 seconds) at the defaults. The last frame of the loop
 flows into the first without a seam, so a `Sequence` of any multiple of the
-period, or a Remotion `<Loop>` of that length, plays as a continuous
+period (twice as many frames at 60 fps), or a Remotion `<Loop>` of that length, plays as a continuous
 background.
 
 A particle lives `loopFrames / round(loopFrames / lifeFrames)` frames, 150

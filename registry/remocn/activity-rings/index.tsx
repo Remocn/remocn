@@ -1,15 +1,10 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Sora";
-import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { type ReactNode, useId } from "react";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -38,6 +33,22 @@ export interface ActivityRingsProps {
   /** Small heading above the readouts. */
   title?: string;
   accent?: string;
+  /** Text after the over-goal percentage. */
+  goalLabel?: string;
+  /** Frames the outer ring takes to close; inner rings follow 4 frames apart. */
+  fill?: number;
+  /** Text color of the title and values; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the readouts. Load it yourself; Sora by default. */
+  fontFamily?: string;
+  /** Size of the rings and readouts, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -94,6 +105,22 @@ function alpha(color: string, a: number) {
   const m = /^rgb\((\d+),(\d+),(\d+)\)$/.exec(color);
   if (m) return `rgba(${m[1]},${m[2]},${m[3]},${a})`;
   return color;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 function Grain({ opacity }: { opacity: number }) {
@@ -233,14 +260,24 @@ export function ActivityRings({
   rings = DEFAULT_RINGS,
   title = "This month",
   accent = "#3B5BFD",
+  goalLabel = "of goal",
+  fill = 42,
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: ActivityRingsProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width, height, fps } = useSceneConfig();
   const t = frame * speed;
   const u = Math.min(width / 1280, height / 720);
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const list = rings.slice(0, 3);
 
@@ -259,7 +296,7 @@ export function ActivityRings({
 
   // timeline
   const FILL_START = 16;
-  const fillEnd = (i: number) => 58 + i * 4; // every ring closes, outermost first
+  const fillEnd = (i: number) => FILL_START + fill + i * 4; // every ring closes, outermost first
   const HIT = fillEnd(list.length - 1);
 
   const stageIn = interpolate(t, [0, 22], [0, 1], {
@@ -309,243 +346,253 @@ export function ActivityRings({
   const rowX = width * 0.6;
   const rowH = 108 * u;
   const rowsTop = cy - (list.length * rowH) / 2 + 18 * u;
-  const row = (k: number, d = 0) =>
-    interpolate(t, [8 + k * 4 + d, 26 + k * 4 + d], [0, 1], {
+  const rowAt = (tt: number, k: number, d = 0) =>
+    interpolate(tt, [8 + k * 4 + d, 26 + k * 4 + d], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const row = (k: number, d = 0) => rowAt(t, k, d);
+  // Whether a travel of `px` at full stroke is still moving at this frame.
+  const stirs = (at: (tt: number) => number, px: number) =>
+    Math.abs(at(t + 1) - at(t)) * px > 1e-3 ||
+    Math.abs(at(t) - at(t - 1)) * px > 1e-3;
+  const overInAt = (tt: number, i: number) =>
+    interpolate(tt, [HIT + 4 + i * 3, HIT + 16 + i * 3], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background: background ?? c.bg,
+        overflow: "hidden",
+      }}
+    >
       <AbsoluteFill
         style={{
           background: c.key,
         }}
       />
 
-      {/* rings plane: moves a touch more than the readouts for parallax */}
-      <AbsoluteFill
-        style={{
-          transform: `translateX(${-push * 10 * u}px) scale(${(0.94 + stageIn * 0.06) * (1 + push * 0.02) * (1 + bump * 0.016)})`,
-          transformOrigin: `${cx}px ${cy}px`,
-          opacity: stageIn,
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          <defs>
-            {/* fixed in space, drifting a few degrees: light falls from the top right */}
-            <linearGradient
-              id={gradId}
-              gradientUnits="userSpaceOnUse"
-              x1={cx + R0 * Math.cos(-0.9 + push * 0.25)}
-              y1={cy + R0 * Math.sin(-0.9 + push * 0.25)}
-              x2={cx - R0 * Math.cos(-0.9 + push * 0.25)}
-              y2={cy - R0 * Math.sin(-0.9 + push * 0.25)}
-            >
-              {BEAM.stops.map((col, k) => (
-                <stop
-                  key={col}
-                  offset={k / (BEAM.stops.length - 1)}
-                  stopColor={col}
-                />
-              ))}
-            </linearGradient>
-          </defs>
-          {list.map((ring, i) => (
-            <Ring
-              key={ring.label}
-              cx={cx}
-              cy={cy}
-              r={radius(i)}
-              sw={sw}
-              p={progress(i)}
-              color={paints[i]}
-              lapColor={paints[i]}
-              track={alpha(i === 0 ? BEAM.stops[2] : colors[i], c.track)}
-              shadow={c.capShadow}
-              uid={`${uid}r${i}`}
-              u={u}
-            />
-          ))}
-          {/* hit pulse just outside the outer ring */}
-          {t >= HIT ? (
-            <circle
-              cx={cx}
-              cy={cy}
-              r={R0 + sw / 2 + 6 * u + pulse * 26 * u}
-              fill="none"
-              stroke={accent}
-              strokeWidth={Math.max(1, 1.5 * u)}
-              opacity={(1 - pulse) * 0.45}
-            />
-          ) : null}
-          {/* centre check */}
-          {t >= HIT ? (
-            <g
-              transform={`translate(${cx} ${cy}) scale(${0.82 + check * 0.18})`}
-              opacity={Math.min(1, check * 1.6)}
-            >
-              <circle r={badge} fill={`url(#${gradId})`} />
-              <path
-                d={`M ${-badge * 0.36} ${badge * 0.02} L ${-badge * 0.1} ${badge * 0.28} L ${badge * 0.38} ${-badge * 0.24}`}
-                fill="none"
-                stroke="#FFFFFF"
-                strokeWidth={badge * 0.15}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                pathLength={1}
-                strokeDasharray="1 1"
-                strokeDashoffset={1 - checkDraw}
-              />
-            </g>
-          ) : null}
-        </svg>
-      </AbsoluteFill>
-
-      {/* readouts */}
-      <AbsoluteFill
-        style={{
-          transform: `translateX(${-push * 5 * u}px)`,
-          fontFamily: sans,
-        }}
-      >
-        <div
+      <ScaleLayer scale={scale}>
+        {/* rings plane: moves a touch more than the readouts for parallax */}
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: rowX,
-            top: rowsTop - 58 * u,
-            display: "flex",
-            alignItems: "center",
-            gap: 12 * u,
-            opacity: row(0, -6),
-            transform: `translateY(${(1 - row(0, -6)) * 10 * u}px)`,
+            transform: `translateX(${-push * 10 * u}px) scale(${(0.94 + stageIn * 0.06) * (1 + push * 0.02) * (1 + bump * 0.016)})`,
+            transformOrigin: `${cx}px ${cy}px`,
+            opacity: stageIn,
           }}
         >
-          <span
+          <svg
+            width={width}
+            height={height}
+            viewBox={`0 0 ${width} ${height}`}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              {/* fixed in space, drifting a few degrees: light falls from the top right */}
+              <linearGradient
+                id={gradId}
+                gradientUnits="userSpaceOnUse"
+                x1={cx + R0 * Math.cos(-0.9 + push * 0.25)}
+                y1={cy + R0 * Math.sin(-0.9 + push * 0.25)}
+                x2={cx - R0 * Math.cos(-0.9 + push * 0.25)}
+                y2={cy - R0 * Math.sin(-0.9 + push * 0.25)}
+              >
+                {BEAM.stops.map((col, k) => (
+                  <stop
+                    key={col}
+                    offset={k / (BEAM.stops.length - 1)}
+                    stopColor={col}
+                  />
+                ))}
+              </linearGradient>
+            </defs>
+            {list.map((ring, i) => (
+              <Ring
+                key={ring.label}
+                cx={cx}
+                cy={cy}
+                r={radius(i)}
+                sw={sw}
+                p={progress(i)}
+                color={paints[i]}
+                lapColor={paints[i]}
+                track={alpha(i === 0 ? BEAM.stops[2] : colors[i], c.track)}
+                shadow={c.capShadow}
+                uid={`${uid}r${i}`}
+                u={u}
+              />
+            ))}
+            {/* hit pulse just outside the outer ring */}
+            {t >= HIT ? (
+              <circle
+                cx={cx}
+                cy={cy}
+                r={R0 + sw / 2 + 6 * u + pulse * 26 * u}
+                fill="none"
+                stroke={accent}
+                strokeWidth={Math.max(1, 1.5 * u)}
+                opacity={(1 - pulse) * 0.45}
+              />
+            ) : null}
+            {/* centre check */}
+            {t >= HIT ? (
+              <g
+                transform={`translate(${cx} ${cy}) scale(${0.82 + check * 0.18})`}
+                opacity={Math.min(1, check * 1.6)}
+              >
+                <circle r={badge} fill={`url(#${gradId})`} />
+                <path
+                  d={`M ${-badge * 0.36} ${badge * 0.02} L ${-badge * 0.1} ${badge * 0.28} L ${badge * 0.38} ${-badge * 0.24}`}
+                  fill="none"
+                  stroke="#FFFFFF"
+                  strokeWidth={badge * 0.15}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  pathLength={1}
+                  strokeDasharray="1 1"
+                  strokeDashoffset={1 - checkDraw}
+                />
+              </g>
+            ) : null}
+          </svg>
+        </AbsoluteFill>
+
+        {/* readouts */}
+        <AbsoluteFill
+          style={{
+            transform: `translateX(${-push * 5 * u}px)`,
+            fontFamily,
+          }}
+        >
+          <div
             style={{
-              color: c.fg,
-              fontWeight: 500,
-              fontSize: 18 * u,
-              letterSpacing: "-0.01em",
+              position: "absolute",
+              left: rowX,
+              top: rowsTop - 58 * u,
+              display: "flex",
+              alignItems: "center",
+              gap: 12 * u,
+              opacity: row(0, -6),
+              transform: `translateY(${(1 - row(0, -6)) * 10 * u}px)${glide(stirs((tt) => rowAt(tt, 0, -6), 10 * u))}`,
             }}
           >
-            {title}
-          </span>
-          <span
-            style={{
-              width: 200 * u * row(0, -2),
-              height: Math.max(1, u),
-              background: c.hair,
-            }}
-          />
-        </div>
-        {list.map((ring, i) => {
-          const p = progress(i);
-          const v = ring.value * Math.min(1, p);
-          const over = Math.round((p - 1) * 100);
-          const overIn = interpolate(
-            t,
-            [HIT + 4 + i * 3, HIT + 16 + i * 3],
-            [0, 1],
-            {
-              ...CLAMP,
-              easing: EASE_OUT,
-            },
-          );
-          const r = row(i + 1);
-          return (
-            <div
-              key={ring.label}
+            <span
               style={{
-                position: "absolute",
-                left: rowX,
-                top: rowsTop + i * rowH,
-                display: "flex",
-                flexDirection: "column",
-                gap: 6 * u,
-                overflow: "hidden",
-                paddingBottom: 4 * u,
+                color: fg,
+                fontWeight: 500,
+                fontSize: 18 * u,
+                letterSpacing: "-0.01em",
               }}
             >
+              {title}
+            </span>
+            <span
+              style={{
+                width: 200 * u * row(0, -2),
+                height: Math.max(1, u),
+                background: c.hair,
+              }}
+            />
+          </div>
+          {list.map((ring, i) => {
+            const p = progress(i);
+            const v = ring.value * Math.min(1, p);
+            const over = Math.round((p - 1) * 100);
+            const overIn = overInAt(t, i);
+            const r = row(i + 1);
+            const rising = stirs((tt) => rowAt(tt, i + 1), 80 * u);
+            return (
               <div
+                key={ring.label}
                 style={{
+                  position: "absolute",
+                  left: rowX,
+                  top: rowsTop + i * rowH,
                   display: "flex",
-                  alignItems: "center",
-                  gap: 10 * u,
-                  transform: `translateY(${(1 - r) * 120}%)`,
+                  flexDirection: "column",
+                  gap: 6 * u,
+                  overflow: "hidden",
+                  paddingBottom: 4 * u,
                 }}
               >
-                <span
+                <div
                   style={{
-                    width: 10 * u,
-                    height: 10 * u,
-                    borderRadius: "50%",
-                    background: swatches[i],
-                  }}
-                />
-                <span
-                  style={{
-                    color: c.muted,
-                    fontWeight: 400,
-                    fontSize: 17 * u,
-                    letterSpacing: "-0.005em",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10 * u,
+                    transform: `translateY(${(1 - r) * 120}%)${glide(rising)}`,
                   }}
                 >
-                  {ring.label}
-                </span>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "baseline",
-                  gap: 12 * u,
-                  transform: `translateY(${(1 - r) * 110}%)`,
-                }}
-              >
-                <span
+                  <span
+                    style={{
+                      width: 10 * u,
+                      height: 10 * u,
+                      borderRadius: "50%",
+                      background: swatches[i],
+                    }}
+                  />
+                  <span
+                    style={{
+                      color: c.muted,
+                      fontWeight: 400,
+                      fontSize: 17 * u,
+                      letterSpacing: "-0.005em",
+                    }}
+                  >
+                    {ring.label}
+                  </span>
+                </div>
+                <div
                   style={{
-                    fontWeight: 400,
-                    fontSize: 64 * u,
-                    lineHeight: 1,
-                    letterSpacing: "-0.045em",
-                    fontVariantNumeric: "tabular-nums",
-                    color: c.fg,
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 12 * u,
+                    transform: `translateY(${(1 - r) * 110}%)${glide(rising)}`,
                   }}
                 >
-                  {fmt(v)}
-                  {ring.unit ? (
-                    <span style={{ color: c.muted, fontSize: 30 * u }}>
-                      {ring.unit}
-                    </span>
-                  ) : null}
-                </span>
-                {over > 0 ? (
                   <span
                     style={{
                       fontWeight: 400,
-                      fontSize: 16 * u,
-                      color: c.muted,
+                      fontSize: 64 * u,
+                      lineHeight: 1,
+                      letterSpacing: "-0.045em",
                       fontVariantNumeric: "tabular-nums",
-                      opacity: overIn,
-                      transform: `translateY(${(1 - overIn) * 8 * u}px)`,
+                      color: fg,
                     }}
                   >
-                    +{over}% of goal
+                    {fmt(v)}
+                    {ring.unit ? (
+                      <span style={{ color: c.muted, fontSize: 30 * u }}>
+                        {ring.unit}
+                      </span>
+                    ) : null}
                   </span>
-                ) : null}
+                  {over > 0 ? (
+                    <span
+                      style={{
+                        fontWeight: 400,
+                        fontSize: 16 * u,
+                        color: c.muted,
+                        fontVariantNumeric: "tabular-nums",
+                        opacity: overIn,
+                        transform: `translateY(${(1 - overIn) * 8 * u}px)${glide(stirs((tt) => overInAt(tt, i), 8 * u))}`,
+                      }}
+                    >
+                      +{over}% {goalLabel}
+                    </span>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </AbsoluteFill>
+            );
+          })}
+        </AbsoluteFill>
+      </ScaleLayer>
 
-      <Grain opacity={c.grain} />
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

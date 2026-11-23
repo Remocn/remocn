@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="WordPullback"
     component={WordPullbackScene}
-    durationInFrames={132}
-    fps={30}
+    durationInFrames={264}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -71,6 +71,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Text after the accent word.",
     },
     {
+      name: "fontWeight",
+      type: "number",
+      default: "300",
+      description: "Weight of the line around the accent word.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between words as the rest of the line rises.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Accent colour (any CSS colour).",
@@ -83,7 +95,36 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
     {
       name: "background",
       type: "string",
-      description: "Overrides the theme background colour.",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Inter Tight\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
     {
       name: "theme",

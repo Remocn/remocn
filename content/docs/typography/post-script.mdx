@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="PostScript"
     component={PostScriptScene}
-    durationInFrames={180}
-    fps={30}
+    durationInFrames={360}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -87,14 +87,49 @@ The `signoff` rises word by word with the `signature` beneath it. A P.S. line (`
       description: "Command or link that wipes in at the bottom; empty hides it.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between words of the sign-off as they rise in.",
+    },
+    {
+      name: "flip",
+      type: "number",
+      default: "30",
+      description: "Frames the sign-off takes to shrink away and hand the stage to the P.S.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of the label and the install line.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Lexend\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

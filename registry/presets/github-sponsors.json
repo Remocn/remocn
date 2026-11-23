@@ -1,0 +1,102 @@
+{
+  "component": "github-sponsors",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-pink",
+      "label": "Midnight Pink",
+      "description": "Dark GitHub canvas with the classic Sponsors pink heart glowing at the default pace.",
+      "askedAs": [
+        "dark mode sponsors thank you",
+        "github sponsors on black background",
+        "night theme funding card",
+        "тёмная тема спонсоры",
+        "спонсоры на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark"
+      }
+    },
+    {
+      "id": "quick-thanks",
+      "label": "Quick Thanks",
+      "description": "Light card that plays the whole draw, dock and avatar cascade at double speed for a snappy outro.",
+      "askedAs": [
+        "faster sponsor animation",
+        "short punchy thank you",
+        "speed up the heart reveal",
+        "быстрая анимация спонсоров",
+        "короткое спасибо спонсорам"
+      ],
+      "props": {
+        "speed": 2
+      }
+    },
+    {
+      "id": "forest-dark",
+      "label": "Forest Dark",
+      "description": "Dark theme with a calm GitHub green accent and a slightly brisker rhythm.",
+      "askedAs": [
+        "green accent dark sponsors",
+        "open source green theme",
+        "calm green funding card",
+        "зелёный акцент тёмная тема",
+        "спонсоры в зелёном цвете"
+      ],
+      "props": {
+        "theme": "dark",
+        "accentColor": "#3fb950",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "ocean-light",
+      "label": "Ocean Light",
+      "description": "Clean light card with a cool blue accent for a corporate, trustworthy tone.",
+      "askedAs": [
+        "blue sponsors card",
+        "professional light funding slide",
+        "corporate thank you sponsors",
+        "синий акцент светлая тема",
+        "деловой стиль для спонсоров"
+      ],
+      "props": {
+        "accentColor": "#0969da"
+      }
+    },
+    {
+      "id": "amber-flash",
+      "label": "Amber Flash",
+      "description": "Dark theme with a warm amber accent racing through the sequence at triple speed.",
+      "askedAs": [
+        "warm orange sponsors very fast",
+        "quick dark amber thank you",
+        "social clip sponsor shoutout fast",
+        "оранжевый быстрый ролик спонсоров",
+        "тёплый цвет и быстро"
+      ],
+      "props": {
+        "theme": "dark",
+        "accentColor": "#d29922",
+        "speed": 3
+      }
+    },
+    {
+      "id": "violet-swift",
+      "label": "Violet Swift",
+      "description": "Light card with a muted violet accent and a lively 1.75x pace.",
+      "askedAs": [
+        "purple sponsors animation",
+        "violet accent light theme",
+        "soft purple thank you card",
+        "фиолетовый акцент спонсоры",
+        "лиловая тема благодарности"
+      ],
+      "props": {
+        "accentColor": "#8250df",
+        "speed": 1.75
+      }
+    }
+  ]
+}

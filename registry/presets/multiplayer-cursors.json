@@ -1,0 +1,120 @@
+{
+  "component": "multiplayer-cursors",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "night-studio",
+      "label": "Night Studio",
+      "description": "A dark board on a deep blue-hour ground with a soft violet accent for late-night collaboration.",
+      "askedAs": [
+        "dark mode whiteboard",
+        "night version of the collaboration board",
+        "moody dark team canvas",
+        "тёмная тема для доски",
+        "ночной вариант совместной работы"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#8b7cf6",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "paper-workshop",
+      "label": "Paper Workshop",
+      "description": "A warm cream board with dark brown text, a terracotta accent and an editorial serif.",
+      "askedAs": [
+        "warm paper style board",
+        "cozy workshop whiteboard look",
+        "cream background with serif font",
+        "тёплая бумажная доска",
+        "уютный стиль с засечками"
+      ],
+      "props": {
+        "background": "#f5efe4",
+        "ink": "#2b2420",
+        "accent": "#c8553d",
+        "fontFamily": "Fraunces",
+        "ground": "paper-crease"
+      }
+    },
+    {
+      "id": "rush-hour",
+      "label": "Rush Hour",
+      "description": "A fast, punchy pass where cursors zip around the board at double speed in a bold grotesque.",
+      "askedAs": [
+        "make the cursors move faster",
+        "quick energetic collaboration demo",
+        "speedy teamwork shot",
+        "ускорить курсоры",
+        "быстрая энергичная анимация"
+      ],
+      "props": {
+        "speed": 2,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#ff5a36",
+        "ground": "corona"
+      }
+    },
+    {
+      "id": "calm-close-up",
+      "label": "Calm Close-Up",
+      "description": "A slow, zoomed-in view of the board with a quiet teal accent for a relaxed product tour.",
+      "askedAs": [
+        "slow zoomed in board",
+        "calm relaxed collaboration scene",
+        "bigger cursors moving slowly",
+        "медленный крупный план доски",
+        "спокойная неторопливая анимация"
+      ],
+      "props": {
+        "speed": 0.5,
+        "scale": 1.3,
+        "accent": "#0f9d8a",
+        "ground": "greenhouse",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "A dark charcoal board with monospace type and a mint accent for engineering-focused teams.",
+      "askedAs": [
+        "developer style whiteboard",
+        "monospace dark board",
+        "techy engineering collaboration look",
+        "доска в стиле для разработчиков",
+        "моноширинный шрифт и тёмный фон"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#16181d",
+        "ink": "#e6e8ec",
+        "accent": "#3ddc97",
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin"
+      }
+    },
+    {
+      "id": "wide-overview",
+      "label": "Wide Overview",
+      "description": "A smaller, pulled-back board on a cool polar ground that enters after a short beat.",
+      "askedAs": [
+        "zoom out to show the whole board",
+        "smaller board with a delayed start",
+        "wide shot of team canvas",
+        "отдалить доску целиком",
+        "уменьшить и добавить задержку"
+      ],
+      "props": {
+        "scale": 0.75,
+        "delay": 20,
+        "ground": "polar",
+        "accent": "#2f6fde",
+        "fontFamily": "Inter"
+      }
+    }
+  ]
+}

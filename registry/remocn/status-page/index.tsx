@@ -10,9 +10,9 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -44,7 +44,25 @@ export interface StatusPageProps {
   components?: StatusComponent[];
   hover?: { component: number; day: number };
   year?: number;
+  /** Label of the button in the header. */
+  ctaLabel?: string;
+  /** Headline once every check resolves. */
+  statusLabel?: string;
+  /** Timestamp line next to the headline. */
+  updatedLabel?: string;
+  /** Replaces the remocn mark (or the brand name) in the header. */
+  logo?: React.ReactNode;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the card, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -184,7 +202,21 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
   );
 }
 
-function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
+/**
+ * Laid out at `anchor` and carried to (x, y) by a transform: layout rounds a
+ * box to whole pixels, so a cursor eased by `left`/`top` clicks along.
+ */
+function Cursor({
+  x,
+  y,
+  anchor,
+  press,
+}: {
+  x: number;
+  y: number;
+  anchor: { x: number; y: number };
+  press: number;
+}) {
   return (
     <svg
       width={26}
@@ -192,10 +224,10 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: anchor.x - 2,
+        top: anchor.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.04 * press})`,
+        transform: `translate(${x - anchor.x}px, ${y - anchor.y}px) scale(${1 - 0.04 * press})`,
         filter:
           "drop-shadow(0 1px 1px rgba(0,0,0,0.25)) drop-shadow(0 6px 10px rgba(0,0,0,0.2))",
         overflow: "visible",
@@ -209,6 +241,22 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
         strokeLinejoin="round"
       />
     </svg>
+  );
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
   );
 }
 
@@ -266,19 +314,30 @@ export function StatusPage({
   components = DEFAULT_COMPONENTS,
   hover,
   year = 2026,
+  ctaLabel = "Subscribe",
+  statusLabel = "All systems operational",
+  updatedLabel = "Updated 14:02 UTC",
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   ground,
   groundParams,
 }: StatusPageProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const portrait = height > width;
   const L = layoutFor(portrait);
   const s = Math.min(width / L.stageW, height / L.stageH);
   const dark = theme === "dark";
-  const c = dark ? DARK : LIGHT;
+  const base = dark ? DARK : LIGHT;
+  const c = { ...base, text: ink ?? base.text };
   const sp = (at: number, config: typeof CARD | typeof MORPH = CARD) =>
     spring({ frame: frame - at, fps, config });
 
@@ -405,464 +464,489 @@ export function StatusPage({
   };
 
   return (
-    <AbsoluteFill style={{ fontFamily: geist.fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={resolvedParams}
-        timeOffset={6}
-        timeScale={0.35}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - L.stageW * s) / 2,
-          top: (height - L.stageH * s) / 2,
-          width: L.stageW,
-          height: L.stageH,
-          transform: `scale(${s})`,
-          transformOrigin: "0 0",
-        }}
-      >
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <GshGround
+          preset={resolvedGround}
+          params={resolvedParams}
+          timeOffset={6}
+          timeScale={0.35}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
+            left: (width - L.stageW * s) / 2,
+            top: (height - L.stageH * s) / 2,
+            width: L.stageW,
+            height: L.stageH,
+            transform: `scale(${s})`,
             transformOrigin: "0 0",
-            transform: `translate(${L.stageW / 2 - focus.x * camS}px, ${L.stageH / 2 - focus.y * camS}px) scale(${camS})`,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: L.card.x,
-              top: L.card.y,
-              width: L.card.w,
-              height: L.card.h,
-              borderRadius: 24,
-              background: c.card,
-              boxShadow: c.shadow,
-              overflow: "hidden",
-              color: c.text,
-              opacity: cardO,
-              transform: `translateY(${(1 - cardIn) * 48}px) scale(${0.96 + 0.04 * cardIn})`,
-              WebkitFontSmoothing: "antialiased",
+              inset: 0,
+              transformOrigin: "0 0",
+              // Chrome parks a glyph raster on a whole pixel vertically for as
+              // long as the matrix is axis-aligned, so text under a slow
+              // transform clicks along. The camera never stops drifting, so
+              // it is marked as moving on every frame.
+              transform: `translate(${L.stageW / 2 - focus.x * camS}px, ${L.stageH / 2 - focus.y * camS}px) scale(${camS})${glide(true)}`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: L.pad,
-                right: L.pad,
-                top: L.headY,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
+                left: L.card.x,
+                top: L.card.y,
+                width: L.card.w,
+                height: L.card.h,
+                borderRadius: 24,
+                background: c.card,
+                boxShadow: c.shadow,
+                overflow: "hidden",
+                color: c.text,
+                opacity: cardO,
+                transform: `translateY(${(1 - cardIn) * 48}px) scale(${0.96 + 0.04 * cardIn})`,
+                WebkitFontSmoothing: "antialiased",
               }}
             >
-              {brand === "remocn" ? (
-                <RemocnLogo fontSize={L.logo} color={c.text} />
-              ) : (
-                <span
-                  style={{
-                    fontSize: L.logo,
-                    fontWeight: 400,
-                    letterSpacing: "-0.03em",
-                  }}
-                >
-                  {brand}
-                </span>
-              )}
-              <span
-                style={{
-                  fontSize: L.logo,
-                  fontWeight: 300,
-                  color: c.faint,
-                  letterSpacing: "-0.03em",
-                }}
-              >
-                status
-              </span>
-              <div style={{ flex: 1 }} />
-              {portrait ? null : (
-                <span style={{ ...mLabel, color: c.faint }}>{url}</span>
-              )}
-              <div
-                style={{
-                  height: 40,
-                  padding: "0 16px",
-                  marginLeft: 12,
-                  borderRadius: 10,
-                  background: accent,
-                  color: "#fff",
-                  fontSize: 16,
-                  display: "flex",
-                  alignItems: "center",
-                  boxShadow:
-                    "inset 0 1px 0 rgba(255,255,255,0.18), 0 1px 2px rgba(0,0,0,0.2)",
-                }}
-              >
-                Subscribe
-              </div>
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: L.pad,
-                right: L.pad,
-                top: L.bannerY,
-                display: "flex",
-                alignItems: L.bannerTwoLine ? "flex-start" : "center",
-                gap: 18,
-              }}
-            >
-              <div
-                style={{
-                  position: "relative",
-                  width: 34,
-                  height: 34,
-                  flexShrink: 0,
-                  marginTop: L.bannerTwoLine ? 10 : 0,
-                }}
-              >
-                <svg
-                  width={34}
-                  height={34}
-                  viewBox="0 0 34 34"
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    opacity: 1 - flip,
-                    transform: `rotate(${frame * 9}deg)`,
-                  }}
-                >
-                  <circle
-                    cx={17}
-                    cy={17}
-                    r={13}
-                    fill="none"
-                    stroke={c.empty}
-                    strokeWidth={2}
-                  />
-                  <path
-                    d="M17 4a13 13 0 0 1 13 13"
-                    fill="none"
-                    stroke={c.muted}
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                {resolved ? (
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: 17,
-                      background: c.green,
-                      transform: `scale(${flip})`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <svg width={18} height={18} viewBox="0 0 18 18">
-                      <path
-                        d="M4 9.4l3.2 3.1L14 5.6"
-                        fill="none"
-                        stroke="#fff"
-                        strokeWidth={1.8}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        pathLength={1}
-                        strokeDasharray={1}
-                        strokeDashoffset={
-                          1 - tw(frame, B.resolve + 3, B.resolve + 12, SOFT)
-                        }
-                      />
-                    </svg>
-                  </div>
-                ) : null}
-              </div>
-              <div
-                style={{
-                  flex: 1,
-                  position: "relative",
-                  height: L.bannerTwoLine ? 132 : 46,
-                }}
-              >
-                {[0, 1].map((k) => {
-                  const o = k === 0 ? 1 - lineSwap : lineSwap;
-                  return (
-                    <div
-                      key={k}
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        top: 0,
-                        fontSize: L.bannerSize,
-                        fontWeight: 300,
-                        letterSpacing: "-0.035em",
-                        lineHeight: 1.18,
-                        color: k === 0 ? c.muted : c.text,
-                        opacity: k === 1 && !resolved ? 0 : o,
-                        transform: `translateY(${(k === 0 ? -1 : 1) * (1 - o) * 14}px)`,
-                        filter: `blur(${(1 - o) * 4}px)`,
-                        whiteSpace: L.bannerTwoLine ? "normal" : "nowrap",
-                        width: L.bannerTwoLine ? 400 : undefined,
-                      }}
-                    >
-                      {k === 0
-                        ? `Checking ${components.length} services`
-                        : "All systems operational"}
-                    </div>
-                  );
-                })}
-              </div>
-              {portrait ? null : (
-                <span
-                  style={{
-                    ...mLabel,
-                    opacity: lineSwap,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  Updated 14:02 UTC
-                </span>
-              )}
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: L.pad,
-                right: L.pad,
-                top: L.listY,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                borderBottom: `1px solid ${c.line}`,
-                ...mLabel,
-                color: c.faint,
-              }}
-            >
-              <span>Services</span>
-              <span style={{ marginLeft: "auto" }}>90 days ago → today</span>
-            </div>
-
-            {components.map((comp, r) => {
-              const start = B.bars + r * 5;
-              const settle = tw(frame, start + 2, start + 40, SOFT);
-              const pct = comp.uptime - (1 - settle) * 0.42;
-              const rowIn = tw(frame, start - 2, start + 10);
-              const byDay = new Map(
-                (comp.incidents ?? []).map((i) => [i.day, i]),
-              );
-              const rowHovered = targets[active].component === r && tip > 0.01;
-              return (
-                <div
-                  key={comp.name}
-                  style={{
-                    position: "absolute",
-                    left: L.pad,
-                    right: L.pad,
-                    top: L.listY + 40 + r * L.rowH,
-                    height: L.rowH,
-                    borderBottom:
-                      r === components.length - 1
-                        ? "none"
-                        : `1px solid ${c.line}`,
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      top: portrait ? 18 : 9,
-                      display: "flex",
-                      alignItems: "baseline",
-                      fontSize: L.nameSize,
-                      opacity: rowIn,
-                      transform: `translateY(${(1 - rowIn) * 8}px)`,
-                    }}
-                  >
-                    <span style={{ fontWeight: 400, letterSpacing: "-0.01em" }}>
-                      {comp.name}
-                    </span>
-                    <span
-                      style={{
-                        marginLeft: "auto",
-                        fontFamily: mono.fontFamily,
-                        fontSize: 17,
-                        color: c.text,
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {pct.toFixed(2)}%
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: L.barTop,
-                      height: L.barH,
-                      width: innerW,
-                    }}
-                  >
-                    {Array.from({ length: DAYS }, (_, j) => {
-                      const at = start + j * 0.32;
-                      const v = spring({
-                        frame: frame - at,
-                        fps,
-                        config: CHIP,
-                      });
-                      const inc = byDay.get(j);
-                      const base = inc ? levelColor(c, inc.level) : c.green;
-                      const color = interpolateColors(
-                        tw(frame, at, at + 8),
-                        [0, 1],
-                        [c.empty, base],
-                      );
-                      const hovered = rowHovered && targets[active].day === j;
-                      const dim = rowHovered && !hovered ? 1 - tip * 0.45 : 1;
-                      return (
-                        <div
-                          key={j}
-                          style={{
-                            position: "absolute",
-                            left: j * (barW + L.gap),
-                            bottom: 0,
-                            width: barW,
-                            height: L.barH,
-                            borderRadius: 2,
-                            background: color,
-                            opacity: (frame >= at ? 1 : 0) * dim,
-                            transformOrigin: "50% 100%",
-                            transform: `scaleY(${Math.max(0, v) * (hovered ? 1 + 0.18 * tip : 1)})`,
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {tip > 0.01 ? (
-            <div
-              style={{
-                position: "absolute",
-                left: tipPos.x - tipArrow,
-                top: tipPos.y - L.barH / 2 - 14 - 104,
-                width: L.tipW,
-                height: 104,
-                boxSizing: "border-box",
-                padding: "14px 16px",
-                borderRadius: 14,
-                background: c.tip,
-                color: c.tipText,
-                boxShadow: dark
-                  ? "0 0 0 1px rgba(255,255,255,0.09), inset 0 1px 0 rgba(255,255,255,0.06), 0 18px 40px -8px rgba(0,0,0,0.7)"
-                  : "0 2px 4px rgba(0,0,0,0.08), 0 18px 40px -10px rgba(0,0,0,0.38)",
-                opacity: clamp(tip * 1.6),
-                transformOrigin: `${tipArrow}px 100%`,
-                transform: `translateY(${(1 - tip) * 10}px) scale(${0.92 + 0.08 * tip})`,
-              }}
-            >
-              <div style={{ position: "relative", height: "100%" }}>
-                {targets.map((t, k) => {
-                  const comp = components[t.component] ?? components[0];
-                  const inc = comp?.incidents?.find((i) => i.day === t.day);
-                  const o = k === 0 ? 1 - swap : swap;
-                  if (o <= 0.01 || (k === 1 && frame < B.moveB)) return null;
-                  const col = levelColor(c, inc?.level);
-                  const label =
-                    inc?.title ??
-                    (inc?.level === "outage"
-                      ? "Partial outage"
-                      : "Degraded performance");
-                  return (
-                    <div
-                      key={`${t.component}-${t.day}`}
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        opacity: o,
-                        transform: `translateY(${(k === 0 ? -1 : 1) * (1 - o) * 8}px)`,
-                      }}
-                    >
-                      <div style={{ ...mLabel, color: c.tipMuted }}>
-                        {inc?.date ?? `${DAYS - 1 - t.day} days ago`}, {year}
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 10,
-                          marginTop: 10,
-                          fontSize: 18,
-                          letterSpacing: "-0.01em",
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: 9,
-                            height: 9,
-                            borderRadius: 5,
-                            background: col,
-                          }}
-                        />
-                        {label}
-                        <span
-                          style={{
-                            marginLeft: "auto",
-                            fontFamily: mono.fontFamily,
-                            fontSize: 16,
-                            color: c.tipMuted,
-                            fontVariantNumeric: "tabular-nums",
-                          }}
-                        >
-                          {inc?.minutes ?? 10} min
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 16,
-                          color: c.tipMuted,
-                          marginTop: 8,
-                        }}
-                      >
-                        Resolved · {comp?.name}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
               <div
                 style={{
                   position: "absolute",
-                  left: tipArrow - 7,
-                  bottom: -6,
-                  width: 14,
-                  height: 14,
-                  background: c.tip,
-                  transform: "rotate(45deg)",
-                  borderRadius: 2,
+                  left: L.pad,
+                  right: L.pad,
+                  top: L.headY,
+                  height: 40,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
                 }}
-              />
-            </div>
-          ) : null}
+              >
+                {logo ??
+                  (brand === "remocn" ? (
+                    <RemocnLogo fontSize={L.logo} color={c.text} />
+                  ) : (
+                    <span
+                      style={{
+                        fontSize: L.logo,
+                        fontWeight: 400,
+                        letterSpacing: "-0.03em",
+                      }}
+                    >
+                      {brand}
+                    </span>
+                  ))}
+                <span
+                  style={{
+                    fontSize: L.logo,
+                    fontWeight: 300,
+                    color: c.faint,
+                    letterSpacing: "-0.03em",
+                  }}
+                >
+                  status
+                </span>
+                <div style={{ flex: 1 }} />
+                {portrait ? null : (
+                  <span style={{ ...mLabel, color: c.faint }}>{url}</span>
+                )}
+                <div
+                  style={{
+                    height: 40,
+                    padding: "0 16px",
+                    marginLeft: 12,
+                    borderRadius: 10,
+                    background: accent,
+                    color: "#fff",
+                    fontSize: 16,
+                    display: "flex",
+                    alignItems: "center",
+                    boxShadow:
+                      "inset 0 1px 0 rgba(255,255,255,0.18), 0 1px 2px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  {ctaLabel}
+                </div>
+              </div>
 
-          {cursorO > 0.01 ? (
-            <div style={{ opacity: cursorO }}>
-              <Cursor x={cur.x} y={cur.y} press={press} />
+              <div
+                style={{
+                  position: "absolute",
+                  left: L.pad,
+                  right: L.pad,
+                  top: L.bannerY,
+                  display: "flex",
+                  alignItems: L.bannerTwoLine ? "flex-start" : "center",
+                  gap: 18,
+                }}
+              >
+                <div
+                  style={{
+                    position: "relative",
+                    width: 34,
+                    height: 34,
+                    flexShrink: 0,
+                    marginTop: L.bannerTwoLine ? 10 : 0,
+                  }}
+                >
+                  <svg
+                    width={34}
+                    height={34}
+                    viewBox="0 0 34 34"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      opacity: 1 - flip,
+                      transform: `rotate(${frame * 9}deg)`,
+                    }}
+                  >
+                    <circle
+                      cx={17}
+                      cy={17}
+                      r={13}
+                      fill="none"
+                      stroke={c.empty}
+                      strokeWidth={2}
+                    />
+                    <path
+                      d="M17 4a13 13 0 0 1 13 13"
+                      fill="none"
+                      stroke={c.muted}
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  {resolved ? (
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: 17,
+                        background: c.green,
+                        transform: `scale(${flip})`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <svg width={18} height={18} viewBox="0 0 18 18">
+                        <path
+                          d="M4 9.4l3.2 3.1L14 5.6"
+                          fill="none"
+                          stroke="#fff"
+                          strokeWidth={1.8}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          pathLength={1}
+                          strokeDasharray={1}
+                          strokeDashoffset={
+                            1 - tw(frame, B.resolve + 3, B.resolve + 12, SOFT)
+                          }
+                        />
+                      </svg>
+                    </div>
+                  ) : null}
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    position: "relative",
+                    height: L.bannerTwoLine ? 132 : 46,
+                  }}
+                >
+                  {[0, 1].map((k) => {
+                    const o = k === 0 ? 1 - lineSwap : lineSwap;
+                    return (
+                      <div
+                        key={k}
+                        style={{
+                          position: "absolute",
+                          left: 0,
+                          top: 0,
+                          fontSize: L.bannerSize,
+                          fontWeight: 300,
+                          letterSpacing: "-0.035em",
+                          lineHeight: 1.18,
+                          color: k === 0 ? c.muted : c.text,
+                          opacity: k === 1 && !resolved ? 0 : o,
+                          transform: `translateY(${(k === 0 ? -1 : 1) * (1 - o) * 14}px)`,
+                          filter: `blur(${(1 - o) * 4}px)`,
+                          whiteSpace: L.bannerTwoLine ? "normal" : "nowrap",
+                          width: L.bannerTwoLine ? 400 : undefined,
+                        }}
+                      >
+                        {k === 0
+                          ? `Checking ${components.length} services`
+                          : statusLabel}
+                      </div>
+                    );
+                  })}
+                </div>
+                {portrait ? null : (
+                  <span
+                    style={{
+                      ...mLabel,
+                      opacity: lineSwap,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {updatedLabel}
+                  </span>
+                )}
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: L.pad,
+                  right: L.pad,
+                  top: L.listY,
+                  height: 40,
+                  display: "flex",
+                  alignItems: "center",
+                  borderBottom: `1px solid ${c.line}`,
+                  ...mLabel,
+                  color: c.faint,
+                }}
+              >
+                <span>Services</span>
+                <span style={{ marginLeft: "auto" }}>90 days ago → today</span>
+              </div>
+
+              {components.map((comp, r) => {
+                const start = B.bars + r * 5;
+                const settle = tw(frame, start + 2, start + 40, SOFT);
+                const pct = comp.uptime - (1 - settle) * 0.42;
+                const rowIn = tw(frame, start - 2, start + 10);
+                const byDay = new Map(
+                  (comp.incidents ?? []).map((i) => [i.day, i]),
+                );
+                const rowHovered =
+                  targets[active].component === r && tip > 0.01;
+                return (
+                  <div
+                    key={comp.name}
+                    style={{
+                      position: "absolute",
+                      left: L.pad,
+                      right: L.pad,
+                      top: L.listY + 40 + r * L.rowH,
+                      height: L.rowH,
+                      borderBottom:
+                        r === components.length - 1
+                          ? "none"
+                          : `1px solid ${c.line}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        top: portrait ? 18 : 9,
+                        display: "flex",
+                        alignItems: "baseline",
+                        fontSize: L.nameSize,
+                        opacity: rowIn,
+                        transform: `translateY(${(1 - rowIn) * 8}px)`,
+                      }}
+                    >
+                      <span
+                        style={{ fontWeight: 400, letterSpacing: "-0.01em" }}
+                      >
+                        {comp.name}
+                      </span>
+                      <span
+                        style={{
+                          marginLeft: "auto",
+                          fontFamily: mono.fontFamily,
+                          fontSize: 17,
+                          color: c.text,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {pct.toFixed(2)}%
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: L.barTop,
+                        height: L.barH,
+                        width: innerW,
+                      }}
+                    >
+                      {Array.from({ length: DAYS }, (_, j) => {
+                        const at = start + j * 0.32;
+                        const v = spring({
+                          frame: frame - at,
+                          fps,
+                          config: CHIP,
+                        });
+                        const inc = byDay.get(j);
+                        const base = inc ? levelColor(c, inc.level) : c.green;
+                        const color = interpolateColors(
+                          tw(frame, at, at + 8),
+                          [0, 1],
+                          [c.empty, base],
+                        );
+                        const hovered = rowHovered && targets[active].day === j;
+                        const dim = rowHovered && !hovered ? 1 - tip * 0.45 : 1;
+                        return (
+                          <div
+                            key={j}
+                            style={{
+                              position: "absolute",
+                              left: j * (barW + L.gap),
+                              bottom: 0,
+                              width: barW,
+                              height: L.barH,
+                              borderRadius: 2,
+                              background: color,
+                              opacity: (frame >= at ? 1 : 0) * dim,
+                              transformOrigin: "50% 100%",
+                              transform: `scaleY(${Math.max(0, v) * (hovered ? 1 + 0.18 * tip : 1)})`,
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ) : null}
+
+            {tip > 0.01 ? (
+              <div
+                style={{
+                  position: "absolute",
+                  // Parked over the first bar; the slide to the second is a
+                  // transform, for the same reason as the cursor's travel.
+                  left: pA.x - tipArrow,
+                  top: pA.y - L.barH / 2 - 14 - 104,
+                  width: L.tipW,
+                  height: 104,
+                  boxSizing: "border-box",
+                  padding: "14px 16px",
+                  borderRadius: 14,
+                  background: c.tip,
+                  color: c.tipText,
+                  boxShadow: dark
+                    ? "0 0 0 1px rgba(255,255,255,0.09), inset 0 1px 0 rgba(255,255,255,0.06), 0 18px 40px -8px rgba(0,0,0,0.7)"
+                    : "0 2px 4px rgba(0,0,0,0.08), 0 18px 40px -10px rgba(0,0,0,0.38)",
+                  opacity: clamp(tip * 1.6),
+                  transformOrigin: `${tipArrow}px 100%`,
+                  transform: `translate(${(pB.x - pA.x) * toB}px, ${(pB.y - pA.y) * toB + (1 - tip) * 10}px) scale(${0.92 + 0.08 * tip})`,
+                }}
+              >
+                <div style={{ position: "relative", height: "100%" }}>
+                  {targets.map((t, k) => {
+                    const comp = components[t.component] ?? components[0];
+                    const inc = comp?.incidents?.find((i) => i.day === t.day);
+                    const o = k === 0 ? 1 - swap : swap;
+                    if (o <= 0.01 || (k === 1 && frame < B.moveB)) return null;
+                    const col = levelColor(c, inc?.level);
+                    const label =
+                      inc?.title ??
+                      (inc?.level === "outage"
+                        ? "Partial outage"
+                        : "Degraded performance");
+                    return (
+                      <div
+                        key={`${t.component}-${t.day}`}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          opacity: o,
+                          transform: `translateY(${(k === 0 ? -1 : 1) * (1 - o) * 8}px)`,
+                        }}
+                      >
+                        <div style={{ ...mLabel, color: c.tipMuted }}>
+                          {inc?.date ?? `${DAYS - 1 - t.day} days ago`}, {year}
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            marginTop: 10,
+                            fontSize: 18,
+                            letterSpacing: "-0.01em",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 9,
+                              height: 9,
+                              borderRadius: 5,
+                              background: col,
+                            }}
+                          />
+                          {label}
+                          <span
+                            style={{
+                              marginLeft: "auto",
+                              fontFamily: mono.fontFamily,
+                              fontSize: 16,
+                              color: c.tipMuted,
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
+                            {inc?.minutes ?? 10} min
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 16,
+                            color: c.tipMuted,
+                            marginTop: 8,
+                          }}
+                        >
+                          Resolved · {comp?.name}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: tipArrow - 7,
+                    bottom: -6,
+                    width: 14,
+                    height: 14,
+                    background: c.tip,
+                    transform: "rotate(45deg)",
+                    borderRadius: 2,
+                  }}
+                />
+              </div>
+            ) : null}
+
+            {cursorO > 0.01 ? (
+              <div style={{ opacity: cursorO }}>
+                <Cursor
+                  x={cur.x}
+                  y={cur.y}
+                  anchor={{ x: pA.x + 2, y: pA.y + 4 }}
+                  press={press}
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

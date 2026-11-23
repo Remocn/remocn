@@ -39,8 +39,8 @@ export const RemotionRoot = () => (
   <Composition
     id="BaselineDrop"
     component={BaselineDropScene}
-    durationInFrames={125}
-    fps={30}
+    durationInFrames={250}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -69,10 +69,56 @@ Each word drops from above and lands on a single baseline with a small bounce wh
       description: "Frames between consecutive word landings",
     },
     {
+      name: "fall",
+      type: "number",
+      default: "15",
+      description: "Frames each word takes to fall onto the baseline.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "20",
+      description: "Frames after the last word lands before the baseline retracts.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Schibsted Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

@@ -1,0 +1,101 @@
+{
+  "component": "liquid-fill",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ocean-blue",
+      "label": "Ocean Blue",
+      "description": "Deep navy ground with a calm blue fill and pale aqua bubbles.",
+      "askedAs": [
+        "blue water fill on dark navy",
+        "calm ocean liquid reveal",
+        "fill logo with blue water",
+        "синяя вода на тёмном фоне",
+        "заполнение логотипа водой"
+      ],
+      "props": {
+        "liquidColor": "#2f7de1",
+        "outlineColor": "#dcebfa",
+        "bubbleColor": "#bfe3ff",
+        "backgroundColor": "#0b1b2e",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "fresh-milk",
+      "label": "Fresh Milk",
+      "description": "Light warm paper background filling slowly with soft cream liquid and a charcoal outline.",
+      "askedAs": [
+        "light background white liquid fill",
+        "milk pouring into logo",
+        "soft bright dairy look",
+        "светлый фон с молоком",
+        "молочная заливка логотипа"
+      ],
+      "props": {
+        "liquidColor": "#f3ebdd",
+        "outlineColor": "#2b2b2b",
+        "bubbleColor": "#ffffff",
+        "backgroundColor": "#d9cfc1",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "fintech-mint",
+      "label": "Fintech Mint",
+      "description": "Crisp mint green filling a white outline on near-black graphite at a brisk pace.",
+      "askedAs": [
+        "green money filling up",
+        "fintech balance top up animation",
+        "mint green fast fill",
+        "зелёная заливка для финтеха",
+        "пополнение баланса анимация"
+      ],
+      "props": {
+        "liquidColor": "#2dbe8c",
+        "bubbleColor": "#d6f5ea",
+        "backgroundColor": "#0f1714",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "cold-brew",
+      "label": "Cold Brew",
+      "description": "Rich coffee brown liquid with cream bubbles on an espresso-dark background, poured slowly.",
+      "askedAs": [
+        "coffee filling the logo",
+        "brown drink slow pour",
+        "cafe brand fill reveal",
+        "кофе заполняет логотип",
+        "медленная коричневая заливка"
+      ],
+      "props": {
+        "liquidColor": "#7a4a2a",
+        "outlineColor": "#e8d8c3",
+        "bubbleColor": "#f0e2cc",
+        "backgroundColor": "#1a120d",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "citrus-pop",
+      "label": "Citrus Pop",
+      "description": "Bright orange juice snapping into a dark outline on a pale lemon background at double speed.",
+      "askedAs": [
+        "orange juice quick fill",
+        "fast energetic liquid logo",
+        "bright citrus drink sting",
+        "быстрая оранжевая заливка",
+        "яркий сок наполняет логотип"
+      ],
+      "props": {
+        "liquidColor": "#f28c28",
+        "outlineColor": "#3a2a1a",
+        "bubbleColor": "#fff4d6",
+        "backgroundColor": "#fbf1d3",
+        "speed": 2
+      }
+    }
+  ]
+}

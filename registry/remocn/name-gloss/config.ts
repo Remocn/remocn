@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const nameGlossConfig: ComponentConfig = {
   componentName: "NameGloss",
@@ -13,6 +19,31 @@ export const nameGlossConfig: ComponentConfig = {
       },
       description: "Theme",
     },
+    why: {
+      type: "text-content",
+      default: "So the film looks like yours from the first render.",
+      description: "Why",
+    },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      default: 42,
+      min: 0,
+      max: 120,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Geologica" }),
     speed: {
       type: "number",
       default: 1,

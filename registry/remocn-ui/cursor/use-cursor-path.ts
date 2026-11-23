@@ -1,7 +1,6 @@
 "use client";
-
-import { useCurrentFrame } from "remotion";
 import type { CursorStyle } from "@/components/remocn/cursor";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 
 export interface CursorWaypoint {
@@ -57,7 +56,7 @@ export function useCursorPath(
   waypoints: CursorWaypoint[],
   opts: CursorPathOptions = {},
 ): CursorStyle {
-  const raw = useCurrentFrame();
+  const raw = useSceneFrame();
   return cursorPathAt(waypoints, raw, opts);
 }
 

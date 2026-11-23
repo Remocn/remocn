@@ -1,0 +1,102 @@
+{
+  "component": "ellipsis-resolve",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-ship",
+      "label": "Snappy Ship",
+      "description": "A quick pulse that snaps into a bold sans word with a fast gradient sweep.",
+      "askedAs": [
+        "fast resolve to word",
+        "quick snappy loading done",
+        "punchy short reveal",
+        "быстрое появление слова",
+        "резкий переход из загрузки"
+      ],
+      "props": {
+        "resolveAt": 18,
+        "sweepFrames": 10,
+        "fontFamily": "Inter",
+        "speed": 1.5,
+        "grain": false
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Warm off-white page with dark ink and an editorial serif in a muted terracotta accent.",
+      "askedAs": [
+        "light editorial version",
+        "warm paper background",
+        "elegant serif on cream",
+        "светлый тёплый вариант",
+        "редакционный стиль на бумаге"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#c2562f",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "slow-suspense",
+      "label": "Slow Suspense",
+      "description": "Long, patient thinking dots that resolve late with a slow, cinematic sweep.",
+      "askedAs": [
+        "longer build up before reveal",
+        "slow dramatic resolve",
+        "make it suspenseful",
+        "медленное драматичное появление",
+        "долгая пауза перед словом"
+      ],
+      "props": {
+        "resolveAt": 80,
+        "sweepFrames": 52,
+        "speed": 0.75,
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Near-black console backdrop with monospace type and a soft green accent, grain off.",
+      "askedAs": [
+        "terminal style result",
+        "monospace dev look",
+        "command line done message",
+        "стиль терминала",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#e3eae5",
+        "accent": "#3fb57a",
+        "grain": false,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Deep navy field with a large geometric grotesk word in a dusky violet gradient.",
+      "askedAs": [
+        "dark purple big word",
+        "navy and violet reveal",
+        "large bold headline look",
+        "тёмно-синий с фиолетовым",
+        "крупное слово на тёмном фоне"
+      ],
+      "props": {
+        "background": "#0f1226",
+        "ink": "#edebf7",
+        "accent": "#8b6cf0",
+        "fontFamily": "Space Grotesk",
+        "scale": 1.4
+      }
+    }
+  ]
+}

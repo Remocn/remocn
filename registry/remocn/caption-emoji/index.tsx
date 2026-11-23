@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
-import { Easing, interpolate, spring, useVideoConfig } from "remotion";
+import { Easing, interpolate, spring } from "remotion";
 import {
   type CaptionBaseProps,
   captionWordText,
@@ -11,6 +11,8 @@ import {
   normalizeCaptionWord,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionEmojiProps extends CaptionBaseProps {
   emoji?: Record<string, string>;
@@ -25,6 +27,8 @@ const LEGIBILITY_SHADOW =
   "0 2px 3px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35)";
 
 const POP_SPRING = { damping: 9, stiffness: 180, mass: 0.6 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const enterEasing = Easing.bezier(0.2, 0.8, 0.2, 1);
 
@@ -45,7 +49,8 @@ export function CaptionEmoji({
   shadow = true,
   className,
 }: CaptionEmojiProps) {
-  const { fps } = useVideoConfig();
+  const glide = useGlide();
+  const { fps } = useSceneConfig();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -88,7 +93,7 @@ export function CaptionEmoji({
         lineHeight: 1.2,
         textAlign: "center",
         opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)`,
+        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
       }}
     >
       {groupCaptionWords(state.tokens).map((word, w) => {

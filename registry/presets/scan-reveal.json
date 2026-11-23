@@ -1,0 +1,126 @@
+{
+  "component": "scan-reveal",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "blueprint-mono",
+      "label": "Blueprint Mono",
+      "description": "A technical deep-navy canvas with monospace type, crisp cyan accent and a measured scan.",
+      "askedAs": [
+        "technical blueprint look with mono font",
+        "engineering style title on navy",
+        "code-like headline reveal",
+        "технический стиль как чертёж",
+        "моноширинный шрифт на тёмно-синем фоне"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b1a2e",
+        "ink": "#e6eef7",
+        "accent": "#5cc8e8",
+        "scan": 64
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm paper-light page with an elegant serif headline, terracotta accent and a slow, unhurried sweep.",
+      "askedAs": [
+        "elegant magazine style title",
+        "serif headline on cream background",
+        "slow classy reveal for editorial",
+        "элегантный журнальный заголовок",
+        "медленное появление с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1e1b17",
+        "accent": "#b5532e",
+        "scan": 96
+      }
+    },
+    {
+      "id": "swift-clean",
+      "label": "Swift Clean",
+      "description": "A clean, guide-free light layout in Inter with a fast, snappy scan for quick cuts.",
+      "askedAs": [
+        "fast minimal white title",
+        "quick clean section header",
+        "snappy reveal without grid lines",
+        "быстрый минималистичный заголовок",
+        "чистый светлый стиль без сетки"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "guides": false,
+        "grain": false,
+        "scan": 28,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "noir-gold",
+      "label": "Noir Gold",
+      "description": "Near-black backdrop with soft ivory text and a muted gold accent, scaled up for a luxurious statement.",
+      "askedAs": [
+        "luxury black and gold title",
+        "premium dark headline big",
+        "high-end brand opener",
+        "роскошный чёрный с золотом",
+        "премиальный крупный заголовок"
+      ],
+      "props": {
+        "background": "#0e0d0b",
+        "ink": "#f2ebdd",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "scale": 1.2,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "forest-calm",
+      "label": "Forest Calm",
+      "description": "Deep forest green with sage accent and rounded Manrope type, delayed and gently paced.",
+      "askedAs": [
+        "calm green title card",
+        "soft natural dark green header",
+        "relaxed slow intro",
+        "спокойный зелёный заголовок",
+        "мягкое медленное появление"
+      ],
+      "props": {
+        "background": "#13261e",
+        "ink": "#e8f0ea",
+        "accent": "#8fbf9f",
+        "fontFamily": "Manrope",
+        "delay": 20,
+        "scan": 110
+      }
+    },
+    {
+      "id": "compact-signal",
+      "label": "Compact Signal",
+      "description": "A smaller, tight Geist headline on charcoal with a coral accent and quick scan for lower-key sections.",
+      "askedAs": [
+        "small compact section label",
+        "subtle dark title with coral",
+        "smaller quick headline",
+        "компактный небольшой заголовок",
+        "тёмный с коралловым акцентом"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "scale": 0.75,
+        "accent": "#f26b5b",
+        "background": "#1a1c20",
+        "ink": "#edeef0",
+        "scan": 40
+      }
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -10,9 +11,9 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -39,6 +40,22 @@ export interface QuadrantPlotProps {
   points?: QuadrantPoint[];
   brand?: QuadrantPoint;
   accent?: string;
+  /** Color of the brand label and the lit axis ends; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the point and brand labels. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames between competitor dots dropping in. */
+  stagger?: number;
+  /** Replaces the remocn mark when the brand label is "remocn". */
+  logo?: React.ReactNode;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the plot, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -174,19 +191,50 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function QuadrantPlot({
   xLabels = ["Slow", "Fast"],
   yLabels = ["Hard", "Easy"],
   points = DEFAULT_POINTS,
   brand = DEFAULT_BRAND,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  stagger = DROP_STAGGER,
+  logo,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: QuadrantPlotProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const heroLabel = ink ?? p.heroLabel;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
 
   const cx = width / 2;
   const cy = height / 2;
@@ -318,7 +366,7 @@ export function QuadrantPlot({
           letterSpacing: "0.12em",
           textTransform: "uppercase",
           color: strong
-            ? interpolateColors(wash, [0, 1], [p.muted, p.fg])
+            ? interpolateColors(wash, [0, 1], [p.muted, fg])
             : p.muted,
           opacity: k,
           whiteSpace: "nowrap",
@@ -345,218 +393,220 @@ export function QuadrantPlot({
       : interpolateColors(wash, [0, 1], [accent, p.hero]);
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `translate(${camX}px, ${camY}px) scale(${zoom})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        <div
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: cx,
-            top: cy - hh,
-            width: hw,
-            height: hh,
-            background: mesh,
-            opacity: wash,
-            clipPath: `inset(${(1 - reveal) * 100}% ${(1 - reveal) * 100}% 0 0)`,
+            transform: `translate(${camX}px, ${camY}px) scale(${zoom})${glide(midway(push) || midway(drift))}`,
+            transformOrigin: "50% 50%",
           }}
-        />
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
         >
-          {gridDots.map(([gx, gy]) => (
-            <circle
-              key={`${gx.toFixed(1)}-${gy.toFixed(1)}`}
-              cx={gx}
-              cy={gy}
-              r={1.3 * u}
-              fill={p.grid}
-              opacity={markK}
-            />
-          ))}
-
-          <line
-            x1={cx - hw * axisK}
-            y1={cy}
-            x2={cx + hw * axisK}
-            y2={cy}
-            stroke={p.axis}
-            strokeWidth={sw}
+          <div
+            style={{
+              position: "absolute",
+              left: cx,
+              top: cy - hh,
+              width: hw,
+              height: hh,
+              background: mesh,
+              opacity: wash,
+              clipPath: `inset(${(1 - reveal) * 100}% ${(1 - reveal) * 100}% 0 0)`,
+            }}
           />
-          <line
-            x1={cx}
-            y1={cy - hh * axisK}
-            x2={cx}
-            y2={cy + hh * axisK}
-            stroke={p.axis}
-            strokeWidth={sw}
-          />
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            {gridDots.map(([gx, gy]) => (
+              <circle
+                key={`${gx.toFixed(1)}-${gy.toFixed(1)}`}
+                cx={gx}
+                cy={gy}
+                r={1.3 * u}
+                fill={p.grid}
+                opacity={markK}
+              />
+            ))}
 
-          {corners.map(([x, y, ix, iy]) => (
-            <path
-              key={`${x}-${y}`}
-              d={`M${x + ix * corner} ${y} L${x} ${y} L${x} ${y + iy * corner}`}
-              fill="none"
-              stroke={p.mark}
+            <line
+              x1={cx - hw * axisK}
+              y1={cy}
+              x2={cx + hw * axisK}
+              y2={cy}
+              stroke={p.axis}
               strokeWidth={sw}
-              opacity={markK * (ix < 0 && iy > 0 ? 1 - wash : 1)}
             />
-          ))}
+            <line
+              x1={cx}
+              y1={cy - hh * axisK}
+              x2={cx}
+              y2={cy + hh * axisK}
+              stroke={p.axis}
+              strokeWidth={sw}
+            />
+
+            {corners.map(([x, y, ix, iy]) => (
+              <path
+                key={`${x}-${y}`}
+                d={`M${x + ix * corner} ${y} L${x} ${y} L${x} ${y + iy * corner}`}
+                fill="none"
+                stroke={p.mark}
+                strokeWidth={sw}
+                opacity={markK * (ix < 0 && iy > 0 ? 1 - wash : 1)}
+              />
+            ))}
+
+            {points.map((pt, i) => {
+              const start = DROP + i * stagger;
+              const s = spring({
+                frame: t - start,
+                fps,
+                config: { damping: 14, stiffness: 170, mass: 0.7 },
+              });
+              const o = interpolate(t, [start, start + 6], [0, 1], CLAMP);
+              const x = toX(pt.x);
+              const y = toY(pt.y) - (1 - s) * 34 * u;
+              return (
+                <circle
+                  key={pt.label}
+                  cx={x}
+                  cy={y}
+                  r={7 * u}
+                  fill={p.dot}
+                  opacity={o * (1 - 0.62 * dim)}
+                />
+              );
+            })}
+
+            <g opacity={guide * 0.9}>
+              <line
+                x1={bx}
+                y1={by}
+                x2={bx}
+                y2={by + (cy - by) * guide}
+                stroke={p.guide}
+                strokeWidth={sw}
+                strokeDasharray={`${3 * u} ${5 * u}`}
+              />
+              <line
+                x1={bx}
+                y1={by}
+                x2={bx + (cx - bx) * guide}
+                y2={by}
+                stroke={p.guide}
+                strokeWidth={sw}
+                strokeDasharray={`${3 * u} ${5 * u}`}
+              />
+            </g>
+
+            {ghosts.map((g, i) => (
+              <circle
+                key={i}
+                cx={g.gx}
+                cy={g.gy}
+                r={12 * u * brandS}
+                fill={accent}
+                opacity={t >= ARRIVE ? g.o : 0}
+              />
+            ))}
+            <circle
+              cx={dx}
+              cy={dy}
+              r={(12 + 36 * ring) * u}
+              fill="none"
+              stroke={heroDot}
+              strokeWidth={1.5 * u}
+              opacity={t >= LANDED ? (1 - ring) * 0.7 : 0}
+            />
+            <circle
+              cx={dx}
+              cy={dy}
+              r={22 * u}
+              fill="none"
+              stroke={heroDot}
+              strokeWidth={sw}
+              opacity={brandLab * 0.45}
+            />
+            <circle
+              cx={dx}
+              cy={dy}
+              r={12 * u * brandS}
+              fill={heroDot}
+              opacity={t >= ARRIVE ? brandO : 0}
+            />
+          </svg>
 
           {points.map((pt, i) => {
-            const start = DROP + i * DROP_STAGGER;
-            const s = spring({
-              frame: t - start,
-              fps,
-              config: { damping: 14, stiffness: 170, mass: 0.7 },
+            const start = DROP + i * stagger + 5;
+            const k = interpolate(t, [start, start + 14], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
             });
-            const o = interpolate(t, [start, start + 6], [0, 1], CLAMP);
-            const x = toX(pt.x);
-            const y = toY(pt.y) - (1 - s) * 34 * u;
             return (
-              <circle
+              <div
                 key={pt.label}
-                cx={x}
-                cy={y}
-                r={7 * u}
-                fill={p.dot}
-                opacity={o * (1 - 0.62 * dim)}
-              />
+                style={{
+                  position: "absolute",
+                  left: toX(pt.x) + 15 * u,
+                  top: toY(pt.y),
+                  transform: `translate(${(1 - k) * -6 * u}px, -50%)`,
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 17 * u,
+                  letterSpacing: "-0.005em",
+                  color: p.muted,
+                  opacity: k * (1 - 0.6 * dim),
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {pt.label}
+              </div>
             );
           })}
 
-          <g opacity={guide * 0.9}>
-            <line
-              x1={bx}
-              y1={by}
-              x2={bx}
-              y2={by + (cy - by) * guide}
-              stroke={p.guide}
-              strokeWidth={sw}
-              strokeDasharray={`${3 * u} ${5 * u}`}
-            />
-            <line
-              x1={bx}
-              y1={by}
-              x2={bx + (cx - bx) * guide}
-              y2={by}
-              stroke={p.guide}
-              strokeWidth={sw}
-              strokeDasharray={`${3 * u} ${5 * u}`}
-            />
-          </g>
+          <div
+            style={{
+              position: "absolute",
+              left: bx + 36 * u,
+              top: by,
+              transform: `translate(${(1 - brandLab) * -10 * u}px, -50%)`,
+              opacity: brandLab,
+            }}
+          >
+            {brand.label.toLowerCase() === "remocn" ? (
+              (logo ?? <RemocnLogo fontSize={34 * u} color={heroLabel} />)
+            ) : (
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: 32 * u,
+                  letterSpacing: "-0.025em",
+                  color: heroLabel,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {brand.label}
+              </div>
+            )}
+          </div>
 
-          {ghosts.map((g, i) => (
-            <circle
-              key={i}
-              cx={g.gx}
-              cy={g.gy}
-              r={12 * u * brandS}
-              fill={accent}
-              opacity={t >= ARRIVE ? g.o : 0}
-            />
-          ))}
-          <circle
-            cx={dx}
-            cy={dy}
-            r={(12 + 36 * ring) * u}
-            fill="none"
-            stroke={heroDot}
-            strokeWidth={1.5 * u}
-            opacity={t >= LANDED ? (1 - ring) * 0.7 : 0}
-          />
-          <circle
-            cx={dx}
-            cy={dy}
-            r={22 * u}
-            fill="none"
-            stroke={heroDot}
-            strokeWidth={sw}
-            opacity={brandLab * 0.45}
-          />
-          <circle
-            cx={dx}
-            cy={dy}
-            r={12 * u * brandS}
-            fill={heroDot}
-            opacity={t >= ARRIVE ? brandO : 0}
-          />
-        </svg>
-
-        {points.map((pt, i) => {
-          const start = DROP + i * DROP_STAGGER + 5;
-          const k = interpolate(t, [start, start + 14], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          return (
-            <div
-              key={pt.label}
-              style={{
-                position: "absolute",
-                left: toX(pt.x) + 15 * u,
-                top: toY(pt.y),
-                transform: `translate(${(1 - k) * -6 * u}px, -50%)`,
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: 17 * u,
-                letterSpacing: "-0.005em",
-                color: p.muted,
-                opacity: k * (1 - 0.6 * dim),
-                whiteSpace: "nowrap",
-              }}
-            >
-              {pt.label}
-            </div>
-          );
-        })}
-
-        <div
-          style={{
-            position: "absolute",
-            left: bx + 36 * u,
-            top: by,
-            transform: `translate(${(1 - brandLab) * -10 * u}px, -50%)`,
-            opacity: brandLab,
-          }}
-        >
-          {brand.label.toLowerCase() === "remocn" ? (
-            <RemocnLogo fontSize={34 * u} color={p.heroLabel} />
-          ) : (
-            <div
-              style={{
-                fontFamily: sans,
-                fontWeight: 500,
-                fontSize: 32 * u,
-                letterSpacing: "-0.025em",
-                color: p.heroLabel,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {brand.label}
-            </div>
-          )}
-        </div>
-
-        {endLabel(xLabels[0], cx - hw - pad, cy, "left", labelK(0), false)}
-        {endLabel(xLabels[1], cx + hw + pad, cy, "right", labelK(2), true)}
-        {endLabel(yLabels[1], cx, cy - hh - pad, "top", labelK(4), true)}
-        {endLabel(yLabels[0], cx, cy + hh + pad, "bottom", labelK(6), false)}
-      </AbsoluteFill>
+          {endLabel(xLabels[0], cx - hw - pad, cy, "left", labelK(0), false)}
+          {endLabel(xLabels[1], cx + hw + pad, cy, "right", labelK(2), true)}
+          {endLabel(yLabels[1], cx, cy - hh - pad, "top", labelK(4), true)}
+          {endLabel(yLabels[0], cx, cy + hh + pad, "bottom", labelK(6), false)}
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${stage} 100%)`,
           opacity: 0.6,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

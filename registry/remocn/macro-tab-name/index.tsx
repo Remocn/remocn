@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadInterTight } from "@remotion/google-fonts/InterTight";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -10,9 +11,9 @@ import {
   interpolate,
   random,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -55,13 +56,19 @@ const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 
+/** A layout shift as a transform, or nothing once it is under a thousandth. */
+const shift = (dx: number, dy = 0) =>
+  Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3
+    ? undefined
+    : `translate(${dx}px, ${dy}px)`;
+
 interface Metrics {
   width: (s: string) => number;
 }
 
-function buildMetrics(_version: number): Metrics {
+function buildMetrics(_version: number, fontFamily: string): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
-  const font = `400 ${MEASURE_PX}px "${inter.fontFamily}"`;
+  const font = `400 ${MEASURE_PX}px "${fontFamily}"`;
   const cache: Record<string, number> = {};
   return {
     width: (s: string) => {
@@ -75,7 +82,7 @@ function buildMetrics(_version: number): Metrics {
   };
 }
 
-function useMetrics() {
+function useMetrics(fontFamily: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("macro-tab-name: measuring"));
   const released = useRef(false);
@@ -87,7 +94,7 @@ function useMetrics() {
     document.fonts.addEventListener("loadingdone", bump);
     Promise.all([
       inter.waitUntilDone(),
-      document.fonts.load(`400 ${MEASURE_PX}px "${inter.fontFamily}"`),
+      document.fonts.load(`400 ${MEASURE_PX}px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -101,8 +108,11 @@ function useMetrics() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMetrics(version), [version]);
+  }, [handle, fontFamily]);
+  return useMemo(
+    () => buildMetrics(version, fontFamily),
+    [version, fontFamily],
+  );
 }
 
 function FileIcon({ size, color }: { size: number; color: string }) {
@@ -161,6 +171,37 @@ export interface MacroTabNameProps {
   docBody?: string[];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Tab and title text before the name resolves. */
+  placeholder?: string;
+  /** Frames between typed letters. */
+  stagger?: number;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the tab and document. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  /** Size of the tab bar and document, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function MacroTabName({
@@ -178,17 +219,27 @@ export function MacroTabName({
   ],
   ground,
   groundParams,
+  placeholder = "Untitled",
+  stagger = B.step,
+  ink: inkProp,
+  background,
+  fontFamily = inter.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: MacroTabNameProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
-  const m = useMetrics();
+  const glide = useGlide();
+  const raw = useSceneFrame();
+  const frame = Math.max(0, raw - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
+  const m = useMetrics(fontFamily);
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 1080 : 1280;
   const stageH = portrait ? 1920 : 720;
   const sc = width / stageW;
 
-  const ink = dark ? "#f1f2f8" : "#15171d";
+  const ink = inkProp ?? (dark ? "#f1f2f8" : "#15171d");
   const soft = dark ? "rgba(230,233,245,0.55)" : "rgba(21,23,29,0.5)";
   const xColor = dark ? "rgba(230,233,245,0.62)" : "rgba(21,23,29,0.5)";
   const chipBg = dark
@@ -220,7 +271,7 @@ export function MacroTabName({
   for (let i = 0; i < chars.length; i++) {
     times.push(t);
     const jitter = Math.round((random(`mtn-${i}`) - 0.5) * 2);
-    t += chars[i] === " " ? B.space : B.step + (i > 0 ? jitter : 0);
+    t += chars[i] === " " ? B.space : stagger + (i > 0 ? jitter : 0);
   }
   const typedEnd = t;
   const track = -0.018 * F;
@@ -241,11 +292,23 @@ export function MacroTabName({
   const caretW = Math.max(2, F * 0.04);
   const chipW = padX + iconS + gap + textW + caretW + xGap + xS + padX;
   const chipL = cx - chipW / 2;
-  const textL = chipL + padX + iconS + gap;
+  // The pieces around the growing chip are laid out where the typed name
+  // leaves them and ride there by transform: layout rounds a box to whole
+  // pixels, so a tab eased by `left` clicks sideways pixel by pixel.
+  const chipWRest = chipW - textW + full;
+  const chipLRest = cx - chipWRest / 2;
+  const slide = (textW - full) / 2;
+  const textL = chipLRest + padX + iconS + gap;
 
+  const pushAt = (f: number) =>
+    mix(1.14, 1, ramp(f, B.focus, 16, FOCUS)) *
+    (1 + 0.04 * ramp(f, 16, B.end - 16, SWAY));
   const focus = ramp(frame, B.focus, 16, FOCUS);
-  const push =
-    mix(1.14, 1, focus) * (1 + 0.04 * ramp(frame, 16, B.end - 16, SWAY));
+  const push = pushAt(frame);
+  const pushNear = (r: number) => pushAt(Math.max(0, r - delay) * speed);
+  const pushMoving =
+    Math.abs(pushNear(raw + 1) - push) > 1e-6 ||
+    Math.abs(push - pushNear(raw - 1)) > 1e-6;
   const blurAll = (1 - focus) * 7;
 
   const caretVis =
@@ -279,7 +342,7 @@ export function MacroTabName({
     (s) => F * (0.86 + 0.3) + m.width(s) * F + padX * 2,
   );
   const nbGap = F * 0.22;
-  let nx = chipL - nbGap;
+  let nx = chipLRest - nbGap;
   const neighborX = neighborW
     .slice()
     .reverse()
@@ -290,7 +353,7 @@ export function MacroTabName({
       return x;
     })
     .reverse();
-  const plusX = chipL + chipW + F * 0.5;
+  const plusX = chipLRest + chipWRest + F * 0.5;
   const titleK = ramp(frame, B.resolve + 4, 12, FOCUS);
   const docLines = portrait ? docBody : docBody.slice(0, 1);
 
@@ -324,6 +387,8 @@ export function MacroTabName({
     0,
   );
   const curIn = ramp(frame, -12, 8);
+  const curParkX = cx + chipWRest * 0.36;
+  const curParkY = curRest.y;
 
   const resolvedGround: GshPresetId | undefined =
     ground ?? (dark ? undefined : "paper-crease");
@@ -345,369 +410,386 @@ export function MacroTabName({
       : undefined);
 
   return (
-    <AbsoluteFill style={{ fontFamily: inter.fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={resolvedParams}
-        timeOffset={4}
-        timeScale={0.4}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${sc})`,
-          transformOrigin: "0 0",
-          overflow: "hidden",
-        }}
-      >
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <GshGround
+          preset={resolvedGround}
+          params={resolvedParams}
+          timeOffset={4}
+          timeScale={0.4}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${push})`,
-            transformOrigin: `${cx}px ${cy}px`,
-            filter: blurAll > 0.05 ? `blur(${blurAll}px)` : undefined,
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${sc})`,
+            transformOrigin: "0 0",
+            overflow: "hidden",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: -40,
-              right: -40,
-              top: bandTop,
-              height: bandBottom - bandTop,
-              background: band,
-              borderTop: `1px solid ${bandLine}`,
-              borderBottom: `1px solid ${bandLine}`,
-              filter: "blur(1.5px)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: docL,
-              top: bandTop - F * 1.45,
-              height: F * 0.9,
-              display: "flex",
-              alignItems: "center",
-              gap: F * 0.28,
-              fontSize: F * 0.5,
-              color: soft,
-              whiteSpace: "nowrap",
-              filter: "blur(5px)",
-              opacity: 0.6,
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              width={F * 0.5}
-              height={F * 0.5}
-              style={{ display: "block" }}
-              aria-hidden
-            >
-              <path
-                d="M14.5 6l-6 6 6 6"
-                fill="none"
-                stroke={soft}
-                strokeWidth={1.6}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <svg
-              viewBox="0 0 24 24"
-              width={F * 0.5}
-              height={F * 0.5}
-              style={{ display: "block", opacity: 0.5 }}
-              aria-hidden
-            >
-              <path
-                d="M9.5 6l6 6-6 6"
-                fill="none"
-                stroke={soft}
-                strokeWidth={1.6}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span style={{ marginLeft: F * 0.2 }}>
-              {[...path, titleK > 0.5 ? name : "Untitled"].join("  /  ")}
-            </span>
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: docL,
-              top: bandBottom + F * 0.8,
-              width: docW,
-              color: ink,
-              whiteSpace: "nowrap",
+              inset: 0,
+              transform: `scale(${push})${glide(pushMoving)}`,
+              transformOrigin: `${cx}px ${cy}px`,
+              filter: blurAll > 0.05 ? `blur(${blurAll}px)` : undefined,
             }}
           >
             <div
               style={{
-                position: "relative",
-                height: F * 1.3,
-                fontSize: F * 1.05,
-                letterSpacing: "-0.02em",
-                filter: "blur(2.5px)",
-                opacity: 0.62,
+                position: "absolute",
+                left: -40,
+                right: -40,
+                top: bandTop,
+                height: bandBottom - bandTop,
+                background: band,
+                borderTop: `1px solid ${bandLine}`,
+                borderBottom: `1px solid ${bandLine}`,
+                filter: "blur(1.5px)",
               }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  opacity: 1 - titleK,
-                  color: soft,
-                }}
-              >
-                Untitled
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  opacity: titleK,
-                  transform: `translateY(${(1 - titleK) * F * 0.18}px)`,
-                }}
-              >
-                {name}
-              </div>
-            </div>
+            />
             <div
               style={{
-                marginTop: F * 0.22,
-                fontSize: F * 0.46,
+                position: "absolute",
+                left: docL,
+                top: bandTop - F * 1.45,
+                height: F * 0.9,
+                display: "flex",
+                alignItems: "center",
+                gap: F * 0.28,
+                fontSize: F * 0.5,
                 color: soft,
-                filter: "blur(3.5px)",
-                opacity: 0.7,
-                fontVariantNumeric: "tabular-nums",
+                whiteSpace: "nowrap",
+                filter: "blur(5px)",
+                opacity: 0.6,
               }}
             >
-              {docMeta}
+              <svg
+                viewBox="0 0 24 24"
+                width={F * 0.5}
+                height={F * 0.5}
+                style={{ display: "block" }}
+                aria-hidden
+              >
+                <path
+                  d="M14.5 6l-6 6 6 6"
+                  fill="none"
+                  stroke={soft}
+                  strokeWidth={1.6}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <svg
+                viewBox="0 0 24 24"
+                width={F * 0.5}
+                height={F * 0.5}
+                style={{ display: "block", opacity: 0.5 }}
+                aria-hidden
+              >
+                <path
+                  d="M9.5 6l6 6-6 6"
+                  fill="none"
+                  stroke={soft}
+                  strokeWidth={1.6}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span style={{ marginLeft: F * 0.2 }}>
+                {[...path, titleK > 0.5 ? name : placeholder].join("  /  ")}
+              </span>
             </div>
-            {docLines.map((line, i) => (
+            <div
+              style={{
+                position: "absolute",
+                left: docL,
+                top: bandBottom + F * 0.8,
+                width: docW,
+                color: ink,
+                whiteSpace: "nowrap",
+              }}
+            >
               <div
-                key={line}
                 style={{
-                  marginTop: i === 0 ? F * 0.7 : F * 0.36,
-                  fontSize: F * 0.56,
+                  position: "relative",
+                  height: F * 1.3,
+                  fontSize: F * 1.05,
+                  letterSpacing: "-0.02em",
+                  filter: "blur(2.5px)",
+                  opacity: 0.62,
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    opacity: 1 - titleK,
+                    color: soft,
+                  }}
+                >
+                  {placeholder}
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    opacity: titleK,
+                    transform: `translateY(${(1 - titleK) * F * 0.18}px)`,
+                  }}
+                >
+                  {name}
+                </div>
+              </div>
+              <div
+                style={{
+                  marginTop: F * 0.22,
+                  fontSize: F * 0.46,
                   color: soft,
-                  filter: `blur(${4.5 + i * 1.2}px)`,
-                  opacity: 0.6 - i * 0.08,
+                  filter: "blur(3.5px)",
+                  opacity: 0.7,
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
-                {line}
+                {docMeta}
+              </div>
+              {docLines.map((line, i) => (
+                <div
+                  key={line}
+                  style={{
+                    marginTop: i === 0 ? F * 0.7 : F * 0.36,
+                    fontSize: F * 0.56,
+                    color: soft,
+                    filter: `blur(${4.5 + i * 1.2}px)`,
+                    opacity: 0.6 - i * 0.08,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {line}
+                </div>
+              ))}
+            </div>
+            {lead.map((label, i) => (
+              <div
+                key={label}
+                style={{
+                  position: "absolute",
+                  left: neighborX[i],
+                  top: cy - chipH / 2,
+                  width: neighborW[i],
+                  height: chipH,
+                  padding: `0 ${padX}px`,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: F * 0.3,
+                  fontSize: F,
+                  color: soft,
+                  whiteSpace: "nowrap",
+                  filter: `blur(${i === lead.length - 1 ? 3.5 : 6}px)`,
+                  opacity: i === lead.length - 1 ? 0.75 : 0.5,
+                  transform: shift(-slide),
+                }}
+              >
+                <FileIcon size={F * 0.86} color={soft} />
+                <span>{label}</span>
               </div>
             ))}
-          </div>
-          {lead.map((label, i) => (
-            <div
-              key={label}
-              style={{
-                position: "absolute",
-                left: neighborX[i],
-                top: cy - chipH / 2,
-                width: neighborW[i],
-                height: chipH,
-                padding: `0 ${padX}px`,
-                display: "flex",
-                alignItems: "center",
-                gap: F * 0.3,
-                fontSize: F,
-                color: soft,
-                whiteSpace: "nowrap",
-                filter: `blur(${i === lead.length - 1 ? 3.5 : 6}px)`,
-                opacity: i === lead.length - 1 ? 0.75 : 0.5,
-              }}
-            >
-              <FileIcon size={F * 0.86} color={soft} />
-              <span>{label}</span>
-            </div>
-          ))}
-          <div
-            style={{
-              position: "absolute",
-              left: plusX,
-              top: cy - F * 0.4,
-              width: F * 0.8,
-              height: F * 0.8,
-              filter: "blur(3.5px)",
-              opacity: 0.7,
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              width={F * 0.8}
-              height={F * 0.8}
-              aria-hidden
-            >
-              <path
-                d="M12 5v14M5 12h14"
-                stroke={soft}
-                strokeWidth={1.5}
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-
-          <div
-            style={{
-              position: "absolute",
-              left: chipL,
-              top: cy - chipH / 2,
-              width: chipW,
-              height: chipH,
-              borderRadius: F * 0.4,
-              background: chipBg,
-              boxShadow: chipShadow,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: chipL + padX,
-              top: cy - iconS / 2,
-              width: iconS,
-              height: iconS,
-            }}
-          >
             <div
               style={{
                 position: "absolute",
-                inset: 0,
-                opacity: 1 - morphOut,
-                transform: `scale(${iconScale})`,
+                left: plusX,
+                top: cy - F * 0.4,
+                width: F * 0.8,
+                height: F * 0.8,
+                filter: "blur(3.5px)",
+                opacity: 0.7,
+                transform: shift(slide),
               }}
             >
-              <FileIcon size={iconS} color={ink} />
-            </div>
-            {frame >= B.morph ? (
               <svg
                 viewBox="0 0 24 24"
-                width={iconS}
-                height={iconS}
+                width={F * 0.8}
+                height={F * 0.8}
+                aria-hidden
+              >
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke={soft}
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+
+            <div
+              style={{
+                position: "absolute",
+                left: chipL,
+                top: cy - chipH / 2,
+                width: chipW,
+                height: chipH,
+                borderRadius: F * 0.4,
+                background: chipBg,
+                boxShadow: chipShadow,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: chipLRest + padX,
+                top: cy - iconS / 2,
+                width: iconS,
+                height: iconS,
+                transform: shift(-slide),
+              }}
+            >
+              <div
                 style={{
                   position: "absolute",
                   inset: 0,
-                  opacity: Math.min(1, ringIn) * (1 - ringOut),
-                  transform: `scale(${Math.max(0, ringIn) * (1 - 0.3 * ringOut)}) rotate(${ringSpin}deg)`,
+                  opacity: 1 - morphOut,
+                  transform: `scale(${iconScale})`,
                 }}
-                aria-hidden
               >
-                <circle
-                  cx={12}
-                  cy={12}
-                  r={8}
-                  fill="none"
-                  stroke={soft}
-                  strokeOpacity={0.35}
-                  strokeWidth={1.5}
-                />
-                <circle
-                  cx={12}
-                  cy={12}
-                  r={8}
-                  fill="none"
-                  stroke={accent}
-                  strokeWidth={1.75}
-                  strokeLinecap="round"
-                  strokeDasharray={`${ringSweep * 50.3} 60`}
-                  transform="rotate(-90 12 12)"
-                />
-              </svg>
-            ) : null}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: textL,
-              top: cy - chipH / 2,
-              width: textW + caretW + F * 0.04,
-              height: chipH,
-            }}
-          >
-            {chars.map((ch, i) => {
-              if (frame < times[i] || ch === " ") return null;
-              const k = ramp(frame, times[i], 4, FOCUS);
-              return (
-                <span
-                  key={`c${i.toString()}`}
+                <FileIcon size={iconS} color={ink} />
+              </div>
+              {frame >= B.morph ? (
+                <svg
+                  viewBox="0 0 24 24"
+                  width={iconS}
+                  height={iconS}
                   style={{
                     position: "absolute",
-                    left: prefix[i],
-                    top: 0,
-                    height: chipH,
-                    lineHeight: `${chipH}px`,
-                    fontSize: F,
-                    letterSpacing: 0,
-                    color: ink,
-                    whiteSpace: "pre",
-                    opacity: k,
-                    filter: k < 0.99 ? `blur(${(1 - k) * 5}px)` : undefined,
-                    transform: `translateY(${(1 - k) * F * 0.14}px)`,
+                    inset: 0,
+                    opacity: Math.min(1, ringIn) * (1 - ringOut),
+                    transform: `scale(${Math.max(0, ringIn) * (1 - 0.3 * ringOut)}) rotate(${ringSpin}deg)`,
                   }}
+                  aria-hidden
                 >
-                  {ch}
-                </span>
-              );
-            })}
+                  <circle
+                    cx={12}
+                    cy={12}
+                    r={8}
+                    fill="none"
+                    stroke={soft}
+                    strokeOpacity={0.35}
+                    strokeWidth={1.5}
+                  />
+                  <circle
+                    cx={12}
+                    cy={12}
+                    r={8}
+                    fill="none"
+                    stroke={accent}
+                    strokeWidth={1.75}
+                    strokeLinecap="round"
+                    strokeDasharray={`${ringSweep * 50.3} 60`}
+                    transform="rotate(-90 12 12)"
+                  />
+                </svg>
+              ) : null}
+            </div>
             <div
               style={{
                 position: "absolute",
-                left:
-                  (typedCount > 0
-                    ? prefix[typedCount - 1] + adv[typedCount - 1]
-                    : 0) +
-                  F * 0.02,
-                top: chipH / 2 - F * 0.42,
-                width: caretW,
-                height: F * 0.84,
-                borderRadius: caretW,
-                background: accent,
-                opacity: caretVis ? 1 : 0,
+                left: textL,
+                top: cy - chipH / 2,
+                width: textW + caretW + F * 0.04,
+                height: chipH,
+                transform: shift(-slide),
               }}
-            />
-          </div>
-          <svg
-            viewBox="0 0 24 24"
-            width={xS}
-            height={xS}
-            style={{
-              position: "absolute",
-              left: chipL + chipW - padX - xS,
-              top: cy - xS / 2,
-            }}
-            aria-hidden
-          >
-            <path
-              d="M5 5l14 14M19 5L5 19"
-              stroke={xColor}
-              strokeWidth={1.6}
-              strokeLinecap="round"
-            />
-          </svg>
+            >
+              {chars.map((ch, i) => {
+                if (frame < times[i] || ch === " ") return null;
+                const k = ramp(frame, times[i], 4, FOCUS);
+                return (
+                  <span
+                    key={`c${i.toString()}`}
+                    style={{
+                      position: "absolute",
+                      left: prefix[i],
+                      top: 0,
+                      height: chipH,
+                      lineHeight: `${chipH}px`,
+                      fontSize: F,
+                      letterSpacing: 0,
+                      color: ink,
+                      whiteSpace: "pre",
+                      opacity: k,
+                      filter: k < 0.99 ? `blur(${(1 - k) * 5}px)` : undefined,
+                      transform: `translateY(${(1 - k) * F * 0.14}px)`,
+                    }}
+                  >
+                    {ch}
+                  </span>
+                );
+              })}
+              <div
+                style={{
+                  position: "absolute",
+                  left:
+                    (typedCount > 0
+                      ? prefix[typedCount - 1] + adv[typedCount - 1]
+                      : 0) +
+                    F * 0.02,
+                  top: chipH / 2 - F * 0.42,
+                  width: caretW,
+                  height: F * 0.84,
+                  borderRadius: caretW,
+                  background: accent,
+                  opacity: caretVis ? 1 : 0,
+                }}
+              />
+            </div>
+            <svg
+              viewBox="0 0 24 24"
+              width={xS}
+              height={xS}
+              style={{
+                position: "absolute",
+                left: chipLRest + chipWRest - padX - xS,
+                top: cy - xS / 2,
+                transform: shift(slide),
+              }}
+              aria-hidden
+            >
+              <path
+                d="M5 5l14 14M19 5L5 19"
+                stroke={xColor}
+                strokeWidth={1.6}
+                strokeLinecap="round"
+              />
+            </svg>
 
-          <div
-            style={{
-              position: "absolute",
-              left: curX,
-              top: curY,
-              opacity: curIn,
-              transform: `scale(${1 - 0.04 * curPress})`,
-              transformOrigin: "20% 15%",
-            }}
-          >
-            <Cursor size={F * 0.72} />
+            <div
+              style={{
+                position: "absolute",
+                // Same reason as the tab pieces: the glide is a transform
+                // from where the cursor parks, not `left`/`top`.
+                left: curParkX,
+                top: curParkY,
+                opacity: curIn,
+                transform: `translate(${curX - curParkX}px, ${curY - curParkY}px) scale(${1 - 0.04 * curPress})`,
+                transformOrigin: "20% 15%",
+              }}
+            >
+              <Cursor size={F * 0.72} />
+            </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

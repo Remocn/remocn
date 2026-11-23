@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const beamSplitConfig: ComponentConfig = {
   componentName: "BeamSplit",
@@ -13,11 +19,6 @@ export const beamSplitConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     title: {
       type: "text-content",
       default: "Ship the story",
@@ -28,6 +29,26 @@ export const beamSplitConfig: ComponentConfig = {
       default: "with motion you own",
       description: "Inner",
     },
+    hold: {
+      type: "number",
+      default: 32,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    innerColor: {
+      type: "color",
+      default: "#f4f7ff",
+      description: "Inner color",
+    },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

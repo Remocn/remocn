@@ -45,8 +45,8 @@ export const RemotionRoot = () => (
   <Composition
     id="RoadmapTimeline"
     component={RoadmapTimelineScene}
-    durationInFrames={190}
-    fps={30}
+    durationInFrames={380}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -89,6 +89,12 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Days the dragged project moves; positive is later",
     },
     {
+      name: "dragFrames",
+      type: "number",
+      default: "26",
+      description: "Frames the cursor takes to drag the project.",
+    },
+    {
       name: "startMonth",
       type: "number",
       default: "6",
@@ -119,6 +125,12 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Workspace name in the breadcrumb",
     },
     {
+      name: "listTitle",
+      type: "string",
+      default: "\"Projects\"",
+      description: "Header over the project list.",
+    },
+    {
       name: "theme",
       type: "\"light\" | \"dark\"",
       default: "\"light\"",
@@ -131,6 +143,29 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Accent color for highlights, buttons and progress",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Inter Tight\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
       name: "speed",
       type: "number",
       default: "1",
@@ -140,6 +175,11 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "ground",
       type: "GshPresetId",
       description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
     },
     {
       name: "groundParams",

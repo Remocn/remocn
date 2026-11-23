@@ -6,11 +6,16 @@ import type {
 } from "@remotion/transitions";
 import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
 };
+
+// Text in a scene lifted a few px by a transform clicks along pixel by pixel;
+// the shared glide mark leans it off the grid while the transition runs.
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 export type CaretWipeProps = {
   /** Sweep direction. `right` types the screen left→right; `left` reverses it. */
@@ -44,6 +49,7 @@ const CaretWipePresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
+  const glide = useGlide();
   const {
     direction = "right",
     caretColor = "#C3E88D",
@@ -54,6 +60,7 @@ const CaretWipePresentation: React.FC<
   const entering = presentationDirection === "entering";
   const p = presentationProgress;
   const goingRight = direction === "right";
+  const mark = glide(midway(p));
 
   // Eased sweep so the caret decelerates as it lands the last column.
   const eased = interpolate(p, [0, 1], [0, 1], {
@@ -74,7 +81,7 @@ const CaretWipePresentation: React.FC<
         style={{
           clipPath: keep,
           WebkitClipPath: keep,
-          translate: `0 ${interpolate(p, [0, 1], [0, -6], clampOpts)}px`,
+          transform: `translateY(${interpolate(p, [0, 1], [0, -6], clampOpts)}px)${mark}`,
           filter: `blur(${interpolate(p, [0.1, 1], [0, 4], clampOpts)}px)`,
         }}
       >
@@ -105,7 +112,7 @@ const CaretWipePresentation: React.FC<
         style={{
           clipPath: reveal,
           WebkitClipPath: reveal,
-          translate: `0 ${interpolate(p, [0, 1], [3, 0], clampOpts)}px`,
+          transform: `translateY(${interpolate(p, [0, 1], [3, 0], clampOpts)}px)${mark}`,
           filter: `blur(${interpolate(p, [0, 0.8], [2, 0], clampOpts)}px)`,
         }}
       >

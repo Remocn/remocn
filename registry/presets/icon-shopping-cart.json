@@ -1,0 +1,98 @@
+{
+  "component": "icon-shopping-cart",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-cart",
+      "label": "Hero Cart",
+      "description": "A large, bold cart that draws itself in slowly for a confident centrepiece.",
+      "askedAs": [
+        "big slow shopping cart",
+        "large cart icon drawing in",
+        "bold hero cart animation",
+        "большая корзина крупным планом",
+        "медленная отрисовка корзины"
+      ],
+      "props": {
+        "size": 160,
+        "strokeWidth": 2.5,
+        "speed": 0.5,
+        "animation": "draw"
+      }
+    },
+    {
+      "id": "fine-line",
+      "label": "Fine Line",
+      "description": "A delicate hairline cart in soft slate that sketches in gently.",
+      "askedAs": [
+        "thin line cart icon",
+        "minimal elegant cart",
+        "light stroke shopping cart",
+        "тонкая линия корзины",
+        "минималистичная иконка корзины"
+      ],
+      "props": {
+        "strokeWidth": 1,
+        "color": "#64748b",
+        "size": 96,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "add-to-cart-loop",
+      "label": "Add To Cart",
+      "description": "A brand-blue cart that keeps rolling with a quick looping action.",
+      "askedAs": [
+        "looping cart bounce",
+        "add to cart animation",
+        "cart moving on repeat",
+        "корзина в цикле",
+        "анимация добавления в корзину"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 1.5,
+        "color": "#1f6feb"
+      }
+    },
+    {
+      "id": "snappy-checkout",
+      "label": "Snappy Checkout",
+      "description": "A compact emerald cart that draws and moves at double speed.",
+      "askedAs": [
+        "fast small cart icon",
+        "quick checkout cart",
+        "snappy green cart",
+        "быстрая маленькая корзина",
+        "зелёная корзина быстро"
+      ],
+      "props": {
+        "size": 32,
+        "speed": 2,
+        "color": "#059669",
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "warm-boutique",
+      "label": "Warm Boutique",
+      "description": "A medium terracotta cart with a heavy stroke and an unhurried looping motion.",
+      "askedAs": [
+        "warm colored cart",
+        "boutique shop cart icon",
+        "calm looping cart",
+        "тёплая корзина для магазина",
+        "спокойная корзина в цикле"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "strokeWidth": 3,
+        "size": 72,
+        "loop": true,
+        "speed": 0.75
+      }
+    }
+  ]
+}

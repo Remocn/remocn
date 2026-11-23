@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="RoundSlam"
     component={RoundSlamScene}
-    durationInFrames={110}
-    fps={30}
+    durationInFrames={220}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -63,10 +63,55 @@ export const RemotionRoot = () => (
       description: "The finisher word, punched in bigger and cracked open by the slashes.",
     },
     {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "Weight of the round call and the call word.",
+    },
+    {
+      name: "shake",
+      type: "number",
+      default: "1",
+      description: "Strength of the camera shake on each hit; 0 turns it off.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of one of the thin speed slashes.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Unbounded\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

@@ -1,0 +1,101 @@
+{
+  "component": "icon-users",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked icon that slowly sketches itself in a soft slate tone.",
+      "askedAs": [
+        "thin elegant users icon drawing slowly",
+        "minimal line art people icon",
+        "slow sketch animation of users",
+        "тонкая медленная отрисовка иконки",
+        "элегантная линейная иконка пользователей"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "size": 120,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-brand-pulse",
+      "label": "Bold Pulse",
+      "description": "A chunky cobalt icon that loops its action motion at a brisk pace.",
+      "askedAs": [
+        "bold blue users icon looping",
+        "thick animated team icon",
+        "punchy repeating people icon",
+        "жирная синяя иконка в цикле",
+        "яркая повторяющаяся анимация пользователей"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 2.75,
+        "speed": 1.5,
+        "color": "#1d4ed8",
+        "size": 96
+      }
+    },
+    {
+      "id": "quick-ui-badge",
+      "label": "Quick Badge",
+      "description": "A small, fast icon sized for interface chrome in a neutral graphite.",
+      "askedAs": [
+        "small fast users icon for UI",
+        "tiny quick people icon",
+        "compact interface team icon",
+        "маленькая быстрая иконка для интерфейса",
+        "компактная иконка пользователей"
+      ],
+      "props": {
+        "size": 32,
+        "speed": 2,
+        "strokeWidth": 2.25,
+        "color": "#27272a"
+      }
+    },
+    {
+      "id": "hero-forest-loop",
+      "label": "Hero Loop",
+      "description": "An oversized deep-green icon that draws and animates on a calm, endless loop.",
+      "askedAs": [
+        "huge green users icon on loop",
+        "large calm looping community icon",
+        "big hero people illustration animated",
+        "большая зелёная иконка в цикле",
+        "крупная спокойная анимация сообщества"
+      ],
+      "props": {
+        "size": 200,
+        "loop": true,
+        "speed": 0.75,
+        "color": "#166534",
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "warm-terracotta-action",
+      "label": "Warm Action",
+      "description": "A medium terracotta icon that skips the draw and plays only its lively action.",
+      "askedAs": [
+        "warm orange users icon moving",
+        "friendly terracotta team icon",
+        "users icon motion without drawing",
+        "тёплая терракотовая иконка",
+        "анимация пользователей без отрисовки"
+      ],
+      "props": {
+        "animation": "action",
+        "color": "#c2410c",
+        "size": 72,
+        "speed": 1.25
+      }
+    }
+  ]
+}

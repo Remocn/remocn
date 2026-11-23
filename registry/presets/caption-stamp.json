@@ -1,0 +1,117 @@
+{
+  "component": "caption-stamp",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "classic-postal",
+      "label": "Classic Postal",
+      "description": "Navy ink stamps on warm cream captions with a long, lingering hold like a vintage post office mark.",
+      "askedAs": [
+        "vintage post office stamp captions",
+        "blue ink stamp on cream text",
+        "old-school postal look subtitles",
+        "винтажные субтитры с синим штампом",
+        "почтовый штамп в субтитрах"
+      ],
+      "props": {
+        "color": "#f5efe0",
+        "stampColor": "#1e3a8a",
+        "holdMs": 1200,
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Short word-by-word pages and a quick hold so stamps hit in fast staccato bursts.",
+      "askedAs": [
+        "fast punchy stamp captions",
+        "one word at a time stamping",
+        "quick snappy subtitles for reactions",
+        "быстрые субтитры по одному слову",
+        "резкие штампы в субтитрах"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 300,
+        "holdMs": 200,
+        "fontSize": 96,
+        "fontWeight": 900
+      }
+    },
+    {
+      "id": "clean-ink",
+      "label": "Clean Ink",
+      "description": "Crisp flat stamps without texture or shadow in a calm forest green for a tidy, modern feel.",
+      "askedAs": [
+        "clean flat stamp without grunge",
+        "minimal modern stamp captions",
+        "no texture no shadow stamp",
+        "чистый штамп без текстуры",
+        "минималистичные субтитры со штампом"
+      ],
+      "props": {
+        "texture": false,
+        "shadow": false,
+        "stampColor": "#15803d",
+        "fontWeight": 600
+      }
+    },
+    {
+      "id": "big-slam",
+      "label": "Big Slam",
+      "description": "Oversized heavy type with a deep crimson stamp that holds for dramatic, poster-like impact.",
+      "askedAs": [
+        "huge bold stamp captions",
+        "dramatic big text with stamp",
+        "poster style impact subtitles",
+        "огромные жирные субтитры со штампом",
+        "драматичный крупный штамп"
+      ],
+      "props": {
+        "fontSize": 128,
+        "fontWeight": 900,
+        "stampColor": "#b91c1c",
+        "holdMs": 1000,
+        "combineTokensWithinMilliseconds": 800
+      }
+    },
+    {
+      "id": "soft-notes",
+      "label": "Soft Notes",
+      "description": "Smaller regular-weight captions in long relaxed pages with a muted mustard stamp for gentle emphasis.",
+      "askedAs": [
+        "subtle small stamp captions",
+        "gentle calm subtitles with accent",
+        "long lines with soft stamp",
+        "спокойные мелкие субтитры",
+        "мягкий акцент штампом"
+      ],
+      "props": {
+        "fontSize": 44,
+        "fontWeight": 500,
+        "stampColor": "#ca8a04",
+        "combineTokensWithinMilliseconds": 2400,
+        "holdMs": 400
+      }
+    },
+    {
+      "id": "ink-on-paper",
+      "label": "Ink On Paper",
+      "description": "Dark charcoal captions with a textured black stamp, made for light or paper-coloured backgrounds.",
+      "askedAs": [
+        "dark text stamp for white background",
+        "black ink stamp captions",
+        "printed paper look subtitles",
+        "тёмные субтитры для светлого фона",
+        "чёрный штамп как на бумаге"
+      ],
+      "props": {
+        "color": "#1f2937",
+        "stampColor": "#111111",
+        "shadow": false,
+        "texture": true
+      }
+    }
+  ]
+}

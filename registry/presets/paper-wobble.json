@@ -1,0 +1,114 @@
+{
+  "component": "paper-wobble",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "barely-there",
+      "label": "Barely There",
+      "description": "A faint, slow tremor that hints at hand placement without drawing attention.",
+      "askedAs": [
+        "subtle paper jitter",
+        "very light wobble",
+        "almost still handmade feel",
+        "еле заметное дрожание",
+        "лёгкая тряска бумаги"
+      ],
+      "props": {
+        "amp": 0.5,
+        "rotAmp": 0.1,
+        "step": 4,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "nervous-hands",
+      "label": "Nervous Hands",
+      "description": "Quick, twitchy reshoots with every frame nudged like an anxious animator at work.",
+      "askedAs": [
+        "fast jittery stop motion",
+        "shaky frantic wobble",
+        "twitchy hand-placed look",
+        "быстрая нервная тряска",
+        "дёрганая покадровая анимация"
+      ],
+      "props": {
+        "amp": 2.2,
+        "rotAmp": 0.5,
+        "step": 1,
+        "speed": 2
+      }
+    },
+    {
+      "id": "on-twos-classic",
+      "label": "Classic Twos",
+      "description": "Traditional animation-on-twos cadence with moderate drift and a gentle tilt.",
+      "askedAs": [
+        "animated on twos",
+        "classic stop motion timing",
+        "traditional frame wobble",
+        "анимация на двойках",
+        "классический стоп-моушен"
+      ],
+      "props": {
+        "amp": 1.8,
+        "rotAmp": 0.4,
+        "step": 2
+      }
+    },
+    {
+      "id": "lazy-shuffle",
+      "label": "Lazy Shuffle",
+      "description": "Slow, chunky pose holds with wide drifts, like cutouts nudged by hand between long takes.",
+      "askedAs": [
+        "slow choppy paper",
+        "big lazy wobble",
+        "cutout shifted occasionally",
+        "медленное смещение вырезок",
+        "ленивая бумажная анимация"
+      ],
+      "props": {
+        "amp": 3.5,
+        "rotAmp": 0.6,
+        "step": 6,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "tilted-scraps",
+      "label": "Tilted Scraps",
+      "description": "Rotation-heavy jitter where pieces rock and skew like loose scraps on a breezy desk.",
+      "askedAs": [
+        "paper rotating wobble",
+        "tilting cutouts",
+        "scrapbook rocking motion",
+        "покачивание бумажек",
+        "наклоны как у обрезков"
+      ],
+      "props": {
+        "amp": 1,
+        "rotAmp": 1.4,
+        "step": 3,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "earthquake-desk",
+      "label": "Rumbling Desk",
+      "description": "Heavy, energetic shake with large offsets for loud, chaotic handmade moments.",
+      "askedAs": [
+        "strong shaking paper",
+        "intense stop motion jitter",
+        "chaotic handmade shake",
+        "сильная тряска стола",
+        "интенсивное дрожание"
+      ],
+      "props": {
+        "amp": 5,
+        "rotAmp": 1,
+        "step": 2,
+        "speed": 3
+      }
+    }
+  ]
+}

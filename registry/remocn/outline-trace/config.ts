@@ -5,7 +5,7 @@ export const outlineTraceConfig: ComponentConfig = {
   importPath: "@/components/remocn/outline-trace",
   controls: {
     text: { type: "text-content", default: "Outline", description: "Text" },
-    color: { type: "color", default: "#111111", description: "Fill" },
+    color: { type: "color", default: "#111111", description: "Fill color" },
     strokeColor: { type: "color", default: "#111111", description: "Stroke" },
     fontSize: {
       type: "number",

@@ -1,0 +1,122 @@
+{
+  "component": "run-on",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, paper-toned page with a large Instrument Serif sentence that reads like a magazine pull quote.",
+      "askedAs": [
+        "make it look like a magazine quote",
+        "serif text on cream background",
+        "elegant editorial style",
+        "журнальный стиль с засечками",
+        "элегантный текст на светлом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "endless-drag",
+      "label": "Endless Drag",
+      "description": "A slow, light-weight sentence with a long hold that makes the tedious version feel like it never ends.",
+      "askedAs": [
+        "make it feel slow and exhausting",
+        "drag it out longer",
+        "tired tedious pacing",
+        "медленно и утомительно",
+        "растянуть подольше"
+      ],
+      "props": {
+        "speed": 0.5,
+        "hold": 48,
+        "fontWeight": 300,
+        "delay": 12
+      }
+    },
+    {
+      "id": "terminal-log",
+      "label": "Terminal Log",
+      "description": "Monospaced green-on-charcoal text that reads like a command line spitting out a long workflow.",
+      "askedAs": [
+        "make it look like code",
+        "terminal style text",
+        "monospace developer look",
+        "как в терминале",
+        "моноширинный шрифт как код"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#111614",
+        "ink": "#d7e3dc",
+        "accent": "#4fbf8a",
+        "scale": 0.85,
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "quick-punch",
+      "label": "Quick Punch",
+      "description": "Big, bold, fast type with almost no hold for a snappy one-line answer.",
+      "askedAs": [
+        "fast and bold",
+        "punchy quick version",
+        "big heavy text that snaps in",
+        "быстро и жирно",
+        "резкий крупный текст"
+      ],
+      "props": {
+        "speed": 2,
+        "hold": 4,
+        "fontWeight": 700,
+        "scale": 1.35,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "midnight-blue",
+      "label": "Midnight Blue",
+      "description": "Soft off-white Manrope on deep navy with a calm sky-blue accent dot.",
+      "askedAs": [
+        "dark blue background",
+        "calm navy look",
+        "blue accent instead of orange",
+        "тёмно-синий фон",
+        "спокойный синий стиль"
+      ],
+      "props": {
+        "background": "#0f1a2e",
+        "ink": "#e8edf5",
+        "accent": "#6ea8fe",
+        "fontFamily": "Manrope",
+        "fontWeight": 600
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A small, light Inter sentence on a white page with a muted graphite accent.",
+      "askedAs": [
+        "minimal and understated",
+        "small clean white version",
+        "subtle quiet text",
+        "минималистично и тихо",
+        "маленький текст на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "scale": 0.7,
+        "accent": "#5c6370"
+      }
+    }
+  ]
+}

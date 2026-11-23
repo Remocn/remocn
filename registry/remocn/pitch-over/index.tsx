@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const grotesk = loadSpaceGrotesk("normal", {
   weights: ["400"],
@@ -30,7 +30,19 @@ export interface PitchOverProps {
   suffix?: string;
   label?: string;
   accent?: string;
+  /** Color of the number, ruler and label; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the number. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Frames the count runs before the ruler turns flat. */
+  countLength?: number;
+  /** Major ticks on the ruler; four minor ticks sit between each pair. */
+  ticks?: number;
+  /** Size of the number and ruler, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -45,9 +57,7 @@ const PROBE_PX = 200;
 
 const ENTER_END = 10;
 const COUNT_END = 46;
-const PITCH_AT = 42;
 const PITCH_LEN = 34;
-const LABEL_AT = 70;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_COUNT = Easing.bezier(0.25, 0.6, 0.25, 1);
@@ -76,7 +86,12 @@ function format(v: number, decimals: number) {
   });
 }
 
-function measure(prefix: string, suffix: string, label: string): Metrics {
+function measure(
+  prefix: string,
+  suffix: string,
+  label: string,
+  fontFamily: string,
+): Metrics {
   const probe = document.createElement("span");
   Object.assign(probe.style, {
     position: "absolute",
@@ -84,7 +99,7 @@ function measure(prefix: string, suffix: string, label: string): Metrics {
     top: "0",
     visibility: "hidden",
     whiteSpace: "pre",
-    fontFamily: `"${grotesk.fontFamily}"`,
+    fontFamily: `"${fontFamily}"`,
     fontWeight: "400",
     fontSize: `${PROBE_PX}px`,
     lineHeight: "1",
@@ -109,7 +124,7 @@ function measure(prefix: string, suffix: string, label: string): Metrics {
   let labelW = 0;
   const ctx = document.createElement("canvas").getContext("2d");
   if (ctx) {
-    ctx.font = `400 ${PROBE_PX}px "${grotesk.fontFamily}"`;
+    ctx.font = `400 ${PROBE_PX}px "${fontFamily}"`;
     const m = ctx.measureText("0");
     const asc = m.fontBoundingBoxAscent / PROBE_PX;
     const desc = m.fontBoundingBoxDescent / PROBE_PX;
@@ -130,24 +145,29 @@ function measure(prefix: string, suffix: string, label: string): Metrics {
   };
 }
 
-function useMetrics(prefix: string, suffix: string, label: string) {
-  const key = [prefix, suffix, label].join("\u0001");
+function useMetrics(
+  prefix: string,
+  suffix: string,
+  label: string,
+  fontFamily: string,
+) {
+  const key = [prefix, suffix, label, fontFamily].join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("pitch-over: measuring"));
   const released = useRef(false);
   useEffect(() => {
     let live = true;
-    const [p, s, l] = key.split("\u0001");
+    const [p, s, l, f] = key.split("\u0001");
     Promise.all([
       grotesk.waitUntilDone(),
       mono.waitUntilDone(),
-      document.fonts.load(`400 100px "${grotesk.fontFamily}"`),
+      document.fonts.load(`400 100px "${f}"`),
       document.fonts.load(`400 100px "${mono.fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(p, s, l) });
+        setState({ key, m: measure(p, s, l, f) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -160,6 +180,22 @@ function useMetrics(prefix: string, suffix: string, label: string) {
   return state && state.key === key ? state.m : null;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PitchOver({
   value = 7200,
   from = 0,
@@ -168,15 +204,25 @@ export function PitchOver({
   suffix = "",
   label = "Frames rendered, T+04:00",
   accent,
+  ink,
   background,
+  fontFamily = grotesk.fontFamily,
+  countLength = COUNT_END,
+  ticks: majors = 10,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PitchOverProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
-  const mark = accent ?? c.ink;
-  const m = useMetrics(prefix, suffix, label);
+  const fg = ink ?? c.ink;
+  const mark = accent ?? fg;
+  const pitchAt = countLength - 4;
+  const labelAt = pitchAt + PITCH_LEN - 6;
+  const m = useMetrics(prefix, suffix, label, fontFamily);
   const finalText = useMemo(
     () => `${prefix}${format(value, decimals)}${suffix}`,
     [prefix, value, decimals, suffix],
@@ -232,7 +278,7 @@ export function PitchOver({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const g = interpolate(t, [0, COUNT_END], [0, 1], {
+  const g = interpolate(t, [0, countLength], [0, 1], {
     ...CLAMP,
     easing: EASE_COUNT,
   });
@@ -242,11 +288,11 @@ export function PitchOver({
     decimals,
   )}${suffix}`;
 
-  const move = interpolate(t, [PITCH_AT, PITCH_AT + PITCH_LEN], [0, 1], {
+  const move = interpolate(t, [pitchAt, pitchAt + PITCH_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const turn = interpolate(t, [PITCH_AT, PITCH_AT + PITCH_LEN], [0, 1], {
+  const turn = interpolate(t, [pitchAt, pitchAt + PITCH_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_TURN,
   });
@@ -257,11 +303,17 @@ export function PitchOver({
   const vy = H - marginY;
   const hx = marginX;
   const hy = H - marginY - below;
-  const px = vx + (hx - vx) * move;
-  const py = vy + (hy - vy) * move + (1 - enter) * H * 0.05;
+  // Layout rounds a box and a baseline to whole pixels, so a block eased by
+  // `left`/`top` clicks along pixel by pixel. It is laid out where it lands
+  // and the travel is a transform. Upright it sat on layout's whole pixels,
+  // so the start of the travel is the same whole-pixel distance.
+  const dx = (Math.round(vx) - Math.round(hx)) * (1 - move);
+  const dy =
+    (Math.round(vy) - Math.round(hy)) * (1 - move) + (1 - enter) * H * 0.05;
+  const travelling = Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3;
+  const moving = enter < 1 || (t > pitchAt && t < pitchAt + PITCH_LEN);
 
-  const majors = 10;
-  const minors = 50;
+  const minors = majors * 5;
   const reach = g * rulerLen;
   const ticks: { x: number; major: boolean }[] = [];
   for (let i = 0; i <= minors; i++) {
@@ -270,7 +322,7 @@ export function PitchOver({
       major: i % (minors / majors) === 0,
     });
   }
-  const labelP = interpolate(t, [LABEL_AT, LABEL_AT + 16], [0, 1], {
+  const labelP = interpolate(t, [labelAt, labelAt + 16], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -278,99 +330,101 @@ export function PitchOver({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: px,
-          top: py,
-          width: 0,
-          height: 0,
-          transformOrigin: "0 0",
-          transform: `rotate(${angle.toFixed(3)}deg) scale(${k.toFixed(4)})`,
-          opacity: enter,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: 0,
-            top: -m.base * F,
-            height: F,
-            lineHeight: `${F}px`,
-            whiteSpace: "pre",
-            fontFamily: grotesk.fontFamily,
-            fontWeight: 400,
-            fontSize: F,
-            fontVariantNumeric: "tabular-nums",
-            letterSpacing: `${TRACK}em`,
-            color: c.ink,
+            left: hx,
+            top: hy,
+            width: 0,
+            height: 0,
+            transformOrigin: "0 0",
+            transform: `${travelling ? `translate(${dx}px, ${dy}px) ` : ""}rotate(${angle.toFixed(3)}deg) scale(${k.toFixed(4)})${glide(moving)}`,
+            opacity: enter,
           }}
         >
-          {text}
-        </div>
-        <svg
-          width={rulerLen + notch * 2}
-          height={below}
-          viewBox={`${-notch} 0 ${rulerLen + notch * 2} ${below}`}
-          style={{
-            position: "absolute",
-            left: -notch,
-            top: 0,
-            overflow: "visible",
-          }}
-          aria-hidden
-        >
-          <line
-            x1={0}
-            x2={rulerLen}
-            y1={gap}
-            y2={gap}
-            stroke={c.dim}
-            strokeWidth={stroke}
-          />
-          <line
-            x1={0}
-            x2={reach}
-            y1={gap}
-            y2={gap}
-            stroke={c.ink}
-            strokeWidth={stroke}
-          />
-          {ticks.map((tk) => (
-            <line
-              key={tk.x}
-              x1={tk.x}
-              x2={tk.x}
-              y1={gap}
-              y2={gap + (tk.major ? tickMajor : tickMinor)}
-              stroke={tk.x <= reach + 0.5 ? c.ink : c.dim}
-              strokeWidth={stroke}
-            />
-          ))}
-          <path
-            d={`M${reach.toFixed(2)} ${gap.toFixed(2)} l${(-notch / 2).toFixed(2)} ${(-notch * 0.8).toFixed(2)} h${notch.toFixed(2)} Z`}
-            fill={mark}
-          />
-        </svg>
-        {label ? (
           <div
             style={{
               position: "absolute",
               left: 0,
-              top: labelTop,
+              top: -m.base * F,
+              height: F,
+              lineHeight: `${F}px`,
               whiteSpace: "pre",
-              fontFamily: mono.fontFamily,
+              fontFamily,
               fontWeight: 400,
-              fontSize: labelFs,
-              lineHeight: 1,
-              color: c.ink,
-              opacity: labelP,
+              fontSize: F,
+              fontVariantNumeric: "tabular-nums",
+              letterSpacing: `${TRACK}em`,
+              color: fg,
             }}
           >
-            {label}
+            {text}
           </div>
-        ) : null}
-      </div>
+          <svg
+            width={rulerLen + notch * 2}
+            height={below}
+            viewBox={`${-notch} 0 ${rulerLen + notch * 2} ${below}`}
+            style={{
+              position: "absolute",
+              left: -notch,
+              top: 0,
+              overflow: "visible",
+            }}
+            aria-hidden
+          >
+            <line
+              x1={0}
+              x2={rulerLen}
+              y1={gap}
+              y2={gap}
+              stroke={c.dim}
+              strokeWidth={stroke}
+            />
+            <line
+              x1={0}
+              x2={reach}
+              y1={gap}
+              y2={gap}
+              stroke={fg}
+              strokeWidth={stroke}
+            />
+            {ticks.map((tk) => (
+              <line
+                key={tk.x}
+                x1={tk.x}
+                x2={tk.x}
+                y1={gap}
+                y2={gap + (tk.major ? tickMajor : tickMinor)}
+                stroke={tk.x <= reach + 0.5 ? fg : c.dim}
+                strokeWidth={stroke}
+              />
+            ))}
+            <path
+              d={`M${reach.toFixed(2)} ${gap.toFixed(2)} l${(-notch / 2).toFixed(2)} ${(-notch * 0.8).toFixed(2)} h${notch.toFixed(2)} Z`}
+              fill={mark}
+            />
+          </svg>
+          {label ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: labelTop,
+                whiteSpace: "pre",
+                fontFamily: mono.fontFamily,
+                fontWeight: 400,
+                fontSize: labelFs,
+                lineHeight: 1,
+                color: fg,
+                opacity: labelP,
+              }}
+            >
+              {label}
+            </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

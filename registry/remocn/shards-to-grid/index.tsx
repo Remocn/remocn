@@ -11,9 +11,9 @@ import {
   random,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -33,12 +33,25 @@ export interface ShardsToGridProps {
   status?: string;
   headline?: string;
   labels?: string[];
+  /** Label of the window's primary button. */
+  ctaLabel?: string;
   theme?: "dark" | "light";
   background?: string;
   accent?: string;
+  /** Text color of the window title; overrides the theme ink. */
+  ink?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark in the window toolbar. */
+  logo?: React.ReactNode;
   blooms?: string[];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Size of the shards and window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const THEMES = {
@@ -149,10 +162,16 @@ const TALL_CLUSTERS = [
 const ASPECTS = [1.6, 1.33, 0.75, 1, 2.1, 0.62, 1.45, 0.8];
 const SWATCH = ["#e6dac8", "#b48a62", "#4b5a47", "#1d2230"];
 
+/**
+ * A shard's face, laid out once at the shard's full size `w` x `h` and shrunk
+ * with it by `k`. Sizing it from the shrinking box instead would reflow the
+ * type every frame, and layout rounds each baseline to a whole pixel.
+ */
 function Fragment({
   kind,
   w,
   h,
+  k,
   surface,
   ink,
   accent,
@@ -161,15 +180,25 @@ function Fragment({
   kind: Kind;
   w: number;
   h: number;
+  k: number;
   surface: string;
   ink: string;
   accent: string;
   seed: number;
 }) {
   const u = Math.min(w, h);
+  const face = {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: w,
+    height: h,
+    transform: k === 1 ? undefined : `scale(${k})`,
+    transformOrigin: "0 0",
+  } as const;
   if (kind === "swatch") {
     return (
-      <div style={{ position: "absolute", inset: 0, display: "flex" }}>
+      <div style={{ ...face, display: "flex" }}>
         {[...SWATCH, accent].map((c) => (
           <span key={c} style={{ flex: 1, backgroundColor: c }} />
         ))}
@@ -180,8 +209,7 @@ function Fragment({
     return (
       <div
         style={{
-          position: "absolute",
-          inset: 0,
+          ...face,
           backgroundColor: surface,
           display: "flex",
           alignItems: "center",
@@ -212,8 +240,7 @@ function Fragment({
   return (
     <div
       style={{
-        position: "absolute",
-        inset: 0,
+        ...face,
         backgroundColor: surface,
         padding: u * 0.12,
         boxSizing: "border-box",
@@ -292,21 +319,45 @@ function PlayOutline({ size, color }: { size: number; color: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ShardsToGrid({
   images,
   title = "Launch v1",
   status = "Assembling",
   headline = "Every frame, written in code.",
   labels = ["Motion", "Type", "Sound", "Play reel", "Brand"],
+  ctaLabel = "Publish",
   theme = "dark",
   background,
   accent = "#3B5BFD",
+  ink,
+  fontFamily = geist.fontFamily,
+  logo,
   blooms,
   ground,
   groundParams,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: ShardsToGridProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const t = THEMES[theme];
   const light = theme === "light";
   const srcs =
@@ -451,7 +502,17 @@ export function ShardsToGrid({
       : { x: cx - s.w * 0.1, y: cy - s.h * 0.1, w: s.w * 0.2, h: s.h * 0.2 };
     const tx = target.x + target.w / 2;
     const ty = target.y + target.h / 2;
+    // The box is laid out where it lands and reaches that place by a
+    // transform: layout rounds a box and a baseline to whole pixels, so a
+    // shard carried by `left`/`top` clicks through its slow swirl. `dx`/`dy`
+    // is the corner's distance from home, exactly zero once it has landed.
+    const left = tx - target.w / 2;
+    const top = ty - target.h / 2;
     return {
+      left,
+      top,
+      dx: (sx - s.w / 2 - left) * (1 - q),
+      dy: (sy - s.h / 2 - top) * (1 - q),
       x: sx + (tx - sx) * q,
       y: sy + (ty - sy) * q,
       w: s.w + (target.w - s.w) * q,
@@ -555,8 +616,8 @@ export function ShardsToGrid({
         key={`sh-${s.i}`}
         style={{
           position: "absolute",
-          left: p.x - p.w / 2,
-          top: p.y - p.h / 2,
+          left: p.left,
+          top: p.top,
           width: p.w,
           height: p.h,
           borderRadius: radius,
@@ -566,7 +627,7 @@ export function ShardsToGrid({
             Math.min(1, p.e * 2) *
             fade *
             (s.isCell ? 1 : 0.55 + 0.45 * Math.min(1, s.z * 2)),
-          transform: `perspective(${W * 1.2}px) rotateX(${p.rx}deg) rotateY(${p.ry}deg) rotateZ(${p.rz}deg)`,
+          transform: `translate(${p.dx}px, ${p.dy}px) perspective(${W * 1.2}px) rotateX(${p.rx}deg) rotateY(${p.ry}deg) rotateZ(${p.rz}deg)`,
           filter:
             motion + depthBlur * (1 - p.q) > 0.3
               ? `blur(${motion + depthBlur * (1 - p.q)}px)`
@@ -588,8 +649,9 @@ export function ShardsToGrid({
         {s.kind === "type" || s.kind === "wave" || s.kind === "swatch" ? (
           <Fragment
             kind={s.kind}
-            w={p.w}
-            h={p.h}
+            w={s.w}
+            h={s.h}
+            k={p.w / s.w}
             surface={t.surface}
             ink={t.ink}
             accent={accent}
@@ -616,315 +678,336 @@ export function ShardsToGrid({
         timeOffset={t.groundOffset}
         timeScale={0.5}
       />
-      <AbsoluteFill
-        style={{ transform: `scale(${push * (1 + snapPunch * 0.012)})` }}
-      >
-        {order
-          .filter((s) => !s.isCell || frame < beat("morph"))
-          .map(renderShard)}
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: winRect.x,
-            top: winRect.y,
-            width: winRect.w,
-            height: winRect.h,
-            borderRadius: winRadius,
-            backgroundColor: fill > 0.01 ? winBg : t.pill,
-            opacity: pillIn,
-            transform: `translateY(${(1 - pillIn) * H * 0.04}px)`,
-            boxShadow: `inset 0 1px 0 rgba(255,255,255,${light ? 0.9 : 0.07}), 0 0 0 1px ${t.pillEdge}, 0 ${(2 + 4 * morph) * unit}px ${(6 + 10 * morph) * unit}px ${shadow(0.5)}, 0 ${(16 + 40 * morph) * unit}px ${(40 + 100 * morph) * unit}px ${shadow(0.6)}`,
-            backdropFilter: fill < 1 ? "blur(14px)" : undefined,
+            // The push never rests once the clip runs, so neither does the
+            // tilt.
+            transform: `scale(${push * (1 + snapPunch * 0.012)})${glide(frame > 0)}`,
           }}
         >
+          {order
+            .filter((s) => !s.isCell || frame < beat("morph"))
+            .map(renderShard)}
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: pillFont * 0.7,
-              fontFamily: geist.fontFamily,
-              fontSize: pillFont,
-              fontWeight: 400,
-              color: t.pillInk,
-              letterSpacing: "-0.01em",
-              opacity: pillText,
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span
-              style={{
-                width: pillFont * 0.42,
-                height: pillFont * 0.42,
-                borderRadius: "50%",
-                backgroundColor: accent,
-              }}
-            />
-            <span>{title}</span>
-            <span style={{ opacity: 0.5, fontWeight: 300 }}>{status}</span>
-            <span
-              style={{
-                fontFamily: mono.fontFamily,
-                opacity: 0.6,
-                fontSize: pillFont * 0.9,
-                minWidth: "3.4ch",
-                textAlign: "right",
-              }}
-            >
-              {pct}%
-            </span>
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: 0,
-              height: bar,
-              display: "flex",
-              alignItems: "center",
-              padding: `0 ${pad * 1.2}px`,
-              opacity: chrome,
-              fontFamily: geist.fontFamily,
+              // Laid out at the window's corner; the way there from the
+              // pill is a transform, so the chrome inside doesn't click along
+              // through the long tail of the morph.
+              left: win.x,
+              top: win.y,
+              width: winRect.w,
+              height: winRect.h,
+              borderRadius: winRadius,
+              backgroundColor: fill > 0.01 ? winBg : t.pill,
+              opacity: pillIn,
+              transform: `translate(${(cx - pillW / 2 - win.x) * (1 - morph)}px, ${(cy - pillH / 2 - win.y) * (1 - morph) + (1 - pillIn) * H * 0.04}px)`,
+              boxShadow: `inset 0 1px 0 rgba(255,255,255,${light ? 0.9 : 0.07}), 0 0 0 1px ${t.pillEdge}, 0 ${(2 + 4 * morph) * unit}px ${(6 + 10 * morph) * unit}px ${shadow(0.5)}, 0 ${(16 + 40 * morph) * unit}px ${(40 + 100 * morph) * unit}px ${shadow(0.6)}`,
+              backdropFilter: fill < 1 ? "blur(14px)" : undefined,
             }}
           >
             <div
               style={{
+                position: "absolute",
+                inset: 0,
                 display: "flex",
                 alignItems: "center",
-                gap: label * 0.6,
-                fontSize: label,
-                color: `rgb(${t.ink})`,
+                justifyContent: "center",
+                gap: pillFont * 0.7,
+                fontFamily,
+                fontSize: pillFont,
+                fontWeight: 400,
+                color: t.pillInk,
+                letterSpacing: "-0.01em",
+                opacity: pillText,
                 whiteSpace: "nowrap",
               }}
             >
-              <RemocnR height={label * 0.95} color={`rgb(${t.ink})`} />
+              <span
+                style={{
+                  width: pillFont * 0.42,
+                  height: pillFont * 0.42,
+                  borderRadius: "50%",
+                  backgroundColor: accent,
+                }}
+              />
               <span>{title}</span>
+              <span style={{ opacity: 0.5, fontWeight: 300 }}>{status}</span>
               <span
                 style={{
                   fontFamily: mono.fontFamily,
-                  fontSize: label * 0.86,
-                  color: `rgba(${t.ink},0.55)`,
-                  backgroundColor: t.chip,
-                  padding: `${label * 0.16}px ${label * 0.45}px`,
-                  borderRadius: label * 0.3,
+                  opacity: 0.6,
+                  fontSize: pillFont * 0.9,
+                  minWidth: "3.4ch",
+                  textAlign: "right",
                 }}
               >
-                main
+                {pct}%
               </span>
             </div>
             <div
               style={{
-                marginLeft: "auto",
+                position: "absolute",
+                left: 0,
+                top: 0,
+                // The bar is as wide as the finished window from the start,
+                // so its right-hand group isn't reflowed as the window grows.
+                width: win.w,
+                boxSizing: "border-box",
+                height: bar,
                 display: "flex",
                 alignItems: "center",
-                gap: label * 0.9,
+                padding: `0 ${pad * 1.2}px`,
+                opacity: chrome,
+                fontFamily,
               }}
             >
-              <PlayOutline size={label * 1.15} color={`rgba(${t.ink},0.6)`} />
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  height: bar * 0.56,
-                  padding: `0 ${label * 0.75}px`,
-                  borderRadius: label * 0.38,
-                  backgroundColor: accent,
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22)",
-                  fontSize: label * 0.94,
-                  color: "#ffffff",
-                  transform: `scale(${0.9 + 0.1 * sp(beat("snap") + 6, CHIP)})`,
+                  gap: label * 0.6,
+                  fontSize: label,
+                  color: ink ?? `rgb(${t.ink})`,
+                  whiteSpace: "nowrap",
                 }}
               >
-                Publish
+                {logo ?? (
+                  <RemocnR
+                    height={label * 0.95}
+                    color={ink ?? `rgb(${t.ink})`}
+                  />
+                )}
+                <span>{title}</span>
+                <span
+                  style={{
+                    fontFamily: mono.fontFamily,
+                    fontSize: label * 0.86,
+                    color: `rgba(${t.ink},0.55)`,
+                    backgroundColor: t.chip,
+                    padding: `${label * 0.16}px ${label * 0.45}px`,
+                    borderRadius: label * 0.3,
+                  }}
+                >
+                  main
+                </span>
+              </div>
+              <div
+                style={{
+                  marginLeft: "auto",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: label * 0.9,
+                  // Rides the window's right edge by a transform instead.
+                  transform: `translateX(${winRect.w - win.w}px)`,
+                }}
+              >
+                <PlayOutline size={label * 1.15} color={`rgba(${t.ink},0.6)`} />
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    height: bar * 0.56,
+                    padding: `0 ${label * 0.75}px`,
+                    borderRadius: label * 0.38,
+                    backgroundColor: accent,
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22)",
+                    fontSize: label * 0.94,
+                    color: "#ffffff",
+                    transform: `scale(${0.9 + 0.1 * sp(beat("snap") + 6, CHIP)})`,
+                  }}
+                >
+                  {ctaLabel}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        {frame >= beat("morph")
-          ? order.filter((s) => s.isCell).map(renderShard)
-          : null}
-        {cells.map((c, k) => {
-          const p = contentIn(k);
-          const text = labels[k] ?? "";
-          if (k === 0) {
-            const words = headline.split(" ");
-            return (
-              <div
-                key="hero"
-                style={{
-                  position: "absolute",
-                  left: c.x,
-                  top: c.y,
-                  width: c.w,
-                  height: c.h,
-                  borderRadius: cellRadius,
-                  overflow: "hidden",
-                  backgroundImage:
-                    "linear-gradient(180deg, rgba(8,9,14,0) 38%, rgba(8,9,14,0.82) 100%)",
-                  opacity: Math.min(1, p * 1.5),
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "flex-end",
-                  padding: c.w * 0.065,
-                  boxSizing: "border-box",
-                }}
-              >
+          {frame >= beat("morph")
+            ? order.filter((s) => s.isCell).map(renderShard)
+            : null}
+          {cells.map((c, k) => {
+            const p = contentIn(k);
+            const text = labels[k] ?? "";
+            if (k === 0) {
+              const words = headline.split(" ");
+              return (
                 <div
+                  key="hero"
                   style={{
-                    fontFamily: mono.fontFamily,
-                    fontSize: label * 0.9,
-                    color: "rgba(255,255,255,0.66)",
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                    marginBottom: label * 0.7,
-                    transform: `translateY(${(1 - p) * label}px)`,
-                  }}
-                >
-                  <span style={{ opacity: 0.55 }}>01</span>
-                  <span style={{ marginLeft: "0.9em" }}>{text}</span>
-                </div>
-                <div
-                  style={{
+                    position: "absolute",
+                    left: c.x,
+                    top: c.y,
+                    width: c.w,
+                    height: c.h,
+                    borderRadius: cellRadius,
+                    overflow: "hidden",
+                    backgroundImage:
+                      "linear-gradient(180deg, rgba(8,9,14,0) 38%, rgba(8,9,14,0.82) 100%)",
+                    opacity: Math.min(1, p * 1.5),
                     display: "flex",
-                    flexWrap: "wrap",
-                    columnGap: "0.24em",
-                    fontFamily: geist.fontFamily,
-                    fontWeight: 400,
-                    fontSize: heroFont,
-                    lineHeight: 1.04,
-                    letterSpacing: "-0.04em",
-                    color: "#ffffff",
-                    maxWidth: "8.4em",
+                    flexDirection: "column",
+                    justifyContent: "flex-end",
+                    padding: c.w * 0.065,
+                    boxSizing: "border-box",
                   }}
                 >
-                  {words.map((w, wi) => (
-                    <span
-                      key={`${w}-${wi}`}
-                      style={{
-                        display: "inline-block",
-                        overflow: "hidden",
-                        padding: "0 0.02em 0.14em",
-                        margin: "0 -0.02em -0.14em",
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: "inline-block",
-                          transform: `translateY(${(1 - headlineIn(wi + 1)) * 105}%)`,
-                        }}
-                      >
-                        {w}
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          }
-          if (k === 3) {
-            return (
-              <div
-                key="accent"
-                style={{
-                  position: "absolute",
-                  left: c.x,
-                  top: c.y,
-                  width: c.w,
-                  height: c.h,
-                  padding: Math.min(c.w, c.h) * 0.12,
-                  boxSizing: "border-box",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  fontFamily: geist.fontFamily,
-                  color: "#ffffff",
-                }}
-              >
-                <div
-                  style={{
-                    transform: `scale(${sp(beat("content") + 9, CHIP)})`,
-                    transformOrigin: "0% 0%",
-                  }}
-                >
-                  <PlayIcon size={label * 2} color="#ffffff" />
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "baseline",
-                    fontSize: label * 1.08,
-                    fontWeight: 400,
-                    letterSpacing: "-0.01em",
-                    opacity: p,
-                    transform: `translateY(${(1 - p) * label}px)`,
-                  }}
-                >
-                  <span>{text}</span>
-                  <span
+                  <div
                     style={{
                       fontFamily: mono.fontFamily,
                       fontSize: label * 0.9,
-                      opacity: 0.7,
-                      fontVariantNumeric: "tabular-nums",
+                      color: "rgba(255,255,255,0.66)",
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                      marginBottom: label * 0.7,
+                      transform: `translateY(${(1 - p) * label}px)`,
                     }}
                   >
-                    0:42
-                  </span>
+                    <span style={{ opacity: 0.55 }}>01</span>
+                    <span style={{ marginLeft: "0.9em" }}>{text}</span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      columnGap: "0.24em",
+                      fontFamily,
+                      fontWeight: 400,
+                      fontSize: heroFont,
+                      lineHeight: 1.04,
+                      letterSpacing: "-0.04em",
+                      color: "#ffffff",
+                      maxWidth: "8.4em",
+                    }}
+                  >
+                    {words.map((w, wi) => (
+                      <span
+                        key={`${w}-${wi}`}
+                        style={{
+                          display: "inline-block",
+                          overflow: "hidden",
+                          padding: "0 0.02em 0.14em",
+                          margin: "0 -0.02em -0.14em",
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: "inline-block",
+                            transform: `translateY(${(1 - headlineIn(wi + 1)) * 105}%)`,
+                          }}
+                        >
+                          {w}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              );
+            }
+            if (k === 3) {
+              return (
+                <div
+                  key="accent"
+                  style={{
+                    position: "absolute",
+                    left: c.x,
+                    top: c.y,
+                    width: c.w,
+                    height: c.h,
+                    padding: Math.min(c.w, c.h) * 0.12,
+                    boxSizing: "border-box",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    fontFamily,
+                    color: "#ffffff",
+                  }}
+                >
+                  <div
+                    style={{
+                      transform: `scale(${sp(beat("content") + 9, CHIP)})`,
+                      transformOrigin: "0% 0%",
+                    }}
+                  >
+                    <PlayIcon size={label * 2} color="#ffffff" />
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "baseline",
+                      fontSize: label * 1.08,
+                      fontWeight: 400,
+                      letterSpacing: "-0.01em",
+                      opacity: p,
+                      transform: `translateY(${(1 - p) * label}px)`,
+                    }}
+                  >
+                    <span>{text}</span>
+                    <span
+                      style={{
+                        fontFamily: mono.fontFamily,
+                        fontSize: label * 0.9,
+                        opacity: 0.7,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      0:42
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+            const cp = interpolate(
+              frame,
+              [beat("content") + 4 + k * 3, beat("content") + 16 + k * 3],
+              [0, 1],
+              { ...CLAMP, easing: TYPE_IN },
             );
-          }
-          const cp = interpolate(
-            frame,
-            [beat("content") + 4 + k * 3, beat("content") + 16 + k * 3],
-            [0, 1],
-            { ...CLAMP, easing: TYPE_IN },
-          );
-          return (
-            <div
-              key={`cap-${k}`}
-              style={{
-                position: "absolute",
-                left: c.x,
-                top: c.y + c.h * 0.55,
-                width: c.w,
-                height: c.h * 0.45,
-                borderRadius: `0 0 ${cellRadius}px ${cellRadius}px`,
-                backgroundImage:
-                  "linear-gradient(180deg, rgba(8,9,14,0) 0%, rgba(8,9,14,0.28) 45%, rgba(8,9,14,0.62) 100%)",
-                display: "flex",
-                alignItems: "flex-end",
-                gap: label * 0.6,
-                padding: label * 0.8,
-                boxSizing: "border-box",
-                fontFamily: geist.fontFamily,
-                fontSize: label,
-                color: "#ffffff",
-                opacity: cp,
-                whiteSpace: "nowrap",
-              }}
-            >
-              <span
+            return (
+              <div
+                key={`cap-${k}`}
                 style={{
-                  fontFamily: mono.fontFamily,
-                  fontSize: label * 0.86,
-                  opacity: 0.6,
-                  transform: `translateY(${(1 - cp) * label * 0.8}px)`,
+                  position: "absolute",
+                  left: c.x,
+                  top: c.y + c.h * 0.55,
+                  width: c.w,
+                  height: c.h * 0.45,
+                  borderRadius: `0 0 ${cellRadius}px ${cellRadius}px`,
+                  backgroundImage:
+                    "linear-gradient(180deg, rgba(8,9,14,0) 0%, rgba(8,9,14,0.28) 45%, rgba(8,9,14,0.62) 100%)",
+                  display: "flex",
+                  alignItems: "flex-end",
+                  gap: label * 0.6,
+                  padding: label * 0.8,
+                  boxSizing: "border-box",
+                  fontFamily,
+                  fontSize: label,
+                  color: "#ffffff",
+                  opacity: cp,
+                  whiteSpace: "nowrap",
                 }}
               >
-                0{k + 1}
-              </span>
-              <span style={{ transform: `translateY(${(1 - cp) * label}px)` }}>
-                {text}
-              </span>
-            </div>
-          );
-        })}
-      </AbsoluteFill>
+                <span
+                  style={{
+                    fontFamily: mono.fontFamily,
+                    fontSize: label * 0.86,
+                    opacity: 0.6,
+                    transform: `translateY(${(1 - cp) * label * 0.8}px)`,
+                  }}
+                >
+                  0{k + 1}
+                </span>
+                <span
+                  style={{ transform: `translateY(${(1 - cp) * label}px)` }}
+                >
+                  {text}
+                </span>
+              </div>
+            );
+          })}
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

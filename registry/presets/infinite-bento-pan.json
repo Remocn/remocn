@@ -1,0 +1,108 @@
+{
+  "component": "infinite-bento-pan",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-drift-teal",
+      "label": "Slow Teal Drift",
+      "description": "A calm, unhurried glide across the grid with cool teal accents for a quiet background layer.",
+      "askedAs": [
+        "slow calm background pan",
+        "gentle ambient dashboard drift",
+        "teal slow moving grid",
+        "медленный спокойный фон с панорамой",
+        "плавное движение бирюзовой сетки"
+      ],
+      "props": {
+        "panSpeed": 0.5,
+        "speed": 0.5,
+        "accentColor": "#14b8a6"
+      }
+    },
+    {
+      "id": "fast-sweep-blue",
+      "label": "Fast Sweep",
+      "description": "A brisk, energetic sweep across the cards in a confident product blue.",
+      "askedAs": [
+        "fast energetic dashboard pan",
+        "quick camera move across cards",
+        "busy high tempo data background",
+        "быстрая панорама по дашборду",
+        "энергичный фон с карточками"
+      ],
+      "props": {
+        "panSpeed": 2.25,
+        "speed": 2,
+        "accentColor": "#2563eb"
+      }
+    },
+    {
+      "id": "amber-glow",
+      "label": "Amber Glow",
+      "description": "Warm amber accents at a steady medium pace for a finance or analytics feel.",
+      "askedAs": [
+        "warm orange dashboard background",
+        "amber finance data look",
+        "golden accent card grid",
+        "тёплый оранжевый фон с данными",
+        "янтарные акценты на сетке"
+      ],
+      "props": {
+        "accentColor": "#f59e0b",
+        "panSpeed": 1.25
+      }
+    },
+    {
+      "id": "mono-minimal",
+      "label": "Mono Minimal",
+      "description": "Neutral slate accents with a slow pan for an understated, editorial backdrop.",
+      "askedAs": [
+        "minimal grey dashboard background",
+        "neutral understated grid pan",
+        "no color accent subtle backdrop",
+        "минималистичный серый фон",
+        "нейтральная сдержанная сетка"
+      ],
+      "props": {
+        "accentColor": "#94a3b8",
+        "panSpeed": 0.75,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rose-pulse",
+      "label": "Rose Pulse",
+      "description": "Soft rose accents with lively card motion over a moderate camera drift.",
+      "askedAs": [
+        "pink accent dashboard pan",
+        "rose colored data grid",
+        "lively cards with soft pink",
+        "розовый фон с дашбордом",
+        "живые карточки с розовыми акцентами"
+      ],
+      "props": {
+        "accentColor": "#e11d48",
+        "speed": 1.75,
+        "panSpeed": 1
+      }
+    },
+    {
+      "id": "emerald-glide",
+      "label": "Emerald Glide",
+      "description": "Deep emerald accents with a long, steady glide and slowed card animation.",
+      "askedAs": [
+        "green growth data background",
+        "emerald slow dashboard pan",
+        "calm green metrics grid",
+        "зелёный фон с метриками",
+        "медленная изумрудная панорама"
+      ],
+      "props": {
+        "accentColor": "#10b981",
+        "panSpeed": 0.5,
+        "speed": 1.25
+      }
+    }
+  ]
+}

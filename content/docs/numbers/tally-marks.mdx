@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="TallyMarks"
     component={TallyMarksScene}
-    durationInFrames={180}
-    fps={30}
+    durationInFrames={360}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -75,10 +75,56 @@ Hand-drawn tally strokes scratch in across the frame while the camera drifts ove
       description: "How many tally groups sit in each row.",
     },
     {
+      name: "strokeWidth",
+      type: "number",
+      default: "9",
+      description: "Thickness of a tally stroke, in pixels at 720p; scales with the frame.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "2",
+      description: "Frames between digits as the total rolls in.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "End color of the numeral gradient.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Fraunces\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

@@ -1,16 +1,10 @@
 "use client";
 
 import { loadFont as loadOnest } from "@remotion/google-fonts/Onest";
-import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { type ReactNode, useId } from "react";
+import { AbsoluteFill, Easing, interpolate, random, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -43,6 +37,8 @@ const B = {
 
 export const HEAT_DRAIN_REVEAL_DURATION = B.end;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   interpolate(f, [start, start + dur], [0, 1], {
     extrapolateLeft: "clamp",
@@ -66,6 +62,23 @@ export interface HeatDrainRevealProps {
   daysInMonth?: number;
   events?: CalEvent[];
   upcoming?: { when: string; title: string; time: string }[];
+  /** Pill in the calendar header. */
+  todayLabel?: string;
+  /** Heading above the upcoming list (portrait). */
+  upcomingTitle?: string;
+  /** Frames between headline words as they rise. */
+  stagger?: number;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Size of the headline and calendar, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 }
@@ -213,6 +226,22 @@ function Chevron({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function HeatDrainReveal({
   theme = "dark",
   heat = ["#fff1df", "#ffc48a", "#ff9447", "#f56a22", "#d9481a"],
@@ -234,11 +263,21 @@ export function HeatDrainReveal({
     { when: "Fri 13", title: "Press preview", time: "14:30" },
     { when: "Tue 24", title: "Launch recap", time: "11:00" },
   ],
+  todayLabel = "Today",
+  upcomingTitle = "Upcoming",
+  stagger = 2,
+  ink: inkProp,
+  background,
+  fontFamily = onest.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: HeatDrainRevealProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const dark = theme === "dark";
   const ditherId = `hdr-dither-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const portrait = height > width * 1.2;
@@ -257,7 +296,7 @@ export function HeatDrainReveal({
   const ch = pad + headerH + weekH + gridH + upH + pad * 0.7;
   const radius = 24 * u;
 
-  const ink = dark ? "#f6efe8" : "#1b1612";
+  const ink = inkProp ?? (dark ? "#f6efe8" : "#1b1612");
   const muted = dark ? "rgba(246,236,226,0.5)" : "rgba(27,22,18,0.46)";
   const faint = dark ? "rgba(246,236,226,0.26)" : "rgba(27,22,18,0.24)";
   const hair = dark ? "rgba(255,240,226,0.09)" : "rgba(60,40,20,0.09)";
@@ -271,7 +310,20 @@ export function HeatDrainReveal({
   const breathe = 0.9 + 0.1 * Math.sin(((frame - B.halo) / 36) * Math.PI);
   const recede = ramp(frame, B.recede, 14, EXIT);
   const lift = spring({ frame: frame - B.recede, fps, config: HEAVY });
-  const push = 1 + 0.03 * ramp(frame, B.rise + 20, B.end - B.rise - 20, SWAY);
+  const pushP = ramp(frame, B.rise + 20, B.end - B.rise - 20, SWAY);
+  const push = 1 + 0.03 * pushP;
+  const pushMoving = midway(pushP);
+  const liftAt = (f: number) =>
+    spring({ frame: f - B.recede, fps, config: HEAVY });
+  const headMoving =
+    !pushMoving &&
+    (portrait
+      ? Math.abs(liftAt(frame + 1) - lift) > 1e-6 ||
+        Math.abs(lift - liftAt(frame - 1)) > 1e-6
+      : midway(recede) ||
+        headline
+          .split(" ")
+          .some((_, i) => midway(ramp(frame, B.words + i * stagger, 14))));
   const chipS = spring({ frame: frame - B.chip, fps, config: CHIP });
   const chipOn = ramp(frame, B.chip, 4);
 
@@ -321,429 +373,447 @@ export function HeatDrainReveal({
   const riseY = mix(stageH * 0.75, 0, rise);
 
   return (
-    <AbsoluteFill style={{ fontFamily: onest.fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={resolvedParams}
-        timeOffset={3}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          background: dark ? "#070403" : "#f7f3ee",
-          opacity: dark ? 0.3 : 0.22,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${sc})`,
-          transformOrigin: "0 0",
-        }}
-      >
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={resolvedGround}
+            params={resolvedParams}
+            timeOffset={3}
+            timeScale={0.5}
+          />
+          <AbsoluteFill
+            style={{
+              background: dark ? "#070403" : "#f7f3ee",
+              opacity: dark ? 0.3 : 0.22,
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${push})`,
-            transformOrigin: "50% 50%",
-            perspective: 1700 * u,
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${sc})`,
+            transformOrigin: "0 0",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: 0,
-              right: 0,
-              top: portrait ? stageH * 0.42 : stageH * 0.44,
-              display: "flex",
-              justifyContent: "center",
-              flexWrap: "wrap",
-              padding: `0 ${stageW * 0.08}px`,
-              fontSize: portrait ? 96 : 60,
-              fontWeight: 300,
-              letterSpacing: "-0.035em",
-              lineHeight: 1.08,
-              color: ink,
-              opacity: portrait ? 1 : 1 - recede,
-              filter:
-                !portrait && recede > 0 ? `blur(${recede * 14}px)` : undefined,
-              transformOrigin: "50% 0%",
-              transform: portrait
-                ? `translateY(${mix(0, 190 - stageH * 0.42, lift)}px) scale(${mix(1, 0.6, lift)})`
-                : `scale(${mix(1, 0.88, recede)}) translateY(${-recede * 30}px)`,
+              inset: 0,
+              transform: `scale(${push})${glide(pushMoving)}`,
+              transformOrigin: "50% 50%",
+              perspective: 1700 * u,
             }}
           >
-            {headline.split(" ").map((w, i) => {
-              const p = ramp(frame, B.words + i * 2, 14);
-              return (
-                <span
-                  key={`${w}-${i.toString()}`}
-                  style={{
-                    display: "inline-block",
-                    overflow: "hidden",
-                    paddingBottom: "0.12em",
-                    marginBottom: "-0.12em",
-                    marginRight: "0.24em",
-                  }}
-                >
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: portrait ? stageH * 0.42 : stageH * 0.44,
+                display: "flex",
+                justifyContent: "center",
+                flexWrap: "wrap",
+                padding: `0 ${stageW * 0.08}px`,
+                fontSize: portrait ? 96 : 60,
+                fontWeight: 300,
+                letterSpacing: "-0.035em",
+                lineHeight: 1.08,
+                color: ink,
+                opacity: portrait ? 1 : 1 - recede,
+                filter:
+                  !portrait && recede > 0
+                    ? `blur(${recede * 14}px)`
+                    : undefined,
+                transformOrigin: "50% 0%",
+                transform: portrait
+                  ? `translateY(${mix(0, 190 - stageH * 0.42, lift)}px) scale(${mix(1, 0.6, lift)})${glide(headMoving)}`
+                  : `scale(${mix(1, 0.88, recede)}) translateY(${-recede * 30}px)${glide(headMoving)}`,
+              }}
+            >
+              {headline.split(" ").map((w, i) => {
+                const p = ramp(frame, B.words + i * stagger, 14);
+                return (
                   <span
+                    key={`${w}-${i.toString()}`}
                     style={{
                       display: "inline-block",
-                      transform: `translateY(${mix(105, 0, p)}%)`,
-                      filter: p < 1 ? `blur(${(1 - p) * 6}px)` : undefined,
+                      overflow: "hidden",
+                      paddingBottom: "0.12em",
+                      marginBottom: "-0.12em",
+                      marginRight: "0.24em",
                     }}
                   >
-                    {w}
+                    <span
+                      style={{
+                        display: "inline-block",
+                        transform: `translateY(${mix(105, 0, p)}%)`,
+                        filter: p < 1 ? `blur(${(1 - p) * 6}px)` : undefined,
+                      }}
+                    >
+                      {w}
+                    </span>
                   </span>
-                </span>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          <div
-            style={{
-              position: "absolute",
-              left: stageW / 2 - cw / 2,
-              top: cardTop,
-              width: cw,
-              height: ch,
-              transform: `translateY(${riseY}px) rotateX(${tilt}deg)`,
-              transformOrigin: "50% 100%",
-            }}
-          >
             <div
               style={{
                 position: "absolute",
-                left: -cw * 0.24,
-                right: -cw * 0.24,
-                bottom: -ch * 0.3,
-                height: ch * 0.5,
-                borderRadius: "50%",
-                background: `radial-gradient(50% 50% at 50% 50%, ${heat[2]} 0%, color-mix(in oklab, ${heat[3]} 70%, transparent) 38%, transparent 72%)`,
-                filter: `blur(${34 * u}px)`,
-                opacity: halo * breathe * (dark ? 1 : 0.8),
-                transform: `scale(${mix(0.6, 1, halo)})`,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                borderRadius: radius,
-                overflow: "hidden",
-                background: surface,
-                border: `1px solid ${hair}`,
-                boxShadow: dark
-                  ? `inset 0 1px 0 rgba(255,240,226,0.07), 0 2px 6px rgba(0,0,0,0.35), 0 ${30 * u}px ${70 * u}px rgba(10,4,0,0.55)`
-                  : `inset 0 1px 0 #fff, 0 1px 2px rgba(60,30,10,0.06), 0 ${20 * u}px ${44 * u}px rgba(80,40,10,0.12), 0 ${60 * u}px ${110 * u}px rgba(120,60,20,0.12)`,
+                left: stageW / 2 - cw / 2,
+                top: cardTop,
+                width: cw,
+                height: ch,
+                transform: `translateY(${riseY}px) rotateX(${tilt}deg)`,
+                transformOrigin: "50% 100%",
               }}
             >
               <div
                 style={{
                   position: "absolute",
-                  left: pad,
-                  right: pad,
-                  top: headerY,
-                  height: headerH,
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  color: ink,
-                  ...rowStyle(headerY + headerH / 2),
+                  left: -cw * 0.24,
+                  right: -cw * 0.24,
+                  bottom: -ch * 0.3,
+                  height: ch * 0.5,
+                  borderRadius: "50%",
+                  background: `radial-gradient(50% 50% at 50% 50%, ${heat[2]} 0%, color-mix(in oklab, ${heat[3]} 70%, transparent) 38%, transparent 72%)`,
+                  filter: `blur(${34 * u}px)`,
+                  opacity: halo * breathe * (dark ? 1 : 0.8),
+                  transform: `scale(${mix(0.6, 1, halo)})`,
                 }}
-              >
-                <div
-                  style={{
-                    fontSize: 32 * u,
-                    letterSpacing: "-0.03em",
-                    lineHeight: 1,
-                  }}
-                >
-                  {monthLabel}
-                </div>
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: 8 * u }}
-                >
-                  <div
-                    style={{
-                      padding: `${6 * u}px ${12 * u}px`,
-                      borderRadius: 99,
-                      border: `1px solid ${hair}`,
-                      fontSize: 16 * u,
-                      color: ink,
-                    }}
-                  >
-                    Today
-                  </div>
-                  <Chevron size={22 * u} color={muted} flip />
-                  <Chevron size={22 * u} color={muted} />
-                </div>
-              </div>
-
-              <div
-                style={{
-                  position: "absolute",
-                  left: pad,
-                  right: pad,
-                  top: weekY,
-                  height: weekH,
-                  display: "grid",
-                  gridTemplateColumns: "repeat(7, 1fr)",
-                  fontSize: 15 * u,
-                  color: muted,
-                  ...rowStyle(weekY + weekH / 2),
-                }}
-              >
-                {WEEKDAYS.map((d) => (
-                  <div key={d} style={{ paddingLeft: 8 * u }}>
-                    {d}
-                  </div>
-                ))}
-              </div>
-
-              {Array.from({ length: 5 }).map((_, row) => {
-                const y = gridY + row * cellH;
-                return (
-                  <div
-                    key={`row-${row.toString()}`}
-                    style={{
-                      position: "absolute",
-                      left: pad,
-                      right: pad,
-                      top: y,
-                      height: cellH,
-                      display: "grid",
-                      gridTemplateColumns: "repeat(7, 1fr)",
-                      borderTop: `1px solid ${hair}`,
-                      ...rowStyle(y + cellH / 2),
-                    }}
-                  >
-                    {grid.slice(row * 7, row * 7 + 7).map((c, col) => {
-                      const ev = c.inMonth
-                        ? events.find((e) => e.day === c.day)
-                        : undefined;
-                      const isLaunch = Boolean(ev?.launch);
-                      return (
-                        <div
-                          key={`c-${row.toString()}-${col.toString()}`}
-                          style={{
-                            position: "relative",
-                            padding: `${8 * u}px ${8 * u}px`,
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 6 * u,
-                          }}
-                        >
-                          <div
-                            style={{
-                              position: "relative",
-                              width: 34 * u,
-                              height: 30 * u,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              marginLeft: -2 * u,
-                            }}
-                          >
-                            {isLaunch ? (
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  inset: 0,
-                                  borderRadius: 9 * u,
-                                  background: `linear-gradient(180deg, ${heat[2]} 0%, ${accent} 100%)`,
-                                  boxShadow: `inset 0 1px 0 rgba(255,255,255,0.35), 0 ${6 * u}px ${16 * u}px color-mix(in oklab, ${accent} 45%, transparent)`,
-                                  opacity: chipOn,
-                                  transform: `scale(${mix(0.4, 1, chipS)})`,
-                                }}
-                              />
-                            ) : null}
-                            <span
-                              style={{
-                                position: "relative",
-                                fontSize: 18 * u,
-                                fontVariantNumeric: "tabular-nums",
-                                color:
-                                  isLaunch && chipOn > 0.5
-                                    ? "#fff"
-                                    : c.inMonth
-                                      ? col > 4
-                                        ? muted
-                                        : ink
-                                      : faint,
-                              }}
-                            >
-                              {c.day}
-                            </span>
-                          </div>
-                          {ev ? (
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 5 * u,
-                                fontSize: 15 * u,
-                                padding: `${3 * u}px ${7 * u}px`,
-                                borderRadius: 6 * u,
-                                alignSelf: "flex-start",
-                                color: isLaunch ? accent : ink,
-                                background: isLaunch
-                                  ? `color-mix(in oklab, ${accent} ${Math.round(16 * chipOn)}%, transparent)`
-                                  : dark
-                                    ? "rgba(255,240,226,0.06)"
-                                    : "rgba(60,40,20,0.05)",
-                                opacity: isLaunch
-                                  ? ramp(frame, B.chip + 4, 8)
-                                  : 1,
-                              }}
-                            >
-                              <div
-                                style={{
-                                  width: 2 * u,
-                                  height: 12 * u,
-                                  borderRadius: 1,
-                                  background: isLaunch ? accent : muted,
-                                }}
-                              />
-                              {ev.label}
-                            </div>
-                          ) : null}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-
-              {portrait ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: pad,
-                    right: pad,
-                    top: upY,
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 16 * u,
-                      color: muted,
-                      paddingBottom: 10 * u,
-                      ...rowStyle(upY + 12 * u),
-                    }}
-                  >
-                    Upcoming
-                  </div>
-                  {upcoming.map((e, i) => {
-                    const y = upY + 40 * u + i * 64 * u;
-                    const first = i === 0;
-                    return (
-                      <div
-                        key={e.title}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 14 * u,
-                          height: 64 * u,
-                          borderTop: `1px solid ${hair}`,
-                          fontSize: 19 * u,
-                          color: ink,
-                          ...rowStyle(y + 32 * u),
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 4 * u,
-                            height: 28 * u,
-                            borderRadius: 2 * u,
-                            background: first ? accent : muted,
-                          }}
-                        />
-                        <div style={{ width: 92 * u, color: muted }}>
-                          {e.when}
-                        </div>
-                        <div style={{ flex: 1 }}>{e.title}</div>
-                        <div
-                          style={{
-                            color: muted,
-                            fontVariantNumeric: "tabular-nums",
-                          }}
-                        >
-                          {e.time}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : null}
-
-              <DitherFilter
-                id={ditherId}
-                cell={2}
-                levels={dark ? 5 : 3}
-                amount={dark ? 0.7 : 0.9}
               />
               <div
                 style={{
                   position: "absolute",
                   inset: 0,
-                  filter:
-                    drain > 0 && drain < 1 ? `url(#${ditherId})` : undefined,
-                  opacity: drain >= 1 ? 0 : 0.94,
+                  borderRadius: radius,
+                  overflow: "hidden",
+                  background: surface,
+                  border: `1px solid ${hair}`,
+                  boxShadow: dark
+                    ? `inset 0 1px 0 rgba(255,240,226,0.07), 0 2px 6px rgba(0,0,0,0.35), 0 ${30 * u}px ${70 * u}px rgba(10,4,0,0.55)`
+                    : `inset 0 1px 0 #fff, 0 1px 2px rgba(60,30,10,0.06), 0 ${20 * u}px ${44 * u}px rgba(80,40,10,0.12), 0 ${60 * u}px ${110 * u}px rgba(120,60,20,0.12)`,
                 }}
               >
                 <div
                   style={{
                     position: "absolute",
+                    left: pad,
+                    right: pad,
+                    top: headerY,
+                    height: headerH,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    color: ink,
+                    ...rowStyle(headerY + headerH / 2),
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 32 * u,
+                      letterSpacing: "-0.03em",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {monthLabel}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8 * u,
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: `${6 * u}px ${12 * u}px`,
+                        borderRadius: 99,
+                        border: `1px solid ${hair}`,
+                        fontSize: 16 * u,
+                        color: ink,
+                      }}
+                    >
+                      {todayLabel}
+                    </div>
+                    <Chevron size={22 * u} color={muted} flip />
+                    <Chevron size={22 * u} color={muted} />
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    position: "absolute",
+                    left: pad,
+                    right: pad,
+                    top: weekY,
+                    height: weekH,
+                    display: "grid",
+                    gridTemplateColumns: "repeat(7, 1fr)",
+                    fontSize: 15 * u,
+                    color: muted,
+                    ...rowStyle(weekY + weekH / 2),
+                  }}
+                >
+                  {WEEKDAYS.map((d) => (
+                    <div key={d} style={{ paddingLeft: 8 * u }}>
+                      {d}
+                    </div>
+                  ))}
+                </div>
+
+                {Array.from({ length: 5 }).map((_, row) => {
+                  const y = gridY + row * cellH;
+                  return (
+                    <div
+                      key={`row-${row.toString()}`}
+                      style={{
+                        position: "absolute",
+                        left: pad,
+                        right: pad,
+                        top: y,
+                        height: cellH,
+                        display: "grid",
+                        gridTemplateColumns: "repeat(7, 1fr)",
+                        borderTop: `1px solid ${hair}`,
+                        ...rowStyle(y + cellH / 2),
+                      }}
+                    >
+                      {grid.slice(row * 7, row * 7 + 7).map((c, col) => {
+                        const ev = c.inMonth
+                          ? events.find((e) => e.day === c.day)
+                          : undefined;
+                        const isLaunch = Boolean(ev?.launch);
+                        return (
+                          <div
+                            key={`c-${row.toString()}-${col.toString()}`}
+                            style={{
+                              position: "relative",
+                              padding: `${8 * u}px ${8 * u}px`,
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 6 * u,
+                            }}
+                          >
+                            <div
+                              style={{
+                                position: "relative",
+                                width: 34 * u,
+                                height: 30 * u,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginLeft: -2 * u,
+                              }}
+                            >
+                              {isLaunch ? (
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    borderRadius: 9 * u,
+                                    background: `linear-gradient(180deg, ${heat[2]} 0%, ${accent} 100%)`,
+                                    boxShadow: `inset 0 1px 0 rgba(255,255,255,0.35), 0 ${6 * u}px ${16 * u}px color-mix(in oklab, ${accent} 45%, transparent)`,
+                                    opacity: chipOn,
+                                    transform: `scale(${mix(0.4, 1, chipS)})`,
+                                  }}
+                                />
+                              ) : null}
+                              <span
+                                style={{
+                                  position: "relative",
+                                  fontSize: 18 * u,
+                                  fontVariantNumeric: "tabular-nums",
+                                  color:
+                                    isLaunch && chipOn > 0.5
+                                      ? "#fff"
+                                      : c.inMonth
+                                        ? col > 4
+                                          ? muted
+                                          : ink
+                                        : faint,
+                                }}
+                              >
+                                {c.day}
+                              </span>
+                            </div>
+                            {ev ? (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 5 * u,
+                                  fontSize: 15 * u,
+                                  padding: `${3 * u}px ${7 * u}px`,
+                                  borderRadius: 6 * u,
+                                  alignSelf: "flex-start",
+                                  color: isLaunch ? accent : ink,
+                                  background: isLaunch
+                                    ? `color-mix(in oklab, ${accent} ${Math.round(16 * chipOn)}%, transparent)`
+                                    : dark
+                                      ? "rgba(255,240,226,0.06)"
+                                      : "rgba(60,40,20,0.05)",
+                                  opacity: isLaunch
+                                    ? ramp(frame, B.chip + 4, 8)
+                                    : 1,
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: 2 * u,
+                                    height: 12 * u,
+                                    borderRadius: 1,
+                                    background: isLaunch ? accent : muted,
+                                  }}
+                                />
+                                {ev.label}
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+
+                {portrait ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: pad,
+                      right: pad,
+                      top: upY,
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 16 * u,
+                        color: muted,
+                        paddingBottom: 10 * u,
+                        ...rowStyle(upY + 12 * u),
+                      }}
+                    >
+                      {upcomingTitle}
+                    </div>
+                    {upcoming.map((e, i) => {
+                      const y = upY + 40 * u + i * 64 * u;
+                      const first = i === 0;
+                      return (
+                        <div
+                          key={e.title}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 14 * u,
+                            height: 64 * u,
+                            borderTop: `1px solid ${hair}`,
+                            fontSize: 19 * u,
+                            color: ink,
+                            ...rowStyle(y + 32 * u),
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 4 * u,
+                              height: 28 * u,
+                              borderRadius: 2 * u,
+                              background: first ? accent : muted,
+                            }}
+                          />
+                          <div style={{ width: 92 * u, color: muted }}>
+                            {e.when}
+                          </div>
+                          <div style={{ flex: 1 }}>{e.title}</div>
+                          <div
+                            style={{
+                              color: muted,
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
+                            {e.time}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
+                <DitherFilter
+                  id={ditherId}
+                  cell={2}
+                  levels={dark ? 5 : 3}
+                  amount={dark ? 0.7 : 0.9}
+                />
+                <div
+                  style={{
+                    position: "absolute",
                     inset: 0,
-                    maskImage: `linear-gradient(180deg, transparent ${front - feather * 0.45}px, black ${front}px)`,
-                    WebkitMaskImage: `linear-gradient(180deg, transparent ${front - feather * 0.45}px, black ${front}px)`,
+                    filter:
+                      drain > 0 && drain < 1 ? `url(#${ditherId})` : undefined,
+                    opacity: drain >= 1 ? 0 : 0.94,
                   }}
                 >
                   <div
                     style={{
                       position: "absolute",
-                      inset: -20 * u,
-                      display: "flex",
-                      flexDirection: "column",
-                      filter: `blur(${9 * u}px)`,
+                      inset: 0,
+                      maskImage: `linear-gradient(180deg, transparent ${front - feather * 0.45}px, black ${front}px)`,
+                      WebkitMaskImage: `linear-gradient(180deg, transparent ${front - feather * 0.45}px, black ${front}px)`,
                     }}
                   >
-                    {bands.map((b, i) => (
-                      <div
-                        key={`band-${i.toString()}`}
-                        style={{
-                          height: `${(b.h / bandSum) * 100}%`,
-                          background: `linear-gradient(90deg, ${heat[b.a]} 0%, ${heat[b.b]} ${b.stop + b.drift * (frame / 60)}%, ${heat[Math.max(0, b.a - 1)]} 100%)`,
-                        }}
-                      />
-                    ))}
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: -20 * u,
+                        display: "flex",
+                        flexDirection: "column",
+                        filter: `blur(${9 * u}px)`,
+                      }}
+                    >
+                      {bands.map((b, i) => (
+                        <div
+                          key={`band-${i.toString()}`}
+                          style={{
+                            height: `${(b.h / bandSum) * 100}%`,
+                            background: `linear-gradient(90deg, ${heat[b.a]} 0%, ${heat[b.b]} ${b.stop + b.drift * (frame / 60)}%, ${heat[Math.max(0, b.a - 1)]} 100%)`,
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: front - feather * 1.1,
+                      height: feather * 1.3,
+                      background: `linear-gradient(180deg, transparent 0%, color-mix(in oklab, ${heat[0]} ${dark ? 62 : 60}%, transparent) 64%, color-mix(in oklab, ${heat[0]} ${dark ? 70 : 55}%, transparent) 84%, transparent 100%)`,
+                      filter: `blur(${8 * u}px)`,
+                      opacity: drain > 0 && drain < 1 ? 1 : 0,
+                    }}
+                  />
                 </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    top: front - feather * 1.1,
-                    height: feather * 1.3,
-                    background: `linear-gradient(180deg, transparent 0%, color-mix(in oklab, ${heat[0]} ${dark ? 62 : 60}%, transparent) 64%, color-mix(in oklab, ${heat[0]} ${dark ? 70 : 55}%, transparent) 84%, transparent 100%)`,
-                    filter: `blur(${8 * u}px)`,
-                    opacity: drain > 0 && drain < 1 ? 1 : 0,
-                  }}
-                />
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

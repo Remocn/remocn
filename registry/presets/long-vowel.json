@@ -1,0 +1,123 @@
+{
+  "component": "long-vowel",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "cream-editorial",
+      "label": "Cream Editorial",
+      "description": "Light paper background with deep ink and a terracotta accent in an elegant Instrument Serif.",
+      "askedAs": [
+        "light warm serif version",
+        "editorial magazine style stretched word",
+        "cream background with rust color",
+        "светлый редакционный стиль",
+        "кремовый фон с терракотой"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4ede1",
+        "ink": "#1f1a16",
+        "accent": "#c2552d",
+        "fontFamily": "Instrument Serif"
+      }
+    },
+    {
+      "id": "slow-drawl",
+      "label": "Slow Drawl",
+      "description": "A long, lazy stretch with extra letters and a late, unhurried reveal.",
+      "askedAs": [
+        "make the vowel stretch really slowly",
+        "lazy drawn out word",
+        "slower and longer stretch",
+        "медленное растягивание слова",
+        "очень длинная ленивая гласная"
+      ],
+      "props": {
+        "repeat": 11,
+        "speed": 0.5,
+        "stretchAt": 45,
+        "stagger": 8,
+        "accent": "#d98a3a"
+      }
+    },
+    {
+      "id": "snappy-pop",
+      "label": "Snappy Pop",
+      "description": "A quick, punchy stretch in bold grotesque type with a coral accent.",
+      "askedAs": [
+        "fast punchy stretched word",
+        "quick snappy version",
+        "bold sans comic timing",
+        "быстрый резкий вариант",
+        "энергичное слово с жирным шрифтом"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "speed": 2,
+        "stretchAt": 12,
+        "stagger": 2,
+        "accent": "#ff6b4a",
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "midnight-plum",
+      "label": "Midnight Plum",
+      "description": "Deep aubergine background with soft lilac ink and a rose accent, clean and grainless.",
+      "askedAs": [
+        "dark purple moody version",
+        "plum background stretched word",
+        "no grain dark elegant look",
+        "тёмно-фиолетовый фон",
+        "сливовый тёмный стиль без зерна"
+      ],
+      "props": {
+        "background": "#1e1424",
+        "ink": "#ede3f2",
+        "accent": "#e07a9b",
+        "grain": false
+      }
+    },
+    {
+      "id": "mono-terminal",
+      "label": "Mono Terminal",
+      "description": "Monospaced type on near-black with a muted sage accent for a dry, techy deadpan.",
+      "askedAs": [
+        "code style stretched word",
+        "monospace developer look",
+        "terminal green deadpan",
+        "моноширинный шрифт как в терминале",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1110",
+        "ink": "#e4eae6",
+        "accent": "#7fb89a",
+        "scale": 0.85,
+        "grain": false
+      }
+    },
+    {
+      "id": "minimal-whisper",
+      "label": "Minimal Whisper",
+      "description": "Small, quiet light-theme composition in Inter with a short stretch and slate blue accent.",
+      "askedAs": [
+        "subtle minimal version",
+        "small clean light stretched word",
+        "quiet understated tagline",
+        "минималистичный светлый вариант",
+        "тихий аккуратный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "scale": 0.7,
+        "repeat": 3,
+        "accent": "#4a6a8a",
+        "delay": 10
+      }
+    }
+  ]
+}

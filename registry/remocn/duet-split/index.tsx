@@ -4,14 +4,9 @@ import { loadFont as loadSans } from "@remotion/google-fonts/BricolageGrotesque"
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -68,6 +63,22 @@ export interface DuetSplitProps {
   afterLabel?: string;
   rows?: DuetRow[];
   accent?: string;
+  /** Text color of the after side and the mark; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the labels and the after side. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Frames between rows. */
+  stagger?: number;
+  /** Frames the last row holds before the after side takes over. */
+  hold?: number;
+  /** Replaces the remocn mark. */
+  logo?: React.ReactNode;
+  /** Size of the split and the mark, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -191,11 +202,13 @@ function Label({
   fs,
   color,
   dot,
+  fontFamily,
 }: {
   text: string;
   fs: number;
   color: string;
   dot: string;
+  fontFamily: string;
 }) {
   return (
     <div
@@ -203,7 +216,7 @@ function Label({
         display: "flex",
         alignItems: "center",
         gap: fs * 0.5,
-        fontFamily: sans,
+        fontFamily,
         fontWeight: 400,
         fontSize: fs,
         lineHeight: 1,
@@ -225,6 +238,24 @@ function Label({
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DuetSplit({
   beforeLabel = "Before",
   afterLabel = "With remocn",
@@ -234,14 +265,24 @@ export function DuetSplit({
     { before: "$12K", after: "$0" },
   ],
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  stagger = ROW_GAP,
+  hold = PUSH_DELAY,
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   ground,
   groundParams,
   speed = 1,
 }: DuetSplitProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const tall = H > W;
 
   const sp = (at: number, config: object, durationInFrames?: number) =>
@@ -253,11 +294,18 @@ export function DuetSplit({
     });
 
   const open = sp(-5, HEAVY);
-  const lastRowAt = ROW_AT + (rows.length - 1) * ROW_GAP;
-  const pushAt = lastRowAt + PUSH_DELAY;
+  const lastRowAt = ROW_AT + (rows.length - 1) * stagger;
+  const pushAt = lastRowAt + hold;
   const push = sp(pushAt, MORPH, PUSH_LEN);
   const logoAt = pushAt + PUSH_LEN - 4;
   const pLogo = sp(logoAt, CARD);
+  // The logo's spring overshoots and has a long tail, so it counts as moving
+  // while its lift still changes between neighbouring frames.
+  const logoLift = (f: number) =>
+    (1 - spring({ frame: f - logoAt, fps, config: CARD })) * 0.05 * H;
+  const logoMoving =
+    Math.abs(logoLift(t + speed) - logoLift(t)) > 1e-3 ||
+    Math.abs(logoLift(t) - logoLift(t - speed)) > 1e-3;
 
   const fs = tall ? 0.135 * W : 0.15 * H;
   const gap = fs * 1.18;
@@ -292,15 +340,30 @@ export function DuetSplit({
     x: afterStart.x + (afterEnd.x - afterStart.x) * push,
     y: afterStart.y + (afterEnd.y - afterStart.y) * push,
   };
+  // Layout rounds a box and a baseline to whole pixels, so the after rows
+  // stay laid out where they wait and the push carries them by transform;
+  // exactly nothing before the push starts.
+  const travel =
+    push > 0
+      ? `translate(${(afterEnd.x - afterStart.x) * push}px, ${(afterEnd.y - afterStart.y) * push}px)`
+      : undefined;
   const grow = 1 + (tall ? 0.16 : 0.2) * push;
   const rowY = (i: number) => (i - (rows.length - 1) / 2) * gap;
 
-  const bump = Math.max(
-    ...rows.map((_, i) => 0.6 * kick(t - ROW_AT - i * ROW_GAP - 3)),
-    kick(t - pushAt - PUSH_LEN + 4),
-  );
-  const camScale =
-    1 + 0.016 * bump + interpolate(t, [0, 160], [0, 0.02], CLAMP);
+  const camAt = (at: number) => {
+    const bump = Math.max(
+      ...rows.map((_, i) => 0.6 * kick(at - ROW_AT - i * stagger - 3)),
+      kick(at - pushAt - PUSH_LEN + 4),
+    );
+    return 1 + 0.016 * bump + interpolate(at, [0, 160], [0, 0.02], CLAMP);
+  };
+  const camScale = camAt(t);
+  const camStep = (at: number) =>
+    Math.abs(camAt(at) - camAt(at - speed)) * W * 0.5;
+  // The slab paints up to the frame edges, so the camera tilts only once it
+  // overhangs them by more than the tilt swings a corner.
+  const camTilt =
+    camScale > 1.0008 && Math.max(camStep(t), camStep(t + speed)) > 1e-3;
 
   const afterOpen = sp(2, HEAVY);
   const labelIn = ENTER(ramp(t, LABEL_AT, 12));
@@ -311,13 +374,13 @@ export function DuetSplit({
     return (
       <div
         style={{
-          fontFamily: sans,
+          fontFamily,
           fontWeight: 300,
           fontSize: fs,
           lineHeight: 1,
           letterSpacing: "-0.045em",
           whiteSpace: "nowrap",
-          color: c.ink,
+          color: fg,
           textShadow: c.shadow,
           opacity: ENTER(ramp(t, at, 3)),
           transform: `translateY(${(1 - p) * 0.22 * fs}px) scale(${1.1 - 0.1 * p})`,
@@ -328,13 +391,20 @@ export function DuetSplit({
     );
   };
 
-  const place = (x: number, y: number, child: React.ReactNode, key: string) => (
+  const place = (
+    x: number,
+    y: number,
+    child: React.ReactNode,
+    key: string,
+    shift?: string,
+  ) => (
     <div
       key={key}
       style={{
         position: "absolute",
         left: x,
         top: y,
+        transform: shift,
         width: 0,
         height: 0,
         display: "flex",
@@ -354,106 +424,141 @@ export function DuetSplit({
     : `${(ac.x / W) * 100}% 54%`;
 
   return (
-    <AbsoluteFill style={{ background: c.base, overflow: "hidden" }}>
-      <GshGround
-        preset={groundParams ? undefined : (ground ?? c.ground)}
-        params={groundParams}
-        timeOffset={theme === "dark" ? 4 : 6}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${tall ? "80% 34%" : "40% 60%"} at ${scrimAt}, rgba(${c.scrim},${c.scrimA}) 0%, rgba(${c.scrim},0) 100%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{ transform: `scale(${camScale})`, transformOrigin: "50% 50%" }}
-      >
-        <div
+    <AbsoluteFill
+      style={{
+        background: background === undefined ? c.base : undefined,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={groundParams ? undefined : (ground ?? c.ground)}
+            params={groundParams}
+            timeOffset={theme === "dark" ? 4 : 6}
+            timeScale={0.5}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${tall ? "80% 34%" : "40% 60%"} at ${scrimAt}, rgba(${c.scrim},${c.scrimA}) 0%, rgba(${c.scrim},0) 100%)`,
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            ...afterLabelPos,
-            opacity: labelIn * (1 - labelOut),
-            transform: `translateY(${(1 - labelIn) * labelFs * 0.6}px)`,
+            background: background === "transparent" ? undefined : background,
           }}
-        >
-          <Label text={afterLabel} fs={labelFs} color={c.ink} dot={accent} />
-        </div>
-        <div
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            inset: 0,
-            transformOrigin: `${ac.x}px ${ac.y}px`,
-            transform: `translateY(${(1 - afterOpen) * 0.08 * H}px) scale(${grow})`,
-          }}
-        >
-          {rows.map((r, i) => {
-            const at = ROW_AT + i * ROW_GAP;
-            return t >= at
-              ? place(ac.x, ac.y + rowY(i), crisp(r.after, at), `a-${i}`)
-              : null;
-          })}
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            ...slabStyle,
-            background: c.slab,
-            boxShadow: tall
-              ? `inset 0 -1px 0 ${c.seam}`
-              : `inset -1px 0 0 ${c.seam}`,
-            overflow: "hidden",
+            transform: `scale(${camScale})${glide(camTilt)}`,
+            transformOrigin: "50% 50%",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: margin,
-              top: tall ? margin : margin * 1.2,
-              opacity: labelIn,
-              transform: `translateY(${(1 - labelIn) * labelFs * 0.6}px)`,
+              ...afterLabelPos,
+              opacity: labelIn * (1 - labelOut),
+              transform: `translateY(${(1 - labelIn) * labelFs * 0.6}px)${glide(midway(labelIn) && !camTilt)}`,
             }}
           >
             <Label
-              text={beforeLabel}
+              text={afterLabel}
               fs={labelFs}
-              color={c.greyLabel}
-              dot={c.grey}
+              color={fg}
+              dot={accent}
+              fontFamily={fontFamily}
             />
           </div>
-          {rows.map((r, i) =>
-            place(
-              tall ? W / 2 : W * 0.25,
-              beforeC.y + rowY(i),
-              <Wobbly
-                text={r.before}
-                at={ROW_AT + i * ROW_GAP}
-                t={t}
-                fontSize={fs * 1.04}
-                color={c.grey}
-                seed={i + 1}
-              />,
-              `b-${i}`,
-            ),
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              transformOrigin: `${ac.x}px ${ac.y}px`,
+              transform: `translateY(${(1 - afterOpen) * 0.08 * H}px) scale(${grow})`,
+            }}
+          >
+            {rows.map((r, i) => {
+              const at = ROW_AT + i * stagger;
+              return t >= at
+                ? place(
+                    afterStart.x,
+                    afterStart.y + rowY(i),
+                    crisp(r.after, at),
+                    `a-${i}`,
+                    travel,
+                  )
+                : null;
+            })}
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              ...slabStyle,
+              background: c.slab,
+              boxShadow: tall
+                ? `inset 0 -1px 0 ${c.seam}`
+                : `inset -1px 0 0 ${c.seam}`,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                left: margin,
+                top: tall ? margin : margin * 1.2,
+                opacity: labelIn,
+                transform: `translateY(${(1 - labelIn) * labelFs * 0.6}px)${glide(midway(labelIn) && !camTilt)}`,
+              }}
+            >
+              <Label
+                text={beforeLabel}
+                fs={labelFs}
+                color={c.greyLabel}
+                dot={c.grey}
+                fontFamily={fontFamily}
+              />
+            </div>
+            {rows.map((r, i) =>
+              place(
+                tall ? W / 2 : W * 0.25,
+                beforeC.y + rowY(i),
+                <Wobbly
+                  text={r.before}
+                  at={ROW_AT + i * stagger}
+                  t={t}
+                  fontSize={fs * 1.04}
+                  color={c.grey}
+                  seed={i + 1}
+                />,
+                `b-${i}`,
+              ),
+            )}
+          </div>
+        </AbsoluteFill>
+
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: tall ? 0.08 * H : 0.085 * H,
+            display: "flex",
+            justifyContent: "center",
+            opacity: ENTER(ramp(t, logoAt, 6)),
+            transform: `translateY(${(1 - pLogo) * 0.05 * H}px)${glide(logoMoving)}`,
+          }}
+        >
+          {logo ?? (
+            <RemocnLogo fontSize={tall ? 0.04 * H : 0.055 * H} color={fg} />
           )}
         </div>
-      </AbsoluteFill>
-
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: tall ? 0.08 * H : 0.085 * H,
-          display: "flex",
-          justifyContent: "center",
-          opacity: ENTER(ramp(t, logoAt, 6)),
-          transform: `translateY(${(1 - pLogo) * 0.05 * H}px)`,
-        }}
-      >
-        <RemocnLogo fontSize={tall ? 0.04 * H : 0.055 * H} color={c.ink} />
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

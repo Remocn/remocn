@@ -6,13 +6,9 @@ import type {
 } from "@remotion/transitions";
 import type React from "react";
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random } from "remotion";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type HyperspaceProps = {
   /** Number of stars in the field. */
@@ -82,7 +78,7 @@ function Starfield({
   opacity: number;
   stride: number;
 }) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const cx = width / 2;
   const cy = height / 2;
   const diag = Math.hypot(width, height) / 2;
@@ -145,7 +141,8 @@ const HyperspacePresentation: React.FC<
     flash,
     flashColor,
   } = { ...hyperspaceDefaults, ...passedProps };
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const { width, height } = useSceneConfig();
   const diag = Math.hypot(width, height) / 2;
   const p = presentationProgress;
 
@@ -181,7 +178,10 @@ const HyperspacePresentation: React.FC<
     return (
       <AbsoluteFill style={{ backgroundColor: "#000000", overflow: "hidden" }}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, filter: `brightness(${dim})` }}
+          style={{
+            transform: `scale(${push})${glide(t > 0 && t < 1)}`,
+            filter: `brightness(${dim})`,
+          }}
         >
           {children}
         </AbsoluteFill>
@@ -227,7 +227,7 @@ const HyperspacePresentation: React.FC<
     <AbsoluteFill style={{ overflow: "hidden" }}>
       <AbsoluteFill
         style={{
-          transform: `scale(${settle})`,
+          transform: `scale(${settle})${glide(q < 1)}`,
           filter: blur > 0.1 ? `blur(${blur}px)` : undefined,
         }}
       >

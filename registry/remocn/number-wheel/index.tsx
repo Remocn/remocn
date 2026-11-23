@@ -2,14 +2,9 @@
 
 import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: MONO_FAMILY } = loadMono();
 
@@ -71,7 +66,11 @@ function DigitColumn({
   fontSize: number;
   opacity: number;
 }) {
+  const glide = useGlide();
   const cellHeight = fontSize * 1.1;
+  // A slowly rolling strip would click along pixel by pixel; the strip's
+  // transform is marked so its digits lean while it rolls.
+  const rolling = Math.abs(value - Math.round(value)) > 1e-6;
   return (
     <span
       style={{
@@ -88,7 +87,7 @@ function DigitColumn({
         style={{
           display: "flex",
           flexDirection: "column",
-          translate: `0 ${-value * cellHeight}px`,
+          transform: `translateY(${-value * cellHeight}px)${glide(rolling)}`,
         }}
       >
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((d, i) => (
@@ -182,7 +181,7 @@ function OdometerColumns({
 }
 
 export function Odometer({ current, fontSize, color }: OdometerProps) {
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   const value = Math.max(0, Math.round(current));
   return (
     <OdometerColumns
@@ -202,8 +201,8 @@ export function NumberWheel({
   color = "#171717",
   speed = 1,
 }: NumberWheelProps) {
-  const frame = useCurrentFrame();
-  const { durationInFrames, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { durationInFrames, fps } = useSceneConfig();
 
   const start = Math.max(0, Math.round(from));
   const end = Math.max(0, Math.round(to));

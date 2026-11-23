@@ -1,0 +1,125 @@
+{
+  "component": "now-playing",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "late-night-slow",
+      "label": "Late Night",
+      "description": "A deep indigo player with soft violet tint and slow, lingering lyric lines in an elegant serif.",
+      "askedAs": [
+        "slow moody night music player",
+        "dark purple lyrics video",
+        "calm late night vibe",
+        "ночной медленный плеер",
+        "тёмный фиолетовый плеер с текстом"
+      ],
+      "props": {
+        "tint": "#4b3f8c",
+        "accent": "#b9a6ff",
+        "ground": "velvet-hour",
+        "fontFamily": "Instrument Serif",
+        "lineHold": 36,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "summer-pop",
+      "label": "Summer Pop",
+      "description": "A bright coral-and-amber gradient with quick lyric flips for an upbeat, punchy feel.",
+      "askedAs": [
+        "energetic pop song player",
+        "fast bright lyrics",
+        "warm sunny music promo",
+        "яркий летний плеер",
+        "быстрый поп с текстом песни"
+      ],
+      "props": {
+        "tint": "#e2704a",
+        "accent": "#ffc24b",
+        "ground": "solstice",
+        "fontFamily": "Bricolage Grotesque",
+        "lineHold": 12,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "mini-story",
+      "label": "Mini Expand",
+      "description": "The compact mini player that expands into full view, slightly enlarged for vertical stories.",
+      "askedAs": [
+        "mini player for stories",
+        "vertical music clip",
+        "small player that expands",
+        "мини плеер для сторис",
+        "вертикальное видео с плеером"
+      ],
+      "props": {
+        "variant": "mini",
+        "scale": 1.2,
+        "ground": "petal-arc",
+        "tint": "#c2577a"
+      }
+    },
+    {
+      "id": "podcast-studio",
+      "label": "Podcast Studio",
+      "description": "A neutral charcoal backdrop with off-white Geist type and a muted teal accent for spoken-word audio.",
+      "askedAs": [
+        "podcast player look",
+        "clean dark audio app",
+        "minimal neutral player",
+        "плеер для подкаста",
+        "минималистичный тёмный плеер"
+      ],
+      "props": {
+        "background": "#1c1d21",
+        "ink": "#f2f0eb",
+        "tint": "#3e5c5a",
+        "accent": "#5fb3a6",
+        "fontFamily": "Geist",
+        "lineHold": 28
+      }
+    },
+    {
+      "id": "paper-acoustic",
+      "label": "Paper Acoustic",
+      "description": "A light cream paper backdrop with dark ink Fraunces type and a soft olive tint for acoustic tracks.",
+      "askedAs": [
+        "light acoustic music player",
+        "cream paper background lyrics",
+        "soft folk song video",
+        "светлый акустический плеер",
+        "бежевый фон с текстом песни"
+      ],
+      "props": {
+        "background": "#f3ede2",
+        "ink": "#2a2620",
+        "tint": "#7a7448",
+        "accent": "#a0522d",
+        "ground": "paper-crease",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "cold-electronic",
+      "label": "Cold Electronic",
+      "description": "An icy blue gradient with monospace type and a brisk tempo for electronic and techno releases.",
+      "askedAs": [
+        "electronic track player",
+        "cool blue techno lyrics",
+        "tech mono music promo",
+        "электронный холодный плеер",
+        "синий техно плеер"
+      ],
+      "props": {
+        "tint": "#2b4c7e",
+        "accent": "#7fd1e8",
+        "ground": "coldlight",
+        "fontFamily": "JetBrains Mono",
+        "speed": 1.25,
+        "scale": 0.9
+      }
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "component": "shader-smoke-ring",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-halo",
+      "label": "Slow Halo",
+      "description": "A wide, thin ring drifting very slowly on a near-black field for a calm, luxurious feel.",
+      "askedAs": [
+        "slow thin smoke ring",
+        "calm elegant halo of smoke",
+        "gentle wide ring background",
+        "медленное тонкое кольцо дыма",
+        "спокойный дымный ореол"
+      ],
+      "props": {
+        "speed": 0.5,
+        "radius": 0.4,
+        "thickness": 0.35,
+        "colorBack": "#0a0a0f"
+      }
+    },
+    {
+      "id": "dense-plume",
+      "label": "Dense Plume",
+      "description": "A thick, heavy smoke ring held small and tight in the center like a dense puff.",
+      "askedAs": [
+        "thick heavy smoke ring",
+        "dense puff of smoke in center",
+        "chunky small smoke loop",
+        "густое плотное кольцо дыма",
+        "толстый клуб дыма по центру"
+      ],
+      "props": {
+        "thickness": 1.2,
+        "radius": 0.15,
+        "scale": 0.6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "restless-swirl",
+      "label": "Restless Swirl",
+      "description": "A fast-churning ring that curls and dissipates energetically for more dynamic moments.",
+      "askedAs": [
+        "fast swirling smoke ring",
+        "energetic churning smoke",
+        "quick moving smoke loop",
+        "быстрое кольцо дыма",
+        "динамичный закручивающийся дым"
+      ],
+      "props": {
+        "speed": 2.5,
+        "thickness": 0.8,
+        "scale": 1
+      }
+    },
+    {
+      "id": "midnight-blue",
+      "label": "Midnight Blue",
+      "description": "A medium ring floating over a deep navy field for a cool, nocturnal atmosphere.",
+      "askedAs": [
+        "smoke ring on dark blue",
+        "navy background smoke",
+        "cool night smoke ring",
+        "дымное кольцо на тёмно-синем",
+        "ночной синий фон с дымом"
+      ],
+      "props": {
+        "colorBack": "#0b1426",
+        "radius": 0.3,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "full-frame",
+      "label": "Full Frame",
+      "description": "An oversized ring that fills the frame with soft, enveloping smoke on warm charcoal.",
+      "askedAs": [
+        "huge smoke ring filling screen",
+        "big immersive smoke background",
+        "large soft smoke circle",
+        "огромное кольцо дыма на весь экран",
+        "крупный обволакивающий дым"
+      ],
+      "props": {
+        "scale": 1.7,
+        "radius": 0.35,
+        "thickness": 0.9,
+        "colorBack": "#17130f",
+        "speed": 0.5
+      }
+    }
+  ]
+}

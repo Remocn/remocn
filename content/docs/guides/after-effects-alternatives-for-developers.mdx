@@ -1,17 +1,20 @@
 ---
 title: "After Effects Alternatives for Developers: Programmatic Video Tools Compared (2026)"
 navTitle: After Effects alternatives
-description: "Programmatic video alternatives to After Effects for developers, compared: Remotion, Remocn, Motion Canvas, Revideo, HyperFrames, Manim, FFmpeg, Lottie and hosted video APIs, with licences, prices, GitHub stars, latest releases and an After Effects to code mapping."
+description: "Programmatic video alternatives to After Effects for developers, compared: Remotion, Remocn, Motion Canvas, Revideo, HyperFrames, Manim, MoviePy, Editly, FFmpeg, Lottie and hosted video APIs, with licences, prices, GitHub stars, latest releases, Remotion alternatives with a verdict per tool, HyperFrames vs Remotion and an After Effects to code mapping."
+lastModified: 2026-11-19
 ---
 
-_Last updated: November 11, 2026. Remocn wrote this page, and Remocn is one of the tools compared. Facts about other tools come from their own sites and repositories; see [Sources](#sources)._
+_Last updated: November 19, 2026. Remocn wrote this page, and Remocn is one of the tools compared. Facts about other tools come from their own sites and repositories; see [Sources](#sources)._
 
 The main programmatic video alternatives to After Effects for developers are
 [Remotion](https://www.remotion.dev) (React), [Motion Canvas](https://motioncanvas.io) and
 [Revideo](https://github.com/midrender/revideo) (TypeScript), [HyperFrames](https://github.com/heygen-com/hyperframes)
-(HTML and CSS), [Manim](https://www.manim.community) (Python), FFmpeg for cutting and encoding, Lottie for
-animations that still start in After Effects, and hosted video APIs such as Shotstack and Creatomate. If you
-pick Remotion, Remocn adds 932 free, MIT-licensed components (text effects, transitions, backgrounds, camera
+(HTML and CSS), [Manim](https://www.manim.community) and [MoviePy](https://github.com/Zulko/moviepy) (Python),
+[Editly](https://github.com/mifi/editly) (JSON on FFmpeg), FFmpeg for cutting and encoding, Lottie for animations
+that still start in After Effects, hosted video APIs such as Shotstack, Creatomate and JSON2Video, and Plainly for
+rendering After Effects templates through an API. If you
+pick Remotion, Remocn adds 934 free, MIT-licensed components (text effects, transitions, backgrounds, camera
 shots, UI simulations and full templates) that you install with `npx shadcn@latest add @remocn/<name>`.
 
 None of them is a drop-in replacement for After Effects. You give up the timeline and the graph editor and get
@@ -19,9 +22,10 @@ version control, data-driven videos, reusable components and renders a script or
 
 ## Programmatic video tools compared
 
-Stars and releases were checked on November 11, 2026, from each project's GitHub repository (and npm, where a
-project publishes no GitHub releases). Prices were checked on November 10, 2026, on each vendor's own pricing
-page. Prices change; follow the links before you commit.
+Stars and releases were checked on November 11, 2026, from each project's GitHub repository (and npm or PyPI,
+where a project publishes no GitHub releases). Prices were checked on November 10, 2026, on each vendor's own
+pricing page. MoviePy, Editly, JSON2Video and Plainly were added on November 19, 2026, and checked that day.
+Prices change; follow the links before you commit.
 
 | Tool | Language | Licence | Pricing | GitHub stars | Latest release | Checked | Best for |
 |---|---|---|---|---|---|---|---|
@@ -31,13 +35,18 @@ page. Prices change; follow the links before you commit.
 | [Revideo](https://github.com/midrender/revideo) | TypeScript | MIT | Free | 4.2k | 0.11.0 on npm, Jul 10, 2026 (no GitHub releases) | Nov 11, 2026 | An MIT TypeScript render engine with a React player |
 | [HyperFrames](https://github.com/heygen-com/hyperframes) | HTML, CSS, JavaScript; Node.js 22+ and FFmpeg | Apache 2.0 | Free, "no per-render fees or commercial-use thresholds" | 82.5k | v0.9.33, Nov 11, 2026 | Nov 11, 2026 | Teams that write HTML and CSS rather than React, or need Apache 2.0 |
 | [Manim](https://www.manim.community) | Python | MIT | Free | 42.4k | v0.22.1, Oct 27, 2026 | Nov 11, 2026 | Maths, graphs and equations |
+| [MoviePy](https://github.com/Zulko/moviepy) | Python | MIT | Free | 15.2k | v2.2.1, May 21, 2025 | Nov 19, 2026 | Cutting, compositing and captioning footage from a Python script |
+| [Editly](https://github.com/mifi/editly) | Node.js; a JSON5 or JavaScript edit spec rendered with FFmpeg | MIT | Free | 5.6k | 0.14.2 on npm, Jan 19, 2025; last commit Feb 20, 2025 | Nov 19, 2026 | Slideshows and simple edits declared as data |
 | [FFmpeg](https://ffmpeg.org) | CLI, C libraries | LGPL 2.1 or later; GPL if built with its optional GPL parts | Free | 67.0k (GitHub mirror) | n9.0.2 tag, Sep 18, 2026 | Nov 11, 2026 | Cutting, joining, overlaying, converting and encoding existing footage |
 | [Lottie](https://github.com/airbnb/lottie-web) (lottie-web) | JavaScript (web); native players for iOS and Android | MIT | Free player. Authoring still needs After Effects | 32.4k | v5.13.0, May 21, 2025 | Nov 11, 2026 | Playing a designer's After Effects animation in code |
 | [Shotstack](https://shotstack.io) | JSON over HTTP, any language | Commercial, hosted | 10 free credits; pay as you go $10 for 50 minutes; Starter $39/month | Not open source | Hosted service | Nov 10, 2026 | Rendering as a hosted service, without servers or a React codebase |
 | [Creatomate](https://creatomate.com) | JSON over HTTP, any language | Commercial, hosted | 50 free credits; Essential $45/month | Not open source | Hosted service | Nov 10, 2026 | Filling the same template with data at volume, with no infrastructure |
+| [JSON2Video](https://json2video.com) | JSON over HTTP, any language | Commercial, hosted | 600 free credits, watermarked; $49.95 one-time for 7,200 credits (up to 120 minutes); Hobby $199.50/year for 50 minutes a month | Not open source | Hosted service | Nov 19, 2026 | Template videos from JSON, paid per second rendered |
+| [Plainly](https://www.plainlyvideos.com) | After Effects templates, rendered through an API | Commercial, hosted | 14-day free trial; Starter $69/month, or $48/month billed yearly, for 50 minutes | Not open source | Hosted service | Nov 19, 2026 | Keeping After Effects for design and rendering data-driven versions at volume |
 
 Stars measure attention, not fit. HyperFrames and Remotion lead by a wide margin. Motion Canvas's last stable
-release is from December 2024, and Revideo publishes to npm without GitHub releases.
+release is from December 2024, Revideo publishes to npm without GitHub releases, and Editly's last commit is from
+February 2025.
 
 ## What you work in
 
@@ -49,10 +58,14 @@ release is from December 2024, and Revideo publishes to npm without GitHub relea
 | Revideo | Rendering engine for videos in code | A React player for preview, no editor. re.video now redirects to midrender.com | Your machine or servers |
 | HyperFrames | HTML, CSS and seekable animations rendered to MP4, by HeyGen | HyperFrames Studio, marked "Available, evolving" | Your machine or servers |
 | Manim | Library for mathematical animations | None; scenes are Python classes | Your machine |
+| MoviePy | Python library for editing video | None; edits are Python scripts | Your machine |
+| Editly | Command-line tool and Node.js API that renders an edit spec | None; the edit is a JSON5 file | Your machine, with FFmpeg |
 | FFmpeg | Command-line media engine | None | Your machine or servers |
 | Lottie | Player for After Effects animations exported as JSON with Bodymovin | After Effects itself | The viewer's browser or app |
 | Shotstack | Hosted video editing API | Template editor in the browser | Shotstack's servers, paid per minute |
 | Creatomate | Hosted template rendering API | Template editor in the browser | Creatomate's servers, paid per credit |
+| JSON2Video | Hosted video API driven by JSON | Not checked for this page | JSON2Video's service, one credit per second rendered |
+| Plainly | Render API for After Effects templates | After Effects, through Plainly's plugin | Plainly's shared rendering infrastructure, plans capped by rendered minutes |
 
 ## How Remocn compares with snapcn
 
@@ -61,11 +74,68 @@ shadcn CLI and copy source files into your project. Checked on November 10, 2026
 
 | | Remocn | snapcn |
 |---|---|---|
-| Components | 932 components, all MIT | 60 MIT and 81 Pro, per its site footer |
+| Components | 934 components, all MIT | 60 MIT and 81 Pro, per its site footer |
 | Price | Free | Free components; Pro from $179/year, per its pricing page |
 | Install | `npx shadcn@latest add @remocn/<name>` | `npx shadcn@latest add @snapcn/<name>` |
 
 Both sit on top of Remotion, so Remotion's licence applies to either.
+
+## HyperFrames vs Remotion: which should I use?
+
+Pick HyperFrames if you want to write video as plain HTML, CSS and JavaScript with no build step, or need an
+Apache 2.0 licence at any company size. Pick Remotion if your team writes React and TypeScript and wants the
+larger ecosystem and a mature cloud renderer; add Remocn when you want ready-made motion and agent tooling on
+top, the way HyperFrames adds its block registry and skills.
+
+Checked on November 17, 2026, against HyperFrames' README and HeyGen's own
+[HyperFrames vs Remotion guide](https://hyperframes.heygen.com/guides/hyperframes-vs-remotion), and
+Remotion's licence page:
+
+| | HyperFrames | Remotion + Remocn |
+|---|---|---|
+| You write | An HTML file: HTML, CSS and JavaScript, animated with GSAP, CSS animations, Lottie, Three.js, Anime.js or WAAPI | React components in TypeScript |
+| Timing | Data attributes (`data-start`, `data-duration`, `data-track-index`) and a paused timeline the renderer seeks frame by frame | `useCurrentFrame()`, `interpolate()`, `spring()`, `<Sequence>` |
+| Build step | None: `index.html` plays as is | A bundler, set up by `npx create-video` |
+| Licence | Apache 2.0 | Remotion: Remotion License (source-available). Remocn: MIT |
+| Cost | Free, with no per-render fees or company-size threshold | Remotion is free for teams of up to 3 people, then a Company License (minimum $100/month). Remocn is free |
+| Rendering | Headless Chrome and FFmpeg on your machine (Node.js 22+), Docker, AWS Lambda, Google Cloud Run, or HeyGen's hosted cloud | Headless Chrome and FFmpeg on your machine or servers, or AWS through `@remotion/lambda` |
+| Ready-made blocks | About 450 blocks and components, installed as editable source with `npx hyperframes add <name>` | 934 Remocn components, installed as editable source with `npx shadcn@latest add @remocn/<name>` |
+| AI agent support | Agent skills (`npx skills add heygen-com/hyperframes`), a Claude Code plugin, and an MCP connector marked beta | Remotion's Agent Skills; Remocn's skill (`npx skills add Remocn/remocn`), Claude Code / Codex plugin (`/remocn:video <brief>`) and free [MCP server](/docs/getting-started/mcp-server) |
+| Visual editor | HyperFrames Studio desktop app, marked "Available, evolving" | Remotion Studio previews in the browser; motion is written in code |
+| Best for | Teams that think in web pages, agents writing HTML, and companies that need Apache 2.0 | React teams, and anyone who wants Remotion's ecosystem and production history |
+
+HeyGen published a same-prompt benchmark with Claude Code: one run per framework, no retries. Remotion took
+12 min 30 s and wrote 10 TypeScript files (1,037 lines) plus about 950 MB of `node_modules`; HyperFrames took
+11 min 50 s and wrote 4 HTML files (822 lines) with nothing to install. HeyGen notes that a single run says
+nothing about quality, and it is HeyGen's own test of its own framework.
+
+**Choose HyperFrames when…**
+
+- your team writes HTML and CSS, not React, or the source is already a web page or browser animation;
+- you want no bundler and no `node_modules` in the video project;
+- the licence has to be Apache 2.0 whatever the size of the company.
+
+**Choose Remotion (with Remocn) when…**
+
+- your team and your app are already React and TypeScript, so product UI can be reused in the video;
+- you want the larger body of Remotion templates, tutorials and production use, and Remotion Lambda;
+- you want ready-made, MIT-licensed motion and an agent that picks it for you: install the
+  [agent skill](/docs/getting-started/agent-skill) or [plugin](/docs/getting-started/plugin), or point any MCP client at
+  `https://remocn.dev/mcp`.
+
+### Is there an alternative to HyperFrames for React/Remotion?
+
+Yes: Remotion with Remocn. Remotion is the React framework, and Remocn adds what HyperFrames adds on top of
+its HTML framework: a registry of finished motion installed as editable source, plus an agent skill, a
+Claude Code / Codex plugin and an MCP server. Remocn is not a Remotion alternative; it only works inside a
+Remotion project. Start with [Installation](/docs/getting-started/installation), then
+[make a product demo video with an AI agent](/docs/guides/product-demo).
+[HyperFrames alternatives](/docs/guides/hyperframes-alternatives) compares it with Motion Canvas, Revideo,
+Creatomate and Shotstack and maps HyperFrames' attributes, catalog and CLI to Remotion.
+
+```bash
+npx shadcn@latest add @remocn/soft-blur-in
+```
 
 ## After Effects to code: what replaces what
 
@@ -76,9 +146,9 @@ Remocn already has the finished piece.
 |---|---|---|
 | Composition (size, frame rate, duration) | `<Composition>` with `width`, `height`, `fps`, `durationInFrames` | [Templates](/docs/templates): full compositions |
 | Precomp | A React component placed inside a `<Sequence>` | [Compositions](/docs/compositions) |
-| Layer in and out points | `<Sequence from={30} durationInFrames={60}>` | Each component page states its natural length in frames |
+| Layer in and out points | `<Sequence from={60} durationInFrames={120}>` | Each component page states its natural length in frames |
 | Layers played one after another | `<Series>` | — |
-| Keyframes | `interpolate(frame, [0, 30], [0, 1])` | Every component; motion is precomputed per frame |
+| Keyframes | `interpolate(frame, [0, 60], [0, 1])` | Every component; motion is precomputed per frame |
 | Easy Ease and the graph editor | The `easing` option of `interpolate()`, for example `Easing.bezier(0.25, 1, 0.5, 1)` | — |
 | Overshoot or bounce expression | `spring()` | — |
 | `wiggle()` expression | Seeded `random()` from `remotion`, or `noise2D()` from `@remotion/noise` | [Impact Shake](/docs/camera/impact-shake) |
@@ -113,7 +183,7 @@ import { Sequence } from "remotion";
 import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
 
 export const Intro = () => (
-  <Sequence durationInFrames={90}>
+  <Sequence durationInFrames={180}>
     <SoftBlurIn text="Ship the launch video today" />
   </Sequence>
 );
@@ -135,9 +205,32 @@ Code replaces some After Effects work well and some not at all. Be honest with y
 - **…you need compositing.** Character animation, rotoscoping, tracking and keying are After Effects territory.
   None of the code tools here does them well.
 - **…a motion designer owns the work.** If the person making the animation lives in After Effects, keep them
-  there and bring the result into code with Lottie, or into Remotion with `@remotion/lottie`.
+  there and bring the result into code with Lottie, or into Remotion with `@remotion/lottie`. To render many
+  versions of their template with data, Plainly runs After Effects templates through an API.
 - **…the video is a one-off.** Code pays back when you make a series of videos, change them often, or fill
   them with data. For a single piece with no reuse, an editor is often faster.
+
+## Remotion alternatives: a verdict per tool
+
+The usual reasons to look past Remotion are its licence (free for teams of up to 3 people, paid above that),
+React, or wanting someone else to run the renders. Remocn is not an alternative: it is an add-on that only works
+inside a Remotion project, so it sits in the last row, for when you stay.
+
+| Tool | Pick it when | Skip it when |
+|---|---|---|
+| Revideo | The Remotion licence is the blocker and you still want TypeScript, with a React player for preview | You want an editor or tagged GitHub releases; it ships to npm only |
+| Motion Canvas | You make explainers synced to a voiceover and want its visual preview | You need active releases; the last stable one is from December 2024 |
+| HyperFrames | Your team writes HTML and CSS, or the licence has to be Apache 2.0 at any company size | Your app is React and you want to reuse its components in the video |
+| Manim | The video is maths: equations, graphs, geometry | You make product or launch videos |
+| MoviePy | You script edits of real footage in Python: cut, join, overlay text | You want designed motion graphics; it is an editing library |
+| Editly | You need slideshows or simple edits declared as a JSON5 file, under MIT | You start something large; its last release is from January 2025 |
+| FFmpeg | You cut, convert and encode existing footage | You want designed animation; it is a media engine |
+| Shotstack, Creatomate, JSON2Video | You want rendering as a hosted API with no servers or React codebase | You want the source in your repo and no per-minute or per-credit bill |
+| Plainly | Designers stay in After Effects and you need data-driven versions rendered by API | Nobody on the team uses After Effects |
+| Stay on Remotion (+ Remocn) | Your team writes React, fits the free tier or can pay for a Company License, and wants finished motion: `npx shadcn@latest add @remocn/<name>` | One of the rows above describes your reason for leaving |
+
+[HyperFrames alternatives](/docs/guides/hyperframes-alternatives) and
+[Remotion MCP servers compared](/docs/guides/remotion-mcp-servers) cover the agent side of the same choice.
 
 ## Pick another code tool over Remotion and Remocn when…
 
@@ -147,9 +240,10 @@ Code replaces some After Effects work well and some not at all. Be honest with y
 - **…the licence has to be MIT or Apache 2.0 at any company size.** Remocn is MIT, but it requires Remotion,
   which is free for teams of up to 3 people and needs a paid Company License above that. Read
   [Remotion's licence](https://www.remotion.dev/docs/license) before you build on it at work. Motion Canvas,
-  Revideo, Manim (MIT) and HyperFrames (Apache 2.0) have no such threshold.
+  Revideo, Manim, MoviePy, Editly (MIT) and HyperFrames (Apache 2.0) have no such threshold.
 - **…you want rendering as a service.** Remocn is not hosted: there is no account and no render service. You
-  render wherever you run Remotion. Shotstack and Creatomate render on their servers.
+  render wherever you run Remotion. Shotstack, Creatomate and JSON2Video render on their servers, and Plainly
+  renders After Effects templates on its own.
 - **…you animate maths.** Manim is built for equations, graphs and geometry.
 
 ## Building After Effects-style videos with an AI agent
@@ -177,10 +271,14 @@ on November 11, 2026.
 - Remotion licence and pricing: [remotion.dev/docs/license](https://www.remotion.dev/docs/license) and its license FAQ. Stars and v4.0.542: [github.com/remotion-dev/remotion](https://github.com/remotion-dev/remotion)
 - Motion Canvas: [motioncanvas.io](https://motioncanvas.io) and [github.com/motion-canvas/motion-canvas](https://github.com/motion-canvas/motion-canvas). Latest stable release v3.17.2, December 14, 2024
 - Revideo: [github.com/midrender/revideo](https://github.com/midrender/revideo) (redirected from redotvideo/revideo); re.video redirects to midrender.com/revideo. Version 0.11.0 from [npmjs.com/package/@revideo/core](https://www.npmjs.com/package/@revideo/core)
-- HyperFrames: [github.com/heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) and its releases page
+- HyperFrames: [github.com/heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) and its releases page. HyperFrames vs Remotion section (checked November 17, 2026): the HyperFrames README, HeyGen's [HyperFrames vs Remotion guide](https://hyperframes.heygen.com/guides/hyperframes-vs-remotion) for the benchmark, and [openskills.app/guides/hyperframes-vs-remotion](https://openskills.app/guides/hyperframes-vs-remotion)
 - Manim: [manim.community](https://www.manim.community) and [github.com/ManimCommunity/manim](https://github.com/ManimCommunity/manim)
 - FFmpeg: [ffmpeg.org/legal.html](https://ffmpeg.org/legal.html); stars and tags from the [GitHub mirror](https://github.com/FFmpeg/FFmpeg)
 - Lottie: [github.com/airbnb/lottie-web](https://github.com/airbnb/lottie-web), tag v5.13.0
+- MoviePy (checked November 19, 2026): [github.com/Zulko/moviepy](https://github.com/Zulko/moviepy) and [pypi.org/project/moviepy](https://pypi.org/project/moviepy/), version 2.2.1
+- Editly (checked November 19, 2026): [github.com/mifi/editly](https://github.com/mifi/editly), last commit February 20, 2025, and [npmjs.com/package/editly](https://www.npmjs.com/package/editly), version 0.14.2; v0.15.0-rc.1 on GitHub is a release candidate
+- JSON2Video (checked November 19, 2026): [json2video.com/pricing](https://json2video.com/pricing/)
+- Plainly (checked November 19, 2026): [plainlyvideos.com/pricing](https://www.plainlyvideos.com/pricing), including its FAQ on After Effects and rendering
 - Shotstack: [shotstack.io/pricing](https://shotstack.io/pricing/)
 - Creatomate: [creatomate.com/pricing](https://creatomate.com/pricing)
 - snapcn: [snapcn.dev](https://snapcn.dev) footer and [snapcn.dev/docs/pricing](https://snapcn.dev/docs/pricing)
@@ -191,10 +289,16 @@ on November 11, 2026.
 <Faq>
 
 **What are the programmatic video alternatives to After Effects for developers?**
-Remotion (React), Motion Canvas and Revideo (TypeScript), HyperFrames (HTML and CSS), Manim (Python), FFmpeg for editing footage on the command line, Lottie for playing After Effects exports in code, and hosted APIs such as Shotstack and Creatomate. Remocn adds 932 MIT-licensed components on top of Remotion.
+Remotion (React), Motion Canvas and Revideo (TypeScript), HyperFrames (HTML and CSS), Manim and MoviePy (Python), Editly (JSON on FFmpeg), FFmpeg for editing footage on the command line, Lottie for playing After Effects exports in code, hosted APIs such as Shotstack, Creatomate and JSON2Video, and Plainly for rendering After Effects templates through an API. Remocn adds 934 MIT-licensed components on top of Remotion.
 
 **Which programmatic video tool has the most GitHub stars?**
-On November 11, 2026: HyperFrames (82.5k), Remotion (72.4k), FFmpeg's GitHub mirror (67.0k), Manim (42.4k), lottie-web (32.4k), Motion Canvas (19.8k), Revideo (4.2k) and Remocn (1.7k). Stars measure attention, not whether a tool fits your project.
+On November 11, 2026: HyperFrames (82.5k), Remotion (72.4k), FFmpeg's GitHub mirror (67.0k), Manim (42.4k), lottie-web (32.4k), Motion Canvas (19.8k), Revideo (4.2k) and Remocn (1.7k). On November 19, 2026, MoviePy had 15.2k and Editly 5.6k. Stars measure attention, not whether a tool fits your project.
+
+**What are the best alternatives to Remotion?**
+It depends on why you are leaving. For the licence: Revideo or Motion Canvas (MIT, TypeScript) or HyperFrames (Apache 2.0, HTML and CSS). Without React: HyperFrames, Manim or MoviePy for Python, or Editly for a JSON spec. For hosted rendering: Shotstack, Creatomate or JSON2Video, or Plainly if your templates are in After Effects. Remocn is not a Remotion alternative; it adds components to a Remotion project.
+
+**Is there an open-source alternative to Remotion?**
+Yes. Remotion itself is source-available, not open source. Revideo, Motion Canvas, Manim, MoviePy and Editly are MIT, and HyperFrames is Apache 2.0. Remocn is MIT too, but it needs Remotion, so it does not remove Remotion's licence.
 
 **What is the difference between Remotion and Remocn?**
 Remotion is the framework: it renders React components to video. Remocn is a component registry that adds to Remotion. It ships text effects, transitions, backgrounds, camera shots, UI simulations and templates as source files that you install with `npx shadcn@latest add @remocn/<name>`. You need both: Remocn has no renderer of its own.
@@ -213,6 +317,12 @@ Under MIT, Motion Canvas and Revideo for TypeScript, Manim for Python. Under Apa
 
 **Can I use my After Effects animations in code?**
 Yes, through Lottie. Export the animation as JSON with the Bodymovin plugin and play it with lottie-web, or inside a Remotion video with `@remotion/lottie`. Lottie does not support video, audio or image sequences in the export.
+
+**HyperFrames vs Remotion: which should I use?**
+HyperFrames if you want to write video as plain HTML and CSS with no build step, or need Apache 2.0 at any company size. Remotion if your team writes React and TypeScript and wants its larger ecosystem and Remotion Lambda; it is free for teams of up to 3 people and paid above that. Both render with headless Chrome and FFmpeg and both have agent skills.
+
+**Is there an alternative to HyperFrames for React or Remotion?**
+Yes: Remotion with Remocn. HyperFrames pairs an HTML framework with a block registry and agent skills; Remocn gives Remotion the same pair, with 934 MIT components installed by `npx shadcn@latest add @remocn/<name>`, an agent skill, a Claude Code / Codex plugin and a free MCP server.
 
 **Do I still need After Effects with Remocn?**
 No. Everything happens in your code editor and Remotion Studio's browser preview.

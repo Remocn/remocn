@@ -1,11 +1,11 @@
 "use client";
 
+import { interpolate, Sequence } from "remotion";
 import {
-  interpolate,
-  Sequence,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
 
 export type TerminalLineType = "command" | "log" | "success" | "error";
 
@@ -77,8 +77,10 @@ export function TerminalSimulator({
   speed = 1,
   className,
 }: TerminalSimulatorProps) {
-  const frame = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
+  // A `<Sequence>` starts on one of the composition's own frames.
+  const toFrames = useCompositionFrames();
 
   const lineHeight = Math.round(fontSize * 1.6);
   const visibleLines = 8;
@@ -184,7 +186,7 @@ export function TerminalSimulator({
             {lines.map((line, index) => (
               <Sequence
                 key={index}
-                from={Math.round(starts[index] / speed)}
+                from={toFrames(starts[index] / speed)}
                 layout="none"
               >
                 <TerminalLineRow
@@ -239,7 +241,7 @@ function TerminalLineRow({
   fps: number;
   speed: number;
 }) {
-  const localFrame = useCurrentFrame() * speed;
+  const localFrame = useSceneFrame() * speed;
   const totalChars = line.text.length;
 
   // Chunked reveal: Math.floor of an interpolated count, then snapped to the

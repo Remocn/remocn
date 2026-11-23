@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const waveformTitleConfig: ComponentConfig = {
   componentName: "WaveformTitle",
@@ -12,11 +18,6 @@ export const waveformTitleConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -32,6 +33,21 @@ export const waveformTitleConfig: ComponentConfig = {
       description: "Accent words",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Instrument Sans", grain: true }),
     speed: {
       type: "number",
       default: 1,

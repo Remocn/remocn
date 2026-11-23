@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/InterTight";
+import type React from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -8,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const face = loadFont("normal", {
   weights: ["300", "400"],
@@ -26,6 +27,20 @@ export interface CaretLetterProps {
   subline?: string;
   /** Colour of the caret, and of the letter it becomes. */
   accent?: string;
+  /** Text color of the word; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  /** Weight of the word. */
+  fontWeight?: number;
+  /** Frames the caret takes to type the word; later beats shift with it. */
+  typeLength?: number;
+  /** Size of the word, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -52,6 +67,10 @@ const OPEN_LEN = 24;
 const MORPH = 134;
 const MORPH_LEN = 16;
 const SUB = 150;
+
+// Letters scale in and the subline rises by a transform; the shared glide
+// mark leans their text off the pixel grid while a progress is midway.
+const moving = (p: number) => p > 0 && p < 1;
 
 /** Caret proportions in em. */
 const CARET_W = 0.02;
@@ -131,17 +150,49 @@ function sameLayout(a: Layout | null, b: Layout) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CaretLetter({
   word = "launch",
   stemIndex = 0,
   subline = "Animated components for your next release.",
   accent = "#3B5BFD",
+  ink: inkProp,
+  background,
+  fontFamily = face.fontFamily,
+  fontWeight = 300,
+  typeLength = TYPE_LEN,
+  scale = 1,
+  delay = 0,
   theme = "light",
   speed = 1,
 }: CaretLetterProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const glide = useGlide();
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
+  const fg = inkProp ?? t.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? t.bg);
+  const shift = typeLength - TYPE_LEN;
+  const slideAt = SLIDE + shift;
+  const openAt = OPEN + shift;
+  const morphAt = MORPH + shift;
+  const subAt = SUB + shift;
 
   const letters = Array.from(word);
   const stem = Math.max(0, Math.min(letters.length - 1, stemIndex));
@@ -149,9 +200,9 @@ export function CaretLetter({
   const fontSize = Math.round(width * 0.15);
   const subSize = Math.round(width * 0.0165);
   const textStyle = {
-    fontFamily: face.fontFamily,
+    fontFamily,
     fontSize,
-    fontWeight: 300,
+    fontWeight,
     letterSpacing: "-0.035em",
     lineHeight: LINE_HEIGHT,
     whiteSpace: "pre",
@@ -169,6 +220,8 @@ export function CaretLetter({
     let live = true;
     face
       .waitUntilDone()
+      .catch(() => undefined)
+      .then(() => document.fonts.load(`${fontWeight} 100px "${fontFamily}"`))
       .catch(() => undefined)
       .then(() => document.fonts.ready)
       .then(() => {
@@ -190,12 +243,12 @@ export function CaretLetter({
           };
           const f = origins(fullRow);
           const ty = origins(typedRow);
-          const family = face.fontFamily.includes('"')
-            ? face.fontFamily
-            : `"${face.fontFamily}"`;
+          const family = fontFamily.includes('"')
+            ? fontFamily
+            : `"${fontFamily}"`;
           const ink = measureInk(
             letters[stem] ?? "l",
-            `300 {size} ${family}`,
+            `${fontWeight} {size} ${family}`,
             fontSize,
           ) ?? {
             left: fontSize * 0.06,
@@ -222,7 +275,7 @@ export function CaretLetter({
     return () => {
       live = false;
     };
-  }, [word, stem, fontSize, handle]);
+  }, [word, stem, fontSize, handle, fontFamily, fontWeight]);
 
   const L = layout;
   const gap = fontSize * 0.05;
@@ -230,7 +283,7 @@ export function CaretLetter({
 
   // Typing: the caret sweeps right, letters grow in its wake.
   const typeX = (f: number) =>
-    interpolate(f, [TYPE, TYPE + TYPE_LEN], [0, typedEnd], {
+    interpolate(f, [TYPE, TYPE + typeLength], [0, typedEnd], {
       ...clamp,
       easing: EASE_TYPE,
     });
@@ -240,21 +293,21 @@ export function CaretLetter({
   const letterIn = typedLetters.map((_, j) => {
     const left = L?.typed[j] ?? 0;
     const edge = typedRight(j) - (typedRight(j) - left) * 0.1;
-    for (let f = TYPE; f <= TYPE + TYPE_LEN; f++)
+    for (let f = TYPE; f <= TYPE + typeLength; f++)
       if (typeX(f) >= edge) return f - 2;
-    return TYPE + TYPE_LEN;
+    return TYPE + typeLength;
   });
 
   // Slide home: the caret runs back into the word, the letters part for it.
-  const slide = interpolate(frame, [SLIDE, SLIDE + SLIDE_LEN], [0, 1], {
+  const slide = interpolate(frame, [slideAt, slideAt + SLIDE_LEN], [0, 1], {
     ...clamp,
     easing: EASE_IN_OUT,
   });
-  const open = interpolate(frame, [OPEN, OPEN + OPEN_LEN], [0, 1], {
+  const open = interpolate(frame, [openAt, openAt + OPEN_LEN], [0, 1], {
     ...clamp,
     easing: EASE_IN_OUT,
   });
-  const morph = interpolate(frame, [MORPH, MORPH + MORPH_LEN], [0, 1], {
+  const morph = interpolate(frame, [morphAt, morphAt + MORPH_LEN], [0, 1], {
     ...clamp,
     easing: EASE_OUT,
   });
@@ -269,7 +322,7 @@ export function CaretLetter({
       ? interpolate(open, [0, 1], [L?.typed[stem] ?? 0, stemCx])
       : stemCx;
   const caretX =
-    frame < SLIDE
+    frame < slideAt
       ? typeX(frame)
       : interpolate(slide, [0, 1], [typedEnd, caretHome]);
 
@@ -294,7 +347,7 @@ export function CaretLetter({
   const blink =
     frame < TYPE
       ? blinkAt(frame, 8, TYPE - 4)
-      : blinkAt(frame, TYPE + TYPE_LEN + 2, SLIDE - 2);
+      : blinkAt(frame, TYPE + typeLength + 2, slideAt - 2);
 
   // Caret geometry, morphing into the stem of the letter.
   const baseline = L?.baseline ?? 0;
@@ -314,17 +367,39 @@ export function CaretLetter({
     [baseline + fontSize * CARET_DOWN, baseline + ink.bottom],
   );
 
-  const subP = interpolate(frame, [SUB, SUB + 30], [0, 1], {
+  const subP = interpolate(frame, [subAt, subAt + 30], [0, 1], {
     ...clamp,
     easing: EASE_OUT,
   });
 
   const rowH = L?.rowH ?? fontSize * LINE_HEIGHT;
-  const left = width / 2 - centre;
+  // The row is laid out at the centre it rests at nearest in time, and the
+  // drift between rests is a transform: layout rounds the caret box to whole
+  // pixels, so a row eased by `left` makes it click along.
+  const restCentre =
+    frame < slideAt
+      ? typingCentre < typedEnd / 4
+        ? 0
+        : typedEnd / 2
+      : slide < 0.5
+        ? typedEnd / 2
+        : fullCentre;
+  const left = width / 2 - restCentre;
+  const drift = restCentre - centre;
+  // The caret the same way, laid out where it rests nearest in time.
+  const caretRest =
+    frame < slideAt
+      ? typeX(frame) < typedEnd / 2
+        ? 0
+        : typedEnd
+      : slide < 0.5
+        ? typedEnd
+        : stemCx;
+  const caretRun = caretX - caretRest;
   const top = height / 2 - rowH / 2 - height * 0.035;
 
   return (
-    <AbsoluteFill style={{ background: t.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       {/* measuring rows: never shown */}
       <div style={{ position: "absolute", visibility: "hidden", top: 0 }}>
         <div ref={fullRef} style={{ ...textStyle, display: "inline-block" }}>
@@ -348,82 +423,90 @@ export function CaretLetter({
         </div>
       </div>
 
-      <div
-        style={{
-          position: "absolute",
-          left,
-          top,
-          width: 0,
-          height: rowH,
-          opacity: L ? 1 : 0,
-        }}
-      >
-        {typedLetters.map((ch, j) => {
-          const p = interpolate(
-            frame,
-            [letterIn[j] ?? TYPE, (letterIn[j] ?? TYPE) + LETTER_LEN],
-            [0, 1],
-            { ...clamp, easing: EASE_OUT },
-          );
-          const fullIndex = j < stem ? j : j + 1;
-          const x = interpolate(
-            open,
-            [0, 1],
-            [L?.typed[j] ?? 0, L?.full[fullIndex] ?? 0],
-          );
-          return (
-            <span
-              key={j}
-              style={{
-                ...textStyle,
-                position: "absolute",
-                left: x,
-                top: 0,
-                color: t.fg,
-                opacity: p,
-                filter: p < 1 ? `blur(${(1 - p) * 8}px)` : undefined,
-                transformOrigin: `0px ${baseline}px`,
-                transform: `scale(${0.6 + 0.4 * p})`,
-              }}
-            >
-              {ch}
-            </span>
-          );
-        })}
-
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: caretX - caretW / 2,
-            top: caretTop,
-            width: caretW,
-            height: caretBottom - caretTop,
-            background: accent,
-            borderRadius: interpolate(morph, [0, 1], [caretW / 2, 0]),
-            opacity: caretIn * blink,
-          }}
-        />
-
-        <div
-          style={{
-            position: "absolute",
-            left: (L?.fullW ?? 0) / 2,
-            top: rowH + fontSize * 0.02,
-            transform: `translate(-50%, ${(1 - subP) * 12}px)`,
-            whiteSpace: "nowrap",
-            fontFamily: face.fontFamily,
-            fontWeight: 400,
-            fontSize: subSize,
-            letterSpacing: "-0.005em",
-            lineHeight: 1.4,
-            color: t.muted,
-            opacity: subP,
-            filter: `blur(${(1 - subP) * 8}px)`,
+            left,
+            top,
+            width: 0,
+            height: rowH,
+            opacity: L ? 1 : 0,
+            transform:
+              Math.abs(drift) < 1e-3 ? undefined : `translateX(${drift}px)`,
           }}
         >
-          {subline}
+          {typedLetters.map((ch, j) => {
+            const p = interpolate(
+              frame,
+              [letterIn[j] ?? TYPE, (letterIn[j] ?? TYPE) + LETTER_LEN],
+              [0, 1],
+              { ...clamp, easing: EASE_OUT },
+            );
+            const fullIndex = j < stem ? j : j + 1;
+            const x = interpolate(
+              open,
+              [0, 1],
+              [L?.typed[j] ?? 0, L?.full[fullIndex] ?? 0],
+            );
+            return (
+              <span
+                key={j}
+                style={{
+                  ...textStyle,
+                  position: "absolute",
+                  left: x,
+                  top: 0,
+                  color: fg,
+                  opacity: p,
+                  filter: p < 1 ? `blur(${(1 - p) * 8}px)` : undefined,
+                  transformOrigin: `0px ${baseline}px`,
+                  transform: `scale(${0.6 + 0.4 * p})${glide(moving(p))}`,
+                }}
+              >
+                {ch}
+              </span>
+            );
+          })}
+
+          <div
+            style={{
+              position: "absolute",
+              left: caretRest - caretW / 2,
+              top: caretTop,
+              transform:
+                Math.abs(caretRun) < 1e-3
+                  ? undefined
+                  : `translateX(${caretRun}px)`,
+              width: caretW,
+              height: caretBottom - caretTop,
+              background: accent,
+              borderRadius: interpolate(morph, [0, 1], [caretW / 2, 0]),
+              opacity: caretIn * blink,
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              left: (L?.fullW ?? 0) / 2,
+              top: rowH + fontSize * 0.02,
+              transform: `translate(-50%, ${(1 - subP) * 12}px)${glide(moving(subP))}`,
+              whiteSpace: "nowrap",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: subSize,
+              letterSpacing: "-0.005em",
+              lineHeight: 1.4,
+              color: t.muted,
+              opacity: subP,
+              filter: `blur(${(1 - subP) * 8}px)`,
+            }}
+          >
+            {subline}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

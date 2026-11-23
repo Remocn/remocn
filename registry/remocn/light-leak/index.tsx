@@ -5,7 +5,8 @@ import type {
   TransitionPresentationComponentProps,
 } from "@remotion/transitions";
 import type React from "react";
-import { AbsoluteFill, Easing, interpolate, useVideoConfig } from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 
 export type LightLeakOrigin = "left" | "right" | "top" | "bottom";
 
@@ -49,7 +50,7 @@ function Leak({
   origin: LightLeakOrigin;
   intensity: number;
 }) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const k = heat(p) * intensity;
   const span = Math.max(width, height);
   const drift = interpolate(p, [0, 1], [-0.25, 1.05], {

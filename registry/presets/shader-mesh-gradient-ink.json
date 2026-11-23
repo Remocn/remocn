@@ -1,0 +1,92 @@
+{
+  "component": "shader-mesh-gradient-ink",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-ink",
+      "label": "Still Ink",
+      "description": "Barely moving ink folds with soft, gentle bends for a calm editorial backdrop.",
+      "askedAs": [
+        "slow calm dark background",
+        "almost static ink texture",
+        "subtle moving charcoal backdrop",
+        "медленный спокойный тёмный фон",
+        "почти неподвижные чернила"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.5,
+        "swirl": 0.1
+      }
+    },
+    {
+      "id": "ink-vortex",
+      "label": "Ink Vortex",
+      "description": "Charcoal and silver curl into deep, spiraling eddies that drift at a measured pace.",
+      "askedAs": [
+        "swirling ink background",
+        "spiral monochrome gradient",
+        "ink twisting in water",
+        "закрученные чернила фон",
+        "вихрь серых чернил"
+      ],
+      "props": {
+        "swirl": 0.85,
+        "distortion": 1.2,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "liquid-rush",
+      "label": "Liquid Rush",
+      "description": "Fast, energetic ink currents with heavy warping for a high-tempo sequence.",
+      "askedAs": [
+        "fast flowing ink",
+        "energetic dark liquid background",
+        "quick moving smoke texture",
+        "быстрые текущие чернила",
+        "энергичный тёмный фон"
+      ],
+      "props": {
+        "speed": 2.5,
+        "distortion": 1.5,
+        "swirl": 0.4
+      }
+    },
+    {
+      "id": "smooth-sheets",
+      "label": "Smooth Sheets",
+      "description": "Broad, nearly flat bands of grey glide slowly like brushed metal.",
+      "askedAs": [
+        "smooth minimal gray gradient",
+        "clean flat silver backdrop",
+        "soft metal sheen background",
+        "гладкий серый градиент",
+        "минималистичный серебристый фон"
+      ],
+      "props": {
+        "distortion": 0.15,
+        "swirl": 0,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "restless-folds",
+      "label": "Restless Folds",
+      "description": "Moderately quick, tightly folded ink with a lively twist but no full spirals.",
+      "askedAs": [
+        "busy folded ink texture",
+        "lively monochrome motion",
+        "crumpled silver gradient",
+        "живые складки чернил",
+        "подвижный монохромный фон"
+      ],
+      "props": {
+        "speed": 1.75,
+        "distortion": 0.8,
+        "swirl": 0.6
+      }
+    }
+  ]
+}

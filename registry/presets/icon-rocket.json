@@ -1,0 +1,101 @@
+{
+  "component": "icon-rocket",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "launch-hero",
+      "label": "Launch Hero",
+      "description": "A large, bold rocket that draws itself in and then lifts off at a measured pace.",
+      "askedAs": [
+        "big rocket for a launch announcement",
+        "large bold rocket icon",
+        "hero rocket animation",
+        "большая ракета для анонса запуска",
+        "крупная жирная иконка ракеты"
+      ],
+      "props": {
+        "size": 160,
+        "strokeWidth": 2.75,
+        "color": "#1f2937",
+        "animation": "both",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "blueprint-sketch",
+      "label": "Blueprint Sketch",
+      "description": "A thin, slate-blue line drawing that slowly traces the rocket outline like a technical sketch.",
+      "askedAs": [
+        "thin line rocket drawing",
+        "slow sketch of a rocket",
+        "blueprint style rocket outline",
+        "тонкий контур ракеты рисуется медленно",
+        "ракета в стиле чертежа"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "color": "#2f5d8a",
+        "speed": 0.5,
+        "size": 96
+      }
+    },
+    {
+      "id": "rapid-liftoff",
+      "label": "Rapid Liftoff",
+      "description": "A small, punchy rocket in warm orange that blasts off quickly and repeats.",
+      "askedAs": [
+        "fast looping rocket",
+        "quick rocket takeoff icon",
+        "energetic orange rocket",
+        "быстрая ракета в цикле",
+        "оранжевая ракета быстро взлетает"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 2,
+        "color": "#e8590c",
+        "size": 64
+      }
+    },
+    {
+      "id": "calm-orbit",
+      "label": "Calm Orbit",
+      "description": "A muted teal rocket gently looping its motion at a relaxed tempo for ambient backgrounds.",
+      "askedAs": [
+        "slow looping rocket for background",
+        "calm rocket animation",
+        "subtle teal rocket loop",
+        "спокойная ракета на фоне",
+        "медленная зацикленная ракета"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 0.5,
+        "color": "#0f766e",
+        "strokeWidth": 1.5
+      }
+    },
+    {
+      "id": "inline-badge",
+      "label": "Inline Badge",
+      "description": "A compact, heavy-stroked violet rocket that draws in fast, sized for inline text and buttons.",
+      "askedAs": [
+        "tiny rocket icon for a button",
+        "small rocket next to text",
+        "compact quick rocket badge",
+        "маленькая иконка ракеты для кнопки",
+        "крошечная ракета рядом с текстом"
+      ],
+      "props": {
+        "size": 28,
+        "strokeWidth": 2.5,
+        "color": "#5b4bc4",
+        "speed": 1.5
+      }
+    }
+  ]
+}

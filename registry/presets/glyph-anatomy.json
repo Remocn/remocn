@@ -1,0 +1,110 @@
+{
+  "component": "glyph-anatomy",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "specimen-slow",
+      "label": "Type Specimen",
+      "description": "Large, slow build with points left on the finished glyphs like a printed specimen sheet.",
+      "askedAs": [
+        "slow detailed letter construction",
+        "show the anchors on the final word",
+        "type specimen style build",
+        "медленное построение букв с точками",
+        "оставить точки на буквах"
+      ],
+      "props": {
+        "fontSize": 280,
+        "speed": 0.5,
+        "keepPoints": true
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "Fast, compact build that flashes the scaffolding and snaps to the clean word.",
+      "askedAs": [
+        "fast font editor reveal",
+        "quick glyph build for a short intro",
+        "snappy letters from curves",
+        "быстрая сборка букв",
+        "короткая анимация шрифта"
+      ],
+      "props": {
+        "speed": 2.5,
+        "fontSize": 160
+      }
+    },
+    {
+      "id": "warm-draft",
+      "label": "Warm Draft",
+      "description": "Cream glyphs with amber points for a softer, drafting-table feel.",
+      "askedAs": [
+        "warm colored bezier handles",
+        "orange points cream letters",
+        "less techy font construction",
+        "тёплые цвета для сборки шрифта",
+        "оранжевые точки и кремовые буквы"
+      ],
+      "props": {
+        "color": "#f3ead8",
+        "guideColor": "#e8913a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "minimal-outline",
+      "label": "Clean Points",
+      "description": "No metric guides, just mint anchors and handles shaping the letters.",
+      "askedAs": [
+        "hide the guide lines",
+        "only points and curves no grid",
+        "minimal glyph building",
+        "без направляющих линий",
+        "только точки и кривые"
+      ],
+      "props": {
+        "guides": false,
+        "guideColor": "#3ecf8e",
+        "fontSize": 220
+      }
+    },
+    {
+      "id": "blueprint-detail",
+      "label": "Blueprint",
+      "description": "Pale blue glyphs with coral points kept visible, like an annotated technical drawing.",
+      "askedAs": [
+        "blueprint style lettering",
+        "technical drawing of a word",
+        "keep construction visible blue",
+        "чертёж букв",
+        "техническая схема шрифта"
+      ],
+      "props": {
+        "color": "#cfe3ff",
+        "guideColor": "#ff6b5b",
+        "keepPoints": true,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "mono-headline",
+      "label": "Mono Headline",
+      "description": "Huge white word with grey scaffolding for a restrained monochrome title.",
+      "askedAs": [
+        "big black and white title build",
+        "grey guides monochrome",
+        "giant letters constructed",
+        "большой монохромный заголовок",
+        "серые направляющие и белые буквы"
+      ],
+      "props": {
+        "fontSize": 320,
+        "guideColor": "#8a8f98",
+        "color": "#ffffff",
+        "speed": 1.25
+      }
+    }
+  ]
+}

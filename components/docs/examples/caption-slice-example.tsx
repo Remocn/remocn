@@ -1,7 +1,8 @@
 "use client";
 
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { previewCaptions } from "@/components/docs/examples/caption-fixture";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { CaptionSlice } from "@/registry/remocn/caption-slice";
 
 interface CaptionSliceExampleProps {
@@ -25,7 +26,7 @@ export function CaptionSliceExampleScene({
   holdMs,
   shadow,
 }: CaptionSliceExampleProps) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   return (
     <AbsoluteFill
       style={{

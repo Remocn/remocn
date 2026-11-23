@@ -1,0 +1,25 @@
+---
+title: Steady motion
+date: 2026-11-20
+---
+
+Slow moves used to tremble. A line of text held still for a few frames, then jumped a whole pixel, and the lines of one block jumped on different frames. Every preview was measured frame by frame, at full size and at the size of a small player: 529 of them had the shake, and 527 now move without it. Timing, easing and distances are the same as before.
+
+<ChangelogPreview name="channel-reactions" />
+
+### Fixes
+
+- **Text under a slow scale or slide glides.** Chrome draws glyphs on whole pixels for as long as a transform is axis-aligned, so a slow push or a settling spring moved text one pixel at a time. A block of text under a moving transform now leans by an angle too small to see, about 0.03° at full size, and Chrome places it between pixels. Only the text leans: cards, hairlines and images stay level.
+- **It holds at any size.** The angle is worked out from the size each block of text really has on the screen, so the fix works in a small player, in a thumbnail, in a scene placed inside another scene and in a render at `--scale 2`.
+- **No snap at a stop.** Text that comes to rest between pixels keeps its lean, so it no longer drops onto the nearest pixel when it stops and jumps back when it moves again. Where text rests on whole pixels, a frame at rest is drawn exactly as before.
+- **Faster moves step evenly.** Text that travelled between half a pixel and two pixels a frame still landed on whole pixels, so its steps came out uneven: 1, 1, 0, 1 for a true 0.75. It glides at any speed now.
+- **Blocks and lines moved by layout glide too.** Anything eased by `top`, `left`, a margin or a growing neighbour is now laid out where it ends up and travels there by transform, for its whole life.
+- **Chats and feeds that stick to the bottom hold steady.** In [Channel Reactions](/docs/product-scenes/channel-reactions), [AI Answer Sources](/docs/product-scenes/ai-answer-sources), [Voice Agent](/docs/product-scenes/voice-agent) and [Prompt to App](/docs/product-scenes/prompt-to-app), a message or a block that opens no longer pushes the lines above it up pixel by pixel.
+- **Transitions carry their scenes smoothly.** A scene inside a scale or a slide transition no longer shakes on the way in or out.
+- **A render no longer depends on how many tabs draw it.** Some components moved text on a `will-change: transform` layer. Such a layer is drawn once and then slid, so a frame depended on the frames its tab drew before, and `npx remotion render` splits the frames over several tabs: neighbouring frames could sit a pixel apart. Text no longer rides such a layer.
+
+The lean comes from one small shared file, `glide`, which the affected components now bring with them.
+
+Small text still moves on Chrome's quarter-pixel grid. A render at `--scale 2` halves that step.
+
+Your project owns its copy of each component, so run `npx shadcn add remocn/<name> --overwrite` for the ones you have installed to pick up the fix.

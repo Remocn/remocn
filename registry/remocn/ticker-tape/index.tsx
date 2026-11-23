@@ -5,13 +5,9 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/Oswald";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -70,6 +66,20 @@ export interface TickerTapeProps {
   /** Replaces the logo / name under the poster. */
   logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the symbols and name; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the symbols and name. Load it yourself; Oswald by default. */
+  fontFamily?: string;
+  /** Status next to the name under the poster. */
+  label?: string;
+  /** Strength of the motion smear on the running bands; 0 turns it off. */
+  blur?: number;
+  /** Size of the bands and poster, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -265,7 +275,9 @@ function QuoteView({
   muted,
   upFill,
   downFill,
+  fontFamily,
 }: {
+  fontFamily: string;
   q: Quote;
   x: number;
   baseline: number;
@@ -311,7 +323,7 @@ function QuoteView({
         x={x}
         y={baseline}
         fill={fg}
-        fontFamily={display}
+        fontFamily={fontFamily}
         fontWeight={500}
         fontSize={fs}
       >
@@ -327,6 +339,28 @@ function QuoteView({
         </text>
       </g>
     </g>
+  );
+}
+
+// Chrome parks a glyph raster on a whole pixel vertically for as long as the
+// matrix is axis-aligned, so text under a slow transform clicks along pixel by
+// pixel. The transforms that carry text are marked, so it leans off that grid
+// while they move; SVG text can't carry the mark itself, so the drawing does.
+const midway = (p: number) => p > 0 && p < 1;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
   );
 }
 
@@ -353,13 +387,24 @@ export function TickerTape({
   name = "remocn",
   logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  label = "MARKET CLOSE",
+  blur = 1,
+  scale: zoom = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: TickerTapeProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const heroSym = symbol.trim().toUpperCase() || "RMCN";
 
@@ -416,10 +461,12 @@ export function TickerTape({
   const heroQ = heroRow.placed.find((q) => q.hero) as Placed;
 
   // poster scale and position
-  const rise = interpolate(t, [RISE_AT, RISE_AT + RISE_LEN], [0, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.7, 0, 0.2, 1),
-  });
+  const riseAt = (f: number) =>
+    interpolate(f, [RISE_AT, RISE_AT + RISE_LEN], [0, 1], {
+      ...CLAMP,
+      easing: Easing.bezier(0.7, 0, 0.2, 1),
+    });
+  const rise = riseAt(t);
   const posterScale = Math.min((W * 0.74) / heroQ.w, (H * 0.36) / heroRow.fs);
   const scale = 1 + (posterScale - 1) * rise;
   const heroBaseline0 = baselines[heroRowIdx];
@@ -427,10 +474,12 @@ export function TickerTape({
   const heroCy1 = H * 0.46;
   const heroCy = heroCy0 + (heroCy1 - heroCy0) * rise;
 
-  const clear = interpolate(t, [RISE_AT - 4, RISE_AT + 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IN,
-  });
+  const clearAt = (f: number) =>
+    interpolate(f, [RISE_AT - 4, RISE_AT + 20], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IN,
+    });
+  const clear = clearAt(t);
   const caption = (d: number) =>
     interpolate(
       t,
@@ -448,7 +497,7 @@ export function TickerTape({
   const upFill = `url(#${upId})`;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       {/* aurora glow lands under the poster */}
       <AbsoluteFill
         style={{
@@ -461,239 +510,257 @@ export function TickerTape({
             .join(", "),
         }}
       />
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        role="img"
-        aria-label={`${heroSym} ${price} ${change >= 0 ? "up" : "down"} ${fmtChg(change)}`}
-      >
-        <defs>
-          <linearGradient id={upId} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor={p.up[0]} />
-            <stop offset="1" stopColor={p.up[1]} />
-          </linearGradient>
-          <clipPath id={`${uid}stage`}>
-            <rect
-              x={0}
-              y={baselines[0] + gaps[0] / 2}
-              width={W}
-              height={
-                baselines[rows.length - 1] -
-                heights[rows.length - 1] -
-                gaps[rows.length - 2] / 2 -
-                (baselines[0] + gaps[0] / 2)
-              }
-            />
-          </clipPath>
-          {rows.map((r, i) => {
-            const v = speedAt(
-              t,
-              r.v * u,
-              r.hero ? STOP_AT : STOP_AT - 8 + i * 3,
-              r.hero ? 0 : 0.12,
-            );
-            return (
-              <filter
-                key={`blur${r.size}${r.dir}${r.v}`}
-                id={`${uid}blur${i}`}
-                x="-5%"
-                y="-50%"
-                width="110%"
-                height="200%"
-              >
-                <feGaussianBlur stdDeviation={`${(v * 0.2).toFixed(2)} 0`} />
-              </filter>
-            );
-          })}
-        </defs>
-
-        {rows.map((r, i) => {
-          const stopAt = r.hero ? STOP_AT : STOP_AT - 8 + i * 3;
-          const rest = r.hero ? 0 : r.kind === "mono" ? 0.35 : 0.12;
-          const D = travel(t, r.v * u, stopAt, rest);
-          // the hero row is offset so the hero quote lands dead centre
-          const Dstop = travel(stopAt + 1000, r.v * u, stopAt, 0);
-          const x0 = r.hero
-            ? W / 2 - (heroQ.x + heroQ.w / 2) - r.dir * Dstop
-            : -hash(i * 3.3) * r.period;
-          const shift = x0 + r.dir * D;
-          const off = ((shift % r.period) + r.period) % r.period;
-          const baseline = baselines[i];
-          // side bands clear: upper ones up, lower ones down
-          const away =
-            r.kind === "mono" || r.hero
-              ? 0
-              : (i < heroRowIdx ? -1 : 1) * clear * H * 0.55;
-          const fade = r.kind === "mono" ? 1 - 0.35 * clear : 1 - clear;
-          const copies = [-1, 0, 1, 2];
-          return (
-            <g
-              key={`row${r.size}${r.dir}${r.v}`}
-              clipPath={r.kind === "mono" ? undefined : `url(#${uid}stage)`}
-            >
-              <g opacity={fade} transform={`translate(0 ${away})`}>
-                {/* hairlines between bands, carried away by the side bands */}
-                {i !== heroRowIdx ? (
-                  <line
-                    x1={0}
-                    x2={W}
-                    y1={
-                      i < heroRowIdx
-                        ? baseline + gaps[i] / 2
-                        : baseline - heights[i] - gaps[i - 1] / 2
-                    }
-                    y2={
-                      i < heroRowIdx
-                        ? baseline + gaps[i] / 2
-                        : baseline - heights[i] - gaps[i - 1] / 2
-                    }
-                    stroke={p.rule}
-                    strokeWidth={Math.max(1, u)}
+      <ScaleLayer scale={zoom}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{
+            position: "absolute",
+            inset: 0,
+            // The bands never stop sliding, so a lean that came with the
+            // poster's rise and went with it would snap their text by up to
+            // half a pixel on the way; the drawing counts as moving always.
+            transform: glide(true),
+          }}
+          role="img"
+          aria-label={`${heroSym} ${price} ${change >= 0 ? "up" : "down"} ${fmtChg(change)}`}
+        >
+          <defs>
+            <linearGradient id={upId} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor={p.up[0]} />
+              <stop offset="1" stopColor={p.up[1]} />
+            </linearGradient>
+            <clipPath id={`${uid}stage`}>
+              <rect
+                x={0}
+                y={baselines[0] + gaps[0] / 2}
+                width={W}
+                height={
+                  baselines[rows.length - 1] -
+                  heights[rows.length - 1] -
+                  gaps[rows.length - 2] / 2 -
+                  (baselines[0] + gaps[0] / 2)
+                }
+              />
+            </clipPath>
+            {rows.map((r, i) => {
+              const v = speedAt(
+                t,
+                r.v * u,
+                r.hero ? STOP_AT : STOP_AT - 8 + i * 3,
+                r.hero ? 0 : 0.12,
+              );
+              return (
+                <filter
+                  key={`blur${r.size}${r.dir}${r.v}`}
+                  id={`${uid}blur${i}`}
+                  x="-5%"
+                  y="-50%"
+                  width="110%"
+                  height="200%"
+                >
+                  <feGaussianBlur
+                    stdDeviation={`${(v * 0.2 * blur).toFixed(2)} 0`}
                   />
-                ) : null}
-                <g filter={`url(#${uid}blur${i})`}>
-                  {copies.flatMap((c) =>
-                    r.placed.map((q) => {
-                      if (q.hero) return null;
-                      let x =
-                        q.x + c * r.period + (r.hero ? shift : off - r.period);
-                      if (r.hero) {
-                        // neighbours make room for the growing hero quote
-                        const heroX = heroQ.x + c * r.period + shift;
-                        const dirSide = x < heroX ? -1 : 1;
-                        x +=
-                          dirSide *
-                          ((scale - 1) * heroQ.w * 0.5 + rise * W * 0.12);
+                </filter>
+              );
+            })}
+          </defs>
+
+          {rows.map((r, i) => {
+            const stopAt = r.hero ? STOP_AT : STOP_AT - 8 + i * 3;
+            const rest = r.hero ? 0 : r.kind === "mono" ? 0.35 : 0.12;
+            const D = travel(t, r.v * u, stopAt, rest);
+            // the hero row is offset so the hero quote lands dead centre
+            const Dstop = travel(stopAt + 1000, r.v * u, stopAt, 0);
+            const x0 = r.hero
+              ? W / 2 - (heroQ.x + heroQ.w / 2) - r.dir * Dstop
+              : -hash(i * 3.3) * r.period;
+            const shift = x0 + r.dir * D;
+            const off = ((shift % r.period) + r.period) % r.period;
+            const baseline = baselines[i];
+            // side bands clear: upper ones up, lower ones down
+            const away =
+              r.kind === "mono" || r.hero
+                ? 0
+                : (i < heroRowIdx ? -1 : 1) * clear * H * 0.55;
+            const fade = r.kind === "mono" ? 1 - 0.35 * clear : 1 - clear;
+            const copies = [-1, 0, 1, 2];
+            return (
+              <g
+                key={`row${r.size}${r.dir}${r.v}`}
+                clipPath={r.kind === "mono" ? undefined : `url(#${uid}stage)`}
+              >
+                <g opacity={fade} transform={`translate(0 ${away})`}>
+                  {/* hairlines between bands, carried away by the side bands */}
+                  {i !== heroRowIdx ? (
+                    <line
+                      x1={0}
+                      x2={W}
+                      y1={
+                        i < heroRowIdx
+                          ? baseline + gaps[i] / 2
+                          : baseline - heights[i] - gaps[i - 1] / 2
                       }
-                      if (x > W + 20 * u || x + q.w < -20 * u) return null;
-                      return (
-                        <g key={`${c}-${q.x}`} opacity={r.hero ? 1 - rise : 1}>
-                          <QuoteView
-                            q={q}
-                            x={x}
-                            baseline={baseline}
-                            fs={r.fs}
-                            kind={r.kind}
-                            fg={p.fg}
-                            muted={p.muted}
-                            upFill={upFill}
-                            downFill={p.down}
-                          />
-                        </g>
-                      );
-                    }),
-                  )}
+                      y2={
+                        i < heroRowIdx
+                          ? baseline + gaps[i] / 2
+                          : baseline - heights[i] - gaps[i - 1] / 2
+                      }
+                      stroke={p.rule}
+                      strokeWidth={Math.max(1, u)}
+                    />
+                  ) : null}
+                  <g filter={`url(#${uid}blur${i})`}>
+                    {copies.flatMap((c) =>
+                      r.placed.map((q) => {
+                        if (q.hero) return null;
+                        let x =
+                          q.x +
+                          c * r.period +
+                          (r.hero ? shift : off - r.period);
+                        if (r.hero) {
+                          // neighbours make room for the growing hero quote
+                          const heroX = heroQ.x + c * r.period + shift;
+                          const dirSide = x < heroX ? -1 : 1;
+                          x +=
+                            dirSide *
+                            ((scale - 1) * heroQ.w * 0.5 + rise * W * 0.12);
+                        }
+                        if (x > W + 20 * u || x + q.w < -20 * u) return null;
+                        return (
+                          <g
+                            key={`${c}-${q.x}`}
+                            opacity={r.hero ? 1 - rise : 1}
+                          >
+                            <QuoteView
+                              q={q}
+                              x={x}
+                              baseline={baseline}
+                              fs={r.fs}
+                              kind={r.kind}
+                              fg={fg}
+                              fontFamily={fontFamily}
+                              muted={p.muted}
+                              upFill={upFill}
+                              downFill={p.down}
+                            />
+                          </g>
+                        );
+                      }),
+                    )}
+                  </g>
                 </g>
               </g>
-            </g>
-          );
-        })}
+            );
+          })}
 
-        {/* hero quote: rides its band, then scales into the poster */}
-        {(() => {
-          const r = heroRow;
-          const D = travel(t, r.v * u, STOP_AT, 0);
-          const Dstop = travel(STOP_AT + 1000, r.v * u, STOP_AT, 0);
-          const x0 = W / 2 - (heroQ.x + heroQ.w / 2) - r.dir * Dstop;
-          const shift = x0 + r.dir * D;
-          // nearest copy to the centre
-          const raw = heroQ.x + shift;
-          const n = Math.round((W / 2 - heroQ.w / 2 - raw) / r.period);
-          const left = raw + n * r.period;
-          const cx = left + heroQ.w / 2;
-          return (
-            <g
-              transform={`translate(${cx} ${heroCy}) scale(${scale}) translate(${-cx} ${-heroCy0})`}
-            >
-              <g filter={`url(#${uid}blur${heroRowIdx})`}>
-                <QuoteView
-                  q={heroQ}
-                  x={left}
-                  baseline={heroBaseline0}
-                  fs={r.fs}
-                  kind="big"
-                  fg={p.fg}
-                  muted={p.muted}
-                  upFill={upFill}
-                  downFill={p.down}
-                />
-              </g>
-            </g>
-          );
-        })()}
-      </svg>
-
-      {/* caption under the poster */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: heroCy1 + (CAP * heroRow.fs * posterScale) / 2 + 46 * u,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 14 * u,
-          fontFamily: mono,
-          fontSize: 15 * u,
-          letterSpacing: "0.12em",
-          color: p.muted,
-          lineHeight: 1,
-        }}
-      >
-        <div
-          style={{
-            opacity: caption(0),
-            transform: `translateY(${(1 - caption(0)) * 12 * u}px)`,
-          }}
-        >
-          {logo ??
-            (name.trim().toLowerCase() === "remocn" ? (
-              <RemocnLogo fontSize={30 * u} color={p.fg} />
-            ) : (
-              <span
-                style={{
-                  fontFamily: display,
-                  fontWeight: 500,
-                  fontSize: 30 * u,
-                  letterSpacing: "0.01em",
-                  color: p.fg,
-                }}
+          {/* hero quote: rides its band, then scales into the poster */}
+          {(() => {
+            const r = heroRow;
+            const D = travel(t, r.v * u, STOP_AT, 0);
+            const Dstop = travel(STOP_AT + 1000, r.v * u, STOP_AT, 0);
+            const x0 = W / 2 - (heroQ.x + heroQ.w / 2) - r.dir * Dstop;
+            const shift = x0 + r.dir * D;
+            // nearest copy to the centre
+            const raw = heroQ.x + shift;
+            const n = Math.round((W / 2 - heroQ.w / 2 - raw) / r.period);
+            const left = raw + n * r.period;
+            const cx = left + heroQ.w / 2;
+            return (
+              <g
+                transform={`translate(${cx} ${heroCy}) scale(${scale}) translate(${-cx} ${-heroCy0})`}
               >
-                {name}
-              </span>
-            ))}
-        </div>
+                <g filter={`url(#${uid}blur${heroRowIdx})`}>
+                  <QuoteView
+                    q={heroQ}
+                    x={left}
+                    baseline={heroBaseline0}
+                    fs={r.fs}
+                    kind="big"
+                    fg={fg}
+                    fontFamily={fontFamily}
+                    muted={p.muted}
+                    upFill={upFill}
+                    downFill={p.down}
+                  />
+                </g>
+              </g>
+            );
+          })()}
+        </svg>
+
+        {/* caption under the poster */}
         <div
           style={{
-            width: Math.max(1, u),
-            height: 20 * u,
-            background: p.rule,
-            transform: `scaleY(${caption(3)})`,
-          }}
-        />
-        <div
-          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: heroCy1 + (CAP * heroRow.fs * posterScale) / 2 + 46 * u,
             display: "flex",
+            justifyContent: "center",
             alignItems: "center",
-            gap: 9 * u,
-            opacity: caption(6),
-            transform: `translateY(${(1 - caption(6)) * 12 * u}px)`,
+            gap: 14 * u,
+            fontFamily: mono,
+            fontSize: 15 * u,
+            letterSpacing: "0.12em",
+            color: p.muted,
+            lineHeight: 1,
           }}
         >
           <div
             style={{
-              width: 7 * u,
-              height: 7 * u,
-              borderRadius: 99,
-              background: accent,
+              opacity: caption(0),
+              transform: `translateY(${(1 - caption(0)) * 12 * u}px)${glide(midway(caption(0)))}`,
+            }}
+          >
+            {logo ??
+              (name.trim().toLowerCase() === "remocn" ? (
+                <RemocnLogo fontSize={30 * u} color={fg} />
+              ) : (
+                <span
+                  style={{
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: 30 * u,
+                    letterSpacing: "0.01em",
+                    color: fg,
+                  }}
+                >
+                  {name}
+                </span>
+              ))}
+          </div>
+          <div
+            style={{
+              width: Math.max(1, u),
+              height: 20 * u,
+              background: p.rule,
+              transform: `scaleY(${caption(3)})`,
             }}
           />
-          <span>MARKET CLOSE</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 9 * u,
+              opacity: caption(6),
+              transform: `translateY(${(1 - caption(6)) * 12 * u}px)${glide(midway(caption(6)))}`,
+            }}
+          >
+            <div
+              style={{
+                width: 7 * u,
+                height: 7 * u,
+                borderRadius: 99,
+                background: accent,
+              }}
+            />
+            <span>{label}</span>
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -2,14 +2,10 @@
 
 import { loadFont as loadSans } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
-import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { type ReactNode, useId } from "react";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -19,7 +15,8 @@ const { fontFamily: display } = loadSerif("normal", {
   weights: ["400"],
   subsets: ["latin"],
 });
-const { fontFamily: displayItalic } = loadSerif("italic", {
+// Same family name as `display`; this call only loads the italic face.
+loadSerif("italic", {
   weights: ["400"],
   subsets: ["latin"],
 });
@@ -66,6 +63,22 @@ export interface BalanceBeamProps {
   title?: string;
   subtitle?: string;
   accent?: string;
+  /** Frames between blocks dropping onto the beam. */
+  stagger?: number;
+  /** Text color of the headline; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline. Load it yourself; Instrument Serif by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark drawn on the hero block when `accentLabel` is "remocn". */
+  logo?: ReactNode;
+  /** Size of the beam and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -202,19 +215,48 @@ function simulate(
   return { angle: a };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BalanceBeam({
   items = ["$4,800", "62 hours", "3 tools", "9 revisions", "2 freelancers"],
   accentLabel = "remocn",
   title = "One block.",
   subtitle = "Outweighs the whole stack.",
   accent = "#3B5BFD",
+  stagger = STEP,
+  ink,
+  background,
+  fontFamily = display,
+  logo,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: BalanceBeamProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage = background ?? p.bg;
 
   const halfL = 400 * u;
   const beamT = 10 * u;
@@ -246,7 +288,7 @@ export function BalanceBeam({
       const total = row.reduce((s, b) => s + b.w, 0) + gap * (n - 1);
       let x = stackX - total / 2;
       row.forEach((b) => {
-        const spawn = START + out.length * STEP;
+        const spawn = START + out.length * stagger;
         out.push({
           label: b.label,
           w: b.w,
@@ -355,7 +397,28 @@ export function BalanceBeam({
           />
         ) : null}
         {isAccent && isLogo ? (
-          <LogoGlyphs size={logoSize} fill="#FFFFFF" />
+          logo === undefined ? (
+            <LogoGlyphs size={logoSize} fill="#FFFFFF" />
+          ) : (
+            <foreignObject
+              x={-b.w / 2}
+              y={-blockH / 2}
+              width={b.w}
+              height={blockH}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {logo}
+              </div>
+            </foreignObject>
+          )
         ) : (
           <text
             x={0}
@@ -388,150 +451,155 @@ export function BalanceBeam({
     : `radial-gradient(46% 52% at ${74 - 3 * drift}% 76%, rgba(138,123,255,${0.03 + 0.1 * tip}) 0%, transparent 72%)`;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill style={{ backgroundImage: silkGround, opacity: enter }} />
-      <AbsoluteFill style={{ transform: `translateY(${shift}px)` }}>
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
-        >
-          <defs>
-            <linearGradient id={silkId} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#8A7BFF" />
-              <stop offset="0.55" stopColor="#3B3FD8" />
-              <stop offset="1" stopColor="#23268F" />
-            </linearGradient>
-            <linearGradient id={sheenId} x1="0" y1="0" x2="1" y2="0.35">
-              <stop
-                offset={0.18 + 0.1 * drift}
-                stopColor="#F3D6C0"
-                stopOpacity="0"
-              />
-              <stop
-                offset={0.3 + 0.1 * drift}
-                stopColor="#F3D6C0"
-                stopOpacity="0.4"
-              />
-              <stop
-                offset={0.44 + 0.1 * drift}
-                stopColor="#F3D6C0"
-                stopOpacity="0"
-              />
-            </linearGradient>
-          </defs>
-          <line
-            x1={cx - groundHalf}
-            x2={cx + groundHalf}
-            y1={groundY + sw / 2}
-            y2={groundY + sw / 2}
-            stroke={p.axis}
-            strokeWidth={sw}
-          />
-          <line
-            x1={cx - (halfL + 36 * u) * enter}
-            x2={cx + (halfL + 36 * u) * enter}
-            y1={levelY}
-            y2={levelY}
-            stroke={p.level}
-            strokeWidth={sw}
-            strokeDasharray={`${4 * u} ${6 * u}`}
-          />
-          <g opacity={enter} transform={`translate(0 ${(1 - enter) * 12 * u})`}>
-            <path
-              d={`M ${cx} ${pivotY} L ${cx + fulW / 2} ${groundY} L ${cx - fulW / 2} ${groundY} Z`}
-              fill={p.fulcrum}
-            />
-          </g>
-          <g
-            opacity={enter}
-            transform={`translate(${cx} ${pivotY + (1 - enter) * 12 * u}) rotate(${angle})`}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill style={{ transform: `translateY(${shift}px)` }}>
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
           >
-            <rect
-              x={-halfL}
-              y={-beamT}
-              width={halfL * 2}
-              height={beamT}
-              rx={2 * u}
-              fill={p.beam}
+            <defs>
+              <linearGradient id={silkId} x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor="#8A7BFF" />
+                <stop offset="0.55" stopColor="#3B3FD8" />
+                <stop offset="1" stopColor="#23268F" />
+              </linearGradient>
+              <linearGradient id={sheenId} x1="0" y1="0" x2="1" y2="0.35">
+                <stop
+                  offset={0.18 + 0.1 * drift}
+                  stopColor="#F3D6C0"
+                  stopOpacity="0"
+                />
+                <stop
+                  offset={0.3 + 0.1 * drift}
+                  stopColor="#F3D6C0"
+                  stopOpacity="0.4"
+                />
+                <stop
+                  offset={0.44 + 0.1 * drift}
+                  stopColor="#F3D6C0"
+                  stopOpacity="0"
+                />
+              </linearGradient>
+            </defs>
+            <line
+              x1={cx - groundHalf}
+              x2={cx + groundHalf}
+              y1={groundY + sw / 2}
+              y2={groundY + sw / 2}
+              stroke={p.axis}
+              strokeWidth={sw}
             />
-          </g>
-          {blocks.map((b, i) => renderBlock(b, false, `b${i}`))}
-          {renderBlock(accentBlock, true, "acc")}
-          <circle
-            cx={cx}
-            cy={pivotY - beamT / 2}
-            r={3.2 * u}
-            fill={p.bg}
-            opacity={enter}
-          />
-        </svg>
-      </AbsoluteFill>
+            <line
+              x1={cx - (halfL + 36 * u) * enter}
+              x2={cx + (halfL + 36 * u) * enter}
+              y1={levelY}
+              y2={levelY}
+              stroke={p.level}
+              strokeWidth={sw}
+              strokeDasharray={`${4 * u} ${6 * u}`}
+            />
+            <g
+              opacity={enter}
+              transform={`translate(0 ${(1 - enter) * 12 * u})`}
+            >
+              <path
+                d={`M ${cx} ${pivotY} L ${cx + fulW / 2} ${groundY} L ${cx - fulW / 2} ${groundY} Z`}
+                fill={p.fulcrum}
+              />
+            </g>
+            <g
+              opacity={enter}
+              transform={`translate(${cx} ${pivotY + (1 - enter) * 12 * u}) rotate(${angle})`}
+            >
+              <rect
+                x={-halfL}
+                y={-beamT}
+                width={halfL * 2}
+                height={beamT}
+                rx={2 * u}
+                fill={p.beam}
+              />
+            </g>
+            {blocks.map((b, i) => renderBlock(b, false, `b${i}`))}
+            {renderBlock(accentBlock, true, "acc")}
+            <circle
+              cx={cx}
+              cy={pivotY - beamT / 2}
+              r={3.2 * u}
+              fill={stage === "transparent" ? p.bg : stage}
+              opacity={enter}
+            />
+          </svg>
+        </AbsoluteFill>
 
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: titleTop,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 14 * u,
-          whiteSpace: "nowrap",
-        }}
-      >
         <div
           style={{
-            fontFamily: display,
-            fontWeight: 400,
-            fontSize: titleSize,
-            lineHeight: 0.95,
-            letterSpacing: "-0.025em",
-            color: p.fg,
-            opacity: titleIn,
-            filter:
-              titleIn < 0.99 ? `blur(${(1 - titleIn) * 8 * u}px)` : undefined,
-            transform: `translateY(${(1 - titleIn) * 18 * u}px)`,
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: titleTop,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 14 * u,
+            whiteSpace: "nowrap",
           }}
         >
-          {titleHead}
-          {titleTail ? (
-            <span style={{ fontFamily: displayItalic, fontStyle: "italic" }}>
-              {titleTail}
-            </span>
-          ) : null}
-        </div>
-        {subtitle ? (
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10 * u,
-              fontFamily: sans,
+              fontFamily,
               fontWeight: 400,
-              fontSize: subSize,
-              lineHeight: 1.2,
-              letterSpacing: "-0.005em",
-              color: p.muted,
-              opacity: subIn,
-              transform: `translateY(${(1 - subIn) * 8 * u}px)`,
+              fontSize: titleSize,
+              lineHeight: 0.95,
+              letterSpacing: "-0.025em",
+              color: fg,
+              opacity: titleIn,
+              filter:
+                titleIn < 0.99 ? `blur(${(1 - titleIn) * 8 * u}px)` : undefined,
+              transform: `translateY(${(1 - titleIn) * 18 * u}px)${glide(midway(titleIn))}`,
             }}
           >
-            <span
-              style={{
-                width: 10 * u,
-                height: 10 * u,
-                borderRadius: "50%",
-                background: accent,
-              }}
-            />
-            {subtitle}
+            {titleHead}
+            {titleTail ? (
+              <span style={{ fontFamily, fontStyle: "italic" }}>
+                {titleTail}
+              </span>
+            ) : null}
           </div>
-        ) : null}
-      </div>
-      <Grain opacity={p.grain} />
+          {subtitle ? (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10 * u,
+                fontFamily: sans,
+                fontWeight: 400,
+                fontSize: subSize,
+                lineHeight: 1.2,
+                letterSpacing: "-0.005em",
+                color: p.muted,
+                opacity: subIn,
+                transform: `translateY(${(1 - subIn) * 8 * u}px)${glide(midway(subIn))}`,
+              }}
+            >
+              <span
+                style={{
+                  width: 10 * u,
+                  height: 10 * u,
+                  borderRadius: "50%",
+                  background: accent,
+                }}
+              />
+              {subtitle}
+            </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="LiquidWord"
     component={LiquidWordScene}
-    durationInFrames={145}
-    fps={30}
+    durationInFrames={290}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -63,16 +63,62 @@ The `from` word holds, then melts under a swirl gradient, sags, drips and slumps
       description: "The word that re-forms out of the pool, crisp and kerned.",
     },
     {
+      name: "meltAt",
+      type: "number",
+      default: "12",
+      description: "Frame the first word starts to melt; the rest of the timeline follows.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between letters of the new word rising out of the pool.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Sora\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
       description: "Light or dark ground; the component ships both.",
     },
     {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
       name: "speed",
       type: "number",
       default: "1",
       description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "accent",

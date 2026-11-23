@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const flashSweepConfig: ComponentConfig = {
   componentName: "FlashSweep",
@@ -13,10 +19,20 @@ export const flashSweepConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
+    eyebrow: {
+      type: "text-content",
+      default: "Introducing",
+      description: "Eyebrow",
+    },
+    tagline: {
+      type: "text-content",
+      default: "Motion for the films you launch with.",
+      description: "Tagline",
+    },
+    caption: {
+      type: "text-content",
+      default: "Copy it in. Change anything.",
+      description: "Caption",
     },
     direction: {
       type: "enum",
@@ -54,6 +70,17 @@ export const flashSweepConfig: ComponentConfig = {
       description: "Hold",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    tint: {
+      type: "color",
+      default: undefined,
+      description: "Tint",
+    },
+    ...sceneControls({ font: "Onest", background: false, grain: true }),
     speed: {
       type: "number",
       default: 1,

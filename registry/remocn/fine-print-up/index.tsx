@@ -10,17 +10,27 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const gloock = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
 export interface FinePrintUpProps {
   lines?: string[];
   closing?: string;
+  /** Frames each word takes to travel from the fine print up to the headline. */
+  travel?: number;
   accent?: string;
+  /** Text color of the headline; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Gloock by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -61,23 +71,23 @@ const CLAMP = {
 
 let measureCtx: CanvasRenderingContext2D | null = null;
 
-function em(s: string): number {
+function em(s: string, family: string): number {
   if (!measureCtx) {
     measureCtx = document.createElement("canvas").getContext("2d");
   }
   if (!measureCtx) return s.length * 0.5;
-  measureCtx.font = `400 100px "${gloock.fontFamily}"`;
+  measureCtx.font = `400 100px "${family}"`;
   return measureCtx.measureText(s).width / 100 + TRACK * Array.from(s).length;
 }
 
-function useFontReady() {
+function useFontReady(fontFamily: string) {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("fine-print-up: font"));
   useEffect(() => {
     let live = true;
     gloock
       .waitUntilDone()
-      .then(() => document.fonts.load(`400 100px "${gloock.fontFamily}"`))
+      .then(() => document.fonts.load(`400 100px "${fontFamily}"`))
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
@@ -87,7 +97,7 @@ function useFontReady() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, fontFamily]);
   return ready;
 }
 
@@ -96,13 +106,18 @@ interface Laid {
   lines: number;
 }
 
-function wrapAt(words: string[], maxEm: number, indent = 0): Laid {
-  const space = em(" ");
+function wrapAt(
+  words: string[],
+  maxEm: number,
+  family: string,
+  indent = 0,
+): Laid {
+  const space = em(" ", family);
   const out: { text: string; x: number; line: number }[] = [];
   let line = 0;
   let x = indent;
   for (const w of words) {
-    const ww = em(w);
+    const ww = em(w, family);
     if (x > indent && x + ww > maxEm) {
       line += 1;
       x = indent;
@@ -113,47 +128,78 @@ function wrapAt(words: string[], maxEm: number, indent = 0): Laid {
   return { words: out, lines: line + 1 };
 }
 
-function balanced(words: string[], maxEm: number): Laid {
-  const base = wrapAt(words, maxEm);
-  let lo = Math.max(...words.map(em), 0.1);
+function balanced(words: string[], maxEm: number, family: string): Laid {
+  const base = wrapAt(words, maxEm, family);
+  let lo = Math.max(...words.map((w) => em(w, family)), 0.1);
   let hi = maxEm;
   for (let i = 0; i < 14; i++) {
     const mid = (lo + hi) / 2;
-    if (wrapAt(words, mid).lines <= base.lines) hi = mid;
+    if (wrapAt(words, mid, family).lines <= base.lines) hi = mid;
     else lo = mid;
   }
-  return wrapAt(words, hi);
+  return wrapAt(words, hi, family);
 }
 
-function fitSize(words: string[], boxW: number, boxH: number, maxF: number) {
-  const widest = Math.max(...words.map(em), 0.1);
+function fitSize(
+  words: string[],
+  boxW: number,
+  boxH: number,
+  maxF: number,
+  family: string,
+) {
+  const widest = Math.max(...words.map((w) => em(w, family)), 0.1);
   let lo = 8;
   let hi = maxF;
   for (let i = 0; i < 18; i++) {
     const mid = (lo + hi) / 2;
-    const lay = wrapAt(words, boxW / mid);
+    const lay = wrapAt(words, boxW / mid, family);
     if (lay.lines * LH * mid <= boxH && widest * mid <= boxW) lo = mid;
     else hi = mid;
   }
   return lo;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FinePrintUp({
   lines = DEFAULT_LINES,
   closing = "That’s all the fine print.",
+  travel = TRAVEL,
   accent,
+  ink,
   background,
+  fontFamily = gloock.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: FinePrintUpProps) {
-  const frame = useCurrentFrame();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const ready = useFontReady();
+  const ready = useFontReady(fontFamily);
 
   if (!ready || lines.length === 0) {
     return (
@@ -174,8 +220,10 @@ export function FinePrintUp({
 
   const words = lines.map((l) => l.split(/\s+/).filter(Boolean));
   const marks = lines.map((_, i) => "*".repeat(i + 1));
-  const markW = em("***") + em(" ") * 0.6;
-  const fineLays = words.map((ws) => wrapAt(ws, fineW / fs - markW));
+  const markW = em("***", fontFamily) + em(" ", fontFamily) * 0.6;
+  const fineLays = words.map((ws) =>
+    wrapAt(ws, fineW / fs - markW, fontFamily),
+  );
   const fineHeights = fineLays.map((l) => l.lines * FINE_LH * fs);
   const fineGap = fs * 0.7;
   const fineTotal =
@@ -188,14 +236,14 @@ export function FinePrintUp({
   }
 
   const heads = words.map((ws) => {
-    const F = fitSize(ws, boxW, boxH, H * (portrait ? 0.1 : 0.15));
-    return { F, lay: balanced(ws, boxW / F) };
+    const F = fitSize(ws, boxW, boxH, H * (portrait ? 0.1 : 0.15), fontFamily);
+    return { F, lay: balanced(ws, boxW / F, fontFamily) };
   });
 
   const D = durationInFrames * speed;
   const per = Math.max(50, (D - START - TAIL) / n);
   const stepAt = (i: number) => START + i * per;
-  const closeAt = stepAt(n - 1) + TRAVEL + 26;
+  const closeAt = stepAt(n - 1) + travel + 26;
 
   const intro = interpolate(t, [0, 12], [0, 1], {
     ...CLAMP,
@@ -213,28 +261,32 @@ export function FinePrintUp({
     lh: number,
     color: string,
     opacity: number,
-  ) => (
-    <div
-      key={key}
-      style={{
-        position: "absolute",
-        left: 0,
-        top: 0,
-        fontFamily: gloock.fontFamily,
-        fontWeight: 400,
-        fontSize: renderSize,
-        lineHeight: `${lh * renderSize}px`,
-        letterSpacing: `${TRACK}em`,
-        whiteSpace: "pre",
-        color,
-        opacity,
-        transformOrigin: "0 0",
-        transform: `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${(size / renderSize).toFixed(4)})`,
-      }}
-    >
-      {s}
-    </div>
-  );
+    moving: boolean,
+  ) => {
+    const k = size / renderSize;
+    return (
+      <div
+        key={key}
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          fontFamily,
+          fontWeight: 400,
+          fontSize: renderSize,
+          lineHeight: `${lh * renderSize}px`,
+          letterSpacing: `${TRACK}em`,
+          whiteSpace: "pre",
+          color,
+          opacity,
+          transformOrigin: "0 0",
+          transform: `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${k.toFixed(4)})${glide(moving)}`,
+        }}
+      >
+        {s}
+      </div>
+    );
+  };
 
   lines.forEach((_, i) => {
     const s0 = stepAt(i);
@@ -242,13 +294,14 @@ export function FinePrintUp({
     const { F, lay } = heads[i];
     const fl = fineLays[i];
     const pick = interpolate(u, [-2, 6], [0, 1], CLAMP);
-    const exit =
+    const exitAt = (tt: number) =>
       i < n - 1
-        ? interpolate(t, [stepAt(i + 1), stepAt(i + 1) + 12], [0, 1], {
+        ? interpolate(tt, [stepAt(i + 1), stepAt(i + 1) + 12], [0, 1], {
             ...CLAMP,
             easing: Easing.bezier(0.55, 0, 1, 0.45),
           })
         : 0;
+    const exit = exitAt(t);
     if (exit >= 1) return;
 
     const markOp = interpolate(u, [4, 14], [1, 0], CLAMP) * intro;
@@ -264,6 +317,7 @@ export function FinePrintUp({
           FINE_LH,
           interpolateColors(pick, [0, 1], [c.muted, hi]),
           markOp,
+          false,
         ),
       );
     }
@@ -276,19 +330,33 @@ export function FinePrintUp({
       const fy = fineTops[i] + fw.line * FINE_LH * fs;
       const hx = mx + hw.x * F;
       const hy = headTop + hw.line * LH * F;
-      const move = interpolate(
-        u,
-        [6 + wi * stagger, 6 + wi * stagger + TRAVEL],
-        [0, 1],
-        { ...CLAMP, easing: EASE_IO },
-      );
       const fyScaled = fy + (FINE_LH - LH) * fs * 0.5;
-      const x = fx + (hx - fx) * move;
-      const y = fyScaled + (hy - fyScaled) * move - exit * F * 0.18;
-      const size = fs + (F - fs) * move;
+      const geometry = (tt: number) => {
+        const mv = interpolate(
+          tt - s0,
+          [6 + wi * stagger, 6 + wi * stagger + travel],
+          [0, 1],
+          { ...CLAMP, easing: EASE_IO },
+        );
+        return {
+          move: mv,
+          x: fx + (hx - fx) * mv,
+          y: fyScaled + (hy - fyScaled) * mv - exitAt(tt) * F * 0.18,
+          size: fs + (F - fs) * mv,
+        };
+      };
+      const { move, x, y, size } = geometry(t);
+      // The in-out ease creeps for a few frames at each end, still enough to
+      // cross a pixel, so motion is read off the neighbouring frames.
+      const moving = [geometry(t - 1), geometry(t + 1)].some(
+        (o) =>
+          Math.abs(o.x - x) > 1e-3 ||
+          Math.abs(o.y - y) > 1e-3 ||
+          Math.abs(o.size - size) > 1e-4,
+      );
       const land = interpolate(move, [0.7, 1], [0, 1], CLAMP);
       const flyColor = interpolateColors(pick, [0, 1], [c.muted, hi]);
-      const baseColor = interpolateColors(land, [0, 1], [flyColor, c.ink]);
+      const baseColor = interpolateColors(land, [0, 1], [flyColor, fg]);
       nodes.push(
         text(
           `w${i}-${wi}`,
@@ -300,6 +368,7 @@ export function FinePrintUp({
           LH,
           baseColor,
           intro * (1 - exit),
+          moving,
         ),
       );
     });
@@ -310,7 +379,7 @@ export function FinePrintUp({
     easing: EASE_OUT,
   });
   if (closeIn > 0 && closing) {
-    const cl = wrapAt(closing.split(/\s+/), fineW / fs);
+    const cl = wrapAt(closing.split(/\s+/), fineW / fs, fontFamily);
     const ch = cl.lines * FINE_LH * fs;
     cl.words.forEach((w, wi) => {
       nodes.push(
@@ -324,6 +393,7 @@ export function FinePrintUp({
           FINE_LH,
           c.muted,
           closeIn,
+          midway(closeIn),
         ),
       );
     });
@@ -331,7 +401,7 @@ export function FinePrintUp({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

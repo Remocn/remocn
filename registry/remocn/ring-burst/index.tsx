@@ -4,13 +4,9 @@ import { loadFont as loadSerif } from "@remotion/google-fonts/Fraunces";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadSerif("italic", {
   weights: ["400"],
@@ -82,20 +78,51 @@ function haloGround(tone: Tone, r: number) {
   return `radial-gradient(circle ${r.toFixed(1)}px at 50% 50%, transparent 0%, transparent 74%, ${mixA(c0, 0.85)} 76.5%, ${mixA(c1, 0.62)} 81%, ${mixA(c2, 0.36)} 88%, ${mixA(c3, 0.16)} 94%, transparent 100%)`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        transform: `scale(${scale})`,
+      }}
+    >
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+type Look = {
+  fontFamily: string;
+  ink?: string;
+  scale: number;
+  logo?: React.ReactNode;
+};
+
 function Headline({
   text,
   tone,
   accent,
   mark,
+  look,
 }: {
   text: string;
   tone: Tone;
   accent: string;
   mark: boolean;
+  look: Look;
 }) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
-  const c = TONES[tone];
+  const c = { ...TONES[tone], fg: look.ink ?? TONES[tone].fg };
   const logo = mark && isLogo(text);
   const dot = mark && !logo && text.endsWith(".");
   const body = dot ? text.slice(0, -1) : text;
@@ -111,29 +138,33 @@ function Headline({
         justifyContent: "center",
       }}
     >
-      {logo ? (
-        <RemocnLogo
-          fontSize={Math.min(116 * u, (0.36 * W) / 3.9)}
-          color={c.fg}
-        />
-      ) : (
-        <div
-          style={{
-            fontFamily: serif,
-            fontStyle: "italic",
-            fontWeight: 400,
-            fontSize: size,
-            letterSpacing: "-0.03em",
-            lineHeight: 1,
-            whiteSpace: "nowrap",
-            paddingBottom: size * 0.1,
-            paddingRight: size * 0.06,
-          }}
-        >
-          {body}
-          {dot ? <span style={{ color: accent }}>.</span> : null}
-        </div>
-      )}
+      <ScaleLayer scale={look.scale}>
+        {logo ? (
+          (look.logo ?? (
+            <RemocnLogo
+              fontSize={Math.min(116 * u, (0.36 * W) / 3.9)}
+              color={c.fg}
+            />
+          ))
+        ) : (
+          <div
+            style={{
+              fontFamily: look.fontFamily,
+              fontStyle: "italic",
+              fontWeight: 400,
+              fontSize: size,
+              letterSpacing: "-0.03em",
+              lineHeight: 1,
+              whiteSpace: "nowrap",
+              paddingBottom: size * 0.1,
+              paddingRight: size * 0.06,
+            }}
+          >
+            {body}
+            {dot ? <span style={{ color: accent }}>.</span> : null}
+          </div>
+        )}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -144,18 +175,22 @@ function Scene({
   accent,
   mark,
   ground,
+  fill,
+  look,
 }: {
   content: React.ReactNode;
   tone: Tone;
   accent: string;
   mark: boolean;
   ground?: string;
+  fill?: string;
+  look: Look;
 }) {
   const text = typeof content === "string" || typeof content === "number";
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: TONES[tone].bg,
+        backgroundColor: fill ?? TONES[tone].bg,
         backgroundImage: ground,
       }}
     >
@@ -165,6 +200,7 @@ function Scene({
           tone={tone}
           accent={accent}
           mark={mark}
+          look={look}
         />
       ) : (
         content
@@ -208,7 +244,23 @@ export interface RingBurstProps {
   colors?: string[];
   /** Frames the outgoing scene holds before the burst. */
   delay?: number;
+  /** Frames each ring takes to grow past the frame's edge. */
+  expand?: number;
+  /** Frames between one ring and the next. */
+  stagger?: number;
   accent?: string;
+  /** Text color of the headlines; overrides the theme. */
+  ink?: string;
+  /** Fill of the incoming scene; "transparent" drops it. */
+  background?: string;
+  /** Typeface for text headlines. Load it yourself; Fraunces italic by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark shown when `to` is "remocn". */
+  logo?: React.ReactNode;
+  /** Size of the headlines, around the frame's center. */
+  scale?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   /** `dark` lands on a dark scene, `light` on a light one. */
@@ -233,12 +285,26 @@ export function RingBurst({
   origin = [0.5, 0.5],
   colors,
   delay = 20,
+  expand = GROW,
+  stagger = 4,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = serif,
+  logo,
+  scale = 1,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: RingBurstProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = useSceneFrame() * speed;
+  const look: Look = { fontFamily, ink, scale, logo };
+  const stageB =
+    background === "transparent"
+      ? "transparent"
+      : (background ?? TONES[theme].bg);
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const toneB: Tone = theme;
   const toneA: Tone = theme === "dark" ? "light" : "dark";
@@ -246,7 +312,9 @@ export function RingBurst({
     0,
     3,
   );
-  const gaps = [...GAPS.slice(0, fills.length), GAPS[3]];
+  const gaps = [...GAPS.slice(0, fills.length), GAPS[3]].map(
+    (g) => (g * stagger) / 4,
+  );
 
   const ox = origin[0] * W;
   const oy = origin[1] * H;
@@ -260,21 +328,37 @@ export function RingBurst({
     6 * u;
 
   const progress = (i: number) =>
-    interpolate(t, [delay + gaps[i], delay + gaps[i] + GROW], [0, 1], CLAMP);
+    interpolate(t, [delay + gaps[i], delay + gaps[i] + expand], [0, 1], CLAMP);
   const radius = (i: number) => reach * EASE_BURST(progress(i));
 
   const last = gaps.length - 1;
   const done = progress(last) >= 1;
-  const push =
+  const pushAt = (f: number) =>
     1 +
     0.06 *
-      EASE_PUSH(interpolate(t, [delay, delay + GROW * 0.8], [0, 1], CLAMP));
+      EASE_PUSH(interpolate(f, [delay, delay + expand * 0.8], [0, 1], CLAMP));
+  const settleAt = (f: number) =>
+    1.08 -
+    0.08 *
+      EASE_LAND(
+        interpolate(
+          f,
+          [delay + gaps[last], delay + gaps[last] + expand],
+          [0, 1],
+          CLAMP,
+        ),
+      );
+  const push = pushAt(t);
   const land = EASE_LAND(progress(last));
-  const settle = 1.08 - 0.08 * land;
+  const settle = settleAt(t);
+  // Both eases are flat at their ends, so the test is on the scale itself.
+  const changing = (at: (f: number) => number) =>
+    Math.abs(at(t + speed) - at(t)) > 2e-6 ||
+    Math.abs(at(t) - at(t - speed)) > 2e-6;
   // The halo keeps breathing outward a touch after the landing.
   const drift = interpolate(
     t,
-    [delay + GROW, delay + GROW + 90],
+    [delay + expand, delay + expand + 90],
     [0, 1],
     CLAMP,
   );
@@ -304,15 +388,21 @@ export function RingBurst({
   const hideA = fills.some((_, i) => coveredBy(i)) || done;
 
   return (
-    <AbsoluteFill style={{ background: TONES[toneB].bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stageB, overflow: "hidden" }}>
       {hideA ? null : (
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            transform: `scale(${push})${glide(changing(pushAt))}`,
             transformOrigin: `${ox}px ${oy}px`,
           }}
         >
-          <Scene content={from} tone={toneA} accent={accent} mark={false} />
+          <Scene
+            content={from}
+            tone={toneA}
+            accent={accent}
+            mark={false}
+            look={look}
+          />
         </AbsoluteFill>
       )}
       {fills.map((fill, i) => {
@@ -336,7 +426,7 @@ export function RingBurst({
                 top: (done ? reach : radius(last)) - oy,
                 width: W,
                 height: H,
-                transform: `scale(${settle})`,
+                transform: `scale(${settle})${glide(changing(settleAt))}`,
                 transformOrigin: `${ox}px ${oy}px`,
               }}
             >
@@ -346,11 +436,13 @@ export function RingBurst({
                 accent={accent}
                 mark
                 ground={halo}
+                fill={stageB}
+                look={look}
               />
             </div>,
           )
         : null}
-      <Grain opacity={theme === "light" ? 0.035 : 0.05} />
+      {grain ? <Grain opacity={theme === "light" ? 0.035 : 0.05} /> : null}
     </AbsoluteFill>
   );
 }

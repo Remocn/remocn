@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const ipoOpenConfig: ComponentConfig = {
   componentName: "IpoOpen",
@@ -12,11 +18,6 @@ export const ipoOpenConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     symbol: {
       type: "text-content",
@@ -38,6 +39,11 @@ export const ipoOpenConfig: ComponentConfig = {
       default: "remocn",
       description: "Name",
     },
+    priceTag: {
+      type: "text-content",
+      default: "IPO price",
+      description: "Price tag",
+    },
     ipoPrice: {
       type: "number",
       default: 18,
@@ -56,6 +62,21 @@ export const ipoOpenConfig: ComponentConfig = {
       description: "Open price",
       hiddenFromList: false,
     },
+    countLength: {
+      type: "number",
+      default: 50,
+      min: 10,
+      max: 100,
+      step: 1,
+      description: "Count length (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Schibsted Grotesk" }),
     speed: {
       type: "number",
       default: 1,

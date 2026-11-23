@@ -1,13 +1,23 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  AUTO,
+  type ComponentConfig,
+  enumVariants,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const keycapPressConfig: ComponentConfig = {
   componentName: "KeycapPress",
   importPath: "@/components/remocn/keycap-press",
   controls: {
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
+    theme: {
+      type: "enum",
+      default: AUTO,
+      variants: enumVariants([AUTO, "dark", "light"]),
+      description: "Theme",
     },
     label: {
       type: "text-content",
@@ -23,6 +33,31 @@ export const keycapPressConfig: ComponentConfig = {
       },
       description: "Material",
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    glow: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 1,
+      step: 0.05,
+      description: "Underglow",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Bricolage Grotesque" }),
     speed: {
       type: "number",
       default: 1,
@@ -35,6 +70,8 @@ export const keycapPressConfig: ComponentConfig = {
   },
   durationInFrames: 135,
   fps: FPS,
+  // Does not hold 60 fps in the browser yet (`audit:playback`: paint).
+  previewFps: 30,
   compositionWidth: W,
   compositionHeight: H,
 };

@@ -45,8 +45,8 @@ export const RemotionRoot = () => (
   <Composition
     id="AppStoreListing"
     component={AppStoreListingScene}
-    durationInFrames={200}
-    fps={30}
+    durationInFrames={400}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -119,6 +119,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Optional award label; null hides it",
     },
     {
+      name: "getLabel",
+      type: "string",
+      default: "\"Get\"",
+      description: "Label of the install button before the tap",
+    },
+    {
+      name: "openLabel",
+      type: "string",
+      default: "\"Open\"",
+      description: "Label of the install button once the download finishes",
+    },
+    {
+      name: "backLabel",
+      type: "string",
+      default: "\"Search\"",
+      description: "Label of the back link at the top of the listing",
+    },
+    {
       name: "screenshots",
       type: "AppScreenshot[]",
       default: "DEFAULT_SHOTS",
@@ -129,6 +147,34 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Color of the lines beside the phone; overrides the theme ink",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Onest\"",
+      description: "Typeface for the copy. Load the font in your project first",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves",
     },
     {
       name: "speed",

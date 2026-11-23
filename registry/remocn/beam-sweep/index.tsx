@@ -17,9 +17,13 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -94,12 +98,13 @@ const BeamSweepPresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
+  const glide = useGlide();
   const props = {
     ...beamSweepDefaults,
     ...passedProps,
     beamParams: passedProps.beamParams ?? beamSweepDefaults.beamParams,
   };
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const p = presentationProgress;
   const cssAngle = `${90 + props.angle}deg`;
   const { lead, trail } = sweep(p);
@@ -119,7 +124,7 @@ const BeamSweepPresentation: React.FC<
         style={{
           maskImage: aMask,
           WebkitMaskImage: aMask,
-          transform: `scale(${push})`,
+          transform: `scale(${push})${glide(p > 0 && p < 0.5)}`,
           filter: `brightness(${(1 + k * (props.light ? 0.25 : 1.3)).toFixed(3)}) saturate(${(1 + k * 0.5).toFixed(3)}) blur(${(k * 4).toFixed(2)}px)`,
         }}
       >
@@ -275,13 +280,26 @@ function BuilderScene({
   theme,
   images,
   title,
+  brand,
+  prompt,
+  publishLabel,
+  scale,
+  delay,
+  speed,
 }: {
   theme: Theme;
   images: string[];
   title: [string, string];
+  brand: string;
+  prompt: string;
+  publishLabel: string;
+  scale: number;
+  delay: number;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = UI[theme];
   const tall = H > W;
   const u = (tall ? W / 720 : H / 720) * 1.12;
@@ -303,6 +321,7 @@ function BuilderScene({
     },
   );
   const push = interpolate(frame, [0, 66], [1, 1.03], CLAMP);
+  const pushing = frame > 0 && frame < 66;
   const tile = (i: number) =>
     spring({
       frame: frame - A_BEATS.tilesIn - i * 3,
@@ -320,320 +339,343 @@ function BuilderScene({
   };
   return (
     <AbsoluteFill
-      style={{ backgroundColor: c.app, transform: `scale(${push})` }}
+      style={{
+        backgroundColor: c.app,
+        transform: `scale(${push})${glide(pushing)}`,
+      }}
     >
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: 0,
-          height: topH,
-          display: "flex",
-          alignItems: "center",
-          padding: `0 ${18 * u}px`,
-          gap: 14 * u,
-          borderBottom: `1px solid ${c.line}`,
-          ...label,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
-            width: 26 * u,
-            height: 26 * u,
-            borderRadius: 7 * u,
-            background: `linear-gradient(140deg, #5b78ff, ${c.accent})`,
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 0,
+            height: topH,
+            display: "flex",
+            alignItems: "center",
+            padding: `0 ${18 * u}px`,
+            gap: 14 * u,
+            borderBottom: `1px solid ${c.line}`,
+            ...label,
           }}
-        />
-        <span>Lumen</span>
-        <span style={{ color: c.faint }}>/</span>
-        <span style={{ color: c.muted }}>launch-site</span>
-        <Icon d={ICONS.chevron} size={14 * u} color={c.faint} />
-        <div style={{ flex: 1 }} />
-        {tall ? null : (
+        >
           <div
             style={{
-              display: "flex",
-              padding: 3 * u,
-              borderRadius: 9 * u,
-              background: c.raised,
-              border: `1px solid ${c.line}`,
-              gap: 2 * u,
-              fontSize: 13 * u,
+              width: 26 * u,
+              height: 26 * u,
+              borderRadius: 7 * u,
+              background: `linear-gradient(140deg, #5b78ff, ${c.accent})`,
             }}
-          >
-            <span
+          />
+          <span>{brand}</span>
+          <span style={{ color: c.faint }}>/</span>
+          <span style={{ color: c.muted }}>launch-site</span>
+          <Icon d={ICONS.chevron} size={14 * u} color={c.faint} />
+          <div style={{ flex: 1 }} />
+          {tall ? null : (
+            <div
               style={{
-                padding: `${4 * u}px ${12 * u}px`,
-                borderRadius: 6 * u,
-                background: c.panel,
-                boxShadow: c.highlight,
+                display: "flex",
+                padding: 3 * u,
+                borderRadius: 9 * u,
+                background: c.raised,
+                border: `1px solid ${c.line}`,
+                gap: 2 * u,
+                fontSize: 13 * u,
               }}
             >
-              Preview
-            </span>
-            <span style={{ padding: `${4 * u}px ${12 * u}px`, color: c.muted }}>
-              Edit
-            </span>
-          </div>
-        )}
-        {tall ? null : (
+              <span
+                style={{
+                  padding: `${4 * u}px ${12 * u}px`,
+                  borderRadius: 6 * u,
+                  background: c.panel,
+                  boxShadow: c.highlight,
+                }}
+              >
+                Preview
+              </span>
+              <span
+                style={{ padding: `${4 * u}px ${12 * u}px`, color: c.muted }}
+              >
+                Edit
+              </span>
+            </div>
+          )}
+          {tall ? null : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8 * u,
+                padding: `${6 * u}px ${14 * u}px`,
+                borderRadius: 999,
+                border: `1px solid ${c.line}`,
+                color: c.muted,
+                fontSize: 13 * u,
+                minWidth: 200 * u,
+              }}
+            >
+              <Icon d={ICONS.globe} size={14 * u} color={c.faint} />
+              lumen.app
+            </div>
+          )}
+          <div style={{ flex: 1 }} />
+          <Icon d={ICONS.undo} size={17 * u} color={c.faint} />
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8 * u,
-              padding: `${6 * u}px ${14 * u}px`,
+              gap: 7 * u,
+              padding: `${7 * u}px ${16 * u}px`,
               borderRadius: 999,
-              border: `1px solid ${c.line}`,
-              color: c.muted,
-              fontSize: 13 * u,
-              minWidth: 200 * u,
+              background: published ? c.accent : c.ink,
+              color: published ? "#fff" : c.app,
+              fontSize: 14 * u,
+              transform: `scale(${pressScale})`,
+              boxShadow: published
+                ? `0 0 0 ${4 * u}px rgba(59,91,253,0.22)`
+                : "none",
             }}
           >
-            <Icon d={ICONS.globe} size={14 * u} color={c.faint} />
-            lumen.app
+            {published ? (
+              <Icon d={ICONS.check} size={14 * u} color="#fff" />
+            ) : null}
+            {published ? "Publishing" : publishLabel}
           </div>
-        )}
-        <div style={{ flex: 1 }} />
-        <Icon d={ICONS.undo} size={17 * u} color={c.faint} />
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 7 * u,
-            padding: `${7 * u}px ${16 * u}px`,
-            borderRadius: 999,
-            background: published ? c.accent : c.ink,
-            color: published ? "#fff" : c.app,
-            fontSize: 14 * u,
-            transform: `scale(${pressScale})`,
-            boxShadow: published
-              ? `0 0 0 ${4 * u}px rgba(59,91,253,0.22)`
-              : "none",
-          }}
-        >
-          {published ? (
-            <Icon d={ICONS.check} size={14 * u} color="#fff" />
-          ) : null}
-          {published ? "Publishing" : "Publish"}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            bottom: -1,
-            height: 2 * u,
-            width: `${bar * 100}%`,
-            background: `linear-gradient(90deg, transparent, ${c.accent})`,
-          }}
-        />
-      </div>
-      {tall ? null : (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: topH,
-            bottom: 0,
-            width: chatW,
-            borderRight: `1px solid ${c.line}`,
-            background: c.panel,
-            padding: 18 * u,
-            display: "flex",
-            flexDirection: "column",
-            gap: 14 * u,
-            ...label,
-            fontSize: 14 * u,
-          }}
-        >
           <div
             style={{
-              alignSelf: "flex-end",
-              maxWidth: "86%",
-              padding: `${10 * u}px ${13 * u}px`,
-              borderRadius: 12 * u,
-              background: c.raised,
-              border: `1px solid ${c.line}`,
-              boxShadow: c.highlight,
-              lineHeight: 1.4,
+              position: "absolute",
+              left: 0,
+              bottom: -1,
+              height: 2 * u,
+              width: `${bar * 100}%`,
+              background: `linear-gradient(90deg, transparent, ${c.accent})`,
+            }}
+          />
+        </div>
+        {tall ? null : (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: topH,
+              bottom: 0,
+              width: chatW,
+              borderRight: `1px solid ${c.line}`,
+              background: c.panel,
+              padding: 18 * u,
+              display: "flex",
+              flexDirection: "column",
+              gap: 14 * u,
+              ...label,
+              fontSize: 14 * u,
             }}
           >
-            Make the hero calmer and add the product shots.
-          </div>
-          <div style={{ color: c.faint, fontSize: 13 * u }}>Thought for 6s</div>
-          {[
-            "Rewrote hero.tsx",
-            "Added 2 product images",
-            "Tuned type scale",
-          ].map((t, i) => (
             <div
-              key={t}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 9 * u,
-                color: c.muted,
-                opacity: interpolate(frame, [i * 3, i * 3 + 9], [0, 1], CLAMP),
+                alignSelf: "flex-end",
+                maxWidth: "86%",
+                padding: `${10 * u}px ${13 * u}px`,
+                borderRadius: 12 * u,
+                background: c.raised,
+                border: `1px solid ${c.line}`,
+                boxShadow: c.highlight,
+                lineHeight: 1.4,
               }}
             >
-              <Icon d={ICONS.check} size={15 * u} color={c.accent} />
-              {t}
+              {prompt}
             </div>
-          ))}
-          <div style={{ flex: 1 }} />
-          <div style={{ display: "flex", gap: 8 * u, flexWrap: "wrap" }}>
-            {["Add pricing", "Dark mode"].map((t) => (
+            <div style={{ color: c.faint, fontSize: 13 * u }}>
+              Thought for 6s
+            </div>
+            {[
+              "Rewrote hero.tsx",
+              "Added 2 product images",
+              "Tuned type scale",
+            ].map((t, i) => (
               <div
                 key={t}
                 style={{
-                  padding: `${5 * u}px ${11 * u}px`,
-                  borderRadius: 999,
-                  border: `1px solid ${c.line}`,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 9 * u,
                   color: c.muted,
-                  fontSize: 12.5 * u,
+                  opacity: interpolate(
+                    frame,
+                    [i * 3, i * 3 + 9],
+                    [0, 1],
+                    CLAMP,
+                  ),
                 }}
               >
+                <Icon d={ICONS.check} size={15 * u} color={c.accent} />
                 {t}
               </div>
             ))}
-          </div>
-          <div
-            style={{
-              borderRadius: 14 * u,
-              border: `1px solid ${c.line}`,
-              background: c.raised,
-              boxShadow: `${c.highlight}, 0 ${8 * u}px ${24 * u}px rgba(0,0,0,0.18)`,
-              padding: 12 * u,
-              display: "flex",
-              flexDirection: "column",
-              gap: 16 * u,
-            }}
-          >
-            <span style={{ color: c.faint }}>Ask for a change…</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 * u }}>
-              <Icon d={ICONS.plus} size={16 * u} color={c.muted} />
-              <span style={{ color: c.muted, fontSize: 13 * u }}>Build</span>
-              <Icon d={ICONS.chevron} size={12 * u} color={c.faint} />
-              <div style={{ flex: 1 }} />
+            <div style={{ flex: 1 }} />
+            <div style={{ display: "flex", gap: 8 * u, flexWrap: "wrap" }}>
+              {["Add pricing", "Dark mode"].map((t) => (
+                <div
+                  key={t}
+                  style={{
+                    padding: `${5 * u}px ${11 * u}px`,
+                    borderRadius: 999,
+                    border: `1px solid ${c.line}`,
+                    color: c.muted,
+                    fontSize: 12.5 * u,
+                  }}
+                >
+                  {t}
+                </div>
+              ))}
+            </div>
+            <div
+              style={{
+                borderRadius: 14 * u,
+                border: `1px solid ${c.line}`,
+                background: c.raised,
+                boxShadow: `${c.highlight}, 0 ${8 * u}px ${24 * u}px rgba(0,0,0,0.18)`,
+                padding: 12 * u,
+                display: "flex",
+                flexDirection: "column",
+                gap: 16 * u,
+              }}
+            >
+              <span style={{ color: c.faint }}>Ask for a change…</span>
               <div
-                style={{
-                  width: 28 * u,
-                  height: 28 * u,
-                  borderRadius: 8 * u,
-                  background: c.accent,
-                  display: "grid",
-                  placeItems: "center",
-                }}
+                style={{ display: "flex", alignItems: "center", gap: 10 * u }}
               >
-                <Icon d={ICONS.send} size={15 * u} color="#fff" />
+                <Icon d={ICONS.plus} size={16 * u} color={c.muted} />
+                <span style={{ color: c.muted, fontSize: 13 * u }}>Build</span>
+                <Icon d={ICONS.chevron} size={12 * u} color={c.faint} />
+                <div style={{ flex: 1 }} />
+                <div
+                  style={{
+                    width: 28 * u,
+                    height: 28 * u,
+                    borderRadius: 8 * u,
+                    background: c.accent,
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  <Icon d={ICONS.send} size={15 * u} color="#fff" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-      <div
-        style={{
-          position: "absolute",
-          left: chatW + (tall ? 28 : 24) * u,
-          right: (tall ? 28 : 24) * u,
-          top: topH + 22 * u,
-          bottom: 22 * u,
-          borderRadius: 12 * u,
-          background: c.page,
-          overflow: "hidden",
-          boxShadow: `0 0 0 1px ${c.line}, 0 ${12 * u}px ${36 * u}px rgba(0,0,0,0.28), 0 ${2 * u}px ${6 * u}px rgba(0,0,0,0.18)`,
-          padding: `${22 * u}px ${36 * u}px`,
-          display: "flex",
-          flexDirection: "column",
-          gap: 26 * u,
-        }}
-      >
+        )}
         <div
           style={{
+            position: "absolute",
+            left: chatW + (tall ? 28 : 24) * u,
+            right: (tall ? 28 : 24) * u,
+            top: topH + 22 * u,
+            bottom: 22 * u,
+            borderRadius: 12 * u,
+            background: c.page,
+            overflow: "hidden",
+            boxShadow: `0 0 0 1px ${c.line}, 0 ${12 * u}px ${36 * u}px rgba(0,0,0,0.28), 0 ${2 * u}px ${6 * u}px rgba(0,0,0,0.18)`,
+            padding: `${22 * u}px ${36 * u}px`,
             display: "flex",
-            alignItems: "center",
-            gap: 22 * u,
-            fontFamily: geist.fontFamily,
-            fontWeight: 400,
-            fontSize: 13 * u,
-            color: c.pageMuted,
+            flexDirection: "column",
+            gap: 26 * u,
           }}
         >
-          <span
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 22 * u,
+              fontFamily: geist.fontFamily,
+              fontWeight: 400,
+              fontSize: 13 * u,
+              color: c.pageMuted,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: serif.fontFamily,
+                fontSize: 22 * u,
+                color: c.pageInk,
+                marginRight: "auto",
+              }}
+            >
+              {brand}
+            </span>
+            {tall ? null : <span>Product</span>}
+            {tall ? null : <span>Stories</span>}
+            <span>Pricing</span>
+            <span
+              style={{
+                padding: `${6 * u}px ${13 * u}px`,
+                borderRadius: 999,
+                background: c.pageInk,
+                color: c.page,
+              }}
+            >
+              Get early access
+            </span>
+          </div>
+          <div
             style={{
               fontFamily: serif.fontFamily,
-              fontSize: 22 * u,
+              fontWeight: 400,
+              fontSize: (tall ? 78 : 58) * u,
+              lineHeight: 1,
+              letterSpacing: "-0.02em",
               color: c.pageInk,
-              marginRight: "auto",
             }}
           >
-            Lumen
-          </span>
-          {tall ? null : <span>Product</span>}
-          {tall ? null : <span>Stories</span>}
-          <span>Pricing</span>
-          <span
+            {title[0]}
+            <br />
+            <span
+              style={{
+                fontFamily: serifItalic.fontFamily,
+                fontStyle: "italic",
+              }}
+            >
+              {title[1]}
+            </span>
+          </div>
+          <div
             style={{
-              padding: `${6 * u}px ${13 * u}px`,
-              borderRadius: 999,
-              background: c.pageInk,
-              color: c.page,
+              display: "flex",
+              flexDirection: tall ? "column" : "row",
+              gap: 14 * u,
+              flex: 1,
+              minHeight: 0,
             }}
           >
-            Get early access
-          </span>
+            {images.slice(0, 3).map((src, i) => {
+              const s = tile(i);
+              return (
+                <div
+                  key={src}
+                  style={{
+                    flex: i === 0 ? 1.4 : 1,
+                    borderRadius: 10 * u,
+                    overflow: "hidden",
+                    position: "relative",
+                    transform: `translateY(${(1 - s) * 30 * u}px)`,
+                    opacity: Math.min(1, s * 1.6),
+                  }}
+                >
+                  <Img
+                    src={src}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div
-          style={{
-            fontFamily: serif.fontFamily,
-            fontWeight: 400,
-            fontSize: (tall ? 78 : 58) * u,
-            lineHeight: 1,
-            letterSpacing: "-0.02em",
-            color: c.pageInk,
-          }}
-        >
-          {title[0]}
-          <br />
-          <span
-            style={{ fontFamily: serifItalic.fontFamily, fontStyle: "italic" }}
-          >
-            {title[1]}
-          </span>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: tall ? "column" : "row",
-            gap: 14 * u,
-            flex: 1,
-            minHeight: 0,
-          }}
-        >
-          {images.slice(0, 3).map((src, i) => {
-            const s = tile(i);
-            return (
-              <div
-                key={src}
-                style={{
-                  flex: i === 0 ? 1.4 : 1,
-                  borderRadius: 10 * u,
-                  overflow: "hidden",
-                  position: "relative",
-                  transform: `translateY(${(1 - s) * 30 * u}px)`,
-                  opacity: Math.min(1, s * 1.6),
-                }}
-              >
-                <Img
-                  src={src}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -642,13 +684,15 @@ function RiseLine({
   text,
   at,
   style,
+  speed,
 }: {
   text: string;
   at: number;
   style: React.CSSProperties;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
   const words = text.split(" ");
   return (
     <div style={style}>
@@ -692,65 +736,94 @@ function StatementScene({
   sub,
   ground,
   groundParams,
+  fontFamily,
+  ink,
+  background,
+  scale,
+  speed,
 }: {
   theme: Theme;
   line: string;
   sub: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  fontFamily: string;
+  ink?: string;
+  background?: string;
+  scale: number;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame() * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = UI[theme];
   const tall = H > W;
   const size = tall ? W * 0.1 : Math.min(W * 0.066, H * 0.12);
-  const push = interpolate(frame, [0, durationInFrames], [1, 1.035], CLAMP);
+  const push = interpolate(
+    frame,
+    [0, durationInFrames * speed],
+    [1, 1.035],
+    CLAMP,
+  );
   return (
     <AbsoluteFill>
-      <GshGround
-        preset={ground ?? c.ground}
-        params={groundParams ?? c.groundParams}
-        timeOffset={2}
-        timeScale={0.6}
-      />
-      <AbsoluteFill
-        style={{
-          justifyContent: "center",
-          alignItems: "center",
-          transform: `scale(${push})`,
-          paddingBottom: tall ? H * 0.16 : H * 0.2,
-          gap: size * 0.42,
-        }}
-      >
-        <RiseLine
-          text={line}
-          at={B_BEATS.lineIn}
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? c.ground}
+          params={groundParams ?? c.groundParams}
+          timeOffset={2}
+          timeScale={0.6}
+        />
+      ) : (
+        <AbsoluteFill
           style={{
-            fontFamily: hanken.fontFamily,
-            fontWeight: 300,
-            fontSize: size,
-            letterSpacing: "-0.04em",
-            lineHeight: 1.04,
-            color: c.heroInk,
-            textAlign: "center",
-            textWrap: "balance",
-            maxWidth: W * (tall ? 0.86 : 0.8),
+            background: background === "transparent" ? undefined : background,
           }}
         />
-        <RiseLine
-          text={sub}
-          at={B_BEATS.subIn}
+      )}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            fontFamily: hanken.fontFamily,
-            fontWeight: 400,
-            fontSize: size * 0.34,
-            letterSpacing: "-0.01em",
-            color: c.heroMuted,
-            textAlign: "center",
-            maxWidth: W * 0.8,
+            justifyContent: "center",
+            alignItems: "center",
+            // The push runs for the whole scene, so it never rests.
+            transform: `scale(${push})${glide(true)}`,
+            paddingBottom: tall ? H * 0.16 : H * 0.2,
+            gap: size * 0.42,
           }}
-        />
-      </AbsoluteFill>
+        >
+          <RiseLine
+            text={line}
+            at={B_BEATS.lineIn}
+            speed={speed}
+            style={{
+              fontFamily,
+              fontWeight: 300,
+              fontSize: size,
+              letterSpacing: "-0.04em",
+              lineHeight: 1.04,
+              color: ink ?? c.heroInk,
+              textAlign: "center",
+              textWrap: "balance",
+              maxWidth: W * (tall ? 0.86 : 0.8),
+            }}
+          />
+          <RiseLine
+            text={sub}
+            at={B_BEATS.subIn}
+            speed={speed}
+            style={{
+              fontFamily,
+              fontWeight: 400,
+              fontSize: size * 0.34,
+              letterSpacing: "-0.01em",
+              color: c.heroMuted,
+              textAlign: "center",
+              maxWidth: W * 0.8,
+            }}
+          />
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -767,7 +840,40 @@ export type BeamSweepDemoProps = {
   sceneA?: number;
   sceneB?: number;
   transition?: number;
+  /** Product name in the scene A app bar and on its page. */
+  brand?: string;
+  /** Request shown in the scene A chat bubble. */
+  prompt?: string;
+  /** Label of the scene A button before it is pressed. */
+  publishLabel?: string;
+  /** Typeface for the scene B statement. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Color of the scene B statement; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the scene B gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Size of each scene's foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 };
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
 
 export const BEAM_SWEEP_DEMO = { sceneA: 66, sceneB: 72, transition: 30 };
 
@@ -799,28 +905,66 @@ export function BeamSweepDemo({
   sceneA = BEAM_SWEEP_DEMO.sceneA,
   sceneB = BEAM_SWEEP_DEMO.sceneB,
   transition = BEAM_SWEEP_DEMO.transition,
+  brand = "Lumen",
+  prompt = "Make the hero calmer and add the product shots.",
+  publishLabel = "Publish",
+  fontFamily = hanken.fontFamily,
+  ink,
+  background,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: BeamSweepDemoProps) {
   const presentation = beamSweep({
     ...(theme === "light" ? LIGHT_BEAM : {}),
     ...beam,
   });
+  // Speed scales the series itself so the transition keeps pace with the scenes.
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   return (
-    <AbsoluteFill style={{ backgroundColor: UI[theme].app }}>
+    <AbsoluteFill
+      style={{
+        backgroundColor:
+          background === "transparent"
+            ? undefined
+            : (background ?? UI[theme].app),
+      }}
+    >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={sceneA}>
-          <BuilderScene theme={theme} images={images} title={pageTitle} />
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(sceneA)}
+        >
+          <BuilderScene
+            theme={theme}
+            images={images}
+            title={pageTitle}
+            brand={brand}
+            prompt={prompt}
+            publishLabel={publishLabel}
+            scale={scale}
+            delay={delay}
+            speed={speed}
+          />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
           presentation={presentation}
-          timing={linearTiming({ durationInFrames: transition })}
+          timing={linearTiming({ durationInFrames: len(transition) })}
         />
-        <TransitionSeries.Sequence durationInFrames={sceneB}>
+        <TransitionSeries.Sequence durationInFrames={len(sceneB)}>
           <StatementScene
             theme={theme}
             line={line}
             sub={sub}
             ground={ground}
             groundParams={groundParams}
+            fontFamily={fontFamily}
+            ink={ink}
+            background={background}
+            scale={scale}
+            speed={speed}
           />
         </TransitionSeries.Sequence>
       </TransitionSeries>

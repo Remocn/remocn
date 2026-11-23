@@ -1,0 +1,99 @@
+{
+  "component": "icon-inbox",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined inbox that sketches itself in slowly for an elegant intro moment.",
+      "askedAs": [
+        "big inbox icon drawing slowly",
+        "elegant thin line inbox reveal",
+        "large calm inbox animation",
+        "большая иконка входящих медленно рисуется",
+        "тонкая элегантная анимация почты"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "new-mail-ping",
+      "label": "New Mail Ping",
+      "description": "A bold blue inbox that repeatedly bounces with a quick action to signal incoming mail.",
+      "askedAs": [
+        "looping notification inbox",
+        "new message alert icon",
+        "bouncing blue inbox",
+        "зацикленная иконка нового письма",
+        "синяя анимация уведомления о почте"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#1f6feb",
+        "strokeWidth": 2.5,
+        "speed": 1.5,
+        "size": 72
+      }
+    },
+    {
+      "id": "snappy-ui",
+      "label": "Snappy UI",
+      "description": "A small, crisp inbox that draws and acts in a fast burst like an interface micro-interaction.",
+      "askedAs": [
+        "quick small inbox icon",
+        "fast ui micro animation inbox",
+        "snappy button icon",
+        "быстрая маленькая иконка почты",
+        "шустрая микроанимация входящих"
+      ],
+      "props": {
+        "size": 32,
+        "speed": 2.5,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "muted-slate-loop",
+      "label": "Muted Slate",
+      "description": "A soft slate-grey inbox gently looping its full animation as a quiet background accent.",
+      "askedAs": [
+        "subtle grey inbox loop",
+        "calm ambient inbox icon",
+        "low key looping mail icon",
+        "спокойная серая иконка почты в цикле",
+        "ненавязчивая фоновая анимация входящих"
+      ],
+      "props": {
+        "color": "#64748b",
+        "loop": true,
+        "speed": 0.75,
+        "size": 96,
+        "strokeWidth": 1.5
+      }
+    },
+    {
+      "id": "bold-terracotta",
+      "label": "Bold Terracotta",
+      "description": "A heavy-stroked warm terracotta inbox with punchy full motion for poster-style frames.",
+      "askedAs": [
+        "thick warm colored inbox",
+        "bold orange mail icon",
+        "chunky inbox animation",
+        "толстая тёплая иконка входящих",
+        "жирная терракотовая иконка почты"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "strokeWidth": 3,
+        "size": 128,
+        "speed": 1.25
+      }
+    }
+  ]
+}

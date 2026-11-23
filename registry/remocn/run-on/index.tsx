@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const dmSans = loadFont("normal", {
   weights: ["400", "500"],
@@ -23,8 +23,19 @@ export interface RunOnProps {
   promise?: string;
   highlight?: string;
   joiners?: string[];
+  /** Frames the full stop holds before the sentence drains away. */
+  hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; DM Sans by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -78,6 +89,8 @@ interface Metrics {
   dotW: number;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function layoutWords(s: string, em: (x: string) => number) {
   const out: Word[] = [];
   const re = /\S+/g;
@@ -92,11 +105,11 @@ function layoutWords(s: string, em: (x: string) => number) {
   return out;
 }
 
-function measure(text: string, promise: string): Metrics {
+function measure(text: string, promise: string, font: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("run-on: no 2d context");
-  ctx.font = `${WGHT} ${PROBE}px "${dmSans.fontFamily}"`;
+  ctx.font = font;
   const em = (x: string) =>
     ctx.measureText(x).width / PROBE + TRACK * Array.from(x).length;
   const body = promise.replace(/\.$/, "");
@@ -108,7 +121,12 @@ function measure(text: string, promise: string): Metrics {
   };
 }
 
-function useMetrics(text: string, promise: string) {
+function useMetrics(
+  text: string,
+  promise: string,
+  fontFamily: string,
+  fontWeight: number,
+) {
   const key = `${text}\u0001${promise}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("run-on: measuring"));
@@ -119,12 +137,19 @@ function useMetrics(text: string, promise: string) {
     let live = true;
     Promise.all([
       dmSans.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${dmSans.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(src.current.text, src.current.promise) });
+        setState({
+          key,
+          m: measure(
+            src.current.text,
+            src.current.promise,
+            `${fontWeight} ${PROBE}px "${fontFamily}"`,
+          ),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -133,8 +158,24 @@ function useMetrics(text: string, promise: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
   return state && state.key === key ? state.m : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function RunOn({
@@ -142,22 +183,30 @@ export function RunOn({
   promise = "Or change one line.",
   highlight = "one line",
   joiners = ["and", "then"],
+  hold = HOLD,
   accent,
+  ink,
   background,
+  fontFamily = dmSans.fontFamily,
+  fontWeight = WGHT,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: RunOnProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const k = Math.min(1, durationInFrames / BASE);
   const t = (frame * speed) / k;
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
   const body = text.trim().replace(/[.!?…]+$/, "");
   const said = promise.trim();
-  const m = useMetrics(body, said);
+  const m = useMetrics(body, said, fontFamily, fontWeight);
 
   if (!m) {
     return (
@@ -193,27 +242,35 @@ export function RunOn({
     acc += FIRST_GAP + (LAST_GAP - FIRST_GAP) * p ** 0.6;
   }
   const stopAt = arrive[n - 1] + STOP_GAP;
-  const drainAt = stopAt + SLAM + HOLD;
+  const drainAt = stopAt + SLAM + hold;
   const promiseAt = drainAt + DRAIN - PROMISE_LAG;
 
   const need = (ln: number) => Math.max(0, top0 + (ln + 1) * pitch - floor);
-  let scroll = 0;
-  for (let i = 0; i < n; i++) {
-    if (t < arrive[i]) break;
-    const from = i === 0 ? 0 : need(placed[i - 1].line);
-    const to = need(placed[i].line);
-    if (to !== from) {
-      scroll =
-        from +
-        (to - from) *
-          interpolate(t, [arrive[i], arrive[i] + SCROLL], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-    } else {
-      scroll = to;
+  const scrollAt = (f: number) => {
+    let at = 0;
+    for (let i = 0; i < n; i++) {
+      if (f < arrive[i]) break;
+      const from = i === 0 ? 0 : need(placed[i - 1].line);
+      const to = need(placed[i].line);
+      if (to !== from) {
+        at =
+          from +
+          (to - from) *
+            interpolate(f, [arrive[i], arrive[i] + SCROLL], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+      } else {
+        at = to;
+      }
     }
-  }
+    return at;
+  };
+  const scroll = scrollAt(t);
+  const step = speed / k;
+  const scrolling =
+    Math.abs(scrollAt(t + step) - scroll) > 1e-3 ||
+    Math.abs(scroll - scrollAt(t - step)) > 1e-3;
   const drain = interpolate(t, [drainAt, drainAt + DRAIN], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.55, 0, 1, 0.45),
@@ -239,6 +296,11 @@ export function RunOn({
     dy: number,
     opacity: number,
     color: string,
+    moving: boolean,
+    // Layout puts a baseline on a whole pixel inside its box, so a glyph whose
+    // font size eases clicks even under a transform. While it grows it is laid
+    // out at `laid` and scaled from there; otherwise `laid` is `size`.
+    laid = size,
   ) => (
     <div
       key={key}
@@ -246,17 +308,18 @@ export function RunOn({
         position: "absolute",
         left: 0,
         top: 0,
-        height: size * 1.2,
-        lineHeight: `${size * 1.2}px`,
+        height: laid * 1.2,
+        lineHeight: `${laid * 1.2}px`,
         whiteSpace: "pre",
-        fontFamily: dmSans.fontFamily,
-        fontWeight: WGHT,
-        fontSize: size,
+        fontFamily,
+        fontWeight,
+        fontSize: laid,
         letterSpacing: `${TRACK}em`,
         fontKerning: "normal",
         color,
         opacity,
-        transform: `translate(${x.toFixed(2)}px, ${(baseY - size * 0.93 + dy).toFixed(2)}px)`,
+        transform: `translate(${x.toFixed(2)}px, ${(baseY - size * 0.93 + dy).toFixed(2)}px)${glide(moving)}${laid === size ? "" : ` scale(${size / laid})`}`,
+        transformOrigin: laid === size ? undefined : "0 0",
       }}
     >
       {text}
@@ -284,7 +347,8 @@ export function RunOn({
           F,
           F * 0.3 * (1 - r),
           r * (1 - drain * 0.5),
-          join ? c.dim : c.ink,
+          join ? c.dim : fg,
+          midway(r) || scrolling || midway(drain),
         ),
       );
     });
@@ -304,6 +368,9 @@ export function RunOn({
     const stopY = baseOf(placed[last].line) - scroll;
     const restX = marginX + m.promiseW * Fp;
     const size = F + (Fp - F) * dotTravel;
+    // Both eases crawl into their ends, so they count as moving until they
+    // are exactly there.
+    const travelling = dotTravel > 0 && dotTravel < 1;
     nodes.push(
       glyph(
         "stop",
@@ -314,6 +381,8 @@ export function RunOn({
         -F * 0.7 * (1 - slam),
         Math.min(1, slam * 1.6),
         hi,
+        (slam > 0 && slam < 1) || travelling || scrolling,
+        travelling ? Fp : size,
       ),
     );
   }
@@ -334,8 +403,8 @@ export function RunOn({
     const inHi =
       hiStart >= 0 && w.start < hiEnd && w.start + w.text.length > hiStart;
     const color = inHi
-      ? `color-mix(in oklab, ${hi} ${(lit * 100).toFixed(1)}%, ${c.ink})`
-      : c.ink;
+      ? `color-mix(in oklab, ${hi} ${(lit * 100).toFixed(1)}%, ${fg})`
+      : fg;
     nodes.push(
       glyph(
         `p${i}`,
@@ -346,13 +415,14 @@ export function RunOn({
         Fp * 0.4 * (1 - r),
         r,
         color,
+        midway(r),
       ),
     );
   });
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

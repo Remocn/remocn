@@ -1,0 +1,120 @@
+{
+  "component": "led-ticker",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "stadium-amber",
+      "label": "Stadium Amber",
+      "description": "Warm amber dots on near-black, like a classic stadium scoreboard.",
+      "askedAs": [
+        "orange led scoreboard",
+        "warm amber stadium sign",
+        "old school amber dot matrix",
+        "янтарное табло стадиона",
+        "оранжевая светодиодная надпись"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0d0b08",
+        "ink": "#ffb347",
+        "accent": "#ff6a3d",
+        "dotSize": 0.5
+      }
+    },
+    {
+      "id": "station-board",
+      "label": "Station Board",
+      "description": "Slow, calm scroll in soft white and teal like a railway departure sign.",
+      "askedAs": [
+        "train station departure board",
+        "slow calm led sign",
+        "subtle teal transit display",
+        "табло на вокзале",
+        "медленная бегущая строка"
+      ],
+      "props": {
+        "scroll": 96,
+        "background": "#0b1416",
+        "ink": "#e6f1ef",
+        "accent": "#2bb3a3",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Clean light theme with fine dots and a deep ink-blue emphasis, grain off.",
+      "askedAs": [
+        "light background led text",
+        "clean white dot matrix",
+        "minimal bright ticker",
+        "светлая бегущая строка",
+        "белый фон точечный шрифт"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1c1c1c",
+        "accent": "#2a3fd1",
+        "dotSize": 0.36,
+        "grain": false
+      }
+    },
+    {
+      "id": "rapid-bumper",
+      "label": "Rapid Bumper",
+      "description": "Fast, oversized scroll with chunky dots for a punchy launch beat.",
+      "askedAs": [
+        "fast big ticker",
+        "quick punchy led bumper",
+        "huge fast scrolling sign",
+        "быстрая крупная бегущая строка",
+        "энергичная заставка с точками"
+      ],
+      "props": {
+        "scroll": 28,
+        "scale": 1.35,
+        "dotSize": 0.58,
+        "speed": 1.5,
+        "accent": "#ff4d6d"
+      }
+    },
+    {
+      "id": "arcade-green",
+      "label": "Arcade Green",
+      "description": "Phosphor green dots on a deep green-black, like a vintage terminal or arcade marquee.",
+      "askedAs": [
+        "green retro terminal ticker",
+        "matrix green led text",
+        "vintage arcade sign",
+        "зелёное ретро табло",
+        "текст как на старом терминале"
+      ],
+      "props": {
+        "background": "#07110a",
+        "ink": "#7ee08a",
+        "accent": "#d4f45a",
+        "dotSize": 0.42
+      }
+    },
+    {
+      "id": "compact-delayed",
+      "label": "Compact Slow",
+      "description": "Smaller, unhurried ticker that starts after a short pause, good as a subtle backdrop.",
+      "askedAs": [
+        "small subtle led ticker",
+        "delayed slow scrolling text",
+        "quiet background sign",
+        "маленькая спокойная бегущая строка",
+        "строка с задержкой старта"
+      ],
+      "props": {
+        "scale": 0.7,
+        "scroll": 110,
+        "delay": 20,
+        "accent": "#9b8cff"
+      }
+    }
+  ]
+}

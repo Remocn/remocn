@@ -4,12 +4,9 @@ import { loadFont as loadBricolage } from "@remotion/google-fonts/BricolageGrote
 import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
 import type React from "react";
 import { Fragment, useId } from "react";
-import {
-  AbsoluteFill,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const bricolage = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -26,8 +23,20 @@ export interface FlickSwapItem {
 export interface FlickSwapProps {
   items?: FlickSwapItem[];
   dwell?: number;
+  /** Weight of the headlines. */
+  fontWeight?: number;
+  /** Strength of the motion blur on a flick; 0 turns it off. */
+  blur?: number;
   accent?: string;
+  /** Text color of the headlines; overrides the theme. */
+  ink?: string;
   background?: string;
+  /** Typeface for the headlines. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Size of the copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -164,17 +173,41 @@ function estimateEm(text: string) {
   return w;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FlickSwap({
   items = DEFAULT_ITEMS,
   dwell = 28,
+  fontWeight = 500,
+  blur: blurAmount = 1,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = bricolage.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: FlickSwapProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const p = PALETTES[theme];
+  const fg = ink ?? p.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const transparent = background === "transparent";
   const list = items.length > 0 ? items : DEFAULT_ITEMS;
@@ -193,7 +226,14 @@ export function FlickSwap({
     (scrollAt(frame + 0.5, n, period) - scrollAt(frame - 0.5, n, period)) *
     height;
   const speedPx = Math.abs(v);
-  const blur = Math.min(16 * s, speedPx * 0.13);
+  // The scroll is a damped spring with no clean progress, and the words trail
+  // it by up to two frames, so look at the neighbouring frames instead.
+  const yAt = (f: number) => scrollAt(f, n, period) * height;
+  let scrolling = false;
+  for (let d = -2; d < 1 && !scrolling; d++) {
+    scrolling = Math.abs(yAt(frame + d + 1) - yAt(frame + d)) > 1e-3;
+  }
+  const blur = Math.min(16 * s, speedPx * 0.13) * blurAmount;
   const lean = Math.max(-1.2, Math.min(1.2, (v / height) * 9));
   const sway = (v / height) * 26 * s;
 
@@ -216,7 +256,7 @@ export function FlickSwap({
   const railH = railGap * (n - 1);
   const railX = width - padX * (portrait ? 0.55 : 0.42);
   const railTop = height / 2 - railH / 2;
-  const railY = railTop + Math.max(-0.3, Math.min(n - 0.7, y)) * railGap;
+  const railShift = Math.max(-0.3, Math.min(n - 0.7, y)) * railGap;
   const railIn = interpolate(frame, [4, 16], [0, 1], CLAMP);
 
   return (
@@ -238,133 +278,138 @@ export function FlickSwap({
         </defs>
       </svg>
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          filter: blur > 0.4 ? `url(#fs-${uid})` : undefined,
-          transform: `translateX(${sway.toFixed(2)}px) rotate(${lean.toFixed(3)}deg)`,
-          transformOrigin: "100% 100%",
-        }}
-      >
-        {list.map((item, i) => {
-          const off = (i - y) * height;
-          if (Math.abs(off) > height * 1.05) return null;
-          const fs = fsFor(item.headline);
-          const words = splitWords(item.headline, item.highlight);
-          return (
-            <div
-              key={i}
-              style={{
-                position: "absolute",
-                left: padX,
-                top: 0,
-                height,
-                width: maxW,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                transform: `translateY(${off.toFixed(2)}px)`,
-              }}
-            >
-              {item.label ? (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: labelFs * 0.8,
-                    marginBottom: fs * 0.32,
-                    fontFamily: mono.fontFamily,
-                    fontWeight: 500,
-                    fontSize: labelFs,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    color: p.muted,
-                  }}
-                >
-                  <span style={{ color: p.fg }}>
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span
-                    style={{
-                      width: labelFs * 1.6,
-                      height: Math.max(1, 1.5 * s),
-                      background: p.rail,
-                    }}
-                  />
-                  <span>{item.label}</span>
-                </div>
-              ) : null}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            filter: blur > 0.4 ? `url(#fs-${uid})` : undefined,
+            transform: `translateX(${sway.toFixed(2)}px) rotate(${lean.toFixed(3)}deg)`,
+            transformOrigin: "100% 100%",
+          }}
+        >
+          {list.map((item, i) => {
+            const off = (i - y) * height;
+            if (Math.abs(off) > height * 1.05) return null;
+            const fs = fsFor(item.headline);
+            const words = splitWords(item.headline, item.highlight);
+            return (
               <div
+                key={i}
                 style={{
-                  fontFamily: bricolage.fontFamily,
-                  fontWeight: 500,
-                  fontSize: fs,
-                  lineHeight: 1.02,
-                  letterSpacing: "-0.035em",
-                  color: p.fg,
-                  textWrap: "balance",
+                  position: "absolute",
+                  left: padX,
+                  top: 0,
+                  height,
+                  width: maxW,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  transform: `translateY(${off.toFixed(2)}px)${glide(scrolling)}`,
                 }}
               >
-                {words.map((w, k) => {
-                  const lag =
-                    (0.5 + Math.min(1.1, k * 0.13)) / Math.max(0.25, speed);
-                  const rel =
-                    (y - scrollAt(frame - lag * speed, n, period)) * height;
-                  return (
-                    <Fragment key={w.index}>
-                      {k > 0 ? " " : null}
-                      <span
-                        style={{
-                          display: "inline-block",
-                          paddingRight: "0.03em",
-                          marginRight: "-0.03em",
-                          transform: `translateY(${rel.toFixed(2)}px)`,
-                          ...(w.hl
-                            ? phraseFill(w.hl, p.highlight(accent))
-                            : {}),
-                        }}
-                      >
-                        {w.text}
-                      </span>
-                    </Fragment>
-                  );
-                })}
+                {item.label ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: labelFs * 0.8,
+                      marginBottom: fs * 0.32,
+                      fontFamily: mono.fontFamily,
+                      fontWeight: 500,
+                      fontSize: labelFs,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: p.muted,
+                    }}
+                  >
+                    <span style={{ color: fg }}>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span
+                      style={{
+                        width: labelFs * 1.6,
+                        height: Math.max(1, 1.5 * s),
+                        background: p.rail,
+                      }}
+                    />
+                    <span>{item.label}</span>
+                  </div>
+                ) : null}
+                <div
+                  style={{
+                    fontFamily,
+                    fontWeight,
+                    fontSize: fs,
+                    lineHeight: 1.02,
+                    letterSpacing: "-0.035em",
+                    color: fg,
+                    textWrap: "balance",
+                  }}
+                >
+                  {words.map((w, k) => {
+                    const lag =
+                      (0.5 + Math.min(1.1, k * 0.13)) / Math.max(0.25, speed);
+                    const rel =
+                      (y - scrollAt(frame - lag * speed, n, period)) * height;
+                    return (
+                      <Fragment key={w.index}>
+                        {k > 0 ? " " : null}
+                        <span
+                          style={{
+                            display: "inline-block",
+                            paddingRight: "0.03em",
+                            marginRight: "-0.03em",
+                            transform: `translateY(${rel.toFixed(2)}px)`,
+                            ...(w.hl
+                              ? phraseFill(w.hl, p.highlight(accent))
+                              : {}),
+                          }}
+                        >
+                          {w.text}
+                        </span>
+                      </Fragment>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
 
-      {n > 1 ? (
-        <div style={{ position: "absolute", inset: 0, opacity: railIn }}>
-          {list.map((_, i) => (
+        {n > 1 ? (
+          <div style={{ position: "absolute", inset: 0, opacity: railIn }}>
+            {list.map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  position: "absolute",
+                  left: railX - 3 * s,
+                  top: railTop + i * railGap - 3 * s,
+                  width: 6 * s,
+                  height: 6 * s,
+                  borderRadius: 9,
+                  background: p.rail,
+                }}
+              />
+            ))}
             <div
-              key={i}
               style={{
                 position: "absolute",
                 left: railX - 3 * s,
-                top: railTop + i * railGap - 3 * s,
+                // Eased by `top`, the pill clicked down pixel by pixel; layout
+                // holds the first stop and the travel is a transform.
+                top: railTop - 11 * s,
+                transform: railShift ? `translateY(${railShift}px)` : undefined,
                 width: 6 * s,
-                height: 6 * s,
+                height: 22 * s,
                 borderRadius: 9,
-                background: p.rail,
+                background: fg,
               }}
             />
-          ))}
-          <div
-            style={{
-              position: "absolute",
-              left: railX - 3 * s,
-              top: railY - 11 * s,
-              width: 6 * s,
-              height: 22 * s,
-              borderRadius: 9,
-              background: p.fg,
-            }}
-          />
-        </div>
-      ) : null}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

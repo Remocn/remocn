@@ -25,6 +25,14 @@ export const CRAFT = [
   "/docs/craft/anti-patterns",
 ];
 
+/** Comparison guides, for readers still choosing a tool. */
+export const COMPARE = [
+  "/docs/guides/after-effects-alternatives-for-developers",
+  "/docs/guides/hyperframes-alternatives",
+  "/docs/guides/remotion-mcp-servers",
+  "/docs/guides/remotion-component-libraries",
+];
+
 export const GUIDES = {
   index: "/docs/guides",
   setup: "/docs/guides/setup",

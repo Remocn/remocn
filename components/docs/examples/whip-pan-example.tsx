@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { type WhipPanProps, whipPan } from "@/registry/remocn/whip-pan";
 
 const FONT_FAMILY =
@@ -37,16 +38,17 @@ interface WhipPanExampleProps {
 }
 
 export function WhipPanExampleScene({ direction, blur }: WhipPanExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <Scene label="Scene A" background="#141318" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 26 })}
+        timing={linearTiming({ durationInFrames: toFrames(26) })}
         presentation={whipPan({ direction, blur })}
       />
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <Scene label="Whip Pan" background="#1a1922" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -61,14 +63,14 @@ import { whipPan } from "@/components/remocn/whip-pan";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 26 })}
+      timing={linearTiming({ durationInFrames: 52 })}
       presentation={whipPan({ direction: "${direction}", blur: ${blur} })}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

@@ -133,6 +133,14 @@ Stings and Social share these extra conventions — the page's props table says 
   only exist in the remocn repo. Always pass the user's own images, or put files with those names in `public/`.
 - Copy and data are props (`title`, `words`, `items`, `value`, `rows`…); defaults are placeholder
   launch copy, so replace them.
+- Brand props, the same on every piece where they apply: `fontFamily` (main copy; load the font
+  first, e.g. `@remotion/google-fonts`), `ink` (main text color), `background` (a solid fill, or
+  `"transparent"`; on a ground scene it replaces the ground), `accent`, and `logo` (a
+  `ReactNode` that replaces the remocn mark). Set them from the user's brand on every scene of a
+  video so the scenes match.
+- Layout and timing props: `scale` (sizes the content, not the background, default `1`) and
+  `delay` (frames to hold the first frame before anything moves, default `0`), next to `speed`.
+- `grain?: boolean` turns off the film grain on the pieces that draw it.
 - `Length` is for the default props. Where it scales with content (word count, item count, number of
   rows), the page says how.
 - Transitions come in two shapes. Some export a lowercase presentation factory for
@@ -156,7 +164,7 @@ sequencers that take a `scenes` array and own the whole timeline. The page says 
 ```tsx
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 
-const opacity = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: "clamp" });
+const opacity = interpolate(frame, [0, 60], [0, 1], { extrapolateRight: "clamp" }); // 1 s at 60 fps
 const scale = spring({ fps, frame, config: { damping: 12, mass: 1, stiffness: 100 } });
 
 // Deterministic randomness (NEVER Math.random())
@@ -166,27 +174,32 @@ const jitter = random(`seed-${frame}`);
 
 ### Composition structure
 
+Frame counts here are composition frames at 60 fps: twice the 30 fps counts of a storyboard.
+
 ```tsx
 import { Sequence, Series } from "remotion";
 
-<Sequence from={30} durationInFrames={60}>
+<Sequence from={60} durationInFrames={120}>
   <Typewriter text="npm install remocn" />
 </Sequence>
 
 <Series>
-  <Series.Sequence durationInFrames={60}><SceneA /></Series.Sequence>
-  <Series.Sequence durationInFrames={60}><SceneB /></Series.Sequence>
+  <Series.Sequence durationInFrames={120}><SceneA /></Series.Sequence>
+  <Series.Sequence durationInFrames={120}><SceneB /></Series.Sequence>
 </Series>
 ```
 
 ### Canvas & timing
 
-- **Canvas standard:** `1280×720 @ 30fps`. Components are laid out for it.
-- **`Length` is the component's own motion, not the whole beat.** For a transition it is the value
-  to pass to `linearTiming` / `springTiming`; for everything else it is the frame the animation
-  finishes on. Treat it as the floor for the `Sequence` and add hold time when the element should
-  stay on screen after it settles. `state-driven` means the component renders from its `state` prop
-  and has no duration of its own.
+- **Canvas standard:** `1280×720 @ 60fps`. Components are laid out for it and keep their timing at
+  any frame rate.
+- **`Length` is the component's own motion, not the whole beat**, counted in 30 fps frames. For a
+  transition it is the length of its `linearTiming` / `springTiming`; for everything else it is the
+  frame the animation finishes on. Treat it as the floor for the `Sequence` and add hold time when
+  the element should stay on screen after it settles. Plan in these 30 fps counts; when you hand a
+  count to Remotion in a 60 fps composition (`durationInFrames`, `from`, the timing length), double
+  it. Frame props passed to a component (`delay`, staggers) stay in 30 fps frames. `state-driven`
+  means the component renders from its `state` prop and has no duration of its own.
 - **Tone matching:** each entry carries a `vibe` tag (`tech`/`premium`/`data`/`clean`/`playful`/
   `social`/`paper`) — pick components whose vibe fits the brand. `paper` is the stop-motion kit: a
   quantized ~10-poses-per-second clock, handwriting and ink. Those components read as one world, so
@@ -212,7 +225,7 @@ https://remocn.dev/docs/craft/anti-patterns.md
 
 - **Terminal scroll is instant** — step-function `translateY`, never spring/ease the scroll.
 - **`overflow: hidden` on split layouts** — prevents content breakage during width animations.
-- **Cursor blink is deterministic** — `Math.floor(frame / 15) % 2 === 0`, not intervals.
+- **Cursor blink is deterministic** — `Math.floor(frame / 30) % 2 === 0` at 60 fps, not intervals.
 - **Static files go in `public/`** — load via `staticFile('cursor.svg')`, not imports.
 - **Social cards render offline** — `avatarUrl=""` / `coverUrl=""` fall back to gradients; no fetch.
 - **Gradient grounds need WebGL** — any component with a `ground` prop renders black without `--gl=angle`.
@@ -233,8 +246,7 @@ restate Remotion API docs here or in your answer; point to those skills or to re
 
 Don't dump components — compose one story. When asked to build a full video ("make a product demo",
 "changelog video", "intro for my landing") and the `video` skill from the remocn plugin is installed,
-follow it: it runs the whole brief → storyboard → install → compose → review flow below and hands
-the result to Remocn Studio. Otherwise:
+follow it: it runs the whole brief → storyboard → install → compose → review flow below. Otherwise:
 
 1. **Decide the strategy** — ready template vs compose from components vs build a new component. See
    `references/anatomy.md` §1.

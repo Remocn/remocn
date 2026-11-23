@@ -2,19 +2,17 @@
 
 import { loadFont } from "@remotion/google-fonts/BarlowCondensed";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: condensed } = loadFont("normal", {
   weights: ["500"],
   subsets: ["latin"],
 });
-const { fontFamily: condensedItalic } = loadFont("italic", {
+// Same family name as the upright face; "VS" picks it up through fontStyle.
+loadFont("italic", {
   weights: ["500"],
   subsets: ["latin"],
 });
@@ -73,6 +71,22 @@ export interface VersusSplitProps {
   stats?: VersusStat[];
   /** The marker on the seam plates. */
   accent?: string;
+  /** Text color of the names and values; overrides the theme. */
+  ink?: string;
+  /** Background fill behind the halves; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Barlow Condensed by default. */
+  fontFamily?: string;
+  /** The word that slams onto the seam. */
+  versus?: string;
+  /** Frames between stat rows as they land. */
+  stagger?: number;
+  /** Replaces the remocn mark on the left half. */
+  logo?: React.ReactNode;
+  /** Size of the whole split, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -144,6 +158,24 @@ function kick(d: number) {
   return k * k;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function VersusSplit({
   away = "The old way",
   homeLabel = "Challenger",
@@ -154,12 +186,24 @@ export function VersusSplit({
     { label: "Revisions", home: "1 round", away: "7 rounds" },
   ],
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = condensed,
+  versus = "VS",
+  stagger = ROW_GAP,
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: VersusSplitProps) {
-  const t = useCurrentFrame() * speed + 2;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + 2;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
   // The seam leans right at the top: x = W/2 + lean at y = 0, W/2 - lean at y = H.
@@ -176,17 +220,27 @@ export function VersusSplit({
   const vsScale = 1.7 - 0.7 * vs;
   const vsOpacity = ramp(t, VS_AT, 3);
 
-  const rowsEnd = ROWS_AT + (stats.length - 1) * ROW_GAP + ROW_LEN;
+  const rowsEnd = ROWS_AT + (stats.length - 1) * stagger + ROW_LEN;
   const lightAt = rowsEnd + LIGHT_DELAY;
   const light = WIPE(ramp(t, lightAt, LIGHT_LEN));
   const dimP = ramp(t, lightAt + 3, 6);
 
-  const bump = Math.max(
-    kick(t - SPLIT_LEN + 1),
-    kick(t - VS_AT - 4),
-    0.6 * kick(t - lightAt - LIGHT_LEN + 2),
-  );
-  const camScale = 1 + 0.02 * bump;
+  const camAt = (at: number) =>
+    1 +
+    0.02 *
+      Math.max(
+        kick(at - SPLIT_LEN + 1),
+        kick(at - VS_AT - 4),
+        0.6 * kick(at - lightAt - LIGHT_LEN + 2),
+      );
+  const camScale = camAt(t);
+  // The camera kick carries the whole frame, and the halves paint up to its
+  // edges, so a tilt there would show a seam as the kick dies out. The text
+  // blocks take the tilt instead while the kick moves them.
+  const camMoving =
+    Math.abs(camAt(t + speed) - camScale) > 1e-6 ||
+    Math.abs(camScale - camAt(t - speed)) > 1e-6;
+  const textTilt = glide(camMoving);
 
   // The light's front edge runs parallel to the seam, from off the left edge
   // to just past the seam.
@@ -216,9 +270,9 @@ export function VersusSplit({
   const homeCx = 0.25 * W;
   const awayCx = 0.755 * W;
   const labelFs = 20 * u;
-  const homeNameInk = lit(homeCx, nameY) ? "#FFFFFF" : c.ink;
+  const homeNameInk = lit(homeCx, nameY) ? "#FFFFFF" : fg;
   const homeLabelInk = lit(homeCx, nameY) ? "#FFFFFFcc" : c.dim;
-  const awayInk = dimP > 0.5 ? c.off : c.ink;
+  const awayInk = dimP > 0.5 ? c.off : fg;
 
   // ── Stat rows ─────────────────────────────────────────────────────────────
   const rowTop = 0.575 * H;
@@ -234,7 +288,7 @@ export function VersusSplit({
   const label = (text: string, ink: string) => (
     <div
       style={{
-        fontFamily: condensed,
+        fontFamily,
         fontWeight: 500,
         fontSize: labelFs,
         letterSpacing: "0.16em",
@@ -249,247 +303,252 @@ export function VersusSplit({
   );
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `scale(${camScale})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        {/* Left half: remocn. */}
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translateX(${leftDx}px)`,
+            transform: `scale(${camScale})`,
+            transformOrigin: "50% 50%",
           }}
         >
+          {/* Left half: remocn. */}
           <div
             style={{
               position: "absolute",
               inset: 0,
-              clipPath: leftPoly,
-              background: c.home,
+              transform: `translateX(${leftDx}px)`,
             }}
           >
-            {light > 0 ? (
-              <>
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    clipPath: lightPoly,
-                    background: haloGround,
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    clipPath: edgePoly,
-                    background: HALO[0],
-                    opacity: 1 - light,
-                  }}
-                />
-              </>
-            ) : null}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: homeCx - 0.24 * W,
-              width: 0.48 * W,
-              top: nameY - 60 * u,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            {label(homeLabel, homeLabelInk)}
-            <RemocnLogo fontSize={80 * u} color={homeNameInk} />
-          </div>
-        </div>
-
-        {/* Right half: the opponent. */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            transform: `translateX(${rightDx}px)`,
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              clipPath: rightPoly,
-              background: dimP > 0 ? c.awayOff : c.away,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: awayCx - 0.24 * W,
-              width: 0.48 * W,
-              top: nameY - 60 * u,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            {label(awayLabel, dimP > 0.5 ? c.off : c.dim)}
             <div
               style={{
-                fontFamily: condensed,
-                fontWeight: 500,
-                fontSize: 92 * u,
-                lineHeight: 0.84,
-                letterSpacing: "0.005em",
-                textTransform: "uppercase",
-                color: awayInk,
-                whiteSpace: "nowrap",
+                position: "absolute",
+                inset: 0,
+                clipPath: leftPoly,
+                background: c.home,
               }}
             >
-              {away}
+              {light > 0 ? (
+                <>
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      clipPath: lightPoly,
+                      background: haloGround,
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      clipPath: edgePoly,
+                      background: HALO[0],
+                      opacity: 1 - light,
+                    }}
+                  />
+                </>
+              ) : null}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: homeCx - 0.24 * W,
+                width: 0.48 * W,
+                top: nameY - 60 * u,
+                transform: textTilt || undefined,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              {label(homeLabel, homeLabelInk)}
+              {logo ?? <RemocnLogo fontSize={80 * u} color={homeNameInk} />}
             </div>
           </div>
-        </div>
 
-        {/* Impact flash along the seam. */}
-        {seamFlash > 0 ? (
+          {/* Right half: the opponent. */}
           <div
             style={{
               position: "absolute",
               inset: 0,
-              clipPath: `polygon(${seamX(0) - 5 * u}px 0, ${seamX(0) + 5 * u}px 0, ${seamX(H) + 5 * u}px ${H}px, ${seamX(H) - 5 * u}px ${H}px)`,
-              background: c.seam,
-              opacity: seamFlash,
+              transform: `translateX(${rightDx}px)`,
             }}
-          />
-        ) : null}
-
-        {/* Stat rows. */}
-        {stats.map((s, i) => {
-          const at = ROWS_AT + i * ROW_GAP;
-          const p = SLAM(ramp(t, at, ROW_LEN));
-          const op = ramp(t, at, 3);
-          const plate = SLAM(ramp(t, at, 5));
-          const y = rowTop + (i + 0.5) * rowStep;
-          const sx = seamX(y);
-          const homeX = sx - valueGap;
-          const awayX = sx + valueGap;
-          const homeInk = lit(homeX - 60 * u, y) ? "#FFFFFF" : c.ink;
-          const awayValInk = dimP > 0.5 ? c.off : c.ink;
-          return (
-            <div key={`${i}-${s.label}`}>
+          >
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                clipPath: rightPoly,
+                background: dimP > 0 ? c.awayOff : c.away,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: awayCx - 0.24 * W,
+                width: 0.48 * W,
+                top: nameY - 60 * u,
+                transform: textTilt || undefined,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              {label(awayLabel, dimP > 0.5 ? c.off : c.dim)}
               <div
                 style={{
-                  position: "absolute",
-                  right: W - homeX,
-                  top: y - valueFs / 2,
-                  height: valueFs,
-                  display: "flex",
-                  alignItems: "center",
-                  transform: `translateX(${-(1 - p) * 0.38 * W}px)`,
-                  opacity: op,
-                  fontFamily: condensed,
+                  fontFamily,
                   fontWeight: 500,
-                  fontSize: valueFs,
-                  lineHeight: 1,
+                  fontSize: 92 * u,
+                  lineHeight: 0.84,
                   letterSpacing: "0.005em",
                   textTransform: "uppercase",
-                  color: homeInk,
+                  color: awayInk,
                   whiteSpace: "nowrap",
-                  paddingTop: 6 * u,
                 }}
               >
-                {s.home}
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: awayX,
-                  top: y - valueFs / 2,
-                  height: valueFs,
-                  display: "flex",
-                  alignItems: "center",
-                  transform: `translateX(${(1 - p) * 0.38 * W}px)`,
-                  opacity: op,
-                  fontFamily: condensed,
-                  fontWeight: 500,
-                  fontSize: valueFs,
-                  lineHeight: 1,
-                  letterSpacing: "0.005em",
-                  textTransform: "uppercase",
-                  color: awayValInk,
-                  whiteSpace: "nowrap",
-                  paddingTop: 6 * u,
-                }}
-              >
-                {s.away}
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: sx - plateW / 2,
-                  top: y - plateH / 2,
-                  width: plateW,
-                  height: plateH,
-                  background: c.plate,
-                  clipPath: `inset(0 ${50 * (1 - plate)}% 0 ${50 * (1 - plate)}%)`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10 * u,
-                  fontFamily: condensed,
-                  fontWeight: 500,
-                  fontSize: labelFs,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  color: c.plateInk,
-                }}
-              >
-                <div
-                  style={{
-                    width: 4 * u,
-                    height: 16 * u,
-                    background: accent,
-                  }}
-                />
-                <span style={{ paddingTop: 2 * u }}>{s.label}</span>
+                {away}
               </div>
             </div>
-          );
-        })}
+          </div>
 
-        {/* VS on the seam. */}
-        <div
-          style={{
-            position: "absolute",
-            left: seamX(vsY) - 200 * u,
-            width: 400 * u,
-            top: vsY - 120 * u,
-            height: 240 * u,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transform: `scale(${vsScale})`,
-            opacity: vsOpacity,
-            fontFamily: condensedItalic,
-            fontStyle: "italic",
-            fontWeight: 500,
-            fontSize: 250 * u,
-            lineHeight: 1,
-            letterSpacing: "-0.01em",
-            color: theme === "dark" ? "#FFFFFF" : c.ink,
-            paddingTop: 12 * u,
-          }}
-        >
-          VS
+          {/* Impact flash along the seam. */}
+          {seamFlash > 0 ? (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                clipPath: `polygon(${seamX(0) - 5 * u}px 0, ${seamX(0) + 5 * u}px 0, ${seamX(H) + 5 * u}px ${H}px, ${seamX(H) - 5 * u}px ${H}px)`,
+                background: c.seam,
+                opacity: seamFlash,
+              }}
+            />
+          ) : null}
+
+          {/* Stat rows. */}
+          {stats.map((s, i) => {
+            const at = ROWS_AT + i * stagger;
+            const p = SLAM(ramp(t, at, ROW_LEN));
+            const op = ramp(t, at, 3);
+            const plate = SLAM(ramp(t, at, 5));
+            const y = rowTop + (i + 0.5) * rowStep;
+            const sx = seamX(y);
+            const homeX = sx - valueGap;
+            const awayX = sx + valueGap;
+            const homeInk = lit(homeX - 60 * u, y) ? "#FFFFFF" : fg;
+            const awayValInk = dimP > 0.5 ? c.off : fg;
+            return (
+              <div key={`${i}-${s.label}`}>
+                <div
+                  style={{
+                    position: "absolute",
+                    right: W - homeX,
+                    top: y - valueFs / 2,
+                    height: valueFs,
+                    display: "flex",
+                    alignItems: "center",
+                    transform: `translateX(${-(1 - p) * 0.38 * W}px)${textTilt}`,
+                    opacity: op,
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: valueFs,
+                    lineHeight: 1,
+                    letterSpacing: "0.005em",
+                    textTransform: "uppercase",
+                    color: homeInk,
+                    whiteSpace: "nowrap",
+                    paddingTop: 6 * u,
+                  }}
+                >
+                  {s.home}
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: awayX,
+                    top: y - valueFs / 2,
+                    height: valueFs,
+                    display: "flex",
+                    alignItems: "center",
+                    transform: `translateX(${(1 - p) * 0.38 * W}px)${textTilt}`,
+                    opacity: op,
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: valueFs,
+                    lineHeight: 1,
+                    letterSpacing: "0.005em",
+                    textTransform: "uppercase",
+                    color: awayValInk,
+                    whiteSpace: "nowrap",
+                    paddingTop: 6 * u,
+                  }}
+                >
+                  {s.away}
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: sx - plateW / 2,
+                    top: y - plateH / 2,
+                    width: plateW,
+                    height: plateH,
+                    background: c.plate,
+                    transform: textTilt || undefined,
+                    clipPath: `inset(0 ${50 * (1 - plate)}% 0 ${50 * (1 - plate)}%)`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10 * u,
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: labelFs,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    color: c.plateInk,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 4 * u,
+                      height: 16 * u,
+                      background: accent,
+                    }}
+                  />
+                  <span style={{ paddingTop: 2 * u }}>{s.label}</span>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* VS on the seam. */}
+          <div
+            style={{
+              position: "absolute",
+              left: seamX(vsY) - 200 * u,
+              width: 400 * u,
+              top: vsY - 120 * u,
+              height: 240 * u,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transform: `scale(${vsScale})${glide(camMoving || midway(vs))}`,
+              opacity: vsOpacity,
+              fontFamily,
+              fontStyle: "italic",
+              fontWeight: 500,
+              fontSize: 250 * u,
+              lineHeight: 1,
+              letterSpacing: "-0.01em",
+              color: theme === "dark" ? "#FFFFFF" : fg,
+              paddingTop: 12 * u,
+            }}
+          >
+            {versus}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

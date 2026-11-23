@@ -62,3 +62,10 @@ articles
 
 # plugin eval runs
 evals/results/
+
+# customizer report (bun run report:customizer -- --out report.md)
+/report.md
+
+# describe presets: the batch being generated (bun run presets:build)
+/.presets-batch.json
+/.describe/

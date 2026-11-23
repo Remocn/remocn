@@ -10,9 +10,9 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -33,7 +33,22 @@ export interface QueryCascadeProps {
   answerBefore?: string;
   answerAfter?: string;
   showLogo?: boolean;
+  /** Replaces the remocn mark under the answer. */
+  logo?: React.ReactNode;
+  /** Highlight color of the term and its underline; overrides the theme. */
   accent?: string;
+  /** Text color of the queries and the answer; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Spacing is measured for Schibsted Grotesk, so pick a face of similar width. */
+  fontFamily?: string;
+  /** Strength of the motion smear while the list scrolls; 0 turns it off. */
+  motionBlur?: number;
+  /** Size of the foreground around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -200,6 +215,24 @@ function split(q: string, term: string) {
   return parts;
 }
 
+const midway = (p: number) => p > 0 && p < 1;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function QueryCascade({
   queries = QUERIES,
   hero = "how to make a launch video",
@@ -207,16 +240,27 @@ export function QueryCascade({
   answerBefore = "Your",
   answerAfter = "is ready.",
   showLogo = true,
+  logo,
+  accent,
+  ink,
+  background,
+  fontFamily = grotesk,
+  motionBlur = 1,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   ground,
   groundParams,
   speed = 1,
 }: QueryCascadeProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const tall = H > W;
   const u = tall ? W / 1000 : H / 720;
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const hi = accent ?? c.term;
   const dark = theme === "dark";
   const resolvedGround: GshPresetId | undefined =
     ground ?? (groundParams ? undefined : dark ? "ember" : undefined);
@@ -238,7 +282,7 @@ export function QueryCascade({
   };
   const s = scroll(t);
   const vel = Math.abs(scroll(t + 0.5) - scroll(t - 0.5)) * pitch;
-  const smear = Math.min(110 * u, vel * 0.6);
+  const smear = Math.min(110 * u, vel * 0.6 * motionBlur);
   const taps = smear < 1.5 ? 1 : Math.min(28, Math.ceil(smear / (2 * u)) + 1);
   const tapOffsets = Array.from({ length: taps }, (_, j) =>
     taps === 1 ? 0 : (j / (taps - 1) - 0.5) * smear,
@@ -257,15 +301,20 @@ export function QueryCascade({
     (W * (tall ? 0.6 : 0.58)) / Math.max(totalQ, totalA),
   );
 
-  const grow = interpolate(t, [GROW[0], GROW[1]], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const fs = f + (Fh - f) * grow;
-  const clear = interpolate(t, [CLEAR[0], CLEAR[1]], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const growAt = (tt: number) =>
+    interpolate(tt, [GROW[0], GROW[1]], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const grow = growAt(t);
+  const sizeAt = (g: number) => f + (Fh - f) * g;
+  const fs = sizeAt(grow);
+  const clearAt = (tt: number) =>
+    interpolate(tt, [CLEAR[0], CLEAR[1]], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const clear = clearAt(t);
   const tint = interpolate(t, [TINT[0], TINT[1]], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -288,7 +337,24 @@ export function QueryCascade({
   });
 
   const cx = W / 2;
-  const heroY = H / 2 + (K - s) * pitch + fs * 0.27 - grow * 18 * u;
+  const heroAt = (sv: number, g: number) =>
+    H / 2 + (K - sv) * pitch + sizeAt(g) * 0.27 - g * 18 * u;
+  const heroY = heroAt(s, grow);
+  // While the hero scrolls in and grows, layout would round its baseline to
+  // whole pixels, both through `top` and inside a box whose font size
+  // changes. So the words are laid out once where they land, at the landed
+  // size, and the travel and the growth are a transform all their life: a
+  // word handed back to plain layout would jump by the rounding.
+  const fsRest = sizeAt(1);
+  const heroRest = heroAt(scroll(STOP), 1);
+  const heroMoving = [t - speed, t + speed].some(
+    (tt) =>
+      sizeAt(growAt(tt)) !== fs || heroAt(scroll(tt), growAt(tt)) !== heroY,
+  );
+  // The rows scroll in, wait, then spread out; they lean only while they go.
+  const rowsMoving = [t - speed, t + speed].some(
+    (tt) => scroll(tt) !== s || clearAt(tt) !== clear,
+  );
   const termQ = -totalQ / 2 + width(qLeft);
   const termA = -totalA / 2 + width(aLeft);
   const termX = termQ + (termA - termQ) * move;
@@ -325,28 +391,36 @@ export function QueryCascade({
     position: "absolute" as const,
     whiteSpace: "pre" as const,
     lineHeight: 1,
-    fontFamily: grotesk,
+    fontFamily,
     fontWeight: 400,
   };
 
+  const heroBox = (
+    anchorRight: boolean,
+    tx: string | undefined,
+  ): React.CSSProperties => ({
+    top: heroRest - fsRest * BASELINE,
+    fontSize: fsRest,
+    transform: `translateY(${heroY - heroRest}px) ${tx ?? ""} scale(${fs / fsRest})${glide(heroMoving)}`,
+    transformOrigin: `${anchorRight ? "100%" : "0"} ${fsRest * BASELINE}px`,
+  });
   const word = (
     text: string,
     x: number,
     anchorRight: boolean,
     opacity: number,
     extra?: React.CSSProperties,
+    tx: string | undefined = anchorRight ? "translateX(-100%)" : undefined,
   ) =>
     opacity > 0.001 ? (
       <div
         style={{
           ...textStyle,
           left: cx + x * fs,
-          top: heroY - fs * BASELINE,
-          fontSize: fs,
+          ...heroBox(anchorRight, tx),
           letterSpacing: `${HERO_TRACK}em`,
-          color: c.fg,
+          color: fg,
           opacity,
-          transform: anchorRight ? "translateX(-100%)" : undefined,
           ...extra,
         }}
       >
@@ -362,210 +436,250 @@ export function QueryCascade({
   const after = arrive(5);
 
   return (
-    <AbsoluteFill style={{ background: c.base, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={resolvedParams}
-        timeOffset={dark ? 4 : 2}
-        timeScale={0.45}
-      />
-      <AbsoluteFill style={{ background: c.scrim }} />
-      {clear < 1 ? (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            filter: taps > 1 ? `blur(${1.2 * u}px)` : undefined,
-            WebkitMaskImage:
-              "linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%)",
-            maskImage:
-              "linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%)",
-          }}
-        >
-          {list.map((q, i) => {
-            if (i === K) return null;
-            const y0 = H / 2 + (i - s) * pitch;
-            const spread = (i - K) * pitch * clear * 1.4;
-            const y = y0 + spread;
-            if (y < -pitch - smear || y > H + pitch + smear) return null;
-            return tapOffsets.map((o) => (
-              <div
-                key={`${i}-${o.toFixed(2)}`}
-                style={{
-                  ...textStyle,
-                  left: 0,
-                  right: 0,
-                  top: y + o + f * 0.27 - f * BASELINE,
-                  textAlign: "center",
-                  fontSize: f,
-                  letterSpacing: "-0.015em",
-                  color: c.fg,
-                  opacity: (1 - clear) * tapOpacity,
-                }}
-              >
-                {split(q, term).map((p, j) => (
-                  <span
-                    key={`${j}-${p.text}`}
-                    style={{ opacity: p.hit ? 0.78 : dim }}
-                  >
-                    {p.text}
-                  </span>
-                ))}
-              </div>
-            ));
-          })}
-        </div>
+    <AbsoluteFill
+      style={{ background: background ?? c.base, overflow: "hidden" }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={resolvedGround}
+            params={resolvedParams}
+            timeOffset={dark ? 4 : 2}
+            timeScale={0.45}
+          />
+          <AbsoluteFill style={{ background: c.scrim }} />
+        </>
       ) : null}
-      {fieldVis > 0.001 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: fieldLeft,
-            top: heroY - fs * 0.3 - fieldH / 2,
-            width: fieldW,
-            height: fieldH,
-            borderRadius: fieldH / 2,
-            background: c.field,
-            boxShadow: c.fieldDepth,
-            opacity: fieldVis,
-            transform: `scale(${0.94 + 0.06 * fieldIn - 0.02 * fieldOut})`,
-          }}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            width={iconS}
-            height={iconS}
-            style={{
-              position: "absolute",
-              left: fs * 0.8,
-              top: (fieldH - iconS) / 2,
-            }}
-            aria-hidden
-          >
-            <g
-              fill="none"
-              stroke={c.icon}
-              strokeWidth={1.5}
-              strokeLinecap="round"
-            >
-              <circle cx="10.5" cy="10.5" r="6.5" />
-              <path d="m15.5 15.5 5 5" />
-            </g>
-          </svg>
+      <ScaleLayer scale={scale}>
+        {clear < 1 ? (
           <div
             style={{
               position: "absolute",
-              right: fs * 0.55,
-              top: (fieldH - keyS) / 2,
-              width: keyS,
-              height: keyS,
-              borderRadius: keyS * 0.26,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: interpolateColors(
-                enter,
-                [0, 1],
-                [dark ? "rgba(255,255,255,0.04)" : "#F7F4F0", c.term],
-              ),
-              boxShadow: `inset 0 0 0 1px ${c.keyRing}`,
-              transform: `scale(${1 - enter * 0.04})`,
+              inset: 0,
+              filter: taps > 1 ? `blur(${1.2 * u}px)` : undefined,
+              WebkitMaskImage:
+                "linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%)",
+              maskImage:
+                "linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%)",
+            }}
+          >
+            {list.map((q, i) => {
+              if (i === K) return null;
+              const y0 = H / 2 + (i - s) * pitch;
+              const spread = (i - K) * pitch * clear * 1.4;
+              const y = y0 + spread;
+              if (y < -pitch - smear || y > H + pitch + smear) return null;
+              // Rows ride the scroll and the spread by transform from where
+              // they land, not by `top`: layout rounds a baseline to whole
+              // pixels.
+              const yRest = H / 2 + (i - scroll(STOP)) * pitch;
+              return tapOffsets.map((o) => (
+                <div
+                  key={`${i}-${o.toFixed(2)}`}
+                  style={{
+                    ...textStyle,
+                    left: 0,
+                    right: 0,
+                    top: yRest + f * 0.27 - f * BASELINE,
+                    transform: `translateY(${y + o - yRest}px)${glide(rowsMoving)}`,
+                    textAlign: "center",
+                    fontSize: f,
+                    letterSpacing: "-0.015em",
+                    color: fg,
+                    opacity: (1 - clear) * tapOpacity,
+                  }}
+                >
+                  {split(q, term).map((p, j) => (
+                    <span
+                      key={`${j}-${p.text}`}
+                      style={{ opacity: p.hit ? 0.78 : dim }}
+                    >
+                      {p.text}
+                    </span>
+                  ))}
+                </div>
+              ));
+            })}
+          </div>
+        ) : null}
+        {fieldVis > 0.001 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: fieldLeft,
+              top: heroY - fs * 0.3 - fieldH / 2,
+              width: fieldW,
+              height: fieldH,
+              borderRadius: fieldH / 2,
+              background: c.field,
+              boxShadow: c.fieldDepth,
+              opacity: fieldVis,
+              transform: `scale(${0.94 + 0.06 * fieldIn - 0.02 * fieldOut})`,
             }}
           >
             <svg
               viewBox="0 0 24 24"
-              width={keyS * 0.56}
-              height={keyS * 0.56}
+              width={iconS}
+              height={iconS}
+              style={{
+                position: "absolute",
+                left: fs * 0.8,
+                top: (fieldH - iconS) / 2,
+              }}
               aria-hidden
             >
-              <path
-                d="M19 5.5v6a3 3 0 0 1-3 3H5.5m4-4-4 4 4 4"
+              <g
                 fill="none"
-                stroke={interpolateColors(
-                  enter,
-                  [0, 1],
-                  [c.icon, dark ? "#1A0E06" : "#FFFFFF"],
-                )}
+                stroke={c.icon}
                 strokeWidth={1.5}
                 strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+              >
+                <circle cx="10.5" cy="10.5" r="6.5" />
+                <path d="m15.5 15.5 5 5" />
+              </g>
             </svg>
+            <div
+              style={{
+                position: "absolute",
+                right: fs * 0.55,
+                top: (fieldH - keyS) / 2,
+                width: keyS,
+                height: keyS,
+                borderRadius: keyS * 0.26,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: interpolateColors(
+                  enter,
+                  [0, 1],
+                  [dark ? "rgba(255,255,255,0.04)" : "#F7F4F0", hi],
+                ),
+                boxShadow: `inset 0 0 0 1px ${c.keyRing}`,
+                transform: `scale(${1 - enter * 0.04})`,
+              }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width={keyS * 0.56}
+                height={keyS * 0.56}
+                aria-hidden
+              >
+                <path
+                  d="M19 5.5v6a3 3 0 0 1-3 3H5.5m4-4-4 4 4 4"
+                  fill="none"
+                  stroke={interpolateColors(
+                    enter,
+                    [0, 1],
+                    [c.icon, dark ? "#1A0E06" : "#FFFFFF"],
+                  )}
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {tapOffsets.map((o) => (
-        <div
-          key={o.toFixed(2)}
-          style={{
-            position: "absolute",
-            inset: 0,
-            opacity: heroEdge * tapOpacity,
-            transform: o ? `translateY(${o}px)` : undefined,
-          }}
-        >
-          {word(qLeft, termX, true, heroBright * (1 - leave), {
-            filter: leave > 0 ? `blur(${leave * 10 * u}px)` : undefined,
-            transform: `translateX(calc(-100% - ${leave * 30 * u}px))`,
-          })}
-          {word(qRight, termX + wTerm, false, heroBright * (1 - leave), {
-            filter: leave > 0 ? `blur(${leave * 10 * u}px)` : undefined,
-            transform: `translateX(${leave * 30 * u}px)`,
-          })}
-          {word(aLeft, termX, true, before, {
-            filter: before < 1 ? `blur(${(1 - before) * 10 * u}px)` : undefined,
-            transform: `translateX(calc(-100% + ${(1 - before) * -24 * u}px))`,
-          })}
-          {word(aRight, termX + wTerm, false, after, {
-            filter: after < 1 ? `blur(${(1 - after) * 10 * u}px)` : undefined,
-            transform: `translateX(${(1 - after) * 24 * u}px)`,
-          })}
+        {tapOffsets.map((o) => (
           <div
+            key={o.toFixed(2)}
             style={{
-              ...textStyle,
-              left: cx + termX * fs,
-              top: heroY - fs * BASELINE,
-              fontSize: fs,
-              letterSpacing: `${HERO_TRACK}em`,
-              color: interpolateColors(tint, [0, 1], [c.fg, c.term]),
-              opacity: Math.max(heroBright, tint),
+              position: "absolute",
+              inset: 0,
+              opacity: heroEdge * tapOpacity,
+              transform: o ? `translateY(${o}px)` : undefined,
             }}
           >
-            {term}
+            {word(
+              qLeft,
+              termX,
+              true,
+              heroBright * (1 - leave),
+              {
+                filter: leave > 0 ? `blur(${leave * 10 * u}px)` : undefined,
+              },
+              `translateX(calc(-100% - ${leave * 30 * u}px))`,
+            )}
+            {word(
+              qRight,
+              termX + wTerm,
+              false,
+              heroBright * (1 - leave),
+              {
+                filter: leave > 0 ? `blur(${leave * 10 * u}px)` : undefined,
+              },
+              `translateX(${leave * 30 * u}px)`,
+            )}
+            {word(
+              aLeft,
+              termX,
+              true,
+              before,
+              {
+                filter:
+                  before < 1 ? `blur(${(1 - before) * 10 * u}px)` : undefined,
+              },
+              `translateX(calc(-100% + ${(1 - before) * -24 * u}px))`,
+            )}
+            {word(
+              aRight,
+              termX + wTerm,
+              false,
+              after,
+              {
+                filter:
+                  after < 1 ? `blur(${(1 - after) * 10 * u}px)` : undefined,
+              },
+              `translateX(${(1 - after) * 24 * u}px)`,
+            )}
+            <div
+              style={{
+                ...textStyle,
+                left: cx + termX * fs,
+                ...heroBox(false, undefined),
+                letterSpacing: `${HERO_TRACK}em`,
+                color: interpolateColors(tint, [0, 1], [fg, hi]),
+                opacity: Math.max(heroBright, tint),
+              }}
+            >
+              {term}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                // Laid out where the answer leaves it; the slide there is a
+                // transform, since layout rounds a box edge to whole pixels.
+                left: cx + termA * fs,
+                top: heroY + fs * 0.16,
+                width: wTerm * fs,
+                height: Math.max(2, fs * 0.05),
+                borderRadius: 99,
+                background: hi,
+                transform: `translateX(${(termQ - termA) * fs * (1 - move)}px) scaleX(${rule})`,
+                transformOrigin: "0 50%",
+              }}
+            />
           </div>
+        ))}
+
+        {showLogo && logoIn > 0 ? (
           <div
             style={{
               position: "absolute",
-              left: cx + termX * fs,
-              top: heroY + fs * 0.16,
-              width: wTerm * fs,
-              height: Math.max(2, fs * 0.05),
-              borderRadius: 99,
-              background: c.term,
-              transform: `scaleX(${rule})`,
-              transformOrigin: "0 50%",
+              left: 0,
+              right: 0,
+              top: heroY + Fh * 0.9,
+              display: "flex",
+              justifyContent: "center",
+              opacity: logoIn,
+              transform: `translateY(${(1 - logoIn) * 10 * u}px)${glide(midway(logoIn))}`,
             }}
-          />
-        </div>
-      ))}
-
-      {showLogo && logoIn > 0 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: heroY + Fh * 0.9,
-            display: "flex",
-            justifyContent: "center",
-            opacity: logoIn,
-            transform: `translateY(${(1 - logoIn) * 10 * u}px)`,
-          }}
-        >
-          <RemocnLogo fontSize={26 * u} color={c.fg} />
-        </div>
-      ) : null}
+          >
+            {logo ?? <RemocnLogo fontSize={26 * u} color={fg} />}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

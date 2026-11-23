@@ -1,0 +1,117 @@
+{
+  "component": "unmask-line",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-quick",
+      "label": "Terminal Quick",
+      "description": "A fast, tight reveal in JetBrains Mono that snaps open like a command finishing.",
+      "askedAs": [
+        "fast terminal reveal",
+        "quick typing effect monospace",
+        "snappy code line animation",
+        "быстрое появление как в терминале",
+        "резкий моноширинный текст"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "stagger": 0.8,
+        "openAt": 18,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-decrypt",
+      "label": "Slow Decrypt",
+      "description": "A patient, letter-by-letter unmask that holds tension before the line opens.",
+      "askedAs": [
+        "slow dramatic letter reveal",
+        "suspenseful decrypt text",
+        "take your time unmasking",
+        "медленное раскрытие букв",
+        "драматичное появление текста"
+      ],
+      "props": {
+        "stagger": 5,
+        "openAt": 70,
+        "speed": 0.75,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Light theme on warm off-white with near-black ink and a deep green accent.",
+      "askedAs": [
+        "light background version",
+        "clean white docs style",
+        "minimal light mode reveal",
+        "светлая тема с зелёным",
+        "белый фон, тёмный текст"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f4ef",
+        "ink": "#1b1d1f",
+        "accent": "#1a7f4b"
+      }
+    },
+    {
+      "id": "midnight-blue",
+      "label": "Midnight Blue",
+      "description": "Deep navy background with soft blue-grey text and a cool cyan accent on the final word.",
+      "askedAs": [
+        "dark blue tech look",
+        "navy background with cyan",
+        "cool toned developer launch",
+        "тёмно-синий фон",
+        "холодные цвета для анонса"
+      ],
+      "props": {
+        "background": "#0b1426",
+        "ink": "#c9d4e5",
+        "accent": "#4cc3d9",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A larger Instrument Serif line on charcoal with a muted amber accent for a magazine feel.",
+      "askedAs": [
+        "elegant serif version",
+        "less techy more editorial",
+        "classy reveal with serif font",
+        "элегантный шрифт с засечками",
+        "журнальный стиль текста"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "scale": 1.35,
+        "background": "#1c1a18",
+        "ink": "#ece6dc",
+        "accent": "#d9a441",
+        "stagger": 3
+      }
+    },
+    {
+      "id": "compact-delayed",
+      "label": "Compact Overlay",
+      "description": "A small, understated line that waits a beat before unmasking, suited to sitting over other footage.",
+      "askedAs": [
+        "small subtle text overlay",
+        "smaller line with a delay",
+        "understated corner reveal",
+        "маленький текст с задержкой",
+        "ненавязчивая подпись"
+      ],
+      "props": {
+        "scale": 0.7,
+        "delay": 24,
+        "stagger": 1.4,
+        "fontFamily": "Space Grotesk"
+      }
+    }
+  ]
+}

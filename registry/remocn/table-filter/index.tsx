@@ -2,19 +2,14 @@
 
 import { loadFont } from "@remotion/google-fonts/Onest";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const onest = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -42,8 +37,22 @@ export interface TableFilterProps {
   selectCount?: number;
   bulkAction?: string;
   workspace?: string;
+  /** Label of the filter button in the toolbar. */
+  filterLabel?: string;
+  /** Word after the count in the bulk-action bar. */
+  selectedLabel?: string;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Size of the scene, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -181,6 +190,8 @@ const clamp = (v: number, lo: number, hi: number) =>
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function withAlpha(color: string, alpha: number) {
   const hex = color.replace("#", "");
   const full = hex.length === 3 ? hex.replace(/(.)/g, "$1$1") : hex;
@@ -222,7 +233,20 @@ function pathAt(keys: Key[], f: number): Pt {
   return keys[keys.length - 1];
 }
 
-function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
+// Laid out where the pointer ends up and carried there by a transform:
+// layout rounds the box to whole pixels, so a pointer eased by `left`/`top`
+// steps over them on its slow approaches.
+function Cursor({
+  x,
+  y,
+  rest,
+  press,
+}: {
+  x: number;
+  y: number;
+  rest: Pt;
+  press: number;
+}) {
   return (
     <svg
       width={22}
@@ -230,10 +254,10 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: rest.x - 2,
+        top: rest.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.04 * press})`,
+        transform: `translate(${x - rest.x}px, ${y - rest.y}px) scale(${1 - 0.04 * press})`,
         filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.28))",
         overflow: "visible",
       }}
@@ -720,6 +744,22 @@ function Sidebar({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TableFilter({
   rows = DEFAULT_ROWS,
   title = "Companies",
@@ -728,21 +768,35 @@ export function TableFilter({
   selectCount = 3,
   bulkAction = "Add to sequence",
   workspace = "remocn",
+  filterLabel = "Filter",
+  selectedLabel = "selected",
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = onest.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: TableFilterProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const u = Math.min(W / 1280, H / 720);
-  const pal = palette(theme);
+  const base = palette(theme);
+  const pal = { ...base, text: ink ?? base.text };
   const sp = (
     f: number,
     config: { mass?: number; damping: number; stiffness?: number } = CARD,
     durationInFrames?: number,
   ) => spring({ frame: f, fps, config, durationInFrames });
+  // The springs here overshoot and several drivers share one element, so
+  // "is it moving" is read off the neighbouring frames, not off a progress.
+  const moves = (at: (f: number) => number) =>
+    Math.abs(at(frame + 1) - at(frame)) > 1e-5 ||
+    Math.abs(at(frame) - at(frame - 1)) > 1e-5;
 
   const matchIdx = rows
     .map((r, i) => (r.stage === filterValue ? i : -1))
@@ -805,11 +859,14 @@ export function TableFilter({
   );
   const cursorIn = interpolate(frame, [20, 28], [0, 1], CL);
 
-  const enter = sp(frame, HEAVY);
-  const popOpen = sp(frame - (T.filterClick + 1), CARD);
-  const popClose = tween(frame, T.optionClick + 2, T.optionClick + 6, EXIT);
-  const pop = popOpen * (1 - popClose);
-  const chip = sp(frame - (T.optionClick + 4), CHIP);
+  const enterAt = (f: number) => sp(f, HEAVY);
+  const enter = enterAt(frame);
+  const popAt = (f: number) =>
+    sp(f - (T.filterClick + 1), CARD) *
+    (1 - tween(f, T.optionClick + 2, T.optionClick + 6, EXIT));
+  const pop = popAt(frame);
+  const chipAt = (f: number) => sp(f - (T.optionClick + 4), CHIP);
+  const chip = chipAt(frame);
   const sortOn = frame >= T.sortClick + 1;
   const sortArrow = tween(frame, T.sortClick + 1, T.sortClick + 7);
   const filtered = frame >= T.collapse;
@@ -825,8 +882,9 @@ export function TableFilter({
     const at = T.collapse + nonMatch++ * 0.6;
     return tween(frame, at, at + 4);
   });
+  const collapseAt = (f: number) => sp(f - (T.collapse + 2), MORPH, 9);
   const collapse = rows.map((_, i) =>
-    matchIdx.includes(i) ? 0 : sp(frame - (T.collapse + 2), MORPH, 9),
+    matchIdx.includes(i) ? 0 : collapseAt(frame),
   );
   const ys: number[] = [];
   let acc = 0;
@@ -834,7 +892,9 @@ export function TableFilter({
     ys.push(acc);
     acc += ROW_H * (1 - collapse[i]);
   });
-  const flipT = sp(frame - T.flip, MORPH, FLIP_LEN + 3);
+  const flipAt = (f: number) => sp(f - T.flip, MORPH, FLIP_LEN + 3);
+  const flipT = flipAt(frame);
+  const reflowing = moves(collapseAt) || moves(flipAt);
   const flipArc = Math.sin(flipT * Math.PI);
   const rowY = rows.map((_, i) => {
     const s = sorted.indexOf(i);
@@ -850,7 +910,8 @@ export function TableFilter({
     return tween(frame, T.check[s], T.check[s] + 6);
   });
   const selected = T.check.filter((t) => frame >= t + 1).length;
-  const bar = sp(frame - (barStart + 2), CARD);
+  const barAt = (f: number) => sp(f - (barStart + 2), CARD);
+  const bar = barAt(frame);
   const selIn = tween(
     frame,
     (T.check[selected - 1] ?? 0) + 1,
@@ -861,12 +922,25 @@ export function TableFilter({
   const sortW = lerp(SORT_BTN.w, 134, sortArrow);
   const filterX = SORT_BTN.x + sortW + 8;
 
-  const camT = interpolate(
-    frame,
-    [T.collapse, T.check[0] ?? T.collapse + 60],
-    [0, 1],
-    { ...CL, easing: CAMERA },
-  );
+  const camAt = (f: number) =>
+    interpolate(f, [T.collapse, T.check[0] ?? T.collapse + 60], [0, 1], {
+      ...CL,
+      easing: CAMERA,
+    });
+  const camT = camAt(frame);
+  // One tilt in a chain is enough, so while the camera moves it carries the
+  // only one and the parts inside add none of their own.
+  const camMoving = moves(camAt) || moves(enterAt);
+  const part = (moving: boolean) => glide(moving && !camMoving);
+  // Rows and the footer are laid out where they come to rest and ride there
+  // on a transform: layout rounds a box and a baseline to whole pixels, so a
+  // row eased by `top` clicks along pixel by pixel. Rows that match end up
+  // sorted; the rest only ever show in their first slot.
+  const rowRest = (i: number) => {
+    const s = sorted.indexOf(i);
+    return (s < 0 ? i : s) * ROW_H;
+  };
+  const footRest = BODY_Y + matchIdx.length * ROW_H;
 
   const btn = (x: number, w: number, label: React.ReactNode, active = 0) => (
     <div
@@ -908,629 +982,648 @@ export function TableFilter({
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? (pal.dark ? "velvet-hour" : "paper-crease")}
-        params={groundParams}
-        timeOffset={pal.dark ? 5 : 2}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: pal.stage }} />
-      {tall ? (
-        <div
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (pal.dark ? "velvet-hour" : "paper-crease")}
+            params={groundParams}
+            timeOffset={pal.dark ? 5 : 2}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: pal.stage }} />
+        </>
+      ) : (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: W * 0.08,
-            right: W * 0.08,
-            top: H * 0.08,
-            color: pal.text,
-            opacity: readIn,
-            transform: `translateY(${(1 - readIn) * 30}px)`,
+            background: background === "transparent" ? undefined : background,
           }}
-        >
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        {tall ? (
           <div
             style={{
-              fontSize: W * 0.22,
-              fontWeight: 300,
-              letterSpacing: "-0.05em",
-              lineHeight: 0.95,
-              fontVariantNumeric: "tabular-nums",
-              opacity: filtered ? 0.25 + 0.75 * countIn : 1,
+              position: "absolute",
+              left: W * 0.08,
+              right: W * 0.08,
+              top: H * 0.08,
+              color: pal.text,
+              opacity: readIn,
+              transform: `translateY(${(1 - readIn) * 30}px)${glide(midway(readIn))}`,
             }}
           >
-            {arrSum}
+            <div
+              style={{
+                fontSize: W * 0.22,
+                fontWeight: 300,
+                letterSpacing: "-0.05em",
+                lineHeight: 0.95,
+                fontVariantNumeric: "tabular-nums",
+                opacity: filtered ? 0.25 + 0.75 * countIn : 1,
+              }}
+            >
+              {arrSum}
+            </div>
+            <div
+              style={{
+                marginTop: W * 0.03,
+                fontSize: W * 0.045,
+                color: pal.muted,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {filtered
+                ? `in ${countVal} ${filterValue.toLowerCase()} ${title.toLowerCase()}`
+                : `across ${countVal} ${title.toLowerCase()}`}
+            </div>
           </div>
-          <div
-            style={{
-              marginTop: W * 0.03,
-              fontSize: W * 0.045,
-              color: pal.muted,
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            {filtered
-              ? `in ${countVal} ${filterValue.toLowerCase()} ${title.toLowerCase()}`
-              : `across ${countVal} ${title.toLowerCase()}`}
-          </div>
-        </div>
-      ) : null}
-      <div
-        style={{
-          position: "absolute",
-          left: ox,
-          top: oy,
-          width: 1280,
-          height: 720,
-          transformOrigin: "0 0",
-          transform: `scale(${uu})`,
-        }}
-      >
+        ) : null}
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transformOrigin: `${MX + 400}px ${HEAD_Y}px`,
-            transform: `scale(${1 + 0.07 * camT}) translateY(${(1 - enter) * 34}px)`,
-            opacity: clamp(enter * 1.6, 0, 1),
+            left: ox,
+            top: oy,
+            width: 1280,
+            height: 720,
+            transformOrigin: "0 0",
+            transform: `scale(${uu})`,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: WIN.x,
-              top: WIN.y,
-              width: WIN.w,
-              height: WIN.h,
-              borderRadius: 14,
-              overflow: "hidden",
-              background: pal.win,
-              display: "flex",
-              boxShadow: pal.dark
-                ? "0 0 0 1px rgba(255,255,255,0.09), inset 0 1px 0 rgba(255,255,255,0.05), 0 30px 80px -20px rgba(0,0,0,0.7)"
-                : "0 0 0 1px rgba(17,19,24,0.06), 0 2px 4px rgba(17,19,24,0.04), 0 30px 70px -24px rgba(17,19,24,0.28)",
+              inset: 0,
+              transformOrigin: `${MX + 400}px ${HEAD_Y}px`,
+              transform: `scale(${1 + 0.07 * camT}) translateY(${(1 - enter) * 34}px)${glide(camMoving)}`,
+              opacity: clamp(enter * 1.6, 0, 1),
             }}
           >
-            <Sidebar pal={pal} workspace={workspace} title={title} />
             <div
-              style={{ flex: 1, background: pal.panel, position: "relative" }}
+              style={{
+                position: "absolute",
+                left: WIN.x,
+                top: WIN.y,
+                width: WIN.w,
+                height: WIN.h,
+                borderRadius: 14,
+                overflow: "hidden",
+                background: pal.win,
+                display: "flex",
+                boxShadow: pal.dark
+                  ? "0 0 0 1px rgba(255,255,255,0.09), inset 0 1px 0 rgba(255,255,255,0.05), 0 30px 80px -20px rgba(0,0,0,0.7)"
+                  : "0 0 0 1px rgba(17,19,24,0.06), 0 2px 4px rgba(17,19,24,0.04), 0 30px 70px -24px rgba(17,19,24,0.28)",
+              }}
             >
+              <Sidebar pal={pal} workspace={workspace} title={title} />
+              <div
+                style={{ flex: 1, background: pal.panel, position: "relative" }}
+              >
+                <div
+                  style={{
+                    height: 44,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 9,
+                    padding: "0 16px",
+                    borderBottom: `1px solid ${pal.border}`,
+                  }}
+                >
+                  <Icon name="building" color={pal.text} size={15} />
+                  <span
+                    style={{ fontSize: 15, fontWeight: 400, color: pal.text }}
+                  >
+                    {title}
+                  </span>
+                  <div style={{ flex: 1 }} />
+                  <Avatar name="Maya Chen" pal={pal} size={24} />
+                </div>
+                <div
+                  style={{
+                    height: 44,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "0 12px",
+                    borderBottom: `1px solid ${pal.border}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      height: 28,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 7,
+                      padding: "0 10px",
+                      borderRadius: 7,
+                      boxShadow: `inset 0 0 0 1px ${pal.border}`,
+                      fontSize: 14,
+                      color: pal.text,
+                      fontWeight: 400,
+                    }}
+                  >
+                    All {title.toLowerCase()}
+                    <Icon name="chevDown" color={pal.muted} size={12} />
+                  </div>
+                  <div style={{ flex: 1 }} />
+                  {(
+                    [
+                      ["View settings", "sliders"],
+                      ["Import / Export", "download"],
+                    ] as [string, IconName][]
+                  ).map(([l, ic]) => (
+                    <div
+                      key={l}
+                      style={{
+                        height: 28,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        padding: "0 10px 0 8px",
+                        borderRadius: 7,
+                        boxShadow: `inset 0 0 0 1px ${pal.border}`,
+                        fontSize: 14,
+                        color: pal.text,
+                      }}
+                    >
+                      <Icon name={ic} color={pal.muted} />
+                      {l}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {btn(
+              SORT_BTN.x,
+              sortW,
+              <>
+                <Icon name="sort" color={pal.muted} />
+                <span>Sorted by</span>
+                <span style={{ color: pal.text, fontWeight: 400 }}>
+                  {sortOn ? "ARR" : "Last activity"}
+                </span>
+              </>,
+              interpolate(
+                frame,
+                [
+                  T.sortClick,
+                  T.sortClick + 4,
+                  T.sortClick + 26,
+                  T.sortClick + 36,
+                ],
+                [0, 1, 1, 0],
+                CL,
+              ),
+            )}
+            {btn(
+              filterX,
+              FILTER_BTN.w,
+              <>
+                <Icon name="filter" color={pal.muted} />
+                <span style={{ color: pal.text }}>{filterLabel}</span>
+              </>,
+              pop,
+            )}
+            {chip > 0.01 && (
               <div
                 style={{
-                  height: 44,
+                  position: "absolute",
+                  left: filterX + FILTER_BTN.w + 8,
+                  top: TOOL_Y + 6,
+                  height: 28,
                   display: "flex",
                   alignItems: "center",
-                  gap: 9,
-                  padding: "0 16px",
-                  borderBottom: `1px solid ${pal.border}`,
+                  gap: 6,
+                  padding: "0 6px 0 10px",
+                  borderRadius: 7,
+                  background: withAlpha(accent, pal.dark ? 0.16 : 0.07),
+                  boxShadow: `inset 0 0 0 1px ${withAlpha(accent, 0.32)}`,
+                  fontSize: 14,
+                  color: pal.text,
+                  transformOrigin: "0 50%",
+                  transform: `translateX(${(1 - chip) * -6}px) scale(${0.96 + 0.04 * chip})${part(moves(chipAt))}`,
+                  opacity: chip,
+                  whiteSpace: "nowrap",
                 }}
               >
-                <Icon name="building" color={pal.text} size={15} />
-                <span
-                  style={{ fontSize: 15, fontWeight: 400, color: pal.text }}
-                >
-                  {title}
-                </span>
-                <div style={{ flex: 1 }} />
-                <Avatar name="Maya Chen" pal={pal} size={24} />
+                <span style={{ color: pal.muted }}>{filterAttribute}</span>
+                <span style={{ color: pal.faint }}>is</span>
+                <div
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: 999,
+                    background: STAGE_COLORS[filterValue] ?? accent,
+                  }}
+                />
+                <span style={{ fontWeight: 400 }}>{filterValue}</span>
+                <div style={{ marginLeft: 2 }}>
+                  <Icon name="x" color={pal.muted} size={13} />
+                </div>
               </div>
+            )}
+            <div
+              style={{
+                position: "absolute",
+                left: MX,
+                top: HEAD_Y,
+                width: WIN.w - SIDEBAR,
+                height: 34,
+                borderTop: `1px solid ${pal.border}`,
+                borderBottom: `1px solid ${pal.border}`,
+                boxSizing: "border-box",
+                background: pal.panel,
+              }}
+            >
+              {COLS.map((c, i) => (
+                <div
+                  key={c.key}
+                  style={{
+                    position: "absolute",
+                    left: colLeft(i),
+                    width: c.w,
+                    top: 0,
+                    bottom: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: c.key === "arr" ? "flex-end" : "flex-start",
+                    gap: 6,
+                    padding: "0 10px",
+                    boxSizing: "border-box",
+                    fontSize: 14,
+                    color: c.key === "arr" && sortOn ? pal.text : pal.muted,
+                    fontWeight: 400,
+                    background:
+                      c.key === "arr" && sortOn
+                        ? withAlpha(accent, 0.06 * clamp(sortArrow, 0, 1))
+                        : "transparent",
+                  }}
+                >
+                  {i === 0 ? (
+                    <Checkbox p={0} accent={accent} pal={pal} />
+                  ) : (
+                    c.label
+                  )}
+                  {c.key === "arr" && sortArrow > 0.01 && (
+                    <div
+                      style={{
+                        transform: `translateY(${(1 - sortArrow) * -4}px)`,
+                        opacity: sortArrow,
+                      }}
+                    >
+                      <Icon
+                        name="arrowDown"
+                        color={accent}
+                        size={13}
+                        width={1.6}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: MX,
+                top: BODY_Y,
+                width: WIN.w - SIDEBAR,
+                height: ROW_H * rows.length,
+                overflow: "hidden",
+              }}
+            >
+              {rows.map((r, i) => {
+                const aAt = (f: number) => sp(f - (10 + i * 2.5), CARD);
+                const a = aAt(frame);
+                const top = rowY[i] + (1 - a) * 12;
+                const lift = climb[i] > 0 ? flipArc : 0;
+                const sink = climb[i] < 0 ? flipArc : 0;
+                return (
+                  <div
+                    key={r.company}
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: rowRest(i),
+                      transform: `translateY(${top - rowRest(i)}px)${part(reflowing || moves(aAt))}`,
+                      height: ROW_H * (1 - collapse[i]),
+                      overflow: "hidden",
+                      opacity:
+                        clamp(a * 1.6, 0, 1) *
+                        (1 - fadeOut[i]) *
+                        (1 - 0.9 * sink),
+                      zIndex: lift > 0 ? 5 : 1,
+                      boxShadow:
+                        lift > 0
+                          ? `0 0 0 1px ${pal.line}, 0 ${6 * lift}px ${16 * lift}px rgba(0,0,0,${(pal.dark ? 0.4 : 0.08) * lift})`
+                          : "none",
+                    }}
+                  >
+                    <Row
+                      r={r}
+                      pal={pal}
+                      accent={accent}
+                      checked={checks[i]}
+                      sel={checks[i]}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: MX,
+                top: footRest,
+                transform: `translateY(${tableBottom + (1 - enter) * 12 - footRest}px)${part(moves(collapseAt))}`,
+                width: WIN.w - SIDEBAR,
+                height: 36,
+                display: "flex",
+                alignItems: "center",
+                fontSize: 14,
+                color: pal.muted,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {COLS.map((c, i) => {
+                if (i === 0) return null;
+                const value =
+                  c.key === "company"
+                    ? String(countVal)
+                    : c.key === "arr"
+                      ? arrSum
+                      : null;
+                return (
+                  <div
+                    key={c.key}
+                    style={{
+                      width: i === 1 ? COLS[0].w + c.w : c.w,
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                      gap: 5,
+                      paddingRight: 10,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    {value ? (
+                      <>
+                        <span
+                          style={{
+                            color: pal.text,
+                            fontWeight: 400,
+                            fontVariantNumeric: "tabular-nums",
+                            opacity: filtered ? 0.3 + 0.7 * countIn : 1,
+                            transform: `translateY(${filtered ? (1 - countIn) * 3 : 0}px)`,
+                          }}
+                        >
+                          {value}
+                        </span>
+                        {c.key === "company" ? "count" : "sum"}
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="plus" color={pal.faint} size={12} />
+                        <span style={{ color: pal.faint }}>
+                          Add calculation
+                        </span>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {pop > 0.01 && (
               <div
                 style={{
-                  height: 44,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "0 12px",
-                  borderBottom: `1px solid ${pal.border}`,
+                  position: "absolute",
+                  left: POP.x,
+                  top: POP.y,
+                  width: POP.w,
+                  padding: 6,
+                  boxSizing: "border-box",
+                  borderRadius: 10,
+                  background: pal.pop,
+                  boxShadow: pal.dark
+                    ? "0 0 0 1px rgba(255,255,255,0.1), 0 16px 40px rgba(0,0,0,0.55)"
+                    : "0 0 0 1px rgba(17,19,24,0.08), 0 12px 32px -4px rgba(17,19,24,0.14), 0 2px 6px rgba(17,19,24,0.05)",
+                  transformOrigin: "48px 0",
+                  transform: `scale(${0.96 + 0.04 * pop}) translateY(${(1 - pop) * -4}px)${part(moves(popAt))}`,
+                  opacity: clamp(pop * 1.4, 0, 1),
+                  zIndex: 30,
                 }}
               >
                 <div
                   style={{
-                    height: 28,
+                    height: 30,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "0 8px",
+                    fontSize: 14,
+                    color: pal.muted,
+                  }}
+                >
+                  Where{" "}
+                  <span
+                    style={{
+                      color: pal.text,
+                      fontWeight: 400,
+                      padding: "2px 6px",
+                      borderRadius: 5,
+                      boxShadow: `inset 0 0 0 1px ${pal.border}`,
+                    }}
+                  >
+                    {filterAttribute}
+                  </span>{" "}
+                  is
+                </div>
+                <div
+                  style={{
+                    height: 30,
+                    margin: "4px 0 2px",
                     display: "flex",
                     alignItems: "center",
                     gap: 7,
-                    padding: "0 10px",
-                    borderRadius: 7,
+                    padding: "0 8px",
+                    borderRadius: 6,
                     boxShadow: `inset 0 0 0 1px ${pal.border}`,
                     fontSize: 14,
-                    color: pal.text,
-                    fontWeight: 400,
+                    color: pal.faint,
                   }}
                 >
-                  All {title.toLowerCase()}
-                  <Icon name="chevDown" color={pal.muted} size={12} />
+                  <Icon name="search" color={pal.faint} size={13} />
+                  Search options…
                 </div>
-                <div style={{ flex: 1 }} />
+                {stages.map((s, i) => {
+                  const hov =
+                    i === optIdx
+                      ? interpolate(
+                          frame,
+                          [T.optionClick - 8, T.optionClick - 3],
+                          [0, 1],
+                          CL,
+                        )
+                      : 0;
+                  return (
+                    <div
+                      key={s}
+                      style={{
+                        height: 30,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "0 8px",
+                        borderRadius: 6,
+                        fontSize: 14,
+                        color: pal.text,
+                        background:
+                          hov > 0
+                            ? pal.dark
+                              ? `rgba(255,255,255,${0.07 * hov})`
+                              : `rgba(17,19,24,${0.05 * hov})`
+                            : "transparent",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: 999,
+                          background: STAGE_COLORS[s],
+                        }}
+                      />
+                      {s}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {bar > 0.01 && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: barX,
+                  top: BAR.y,
+                  width: BAR.w,
+                  height: BAR.h,
+                  borderRadius: 12,
+                  background: pal.dark ? "#26262B" : "#1C1D21",
+                  boxShadow: pal.dark
+                    ? "0 0 0 1px rgba(255,255,255,0.1), 0 16px 40px rgba(0,0,0,0.5)"
+                    : "0 0 0 1px rgba(10,12,18,0.9), 0 16px 36px -6px rgba(10,12,18,0.32), 0 4px 10px rgba(10,12,18,0.12)",
+                  // The rise is a transform for the same reason as the rows.
+                  transform: `translateY(${(1 - bar) * 24}px) scale(${0.97 + 0.03 * clamp(bar, 0, 1)})${part(moves(barAt))}`,
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "0 6px 0 14px",
+                  boxSizing: "border-box",
+                  gap: 6,
+                  opacity: clamp(bar * 1.8, 0, 1),
+                  color: "#F2F2F4",
+                  fontSize: 14,
+                  zIndex: 25,
+                }}
+              >
+                <div
+                  style={{
+                    width: 120,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Checkbox p={1} accent={accent} pal={pal} />
+                  <span
+                    style={{
+                      fontWeight: 400,
+                      fontVariantNumeric: "tabular-nums",
+                      display: "inline-block",
+                      minWidth: 9,
+                      opacity: selected > 1 ? 0.3 + 0.7 * selIn : 1,
+                      transform: `translateY(${selected > 1 ? (1 - selIn) * 3 : 0}px)`,
+                    }}
+                  >
+                    {selected}
+                  </span>
+                  <span style={{ color: "#B4B5BB", marginLeft: -3 }}>
+                    {selectedLabel}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    width: 1,
+                    height: 20,
+                    background: "rgba(255,255,255,0.14)",
+                  }}
+                />
+                <div
+                  style={{
+                    width: 168,
+                    whiteSpace: "nowrap",
+                    height: 32,
+                    borderRadius: 8,
+                    background: accent,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 7,
+                    fontWeight: 400,
+                    color: "#fff",
+                    transform: `scale(${1 - 0.03 * press * actionHover})`,
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
+                    filter: `brightness(${1 + 0.08 * actionHover})`,
+                  }}
+                >
+                  <Icon name="send" color="#fff" size={13} width={1.5} />
+                  {bulkAction}
+                </div>
                 {(
                   [
-                    ["View settings", "sliders"],
-                    ["Import / Export", "download"],
+                    ["Export", "download"],
+                    ["Delete", "trash"],
                   ] as [string, IconName][]
                 ).map(([l, ic]) => (
                   <div
                     key={l}
                     style={{
-                      height: 28,
+                      height: 32,
+                      padding: "0 8px",
                       display: "flex",
                       alignItems: "center",
                       gap: 6,
-                      padding: "0 10px 0 8px",
-                      borderRadius: 7,
-                      boxShadow: `inset 0 0 0 1px ${pal.border}`,
-                      fontSize: 14,
-                      color: pal.text,
-                    }}
-                  >
-                    <Icon name={ic} color={pal.muted} />
-                    {l}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          {btn(
-            SORT_BTN.x,
-            sortW,
-            <>
-              <Icon name="sort" color={pal.muted} />
-              <span>Sorted by</span>
-              <span style={{ color: pal.text, fontWeight: 400 }}>
-                {sortOn ? "ARR" : "Last activity"}
-              </span>
-            </>,
-            interpolate(
-              frame,
-              [
-                T.sortClick,
-                T.sortClick + 4,
-                T.sortClick + 26,
-                T.sortClick + 36,
-              ],
-              [0, 1, 1, 0],
-              CL,
-            ),
-          )}
-          {btn(
-            filterX,
-            FILTER_BTN.w,
-            <>
-              <Icon name="filter" color={pal.muted} />
-              <span style={{ color: pal.text }}>Filter</span>
-            </>,
-            pop,
-          )}
-          {chip > 0.01 && (
-            <div
-              style={{
-                position: "absolute",
-                left: filterX + FILTER_BTN.w + 8,
-                top: TOOL_Y + 6,
-                height: 28,
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "0 6px 0 10px",
-                borderRadius: 7,
-                background: withAlpha(accent, pal.dark ? 0.16 : 0.07),
-                boxShadow: `inset 0 0 0 1px ${withAlpha(accent, 0.32)}`,
-                fontSize: 14,
-                color: pal.text,
-                transformOrigin: "0 50%",
-                transform: `translateX(${(1 - chip) * -6}px) scale(${0.96 + 0.04 * chip})`,
-                opacity: chip,
-                whiteSpace: "nowrap",
-              }}
-            >
-              <span style={{ color: pal.muted }}>{filterAttribute}</span>
-              <span style={{ color: pal.faint }}>is</span>
-              <div
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: 999,
-                  background: STAGE_COLORS[filterValue] ?? accent,
-                }}
-              />
-              <span style={{ fontWeight: 400 }}>{filterValue}</span>
-              <div style={{ marginLeft: 2 }}>
-                <Icon name="x" color={pal.muted} size={13} />
-              </div>
-            </div>
-          )}
-          <div
-            style={{
-              position: "absolute",
-              left: MX,
-              top: HEAD_Y,
-              width: WIN.w - SIDEBAR,
-              height: 34,
-              borderTop: `1px solid ${pal.border}`,
-              borderBottom: `1px solid ${pal.border}`,
-              boxSizing: "border-box",
-              background: pal.panel,
-            }}
-          >
-            {COLS.map((c, i) => (
-              <div
-                key={c.key}
-                style={{
-                  position: "absolute",
-                  left: colLeft(i),
-                  width: c.w,
-                  top: 0,
-                  bottom: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: c.key === "arr" ? "flex-end" : "flex-start",
-                  gap: 6,
-                  padding: "0 10px",
-                  boxSizing: "border-box",
-                  fontSize: 14,
-                  color: c.key === "arr" && sortOn ? pal.text : pal.muted,
-                  fontWeight: 400,
-                  background:
-                    c.key === "arr" && sortOn
-                      ? withAlpha(accent, 0.06 * clamp(sortArrow, 0, 1))
-                      : "transparent",
-                }}
-              >
-                {i === 0 ? (
-                  <Checkbox p={0} accent={accent} pal={pal} />
-                ) : (
-                  c.label
-                )}
-                {c.key === "arr" && sortArrow > 0.01 && (
-                  <div
-                    style={{
-                      transform: `translateY(${(1 - sortArrow) * -4}px)`,
-                      opacity: sortArrow,
+                      color: l === "Delete" ? "#FF8A8A" : "#D6D7DC",
+                      borderRadius: 8,
                     }}
                   >
                     <Icon
-                      name="arrowDown"
-                      color={accent}
+                      name={ic}
+                      color={l === "Delete" ? "#FF8A8A" : "#A9AAB1"}
                       size={13}
-                      width={1.6}
                     />
+                    {l}
                   </div>
-                )}
+                ))}
+                <div style={{ flex: 1 }} />
+                <div style={{ paddingRight: 8 }}>
+                  <Icon name="x" color="#8D8E95" />
+                </div>
               </div>
-            ))}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: MX,
-              top: BODY_Y,
-              width: WIN.w - SIDEBAR,
-              height: ROW_H * rows.length,
-              overflow: "hidden",
-            }}
-          >
-            {rows.map((r, i) => {
-              const a = sp(frame - (10 + i * 2.5), CARD);
-              const lift = climb[i] > 0 ? flipArc : 0;
-              const sink = climb[i] < 0 ? flipArc : 0;
-              return (
-                <div
-                  key={r.company}
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    top: rowY[i] + (1 - a) * 12,
-                    height: ROW_H * (1 - collapse[i]),
-                    overflow: "hidden",
-                    opacity:
-                      clamp(a * 1.6, 0, 1) *
-                      (1 - fadeOut[i]) *
-                      (1 - 0.9 * sink),
-                    zIndex: lift > 0 ? 5 : 1,
-                    boxShadow:
-                      lift > 0
-                        ? `0 0 0 1px ${pal.line}, 0 ${6 * lift}px ${16 * lift}px rgba(0,0,0,${(pal.dark ? 0.4 : 0.08) * lift})`
-                        : "none",
-                  }}
-                >
-                  <Row
-                    r={r}
-                    pal={pal}
-                    accent={accent}
-                    checked={checks[i]}
-                    sel={checks[i]}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: MX,
-              top: tableBottom + (1 - enter) * 12,
-              width: WIN.w - SIDEBAR,
-              height: 36,
-              display: "flex",
-              alignItems: "center",
-              fontSize: 14,
-              color: pal.muted,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {COLS.map((c, i) => {
-              if (i === 0) return null;
-              const value =
-                c.key === "company"
-                  ? String(countVal)
-                  : c.key === "arr"
-                    ? arrSum
-                    : null;
-              return (
-                <div
-                  key={c.key}
-                  style={{
-                    width: i === 1 ? COLS[0].w + c.w : c.w,
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                    gap: 5,
-                    paddingRight: 10,
-                    boxSizing: "border-box",
-                  }}
-                >
-                  {value ? (
-                    <>
-                      <span
-                        style={{
-                          color: pal.text,
-                          fontWeight: 400,
-                          fontVariantNumeric: "tabular-nums",
-                          opacity: filtered ? 0.3 + 0.7 * countIn : 1,
-                          transform: `translateY(${filtered ? (1 - countIn) * 3 : 0}px)`,
-                        }}
-                      >
-                        {value}
-                      </span>
-                      {c.key === "company" ? "count" : "sum"}
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="plus" color={pal.faint} size={12} />
-                      <span style={{ color: pal.faint }}>Add calculation</span>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          {pop > 0.01 && (
+            )}
             <div
               style={{
                 position: "absolute",
-                left: POP.x,
-                top: POP.y,
-                width: POP.w,
-                padding: 6,
-                boxSizing: "border-box",
-                borderRadius: 10,
-                background: pal.pop,
-                boxShadow: pal.dark
-                  ? "0 0 0 1px rgba(255,255,255,0.1), 0 16px 40px rgba(0,0,0,0.55)"
-                  : "0 0 0 1px rgba(17,19,24,0.08), 0 12px 32px -4px rgba(17,19,24,0.14), 0 2px 6px rgba(17,19,24,0.05)",
-                transformOrigin: "48px 0",
-                transform: `scale(${0.96 + 0.04 * pop}) translateY(${(1 - pop) * -4}px)`,
-                opacity: clamp(pop * 1.4, 0, 1),
-                zIndex: 30,
+                left: 0,
+                top: 0,
+                opacity: cursorIn,
+                zIndex: 50,
               }}
             >
-              <div
-                style={{
-                  height: 30,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "0 8px",
-                  fontSize: 14,
-                  color: pal.muted,
-                }}
-              >
-                Where{" "}
-                <span
-                  style={{
-                    color: pal.text,
-                    fontWeight: 400,
-                    padding: "2px 6px",
-                    borderRadius: 5,
-                    boxShadow: `inset 0 0 0 1px ${pal.border}`,
-                  }}
-                >
-                  {filterAttribute}
-                </span>{" "}
-                is
-              </div>
-              <div
-                style={{
-                  height: 30,
-                  margin: "4px 0 2px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 7,
-                  padding: "0 8px",
-                  borderRadius: 6,
-                  boxShadow: `inset 0 0 0 1px ${pal.border}`,
-                  fontSize: 14,
-                  color: pal.faint,
-                }}
-              >
-                <Icon name="search" color={pal.faint} size={13} />
-                Search options…
-              </div>
-              {stages.map((s, i) => {
-                const hov =
-                  i === optIdx
-                    ? interpolate(
-                        frame,
-                        [T.optionClick - 8, T.optionClick - 3],
-                        [0, 1],
-                        CL,
-                      )
-                    : 0;
-                return (
-                  <div
-                    key={s}
-                    style={{
-                      height: 30,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "0 8px",
-                      borderRadius: 6,
-                      fontSize: 14,
-                      color: pal.text,
-                      background:
-                        hov > 0
-                          ? pal.dark
-                            ? `rgba(255,255,255,${0.07 * hov})`
-                            : `rgba(17,19,24,${0.05 * hov})`
-                          : "transparent",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 7,
-                        height: 7,
-                        borderRadius: 999,
-                        background: STAGE_COLORS[s],
-                      }}
-                    />
-                    {s}
-                  </div>
-                );
-              })}
+              <Cursor x={cur.x} y={cur.y} rest={actionPt} press={press} />
             </div>
-          )}
-          {bar > 0.01 && (
-            <div
-              style={{
-                position: "absolute",
-                left: barX,
-                top: BAR.y + (1 - bar) * 24,
-                width: BAR.w,
-                height: BAR.h,
-                borderRadius: 12,
-                background: pal.dark ? "#26262B" : "#1C1D21",
-                boxShadow: pal.dark
-                  ? "0 0 0 1px rgba(255,255,255,0.1), 0 16px 40px rgba(0,0,0,0.5)"
-                  : "0 0 0 1px rgba(10,12,18,0.9), 0 16px 36px -6px rgba(10,12,18,0.32), 0 4px 10px rgba(10,12,18,0.12)",
-                transform: `scale(${0.97 + 0.03 * clamp(bar, 0, 1)})`,
-                display: "flex",
-                alignItems: "center",
-                padding: "0 6px 0 14px",
-                boxSizing: "border-box",
-                gap: 6,
-                opacity: clamp(bar * 1.8, 0, 1),
-                color: "#F2F2F4",
-                fontSize: 14,
-                zIndex: 25,
-              }}
-            >
-              <div
-                style={{
-                  width: 120,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <Checkbox p={1} accent={accent} pal={pal} />
-                <span
-                  style={{
-                    fontWeight: 400,
-                    fontVariantNumeric: "tabular-nums",
-                    display: "inline-block",
-                    minWidth: 9,
-                    opacity: selected > 1 ? 0.3 + 0.7 * selIn : 1,
-                    transform: `translateY(${selected > 1 ? (1 - selIn) * 3 : 0}px)`,
-                  }}
-                >
-                  {selected}
-                </span>
-                <span style={{ color: "#B4B5BB", marginLeft: -3 }}>
-                  selected
-                </span>
-              </div>
-              <div
-                style={{
-                  width: 1,
-                  height: 20,
-                  background: "rgba(255,255,255,0.14)",
-                }}
-              />
-              <div
-                style={{
-                  width: 168,
-                  whiteSpace: "nowrap",
-                  height: 32,
-                  borderRadius: 8,
-                  background: accent,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 7,
-                  fontWeight: 400,
-                  color: "#fff",
-                  transform: `scale(${1 - 0.03 * press * actionHover})`,
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
-                  filter: `brightness(${1 + 0.08 * actionHover})`,
-                }}
-              >
-                <Icon name="send" color="#fff" size={13} width={1.5} />
-                {bulkAction}
-              </div>
-              {(
-                [
-                  ["Export", "download"],
-                  ["Delete", "trash"],
-                ] as [string, IconName][]
-              ).map(([l, ic]) => (
-                <div
-                  key={l}
-                  style={{
-                    height: 32,
-                    padding: "0 8px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    color: l === "Delete" ? "#FF8A8A" : "#D6D7DC",
-                    borderRadius: 8,
-                  }}
-                >
-                  <Icon
-                    name={ic}
-                    color={l === "Delete" ? "#FF8A8A" : "#A9AAB1"}
-                    size={13}
-                  />
-                  {l}
-                </div>
-              ))}
-              <div style={{ flex: 1 }} />
-              <div style={{ paddingRight: 8 }}>
-                <Icon name="x" color="#8D8E95" />
-              </div>
-            </div>
-          )}
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              opacity: cursorIn,
-              zIndex: 50,
-            }}
-          >
-            <Cursor x={cur.x} y={cur.y} press={press} />
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -2,14 +2,11 @@
 
 import { loadVariableFont } from "@remotion/google-fonts/Archivo";
 import { getLength, getPointAtLength, reversePath } from "@remotion/paths";
+import type React from "react";
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const archivo = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -18,7 +15,19 @@ export interface SingleStrokeProps {
   unit?: string;
   label?: string;
   accent?: string;
+  /** Text color on the panel; overrides the theme. */
+  ink?: string;
   background?: string;
+  /** Typeface for the unit and label. Load it yourself; Archivo by default. */
+  fontFamily?: string;
+  /** Frames the stroke takes to write the number. */
+  drawDuration?: number;
+  /** Frames between label words. */
+  stagger?: number;
+  /** Size of the number and the panel copy, each around its own center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -123,6 +132,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
+const midway = (p: number) => p > 0 && p < 1;
+
 function place(d: string, ox: number, oy: number, k: number): string {
   const tokens = d.split(" ").filter(Boolean);
   const out: string[] = [];
@@ -190,17 +201,40 @@ function buildPath(chars: string[], k: number, ox: number, oy: number) {
   return parts.join(" ");
 }
 
+/** The foreground at `scale`, around its box's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SingleStroke({
   value = "27",
   unit = "Mar",
   label = "Demo day. Every team shows a film.",
   accent,
+  ink,
   background,
+  fontFamily = archivo.fontFamily,
+  drawDuration = DRAW_LEN,
+  stagger = 3,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: SingleStrokeProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const panelFill = theme === "dark" ? (accent ?? c.panel) : c.panel;
@@ -232,7 +266,7 @@ export function SingleStroke({
     ...CLAMP,
     easing: EASE_IN_OUT,
   });
-  const p = interpolate(t, [DRAW_AT, DRAW_AT + DRAW_LEN], [0, 1], {
+  const p = interpolate(t, [DRAW_AT, DRAW_AT + drawDuration], [0, 1], {
     ...CLAMP,
     easing: EASE_SWEEP,
   });
@@ -244,11 +278,11 @@ export function SingleStroke({
   const hairW = Math.max(1.5, k * 0.012);
   const unitP = interpolate(
     t,
-    [DRAW_AT + DRAW_LEN - 10, DRAW_AT + DRAW_LEN + 8],
+    [DRAW_AT + drawDuration - 10, DRAW_AT + drawDuration + 8],
     [0, 1],
     { ...CLAMP, easing: EASE_OUT },
   );
-  const labelAt = DRAW_AT + DRAW_LEN - 2;
+  const labelAt = DRAW_AT + drawDuration - 2;
   const words = label ? label.split(" ") : [];
 
   const panelBox = portrait
@@ -257,52 +291,54 @@ export function SingleStroke({
   const unitSize = portrait ? W * 0.17 : H * 0.17;
   const labelSize = portrait ? W * 0.056 : H * 0.056;
   const text = {
-    fontFamily: archivo.fontFamily,
+    fontFamily,
     letterSpacing: "-0.01em",
-    color: c.panelInk,
+    color: ink ?? c.panelInk,
   };
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0, overflow: "visible" }}
-        aria-hidden
-      >
-        <path
-          d={d}
-          fill="none"
-          stroke={c.hair}
-          strokeWidth={hairW}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity={intro * (1 - p * 0.6)}
-          pathLength={len}
-          strokeDasharray={`${len} ${len}`}
-          strokeDashoffset={len * (1 - intro)}
-        />
-        <path
-          d={d}
-          fill="none"
-          stroke={strokeFill}
-          strokeWidth={sw}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeDasharray={`${drawn} ${len + sw}`}
-          opacity={p > 0 ? 1 : 0}
-        />
-        {tip ? (
-          <circle
-            cx={tip.x}
-            cy={tip.y}
-            r={sw * 0.22}
-            fill={c.tip}
-            opacity={0.8 * tipFade}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0, overflow: "visible" }}
+          aria-hidden
+        >
+          <path
+            d={d}
+            fill="none"
+            stroke={c.hair}
+            strokeWidth={hairW}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity={intro * (1 - p * 0.6)}
+            pathLength={len}
+            strokeDasharray={`${len} ${len}`}
+            strokeDashoffset={len * (1 - intro)}
           />
-        ) : null}
-      </svg>
+          <path
+            d={d}
+            fill="none"
+            stroke={strokeFill}
+            strokeWidth={sw}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeDasharray={`${drawn} ${len + sw}`}
+            opacity={p > 0 ? 1 : 0}
+          />
+          {tip ? (
+            <circle
+              cx={tip.x}
+              cy={tip.y}
+              r={sw * 0.22}
+              fill={c.tip}
+              opacity={0.8 * tipFade}
+            />
+          ) : null}
+        </svg>
+      </ScaleLayer>
       <div
         style={{
           position: "absolute",
@@ -313,63 +349,65 @@ export function SingleStroke({
             : `inset(0 0 0 ${((1 - panelP) * 100).toFixed(3)}%)`,
         }}
       >
-        {unit ? (
-          <div
-            style={{
-              ...text,
-              position: "absolute",
-              left: M,
-              top: M * 0.9,
-              fontVariationSettings: '"wdth" 125, "wght" 500',
-              fontSize: unitSize,
-              lineHeight: 1,
-              letterSpacing: "-0.03em",
-              whiteSpace: "pre",
-              opacity: unitP,
-              transform: `translateY(${((1 - unitP) * unitSize * 0.3).toFixed(2)}px)`,
-            }}
-          >
-            {unit}
-          </div>
-        ) : null}
-        {words.length > 0 ? (
-          <div
-            style={{
-              ...text,
-              position: "absolute",
-              left: M,
-              right: M,
-              bottom: M,
-              fontVariationSettings: '"wdth" 125, "wght" 420',
-              fontSize: labelSize,
-              lineHeight: 1.18,
-              textWrap: "balance",
-            }}
-          >
-            {words.map((w, i) => {
-              const q = interpolate(
-                t,
-                [labelAt + i * 3, labelAt + i * 3 + 16],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
-              return (
-                <span key={`${w}-${i}`}>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      opacity: q,
-                      transform: `translateY(${((1 - q) * labelSize * 0.6).toFixed(2)}px)`,
-                    }}
-                  >
-                    {w}
+        <ScaleLayer scale={scale}>
+          {unit ? (
+            <div
+              style={{
+                ...text,
+                position: "absolute",
+                left: M,
+                top: M * 0.9,
+                fontVariationSettings: '"wdth" 125, "wght" 500',
+                fontSize: unitSize,
+                lineHeight: 1,
+                letterSpacing: "-0.03em",
+                whiteSpace: "pre",
+                opacity: unitP,
+                transform: `translateY(${((1 - unitP) * unitSize * 0.3).toFixed(2)}px)${glide(midway(unitP))}`,
+              }}
+            >
+              {unit}
+            </div>
+          ) : null}
+          {words.length > 0 ? (
+            <div
+              style={{
+                ...text,
+                position: "absolute",
+                left: M,
+                right: M,
+                bottom: M,
+                fontVariationSettings: '"wdth" 125, "wght" 420',
+                fontSize: labelSize,
+                lineHeight: 1.18,
+                textWrap: "balance",
+              }}
+            >
+              {words.map((w, i) => {
+                const q = interpolate(
+                  t,
+                  [labelAt + i * stagger, labelAt + i * stagger + 16],
+                  [0, 1],
+                  { ...CLAMP, easing: EASE_OUT },
+                );
+                return (
+                  <span key={`${w}-${i}`}>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        opacity: q,
+                        transform: `translateY(${((1 - q) * labelSize * 0.6).toFixed(2)}px)${glide(midway(q))}`,
+                      }}
+                    >
+                      {w}
+                    </span>
+                    {i < words.length - 1 ? " " : ""}
                   </span>
-                  {i < words.length - 1 ? " " : ""}
-                </span>
-              );
-            })}
-          </div>
-        ) : null}
+                );
+              })}
+            </div>
+          ) : null}
+        </ScaleLayer>
       </div>
     </AbsoluteFill>
   );

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const layeredCutoutConfig: ComponentConfig = {
   componentName: "LayeredCutout",
@@ -12,11 +18,6 @@ export const layeredCutoutConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     tagline: {
       type: "text-content",
@@ -32,6 +33,25 @@ export const layeredCutoutConfig: ComponentConfig = {
       description: "Layers",
       hiddenFromList: false,
     },
+    push: {
+      type: "number",
+      default: 132,
+      min: 40,
+      max: 240,
+      step: 4,
+      description: "Dolly length (frames)",
+      hiddenFromList: false,
+    },
+    depthBlur: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 3,
+      step: 0.1,
+      description: "Depth blur",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Hanken Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,
@@ -44,6 +64,8 @@ export const layeredCutoutConfig: ComponentConfig = {
   },
   durationInFrames: 170,
   fps: FPS,
+  // Does not hold 60 fps in the browser yet (`audit:playback`: pixels).
+  previewFps: 30,
   compositionWidth: W,
   compositionHeight: H,
 };

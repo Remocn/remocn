@@ -1,0 +1,125 @@
+{
+  "component": "counter-reveal",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, magazine-style reveal in Instrument Serif with a deep ink on warm paper and a slow, unhurried lift.",
+      "askedAs": [
+        "elegant serif word reveal on cream",
+        "magazine style slow announcement",
+        "classy light version with serif font",
+        "элегантный журнальный стиль с засечками",
+        "светлый вариант с медленным раскрытием"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b5522e",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snap-launch",
+      "label": "Snap Launch",
+      "description": "A fast, punchy reveal with near-instant letter cascade and an early lift for quick social cuts.",
+      "askedAs": [
+        "make it quick and punchy",
+        "fast reveal for reels",
+        "snappy short version",
+        "быстрый резкий вариант",
+        "сделай динамичнее для коротких видео"
+      ],
+      "props": {
+        "speed": 1.75,
+        "stagger": 1,
+        "liftAt": 36,
+        "fontFamily": "Space Grotesk",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "midnight-mono",
+      "label": "Midnight Mono",
+      "description": "A technical dark look with JetBrains Mono, a teal accent on near-black and no grain.",
+      "askedAs": [
+        "developer style dark reveal",
+        "monospace terminal look",
+        "clean tech dark theme without grain",
+        "тёмный стиль для разработчиков",
+        "моноширинный шрифт на чёрном фоне"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f14",
+        "ink": "#e6edf3",
+        "accent": "#2bb3a3",
+        "grain": false,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "slow-cinematic",
+      "label": "Slow Cinematic",
+      "description": "A deliberate, oversized reveal with wide letter stagger, a late lift and a short lead-in delay.",
+      "askedAs": [
+        "dramatic slow movie-like reveal",
+        "big cinematic word that lingers",
+        "slow trailer style announcement",
+        "медленное кинематографичное появление",
+        "драматичный вариант с задержкой"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 9,
+        "liftAt": 90,
+        "scale": 1.35,
+        "delay": 20,
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "soft-studio",
+      "label": "Soft Studio",
+      "description": "A calm light theme on pale grey with a sage accent, compact scale and Manrope type.",
+      "askedAs": [
+        "soft minimal light version",
+        "calm pastel reveal",
+        "smaller clean word on light background",
+        "мягкий минималистичный светлый стиль",
+        "спокойные пастельные цвета"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#eef0ec",
+        "ink": "#23302a",
+        "accent": "#6b8f71",
+        "fontFamily": "Manrope",
+        "scale": 0.8
+      }
+    },
+    {
+      "id": "ember-bold",
+      "label": "Ember Bold",
+      "description": "A warm dark look with a burnt-orange accent on charcoal and chunky Bricolage Grotesque letters.",
+      "askedAs": [
+        "warm orange dark version",
+        "bold chunky letters on charcoal",
+        "make it feel warm and loud",
+        "тёплый оранжевый на тёмном",
+        "жирный шрифт и тёплые цвета"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "background": "#1a1614",
+        "ink": "#f5ede4",
+        "accent": "#e0662e",
+        "speed": 1.25
+      }
+    }
+  ]
+}

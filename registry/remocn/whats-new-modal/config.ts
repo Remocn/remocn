@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const whatsNewModalConfig: ComponentConfig = {
   componentName: "WhatsNewModal",
@@ -13,11 +20,6 @@ export const whatsNewModalConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     brand: {
       type: "text-content",
       default: "remocn",
@@ -28,6 +30,32 @@ export const whatsNewModalConfig: ComponentConfig = {
       default: "Maya Chen",
       description: "User name",
     },
+    nextLabel: {
+      type: "text-content",
+      default: "Next",
+      description: "Next label",
+    },
+    skipLabel: {
+      type: "text-content",
+      default: "Skip",
+      description: "Skip label",
+    },
+    dwell: {
+      type: "number",
+      default: 66,
+      min: 30,
+      max: 120,
+      step: 2,
+      description: "Slide hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Figtree" }),
     speed: {
       type: "number",
       default: 1,

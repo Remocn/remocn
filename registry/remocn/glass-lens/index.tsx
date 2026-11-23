@@ -12,9 +12,9 @@ import {
   Img,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -89,10 +89,28 @@ export interface GlassLensProps {
   /** Custom content for the product pane (wins over `src`). */
   children?: React.ReactNode;
   accent?: string;
+  /** Title inside the product pane's preview. */
+  previewTitle?: string;
+  /** How strongly the glass magnifies; 0 for flat glass. */
+  magnify?: number;
+  /** Color of the headline and logo; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline. Load it yourself; Newsreader by default. */
+  fontFamily?: string;
+  /** Size of the headline, pane and lens, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
 }
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -178,18 +196,29 @@ function measureEm(text: string, f: Face) {
 }
 
 /** Holds the frame until the faces are in, so layout is measured once, right. */
-function useFontsReady() {
+function useFontsReady(fontFamily: string) {
   const [handle] = useState(() => delayRender("glass-lens: fonts"));
-  const [ready, setReady] = useState(false);
+  // the family whose faces are in, so a new `fontFamily` re-measures once loaded
+  const [ready, setReady] = useState<string | null>(null);
   useEffect(() => {
+    let live = true;
     Promise.all([
       manrope.waitUntilDone(),
       serifUpright.waitUntilDone(),
       serifItalic.waitUntilDone(),
-    ]).then(() => setReady(true));
-  }, []);
+      document.fonts.load(`400 100px "${fontFamily}"`),
+      document.fonts.load(`italic 400 100px "${fontFamily}"`),
+    ])
+      .catch(() => undefined)
+      .then(() => {
+        if (live) setReady(fontFamily);
+      });
+    return () => {
+      live = false;
+    };
+  }, [fontFamily]);
   useEffect(() => {
-    if (ready) continueRender(handle);
+    if (ready !== null) continueRender(handle);
   }, [ready, handle]);
   return ready;
 }
@@ -230,7 +259,7 @@ interface Layout {
 }
 
 function useLayout(lineEms: number[]): Layout {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const left = width * 0.075;
   const longest = Math.max(...lineEms);
@@ -268,6 +297,7 @@ function Placeholder({
   p,
   accent,
   t,
+  previewTitle,
 }: {
   w: number;
   h: number;
@@ -275,6 +305,7 @@ function Placeholder({
   p: Palette;
   accent: string;
   t: number;
+  previewTitle: string;
 }) {
   const pad = w * 0.05;
   const bar = (x: number, y: number, bw: number, bh: number, c: string) => (
@@ -299,6 +330,11 @@ function Placeholder({
     [0.71, 0.24, 0],
   ];
   const head = (w - pad * 2) * interpolate(t, [20, 190], [0.38, 0.62], CLAMP);
+  // Layout rounds a box's edges to whole pixels, so a playhead eased by
+  // `left` steps unevenly; while it moves it sits where it stops and travels
+  // by transform. At either end it keeps the plain layout.
+  const headRest = (w - pad * 2) * 0.62;
+  const headMoving = t > 20 && t < 190;
   return (
     <>
       {bar(pad, h * 0.045, w * 0.16, 9 * u, p.blockHi)}
@@ -340,7 +376,7 @@ function Placeholder({
             color: "#FFF8F2",
           }}
         >
-          Launch day.
+          {previewTitle}
         </div>
         <div
           style={{
@@ -397,8 +433,11 @@ function Placeholder({
       <div
         style={{
           position: "absolute",
-          left: pad + head,
+          left: pad + (headMoving ? headRest : head),
           top: h * 0.69,
+          transform: headMoving
+            ? `translateX(${head - headRest}px)`
+            : undefined,
           width: Math.max(1, 1.5 * u),
           height: h * 0.25,
           background: p.fg,
@@ -420,7 +459,14 @@ function Scene({
   accent,
   p,
   L,
+  fg,
+  bg,
+  fontFamily,
+  previewTitle,
+  tilted = false,
 }: {
+  /** An ancestor already carries the tilt; one per chain is enough. */
+  tilted?: boolean;
   t: number;
   lines: string[];
   italicLast: boolean;
@@ -430,8 +476,13 @@ function Scene({
   accent: string;
   p: Palette;
   L: Layout;
+  fg: string;
+  bg: string;
+  fontFamily: string;
+  previewTitle: string;
 }) {
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const { width, height } = useSceneConfig();
   const { u } = L;
   const rise = (d: number) =>
     interpolate(t, [d - 8, d + 20], [0, 1], { ...CLAMP, easing: EASE_OUT });
@@ -444,7 +495,7 @@ function Scene({
         top: 0,
         width,
         height,
-        background: p.bg,
+        background: bg,
         overflow: "hidden",
       }}
     >
@@ -463,7 +514,7 @@ function Scene({
           opacity: rise(0),
         }}
       >
-        {logo ?? <RemocnLogo fontSize={26 * u} color={p.fg} />}
+        {logo ?? <RemocnLogo fontSize={26 * u} color={fg} />}
       </div>
       {lines.map((line, i) => {
         const italic = italicLast && i === lines.length - 1 && lines.length > 1;
@@ -477,16 +528,16 @@ function Scene({
               height: L.lineH,
               display: "flex",
               alignItems: "center",
-              fontFamily: serif,
+              fontFamily,
               fontStyle: italic ? "italic" : "normal",
               fontWeight: 400,
               fontSize: L.size,
               letterSpacing: `${HEAD_TRACK}em`,
               lineHeight: 1,
-              color: p.fg,
+              color: fg,
               whiteSpace: "pre",
               opacity: rise(i * 3),
-              transform: `translateY(${(1 - rise(i * 3)) * 24 * u}px)`,
+              transform: `translateY(${(1 - rise(i * 3)) * 24 * u}px)${glide(!tilted && midway(rise(i * 3)))}`,
             }}
           >
             {line}
@@ -522,6 +573,7 @@ function Scene({
               p={p}
               accent={accent}
               t={t}
+              previewTitle={previewTitle}
             />
           ))}
       </div>
@@ -552,6 +604,22 @@ function coreMask(w: number, h: number, edge: number) {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GlassLens({
   lines = ["Every frame,", "composed."],
   italicLast = true,
@@ -561,17 +629,29 @@ export function GlassLens({
   src,
   children,
   accent = "#3B5BFD",
+  previewTitle = "Launch day.",
+  magnify = 1,
+  ink,
+  background,
+  fontFamily = serif,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: GlassLensProps) {
-  const frame = useCurrentFrame() * speed;
-  const { fps, width } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { fps, width } = useSceneConfig();
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const fid = `lens${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const ready = useFontsReady();
+  const ready = useFontsReady(fontFamily);
 
   const faceFor = (i: number): Face => ({
-    family: serif,
+    family: fontFamily,
     italic: italicLast && i === lines.length - 1 && lines.length > 1,
     weight: 400,
     track: HEAD_TRACK,
@@ -591,7 +671,7 @@ export function GlassLens({
       track: CTA_TRACK,
     });
     return { lineEms, wordEm, beforeEm, ctaEm };
-  }, [ready, lines, focus.line, focus.word, cta, italicLast]);
+  }, [ready, lines, focus.line, focus.word, cta, italicLast, fontFamily]);
   const L = useLayout(m.lineEms);
   const { u } = L;
 
@@ -629,46 +709,68 @@ export function GlassLens({
     const last = stops[stops.length - 1];
     return { x: last.x, y: last.y };
   };
-  const pos = posAt(frame);
-  const prev = posAt(frame - 1.5);
-  const vx = (pos.x - prev.x) / 1.5 / u;
-  const vy = (pos.y - prev.y) / 1.5 / u;
-  const spd = Math.hypot(vx, vy);
-  const still = interpolate(spd, [0, 9], [1, 0], CLAMP);
+  const geometryAt = (f: number) => {
+    const pos = posAt(f);
+    const prev = posAt(f - 1.5);
+    const vx = (pos.x - prev.x) / 1.5 / u;
+    const vy = (pos.y - prev.y) / 1.5 / u;
+    const spd = Math.hypot(vx, vy);
+    const still = interpolate(spd, [0, 9], [1, 0], CLAMP);
 
-  // liquid morph into the CTA pill: the drop flattens first and bulges
-  // sideways (volume kept), then the width settles onto the label
-  const mH = spring({
-    frame: frame - 142,
-    fps,
-    config: { damping: 12, stiffness: 110, mass: 0.9 },
-  });
-  const mW = spring({
-    frame: frame - 148,
-    fps,
-    config: { damping: 13, stiffness: 100, mass: 1 },
-  });
-  const bulge = 1 + 0.2 * Math.max(0, mH - mW);
-  // wide enough that the magnified focus word sits inside the flat middle
-  const baseW = Math.max(350 * u, m.wordEm * L.size * 1.18 + 90 * u);
-  const baseH = 150 * u;
-  const sx = 1 + interpolate(Math.abs(vx), [0, 30], [0, 0.2], CLAMP);
-  const sy = 1 + interpolate(Math.abs(vy), [0, 30], [0, 0.2], CLAMP);
-  const lw = (baseW + (ctaW - baseW) * mW) * bulge * sx * (2 - sy);
-  const lh = (baseH + (ctaH - baseH) * mH) * sy * (2 - sx) ** 0.6;
-  // once it lands, the pill grows from its left edge like a real button
-  const anchor = Math.min(1, mH);
-  const cx = pos.x + (L.left + lw / 2 - pos.x) * anchor;
-  const lx = cx - lw / 2;
-  const ly = pos.y - lh / 2;
-  const radius = lh / 2;
-  const morph = Math.min(1, mH);
+    // liquid morph into the CTA pill: the drop flattens first and bulges
+    // sideways (volume kept), then the width settles onto the label
+    const mH = spring({
+      frame: f - 142,
+      fps,
+      config: { damping: 12, stiffness: 110, mass: 0.9 },
+    });
+    const mW = spring({
+      frame: f - 148,
+      fps,
+      config: { damping: 13, stiffness: 100, mass: 1 },
+    });
+    const bulge = 1 + 0.2 * Math.max(0, mH - mW);
+    // wide enough that the magnified focus word sits inside the flat middle
+    const baseW = Math.max(350 * u, m.wordEm * L.size * 1.18 + 90 * u);
+    const baseH = 150 * u;
+    const sx = 1 + interpolate(Math.abs(vx), [0, 30], [0, 0.2], CLAMP);
+    const sy = 1 + interpolate(Math.abs(vy), [0, 30], [0, 0.2], CLAMP);
+    const lw = (baseW + (ctaW - baseW) * mW) * bulge * sx * (2 - sy);
+    const lh = (baseH + (ctaH - baseH) * mH) * sy * (2 - sx) ** 0.6;
+    // once it lands, the pill grows from its left edge like a real button
+    const anchor = Math.min(1, mH);
+    const cx = pos.x + (L.left + lw / 2 - pos.x) * anchor;
+    const lx = cx - lw / 2;
+    const ly = pos.y - lh / 2;
+    const radius = lh / 2;
+    const morph = Math.min(1, mH);
 
-  const enter = interpolate(frame, [-6, 14], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const mag = 1 + (0.08 + 0.1 * still) * (1 - morph);
+    const enter = interpolate(f, [-6, 14], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    const mag = 1 + (0.08 + 0.1 * still) * (1 - morph) * magnify;
+    return { pos, still, lw, lh, cx, lx, ly, radius, morph, enter, mag };
+  };
+  const { pos, still, lw, lh, cx, lx, ly, radius, morph, enter, mag } =
+    geometryAt(frame);
+  // The lens is laid out where it lands on the CTA and travels by transform,
+  // and the magnified copy inside it counters that by transform too: layout
+  // rounds each of the two boxes to whole pixels on its own, so the copy
+  // shook against the lens a pixel at a time.
+  const landed = geometryAt(1e5);
+  const offX = lx - landed.lx;
+  const offY = ly - landed.ly;
+  const travel = Math.abs(offX) >= 1e-3 || Math.abs(offY) >= 1e-3;
+  const differs = (o: ReturnType<typeof geometryAt>) =>
+    Math.abs(o.lx - lx) > 1e-3 ||
+    Math.abs(o.ly - ly) > 1e-3 ||
+    Math.abs(o.cx - cx) > 1e-3 ||
+    Math.abs(o.pos.y - pos.y) > 1e-3 ||
+    Math.abs(o.mag - mag) * width > 1e-3;
+  const lensMoving =
+    differs(geometryAt(frame + speed)) ||
+    differs(geometryAt(Math.max(0, frame - speed)));
   const disp = (22 + 8 * still) * u * (1 - 0.55 * morph);
   const edge = Math.min(lw, lh) * 0.24;
   const M = Math.ceil(disp + 8 * u);
@@ -700,224 +802,240 @@ export function GlassLens({
     accent,
     p,
     L,
+    fg,
+    bg,
+    fontFamily,
+    previewTitle,
   };
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <Scene {...sceneProps} />
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <Scene {...sceneProps} />
 
-      <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
-        <defs>
-          <filter
-            id={fid}
-            x={0}
-            y={0}
-            width={lw + M * 2}
-            height={lh + M * 2}
-            filterUnits="userSpaceOnUse"
-            primitiveUnits="userSpaceOnUse"
-            colorInterpolationFilters="sRGB"
-          >
-            <feImage
-              href={map}
-              x={M}
-              y={M}
-              width={lw}
-              height={lh}
-              preserveAspectRatio="none"
-              result="map"
-            />
-            <feDisplacementMap
-              in="SourceGraphic"
-              in2="map"
-              scale={disp}
-              xChannelSelector="R"
-              yChannelSelector="G"
-              result="bent"
-            />
-            {/* displacement samples nearest-pixel: soften the bent rim, and
+        <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
+          <defs>
+            <filter
+              id={fid}
+              x={0}
+              y={0}
+              width={lw + M * 2}
+              height={lh + M * 2}
+              filterUnits="userSpaceOnUse"
+              primitiveUnits="userSpaceOnUse"
+              colorInterpolationFilters="sRGB"
+            >
+              <feImage
+                href={map}
+                x={M}
+                y={M}
+                width={lw}
+                height={lh}
+                preserveAspectRatio="none"
+                result="map"
+              />
+              <feDisplacementMap
+                in="SourceGraphic"
+                in2="map"
+                scale={disp}
+                xChannelSelector="R"
+                yChannelSelector="G"
+                result="bent"
+              />
+              {/* displacement samples nearest-pixel: soften the bent rim, and
                 keep the flat middle as the crisp (magnified) source */}
-            <feGaussianBlur in="bent" stdDeviation={0.6 * u} result="soft" />
-            <feImage
-              href={core}
-              x={M}
-              y={M}
-              width={lw}
-              height={lh}
-              preserveAspectRatio="none"
-              result="core"
-            />
-            <feComposite
-              in="SourceGraphic"
-              in2="core"
-              operator="in"
-              result="sharp"
-            />
-            <feComposite in="soft" in2="core" operator="out" result="rim" />
-            <feComposite
-              in="sharp"
-              in2="rim"
-              operator="arithmetic"
-              k2={1}
-              k3={1}
-            />
-          </filter>
-        </defs>
-      </svg>
+              <feGaussianBlur in="bent" stdDeviation={0.6 * u} result="soft" />
+              <feImage
+                href={core}
+                x={M}
+                y={M}
+                width={lw}
+                height={lh}
+                preserveAspectRatio="none"
+                result="core"
+              />
+              <feComposite
+                in="SourceGraphic"
+                in2="core"
+                operator="in"
+                result="sharp"
+              />
+              <feComposite in="soft" in2="core" operator="out" result="rim" />
+              <feComposite
+                in="sharp"
+                in2="rim"
+                operator="arithmetic"
+                k2={1}
+                k3={1}
+              />
+            </filter>
+          </defs>
+        </svg>
 
-      {/* soft cast shadow under the glass */}
-      <div
-        style={{
-          position: "absolute",
-          left: lx,
-          top: ly,
-          width: lw,
-          height: lh,
-          borderRadius: radius,
-          boxShadow: `0 0 0 1px ${p.edgeLine}, 0 ${22 * u}px ${44 * u}px -${10 * u}px ${p.lensShadow}, 0 ${4 * u}px ${10 * u}px -${2 * u}px ${p.lensShadow}`,
-          opacity: enter,
-        }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          left: lx,
-          top: ly,
-          width: lw,
-          height: lh,
-          borderRadius: radius,
-          overflow: "hidden",
-          opacity: enter,
-          isolation: "isolate",
-        }}
-      >
+        {/* soft cast shadow under the glass */}
         <div
           style={{
             position: "absolute",
-            left: -M,
-            top: -M,
-            width: lw + M * 2,
-            height: lh + M * 2,
-            filter: `url(#${fid})`,
+            left: landed.lx,
+            top: landed.ly,
+            transform: travel ? `translate(${offX}px, ${offY}px)` : undefined,
+            width: lw,
+            height: lh,
+            borderRadius: radius,
+            boxShadow: `0 0 0 1px ${p.edgeLine}, 0 ${22 * u}px ${44 * u}px -${10 * u}px ${p.lensShadow}, 0 ${4 * u}px ${10 * u}px -${2 * u}px ${p.lensShadow}`,
+            opacity: enter,
+          }}
+        />
+
+        <div
+          style={{
+            position: "absolute",
+            left: landed.lx,
+            top: landed.ly,
+            width: lw,
+            height: lh,
+            borderRadius: radius,
+            overflow: "hidden",
+            opacity: enter,
+            isolation: "isolate",
+            // The mark here covers the magnified copy and the CTA label. It
+            // stays on after the landing: the copy rests under a scale, off
+            // the pixel grid, and keeps its lean only under a mark.
+            transform: `translate(${travel ? offX : 0}px, ${travel ? offY : 0}px)${glide(lensMoving)}`,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: M - lx,
-              top: M - ly,
-              width,
-              height: "100%",
-              transform: `scale(${mag})`,
-              transformOrigin: `${cx}px ${pos.y}px`,
+              left: -M,
+              top: -M,
+              width: lw + M * 2,
+              height: lh + M * 2,
+              filter: `url(#${fid})`,
             }}
           >
-            <Scene {...sceneProps} />
+            <div
+              style={{
+                position: "absolute",
+                left: M - landed.lx,
+                top: M - landed.ly,
+                width,
+                height: "100%",
+                transform: `${travel ? `translate(${-offX}px, ${-offY}px) ` : ""}scale(${mag})`,
+                transformOrigin: `${cx}px ${pos.y}px`,
+              }}
+            >
+              <Scene {...sceneProps} tilted={lensMoving} />
+            </div>
+          </div>
+
+          {/* body: tint, accent fill for the CTA, inner shade and sheen */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: p.glassTint,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: accent,
+              opacity: tint,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: radius,
+              boxShadow: `inset 0 ${-8 * u}px ${18 * u}px -${6 * u}px ${p.innerShade}, inset 0 0 ${10 * u}px ${p.innerShade}`,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: radius * 0.35,
+              right: radius * 0.35,
+              top: 2 * u,
+              height: lh * 0.42,
+              borderRadius: `${radius}px ${radius}px ${radius * 0.6}px ${radius * 0.6}px`,
+              background: `linear-gradient(180deg, rgba(255,255,255,${0.12 * p.rimHi}), rgba(255,255,255,0.03) 55%, rgba(255,255,255,0) 100%)`,
+            }}
+          />
+          {/* specular rim */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: radius,
+              padding: 1.5 * u,
+              background: `radial-gradient(ellipse 45% 60% at ${rimX}% 0%, rgba(255,255,255,${p.rimHi}), transparent 100%), radial-gradient(ellipse 40% 55% at ${100 - rimX}% 100%, rgba(255,255,255,${p.rimLo}), transparent 100%), rgba(255,255,255,${p.rimLo * 0.25})`,
+              WebkitMask:
+                "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+              WebkitMaskComposite: "xor",
+              maskComposite: "exclude",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: radius,
+              boxShadow: `inset 0 0 0 1px rgba(255,255,255,${p.rimLo * 0.5})`,
+            }}
+          />
+
+          {/* CTA label, laid out at the landed pill's size and kept centred
+              on the live one by transform: centring by layout in a box
+              that still grows rounds the label to whole pixels. */}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: landed.lw,
+              height: landed.lh,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10 * u,
+              fontFamily: sans,
+              fontWeight: 500,
+              fontSize: ctaSize,
+              letterSpacing: `${CTA_TRACK}em`,
+              color: "#FFFFFF",
+              whiteSpace: "nowrap",
+              opacity: label,
+              transform: `translate(${(lw - landed.lw) / 2}px, ${(lh - landed.lh) / 2 + (1 - label) * 8 * u}px)${glide(midway(label) && !lensMoving)}`,
+            }}
+          >
+            {cta}
+            <svg
+              width={18 * u}
+              height={18 * u}
+              viewBox="0 0 18 18"
+              style={{
+                opacity: arrow,
+                transform: `translateX(${(arrow - 1) * 8 * u}px)`,
+              }}
+              aria-hidden
+            >
+              <path
+                d="M3 9h11M10 4.5 14.5 9 10 13.5"
+                stroke="#FFFFFF"
+                strokeWidth={1.7}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </div>
         </div>
+      </ScaleLayer>
 
-        {/* body: tint, accent fill for the CTA, inner shade and sheen */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: p.glassTint,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: accent,
-            opacity: tint,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: radius,
-            boxShadow: `inset 0 ${-8 * u}px ${18 * u}px -${6 * u}px ${p.innerShade}, inset 0 0 ${10 * u}px ${p.innerShade}`,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: radius * 0.35,
-            right: radius * 0.35,
-            top: 2 * u,
-            height: lh * 0.42,
-            borderRadius: `${radius}px ${radius}px ${radius * 0.6}px ${radius * 0.6}px`,
-            background: `linear-gradient(180deg, rgba(255,255,255,${0.12 * p.rimHi}), rgba(255,255,255,0.03) 55%, rgba(255,255,255,0) 100%)`,
-          }}
-        />
-        {/* specular rim */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: radius,
-            padding: 1.5 * u,
-            background: `radial-gradient(ellipse 45% 60% at ${rimX}% 0%, rgba(255,255,255,${p.rimHi}), transparent 100%), radial-gradient(ellipse 40% 55% at ${100 - rimX}% 100%, rgba(255,255,255,${p.rimLo}), transparent 100%), rgba(255,255,255,${p.rimLo * 0.25})`,
-            WebkitMask:
-              "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-            WebkitMaskComposite: "xor",
-            maskComposite: "exclude",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: radius,
-            boxShadow: `inset 0 0 0 1px rgba(255,255,255,${p.rimLo * 0.5})`,
-          }}
-        />
-
-        {/* CTA label */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 10 * u,
-            fontFamily: sans,
-            fontWeight: 500,
-            fontSize: ctaSize,
-            letterSpacing: `${CTA_TRACK}em`,
-            color: "#FFFFFF",
-            whiteSpace: "nowrap",
-            opacity: label,
-            transform: `translateY(${(1 - label) * 8 * u}px)`,
-          }}
-        >
-          {cta}
-          <svg
-            width={18 * u}
-            height={18 * u}
-            viewBox="0 0 18 18"
-            style={{
-              opacity: arrow,
-              transform: `translateX(${(arrow - 1) * 8 * u}px)`,
-            }}
-            aria-hidden
-          >
-            <path
-              d="M3 9h11M10 4.5 14.5 9 10 13.5"
-              stroke="#FFFFFF"
-              strokeWidth={1.7}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-      </div>
-
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

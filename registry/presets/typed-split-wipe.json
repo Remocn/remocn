@@ -1,0 +1,122 @@
+{
+  "component": "typed-split-wipe",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-cut",
+      "label": "Snappy Cut",
+      "description": "Fast typing and a sharp, tight exit for quick punchy intros.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick type then quick wipe",
+        "snappy tech title",
+        "быстрая печать и резкий выход",
+        "сделай анимацию шустрее"
+      ],
+      "props": {
+        "typeFrames": 14,
+        "exitAt": 30,
+        "exitFrames": 8,
+        "wordStagger": 2,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Unhurried typing with a long hold and a drawn-out, widely staggered wipe.",
+      "askedAs": [
+        "slow calm typing",
+        "let the text linger longer",
+        "cinematic slow wipe out",
+        "медленное появление текста",
+        "спокойная неторопливая печать"
+      ],
+      "props": {
+        "typeFrames": 54,
+        "exitAt": 85,
+        "exitFrames": 36,
+        "wordStagger": 10,
+        "anchorShift": -140,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "bold-headline",
+      "label": "Bold Headline",
+      "description": "Large heavy white type with a long anchor slide for a confident launch title.",
+      "askedAs": [
+        "big bold title",
+        "huge heavy headline text",
+        "make the text larger and thicker",
+        "крупный жирный заголовок",
+        "большой текст для запуска продукта"
+      ],
+      "props": {
+        "fontSize": 96,
+        "fontWeight": "700",
+        "color": "#ffffff",
+        "anchorShift": -180,
+        "exitFrames": 16
+      }
+    },
+    {
+      "id": "terminal-mint",
+      "label": "Terminal Mint",
+      "description": "Soft mint medium-weight type with steady console-like typing.",
+      "askedAs": [
+        "terminal style green text",
+        "code console look",
+        "developer mint typing",
+        "текст как в терминале",
+        "зелёный текст в стиле консоли"
+      ],
+      "props": {
+        "color": "#8fd6b4",
+        "fontSize": 34,
+        "fontWeight": "500",
+        "typeFrames": 40,
+        "wordStagger": 6
+      }
+    },
+    {
+      "id": "quiet-caption",
+      "label": "Quiet Caption",
+      "description": "Small muted grey caption that types gently and exits together with a subtle anchor drift.",
+      "askedAs": [
+        "small subtle caption",
+        "understated grey subtitle",
+        "minimal quiet text",
+        "маленькая неброская подпись",
+        "тихий минималистичный текст"
+      ],
+      "props": {
+        "fontSize": 24,
+        "color": "#b8bcc4",
+        "anchorShift": -24,
+        "wordStagger": 0,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "amber-signal",
+      "label": "Amber Signal",
+      "description": "Warm amber semibold type with a brisk, strongly staggered word exit.",
+      "askedAs": [
+        "warm amber title",
+        "golden tech text",
+        "orange highlight headline",
+        "тёплый янтарный текст",
+        "золотистый заголовок с эффектом"
+      ],
+      "props": {
+        "color": "#f2c27b",
+        "fontWeight": "600",
+        "fontSize": 56,
+        "exitFrames": 12,
+        "wordStagger": 8
+      }
+    }
+  ]
+}

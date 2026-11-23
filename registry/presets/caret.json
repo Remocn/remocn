@@ -1,0 +1,99 @@
+{
+  "component": "caret",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-block",
+      "label": "Terminal Block",
+      "description": "A wide, square-cornered phosphor-green block that blinks at a steady terminal rhythm.",
+      "askedAs": [
+        "terminal style cursor",
+        "fat block cursor like a shell",
+        "green console caret",
+        "курсор как в терминале",
+        "толстый зелёный курсор"
+      ],
+      "props": {
+        "width": 8,
+        "radius": 0,
+        "color": "#4ade80",
+        "blinkPerSecond": 1.5
+      }
+    },
+    {
+      "id": "hairline-editor",
+      "label": "Hairline Editor",
+      "description": "A thin, tall, quietly slow-blinking line in soft slate, like a modern code editor.",
+      "askedAs": [
+        "thin elegant text cursor",
+        "subtle editor caret",
+        "minimal hairline cursor",
+        "тонкий аккуратный курсор",
+        "минималистичный курсор редактора"
+      ],
+      "props": {
+        "width": 1,
+        "height": 36,
+        "radius": 0,
+        "color": "#475569",
+        "blinkPerSecond": 0.75
+      }
+    },
+    {
+      "id": "steady-accent",
+      "label": "Steady Accent",
+      "description": "A solid, non-blinking indigo bar with rounded ends that holds focus without distraction.",
+      "askedAs": [
+        "cursor that doesn't blink",
+        "static focused caret",
+        "solid blue input cursor",
+        "курсор без мигания",
+        "статичный синий курсор"
+      ],
+      "props": {
+        "blink": false,
+        "width": 4,
+        "radius": 2,
+        "color": "#4f46e5"
+      }
+    },
+    {
+      "id": "urgent-pulse",
+      "label": "Urgent Pulse",
+      "description": "A compact coral caret blinking rapidly for an energetic, attention-grabbing beat.",
+      "askedAs": [
+        "fast blinking cursor",
+        "quick nervous caret",
+        "red attention cursor",
+        "быстро мигающий курсор",
+        "яркий мигающий курсор"
+      ],
+      "props": {
+        "blinkPerSecond": 3,
+        "height": 22,
+        "color": "#e5604d",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "headline-pill",
+      "label": "Headline Pill",
+      "description": "An oversized, fully rounded warm-white caret with a slow, calm blink for large display type on dark scenes.",
+      "askedAs": [
+        "big cursor for headline",
+        "large rounded caret on dark background",
+        "slow blinking hero cursor",
+        "большой курсор для заголовка",
+        "крупный скруглённый курсор"
+      ],
+      "props": {
+        "height": 72,
+        "width": 6,
+        "radius": 8,
+        "color": "#f5f1ea",
+        "blinkPerSecond": 0.5
+      }
+    }
+  ]
+}

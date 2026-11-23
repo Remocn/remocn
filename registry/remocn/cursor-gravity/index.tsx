@@ -1,7 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Easing, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CursorGravityProps {
   /** Custom content in a 300 × 88 reference-pixel slot. */
@@ -188,14 +190,34 @@ export function CursorGravity({
   speed = 1,
   className,
 }: CursorGravityProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
-  const t = frame * (30 / fps) * Math.max(0, finite(speed, 1));
-  const state = getCursorGravityState(t, { width, height, tension });
-  const { unit } = state;
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
+  const step = (30 / fps) * Math.max(0, finite(speed, 1));
+  const t = frame * step;
   // Content travels with the material, without stretching the lettering.
-  const contentUnit = unit * Math.min(1, state.buttonWidth / (300 * unit));
-  const contentX = state.front + state.buttonWidth - 150 * contentUnit;
+  const contentAt = (tt: number) => {
+    const s = getCursorGravityState(tt, { width, height, tension });
+    const cu = s.unit * Math.min(1, s.buttonWidth / (300 * s.unit));
+    return { s, cu, x: s.front + s.buttonWidth - 150 * cu, y: s.centerY };
+  };
+  const now = contentAt(t);
+  const state = now.s;
+  const { unit } = state;
+  const contentUnit = now.cu;
+  const contentX = now.x;
+  // The pull is a sum of eases and a decaying wobble with no single
+  // progress, so the label counts as moving when either neighbour frame
+  // differs.
+  const differs = (tt: number) => {
+    const o = contentAt(tt);
+    return (
+      Math.abs(o.x - now.x) > 1e-3 ||
+      Math.abs(o.y - now.y) > 1e-3 ||
+      Math.abs(o.cu - now.cu) * 300 > 1e-3
+    );
+  };
+  const contentMoving = differs(t + step) || differs(t - step);
   return (
     <div
       className={className}
@@ -235,8 +257,9 @@ export function CursorGravity({
           top: 0,
           width: 300,
           height: 88,
-          translate: `${contentX - 150 * contentUnit}px ${state.centerY - 44 * contentUnit}px`,
-          scale: contentUnit,
+          // One transform rather than `translate` and `scale`: the mark that
+          // gets the label its lean is read from `transform` only.
+          transform: `translate(${contentX - 150 * contentUnit}px, ${state.centerY - 44 * contentUnit}px) scale(${contentUnit})${glide(contentMoving)}`,
           transformOrigin: "top left",
           display: "flex",
           alignItems: "center",

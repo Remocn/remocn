@@ -1,0 +1,107 @@
+{
+  "component": "row-count",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced digits in soft green on near-black, like a live render log ticking upward.",
+      "askedAs": [
+        "monospace counter on black",
+        "terminal style big number",
+        "code-like stat readout",
+        "счётчик в стиле терминала",
+        "моноширинное число на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d7e4d9",
+        "accent": "#6fcf97",
+        "countLength": 110
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A calm serif figure on warm off-white paper with a rust accent, like a printed annual report.",
+      "askedAs": [
+        "serif number on cream background",
+        "annual report style stat",
+        "elegant light counter",
+        "число с засечками на светлом фоне",
+        "как в печатном отчёте"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#b5532c",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rapid-tick",
+      "label": "Rapid Tick",
+      "description": "A fast, punchy roll-up with a quick count and electric blue accent on dark slate.",
+      "askedAs": [
+        "fast counting number",
+        "quick snappy stat",
+        "energetic number roll",
+        "быстрый счётчик",
+        "резкая анимация числа"
+      ],
+      "props": {
+        "countLength": 30,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk",
+        "background": "#12161f",
+        "ink": "#eef2f8",
+        "accent": "#4c8dff"
+      }
+    },
+    {
+      "id": "slow-build",
+      "label": "Slow Build",
+      "description": "An oversized figure that climbs slowly after a short pause, letting each new row land with weight.",
+      "askedAs": [
+        "slow dramatic count up",
+        "big number that grows slowly",
+        "cinematic stat reveal",
+        "медленный рост большого числа",
+        "драматичный счётчик"
+      ],
+      "props": {
+        "scale": 1.3,
+        "countLength": 170,
+        "speed": 0.5,
+        "delay": 20,
+        "fontFamily": "Inter",
+        "accent": "#e0b252"
+      }
+    },
+    {
+      "id": "compact-clean",
+      "label": "Compact Clean",
+      "description": "A small, tidy light-mode figure in Geist with a muted teal accent for dashboards and side panels.",
+      "askedAs": [
+        "small clean number",
+        "minimal light stat",
+        "dashboard style counter",
+        "компактный светлый счётчик",
+        "минималистичная цифра"
+      ],
+      "props": {
+        "theme": "light",
+        "scale": 0.7,
+        "fontFamily": "Geist",
+        "background": "#fafafa",
+        "ink": "#18181b",
+        "accent": "#2a9d8f"
+      }
+    }
+  ]
+}

@@ -1,8 +1,9 @@
 "use client";
 
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 
 import { TerminalSimulator } from "@/components/remocn/terminal-simulator";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface TerminalCursorZoomProps {
   command?: string;
@@ -36,7 +37,7 @@ export function TerminalCursorZoom({
   speed = 1,
   className,
 }: TerminalCursorZoomProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
 
   const charWidth = fontSize * 0.6;
   const windowLeft = (STAGE_WIDTH - WINDOW_WIDTH) / 2;

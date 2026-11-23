@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const couponApplyConfig: ComponentConfig = {
   componentName: "CouponApply",
@@ -12,11 +19,6 @@ export const couponApplyConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     merchant: {
       type: "text-content",
@@ -53,6 +55,21 @@ export const couponApplyConfig: ComponentConfig = {
       default: "Maya Chen",
       description: "Cardholder",
     },
+    formTitle: {
+      type: "text-content",
+      default: "Pay with card",
+      description: "Form title",
+    },
+    placeholder: {
+      type: "text-content",
+      default: "Add promotion code",
+      description: "Placeholder",
+    },
+    errorLabel: {
+      type: "text-content",
+      default: "That code isn’t valid.",
+      description: "Error message",
+    },
     percentOff: {
       type: "number",
       default: 10,
@@ -62,6 +79,13 @@ export const couponApplyConfig: ComponentConfig = {
       description: "Percent off",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Instrument Sans" }),
   },
   durationInFrames: 180,
   fps: FPS,

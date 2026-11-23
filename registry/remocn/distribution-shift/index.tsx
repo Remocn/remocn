@@ -2,6 +2,7 @@
 
 import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -9,9 +10,9 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -27,7 +28,23 @@ export interface DistributionShiftProps {
   after?: number;
   unit?: string;
   label?: string;
+  /** Word before the old value under the readout. */
+  fromLabel?: string;
+  /** Frames the curve takes to morph from `before` to `after`. */
+  shiftDuration?: number;
   accent?: string;
+  /** Text color of the readout and marker; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the readout. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the chart and readout, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -71,11 +88,12 @@ const THEMES = {
   },
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const AXIS = [-16, 14] as const;
 const RISE = -4;
 const MARK = [34, 48] as const;
 const MORPH = [64, 116] as const;
-const HIT = MORPH[1];
 const BINS = 96;
 const Z99 = 2.326;
 const SIGMA_BEFORE = 0.52;
@@ -131,17 +149,19 @@ function Readout({
   size,
   color,
   unitColor,
+  fontFamily,
 }: {
   value: number;
   unit: string;
   size: number;
   color: string;
   unitColor: string;
+  fontFamily: string;
 }) {
   return (
     <span
       style={{
-        fontFamily: sans,
+        fontFamily,
         fontWeight: 400,
         fontSize: size,
         lineHeight: 0.92,
@@ -166,19 +186,48 @@ function Readout({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DistributionShift({
   before = 840,
   after = 120,
   unit = "ms",
   label = "p99 latency",
+  fromLabel = "from",
+  shiftDuration = MORPH[1] - MORPH[0],
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: DistributionShiftProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const fill = background ?? p.bg;
+  const shift = [MORPH[0], MORPH[0] + shiftDuration] as const;
+  const hit = shift[1];
   const hw = Math.max(1, u);
 
   const hi = Math.max(before, after);
@@ -195,7 +244,7 @@ export function DistributionShift({
   const top = height * 0.3;
   const xOf = (v: number) => L + (v / axisMax) * (R - L);
 
-  const morph = interpolate(t, MORPH, [0, 1], { ...CLAMP, easing: EASE_IO });
+  const morph = interpolate(t, shift, [0, 1], { ...CLAMP, easing: EASE_IO });
   const sb = shape(before, SIGMA_BEFORE);
   const sa = shape(after, SIGMA_AFTER);
   const curveAt = (k: number) => {
@@ -222,22 +271,22 @@ export function DistributionShift({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const ghostO = interpolate(t, [MORPH[0], MORPH[0] + 14], [0, 1], CLAMP);
+  const ghostO = interpolate(t, [shift[0], shift[0] + 14], [0, 1], CLAMP);
   const kick = spring({
-    frame: t - HIT,
+    frame: t - hit,
     fps,
     config: { damping: 14, stiffness: 180, mass: 0.6 },
   });
-  const after1 = interpolate(t, [HIT + 4, HIT + 22], [0, 1], {
+  const after1 = interpolate(t, [hit + 4, hit + 22], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const push = interpolate(t, [0, HIT + 54], [0, 1], {
+  const push = interpolate(t, [0, hit + 54], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
 
-  const closer = interpolate(t, [MORPH[0] + 16, HIT + 44], [0, 1], {
+  const closer = interpolate(t, [shift[0] + 16, hit + 44], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -276,251 +325,280 @@ export function DistributionShift({
     ),
   );
   const glowX = ((width * 0.3 + (modeX - width * 0.3) * zoom) / width) * 100;
-  const heroScale = 1 + 0.04 * (1 - kick) * (t >= HIT ? 1 : 0);
+  const heroScale = 1 + 0.04 * (1 - kick) * (t >= hit ? 1 : 0);
+  const zooming = midway(push) || midway(closer);
+  // The tag follows the marker through the zoom. Layout rounds a box and a
+  // baseline to whole pixels, so it is laid out where it settles and the
+  // ride there is a transform.
+  const tagAt = (mx: number, z: number) => ({
+    x: width * 0.3 + (mx - width * 0.3) * z + 14 * u,
+    y: height * 0.7 + (markTop - height * 0.7) * z - 4 * u,
+  });
+  const tagNow = tagAt(markerX, zoom);
+  const tagRest = tagAt(
+    xOf(Math.exp(lerp(Math.log(before), Math.log(after), 1))),
+    1 + 0.025 + 0.16,
+  );
+  const tagMoving = zooming || midway(morph) || midway(tagIn);
+  const kickAt = (f: number) =>
+    f < hit
+      ? 0
+      : spring({
+          frame: f - hit,
+          fps,
+          config: { damping: 14, stiffness: 180, mass: 0.6 },
+        });
+  const kickMoving =
+    Math.abs(kickAt(t + speed) - kickAt(t)) * 4 > 1e-3 ||
+    Math.abs(kickAt(t) - kickAt(t - speed)) * 4 > 1e-3;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(${16 + 14 * (1 - morph)}% ${46 - 6 * morph}% at ${glowX}% 74%, ${p.glow}, transparent 70%)`,
           opacity: 0.2 + 0.8 * morph,
         }}
       />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${zoom})`,
-          transformOrigin: "30% 70%",
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${zoom})${glide(zooming)}`,
+            transformOrigin: "30% 70%",
+          }}
         >
-          <defs>
-            <linearGradient
-              id={gradId}
-              gradientUnits="userSpaceOnUse"
-              x1={0}
-              y1={top - 16 * u}
-              x2={0}
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={gradId}
+                gradientUnits="userSpaceOnUse"
+                x1={0}
+                y1={top - 16 * u}
+                x2={0}
+                y2={base}
+              >
+                <stop offset="0" stopColor={stops[0]} />
+                <stop offset="0.42" stopColor={stops[1]} />
+                <stop offset="1" stopColor={stops[2]} />
+              </linearGradient>
+            </defs>
+            <path
+              d={`${path(now, 1)} L ${xOf(axisMax).toFixed(2)} ${base} L ${L} ${base} Z`}
+              fill={`url(#${gradId})`}
+              opacity={p.area * strokeK}
+            />
+            {bars.map((b) =>
+              b.h > 0.2 ? (
+                <rect
+                  key={b.key}
+                  x={b.x}
+                  y={base - b.h}
+                  width={barW}
+                  height={b.h}
+                  rx={Math.min(barW / 2, 1.5 * u)}
+                  fill={`url(#${gradId})`}
+                  opacity={b.tail ? 0.32 : 0.9}
+                />
+              ) : null,
+            )}
+
+            <path
+              d={path(was, 1)}
+              fill="none"
+              stroke={p.ghost}
+              strokeWidth={hw}
+              strokeDasharray={`${3 * u} ${4 * u}`}
+              opacity={ghostO}
+            />
+            <path
+              d={path(now, strokeK)}
+              fill="none"
+              stroke={color}
+              strokeWidth={2 * u}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+
+            <line
+              x1={L}
+              y1={base}
+              x2={lerp(L, R, axisK)}
               y2={base}
-            >
-              <stop offset="0" stopColor={stops[0]} />
-              <stop offset="0.42" stopColor={stops[1]} />
-              <stop offset="1" stopColor={stops[2]} />
-            </linearGradient>
-          </defs>
-          <path
-            d={`${path(now, 1)} L ${xOf(axisMax).toFixed(2)} ${base} L ${L} ${base} Z`}
-            fill={`url(#${gradId})`}
-            opacity={p.area * strokeK}
-          />
-          {bars.map((b) =>
-            b.h > 0.2 ? (
-              <rect
-                key={b.key}
-                x={b.x}
-                y={base - b.h}
-                width={barW}
-                height={b.h}
-                rx={Math.min(barW / 2, 1.5 * u)}
-                fill={`url(#${gradId})`}
-                opacity={b.tail ? 0.32 : 0.9}
-              />
-            ) : null,
-          )}
+              stroke={p.axis}
+              strokeWidth={hw}
+            />
+            {ticks.map((v, i) => {
+              const a = interpolate(t, [4 + i * 2, 14 + i * 2], [0, 1], CLAMP);
+              return (
+                <line
+                  key={v}
+                  x1={xOf(v)}
+                  y1={base}
+                  x2={xOf(v)}
+                  y2={base + 6 * u}
+                  stroke={p.axis}
+                  strokeWidth={hw}
+                  opacity={a}
+                />
+              );
+            })}
 
-          <path
-            d={path(was, 1)}
-            fill="none"
-            stroke={p.ghost}
-            strokeWidth={hw}
-            strokeDasharray={`${3 * u} ${4 * u}`}
-            opacity={ghostO}
-          />
-          <path
-            d={path(now, strokeK)}
-            fill="none"
-            stroke={color}
-            strokeWidth={2 * u}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
+            <line
+              x1={ghostMarkX}
+              y1={base}
+              x2={ghostMarkX}
+              y2={ghostTop}
+              stroke={p.ghost}
+              strokeWidth={hw}
+              strokeDasharray={`${3 * u} ${4 * u}`}
+              opacity={ghostO}
+            />
+            <line
+              x1={markerX}
+              y1={base}
+              x2={markerX}
+              y2={lerp(base, markTop, markK)}
+              stroke={fg}
+              strokeWidth={hw * 1.2}
+              opacity={markK > 0 ? 1 : 0}
+            />
+            <circle
+              cx={markerX}
+              cy={base}
+              r={3.6 * u}
+              fill={fill}
+              stroke={fg}
+              strokeWidth={hw * 1.4}
+              opacity={markK}
+            />
+          </svg>
 
-          <line
-            x1={L}
-            y1={base}
-            x2={lerp(L, R, axisK)}
-            y2={base}
-            stroke={p.axis}
-            strokeWidth={hw}
-          />
           {ticks.map((v, i) => {
-            const a = interpolate(t, [4 + i * 2, 14 + i * 2], [0, 1], CLAMP);
+            const a = interpolate(t, [4 + i * 2, 16 + i * 2], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
             return (
-              <line
+              <div
                 key={v}
-                x1={xOf(v)}
-                y1={base}
-                x2={xOf(v)}
-                y2={base + 6 * u}
-                stroke={p.axis}
-                strokeWidth={hw}
-                opacity={a}
-              />
+                style={{
+                  position: "absolute",
+                  left: xOf(v) - 60 * u,
+                  width: 120 * u,
+                  top: base + 14 * u,
+                  textAlign: "center",
+                  fontFamily: mono,
+                  fontWeight: 400,
+                  fontSize: 12 * u,
+                  color: p.muted,
+                  fontVariantNumeric: "tabular-nums",
+                  opacity: a,
+                  transform: `translateY(${(1 - a) * 5 * u}px)`,
+                }}
+              >
+                {v.toLocaleString("en-US")}
+                {i === ticks.length - 1 ? ` ${unit}` : ""}
+              </div>
             );
           })}
 
-          <line
-            x1={ghostMarkX}
-            y1={base}
-            x2={ghostMarkX}
-            y2={ghostTop}
-            stroke={p.ghost}
-            strokeWidth={hw}
-            strokeDasharray={`${3 * u} ${4 * u}`}
-            opacity={ghostO}
-          />
-          <line
-            x1={markerX}
-            y1={base}
-            x2={markerX}
-            y2={lerp(base, markTop, markK)}
-            stroke={p.fg}
-            strokeWidth={hw * 1.2}
-            opacity={markK > 0 ? 1 : 0}
-          />
-          <circle
-            cx={markerX}
-            cy={base}
-            r={3.6 * u}
-            fill={p.bg}
-            stroke={p.fg}
-            strokeWidth={hw * 1.4}
-            opacity={markK}
-          />
-        </svg>
-
-        {ticks.map((v, i) => {
-          const a = interpolate(t, [4 + i * 2, 16 + i * 2], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          return (
-            <div
-              key={v}
-              style={{
-                position: "absolute",
-                left: xOf(v) - 60 * u,
-                width: 120 * u,
-                top: base + 14 * u,
-                textAlign: "center",
-                fontFamily: mono,
-                fontWeight: 400,
-                fontSize: 12 * u,
-                color: p.muted,
-                fontVariantNumeric: "tabular-nums",
-                opacity: a,
-                transform: `translateY(${(1 - a) * 5 * u}px)`,
-              }}
-            >
-              {v.toLocaleString("en-US")}
-              {i === ticks.length - 1 ? ` ${unit}` : ""}
-            </div>
-          );
-        })}
+          <div
+            style={{
+              position: "absolute",
+              left: ghostMarkX + 8 * u,
+              top: ghostTop - 4 * u,
+              fontFamily: mono,
+              fontWeight: 400,
+              fontSize: 12 * u,
+              color: p.muted,
+              fontVariantNumeric: "tabular-nums",
+              opacity: ghostO,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {before.toLocaleString("en-US")}
+            {unit}
+          </div>
+        </AbsoluteFill>
 
         <div
           style={{
             position: "absolute",
-            left: ghostMarkX + 8 * u,
-            top: ghostTop - 4 * u,
-            fontFamily: mono,
-            fontWeight: 400,
-            fontSize: 12 * u,
-            color: p.muted,
-            fontVariantNumeric: "tabular-nums",
-            opacity: ghostO,
-            whiteSpace: "nowrap",
+            left: tagRest.x,
+            top: tagRest.y,
+            opacity: tagIn,
+            transform: `translate(${tagNow.x - tagRest.x}px, ${tagNow.y - tagRest.y + (1 - tagIn) * 10 * u}px)${glide(tagMoving)}`,
           }}
         >
-          {before.toLocaleString("en-US")}
-          {unit}
+          <div
+            style={{
+              fontFamily: mono,
+              fontWeight: 400,
+              fontSize: 13 * u,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: p.muted,
+              marginBottom: 12 * u,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {label}
+          </div>
+          <div
+            style={{
+              transform: `scale(${heroScale})${glide(kickMoving && !tagMoving)}`,
+              transformOrigin: "0% 50%",
+            }}
+          >
+            <Readout
+              value={markerV}
+              unit={unit}
+              size={104 * u}
+              color={fg}
+              unitColor={p.muted}
+              fontFamily={fontFamily}
+            />
+          </div>
+          <div
+            style={{
+              marginTop: 14 * u,
+              display: "flex",
+              alignItems: "baseline",
+              gap: 10 * u,
+              fontFamily,
+              fontWeight: 400,
+              fontSize: 20 * u,
+              fontVariantNumeric: "tabular-nums",
+              opacity: after1,
+              transform: `translateY(${(1 - after1) * 8 * u}px)`,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span style={{ color: p.muted }}>
+              {`${fromLabel} `}
+              {before.toLocaleString("en-US")}
+              {unit}
+            </span>
+            <span style={{ color: p.delta, fontWeight: 500 }}>
+              {drop > 0 ? "−" : "+"}
+              {Math.abs(drop)}%
+            </span>
+          </div>
         </div>
-      </AbsoluteFill>
-
-      <div
-        style={{
-          position: "absolute",
-          left: width * 0.3 + (markerX - width * 0.3) * zoom + 14 * u,
-          top: height * 0.7 + (markTop - height * 0.7) * zoom - 4 * u,
-          opacity: tagIn,
-          transform: `translateY(${(1 - tagIn) * 10 * u}px)`,
-        }}
-      >
-        <div
-          style={{
-            fontFamily: mono,
-            fontWeight: 400,
-            fontSize: 13 * u,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: p.muted,
-            marginBottom: 12 * u,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {label}
-        </div>
-        <div
-          style={{
-            transform: `scale(${heroScale})`,
-            transformOrigin: "0% 50%",
-          }}
-        >
-          <Readout
-            value={markerV}
-            unit={unit}
-            size={104 * u}
-            color={p.fg}
-            unitColor={p.muted}
-          />
-        </div>
-        <div
-          style={{
-            marginTop: 14 * u,
-            display: "flex",
-            alignItems: "baseline",
-            gap: 10 * u,
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: 20 * u,
-            fontVariantNumeric: "tabular-nums",
-            opacity: after1,
-            transform: `translateY(${(1 - after1) * 8 * u}px)`,
-            whiteSpace: "nowrap",
-          }}
-        >
-          <span style={{ color: p.muted }}>
-            from {before.toLocaleString("en-US")}
-            {unit}
-          </span>
-          <span style={{ color: p.delta, fontWeight: 500 }}>
-            {drop > 0 ? "−" : "+"}
-            {Math.abs(drop)}%
-          </span>
-        </div>
-      </div>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 64%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 64%, ${fill} 100%)`,
           opacity: 0.55,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

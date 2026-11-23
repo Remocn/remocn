@@ -1,0 +1,116 @@
+{
+  "component": "caption-split-flap",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "departure-board",
+      "label": "Departure Board",
+      "description": "Classic airport board with warm amber glyphs on deep charcoal tiles and a steady, unhurried flip.",
+      "askedAs": [
+        "airport departure board look",
+        "amber letters on dark tiles",
+        "old train station sign",
+        "табло в аэропорту",
+        "жёлтые буквы на тёмных плашках"
+      ],
+      "props": {
+        "color": "#f5b72e",
+        "tileColor": "#1a1a1a",
+        "fontWeight": 700,
+        "holdMs": 900
+      }
+    },
+    {
+      "id": "swiss-rail",
+      "label": "Swiss Rail",
+      "description": "Clean white tiles with crisp black glyphs, like a modern European rail station indicator.",
+      "askedAs": [
+        "white tiles black letters",
+        "clean light station board",
+        "minimal european train sign",
+        "белые плашки с чёрными буквами",
+        "светлое вокзальное табло"
+      ],
+      "props": {
+        "color": "#111111",
+        "tileColor": "#f2f2f0",
+        "fontWeight": 600,
+        "fontSize": 64
+      }
+    },
+    {
+      "id": "rapid-ticker",
+      "label": "Rapid Ticker",
+      "description": "Small, tight tiles that flip word by word with almost no hold for a fast, data-feed rhythm.",
+      "askedAs": [
+        "fast flipping captions",
+        "quick word by word board",
+        "snappy ticker style",
+        "быстрые перелистывающиеся субтитры",
+        "быстрое табло по одному слову"
+      ],
+      "props": {
+        "fontSize": 40,
+        "combineTokensWithinMilliseconds": 0,
+        "holdMs": 150,
+        "tileColor": "#0d1117",
+        "color": "#58d68d"
+      }
+    },
+    {
+      "id": "headline-flap",
+      "label": "Headline Flap",
+      "description": "Huge heavyweight glyphs on oversized tiles that group whole phrases and linger for a bold launch reveal.",
+      "askedAs": [
+        "big bold flip letters",
+        "giant headline board",
+        "launch announcement flap text",
+        "огромные буквы на табло",
+        "крупный заголовок с перелистыванием"
+      ],
+      "props": {
+        "fontSize": 104,
+        "fontWeight": 900,
+        "combineTokensWithinMilliseconds": 2200,
+        "holdMs": 1400
+      }
+    },
+    {
+      "id": "midnight-navy",
+      "label": "Midnight Navy",
+      "description": "Soft ice-blue glyphs on deep navy tiles for a calm, premium tech mood.",
+      "askedAs": [
+        "navy blue flap board",
+        "calm blue tech captions",
+        "dark blue tiles light text",
+        "тёмно-синее табло",
+        "спокойные синие субтитры"
+      ],
+      "props": {
+        "color": "#dbe7f5",
+        "tileColor": "#14213d",
+        "fontWeight": 500,
+        "combineTokensWithinMilliseconds": 1600
+      }
+    },
+    {
+      "id": "signal-red",
+      "label": "Signal Red",
+      "description": "White glyphs on muted brick-red tiles for an urgent, announcement-style alert.",
+      "askedAs": [
+        "red alert board",
+        "white letters on red tiles",
+        "urgent announcement captions",
+        "красное табло с белыми буквами",
+        "срочное объявление на табло"
+      ],
+      "props": {
+        "color": "#ffffff",
+        "tileColor": "#a8322d",
+        "fontSize": 72,
+        "holdMs": 400
+      }
+    }
+  ]
+}

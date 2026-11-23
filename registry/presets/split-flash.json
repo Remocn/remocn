@@ -1,0 +1,100 @@
+{
+  "component": "split-flash",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "pit-wall-mono",
+      "label": "Pit Wall",
+      "description": "A dark timing-screen look in JetBrains Mono with a classic F1 purple accent and a quick freeze.",
+      "askedAs": [
+        "make it look like an F1 timing screen",
+        "monospace race clock with purple",
+        "pit wall timing display",
+        "как табло хронометража в формуле 1",
+        "моноширинный шрифт и фиолетовый акцент"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#8b5cf6",
+        "background": "#0b0b10",
+        "ink": "#f4f4f5",
+        "freezeAt": 30
+      }
+    },
+    {
+      "id": "paper-stopwatch",
+      "label": "Paper Stopwatch",
+      "description": "A light, editorial take with warm off-white paper, serif numerals and a deep red accent.",
+      "askedAs": [
+        "light version with serif font",
+        "elegant editorial stopwatch",
+        "warm paper background timer",
+        "светлый вариант с засечками",
+        "элегантный секундомер на бумаге"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f5f1e8",
+        "ink": "#1c1917",
+        "accent": "#b42318"
+      }
+    },
+    {
+      "id": "slow-build",
+      "label": "Slow Build",
+      "description": "An oversized clock that runs at half speed and holds off its freeze for a long, tense count.",
+      "askedAs": [
+        "slower, more dramatic timer",
+        "let the clock run longer before stopping",
+        "big suspenseful countdown",
+        "медленнее и драматичнее",
+        "пусть часы идут дольше"
+      ],
+      "props": {
+        "speed": 0.5,
+        "freezeAt": 80,
+        "scale": 1.3,
+        "delay": 12
+      }
+    },
+    {
+      "id": "quick-hit",
+      "label": "Quick Hit",
+      "description": "A compact, fast-snapping clock that freezes almost instantly for punchy social cuts.",
+      "askedAs": [
+        "make it fast and snappy",
+        "short quick freeze for reels",
+        "smaller faster timer",
+        "быстро и резко",
+        "короткий вариант для соцсетей"
+      ],
+      "props": {
+        "speed": 2,
+        "freezeAt": 15,
+        "scale": 0.8,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "midnight-green",
+      "label": "Midnight Green",
+      "description": "A deep navy screen with crisp Inter type and a cool emerald flash for build-time claims.",
+      "askedAs": [
+        "dark blue with green accent",
+        "tech build time look",
+        "calm navy timer for dev tools",
+        "тёмно-синий с зелёным",
+        "для времени сборки в стиле девтулзов"
+      ],
+      "props": {
+        "background": "#0f172a",
+        "ink": "#e2e8f0",
+        "accent": "#10b981",
+        "fontFamily": "Inter",
+        "speed": 1.5
+      }
+    }
+  ]
+}

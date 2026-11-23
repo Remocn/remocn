@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const fractionSplitConfig: ComponentConfig = {
   componentName: "FractionSplit",
@@ -12,11 +18,6 @@ export const fractionSplitConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     line: {
       type: "text-content",
@@ -37,6 +38,30 @@ export const fractionSplitConfig: ComponentConfig = {
       description: "Accent piece",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    radius: {
+      type: "number",
+      default: 8,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Corner radius",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Schibsted Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

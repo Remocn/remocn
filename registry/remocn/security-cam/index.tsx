@@ -1,12 +1,13 @@
 "use client";
 
 import type React from "react";
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import {
   type CanvasFilterProps,
   makeCanvasFilter,
   makeFilterShader,
 } from "@/lib/remocn/canvas-presentation";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 
 export type SecurityCamProps = {
   compression?: number;
@@ -155,7 +156,7 @@ export const SecurityCam: React.FC<SecurityCamProps & CanvasFilterProps> = ({
   intensity = DEFAULTS.intensity,
   children,
 }) => {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
 
   return (
     <SecurityCamCanvas

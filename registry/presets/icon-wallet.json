@@ -1,0 +1,99 @@
+{
+  "component": "icon-wallet",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined wallet that sketches itself in slowly for an elegant opener.",
+      "askedAs": [
+        "big slow wallet drawing",
+        "elegant thin wallet intro",
+        "large wallet line reveal",
+        "большой медленный кошелёк",
+        "тонкий кошелёк рисуется"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#1e293b"
+      }
+    },
+    {
+      "id": "fintech-blue-loop",
+      "label": "Fintech Loop",
+      "description": "A bold blue wallet that keeps repeating its action like a payment status indicator.",
+      "askedAs": [
+        "looping blue wallet icon",
+        "payment app wallet animation",
+        "repeating wallet for fintech",
+        "синий кошелёк по кругу",
+        "анимация кошелька для банка"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#1f6feb",
+        "size": 96,
+        "strokeWidth": 2.5
+      }
+    },
+    {
+      "id": "quick-tick",
+      "label": "Quick Tick",
+      "description": "A small, snappy wallet that plays its action fast for UI micro-interactions.",
+      "askedAs": [
+        "fast small wallet icon",
+        "snappy wallet button animation",
+        "quick wallet micro interaction",
+        "быстрая маленькая иконка кошелька",
+        "кошелёк для кнопки"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 32,
+        "speed": 2
+      }
+    },
+    {
+      "id": "emerald-savings",
+      "label": "Emerald Savings",
+      "description": "A heavy-stroked deep green wallet that draws and acts at a calm pace, suggesting money and growth.",
+      "askedAs": [
+        "green money wallet",
+        "savings wallet animation",
+        "thick green wallet icon",
+        "зелёный кошелёк",
+        "кошелёк для накоплений"
+      ],
+      "props": {
+        "color": "#047857",
+        "strokeWidth": 3,
+        "size": 120,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "warm-gold-ambient",
+      "label": "Warm Gold",
+      "description": "A muted gold wallet gently looping its full animation as a soft ambient accent.",
+      "askedAs": [
+        "gold wallet looping slowly",
+        "warm luxury wallet icon",
+        "soft ambient wallet animation",
+        "золотой кошелёк",
+        "медленный зацикленный кошелёк"
+      ],
+      "props": {
+        "color": "#b7791f",
+        "loop": true,
+        "speed": 0.5,
+        "size": 72,
+        "strokeWidth": 1.5
+      }
+    }
+  ]
+}

@@ -2,14 +2,10 @@
 
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont } from "@remotion/google-fonts/SchibstedGrotesk";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -32,6 +28,20 @@ export interface CrashZoomProps {
   tagline?: string;
   /** Kept for the shared draft API; the payoff colour comes from the ground. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the reveal. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  /** Frames of the tease before the crash zoom hits. */
+  windup?: number;
+  /** Number of speed lines in the crash. */
+  streaks?: number;
+  /** Size of the copy and speed lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
   /** gradients.sh preset for the ground. Defaults to "ember" (dark) or a warm paper mist (light). */
@@ -108,62 +118,112 @@ function shake(d: number, amp: number, len: number, seed: number) {
 
 const LINE_COUNT = 72;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CrashZoom({
   tease = "Wait for it…",
   reveal = "1 DAY.",
   tagline = "to make this video.",
+  ink,
+  background,
+  fontFamily = grotesk,
+  windup = BEAT.crash,
+  streaks = LINE_COUNT,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
   ground,
   groundParams,
 }: CrashZoomProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === undefined
+      ? c.stage
+      : background === "transparent"
+        ? "transparent"
+        : background;
+  const shift = windup - BEAT.crash;
+  const beat = {
+    ...BEAT,
+    crash: BEAT.crash + shift,
+    impact: BEAT.impact + shift,
+    tag: BEAT.tag + shift,
+  };
   const u = Math.min(W / 1280, H / 720);
-  const inverted = t >= BEAT.impact && t < BEAT.impact + 1;
+  const inverted = t >= beat.impact && t < beat.impact + 1;
 
   const hasDots = tease.endsWith("…");
   const teaseBody = hasDots ? tease.slice(0, -1) : tease;
-  const teaseIn = ENTER(ramp(t, BEAT.teaseIn, 12));
+  const teaseIn = ENTER(ramp(t, beat.teaseIn, 12));
   const dots = hasDots
-    ? Math.min(3, Math.max(0, Math.floor((t - BEAT.dots) / BEAT.dotGap) + 1))
+    ? Math.min(3, Math.max(0, Math.floor((t - beat.dots) / beat.dotGap) + 1))
     : 0;
-  const push = interpolate(t, [0, BEAT.crash], [1, 1.28], {
+  const push = interpolate(t, [0, beat.crash], [1, 1.28], {
     ...CLAMP,
     easing: EXIT,
   });
-  const crash = ramp(t, BEAT.crash, BEAT.crashLen);
+  const crash = ramp(t, beat.crash, beat.crashLen);
   const teaseScale = push * (1 + 7 * crash ** 2.2);
   const teaseBlur = crash > 0 ? 2 + 10 * crash : 0;
-  const teaseOpacity = teaseIn * (1 - ramp(t, BEAT.crash + 3, 3));
+  const teaseOpacity = teaseIn * (1 - ramp(t, beat.crash + 3, 3));
 
-  const slam = spring({
-    frame: t - BEAT.impact - 1,
-    fps,
-    config: CARD,
-  });
+  const slamAt = (f: number) =>
+    spring({ frame: f - beat.impact - 1, fps, config: CARD });
+  const slam = slamAt(t);
   const revealScale = inverted ? 1.14 : 1.14 - 0.14 * slam;
+  // The slam spring has a long tail; weigh its scale step by the half width
+  // of the reveal, where its glyphs travel furthest.
+  const revealMoving =
+    !inverted &&
+    0.14 *
+      0.42 *
+      W *
+      Math.max(
+        Math.abs(slamAt(t + speed) - slam),
+        Math.abs(slam - slamAt(t - speed)),
+      ) >
+      1e-3;
   const revealBlur = inverted ? 0 : 10 * Math.max(0, 1 - slam * 1.4);
 
-  const rumble = ramp(t, BEAT.crash, BEAT.crashLen);
-  const rx = t < BEAT.impact ? 5 * u * rumble * Math.sin(t * 2.1) : 0;
-  const ry = t < BEAT.impact ? 4 * u * rumble * Math.cos(t * 2.7) : 0;
-  const hit = shake(t - BEAT.impact, 14 * u, 12, 1.7);
+  const rumble = ramp(t, beat.crash, beat.crashLen);
+  const rx = t < beat.impact ? 5 * u * rumble * Math.sin(t * 2.1) : 0;
+  const ry = t < beat.impact ? 4 * u * rumble * Math.cos(t * 2.7) : 0;
+  const hit = shake(t - beat.impact, 14 * u, 12, 1.7);
 
-  const linesIn = ramp(t, BEAT.crash + 1, BEAT.crashLen - 1) ** 1.4;
-  const linesBack = SOFT(ramp(t, BEAT.impact + 1, 20));
-  const reach = t < BEAT.impact ? 1.9 - 0.9 * linesIn : 1 + 0.18 * linesBack;
+  const linesIn = ramp(t, beat.crash + 1, beat.crashLen - 1) ** 1.4;
+  const linesBack = SOFT(ramp(t, beat.impact + 1, 20));
+  const reach = t < beat.impact ? 1.9 - 0.9 * linesIn : 1 + 0.18 * linesBack;
   const linesAlpha =
-    t < BEAT.impact ? 0.55 * linesIn : 0.55 - (0.55 - 0.1) * linesBack;
+    t < beat.impact ? 0.55 * linesIn : 0.55 - (0.55 - 0.1) * linesBack;
   const cx = W / 2;
   const cy = H / 2;
   const far = Math.hypot(W, H) * 0.75;
   const lines: string[] = [];
-  for (let i = 0; i < LINE_COUNT; i++) {
+  for (let i = 0; i < streaks; i++) {
     const a =
-      (i / LINE_COUNT) * Math.PI * 2 +
-      (hash(i) - 0.5) * ((Math.PI * 2) / LINE_COUNT) * 0.9;
+      (i / streaks) * Math.PI * 2 +
+      (hash(i) - 0.5) * ((Math.PI * 2) / streaks) * 0.9;
     const near = 1 + 0.35 * hash(i + 91);
     const rxIn = 0.44 * W * near * reach;
     const ryIn = 0.36 * H * near * reach;
@@ -179,14 +239,14 @@ export function CrashZoom({
     );
   }
 
-  const bloom = ENTER(ramp(t, BEAT.impact, 18));
-  const veil = t < BEAT.impact ? 0.9 : 0.9 - (0.9 - c.veilRest) * bloom;
-  const groundScale = 1.12 - 0.12 * bloom + 0.03 * ramp(t, BEAT.impact, 80);
+  const bloom = ENTER(ramp(t, beat.impact, 18));
+  const veil = t < beat.impact ? 0.9 : 0.9 - (0.9 - c.veilRest) * bloom;
+  const groundScale = 1.12 - 0.12 * bloom + 0.03 * ramp(t, beat.impact, 80);
 
   const revealFs = Math.min(0.5 * H, (0.84 * W) / (0.43 * reveal.length));
   const teaseFs = Math.min(0.1 * H, 0.085 * W);
   const tagFs = Math.min(0.075 * H, 0.062 * W);
-  const tagIn = ENTER(ramp(t, BEAT.tag, 12));
+  const tagIn = ENTER(ramp(t, beat.tag, 12));
 
   const teaseText = (scale: number, opacity: number, key: string) => (
     <div
@@ -197,7 +257,9 @@ export function CrashZoom({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        transform: `translateY(${(1 - teaseIn) * 0.04 * H}px) scale(${scale})`,
+        // The tease never stands still: it rises in, the push carries on to
+        // the crash, and the impact unmounts it.
+        transform: `translateY(${(1 - teaseIn) * 0.04 * H}px) scale(${scale})${glide(true)}`,
         filter:
           teaseBlur > 0.2
             ? `blur(${(teaseBlur * u) / scale}px)`
@@ -213,7 +275,7 @@ export function CrashZoom({
           fontSize: teaseFs,
           lineHeight: 1,
           letterSpacing: "-0.01em",
-          color: c.ink,
+          color: fg,
           whiteSpace: "nowrap",
         }}
       >
@@ -235,11 +297,11 @@ export function CrashZoom({
   return (
     <AbsoluteFill
       style={{
-        background: inverted ? c.ink : c.stage,
+        background: inverted ? fg : stage,
         overflow: "hidden",
       }}
     >
-      {!inverted ? (
+      {!inverted && background === undefined ? (
         <>
           <AbsoluteFill style={{ transform: `scale(${groundScale})` }}>
             <GshGround
@@ -255,92 +317,98 @@ export function CrashZoom({
         </>
       ) : null}
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `translate(${rx + hit.x}px, ${ry + hit.y}px) rotate(${hit.r}deg)`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        {linesAlpha > 0.01 ? (
-          <svg
-            width={W}
-            height={H}
-            viewBox={`0 0 ${W} ${H}`}
-            style={{ position: "absolute", inset: 0 }}
-            aria-hidden
-          >
-            <path
-              d={lines.join("")}
-              fill={inverted ? c.stage : c.lines}
-              opacity={inverted ? 0.8 : linesAlpha}
-            />
-          </svg>
-        ) : null}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            // The tail of the shake turns by less than an eighth of a degree,
+            // which shows nowhere but, turning against the reveal's lean,
+            // cancels it on some frames and snaps the type to the pixel grid
+            // mid-shake. The turn stops there; the shove runs on.
+            transform: `translate(${rx + hit.x}px, ${ry + hit.y}px) rotate(${Math.abs(hit.r) < 0.125 ? 0 : hit.r}deg)`,
+            transformOrigin: "50% 50%",
+          }}
+        >
+          {linesAlpha > 0.01 ? (
+            <svg
+              width={W}
+              height={H}
+              viewBox={`0 0 ${W} ${H}`}
+              style={{ position: "absolute", inset: 0 }}
+              aria-hidden
+            >
+              <path
+                d={lines.join("")}
+                fill={inverted ? c.stage : c.lines}
+                opacity={inverted ? 0.8 : linesAlpha}
+              />
+            </svg>
+          ) : null}
 
-        {t < BEAT.impact ? (
-          <>
-            {crash > 0.02
-              ? [5, 4, 3, 2, 1].map((k) =>
-                  teaseText(
-                    teaseScale * (1 + 0.07 * k * crash),
-                    (teaseOpacity * 0.5) / (1 + 0.6 * k),
-                    `ghost-${k}`,
-                  ),
-                )
-              : null}
-            {teaseText(teaseScale, teaseOpacity, "tease")}
-          </>
-        ) : (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          {t < beat.impact ? (
+            <>
+              {crash > 0.02
+                ? [5, 4, 3, 2, 1].map((k) =>
+                    teaseText(
+                      teaseScale * (1 + 0.07 * k * crash),
+                      (teaseOpacity * 0.5) / (1 + 0.6 * k),
+                      `ghost-${k}`,
+                    ),
+                  )
+                : null}
+              {teaseText(teaseScale, teaseOpacity, "tease")}
+            </>
+          ) : (
             <div
               style={{
-                fontFamily: grotesk,
-                fontWeight: 400,
-                fontSize: revealFs,
-                lineHeight: 0.9,
-                letterSpacing: "-0.05em",
-                whiteSpace: "nowrap",
-                color: inverted ? c.stage : c.ink,
-                transform: `scale(${revealScale})`,
-                filter:
-                  revealBlur > 0.2 ? `blur(${revealBlur * u}px)` : undefined,
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              {reveal}
-            </div>
-            {tagline ? (
               <div
                 style={{
-                  marginTop: 0.035 * H,
-                  fontFamily: serifItalic,
-                  fontStyle: "italic",
+                  fontFamily,
                   fontWeight: 400,
-                  fontSize: tagFs,
-                  lineHeight: 1,
-                  color: c.ink,
+                  fontSize: revealFs,
+                  lineHeight: 0.9,
+                  letterSpacing: "-0.05em",
                   whiteSpace: "nowrap",
-                  opacity: inverted ? 0 : tagIn,
-                  transform: `translateY(${(1 - tagIn) * 0.03 * H}px)`,
-                  filter: `blur(${(1 - tagIn) * 6 * u}px)`,
+                  color: inverted ? c.stage : fg,
+                  transform: `scale(${revealScale})${glide(revealMoving)}`,
+                  filter:
+                    revealBlur > 0.2 ? `blur(${revealBlur * u}px)` : undefined,
                 }}
               >
-                {tagline}
+                {reveal}
               </div>
-            ) : null}
-          </div>
-        )}
-      </div>
+              {tagline ? (
+                <div
+                  style={{
+                    marginTop: 0.035 * H,
+                    fontFamily: serifItalic,
+                    fontStyle: "italic",
+                    fontWeight: 400,
+                    fontSize: tagFs,
+                    lineHeight: 1,
+                    color: fg,
+                    whiteSpace: "nowrap",
+                    opacity: inverted ? 0 : tagIn,
+                    transform: `translateY(${(1 - tagIn) * 0.03 * H}px)${glide(midway(tagIn))}`,
+                    filter: `blur(${(1 - tagIn) * 6 * u}px)`,
+                  }}
+                >
+                  {tagline}
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

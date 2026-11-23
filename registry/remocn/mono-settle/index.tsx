@@ -2,6 +2,7 @@
 
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -9,9 +10,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", {
   weights: ["500"],
@@ -25,8 +26,20 @@ const geistMono = loadGeistMono("normal", {
 export interface MonoSettleProps {
   lines?: string[];
   highlight?: string;
+  /** Frame the mono letters start settling into the sans. */
+  settleAt?: number;
+  /** Frames the settle wave takes to cross a line. */
+  sweep?: number;
   accent?: string;
+  /** Text color of the settled sans; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface the letters settle into. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -81,7 +94,7 @@ interface Metrics {
 
 const baseOf = (asc: number, desc: number) => (1 - (asc + desc)) / 2 + asc;
 
-function measure(lines: string[]): Metrics {
+function measure(lines: string[], family: string): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) throw new Error("mono-settle: no 2d context");
   const run = (s: string, font: string, track: number) => {
@@ -97,7 +110,7 @@ function measure(lines: string[]): Metrics {
     return { xs, total };
   };
   const monoFont = `400 100px "${geistMono.fontFamily}"`;
-  const propFont = `500 100px "${geist.fontFamily}"`;
+  const propFont = `500 100px "${family}"`;
   const out = lines.map((s) => {
     const mm = run(s, monoFont, 0);
     const pp = run(s, propFont, TRACK);
@@ -121,7 +134,7 @@ function measure(lines: string[]): Metrics {
   };
 }
 
-function useMetrics(lines: string[]) {
+function useMetrics(lines: string[], family: string) {
   const key = lines.join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("mono-settle: measuring"));
@@ -131,13 +144,16 @@ function useMetrics(lines: string[]) {
     Promise.all([
       geist.waitUntilDone(),
       geistMono.waitUntilDone(),
-      document.fonts.load(`500 100px "${geist.fontFamily}"`),
+      document.fonts.load(`500 100px "${family}"`),
       document.fonts.load(`400 100px "${geistMono.fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(key.split("\u0001")) });
+        setState({
+          key: key + family,
+          m: measure(key.split("\u0001"), family),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -146,8 +162,8 @@ function useMetrics(lines: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
-  return state && state.key === key ? state.m : null;
+  }, [key, family, handle]);
+  return state && state.key === key + family ? state.m : null;
 }
 
 function highlightMask(lines: string[], needle: string) {
@@ -164,24 +180,48 @@ function highlightMask(lines: string[], needle: string) {
   return masks;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MonoSettle({
   lines = ["From your editor", "to the edit."],
   highlight = "the edit.",
+  settleAt = WAVE_AT,
+  sweep = WAVE_SPAN,
   accent,
+  ink,
   background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: MonoSettleProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.pink;
+  const fg = ink ?? c.ink;
   const list = useMemo(
     () =>
       (lines.length > 0 ? lines : ["From your editor"]).map((l) => l || " "),
     [lines],
   );
-  const m = useMetrics(list);
+  const m = useMetrics(list, fontFamily);
   const hlMask = useMemo(
     () => highlightMask(list, highlight),
     [list, highlight],
@@ -203,28 +243,37 @@ export function MonoSettle({
   const prog = m.lines.map((l, li) =>
     l.xm.map((x) => {
       const at =
-        WAVE_AT + (x / Math.max(0.001, maxMono)) * WAVE_SPAN + li * LINE_LAG;
+        settleAt + (x / Math.max(0.001, maxMono)) * sweep + li * LINE_LAG;
       return interpolate(t, [at, at + MORPH_LEN], [0, 1], CLAMP);
     }),
   );
-  const xs = m.lines.map((l, li) => {
-    const out: number[] = [];
-    let run = 0;
-    for (let i = 0; i < l.xm.length; i++) {
-      out.push(run);
-      const am = (i + 1 < l.xm.length ? l.xm[i + 1] : l.wm) - l.xm[i];
-      const ap = (i + 1 < l.xp.length ? l.xp[i + 1] : l.wp) - l.xp[i];
-      run += am + (ap - am) * EASE_IO(prog[li][i]);
-    }
-    out.push(run);
-    return out;
-  });
-  const widest = Math.max(...xs.map((x) => x[x.length - 1]));
   const capF = H * (portrait ? 0.12 : 0.24) * (list.length > 2 ? 0.75 : 1);
-  const F = Math.min(capF, measureW / widest);
-  const lineH = F * LEADING;
   const lastBase = H - margin;
-  const firstBase = lastBase - lineH * (list.length - 1);
+  const layoutAt = (pr: number[][]) => {
+    const xs = m.lines.map((l, li) => {
+      const out: number[] = [];
+      let run = 0;
+      for (let i = 0; i < l.xm.length; i++) {
+        out.push(run);
+        const am = (i + 1 < l.xm.length ? l.xm[i + 1] : l.wm) - l.xm[i];
+        const ap = (i + 1 < l.xp.length ? l.xp[i + 1] : l.wp) - l.xp[i];
+        run += am + (ap - am) * EASE_IO(pr[li][i]);
+      }
+      out.push(run);
+      return out;
+    });
+    const widest = Math.max(...xs.map((x) => x[x.length - 1]));
+    const F = Math.min(capF, measureW / widest);
+    const lineH = F * LEADING;
+    return { xs, F, lineH, firstBase: lastBase - lineH * (list.length - 1) };
+  };
+  const { xs, F, lineH, firstBase } = layoutAt(prog);
+  // Each box is laid out where it lands, for its whole life, and the way
+  // there is a transform: layout rounds a box to whole pixels, so a box eased
+  // by `left`/`top` clicks along pixel by pixel, and a box handed back to
+  // layout when it stops jumps by what rounding takes off.
+  const morphing = prog.some((l) => l.some((p) => p > 0 && p < 1));
+  const settled = layoutAt(prog.map((l) => l.map(() => 1)));
 
   const hlP = interpolate(t, [HL_AT, HL_AT + HL_LEN], [0, 1], {
     ...CLAMP,
@@ -238,29 +287,60 @@ export function MonoSettle({
       if (ch === " ") return null;
       const e = EASE_IO(prog[li][i]);
       const x = margin + xs[li][i] * F;
-      const r = interpolate(
-        t,
-        [li * LINE_LAG + i * RISE_GAP, li * LINE_LAG + i * RISE_GAP + RISE_LEN],
-        [0, 1],
-        { ...CLAMP, easing: EASE_OUT },
-      );
-      const lift = (1 - r) * F * 1.1;
+      const liftAt = (tt: number) =>
+        (1 -
+          interpolate(
+            tt,
+            [
+              li * LINE_LAG + i * RISE_GAP,
+              li * LINE_LAG + i * RISE_GAP + RISE_LEN,
+            ],
+            [0, 1],
+            { ...CLAMP, easing: EASE_OUT },
+          )) *
+        F *
+        1.1;
+      // The rise is a transform, not part of `top`, for the same reason as
+      // the settle above.
+      const lift = liftAt(t);
+      const rising =
+        Math.abs(liftAt(t + speed) - lift) > 1e-3 ||
+        Math.abs(lift - liftAt(t - speed)) > 1e-3;
+      // The glyph grows with F while the letters settle, and its line box
+      // puts the baseline on a whole pixel at every size. So it is laid out
+      // once at the size it lands at and scaled there instead.
+      const RF = settled.F;
+      const k = F / RF;
+      const glyphAt = (base: number) => {
+        const dy = (F - RF) * (1.05 - base) + lift;
+        return {
+          top: RF * 1.05 - base * RF,
+          height: RF,
+          lineHeight: `${RF}px`,
+          fontSize: RF,
+          transform: `translateY(${dy}px) scale(${k})`,
+          transformOrigin: "0 0",
+        };
+      };
       const sansColor = hlMask[li][i]
-        ? `color-mix(in oklab, ${spot} ${(hlP * 100).toFixed(1)}%, ${c.ink})`
-        : c.ink;
+        ? `color-mix(in oklab, ${spot} ${(hlP * 100).toFixed(1)}%, ${fg})`
+        : fg;
       const top = baseY - F * 1.05;
       const h = F * 1.3;
       const cut = (1 - e) * h;
+      const restX = margin + settled.xs[li][i] * settled.F;
+      const restTop = settled.firstBase + li * settled.lineH - settled.F * 1.05;
       return (
         <div
           key={`${li}-${i}`}
           style={{
             position: "absolute",
-            left: x,
-            top,
+            left: restX,
+            top: restTop,
             width: F,
             height: h,
             overflow: "hidden",
+            transform: `translate(${x - restX}px, ${top - restTop}px)${glide(morphing || rising)}`,
           }}
         >
           {e < 0.999 ? (
@@ -268,15 +348,12 @@ export function MonoSettle({
               style={{
                 position: "absolute",
                 left: 0,
-                top: F * 1.05 - m.baseM * F + lift,
-                height: F,
-                lineHeight: `${F}px`,
+                ...glyphAt(m.baseM),
                 fontFamily: geistMono.fontFamily,
                 fontWeight: 400,
-                fontSize: F,
                 whiteSpace: "pre",
                 color: c.mono,
-                clipPath: `inset(${Math.max(0, h - cut - (F * 1.05 - m.baseM * F)).toFixed(2)}px 0 0 0)`,
+                clipPath: `inset(${(Math.max(0, h - cut - (F * 1.05 - m.baseM * F)) / k).toFixed(2)}px 0 0 0)`,
               }}
             >
               {ch}
@@ -287,18 +364,15 @@ export function MonoSettle({
               style={{
                 position: "absolute",
                 left: 0,
-                top: F * 1.05 - m.baseP * F + lift,
-                height: F,
-                lineHeight: `${F}px`,
-                fontFamily: geist.fontFamily,
+                ...glyphAt(m.baseP),
+                fontFamily,
                 fontWeight: 500,
-                fontSize: F,
                 whiteSpace: "pre",
                 color: sansColor,
                 clipPath:
                   e >= 0.999
                     ? undefined
-                    : `inset(0 0 ${Math.max(0, F - (h - cut - (F * 1.05 - m.baseP * F))).toFixed(2)}px 0)`,
+                    : `inset(0 0 ${(Math.max(0, F - (h - cut - (F * 1.05 - m.baseP * F))) / k).toFixed(2)}px 0)`,
               }}
             >
               {ch}
@@ -311,7 +385,7 @@ export function MonoSettle({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {glyphs}
+      <ScaleLayer scale={scale}>{glyphs}</ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -3,13 +3,9 @@
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: geist } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -21,9 +17,25 @@ export interface MoireRevealProps {
   shape?: "text" | "mark";
   caption?: string;
   accent?: string;
+  /** Text color of the caption; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the figure and caption. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Distance between the lines, in px at 720p. */
+  lineSpacing?: number;
+  /** Degrees the inner grid starts turned before it aligns. */
+  angle?: number;
+  grain?: boolean;
+  /** Size of the line field and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -145,32 +157,59 @@ function Lines({
   return <>{rows}</>;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MoireReveal({
   value = "10×",
   shape = "text",
   caption = "faster first frame on remocn render",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist,
+  lineSpacing = 7,
+  angle: startAngle = START_ANGLE,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: MoireRevealProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const stage = THEMES[theme];
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? stage.bg);
   const raw = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const clipId = `mc${raw}`;
   const maskId = `mm${raw}`;
   const gradId = `mg${raw}`;
   const beam = BEAM[theme];
 
-  const pitch = 7 * u;
+  const pitch = lineSpacing * u;
   const weight = Math.max(1, 1.25 * u);
   const span = Math.hypot(W, H) + 8 * pitch;
   const cx = W / 2;
   const cy = H * 0.43;
 
   const turn = TURN(interpolate(t, [0, TURN_END], [0, 1], CLAMP));
-  const angle = START_ANGLE * (1 - turn);
+  const angle = startAngle * (1 - turn);
   const phase = DRIFT * pitch * turn;
   const detune = TURN(interpolate(t, [32, TURN_END - 4], [0, 1], CLAMP));
   const inner = pitch * (1 + 0.1 * detune);
@@ -216,7 +255,7 @@ export function MoireReveal({
         x={cx}
         y={baseline}
         textAnchor="middle"
-        fontFamily={geist}
+        fontFamily={fontFamily}
         fontWeight={500}
         fontSize={size}
         letterSpacing={`${-0.035 * size}px`}
@@ -244,129 +283,124 @@ export function MoireReveal({
   const plateH = capSize + 28 * u;
 
   return (
-    <AbsoluteFill style={{ background: stage.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <clipPath id={clipId}>{shapeNode}</clipPath>
-          <mask id={maskId} maskUnits="userSpaceOnUse">
-            <rect x={0} y={0} width={W} height={H} fill="#fff" />
-            <g fill="#000">{shapeNode}</g>
-          </mask>
-          <linearGradient
-            id={gradId}
-            gradientUnits="userSpaceOnUse"
-            x1={-gx}
-            y1={gcy - cy - gy}
-            x2={gx}
-            y2={gcy - cy + gy}
-          >
-            <stop offset="0" stopColor={beam[0]} />
-            <stop offset="0.34" stopColor={beam[1]} />
-            <stop offset="0.68" stopColor={beam[2]} />
-            <stop offset="1" stopColor={beam[3]} />
-          </linearGradient>
-        </defs>
-        <g opacity={fieldDim * stage.lineAlpha}>
-          <g transform={flat}>
-            <Lines
-              pitch={pitch}
-              weight={weight}
-              span={span}
-              phase={0}
-              fill={stage.line}
-            />
-          </g>
-          <g mask={`url(#${maskId})`}>
-            <g transform={rot}>
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <clipPath id={clipId}>{shapeNode}</clipPath>
+            <mask id={maskId} maskUnits="userSpaceOnUse">
+              <rect x={0} y={0} width={W} height={H} fill="#fff" />
+              <g fill="#000">{shapeNode}</g>
+            </mask>
+            <linearGradient
+              id={gradId}
+              gradientUnits="userSpaceOnUse"
+              x1={-gx}
+              y1={gcy - cy - gy}
+              x2={gx}
+              y2={gcy - cy + gy}
+            >
+              <stop offset="0" stopColor={beam[0]} />
+              <stop offset="0.34" stopColor={beam[1]} />
+              <stop offset="0.68" stopColor={beam[2]} />
+              <stop offset="1" stopColor={beam[3]} />
+            </linearGradient>
+          </defs>
+          <g opacity={fieldDim * stage.lineAlpha}>
+            <g transform={flat}>
               <Lines
                 pitch={pitch}
                 weight={weight}
                 span={span}
-                phase={phase}
+                phase={0}
                 fill={stage.line}
               />
+            </g>
+            <g mask={`url(#${maskId})`}>
+              <g transform={rot}>
+                <Lines
+                  pitch={pitch}
+                  weight={weight}
+                  span={span}
+                  phase={phase}
+                  fill={stage.line}
+                />
+              </g>
             </g>
           </g>
-        </g>
-        <g clipPath={`url(#${clipId})`}>
-          {locked ? (
-            <rect
-              x={0}
-              y={0}
-              width={W}
-              height={H}
-              fill={stage.bg}
-              opacity={lock}
-            />
-          ) : null}
-          <g opacity={locked ? 1 : fieldDim * stage.lineAlpha}>
-            <g transform={rot}>
-              <Lines
-                pitch={inner}
-                weight={innerWeight}
-                span={span}
-                phase={(phase * inner) / pitch}
-                fill={stage.line}
-              />
-            </g>
+          <g clipPath={`url(#${clipId})`}>
             {locked ? (
-              <g transform={rot} opacity={lock}>
+              <rect x={0} y={0} width={W} height={H} fill={bg} opacity={lock} />
+            ) : null}
+            <g opacity={locked ? 1 : fieldDim * stage.lineAlpha}>
+              <g transform={rot}>
                 <Lines
                   pitch={inner}
                   weight={innerWeight}
                   span={span}
                   phase={(phase * inner) / pitch}
-                  fill={`url(#${gradId})`}
+                  fill={stage.line}
                 />
               </g>
-            ) : null}
+              {locked ? (
+                <g transform={rot} opacity={lock}>
+                  <Lines
+                    pitch={inner}
+                    weight={innerWeight}
+                    span={span}
+                    phase={(phase * inner) / pitch}
+                    fill={`url(#${gradId})`}
+                  />
+                </g>
+              ) : null}
+            </g>
           </g>
-        </g>
-      </svg>
-      {caption ? (
-        <div
-          style={{
-            position: "absolute",
-            left: cx - plateW / 2,
-            top: capTop - 13 * u,
-            width: plateW,
-            height: plateH,
-            background: stage.bg,
-            boxShadow: `inset 0 0 0 ${Math.max(1, u)}px ${stage.hair}`,
-            borderRadius: plateH / 2,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: geist,
-            fontWeight: 400,
-            fontSize: capSize,
-            letterSpacing: "-0.015em",
-            whiteSpace: "nowrap",
-            color: stage.fg,
-            opacity: capIn,
-            transform: `translateY(${(1 - capIn) * 12 * u}px)`,
-          }}
-        >
-          <span
+        </svg>
+        {caption ? (
+          <div
             style={{
-              width: 8 * u,
-              height: 8 * u,
-              borderRadius: "50%",
-              background: accent,
-              marginRight: 12 * u,
-              flexShrink: 0,
+              position: "absolute",
+              left: cx - plateW / 2,
+              top: capTop - 13 * u,
+              width: plateW,
+              height: plateH,
+              background: bg,
+              boxShadow: `inset 0 0 0 ${Math.max(1, u)}px ${stage.hair}`,
+              borderRadius: plateH / 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: capSize,
+              letterSpacing: "-0.015em",
+              whiteSpace: "nowrap",
+              color: ink ?? stage.fg,
+              opacity: capIn,
+              transform: `translateY(${(1 - capIn) * 12 * u}px)${glide(midway(capIn))}`,
             }}
-          />
-          {caption}
-        </div>
-      ) : null}
-      <Grain opacity={stage.grain} />
+          >
+            <span
+              style={{
+                width: 8 * u,
+                height: 8 * u,
+                borderRadius: "50%",
+                background: accent,
+                marginRight: 12 * u,
+                flexShrink: 0,
+              }}
+            />
+            {caption}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={stage.grain} /> : null}
     </AbsoluteFill>
   );
 }

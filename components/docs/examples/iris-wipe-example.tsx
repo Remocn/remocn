@@ -5,6 +5,7 @@ import {
   CanvasSceneB,
   CanvasScenePoster,
 } from "@/components/docs/examples/canvas-scenes";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { irisWipe } from "@/registry/remocn/iris-wipe";
 
 interface IrisWipeExampleProps {
@@ -20,16 +21,17 @@ export function IrisWipeExampleScene({
   centerY,
   holdRadius,
 }: IrisWipeExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <CanvasScenePoster />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 36 })}
+        timing={linearTiming({ durationInFrames: toFrames(36) })}
         presentation={irisWipe({ color, centerX, centerY, holdRadius })}
       />
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <CanvasSceneB />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -48,14 +50,14 @@ import { irisWipe } from "@/components/remocn/iris-wipe";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 36 })}
+      timing={linearTiming({ durationInFrames: 72 })}
       presentation={irisWipe({ color: "${color}", centerX: ${centerX}, centerY: ${centerY}, holdRadius: ${holdRadius} })}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

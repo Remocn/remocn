@@ -1,8 +1,9 @@
 "use client";
 
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { captionsFromText } from "@/components/docs/examples/caption-fixture";
 import type { SpeakerCaption } from "@/lib/remocn/caption-core";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { CaptionSpeaker } from "@/registry/remocn/caption-speaker";
 
 const line = (
@@ -98,7 +99,7 @@ export function CaptionSpeakerExampleScene({
   holdMs,
   shadow,
 }: CaptionSpeakerExampleProps) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   return (
     <AbsoluteFill
       style={{

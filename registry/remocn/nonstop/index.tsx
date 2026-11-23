@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const redHat = loadFont("normal", {
   weights: ["400", "500"],
@@ -22,8 +22,20 @@ export interface NonstopProps {
   label?: string;
   from?: number;
   unit?: string;
+  /** Frames between one count and the next. */
+  interval?: number;
+  /** Frames the zero holds before it turns into "No". */
+  hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the counter and label. Load it yourself; Red Hat Display by default. */
+  fontFamily?: string;
+  /** Size of the counter, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -100,11 +112,11 @@ function buildStates(from: number, unit: string): Token[][] {
   return states;
 }
 
-function measureStates(states: Token[][]): Metrics {
+function measureStates(states: Token[][], family: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("nonstop: no 2d context");
-  ctx.font = `${WGHT} ${FONT_PX}px "${redHat.fontFamily}"`;
+  ctx.font = `${WGHT} ${FONT_PX}px "${family}"`;
   const em = (s: string) =>
     ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
   const adv: Record<string, number> = {};
@@ -131,8 +143,8 @@ function measureStates(states: Token[][]): Metrics {
   };
 }
 
-function useMetrics(states: Token[][], label: string) {
-  const key = `${label}\u0002${states.map((r) => r.map((tk) => `${tk.id}=${tk.ch}`).join("\u0001")).join("\u0003")}`;
+function useMetrics(states: Token[][], label: string, family: string) {
+  const key = `${family}\u0004${label}\u0002${states.map((r) => r.map((tk) => `${tk.id}=${tk.ch}`).join("\u0001")).join("\u0003")}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("nonstop: measuring"));
   const released = useRef(false);
@@ -142,12 +154,12 @@ function useMetrics(states: Token[][], label: string) {
     let live = true;
     Promise.all([
       redHat.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${redHat.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureStates(statesRef.current) });
+        setState({ key, m: measureStates(statesRef.current, family) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -156,29 +168,55 @@ function useMetrics(states: Token[][], label: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, family, handle]);
   return state && state.key === key ? state.m : null;
+}
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function Nonstop({
   label = "From idea to export",
   from = 3,
   unit = "stops",
+  interval = STEP,
+  hold = ZERO_HOLD,
   accent,
+  ink,
   background,
+  fontFamily = redHat.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: NonstopProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const start = Math.max(1, Math.min(9, Math.round(from)));
   const states = buildStates(start, unit);
-  const m = useMetrics(states, label);
+  const m = useMetrics(states, label, fontFamily);
 
   if (!m) {
     return (
@@ -187,9 +225,9 @@ export function Nonstop({
   }
 
   const countSteps = start;
-  const stepAt = (k: number) => FIRST_STEP + (k - 1) * STEP;
+  const stepAt = (k: number) => FIRST_STEP + (k - 1) * interval;
   const zeroAt = stepAt(countSteps);
-  const shrinkAt = zeroAt + ROLL + ZERO_HOLD;
+  const shrinkAt = zeroAt + ROLL + hold;
   const boardAt = shrinkAt + BOARD_GAP;
   const closeAt = boardAt + SHRINK + CLOSE_GAP;
   const changeAt = [
@@ -249,6 +287,7 @@ export function Nonstop({
     opacity: number,
     color: string,
     extra?: React.CSSProperties,
+    moving = false,
   ) => (
     <div
       key={key}
@@ -259,13 +298,14 @@ export function Nonstop({
         height: F,
         lineHeight: `${F}px`,
         whiteSpace: "pre",
-        fontFamily: redHat.fontFamily,
+        fontFamily,
         fontWeight: WGHT,
         fontSize: F,
         letterSpacing: `${TRACK}em`,
         color,
         opacity,
-        transform: `translateY(${dy.toFixed(2)}px)`,
+        // Unrounded: a value rounded to 0.01px parks the glyph as well.
+        transform: `translateY(${dy}px)${glide(moving)}`,
         ...extra,
       }}
     >
@@ -279,7 +319,7 @@ export function Nonstop({
   for (const id of ids) {
     const ta = rowA.find((tk) => tk.id === id);
     const tb = rowB.find((tk) => tk.id === id);
-    const color = id === "d" || id === "dot" ? hi : c.ink;
+    const color = id === "d" || id === "dot" ? hi : fg;
     if (ta && tb) {
       const xa = leftA + A.x[id] * F;
       const xb = leftB + B.x[id] * F;
@@ -296,7 +336,7 @@ export function Nonstop({
         nodes.push(
           glyph(`${id}-a`, ta.ch, x, 0, 1 - swap, color, {
             transformOrigin: `${((zeroW * F) / 2).toFixed(2)}px ${(base - boxTop).toFixed(2)}px`,
-            transform: `scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`,
+            transform: `scale(${sx.toFixed(4)}, ${sy.toFixed(4)})${glide(midway(p))}`,
           }),
         );
         if (swap > 0) nodes.push(glyph(`${id}-b`, tb.ch, x, 0, swap, color));
@@ -330,10 +370,28 @@ export function Nonstop({
               }}
             >
               {out < 1
-                ? glyph(`${id}-a`, ta.ch, x, -travel * out, 1, color)
+                ? glyph(
+                    `${id}-a`,
+                    ta.ch,
+                    x,
+                    -travel * out,
+                    1,
+                    color,
+                    undefined,
+                    midway(out),
+                  )
                 : null}
               {inn > 0
-                ? glyph(`${id}-b`, tb.ch, x, travel * (1 - inn), 1, color)
+                ? glyph(
+                    `${id}-b`,
+                    tb.ch,
+                    x,
+                    travel * (1 - inn),
+                    1,
+                    color,
+                    undefined,
+                    midway(inn),
+                  )
                 : null}
             </div>
           </div>,
@@ -342,58 +400,81 @@ export function Nonstop({
     } else if (ta) {
       if (ta.ch === " ") continue;
       const x = leftA + A.x[id] * F;
-      nodes.push(glyph(`${id}-a`, ta.ch, x, -rise * p, 1 - p, color));
+      nodes.push(
+        glyph(
+          `${id}-a`,
+          ta.ch,
+          x,
+          -rise * p,
+          1 - p,
+          color,
+          undefined,
+          midway(p),
+        ),
+      );
     } else if (tb) {
       if (tb.ch === " ") continue;
       const x = leftB + B.x[id] * F;
       let q = p;
+      let moving = midway(p);
       if (id === "N") {
-        q = interpolate(t, [boardAt, boardAt + SHRINK], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
+        const qAt = (f: number) =>
+          interpolate(f, [boardAt, boardAt + SHRINK], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
+        q = qAt(t);
+        // The ease-out tail still crosses pixels at a full glyph's rise, so
+        // the tilt follows the travel itself, not the progress.
+        moving =
+          Math.abs(qAt(t + 1) - q) * rise > 1e-3 ||
+          Math.abs(q - qAt(t - 1)) * rise > 1e-3;
       }
-      nodes.push(glyph(`${id}-b`, tb.ch, x, rise * (1 - q), q, color));
+      nodes.push(
+        glyph(`${id}-b`, tb.ch, x, rise * (1 - q), q, color, undefined, moving),
+      );
     }
   }
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          right: marginX,
-          top: base - F * 0.98 - L * 1.5,
-          fontFamily: redHat.fontFamily,
-          fontWeight: 400,
-          fontSize: L,
-          lineHeight: 1,
-          letterSpacing: "-0.01em",
-          color: c.ink,
-          whiteSpace: "pre",
-          opacity: lineIn,
-          transform: `translateY(${((1 - lineIn) * L * 0.8).toFixed(2)}px)`,
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          clipPath: `inset(${(base - F * 0.98).toFixed(1)}px 0 ${(H - base - F * 0.3).toFixed(1)}px 0)`,
-        }}
-      >
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            right: marginX,
+            top: base - F * 0.98 - L * 1.5,
+            fontFamily,
+            fontWeight: 400,
+            fontSize: L,
+            lineHeight: 1,
+            letterSpacing: "-0.01em",
+            color: fg,
+            whiteSpace: "pre",
+            opacity: lineIn,
+            transform: `translateY(${(1 - lineIn) * L * 0.8}px)${glide(midway(lineIn))}`,
+          }}
+        >
+          {label}
+        </div>
         <div
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translateY(${((1 - lineIn) * F * 1.3).toFixed(2)}px)`,
+            clipPath: `inset(${(base - F * 0.98).toFixed(1)}px 0 ${(H - base - F * 0.3).toFixed(1)}px 0)`,
           }}
         >
-          {nodes}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              transform: `translateY(${(1 - lineIn) * F * 1.3}px)${glide(midway(lineIn))}`,
+            }}
+          >
+            {nodes}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

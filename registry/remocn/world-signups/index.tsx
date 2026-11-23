@@ -2,19 +2,14 @@
 
 import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: hanken } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -42,8 +37,22 @@ export interface WorldSignupsProps {
   title?: string;
   counterLabel?: string;
   delta?: string;
+  /** Heading above the live signup feed. */
+  feedLabel?: string;
+  /** Time range at the right of the window header. */
+  rangeLabel?: string;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color of the title, counter and names; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -260,6 +269,8 @@ const hash = (n: number) => {
   return s - Math.floor(s);
 };
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
@@ -383,6 +394,7 @@ function SnapCounter({
   changedAt: number[];
   frame: number;
 }) {
+  const glide = useGlide();
   let d = 0;
   const digits = value.replace(/\D/g, "").length;
   return (
@@ -405,7 +417,7 @@ function SnapCounter({
             key={i}
             style={{
               display: "inline-block",
-              transform: `translateY(${(1 - p) * 60}%)`,
+              transform: `translateY(${(1 - p) * 60}%)${glide(midway(p))}`,
               opacity: 0.2 + 0.8 * p,
             }}
           >
@@ -417,6 +429,22 @@ function SnapCounter({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WorldSignups({
   signups = DEFAULT_SIGNUPS,
   startCount = 12847,
@@ -424,20 +452,35 @@ export function WorldSignups({
   title = "Signups around the world",
   counterLabel = "Signups today",
   delta = "+18.2% vs. yesterday",
+  feedLabel = "Latest signups",
+  rangeLabel = "Today",
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hanken,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: WorldSignupsProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const pal = palette(theme);
+  const fg = ink ?? pal.text;
   const tall = H > W * 1.2;
   const D = tall ? { w: 800, h: 1422 } : { w: 1280, h: 720 };
   const s = Math.min(W / D.w, H / D.h);
-  const sp = (at: number, config: object) =>
-    spring({ frame: frame - at, fps, config });
+  const spAt = (f: number, at: number, config: object) =>
+    spring({ frame: f - at, fps, config });
+  const sp = (at: number, config: object) => spAt(frame, at, config);
+  // The springs here overshoot, so "still moving" is read off the
+  // neighbouring frames rather than off a progress value.
+  const moved = (at: (f: number) => number) =>
+    Math.abs(at(frame + 1) - at(frame)) > 1e-5 ||
+    Math.abs(at(frame) - at(frame - 1)) > 1e-5;
 
   const WIN = tall
     ? { x: 40, y: 340, w: 720, h: 1010 }
@@ -534,6 +577,7 @@ export function WorldSignups({
       ),
   );
   const maxCountry = Math.max(...countryTotals);
+  const counterIn = tween(frame, 4, 18);
 
   const counter = (size: number, labelSize: number, onStage: boolean) => (
     <div>
@@ -562,7 +606,7 @@ export function WorldSignups({
           fontSize: size,
           fontWeight: 300,
           letterSpacing: "-0.045em",
-          color: onStage ? pal.stageText : pal.text,
+          color: onStage ? (ink ?? pal.stageText) : fg,
           lineHeight: 1.08,
           marginTop: 6,
           overflow: "hidden",
@@ -570,7 +614,7 @@ export function WorldSignups({
       >
         <div
           style={{
-            transform: `translateY(${(1 - tween(frame, 4, 18)) * 100}%)`,
+            transform: `translateY(${(1 - counterIn) * 100}%)${glide(midway(counterIn))}`,
           }}
         >
           <SnapCounter value={fmt(count)} changedAt={changedAt} frame={frame} />
@@ -597,391 +641,427 @@ export function WorldSignups({
         fontWeight: 400,
         overflow: "hidden",
         WebkitFontSmoothing: "antialiased",
-        background: pal.dark ? "#03050C" : "#EEECE8",
+        background:
+          background === undefined
+            ? pal.dark
+              ? "#03050C"
+              : "#EEECE8"
+            : background === "transparent"
+              ? undefined
+              : background,
       }}
     >
-      <GshGround
-        preset={ground ?? (pal.dark ? "europa" : "paper-crease")}
-        params={groundParams ?? (pal.dark ? undefined : LIGHT_GROUND)}
-        timeOffset={pal.dark ? 5 : 2}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: pal.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (W - D.w * s) / 2,
-          top: (H - D.h * s) / 2,
-          width: D.w,
-          height: D.h,
-          transformOrigin: "0 0",
-          transform: `scale(${s})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (pal.dark ? "europa" : "paper-crease")}
+            params={groundParams ?? (pal.dark ? undefined : LIGHT_GROUND)}
+            timeOffset={pal.dark ? 5 : 2}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: pal.scrim }} />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transformOrigin: `${WIN.x + mapLeft + MAP_W / 2}px ${WIN.y + mapTop + mapH / 2}px`,
-            transform: `scale(${1 + 0.03 * cam})`,
+            left: (W - D.w * s) / 2,
+            top: (H - D.h * s) / 2,
+            width: D.w,
+            height: D.h,
+            transformOrigin: "0 0",
+            transform: `scale(${s})`,
           }}
         >
-          {tall ? (
-            <div style={{ position: "absolute", left: 48, top: 88 }}>
-              {counter(132, 26, true)}
-            </div>
-          ) : null}
           <div
             style={{
               position: "absolute",
-              left: WIN.x,
-              top: WIN.y,
-              width: WIN.w,
-              height: WIN.h,
-              opacity: winA,
-              transform: `translateY(${(1 - win) * 48}px) scale(${0.97 + 0.03 * win})`,
-              transformOrigin: "50% 100%",
-              borderRadius: 16,
-              background: pal.win,
-              boxShadow: pal.winShadow,
-              overflow: "hidden",
+              inset: 0,
+              transformOrigin: `${WIN.x + mapLeft + MAP_W / 2}px ${WIN.y + mapTop + mapH / 2}px`,
+              transform: `scale(${1 + 0.03 * cam})${glide(midway(cam))}`,
             }}
           >
-            <div
-              style={{
-                height: HEAD_H,
-                display: "flex",
-                alignItems: "center",
-                gap: 14,
-                padding: `0 ${PAD}px`,
-                borderBottom: `1px solid ${pal.line}`,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 20,
-                  color: pal.text,
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {title}
-              </span>
-              <div style={{ flex: 1 }} />
-              <span style={{ fontSize: 16, color: pal.muted }}>Today</span>
-            </div>
-
-            <svg
-              width={MAP_W}
-              height={mapH}
-              style={{
-                position: "absolute",
-                left: mapLeft,
-                top: mapTop,
-                overflow: "visible",
-              }}
-            >
-              {dots}
-              {events.map((e, k) => {
-                if (k === 0) return null;
-                const a = project(events[k - 1].lon, events[k - 1].lat);
-                const b = project(e.lon, e.lat);
-                const head = tween(frame, e.at - 12, e.at, moveEase);
-                const tail = tween(frame, e.at - 3, e.at + 12, moveEase);
-                if (head <= 0 || tail >= 1) return null;
-                const mx = (a.x + b.x) / 2;
-                const my = (a.y + b.y) / 2;
-                const dist = Math.hypot(b.x - a.x, b.y - a.y);
-                return (
-                  <path
-                    key={`arc-${e.name}`}
-                    d={`M${a.x} ${a.y} Q${mx} ${my - dist * 0.32} ${b.x} ${b.y}`}
-                    fill="none"
-                    stroke={hot}
-                    strokeWidth={1.75}
-                    strokeLinecap="round"
-                    pathLength={1}
-                    strokeDasharray={`${Math.max(0.0001, head - tail)} 2`}
-                    strokeDashoffset={-tail}
-                  />
-                );
-              })}
-              {events.map((e) => {
-                if (frame < e.at) return null;
-                const p = project(e.lon, e.lat);
-                const land = sp(e.at, CHIP);
-                const ring = tween(frame, e.at, e.at + 24);
-                return (
-                  <g key={`city-${e.name}`}>
-                    <circle
-                      cx={p.x}
-                      cy={p.y}
-                      r={4 + 18 * ring}
-                      fill="none"
-                      stroke={hot}
-                      strokeWidth={1.5}
-                      opacity={0.6 * (1 - ring)}
-                    />
-                    <circle
-                      cx={p.x}
-                      cy={p.y}
-                      r={Math.max(0, 4 * land)}
-                      fill={hot}
-                      stroke={pal.win}
-                      strokeWidth={1.5}
-                    />
-                  </g>
-                );
-              })}
-            </svg>
-            {events.map((e, k) => {
-              const nextAt = events[k + 1]?.at ?? e.at + 40;
-              const hold = Math.max(14, Math.min(26, nextAt - e.at + 8));
-              const a = sp(e.at + 1, CHIP);
-              const out = tween(frame, e.at + hold, e.at + hold + 6, exitEase);
-              if (frame < e.at + 1 || out >= 1) return null;
-              const p = project(e.lon, e.lat);
-              return (
-                <div
-                  key={`label-${e.name}`}
-                  style={{
-                    position: "absolute",
-                    left: mapLeft + p.x,
-                    top: mapTop + p.y - 14,
-                    transform: `translate(-50%, -100%) translateY(${(1 - a) * 8 - out * 6}px) scale(${0.8 + 0.2 * a})`,
-                    transformOrigin: "50% 100%",
-                    opacity: clamp(a * 2, 0, 1) * (1 - out),
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    height: 34,
-                    padding: "0 12px 0 5px",
-                    borderRadius: 99,
-                    background: pal.chip,
-                    boxShadow: pal.chipShadow,
-                    fontSize: 16,
-                    color: pal.text,
-                    whiteSpace: "nowrap",
-                    zIndex: 3,
-                  }}
-                >
-                  <Avatar name={e.name} size={24} />
-                  {e.name.split(" ")[0]}
-                  <span style={{ color: pal.muted }}>{e.city}</span>
-                </div>
-              );
-            })}
-
-            <div
-              style={{
-                position: "absolute",
-                left: mapLeft,
-                top: countryY,
-                width: MAP_W,
-                height: COUNTRY_H,
-                display: "flex",
-                gap: 20,
-              }}
-            >
-              {countries.map((c, i) => {
-                const a = tween(frame, 10 + i * 3, 22 + i * 3);
-                const bumpAt = events
-                  .filter((e) => e.country === c.code && e.at <= frame)
-                  .map((e) => e.at)
-                  .pop();
-                const bump =
-                  bumpAt === undefined
-                    ? 0
-                    : 1 - tween(frame, bumpAt, bumpAt + 24);
-                const fill = sp(10 + i * 3, CARD);
-                return (
-                  <div
-                    key={c.code}
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      opacity: a,
-                      transform: `translateY(${(1 - a) * 8}px)`,
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 16,
-                        color: pal.muted,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {c.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 22,
-                        fontWeight: 300,
-                        color: bump > 0.35 ? accent : pal.text,
-                        marginTop: 2,
-                        fontVariantNumeric: "tabular-nums",
-                        letterSpacing: "-0.01em",
-                      }}
-                    >
-                      {fmt(countryTotals[i])}
-                    </div>
-                    <div
-                      style={{
-                        height: 3,
-                        borderRadius: 2,
-                        background: pal.line,
-                        marginTop: 8,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${(countryTotals[i] / maxCountry) * 100 * clamp(fill, 0, 1.03)}%`,
-                          height: "100%",
-                          borderRadius: 2,
-                          background: accent,
-                        }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
             {tall ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: PAD,
-                  right: PAD,
-                  top: SIDE.y - 14,
-                  height: 1,
-                  background: pal.line,
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  position: "absolute",
-                  left: SIDE.x - 16,
-                  top: HEAD_H,
-                  bottom: 0,
-                  width: 1,
-                  background: pal.line,
-                }}
-              />
-            )}
-            {!tall ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: SIDE.x,
-                  top: SIDE.y,
-                  width: SIDE.w,
-                }}
-              >
-                {counter(60, 16, false)}
+              <div style={{ position: "absolute", left: 48, top: 88 }}>
+                {counter(132, 26, true)}
               </div>
             ) : null}
             <div
               style={{
                 position: "absolute",
-                left: SIDE.x,
-                top: feedTop - 36,
-                fontSize: 16,
-                color: pal.muted,
-              }}
-            >
-              Latest signups
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: SIDE.x,
-                top: feedTop,
-                width: SIDE.w,
-                bottom: 0,
+                left: WIN.x,
+                top: WIN.y,
+                width: WIN.w,
+                height: WIN.h,
+                opacity: winA,
+                transform: `translateY(${(1 - win) * 48}px) scale(${0.97 + 0.03 * win})${glide(midway(win))}`,
+                transformOrigin: "50% 100%",
+                borderRadius: 16,
+                background: pal.win,
+                boxShadow: pal.winShadow,
                 overflow: "hidden",
-                maskImage: "linear-gradient(to bottom, black 70%, transparent)",
               }}
             >
+              <div
+                style={{
+                  height: HEAD_H,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: `0 ${PAD}px`,
+                  borderBottom: `1px solid ${pal.line}`,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 20,
+                    color: fg,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {title}
+                </span>
+                <div style={{ flex: 1 }} />
+                <span style={{ fontSize: 16, color: pal.muted }}>
+                  {rangeLabel}
+                </span>
+              </div>
+
+              <svg
+                width={MAP_W}
+                height={mapH}
+                style={{
+                  position: "absolute",
+                  left: mapLeft,
+                  top: mapTop,
+                  overflow: "visible",
+                }}
+              >
+                {dots}
+                {events.map((e, k) => {
+                  if (k === 0) return null;
+                  const a = project(events[k - 1].lon, events[k - 1].lat);
+                  const b = project(e.lon, e.lat);
+                  const head = tween(frame, e.at - 12, e.at, moveEase);
+                  const tail = tween(frame, e.at - 3, e.at + 12, moveEase);
+                  if (head <= 0 || tail >= 1) return null;
+                  const mx = (a.x + b.x) / 2;
+                  const my = (a.y + b.y) / 2;
+                  const dist = Math.hypot(b.x - a.x, b.y - a.y);
+                  return (
+                    <path
+                      key={`arc-${e.name}`}
+                      d={`M${a.x} ${a.y} Q${mx} ${my - dist * 0.32} ${b.x} ${b.y}`}
+                      fill="none"
+                      stroke={hot}
+                      strokeWidth={1.75}
+                      strokeLinecap="round"
+                      pathLength={1}
+                      strokeDasharray={`${Math.max(0.0001, head - tail)} 2`}
+                      strokeDashoffset={-tail}
+                    />
+                  );
+                })}
+                {events.map((e) => {
+                  if (frame < e.at) return null;
+                  const p = project(e.lon, e.lat);
+                  const land = sp(e.at, CHIP);
+                  const ring = tween(frame, e.at, e.at + 24);
+                  return (
+                    <g key={`city-${e.name}`}>
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r={4 + 18 * ring}
+                        fill="none"
+                        stroke={hot}
+                        strokeWidth={1.5}
+                        opacity={0.6 * (1 - ring)}
+                      />
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r={Math.max(0, 4 * land)}
+                        fill={hot}
+                        stroke={pal.win}
+                        strokeWidth={1.5}
+                      />
+                    </g>
+                  );
+                })}
+              </svg>
               {events.map((e, k) => {
-                if (e.at > frame) return null;
-                let y = 0;
-                for (let j = k + 1; j < events.length; j++) {
-                  if (events[j].at <= frame) y += ROW * sp(events[j].at, CARD);
-                }
-                if (y > ROW * 8) return null;
-                const a = tween(frame, e.at + 1, e.at + 10);
-                const hl = 1 - tween(frame, e.at + 6, e.at + 30, moveEase);
+                const nextAt = events[k + 1]?.at ?? e.at + 40;
+                const hold = Math.max(14, Math.min(26, nextAt - e.at + 8));
+                const a = sp(e.at + 1, CHIP);
+                const out = tween(
+                  frame,
+                  e.at + hold,
+                  e.at + hold + 6,
+                  exitEase,
+                );
+                if (frame < e.at + 1 || out >= 1) return null;
+                const p = project(e.lon, e.lat);
+                const chipMoving =
+                  moved((f) => spAt(f, e.at + 1, CHIP)) || midway(out);
                 return (
                   <div
-                    key={`row-${e.name}`}
+                    key={`label-${e.name}`}
                     style={{
                       position: "absolute",
-                      left: -10,
-                      right: -10,
-                      top: y,
-                      height: ROW - 6,
+                      left: mapLeft + p.x,
+                      top: mapTop + p.y - 14,
+                      transform: `translate(-50%, -100%) translateY(${(1 - a) * 8 - out * 6}px) scale(${0.8 + 0.2 * a})${glide(chipMoving)}`,
+                      transformOrigin: "50% 100%",
+                      opacity: clamp(a * 2, 0, 1) * (1 - out),
                       display: "flex",
                       alignItems: "center",
-                      gap: 14,
-                      padding: "0 10px",
-                      borderRadius: 10,
-                      background: withAlpha(
-                        accent,
-                        (pal.dark ? 0.1 : 0.07) * hl,
-                      ),
+                      gap: 8,
+                      height: 34,
+                      padding: "0 12px 0 5px",
+                      borderRadius: 99,
+                      background: pal.chip,
+                      boxShadow: pal.chipShadow,
+                      fontSize: 16,
+                      color: fg,
+                      whiteSpace: "nowrap",
+                      zIndex: 3,
                     }}
                   >
-                    <div
-                      style={{
-                        flex: 1,
-                        minWidth: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 14,
-                        opacity: a,
-                        transform: `translateY(${(1 - a) * -8}px)`,
-                      }}
-                    >
-                      <Avatar name={e.name} size={34} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          style={{
-                            fontSize: 17,
-                            color: pal.text,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {e.name}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 16,
-                            color: pal.muted,
-                            marginTop: 1,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {e.city}, {e.country}
-                        </div>
-                      </div>
-                      <span
-                        style={{
-                          fontSize: 16,
-                          color:
-                            e.plan && e.plan !== "Free" ? accent : pal.faint,
-                        }}
-                      >
-                        {e.plan ?? "Free"}
-                      </span>
-                    </div>
+                    <Avatar name={e.name} size={24} />
+                    {e.name.split(" ")[0]}
+                    <span style={{ color: pal.muted }}>{e.city}</span>
                   </div>
                 );
               })}
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: mapLeft,
+                  top: countryY,
+                  width: MAP_W,
+                  height: COUNTRY_H,
+                  display: "flex",
+                  gap: 20,
+                }}
+              >
+                {countries.map((c, i) => {
+                  const a = tween(frame, 10 + i * 3, 22 + i * 3);
+                  const bumpAt = events
+                    .filter((e) => e.country === c.code && e.at <= frame)
+                    .map((e) => e.at)
+                    .pop();
+                  const bump =
+                    bumpAt === undefined
+                      ? 0
+                      : 1 - tween(frame, bumpAt, bumpAt + 24);
+                  const fill = sp(10 + i * 3, CARD);
+                  return (
+                    <div
+                      key={c.code}
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        opacity: a,
+                        transform: `translateY(${(1 - a) * 8}px)${glide(midway(a))}`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 16,
+                          color: pal.muted,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {c.name}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 22,
+                          fontWeight: 300,
+                          color: bump > 0.35 ? accent : fg,
+                          marginTop: 2,
+                          fontVariantNumeric: "tabular-nums",
+                          letterSpacing: "-0.01em",
+                        }}
+                      >
+                        {fmt(countryTotals[i])}
+                      </div>
+                      <div
+                        style={{
+                          height: 3,
+                          borderRadius: 2,
+                          background: pal.line,
+                          marginTop: 8,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${(countryTotals[i] / maxCountry) * 100 * clamp(fill, 0, 1.03)}%`,
+                            height: "100%",
+                            borderRadius: 2,
+                            background: accent,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {tall ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: PAD,
+                    right: PAD,
+                    top: SIDE.y - 14,
+                    height: 1,
+                    background: pal.line,
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: SIDE.x - 16,
+                    top: HEAD_H,
+                    bottom: 0,
+                    width: 1,
+                    background: pal.line,
+                  }}
+                />
+              )}
+              {!tall ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: SIDE.x,
+                    top: SIDE.y,
+                    width: SIDE.w,
+                  }}
+                >
+                  {counter(60, 16, false)}
+                </div>
+              ) : null}
+              <div
+                style={{
+                  position: "absolute",
+                  left: SIDE.x,
+                  top: feedTop - 36,
+                  fontSize: 16,
+                  color: pal.muted,
+                }}
+              >
+                {feedLabel}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: SIDE.x,
+                  top: feedTop,
+                  width: SIDE.w,
+                  bottom: 0,
+                  overflow: "hidden",
+                  maskImage:
+                    "linear-gradient(to bottom, black 70%, transparent)",
+                }}
+              >
+                {events.map((e, k) => {
+                  if (e.at > frame) return null;
+                  // Each newer signup pushes this row one slot down. Layout
+                  // holds the slot the row is heading for and the way there
+                  // is a transform: a row eased by `top` has its box and its
+                  // baselines rounded to whole pixels and clicks down.
+                  const yAt = (f: number) => {
+                    let sum = 0;
+                    for (let j = k + 1; j < events.length; j++) {
+                      if (events[j].at <= f)
+                        sum += ROW * spAt(f, events[j].at, CARD);
+                    }
+                    return sum;
+                  };
+                  const y = yAt(frame);
+                  if (y > ROW * 8) return null;
+                  const slot =
+                    ROW *
+                    events.filter((n, j) => j > k && n.at <= frame).length;
+                  const a = tween(frame, e.at + 1, e.at + 10);
+                  const hl = 1 - tween(frame, e.at + 6, e.at + 30, moveEase);
+                  return (
+                    <div
+                      key={`row-${e.name}`}
+                      style={{
+                        position: "absolute",
+                        left: -10,
+                        right: -10,
+                        top: slot,
+                        transform: `translateY(${y - slot}px)${glide(moved(yAt))}`,
+                        height: ROW - 6,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 14,
+                        padding: "0 10px",
+                        borderRadius: 10,
+                        background: withAlpha(
+                          accent,
+                          (pal.dark ? 0.1 : 0.07) * hl,
+                        ),
+                      }}
+                    >
+                      <div
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 14,
+                          opacity: a,
+                          transform: `translateY(${(1 - a) * -8}px)${glide(midway(a))}`,
+                        }}
+                      >
+                        <Avatar name={e.name} size={34} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              fontSize: 17,
+                              color: fg,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {e.name}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 16,
+                              color: pal.muted,
+                              marginTop: 1,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {e.city}, {e.country}
+                          </div>
+                        </div>
+                        <span
+                          style={{
+                            fontSize: 16,
+                            color:
+                              e.plan && e.plan !== "Free" ? accent : pal.faint,
+                          }}
+                        >
+                          {e.plan ?? "Free"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

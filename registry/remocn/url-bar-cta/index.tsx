@@ -11,9 +11,9 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -40,8 +40,24 @@ export interface UrlBarCtaProps {
   command?: string;
   image?: string;
   clipName?: string;
+  /** Links in the built-in page's nav bar. */
+  navLinks?: string[];
+  /** Button at the right of the built-in page's nav bar. */
+  navCta?: string;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color of the typed URL and the headline; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Replaces the remocn wordmark in the built-in page's nav bar. */
+  logo?: React.ReactNode;
+  /** Size of the foreground around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -101,6 +117,12 @@ function withAlpha(hex: string, alpha: number) {
 }
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+/** A layout shift as a transform, or nothing once it is under a thousandth. */
+const shift = (dx: number, dy: number) =>
+  Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3
+    ? undefined
+    : `translate(${dx}px, ${dy}px)`;
 
 function keyTimes(text: string, start: number, typingSpeed: number) {
   const times: number[] = [];
@@ -281,6 +303,11 @@ function BuiltInHero({
   command,
   image,
   clipName,
+  navLinks,
+  navCta,
+  ink,
+  fontFamily,
+  logo,
 }: {
   pal: Pal;
   accent: string;
@@ -295,6 +322,11 @@ function BuiltInHero({
   command: string;
   image: string;
   clipName: string;
+  navLinks: string[];
+  navCta: string;
+  ink: string;
+  fontFamily: string;
+  logo: React.ReactNode;
 }) {
   const textIn = (i: number) =>
     interpolate(frame, [start + i * 3, start + i * 3 + 14], [0, 1], {
@@ -406,7 +438,7 @@ function BuiltInHero({
       style={{
         background: pal.window,
         overflow: "hidden",
-        fontFamily: geist.fontFamily,
+        fontFamily,
         fontWeight: 400,
       }}
     >
@@ -423,12 +455,8 @@ function BuiltInHero({
           color: pal.muted,
         }}
       >
-        <RemocnLogo fontSize={19 * u} color={pal.text} />
-        {portrait
-          ? null
-          : ["Components", "Templates", "Docs"].map((l) => (
-              <span key={l}>{l}</span>
-            ))}
+        {logo ?? <RemocnLogo fontSize={19 * u} color={pal.text} />}
+        {portrait ? null : navLinks.map((l) => <span key={l}>{l}</span>)}
         <span
           style={{
             marginLeft: "auto",
@@ -441,7 +469,7 @@ function BuiltInHero({
             color: pal.window,
           }}
         >
-          Get started
+          {navCta}
         </span>
       </div>
       <div
@@ -461,7 +489,7 @@ function BuiltInHero({
               fontWeight: 300,
               letterSpacing: "-0.04em",
               lineHeight: 1.04,
-              color: pal.text,
+              color: ink,
               textWrap: "balance",
               maxWidth: portrait ? "none" : 440 * u,
             }}
@@ -532,6 +560,24 @@ function BuiltInHero({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+const NAV_LINKS = ["Components", "Templates", "Docs"];
+
 export function UrlBarCta({
   url = "remocn.dev",
   children,
@@ -544,17 +590,28 @@ export function UrlBarCta({
   command = "npx shadcn add remocn/zoom-blur",
   image,
   clipName = "Zoom Blur",
+  navLinks = NAV_LINKS,
+  navCta = "Get started",
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  logo,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: UrlBarCtaProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const raw = useSceneFrame();
+  const frame = Math.max(0, raw - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const portrait = H > W;
   const u = portrait ? W / 760 : Math.min(W / 1280, H / 720);
   const pal = palette(theme);
+  const fg = ink ?? pal.text;
   const src = image ?? staticFile("reel/reel-2.jpg");
 
   const typeStart = 8;
@@ -594,12 +651,12 @@ export function UrlBarCta({
     easing: EXIT,
   });
 
-  const d = spring({
-    frame: frame - dock,
-    fps,
-    config: MORPH,
-    durationInFrames: 22,
-  });
+  const dockAt = (f: number) =>
+    spring({ frame: f - dock, fps, config: MORPH, durationInFrames: 22 });
+  const d = dockAt(frame);
+  const docking =
+    Math.abs(dockAt(frame + speed) - d) > 1e-6 ||
+    Math.abs(d - dockAt(frame - speed)) > 1e-6;
   const load = interpolate(frame, [dock, dock + 24], [0, 1], {
     ...CLAMP,
     easing: MOVE,
@@ -608,7 +665,12 @@ export function UrlBarCta({
     ...CLAMP,
     easing: EXIT,
   });
-  const push = interpolate(frame, [0, 120], [1, 1.03], CLAMP);
+  const pushAt = (r: number) =>
+    interpolate(Math.max(0, r - delay) * speed, [0, 120], [1, 1.03], CLAMP);
+  const push = pushAt(raw);
+  // The push carries the bar, the window and the key, so its tilt covers
+  // every piece of text riding inside them.
+  const pushMoving = pushAt(raw + 1) !== push || pushAt(raw - 1) !== push;
 
   const barW0 = Math.min(640 * u, W * 0.86);
   const barH0 = 62 * u;
@@ -632,9 +694,24 @@ export function UrlBarCta({
   const bh = lerp(barH0, barH1, d);
   const fontSize = lerp(26 * u, 16 * u, d);
   const radius = lerp(16 * u, 8 * u, d);
+  // A font size that eases moves the baseline inside the field by layout,
+  // which rounds it to whole pixels. While it docks the field is laid out at
+  // its docked size and scaled up to the live one about its left middle,
+  // nudged so the url keeps its live x; at rest it is plain layout.
+  const fieldK = docking ? fontSize / (16 * u) : 1;
+  const field = docking
+    ? { h: barH1, font: 16 * u, gap: 8 * u, pad: 12 * u, icon: 14 * u }
+    : {
+        h: bh,
+        font: fontSize,
+        gap: lerp(14, 8, d) * u,
+        pad: lerp(20, 12, d) * u,
+        icon: lerp(22, 14, d) * u,
+      };
+  const fieldDx =
+    (lerp(20, 12, d) + lerp(22, 14, d) + lerp(14, 8, d)) * u -
+    fieldK * (field.pad + field.icon + field.gap);
 
-  const wx = lerp(barX0, winX, d);
-  const wy = lerp(barY0, winY, d);
   const ww = lerp(barW0, winW, d);
   const wh = lerp(barH0, winH, d);
   const winOpacity = interpolate(d, [0, 0.12], [0, 1], CLAMP);
@@ -669,273 +746,343 @@ export function UrlBarCta({
   const gParams = groundParams ?? (ground ? undefined : pal.ground.params);
 
   return (
-    <AbsoluteFill style={{ fontFamily: geist.fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={pal.groundOffset}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 40%" }}
-      >
-        <div
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <GshGround
+          preset={preset}
+          params={gParams}
+          timeOffset={pal.groundOffset}
+          timeScale={0.5}
+        />
+      ) : (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: wx,
-            top: wy,
-            width: ww,
-            height: wh,
-            opacity: winOpacity,
-            borderRadius: lerp(16 * u, 14 * u, d),
-            background: pal.window,
-            overflow: "hidden",
-            boxShadow: pal.elevated,
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${push})${glide(pushMoving)}`,
+            transformOrigin: "50% 40%",
           }}
         >
           <div
             style={{
-              height: toolbarH,
-              background: pal.chrome,
-              boxShadow: `inset 0 -1px 0 ${pal.line}`,
-              display: "flex",
-              alignItems: "center",
-              padding: `0 ${16 * u}px`,
-              gap: 7 * u,
-              position: "relative",
-              opacity: interpolate(d, [0.3, 0.8], [0, 1], CLAMP),
+              // Laid out where the window docks; the morph out of the bar
+              // travels by transform, since layout rounds a box and a
+              // baseline to whole pixels and the window would click along.
+              position: "absolute",
+              left: winX,
+              top: winY,
+              transform: shift(
+                (barX0 - winX) * (1 - d),
+                (barY0 - winY) * (1 - d),
+              ),
+              width: ww,
+              height: wh,
+              opacity: winOpacity,
+              borderRadius: lerp(16 * u, 14 * u, d),
+              background: pal.window,
+              overflow: "hidden",
+              boxShadow: pal.elevated,
             }}
           >
-            {[0, 1, 2].map((k) => (
-              <span
-                key={k}
+            <div
+              style={{
+                height: toolbarH,
+                background: pal.chrome,
+                boxShadow: `inset 0 -1px 0 ${pal.line}`,
+                display: "flex",
+                alignItems: "center",
+                padding: `0 ${16 * u}px`,
+                gap: 7 * u,
+                position: "relative",
+                opacity: interpolate(d, [0.3, 0.8], [0, 1], CLAMP),
+              }}
+            >
+              {[0, 1, 2].map((k) => (
+                <span
+                  key={k}
+                  style={{
+                    width: 11 * u,
+                    height: 11 * u,
+                    borderRadius: 99,
+                    background: pal.dark
+                      ? "rgba(255,255,255,0.14)"
+                      : "rgba(20,20,30,0.14)",
+                  }}
+                />
+              ))}
+              <span style={{ width: 12 * u }} />
+              <Glyph d={ICON.arrowL} size={17 * u} color={pal.muted} />
+              <Glyph d={ICON.arrowR} size={17 * u} color={pal.faint} />
+              {/* Pushed right by an auto margin, the icons would follow the
+                  window's widening edge by layout, pixel by pixel. While it
+                  docks, a margin holds them at their docked place and a
+                  transform carries the difference. */}
+              <div
                 style={{
-                  width: 11 * u,
-                  height: 11 * u,
-                  borderRadius: 99,
-                  background: pal.dark
-                    ? "rgba(255,255,255,0.14)"
-                    : "rgba(20,20,30,0.14)",
+                  marginLeft: "auto",
+                  marginRight: docking ? ww - winW : undefined,
+                  transform: docking ? `translateX(${ww - winW}px)` : undefined,
+                  display: "flex",
+                  gap: 14 * u,
+                }}
+              >
+                <Glyph d={ICON.reload} size={16 * u} color={pal.muted} />
+                <Glyph d={ICON.share} size={16 * u} color={pal.muted} />
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  bottom: 0,
+                  height: 2 * u,
+                  width: `${load * 100}%`,
+                  background: accent,
+                  opacity: loadFade * (load > 0 ? 1 : 0),
                 }}
               />
-            ))}
-            <span style={{ width: 12 * u }} />
-            <Glyph d={ICON.arrowL} size={17 * u} color={pal.muted} />
-            <Glyph d={ICON.arrowR} size={17 * u} color={pal.faint} />
-            <div style={{ marginLeft: "auto", display: "flex", gap: 14 * u }}>
-              <Glyph d={ICON.reload} size={16 * u} color={pal.muted} />
-              <Glyph d={ICON.share} size={16 * u} color={pal.muted} />
             </div>
             <div
               style={{
                 position: "absolute",
                 left: 0,
-                bottom: 0,
-                height: 2 * u,
-                width: `${load * 100}%`,
-                background: accent,
-                opacity: loadFade * (load > 0 ? 1 : 0),
-              }}
-            />
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: (ww - winW) / 2,
-              width: winW,
-              top: toolbarH,
-              height: winH - toolbarH,
-              opacity: interpolate(d, [0.15, 0.45], [0, 1], CLAMP),
-            }}
-          >
-            {children ?? (
-              <BuiltInHero
-                pal={pal}
-                accent={accent}
-                frame={frame}
-                start={heroStart}
-                fps={fps}
-                u={u}
-                portrait={portrait}
-                headline={headline}
-                body={body}
-                cta={cta}
-                command={command}
-                image={src}
-                clipName={clipName}
-              />
-            )}
-          </div>
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            left: bx,
-            top: by,
-            width: bw,
-            height: bh + popupExtra,
-            borderRadius: radius,
-            background: d > 0.6 ? pal.docked : pal.bar,
-            boxShadow: d > 0.6 ? "none" : pal.float,
-            overflow: "hidden",
-            opacity: appearO,
-            transform: `translateY(${(1 - appear) * 18 * u}px) scale(${0.97 + 0.03 * appear})`,
-            transformOrigin: "50% 0%",
-          }}
-        >
-          <div
-            style={{
-              height: bh,
-              display: "flex",
-              alignItems: "center",
-              gap: lerp(14, 8, d) * u,
-              padding: `0 ${lerp(20, 12, d) * u}px`,
-              fontSize,
-              color: pal.text,
-              letterSpacing: "-0.015em",
-            }}
-          >
-            <Glyph
-              d={d > 0.5 ? ICON.lock : ICON.search}
-              size={lerp(22, 14, d) * u}
-              color={pal.faint}
-            />
-            <span
-              style={{
-                whiteSpace: "nowrap",
-                display: "flex",
-                alignItems: "center",
+                width: winW,
+                top: toolbarH,
+                transform: shift((ww - winW) / 2, 0),
+                height: winH - toolbarH,
+                opacity: interpolate(d, [0.15, 0.45], [0, 1], CLAMP),
               }}
             >
-              <span>{typedText}</span>
-              <span
-                style={{
-                  width: 2 * u,
-                  height: fontSize * 1.1,
-                  background: accent,
-                  marginLeft: 1,
-                  opacity: caretVisible ? 1 : 0,
-                }}
-              />
-              {completion ? (
-                <span
-                  style={{
-                    background: withAlpha(accent, pal.dark ? 0.38 : 0.2),
-                    borderRadius: 3 * u,
-                  }}
-                >
-                  {completion}
-                </span>
-              ) : null}
-            </span>
+              {children ?? (
+                <BuiltInHero
+                  pal={pal}
+                  accent={accent}
+                  frame={frame}
+                  start={heroStart}
+                  fps={fps}
+                  u={u}
+                  portrait={portrait}
+                  headline={headline}
+                  body={body}
+                  cta={cta}
+                  command={command}
+                  image={src}
+                  clipName={clipName}
+                  navLinks={navLinks}
+                  navCta={navCta}
+                  ink={fg}
+                  fontFamily={fontFamily}
+                  logo={logo}
+                />
+              )}
+            </div>
           </div>
-          <div style={{ height: 1, background: pal.line, opacity: suggest }} />
-          <div style={{ padding: listPad, opacity: suggest }}>
-            {suggestions.map((s, i) => {
-              const a = interpolate(
-                suggestOpen * 3 - i * 0.6,
-                [0, 1],
-                [0, 1],
-                CLAMP,
-              );
-              return (
-                <div
-                  key={s.main}
-                  style={{
-                    height: rowH,
-                    borderRadius: radius - listPad,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14 * u,
-                    padding: `0 ${14 * u}px`,
-                    background: i === 0 ? pal.rowSel : "transparent",
-                    fontSize: 17 * u,
-                    opacity: a,
-                    transform: `translateY(${(1 - a) * -6 * u}px)`,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {s.icon === "fav" ? (
-                    <Favicon size={20 * u} accent={accent} />
-                  ) : (
-                    <span style={{ width: 20 * u, display: "flex" }}>
-                      <Glyph
-                        d={s.icon === "search" ? ICON.search : ICON.clock}
-                        size={18 * u}
-                        color={pal.faint}
-                      />
-                    </span>
-                  )}
-                  <span style={{ color: pal.text }}>{s.main}</span>
-                  {s.sub ? (
-                    <span
-                      style={{
-                        color: pal.muted,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        minWidth: 0,
-                      }}
-                    >
-                      {s.sub}
-                    </span>
-                  ) : null}
-                  <span style={{ marginLeft: "auto", display: "flex" }}>
-                    {i === 0 ? (
-                      <Keycap label={s.hint} pal={pal} size={14 * u} />
-                    ) : (
-                      <span
-                        style={{
-                          fontFamily: mono.fontFamily,
-                          fontSize: 15 * u,
-                          color: pal.faint,
-                        }}
-                      >
-                        {s.hint}
-                      </span>
-                    )}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
-        <div
-          style={{
-            position: "absolute",
-            left: W / 2 - 70 * u,
-            top: H * (portrait ? 0.66 : 0.78) - 30 * u,
-            width: 140 * u,
-            height: 60 * u,
-            opacity: Math.min(1, keyShow * 1.4) * (1 - keyHide),
-            transform: `translateY(${(1 - keyShow) * 20 * u + press * 5 * u + keyHide * 14 * u}px) scale(${(0.9 + 0.1 * keyShow) * (1 - 0.04 * press)})`,
-          }}
-        >
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              borderRadius: 14 * u,
-              background: pal.keyTop,
-              boxShadow: `inset 0 1px 0 ${pal.dark ? "rgba(255,255,255,0.08)" : "#ffffff"}, 0 0 0 1px ${pal.line}, 0 ${(6 - 5 * press) * u}px 0 ${pal.keyEdge}, 0 ${(18 - 10 * press) * u}px ${(34 - 16 * press) * u}px rgba(0,0,0,${pal.dark ? 0.5 : 0.16})`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10 * u,
-              color: pal.text,
-              fontSize: 19 * u,
+              // Laid out where it is typed into; the dock is a transform,
+              // for the same reason as the window's.
+              left: barX0,
+              top: barY0,
+              width: bw,
+              height: bh + popupExtra,
+              borderRadius: radius,
+              background: d > 0.6 ? pal.docked : pal.bar,
+              boxShadow: d > 0.6 ? "none" : pal.float,
+              overflow: "hidden",
+              opacity: appearO,
+              transform: `translate(${bx - barX0}px, ${by - barY0 + (1 - appear) * 18 * u}px) scale(${0.97 + 0.03 * appear})`,
+              transformOrigin: "50% 0%",
             }}
           >
-            <Glyph
-              d={ICON.enter}
-              size={22 * u}
-              color={press > 0.2 ? accent : pal.muted}
-            />
-            Enter
+            <div
+              style={{
+                height: field.h,
+                display: "flex",
+                alignItems: "center",
+                gap: field.gap,
+                padding: `0 ${field.pad}px`,
+                fontSize: field.font,
+                color: fg,
+                letterSpacing: "-0.015em",
+                transform: docking
+                  ? `translate(${fieldDx}px, ${(bh - field.h) / 2}px) scale(${fieldK})`
+                  : undefined,
+                transformOrigin: docking ? "0 50%" : undefined,
+              }}
+            >
+              <Glyph
+                d={d > 0.5 ? ICON.lock : ICON.search}
+                size={field.icon}
+                color={pal.faint}
+              />
+              <span
+                style={{
+                  whiteSpace: "nowrap",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <span>{typedText}</span>
+                <span
+                  style={{
+                    width: 2 * u,
+                    height: field.font * 1.1,
+                    background: accent,
+                    marginLeft: 1 / fieldK,
+                    opacity: caretVisible ? 1 : 0,
+                  }}
+                />
+                {completion ? (
+                  <span
+                    style={{
+                      background: withAlpha(accent, pal.dark ? 0.38 : 0.2),
+                      borderRadius: 3 * u,
+                    }}
+                  >
+                    {completion}
+                  </span>
+                ) : null}
+              </span>
+            </div>
+            {/* The list sits under the field as typed into; as the field
+                shrinks into the dock the list rides up by transform, not
+                by reflow, which would click it up pixel by pixel. */}
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: barH0,
+                transform: shift(0, bh - barH0),
+              }}
+            >
+              <div
+                style={{ height: 1, background: pal.line, opacity: suggest }}
+              />
+              <div style={{ padding: listPad, opacity: suggest }}>
+                {suggestions.map((s, i) => {
+                  const a = interpolate(
+                    suggestOpen * 3 - i * 0.6,
+                    [0, 1],
+                    [0, 1],
+                    CLAMP,
+                  );
+                  return (
+                    <div
+                      key={s.main}
+                      style={{
+                        height: rowH,
+                        borderRadius: radius - listPad,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 14 * u,
+                        padding: `0 ${14 * u}px`,
+                        background: i === 0 ? pal.rowSel : "transparent",
+                        fontSize: 17 * u,
+                        opacity: a,
+                        transform: `translateY(${(1 - a) * -6 * u}px)`,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {s.icon === "fav" ? (
+                        <Favicon size={20 * u} accent={accent} />
+                      ) : (
+                        <span style={{ width: 20 * u, display: "flex" }}>
+                          <Glyph
+                            d={s.icon === "search" ? ICON.search : ICON.clock}
+                            size={18 * u}
+                            color={pal.faint}
+                          />
+                        </span>
+                      )}
+                      <span style={{ color: pal.text }}>{s.main}</span>
+                      {s.sub ? (
+                        <span
+                          style={{
+                            color: pal.muted,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            minWidth: 0,
+                          }}
+                        >
+                          {s.sub}
+                        </span>
+                      ) : null}
+                      <span
+                        style={{
+                          marginLeft: "auto",
+                          // Held where the bar was typed into while it docks,
+                          // for the same reason as the toolbar icons.
+                          marginRight: docking ? bw - barW0 : undefined,
+                          transform: docking
+                            ? `translateX(${bw - barW0}px)`
+                            : undefined,
+                          display: "flex",
+                        }}
+                      >
+                        {i === 0 ? (
+                          <Keycap label={s.hint} pal={pal} size={14 * u} />
+                        ) : (
+                          <span
+                            style={{
+                              fontFamily: mono.fontFamily,
+                              fontSize: 15 * u,
+                              color: pal.faint,
+                            }}
+                          >
+                            {s.hint}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-      </AbsoluteFill>
+
+          <div
+            style={{
+              position: "absolute",
+              left: W / 2 - 70 * u,
+              top: H * (portrait ? 0.66 : 0.78) - 30 * u,
+              width: 140 * u,
+              height: 60 * u,
+              opacity: Math.min(1, keyShow * 1.4) * (1 - keyHide),
+              transform: `translateY(${(1 - keyShow) * 20 * u + press * 5 * u + keyHide * 14 * u}px) scale(${(0.9 + 0.1 * keyShow) * (1 - 0.04 * press)})`,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: 14 * u,
+                background: pal.keyTop,
+                boxShadow: `inset 0 1px 0 ${pal.dark ? "rgba(255,255,255,0.08)" : "#ffffff"}, 0 0 0 1px ${pal.line}, 0 ${(6 - 5 * press) * u}px 0 ${pal.keyEdge}, 0 ${(18 - 10 * press) * u}px ${(34 - 16 * press) * u}px rgba(0,0,0,${pal.dark ? 0.5 : 0.16})`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10 * u,
+                color: pal.text,
+                fontSize: 19 * u,
+              }}
+            >
+              <Glyph
+                d={ICON.enter}
+                size={22 * u}
+                color={press > 0.2 ? accent : pal.muted}
+              />
+              Enter
+            </div>
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

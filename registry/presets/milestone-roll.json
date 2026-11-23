@@ -1,0 +1,125 @@
+{
+  "component": "milestone-roll",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "arcade-blitz",
+      "label": "Arcade Blitz",
+      "description": "A fast, punchy scoreboard climb in monospace over a warm ember ground with a hot orange accent.",
+      "askedAs": [
+        "fast arcade scoreboard counter",
+        "quick game score count up",
+        "snappy retro number race",
+        "быстрый счётчик как в игре",
+        "аркадный счёт очков"
+      ],
+      "props": {
+        "run": 7,
+        "hold": 6,
+        "fontFamily": "JetBrains Mono",
+        "ground": "ember",
+        "accent": "#ff7a3d",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "editorial-ascent",
+      "label": "Editorial Ascent",
+      "description": "A slow, composed serif count on a light paper ground with an ink-blue accent.",
+      "askedAs": [
+        "elegant slow milestone count",
+        "light serif growth announcement",
+        "calm editorial number reveal",
+        "элегантный медленный счётчик",
+        "светлая версия с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "run": 28,
+        "hold": 26,
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "accent": "#1e3a8a"
+      }
+    },
+    {
+      "id": "midnight-orbit",
+      "label": "Midnight Orbit",
+      "description": "A deep-space counter on a low-orbit ground with a cool cyan accent and steady pacing.",
+      "askedAs": [
+        "space themed user milestone",
+        "dark blue cosmic counter",
+        "night sky growth stat",
+        "космический счётчик на тёмном фоне",
+        "тёмно-синяя тема с голубым"
+      ],
+      "props": {
+        "ground": "low-orbit",
+        "accent": "#5cc8e0",
+        "fontFamily": "Geist",
+        "run": 20,
+        "hold": 18
+      }
+    },
+    {
+      "id": "velvet-celebration",
+      "label": "Velvet Celebration",
+      "description": "A rich garnet-and-gold celebration with a bold grotesque face set a touch larger.",
+      "askedAs": [
+        "luxurious milestone celebration",
+        "burgundy and gold counter",
+        "premium launch growth number",
+        "праздничный бордовый счётчик",
+        "роскошное празднование миллиона"
+      ],
+      "props": {
+        "ground": "garnet",
+        "accent": "#e8b85c",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.25,
+        "hold": 20
+      }
+    },
+    {
+      "id": "quiet-mono",
+      "label": "Quiet Mono",
+      "description": "A minimal charcoal counter in Inter with a soft grey-white palette and a muted sage accent.",
+      "askedAs": [
+        "minimal understated counter",
+        "clean grey stat roll",
+        "subtle corporate milestone",
+        "минималистичный серый счётчик",
+        "сдержанная строгая анимация цифр"
+      ],
+      "props": {
+        "ground": "charcoal-satin",
+        "accent": "#8fb8a0",
+        "fontFamily": "Inter",
+        "ink": "#ededed",
+        "scale": 0.9,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "sunrise-pop",
+      "label": "Sunrise Pop",
+      "description": "A bright, upbeat light-theme roll over a static-sunset gradient with a coral accent and quick tempo.",
+      "askedAs": [
+        "bright cheerful growth counter",
+        "warm sunset gradient milestone",
+        "upbeat social media stat",
+        "яркий тёплый счётчик для соцсетей",
+        "весёлый закатный градиент"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "static-sunset",
+        "accent": "#e5533d",
+        "fontFamily": "Manrope",
+        "speed": 1.5,
+        "delay": 8
+      }
+    }
+  ]
+}

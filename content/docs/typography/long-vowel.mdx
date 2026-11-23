@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="LongVowel"
     component={LongVowelScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -68,6 +68,18 @@ The word rises into place, then the chosen letter is drawn out with spring-drive
       description: "How many extra copies of the letter are drawn out.",
     },
     {
+      name: "stretchAt",
+      type: "number",
+      default: "28",
+      description: "Frame the vowel starts to stretch.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "4",
+      description: "Frames between the extra copies of the vowel drawing out.",
+    },
+    {
       name: "rest",
       type: "string",
       default: "\"less keyframing.\"",
@@ -80,9 +92,20 @@ The word rises into place, then the chosen letter is drawn out with spring-drive
       description: "Accent color that seeds the gradient across the stretched letters.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Override the background color; use \"transparent\" to composite over your own.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Fraunces\"",
+      description: "Typeface for the copy. Load the font in your project first.",
     },
     {
       name: "speed",
@@ -95,6 +118,24 @@ The word rises into place, then the chosen letter is drawn out with spring-drive
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
       description: "Light or dark ground; the component ships both.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
   ]}
 />

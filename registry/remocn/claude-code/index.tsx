@@ -1,14 +1,10 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/JetBrainsMono";
-import {
-  AbsoluteFill,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, spring } from "remotion";
 import { Caret } from "@/components/remocn/caret";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import { useTypewriter } from "@/lib/remocn-ui";
 
 const { fontFamily: MONO_FAMILY } = loadFont();
@@ -93,6 +89,8 @@ function fadeUpAt(
   };
 }
 
+const midway = (p: number) => p > 0 && p < 1;
+
 function Mascot({ accent, size = 96 }: { accent: string; size?: number }) {
   return (
     <svg
@@ -122,8 +120,9 @@ export function ClaudeCode({
   accentColor = "#D97757",
   speed = 1,
 }: ClaudeCodeProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const t = THEMES.dark;
 
   const refW = 1280;
@@ -141,6 +140,21 @@ export function ClaudeCode({
   const leftFade = fadeUpAt(frame * speed, [6, 22]);
   const rightFade = fadeUpAt(frame * speed, [12, 30]);
   const promptFade = fadeUpAt(frame * speed, [18, 36]);
+  // The intro spring overshoots and has a long tail, so "moving" is read off
+  // the neighbouring frames, in px: the drop, and the scale over the window's
+  // height below its top-centre origin.
+  const introPx = (ff: number) => {
+    const b = introBounceIn(ff, fps);
+    return [b.translateY, b.scale * 620];
+  };
+  const introNow = introPx(frame * speed);
+  const introPrev = introPx((frame - 1) * speed);
+  const introNext = introPx((frame + 1) * speed);
+  const introMoving = introNow.some(
+    (v, i) =>
+      Math.abs(v - introPrev[i]) > 1e-3 || Math.abs(introNext[i] - v) > 1e-3,
+  );
+  const lift = (p: number) => glide(midway(p));
 
   const border = accentColor;
 
@@ -175,8 +189,7 @@ export function ClaudeCode({
             overflow: "hidden",
             boxShadow: "0 24px 60px -20px rgba(0,0,0,0.6)",
             opacity: intro.scale,
-            translate: `0 ${intro.translateY}px`,
-            scale: `${intro.scale}`,
+            transform: `translateY(${intro.translateY}px) scale(${intro.scale})${glide(introMoving)}`,
             transformOrigin: "center top",
             display: "flex",
             flexDirection: "column",
@@ -237,7 +250,7 @@ export function ClaudeCode({
                 borderRadius: 6,
                 padding: "28px 24px 24px",
                 opacity: leftFade.opacity,
-                translate: `0 ${leftFade.translateY}px`,
+                transform: `translateY(${leftFade.translateY}px)${lift(leftFade.opacity)}`,
               }}
             >
               <span
@@ -317,7 +330,7 @@ export function ClaudeCode({
                     display: "flex",
                     flexDirection: "column",
                     opacity: rightFade.opacity,
-                    translate: `0 ${rightFade.translateY}px`,
+                    transform: `translateY(${rightFade.translateY}px)${lift(rightFade.opacity)}`,
                   }}
                 >
                   <div>
@@ -371,7 +384,7 @@ export function ClaudeCode({
             <div
               style={{
                 opacity: promptFade.opacity,
-                translate: `0 ${promptFade.translateY}px`,
+                transform: `translateY(${promptFade.translateY}px)${lift(promptFade.opacity)}`,
               }}
             >
               <div

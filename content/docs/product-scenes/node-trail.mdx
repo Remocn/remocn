@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="NodeTrail"
     component={NodeTrailScene}
-    durationInFrames={193}
-    fps={30}
+    durationInFrames={386}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -68,6 +68,40 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "accent",
       type: "string",
       description: "Accent color for the prompt and trails.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
     {
       name: "prompt",
@@ -104,6 +138,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "string",
       default: "\"launch-film.flow\"",
       description: "File name shown on the board chrome.",
+    },
+    {
+      name: "draw",
+      type: "number",
+      default: "22",
+      description: "Frames to draw the first edge; each later edge is a little quicker.",
+    },
+    {
+      name: "pause",
+      type: "number",
+      default: "10",
+      description: "Frames the camera rests on a node before the next edge; shrinks along the trail.",
+    },
+    {
+      name: "motionBlur",
+      type: "boolean",
+      default: "true",
+      description: "Blur along the camera's motion as it travels between nodes.",
     },
     {
       name: "ground",

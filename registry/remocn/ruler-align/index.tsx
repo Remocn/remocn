@@ -2,6 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -9,9 +10,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const face = loadFont("normal", { weights: ["300"], subsets: ["latin"] });
 const mono = loadMono("normal", { weights: ["400"], subsets: ["latin"] });
@@ -21,6 +22,19 @@ export interface RulerAlignProps {
   text?: string;
   /** The ruler's straight edge. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between letters as they fade in. */
+  stagger?: number;
+  /** Size of the line and ruler, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -108,22 +122,47 @@ function hop(f: number, at: number) {
   return 0.07 * Math.sin((Math.PI * d) / 10);
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RulerAlign({
   text = "Made to measure.",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = face.fontFamily,
+  fontWeight = 300,
+  stagger = IN_STAGGER,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: RulerAlignProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
+  const fg = ink ?? t.fg;
   const clipId = `ruler-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const em = Math.round(width * 0.088);
   const textStyle = {
-    fontFamily: face.fontFamily,
+    fontFamily,
     fontSize: em,
-    fontWeight: 300,
+    fontWeight,
     letterSpacing: "-0.035em",
     lineHeight: LINE_HEIGHT,
     whiteSpace: "pre",
@@ -139,7 +178,11 @@ export function RulerAlign({
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-measure when the copy or size changes
   useLayoutEffect(() => {
     let live = true;
-    Promise.all([face.waitUntilDone(), mono.waitUntilDone()])
+    Promise.all([
+      face.waitUntilDone(),
+      mono.waitUntilDone(),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
+    ])
       .catch(() => undefined)
       .then(() => document.fonts.ready)
       .then(() => {
@@ -168,7 +211,7 @@ export function RulerAlign({
     return () => {
       live = false;
     };
-  }, [text, em, handle]);
+  }, [text, em, handle, fontFamily, fontWeight]);
 
   const L = layout;
   const textW = L?.w ?? 0;
@@ -195,24 +238,37 @@ export function RulerAlign({
   // Ruler motion.
   const rulerW = textW + em * 1.4;
   const rulerX0 = width / 2 - rulerW / 2;
-  const inP = interpolate(frame, [RULER_IN, RULER_IN + RULER_IN_LEN], [0, 1], {
-    ...clamp,
-    easing: EASE_OUT,
-  });
-  const level = interpolate(frame, [LEVEL, LEVEL + LEVEL_LEN], [0, 1], {
-    ...clamp,
-    easing: EASE_IN_OUT,
-  });
-  const rise = interpolate(frame, [RISE, RISE + RISE_LEN], [0, 1], {
-    ...clamp,
-    easing: EASE_IN_OUT,
-  });
-  const dip = (tapDip(frame, TAP_1) + tapDip(frame, TAP_2)) * em;
-  /** Height of the ruler's top edge above the baseline (negative is below). */
-  const edge = -em * PARK * (1 - rise);
-  const rulerX = interpolate(inP, [0, 1], [-rulerW - em, rulerX0]);
-  const rulerTilt = interpolate(inP, [0, 1], [-5, -2.2]) * (1 - level);
-  const rulerTop = baseY - edge + dip;
+  const inAt = (f: number) =>
+    interpolate(f, [RULER_IN, RULER_IN + RULER_IN_LEN], [0, 1], {
+      ...clamp,
+      easing: EASE_OUT,
+    });
+  const levelAt = (f: number) =>
+    interpolate(f, [LEVEL, LEVEL + LEVEL_LEN], [0, 1], {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    });
+  const inP = inAt(frame);
+  const riseAt = (f: number) =>
+    interpolate(f, [RISE, RISE + RISE_LEN], [0, 1], {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    });
+  const tiltAt = (f: number) =>
+    interpolate(inAt(f), [0, 1], [-5, -2.2]) * (1 - levelAt(f));
+  const rulerTilt = tiltAt(frame);
+  // The ruler is laid out where it rests, against the baseline, and travels
+  // there by transform: layout rounds a box to whole pixels, so a ruler eased
+  // by `top` steps along with its numbers.
+  const rulerDx = (-rulerW - em - rulerX0) * (1 - inP);
+  const rulerDrop = (f: number) =>
+    em * PARK * (1 - riseAt(f)) + (tapDip(f, TAP_1) + tapDip(f, TAP_2)) * em;
+  const rulerDy = rulerDrop(frame);
+  const rulerMoving =
+    Math.abs(rulerDrop(frame + 1) - rulerDy) > 1e-3 ||
+    Math.abs(rulerDy - rulerDrop(frame - 1)) > 1e-3 ||
+    Math.abs(tiltAt(frame + 1) - rulerTilt) > 1e-6 ||
+    Math.abs(rulerTilt - tiltAt(frame - 1)) > 1e-6;
 
   // High letters drop onto the edge once it reaches the baseline, left to right.
   const highOrder: number[] = [];
@@ -221,23 +277,18 @@ export function RulerAlign({
   });
 
   // Kerning: each tap moves the letters halfway home.
-  const slideP = (i: number, at: number) =>
-    interpolate(
-      frame,
-      [at + 2 + (i % 4), at + 2 + (i % 4) + SLIDE_LEN],
-      [0, 1],
-      { ...clamp, easing: EASE_IN_OUT },
-    );
+  const slideP = (i: number, at: number, f = frame) =>
+    interpolate(f, [at + 2 + (i % 4), at + 2 + (i % 4) + SLIDE_LEN], [0, 1], {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    });
 
-  const glyphs = chars.map((ch, i) => {
-    if (ch === " ") return null;
+  /** Where letter `i` sits on frame `f`: lift, its own tilt and squash. */
+  const pose = (i: number, f: number) => {
     const m = mess[i];
-    const w = L?.ws[i] ?? 0;
-    const home = left + (L?.xs[i] ?? 0);
-
     const fade = interpolate(
-      frame,
-      [IN + i * IN_STAGGER, IN + i * IN_STAGGER + 18],
+      f,
+      [IN + i * stagger, IN + i * stagger + 18],
       [0, 1],
       { ...clamp, easing: EASE_OUT },
     );
@@ -248,31 +299,56 @@ export function RulerAlign({
     let sx = 1;
     let sy = 1;
     if (m.dy > 0) {
-      // Low letter: the rising edge pushes it up and flattens it.
-      const lift = Math.max(0, -edge);
+      // Low letter: the rising edge (PARK em below the baseline at first)
+      // pushes it up and flattens it.
+      const lift = Math.max(0, em * PARK * (1 - riseAt(f)));
       y = Math.min(m.dy, lift);
       rot = m.rot * (y / m.dy);
     } else {
       const k = highOrder.indexOf(i);
       const start = DROP + k * DROP_STAGGER;
-      const p = interpolate(frame, [start, start + FALL], [0, 1], {
+      const p = interpolate(f, [start, start + FALL], [0, 1], {
         ...clamp,
         easing: EASE_FALL,
       });
       y = m.dy * (1 - p);
       rot = m.rot * (1 - p);
-      const d = frame - (start + FALL);
+      const d = f - (start + FALL);
       if (d >= 0 && d < 7) {
         const b = Math.sin((Math.PI * d) / 7) * (1 - d / 9);
         sx = 1 + 0.025 * b;
         sy = 1 - 0.05 * b;
       }
     }
-    y += dip - (hop(frame, TAP_1) + hop(frame, TAP_2)) * em;
+    y +=
+      (tapDip(f, TAP_1) + tapDip(f, TAP_2)) * em -
+      (hop(f, TAP_1) + hop(f, TAP_2)) * em;
+    return { fade, y: y + (1 - fade) * em * 0.12, rot, sx, sy };
+  };
 
-    const k1 = slideP(i, TAP_1);
-    const k2 = slideP(i, TAP_2);
-    const x = home + m.off * (1 - 0.55 * k1 - 0.45 * k2);
+  const glyphs = chars.map((ch, i) => {
+    if (ch === " ") return null;
+    const m = mess[i];
+    const w = L?.ws[i] ?? 0;
+    const home = left + (L?.xs[i] ?? 0);
+    const { fade, y, rot, sx, sy } = pose(i, frame);
+    // The kerning slide is laid out where it ends and travels there by
+    // transform: a letter handed from one layout `left` to the next jumps by
+    // the rounding.
+    const xOf = (k1: number, k2: number) =>
+      home + m.off * (1 - 0.55 * k1 - 0.45 * k2);
+    const xAt = (f: number) => xOf(slideP(i, TAP_1, f), slideP(i, TAP_2, f));
+    const xRest = xOf(1, 1);
+    const x = xAt(frame);
+    // Marked as moving while the letter travels or squashes.
+    const near = (a: ReturnType<typeof pose>, b: ReturnType<typeof pose>) =>
+      Math.abs(a.y - b.y) <= 1e-3 && Math.abs(a.sy - b.sy) <= 1e-6;
+    const here = { fade, y, rot, sx, sy };
+    const moving =
+      !near(pose(i, frame + 1), here) ||
+      !near(here, pose(i, frame - 1)) ||
+      Math.abs(xAt(frame + 1) - x) > 1e-3 ||
+      Math.abs(x - xAt(frame - 1)) > 1e-3;
 
     return (
       <span
@@ -280,13 +356,13 @@ export function RulerAlign({
         style={{
           ...textStyle,
           position: "absolute",
-          left: x,
+          left: xRest,
           top: rowTop,
-          color: t.fg,
+          color: fg,
           opacity: fade,
           filter: fade < 1 ? `blur(${(1 - fade) * 8}px)` : undefined,
           transformOrigin: `${w / 2}px ${L?.baseline ?? em}px`,
-          transform: `translateY(${y + (1 - fade) * em * 0.12}px) rotate(${rot}deg) scale(${sx}, ${sy})`,
+          transform: `translate(${x - xRest}px, ${y}px) rotate(${rot}deg) scale(${sx}, ${sy})${glide(moving)}`,
         }}
       >
         {ch}
@@ -311,7 +387,13 @@ export function RulerAlign({
   const hair = Math.max(1.5, width / 720);
 
   return (
-    <AbsoluteFill style={{ background: t.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? t.bg),
+        overflow: "hidden",
+      }}
+    >
       {/* measuring row: never shown */}
       <div style={{ position: "absolute", visibility: "hidden", top: 0 }}>
         <div ref={rowRef} style={{ ...textStyle, display: "inline-block" }}>
@@ -327,80 +409,82 @@ export function RulerAlign({
         </div>
       </div>
 
-      <div style={{ position: "absolute", inset: 0, opacity: L ? 1 : 0 }}>
-        <div
-          style={{
-            position: "absolute",
-            left: rulerX,
-            top: rulerTop,
-            width: rulerW,
-            height: em * RULER_H,
-            transformOrigin: "50% 0%",
-            transform: `rotate(${rulerTilt}deg)`,
-            opacity: inP,
-          }}
-        >
-          <svg
-            width={rulerW}
-            height={em * RULER_H}
-            style={{ display: "block", overflow: "visible" }}
-            aria-hidden
+      <ScaleLayer scale={scale}>
+        <div style={{ position: "absolute", inset: 0, opacity: L ? 1 : 0 }}>
+          <div
+            style={{
+              position: "absolute",
+              left: rulerX0,
+              top: baseY,
+              width: rulerW,
+              height: em * RULER_H,
+              transformOrigin: "50% 0%",
+              transform: `translate(${rulerDx}px, ${rulerDy}px) rotate(${rulerTilt}deg)${glide(rulerMoving)}`,
+              opacity: inP,
+            }}
           >
-            <defs>
-              <clipPath id={clipId}>
-                <rect
-                  x={0}
-                  y={0}
-                  width={rulerW}
-                  height={em * RULER_H}
-                  rx={em * 0.04}
-                />
-              </clipPath>
-            </defs>
-            <rect
-              x={0.5}
-              y={0.5}
-              width={rulerW - 1}
-              height={em * RULER_H - 1}
-              rx={em * 0.04}
-              fill={t.rulerFill}
-              stroke={t.rulerLine}
-              strokeWidth={1}
-            />
-            <g clipPath={`url(#${clipId})`}>
-              {ticks.map((tk) => (
-                <line
-                  key={tk.x}
-                  x1={tk.x}
-                  x2={tk.x}
-                  y1={0}
-                  y2={tk.h * em}
-                  stroke={t.tick}
-                  strokeWidth={1}
-                />
-              ))}
-              {ticks.map((tk) =>
-                tk.n === null ? null : (
-                  <text
-                    key={`n${tk.x}`}
-                    x={tk.x + em * 0.035}
-                    y={em * 0.33}
-                    fill={t.num}
-                    fontFamily={mono.fontFamily}
-                    fontSize={em * 0.095}
-                  >
-                    {tk.n}
-                  </text>
-                ),
-              )}
-            </g>
-            {/* the straight edge */}
-            <rect x={0} y={0} width={rulerW} height={hair} fill={accent} />
-          </svg>
-        </div>
+            <svg
+              width={rulerW}
+              height={em * RULER_H}
+              style={{ display: "block", overflow: "visible" }}
+              aria-hidden
+            >
+              <defs>
+                <clipPath id={clipId}>
+                  <rect
+                    x={0}
+                    y={0}
+                    width={rulerW}
+                    height={em * RULER_H}
+                    rx={em * 0.04}
+                  />
+                </clipPath>
+              </defs>
+              <rect
+                x={0.5}
+                y={0.5}
+                width={rulerW - 1}
+                height={em * RULER_H - 1}
+                rx={em * 0.04}
+                fill={t.rulerFill}
+                stroke={t.rulerLine}
+                strokeWidth={1}
+              />
+              <g clipPath={`url(#${clipId})`}>
+                {ticks.map((tk) => (
+                  <line
+                    key={tk.x}
+                    x1={tk.x}
+                    x2={tk.x}
+                    y1={0}
+                    y2={tk.h * em}
+                    stroke={t.tick}
+                    strokeWidth={1}
+                  />
+                ))}
+                {ticks.map((tk) =>
+                  tk.n === null ? null : (
+                    <text
+                      key={`n${tk.x}`}
+                      x={tk.x + em * 0.035}
+                      y={em * 0.33}
+                      fill={t.num}
+                      fontFamily={mono.fontFamily}
+                      fontSize={em * 0.095}
+                    >
+                      {tk.n}
+                    </text>
+                  ),
+                )}
+              </g>
+              {/* the straight edge */}
+              <rect x={0} y={0} width={rulerW} height={hair} fill={accent} />
+            </svg>
+          </div>
 
-        {glyphs}
-      </div>
+          {glyphs}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

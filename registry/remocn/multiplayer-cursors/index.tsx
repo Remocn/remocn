@@ -2,14 +2,9 @@
 
 import { loadFont as loadFigtree } from "@remotion/google-fonts/Figtree";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -32,8 +27,22 @@ export interface MultiplayerCursorsProps {
   headline?: string;
   stickyText?: string;
   commentText?: string;
+  /** Label of the share button in the header. */
+  shareLabel?: string;
+  /** Text inside the round shape that gets dragged. */
+  shapeLabel?: string;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Size of the board, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -55,6 +64,8 @@ const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
 const CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 function withAlpha(color: string, alpha: number) {
   const hex = color.replace("#", "");
@@ -570,24 +581,49 @@ function BoardCard({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MultiplayerCursors({
   collaborators = DEFAULT_COLLABORATORS,
   boardTitle = "Launch plan",
   headline = "Plan the launch together",
   stickyText = "Record the hero demo by Friday",
   commentText = "Love this. Ship it Friday.",
+  shareLabel = "Share",
+  shapeLabel = "Launch day",
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = figtree.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: MultiplayerCursorsProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const tall = height > width;
   const L = layout(tall);
   const u = Math.min(width / L.stage.w, height / L.stage.h);
-  const pal = palette(theme);
+  const themed = palette(theme);
+  const pal = ink ? { ...themed, text: ink } : themed;
   const WIN = L.win;
   const people = L.actors.map(
     (_, i) =>
@@ -596,6 +632,11 @@ export function MultiplayerCursors({
   );
   const sp = (at: number, config: Partial<typeof CARD>) =>
     spring({ frame: frame - at, fps, config });
+  // A spring has no clean 0..1 progress, so "is it moving" is read off the
+  // neighbouring frames.
+  const moves = (at: (f: number) => number) =>
+    Math.abs(at(frame + 1) - at(frame)) > 1e-5 ||
+    Math.abs(at(frame) - at(frame - 1)) > 1e-5;
 
   const tbX = (WIN.w - TOOLBAR_W) / 2;
   const tbY = WIN.h - 16 - TOOLBAR_H;
@@ -612,12 +653,15 @@ export function MultiplayerCursors({
   );
   const cur = actors.map((a) => cursorAt(a, frame, fps));
 
-  const win = sp(0, HEAVY);
+  const winAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
+  const win = winAt(frame);
+  const winMoving = moves(winAt);
   const winFade = interpolate(frame, [0, 12], [0, 1], { ...CL, easing: ENTER });
   const cam = interpolate(frame, [20, 260], [1, 1.04], {
     ...CL,
     easing: CAMERA,
   });
+  const camMoving = midway(interpolate(frame, [20, 260], [0, 1], CL));
   const camO = { x: WIN.w / 2, y: WIN.h * 0.45 };
   const toScreen = (p: { x: number; y: number }) => ({
     x: camO.x + (p.x - camO.x) * cam,
@@ -664,6 +708,11 @@ export function MultiplayerCursors({
   const SH = L.shape;
   const shapeX = SH.x + held.x - grab.x;
   const shapeY = SH.y + held.y - grab.y;
+  const dropped = along(pri.keys, 110, fps);
+  const shapeRest = {
+    x: SH.x + dropped.x - grab.x,
+    y: SH.y + dropped.y - grab.y,
+  };
   const lift = dragging ? 1 : 1 - drop;
   const shapeScale = 1 + 0.05 * lift;
 
@@ -695,416 +744,451 @@ export function MultiplayerCursors({
   return (
     <AbsoluteFill
       style={{
-        fontFamily: figtree.fontFamily,
+        fontFamily,
         WebkitFontSmoothing: "antialiased",
         overflow: "hidden",
       }}
     >
-      <GshGround
-        preset={ground ?? (pal.dark ? "charcoal-satin" : "paper-crease")}
-        params={
-          groundParams ??
-          (pal.dark || ground
-            ? undefined
-            : {
-                colors: ["#f4c2a0", "#f9e0cc", "#f1ebe3", "#cdb8a3"],
-                background: "#efebe4",
-              })
-        }
-        timeOffset={pal.dark ? 4 : 3}
-        timeScale={0.35}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - L.stage.w * u) / 2,
-          top: (height - L.stage.h * u) / 2,
-          width: L.stage.w,
-          height: L.stage.h,
-          transform: `scale(${u})`,
-          transformOrigin: "0 0",
-        }}
-      >
-        {tall ? (
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? (pal.dark ? "charcoal-satin" : "paper-crease")}
+          params={
+            groundParams ??
+            (pal.dark || ground
+              ? undefined
+              : {
+                  colors: ["#f4c2a0", "#f9e0cc", "#f1ebe3", "#cdb8a3"],
+                  background: "#efebe4",
+                })
+          }
+          timeOffset={pal.dark ? 4 : 3}
+          timeScale={0.35}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: (width - L.stage.w * u) / 2,
+            top: (height - L.stage.h * u) / 2,
+            width: L.stage.w,
+            height: L.stage.h,
+            transform: `scale(${u})`,
+            transformOrigin: "0 0",
+          }}
+        >
+          {tall ? (
+            <div
+              style={{
+                position: "absolute",
+                left: WIN.x,
+                top: 150,
+                width: WIN.w,
+                fontSize: 52,
+                fontWeight: 300,
+                letterSpacing: "-0.035em",
+                lineHeight: 1.04,
+                color: ink ?? (pal.dark ? "#F2F2F4" : "#1C1B19"),
+                opacity: headIn,
+                transform: `translateY(${(1 - headIn) * 18}px)${glide(midway(headIn))}`,
+              }}
+            >
+              {headline}
+            </div>
+          ) : null}
           <div
             style={{
               position: "absolute",
               left: WIN.x,
-              top: 150,
+              top: WIN.y,
               width: WIN.w,
-              fontSize: 52,
-              fontWeight: 300,
-              letterSpacing: "-0.035em",
-              lineHeight: 1.04,
-              color: pal.dark ? "#F2F2F4" : "#1C1B19",
-              opacity: headIn,
-              transform: `translateY(${(1 - headIn) * 18}px)`,
-            }}
-          >
-            {headline}
-          </div>
-        ) : null}
-        <div
-          style={{
-            position: "absolute",
-            left: WIN.x,
-            top: WIN.y,
-            width: WIN.w,
-            height: WIN.h,
-            opacity: winFade,
-            transformOrigin: "50% 45%",
-            transform: `translateY(${(1 - win) * 60}px) scale(${0.96 + 0.04 * win})`,
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: 18,
-              overflow: "hidden",
-              background: pal.canvas,
-              boxShadow: pal.window,
+              height: WIN.h,
+              opacity: winFade,
+              transformOrigin: "50% 45%",
+              transform: `translateY(${(1 - win) * 60}px) scale(${0.96 + 0.04 * win})${glide(winMoving)}`,
             }}
           >
             <div
               style={{
                 position: "absolute",
                 inset: 0,
-                transform: `scale(${cam})`,
-                transformOrigin: `${camO.x}px ${camO.y}px`,
+                borderRadius: 18,
+                overflow: "hidden",
+                background: pal.canvas,
+                boxShadow: pal.window,
               }}
             >
               <div
                 style={{
                   position: "absolute",
-                  inset: -120,
-                  backgroundImage: `radial-gradient(circle, ${pal.dot} 1px, transparent 1.4px)`,
-                  backgroundSize: "22px 22px",
-                }}
-              />
-
-              <div
-                style={{
-                  position: "absolute",
-                  left: L.frame.x,
-                  top: L.frame.y,
-                  width: L.frame.w,
-                  height: L.frame.h,
-                  boxSizing: "border-box",
-                  background: withAlpha(accent, pal.dark ? 0.06 : 0.035),
-                  boxShadow: `inset 0 0 0 1px ${withAlpha(accent, 0.4)}`,
-                  borderRadius: 12,
-                }}
-              />
-              {COLUMNS.map((c, i) => (
-                <div
-                  key={c}
-                  style={{
-                    position: "absolute",
-                    left: L.heads[i].x + 2,
-                    top: L.heads[i].y,
-                    fontSize: 15,
-                    color: pal.muted,
-                  }}
-                >
-                  {c}
-                </div>
-              ))}
-              {cards.map((card) => (
-                <BoardCard
-                  key={card.title}
-                  card={card}
-                  pal={pal}
-                  outline={
-                    card === SELECTED && selOn ? people[1].color : undefined
-                  }
-                />
-              ))}
-              {marquee ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: Math.min(loose.x, leo.x),
-                    top: Math.min(loose.y, leo.y),
-                    width: Math.abs(leo.x - loose.x),
-                    height: Math.abs(leo.y - loose.y),
-                    background: withAlpha(people[1].color, 0.08),
-                    boxShadow: `inset 0 0 0 1px ${people[1].color}`,
-                  }}
-                />
-              ) : null}
-              {selOn ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: selBox.x,
-                    top: selBox.y,
-                    width: selBox.w,
-                    height: selBox.h,
-                    boxShadow: `inset 0 0 0 1.5px ${people[1].color}`,
-                    borderRadius: interpolate(snap, [0, 1], [0, 10]),
-                  }}
-                >
-                  {[
-                    [0, 0],
-                    [1, 0],
-                    [0, 1],
-                    [1, 1],
-                  ].map(([hx, hy]) => (
-                    <div
-                      key={`${hx}${hy}`}
-                      style={{
-                        position: "absolute",
-                        left: `calc(${hx * 100}% - 4px)`,
-                        top: `calc(${hy * 100}% - 4px)`,
-                        width: 8,
-                        height: 8,
-                        background: "#fff",
-                        boxShadow: `inset 0 0 0 1.5px ${people[1].color}`,
-                        borderRadius: 2,
-                        transform: `scale(${snap})`,
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : null}
-              <div
-                style={{
-                  position: "absolute",
-                  left: shapeX - SH.r,
-                  top: shapeY - SH.r,
-                  width: SH.r * 2,
-                  height: SH.r * 2,
-                  borderRadius: "50%",
-                  background: pal.shape,
-                  boxShadow: `inset 0 0 0 ${dragging ? 2 : 1}px ${dragging ? people[2].color : "rgba(20,67,42,0.25)"}, 0 ${2 + 12 * lift}px ${6 + 20 * lift}px -4px rgba(0,0,0,${0.1 + 0.14 * lift})`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 15,
-                  color: pal.shapeText,
-                  transform: `scale(${shapeScale})`,
+                  inset: 0,
+                  // The camera drifts for nearly the whole clip, so its mark
+                  // covers every label on the board.
+                  transform: `scale(${cam})${glide(camMoving)}`,
+                  transformOrigin: `${camO.x}px ${camO.y}px`,
                 }}
               >
-                Launch day
-              </div>
-              {ghost || frame >= 65 ? (
                 <div
                   style={{
                     position: "absolute",
-                    left: ghost ? cur[0].x - 76 : L.sticky.x,
-                    top: ghost ? cur[0].y - 20 : L.sticky.y,
-                    width: L.sticky.w,
-                    height: L.sticky.h,
-                    background: pal.sticky,
-                    opacity: ghost ? 0.6 : 1,
-                    transform: ghost
-                      ? "scale(0.82) rotate(-4deg)"
-                      : `scale(${0.86 + 0.14 * stickyIn}) rotate(${-5 + 3.5 * stickyIn}deg)`,
-                    transformOrigin: "76px 20px",
-                    borderRadius: 3,
-                    boxShadow:
-                      "0 1px 2px rgba(0,0,0,0.08), 0 12px 22px -10px rgba(60,40,0,0.35)",
-                    padding: 16,
+                    inset: -120,
+                    backgroundImage: `radial-gradient(circle, ${pal.dot} 1px, transparent 1.4px)`,
+                    backgroundSize: "22px 22px",
+                  }}
+                />
+
+                <div
+                  style={{
+                    position: "absolute",
+                    left: L.frame.x,
+                    top: L.frame.y,
+                    width: L.frame.w,
+                    height: L.frame.h,
                     boxSizing: "border-box",
+                    background: withAlpha(accent, pal.dark ? 0.06 : 0.035),
+                    boxShadow: `inset 0 0 0 1px ${withAlpha(accent, 0.4)}`,
+                    borderRadius: 12,
+                  }}
+                />
+                {COLUMNS.map((c, i) => (
+                  <div
+                    key={c}
+                    style={{
+                      position: "absolute",
+                      left: L.heads[i].x + 2,
+                      top: L.heads[i].y,
+                      fontSize: 15,
+                      color: pal.muted,
+                    }}
+                  >
+                    {c}
+                  </div>
+                ))}
+                {cards.map((card) => (
+                  <BoardCard
+                    key={card.title}
+                    card={card}
+                    pal={pal}
+                    outline={
+                      card === SELECTED && selOn ? people[1].color : undefined
+                    }
+                  />
+                ))}
+                {marquee ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: Math.min(loose.x, leo.x),
+                      top: Math.min(loose.y, leo.y),
+                      width: Math.abs(leo.x - loose.x),
+                      height: Math.abs(leo.y - loose.y),
+                      background: withAlpha(people[1].color, 0.08),
+                      boxShadow: `inset 0 0 0 1px ${people[1].color}`,
+                    }}
+                  />
+                ) : null}
+                {selOn ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      // Laid out on the card it snaps to and carried there
+                      // by a transform, handles included: layout rounds every
+                      // box to whole pixels, so the slow end of the snap
+                      // stepped the handles one pixel at a time.
+                      left: SELECTED.x,
+                      top: SELECTED.y,
+                      transform: `translate(${selBox.x - SELECTED.x}px, ${selBox.y - SELECTED.y}px)`,
+                      width: selBox.w,
+                      height: selBox.h,
+                      boxShadow: `inset 0 0 0 1.5px ${people[1].color}`,
+                      borderRadius: interpolate(snap, [0, 1], [0, 10]),
+                    }}
+                  >
+                    {[
+                      [0, 0],
+                      [1, 0],
+                      [0, 1],
+                      [1, 1],
+                    ].map(([hx, hy]) => (
+                      <div
+                        key={`${hx}${hy}`}
+                        style={{
+                          position: "absolute",
+                          left: hx * SELECTED.w - 4,
+                          top: hy * SELECTED.h - 4,
+                          width: 8,
+                          height: 8,
+                          background: "#fff",
+                          boxShadow: `inset 0 0 0 1.5px ${people[1].color}`,
+                          borderRadius: 2,
+                          transform: `translate(${hx * (selBox.w - SELECTED.w)}px, ${hy * (selBox.h - SELECTED.h)}px) scale(${snap})`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+                <div
+                  style={{
+                    position: "absolute",
+                    // Laid out where it is dropped; the drag is a transform,
+                    // or the shape and its label step pixel by pixel as the
+                    // hand slows down.
+                    left: shapeRest.x - SH.r,
+                    top: shapeRest.y - SH.r,
+                    width: SH.r * 2,
+                    height: SH.r * 2,
+                    borderRadius: "50%",
+                    background: pal.shape,
+                    boxShadow: `inset 0 0 0 ${dragging ? 2 : 1}px ${dragging ? people[2].color : "rgba(20,67,42,0.25)"}, 0 ${2 + 12 * lift}px ${6 + 20 * lift}px -4px rgba(0,0,0,${0.1 + 0.14 * lift})`,
                     display: "flex",
-                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 15,
+                    color: pal.shapeText,
+                    transform: `translate(${shapeX - shapeRest.x}px, ${shapeY - shapeRest.y}px) scale(${shapeScale})`,
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: 18,
-                      lineHeight: 1.28,
-                      color: pal.stickyText,
-                      letterSpacing: "-0.01em",
-                    }}
-                  >
-                    {stickyChars.slice(0, typed).join("")}
-                    <span
-                      style={{
-                        display: "inline-block",
-                        width: 1.5,
-                        height: 19,
-                        marginLeft: 1,
-                        verticalAlign: -3,
-                        background: caretOn ? pal.stickyText : "transparent",
-                      }}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      marginTop: "auto",
-                      fontSize: 14,
-                      color: "rgba(43,36,16,0.6)",
-                    }}
-                  >
-                    {people[0].name}
-                  </div>
+                  {shapeLabel}
                 </div>
-              ) : null}
-              {frame >= 111 ? (
-                <>
+                {ghost || frame >= 65 ? (
                   <div
                     style={{
                       position: "absolute",
-                      left: L.pin.x + 26,
-                      top: L.pin.y - 66,
-                      width: 214,
-                      background: pal.panel,
-                      borderRadius: 14,
-                      boxShadow: pal.raised,
-                      padding: "11px 14px 13px",
-                      opacity: bubbleFade,
-                      transform: `translateX(${(1 - bubbleIn) * -12}px) scale(${0.92 + 0.08 * bubbleIn})`,
-                      transformOrigin: "0 100%",
+                      left: L.sticky.x,
+                      top: L.sticky.y,
+                      width: L.sticky.w,
+                      height: L.sticky.h,
+                      background: pal.sticky,
+                      opacity: ghost ? 0.6 : 1,
+                      // The ghost rides the cursor on a transform, like the
+                      // cursor itself, so the two stay glued between pixels.
+                      transform: ghost
+                        ? `translate(${cur[0].x - 76 - L.sticky.x}px, ${cur[0].y - 20 - L.sticky.y}px) scale(0.82) rotate(-4deg)`
+                        : `scale(${0.86 + 0.14 * stickyIn}) rotate(${-5 + 3.5 * stickyIn}deg)`,
+                      transformOrigin: "76px 20px",
+                      borderRadius: 3,
+                      boxShadow:
+                        "0 1px 2px rgba(0,0,0,0.08), 0 12px 22px -10px rgba(60,40,0,0.35)",
+                      padding: 16,
                       boxSizing: "border-box",
+                      display: "flex",
+                      flexDirection: "column",
                     }}
                   >
                     <div
                       style={{
-                        display: "flex",
-                        gap: 8,
-                        alignItems: "baseline",
+                        fontSize: 18,
+                        lineHeight: 1.28,
+                        color: pal.stickyText,
+                        letterSpacing: "-0.01em",
                       }}
                     >
-                      <span style={{ fontSize: 15, color: pal.text }}>
-                        {people[3].name}
-                      </span>
-                      <span style={{ fontSize: 13, color: pal.muted }}>
-                        Just now
-                      </span>
+                      {stickyChars.slice(0, typed).join("")}
+                      <span
+                        style={{
+                          display: "inline-block",
+                          width: 1.5,
+                          height: 19,
+                          marginLeft: 1,
+                          verticalAlign: -3,
+                          background: caretOn ? pal.stickyText : "transparent",
+                        }}
+                      />
                     </div>
                     <div
                       style={{
-                        marginTop: 3,
-                        fontSize: 15,
-                        lineHeight: "20px",
-                        color: pal.text,
-                        minHeight: 20,
+                        marginTop: "auto",
+                        fontSize: 14,
+                        color: "rgba(43,36,16,0.6)",
                       }}
                     >
-                      {commentChars.slice(0, commentTyped).join("")}
+                      {people[0].name}
                     </div>
                   </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: L.pin.x,
-                      top: L.pin.y - 34,
-                      transform: `scale(${pinIn})`,
-                      transformOrigin: "0 100%",
-                      borderRadius: "50% 50% 50% 0",
-                      padding: 2,
-                      background: pal.panel,
-                      boxShadow: "0 3px 8px rgba(0,0,0,0.22)",
-                    }}
-                  >
-                    <Avatar
-                      name={people[3].name}
-                      color={people[3].color}
-                      size={30}
-                      ring="transparent"
-                    />
-                  </div>
-                </>
-              ) : null}
-            </div>
-            <div style={{ ...chrome, left: 16, gap: 8, padding: "0 14px" }}>
-              <span style={{ color: pal.muted }}>Drafts</span>
-              <span style={{ color: pal.faint }}>/</span>
-              <span style={{ color: pal.text }}>{boardTitle}</span>
-            </div>
-            <div
-              style={{ ...chrome, right: 16, gap: 12, padding: "0 6px 0 12px" }}
-            >
-              <div style={{ display: "flex", alignItems: "center" }}>
-                {[...people].reverse().map((p, ri) => {
-                  const i = people.length - 1 - ri;
-                  const s = sp(joinAt[i], CHIP);
-                  return (
+                ) : null}
+                {frame >= 111 ? (
+                  <>
                     <div
-                      key={p.name}
                       style={{
-                        width: 22 * clamp(s),
-                        height: 28,
-                        position: "relative",
+                        position: "absolute",
+                        left: L.pin.x + 26,
+                        top: L.pin.y - 66,
+                        width: 214,
+                        background: pal.panel,
+                        borderRadius: 14,
+                        boxShadow: pal.raised,
+                        padding: "11px 14px 13px",
+                        opacity: bubbleFade,
+                        transform: `translateX(${(1 - bubbleIn) * -12}px) scale(${0.92 + 0.08 * bubbleIn})`,
+                        transformOrigin: "0 100%",
+                        boxSizing: "border-box",
                       }}
                     >
                       <div
                         style={{
-                          position: "absolute",
-                          left: 0,
-                          top: 0,
-                          transform: `scale(${s})`,
+                          display: "flex",
+                          gap: 8,
+                          alignItems: "baseline",
                         }}
                       >
-                        <Avatar
-                          name={p.name}
-                          color={p.color}
-                          size={28}
-                          ring={pal.panel}
-                        />
+                        <span style={{ fontSize: 15, color: pal.text }}>
+                          {people[3].name}
+                        </span>
+                        <span style={{ fontSize: 13, color: pal.muted }}>
+                          Just now
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 3,
+                          fontSize: 15,
+                          lineHeight: "20px",
+                          color: pal.text,
+                          minHeight: 20,
+                        }}
+                      >
+                        {commentChars.slice(0, commentTyped).join("")}
                       </div>
                     </div>
-                  );
-                })}
-                <div style={{ width: 28 }}>
-                  <Avatar
-                    name="Eli"
-                    color={pal.dark ? "#55565C" : "#3D3C39"}
-                    size={28}
-                    ring={pal.panel}
-                  />
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: L.pin.x,
+                        top: L.pin.y - 34,
+                        transform: `scale(${pinIn})`,
+                        transformOrigin: "0 100%",
+                        borderRadius: "50% 50% 50% 0",
+                        padding: 2,
+                        background: pal.panel,
+                        boxShadow: "0 3px 8px rgba(0,0,0,0.22)",
+                      }}
+                    >
+                      <Avatar
+                        name={people[3].name}
+                        color={people[3].color}
+                        size={30}
+                        ring="transparent"
+                      />
+                    </div>
+                  </>
+                ) : null}
+              </div>
+              <div style={{ ...chrome, left: 16, gap: 8, padding: "0 14px" }}>
+                <span style={{ color: pal.muted }}>Drafts</span>
+                <span style={{ color: pal.faint }}>/</span>
+                <span style={{ color: pal.text }}>{boardTitle}</span>
+              </div>
+              <div
+                style={{
+                  ...chrome,
+                  right: 16,
+                  gap: 12,
+                  padding: "0 6px 0 12px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  {[...people].reverse().map((p, ri) => {
+                    const i = people.length - 1 - ri;
+                    const sAt = (f: number) =>
+                      spring({ frame: f - joinAt[i], fps, config: CHIP });
+                    const s = sAt(frame);
+                    return (
+                      <div
+                        key={p.name}
+                        style={{
+                          width: 22 * clamp(s),
+                          height: 28,
+                          position: "relative",
+                        }}
+                      >
+                        <div
+                          style={{
+                            position: "absolute",
+                            left: 0,
+                            top: 0,
+                            transform: `scale(${s})${glide(moves(sAt))}`,
+                          }}
+                        >
+                          <Avatar
+                            name={p.name}
+                            color={p.color}
+                            size={28}
+                            ring={pal.panel}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div style={{ width: 28 }}>
+                    <Avatar
+                      name="Eli"
+                      color={pal.dark ? "#55565C" : "#3D3C39"}
+                      size={28}
+                      ring={pal.panel}
+                    />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    background: accent,
+                    color: "#fff",
+                    fontSize: 15,
+                    padding: "6px 14px",
+                    borderRadius: 8,
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2)",
+                  }}
+                >
+                  {shareLabel}
                 </div>
               </div>
-              <div
-                style={{
-                  background: accent,
-                  color: "#fff",
-                  fontSize: 15,
-                  padding: "6px 14px",
-                  borderRadius: 8,
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2)",
-                }}
-              >
-                Share
-              </div>
+              <Toolbar
+                pal={pal}
+                accent={accent}
+                stickyActive={stickyTool}
+                x={tbX}
+                y={tbY}
+              />
             </div>
-            <Toolbar
-              pal={pal}
-              accent={accent}
-              stickyActive={stickyTool}
-              x={tbX}
-              y={tbY}
-            />
+            {cur.map((c, i) => {
+              const a = actors[i];
+              const vis = interpolate(
+                frame,
+                [a.keys[0].f, a.keys[0].f + 6],
+                [0, 1],
+                CL,
+              );
+              const s = toScreen(c);
+              const k = i === 0 ? interpolate(frame, [38, 62], [0, 1], CL) : 1;
+              return (
+                <div
+                  key={people[i].name}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    // A cursor never rests, it idles in a slow wobble. Eased
+                    // by `left`/`top` it stepped over whole pixels, because
+                    // layout rounds a box and a baseline to them; on a
+                    // transform it glides, and its name tag
+                    // leans all the while.
+                    transform: `translate(${c.x + (s.x - c.x) * k}px, ${c.y + (s.y - c.y) * k}px)${glide(true)}`,
+                    opacity: vis,
+                    zIndex: 20,
+                  }}
+                >
+                  <FigCursor {...people[i]} press={c.press} />
+                </div>
+              );
+            })}
           </div>
-          {cur.map((c, i) => {
-            const a = actors[i];
-            const vis = interpolate(
-              frame,
-              [a.keys[0].f, a.keys[0].f + 6],
-              [0, 1],
-              CL,
-            );
-            const s = toScreen(c);
-            const k = i === 0 ? interpolate(frame, [38, 62], [0, 1], CL) : 1;
-            return (
-              <div
-                key={people[i].name}
-                style={{
-                  position: "absolute",
-                  left: c.x + (s.x - c.x) * k,
-                  top: c.y + (s.y - c.y) * k,
-                  opacity: vis,
-                  zIndex: 20,
-                }}
-              >
-                <FigCursor {...people[i]} press={c.press} />
-              </div>
-            );
-          })}
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

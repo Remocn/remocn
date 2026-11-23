@@ -5,13 +5,9 @@ import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -90,7 +86,25 @@ export interface DotSortProps {
   groups?: DotSortGroup[];
   highlight?: number;
   caption?: string;
+  /** Word before the highlighted group in the auto caption. */
+  verb?: string;
+  /** Replaces the remocn mark drawn for a group labelled "remocn". */
+  logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the labels and the big figure; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the labels and caption. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Frames each dot takes to fly into its row. */
+  fly?: number;
+  /** Size of the chart and figure, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -134,7 +148,6 @@ const SORT_AT = 18;
 const SWEEP = 24;
 const JITTER = 9;
 const FLY = 28;
-const HIT = SORT_AT + SWEEP + JITTER + FLY + 2;
 
 function hash(n: number) {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -181,18 +194,49 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DotSort({
   groups = DEFAULT_GROUPS,
   highlight = 0,
   caption,
+  verb = "choose",
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  fly = FLY,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: DotSortProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg = background ?? p.bg;
+  const HIT = SORT_AT + SWEEP + JITTER + fly + 2;
   const aurora = AURORA[theme];
 
   const list = groups.slice(0, 5);
@@ -304,7 +348,7 @@ export function DotSort({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const scale = 0.975 + 0.035 * push;
+  const zoom = 0.975 + 0.035 * push;
 
   const circles: React.ReactNode[] = [];
   for (const d of dots) {
@@ -313,7 +357,7 @@ export function DotSort({
       easing: EASE_OUT,
     });
     if (a <= 0) continue;
-    const e = FLIGHT(interpolate(t, [d.start, d.start + FLY], [0, 1], CLAMP));
+    const e = FLIGHT(interpolate(t, [d.start, d.start + fly], [0, 1], CLAMP));
     const drift = 1 - e;
     const dx = Math.sin(t * 0.06 + d.phase) * 7 * u * drift;
     const dy = Math.cos(t * 0.05 + d.phase * 1.3) * 7 * u * drift;
@@ -338,176 +382,181 @@ export function DotSort({
 
   const target = bands.find((b) => b.i === hl);
   const hero = target ? Math.round(target.pct * count) : 0;
-  const capText = caption ?? (target ? `choose ${target.label}` : "");
+  const capText = caption ?? (target ? `${verb} ${target.label}` : "");
   const capLogo = caption === undefined && target && isRemocn(target.label);
   const auroraCss = `linear-gradient(90deg, ${aurora.join(", ")})`;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${scale})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${zoom})${glide(midway(push))}`,
+            transformOrigin: "50% 50%",
+          }}
         >
-          {circles}
-        </svg>
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            {circles}
+          </svg>
 
-        {bands.map((b, bi) => {
-          const done = SORT_AT + SWEEP * 0.4 + FLY + bi * 3;
-          const a = interpolate(t, [done, done + 16], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          const isHl = b.i === hl;
-          const fade = isHl ? 1 : 1 - 0.35 * dim;
-          return (
-            <div
-              key={b.label}
-              style={{
-                position: "absolute",
-                left: x0,
-                top: y0 + bi * (bandH + bandGap),
-                width: labelW,
-                height: bandH,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-end",
-                justifyContent: "center",
-                gap: 3 * u,
-                opacity: a * fade,
-                transform: `translateX(${(1 - a) * -10 * u}px)`,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {isRemocn(b.label) ? (
-                <RemocnLogo fontSize={20 * u} color={p.fg} />
-              ) : (
+          {bands.map((b, bi) => {
+            const done = SORT_AT + SWEEP * 0.4 + fly + bi * 3;
+            const a = interpolate(t, [done, done + 16], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            const isHl = b.i === hl;
+            const fade = isHl ? 1 : 1 - 0.35 * dim;
+            return (
+              <div
+                key={b.label}
+                style={{
+                  position: "absolute",
+                  left: x0,
+                  top: y0 + bi * (bandH + bandGap),
+                  width: labelW,
+                  height: bandH,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  justifyContent: "center",
+                  gap: 3 * u,
+                  opacity: a * fade,
+                  transform: `translateX(${(1 - a) * -10 * u}px)`,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {isRemocn(b.label) ? (
+                  (logo ?? <RemocnLogo fontSize={20 * u} color={fg} />)
+                ) : (
+                  <span
+                    style={{
+                      fontFamily,
+                      fontWeight: 500,
+                      fontSize: 18 * u,
+                      letterSpacing: "-0.01em",
+                      color: fg,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {b.label}
+                  </span>
+                )}
                 <span
                   style={{
-                    fontFamily: sans,
-                    fontWeight: 500,
-                    fontSize: 18 * u,
-                    letterSpacing: "-0.01em",
-                    color: p.fg,
+                    fontFamily,
+                    fontWeight: 400,
+                    fontSize: 15 * u,
+                    color: isHl ? aurora[0] : p.muted,
                     lineHeight: 1,
                   }}
                 >
-                  {b.label}
+                  {b.pct}%
                 </span>
-              )}
-              <span
-                style={{
-                  fontFamily: sans,
-                  fontWeight: 400,
-                  fontSize: 15 * u,
-                  color: isHl ? aurora[0] : p.muted,
-                  lineHeight: 1,
-                }}
-              >
-                {b.pct}%
-              </span>
-            </div>
-          );
-        })}
+              </div>
+            );
+          })}
 
-        {target ? (
-          <div
-            style={{
-              position: "absolute",
-              left: heroX,
-              top: 0,
-              height: H,
-              width: heroW,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-            }}
-          >
+          {target ? (
             <div
               style={{
-                fontFamily: serif,
-                fontWeight: 400,
-                fontSize: 184 * u,
-                lineHeight: 0.9,
-                letterSpacing: "-0.005em",
-                color: p.fg,
-                fontVariantNumeric: "tabular-nums",
-                whiteSpace: "nowrap",
-                opacity: land,
-                filter:
-                  land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
-                transform: `translateY(${(1 - land) * 20 * u}px)`,
-              }}
-            >
-              {hero}
-              <span
-                style={{
-                  fontSize: 104 * u,
-                  marginLeft: 6 * u,
-                  color: aurora[0],
-                }}
-              >
-                %
-              </span>
-            </div>
-            <div
-              style={{
-                marginTop: 18 * u,
+                position: "absolute",
+                left: heroX,
+                top: 0,
+                height: H,
+                width: heroW,
                 display: "flex",
-                alignItems: "center",
-                gap: 10 * u,
-                opacity: capIn,
-                transform: `translateY(${(1 - capIn) * 8 * u}px)`,
+                flexDirection: "column",
+                justifyContent: "center",
               }}
             >
-              <span
+              <div
                 style={{
-                  width: 10 * u,
-                  height: 10 * u,
-                  borderRadius: "50%",
-                  background: auroraCss,
-                  flexShrink: 0,
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: sans,
+                  fontFamily: serif,
                   fontWeight: 400,
-                  fontSize: 24 * u,
-                  letterSpacing: "-0.01em",
-                  color: p.muted,
+                  fontSize: 184 * u,
+                  lineHeight: 0.9,
+                  letterSpacing: "-0.005em",
+                  color: fg,
+                  fontVariantNumeric: "tabular-nums",
                   whiteSpace: "nowrap",
-                  display: "flex",
-                  alignItems: "baseline",
-                  gap: 8 * u,
+                  opacity: land,
+                  filter:
+                    land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
+                  transform: `translateY(${(1 - land) * 20 * u}px)`,
                 }}
               >
-                {capLogo ? (
-                  <>
-                    choose
-                    <RemocnLogo fontSize={25 * u} color={p.fg} />
-                  </>
-                ) : (
-                  capText
-                )}
-              </span>
+                {hero}
+                <span
+                  style={{
+                    fontSize: 104 * u,
+                    marginLeft: 6 * u,
+                    color: aurora[0],
+                  }}
+                >
+                  %
+                </span>
+              </div>
+              <div
+                style={{
+                  marginTop: 18 * u,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10 * u,
+                  opacity: capIn,
+                  transform: `translateY(${(1 - capIn) * 8 * u}px)`,
+                }}
+              >
+                <span
+                  style={{
+                    width: 10 * u,
+                    height: 10 * u,
+                    borderRadius: "50%",
+                    background: auroraCss,
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily,
+                    fontWeight: 400,
+                    fontSize: 24 * u,
+                    letterSpacing: "-0.01em",
+                    color: p.muted,
+                    whiteSpace: "nowrap",
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 8 * u,
+                  }}
+                >
+                  {capLogo ? (
+                    <>
+                      {verb}
+                      {logo ?? <RemocnLogo fontSize={25 * u} color={fg} />}
+                    </>
+                  ) : (
+                    capText
+                  )}
+                </span>
+              </div>
             </div>
-          </div>
-        ) : null}
-      </AbsoluteFill>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${bg} 100%)`,
           opacity: 0.6,
           pointerEvents: "none",
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

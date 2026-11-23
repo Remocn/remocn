@@ -1,0 +1,99 @@
+{
+  "component": "icon-home",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-lined house that slowly sketches itself in soft slate.",
+      "askedAs": [
+        "thin elegant house outline drawing slowly",
+        "minimal line art home icon",
+        "delicate slow sketch of a house",
+        "тонкая линия домика медленно рисуется",
+        "минималистичная иконка дома контуром"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-bounce-loop",
+      "label": "Bold Loop",
+      "description": "A chunky, heavy-stroked home icon that repeats its action motion at a lively pace.",
+      "askedAs": [
+        "thick home icon that keeps bouncing",
+        "looping animated house button",
+        "heavy bold house icon repeating",
+        "толстая иконка дома анимируется по кругу",
+        "жирный домик с повторяющейся анимацией"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 3,
+        "speed": 1.5,
+        "size": 72
+      }
+    },
+    {
+      "id": "brand-blue",
+      "label": "Brand Blue",
+      "description": "A medium-sized home icon in a calm product blue that draws and animates in one smooth pass.",
+      "askedAs": [
+        "blue home icon for app UI",
+        "house icon in brand color",
+        "navigation home button blue",
+        "синяя иконка домой для интерфейса",
+        "домик в фирменном синем цвете"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "size": 64,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "quick-tap",
+      "label": "Quick Tap",
+      "description": "A small, crisp icon that snaps through its action instantly like a tapped button.",
+      "askedAs": [
+        "fast snappy home icon tap",
+        "quick small house click animation",
+        "instant home button feedback",
+        "быстрая анимация нажатия на домик",
+        "маленькая иконка дома быстро"
+      ],
+      "props": {
+        "animation": "action",
+        "speed": 3,
+        "size": 32,
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "warm-hero",
+      "label": "Warm Hero",
+      "description": "An oversized terracotta house that draws in leisurely and loops as a calm focal element.",
+      "askedAs": [
+        "big warm colored house animation",
+        "large orange home icon looping",
+        "cozy hero house illustration",
+        "большой тёплый домик крупным планом",
+        "оранжевый дом медленно по кругу"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#c2410c",
+        "speed": 0.75,
+        "loop": true,
+        "strokeWidth": 1.5
+      }
+    }
+  ]
+}

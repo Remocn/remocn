@@ -3,14 +3,9 @@
 import { loadFont } from "@remotion/google-fonts/BricolageGrotesque";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -27,6 +22,20 @@ export interface ChevronRunProps {
   /** Serif italic line under the figure. */
   caption?: string;
   accent?: string;
+  /** Text color of the figure and caption; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the figure. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Weight of the figure. */
+  fontWeight?: number;
+  /** Columns of chevrons in the racing wall. */
+  columns?: number;
+  /** Size of the chevrons and figure, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -38,6 +47,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 // Beat sheet (30fps, speed 1):
 //   0–50   a full-frame wall of up-chevrons races upward in staggered
@@ -94,17 +105,42 @@ const chevronPath = (x: number, y: number, a: number, th: number) => {
   return `M ${x} ${y} L ${x + a} ${y + h} L ${x + a} ${y + h + th} L ${x} ${y + th} L ${x - a} ${y + h + th} L ${x - a} ${y + h} Z`;
 };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ChevronRun({
   value = "+312%",
   caption = "growth since launch",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  fontWeight = 500,
+  columns = COLS,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ChevronRunProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   // ---- the giant chevron ---------------------------------------------------
@@ -124,7 +160,7 @@ export function ChevronRun({
     );
 
   // ---- the wall --------------------------------------------------------------
-  const colStep = W / (COLS - 1);
+  const colStep = W / (columns - 1);
   const rowStep = H * 0.078;
   const L = ROWS * rowStep;
   const a = colStep * 0.41;
@@ -135,7 +171,8 @@ export function ChevronRun({
     return (3.2 * x + 0.3 * x * x) * u;
   };
   const vel = (tt: number) => (travel(tt + 0.5) - travel(tt - 0.5)) / u;
-  const lockStart = (c: number) => LOCK_AT + Math.abs(c - (COLS - 1) / 2) * 1.3;
+  const lockStart = (c: number) =>
+    LOCK_AT + Math.abs(c - (columns - 1) / 2) * 1.3;
   const fuse = interpolate(t, [FUSE_AT, FUSE_AT + 12], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -152,7 +189,7 @@ export function ChevronRun({
 
   const runners: React.ReactNode[] = [];
   const lockers: React.ReactNode[] = [];
-  for (let c = 0; c < COLS; c++) {
+  for (let c = 0; c < columns; c++) {
     const x = c * colStep;
     const tL = lockStart(c);
     const band = outerY(x);
@@ -244,102 +281,106 @@ export function ChevronRun({
   const drift = interpolate(t, [FUSE_AT, 150], [0, 1], CLAMP);
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        role="img"
-        aria-label={`${value} ${caption}`}
-      >
-        <defs>
-          <filter
-            id={`${uid}smear`}
-            filterUnits="userSpaceOnUse"
-            x={0}
-            y={-H * 0.2}
-            width={W}
-            height={H * 1.4}
-          >
-            <feGaussianBlur stdDeviation={`0 ${blurBase.toFixed(2)}`} />
-          </filter>
-          <linearGradient
-            id={`${uid}fluted`}
-            gradientUnits="userSpaceOnUse"
-            x1={cx + W * 0.025 * drift}
-            y1={gradY0}
-            x2={cx - W * 0.025 * drift}
-            y2={gradY1}
-          >
-            {p.fluted.map((c, i) => (
-              <stop key={c} offset={FLUTED_STOPS[i]} stopColor={c} />
-            ))}
-          </linearGradient>
-          <clipPath id={`${uid}giant`}>
-            <path d={chevronPath(cx, apexY, giantA, T)} />
-          </clipPath>
-        </defs>
-
-        <g filter={blurBase > 0.3 ? `url(#${uid}smear)` : undefined}>
-          {runners}
-        </g>
-        {/* once fusing, the pieces are held inside the giant's outline */}
-        <g
-          opacity={1 - solid}
-          clipPath={fuse > 0 ? `url(#${uid}giant)` : undefined}
+    <AbsoluteFill
+      style={{ background: background ?? p.bg, overflow: "hidden" }}
+    >
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          role="img"
+          aria-label={`${value} ${caption}`}
         >
-          {lockers}
-        </g>
-        <path
-          d={chevronPath(cx, apexY, giantA, T)}
-          fill={`url(#${uid}fluted)`}
-          opacity={solid}
-          transform={`translate(${cx} ${apexY + T}) scale(${settle}) translate(${-cx} ${-(apexY + T)})`}
-        />
-      </svg>
+          <defs>
+            <filter
+              id={`${uid}smear`}
+              filterUnits="userSpaceOnUse"
+              x={0}
+              y={-H * 0.2}
+              width={W}
+              height={H * 1.4}
+            >
+              <feGaussianBlur stdDeviation={`0 ${blurBase.toFixed(2)}`} />
+            </filter>
+            <linearGradient
+              id={`${uid}fluted`}
+              gradientUnits="userSpaceOnUse"
+              x1={cx + W * 0.025 * drift}
+              y1={gradY0}
+              x2={cx - W * 0.025 * drift}
+              y2={gradY1}
+            >
+              {p.fluted.map((c, i) => (
+                <stop key={c} offset={FLUTED_STOPS[i]} stopColor={c} />
+              ))}
+            </linearGradient>
+            <clipPath id={`${uid}giant`}>
+              <path d={chevronPath(cx, apexY, giantA, T)} />
+            </clipPath>
+          </defs>
 
-      {/* the figure drops into the cut-out */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: yBase - F * 0.86,
-          textAlign: "center",
-          fontFamily: display,
-          fontWeight: 500,
-          fontSize: F,
-          lineHeight: 1,
-          letterSpacing: "-0.035em",
-          color: p.fg,
-          opacity: Math.min(1, land * 1.8),
-          transform: `translateY(${(1 - land) * -0.28 * F}px)`,
-          whiteSpace: "nowrap",
-        }}
-      >
-        {value}
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: yBase + 0.16 * F,
-          textAlign: "center",
-          fontFamily: serif,
-          fontStyle: "italic",
-          fontWeight: 400,
-          fontSize: 46 * u,
-          lineHeight: 1,
-          letterSpacing: "-0.01em",
-          color: p.fg,
-          opacity: capIn * 0.78,
-          transform: `translateY(${(1 - capIn) * 12 * u}px)`,
-        }}
-      >
-        {caption}
-      </div>
+          <g filter={blurBase > 0.3 ? `url(#${uid}smear)` : undefined}>
+            {runners}
+          </g>
+          {/* once fusing, the pieces are held inside the giant's outline */}
+          <g
+            opacity={1 - solid}
+            clipPath={fuse > 0 ? `url(#${uid}giant)` : undefined}
+          >
+            {lockers}
+          </g>
+          <path
+            d={chevronPath(cx, apexY, giantA, T)}
+            fill={`url(#${uid}fluted)`}
+            opacity={solid}
+            transform={`translate(${cx} ${apexY + T}) scale(${settle}) translate(${-cx} ${-(apexY + T)})`}
+          />
+        </svg>
+
+        {/* the figure drops into the cut-out */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: yBase - F * 0.86,
+            textAlign: "center",
+            fontFamily,
+            fontWeight,
+            fontSize: F,
+            lineHeight: 1,
+            letterSpacing: "-0.035em",
+            color: fg,
+            opacity: Math.min(1, land * 1.8),
+            transform: `translateY(${(1 - land) * -0.28 * F}px)${glide(midway(land))}`,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {value}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: yBase + 0.16 * F,
+            textAlign: "center",
+            fontFamily: serif,
+            fontStyle: "italic",
+            fontWeight: 400,
+            fontSize: 46 * u,
+            lineHeight: 1,
+            letterSpacing: "-0.01em",
+            color: fg,
+            opacity: capIn * 0.78,
+            transform: `translateY(${(1 - capIn) * 12 * u}px)${glide(midway(capIn))}`,
+          }}
+        >
+          {caption}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

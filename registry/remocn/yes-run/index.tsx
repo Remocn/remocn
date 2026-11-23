@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const unbounded = loadFont("normal", {
   weights: ["400", "500"],
@@ -22,7 +22,19 @@ export interface YesRunProps {
   questions?: string[];
   answer?: string;
   accent?: string;
+  /** Text color of the questions; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Unbounded by default. */
+  fontFamily?: string;
+  /** Frames the first question stays; each next one is quicker. */
+  dwell?: number;
+  /** Frames the last answer holds before the end. */
+  hold?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -75,11 +87,15 @@ interface Metrics {
   cap: number;
 }
 
-function measure(questions: string[], answer: string): Metrics {
+function measure(
+  questions: string[],
+  answer: string,
+  fontFamily: string,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("yes-run: no 2d context");
-  ctx.font = `${WGHT} ${FONT_PX}px "${unbounded.fontFamily}"`;
+  ctx.font = `${WGHT} ${FONT_PX}px "${fontFamily}"`;
   const em = (s: string) =>
     ctx.measureText(s).width / FONT_PX +
     TRACK * Math.max(0, Array.from(s).length - 1);
@@ -103,8 +119,8 @@ function measure(questions: string[], answer: string): Metrics {
   };
 }
 
-function useMetrics(questions: string[], answer: string) {
-  const key = `${answer}\u0001${questions.join("\u0002")}`;
+function useMetrics(questions: string[], answer: string, fontFamily: string) {
+  const key = `${fontFamily}\u0003${answer}\u0001${questions.join("\u0002")}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("yes-run: measuring"));
   const released = useRef(false);
@@ -114,14 +130,14 @@ function useMetrics(questions: string[], answer: string) {
     let live = true;
     Promise.all([
       unbounded.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${unbounded.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         setState({
           key,
-          m: measure(input.current.questions, input.current.answer),
+          m: measure(input.current.questions, input.current.answer, fontFamily),
         });
         if (!released.current) {
           released.current = true;
@@ -131,7 +147,7 @@ function useMetrics(questions: string[], answer: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -197,26 +213,49 @@ function chooseRows(
   return { rows: best, size: bestFit };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function YesRun({
   questions = DEFAULT_QUESTIONS,
   answer = "Yes.",
   accent,
+  ink,
   background,
+  fontFamily = unbounded.fontFamily,
+  dwell: firstDwell = FIRST_DWELL,
+  hold = LAST_MIN,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: YesRunProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const dark = theme === "dark";
   const field = dark ? (accent ?? "#FF5A1F") : "#FFFFFF";
   const stage =
     background === "transparent" ? "transparent" : (background ?? field);
-  const ink = "#000000";
-  const block = dark ? "#000000" : (accent ?? "#E8480F");
+  const fg = ink ?? "#000000";
+  const block = dark ? fg : (accent ?? "#E8480F");
   const blockInk = dark ? field : "#FFFFFF";
 
   const qs = questions.length > 0 ? questions : DEFAULT_QUESTIONS;
-  const m = useMetrics(qs, answer);
+  const m = useMetrics(qs, answer, fontFamily);
 
   if (!m) {
     return (
@@ -225,12 +264,12 @@ export function YesRun({
   }
 
   const n = qs.length;
-  const total = durationInFrames * speed;
+  const total = Math.max(0, durationInFrames - delay) * speed;
   const natural = Array.from({ length: n - 1 }, (_, k) =>
-    Math.max(MIN_DWELL, FIRST_DWELL * RATIO ** k),
+    Math.max(MIN_DWELL, firstDwell * RATIO ** k),
   );
   const sum = natural.reduce((s, d) => s + d, 0);
-  const fit = sum > 0 ? Math.min(1, (total - LAST_MIN) / sum) : 1;
+  const fit = sum > 0 ? Math.min(1, (total - hold) / sum) : 1;
   const dwells = natural.map((d) => Math.max(7, Math.round(d * fit)));
 
   const portrait = H > W * 1.1;
@@ -283,6 +322,10 @@ export function YesRun({
   const dist = prev ? (prev.h + e.h) / 2 + gapV : e.h + gapV;
   const winH = prev ? prev.h + (e.h - prev.h) * p : e.h;
 
+  // Layout rounds a baseline and a box edge to whole pixels, so an exchange
+  // pushed by `top` and an answer block slid by `left` stepped in uneven
+  // pixels. Each is laid out where it rests and the travel is a transform.
+  const pushing = p > 0 && p < 1;
   const renderExchange = (x: Exchange, dy: number, reveal: number) => {
     const F = x.size;
     const blockW = bwEm * F;
@@ -305,7 +348,7 @@ export function YesRun({
           top: baseline - baseOff,
           height: lineBox,
           lineHeight: `${lineBox}px`,
-          fontFamily: unbounded.fontFamily,
+          fontFamily,
           fontWeight: WGHT,
           fontSize: F,
           letterSpacing: `${TRACK}em`,
@@ -317,19 +360,19 @@ export function YesRun({
       </div>
     );
 
-    const top = cy + dy - x.h / 2;
+    const top = cy - x.h / 2;
     const out: React.ReactNode[] = [];
     x.rows.forEach((row, i) => {
       const base = top + i * (LINE + ROW_GAP) * F + baseOff;
       const qW = row.w * F;
       if (!row.yes) {
-        out.push(text(row.text, W / 2 - qW / 2, base, ink, `r${i}`));
+        out.push(text(row.text, W / 2 - qW / 2, base, fg, `r${i}`));
         return;
       }
       const alone = row.w === 0;
       const lineW = alone ? blockW : qW + (GAP * F + blockW) * reveal;
       const left = W / 2 - lineW / 2;
-      if (!alone) out.push(text(row.text, left, base, ink, `r${i}`));
+      if (!alone) out.push(text(row.text, left, base, fg, `r${i}`));
       if (reveal <= 0) return;
       const bLeft = alone ? left : left + qW + GAP * F;
       const side = (1 - reveal) * 50;
@@ -337,13 +380,19 @@ export function YesRun({
         ? `inset(0 ${side.toFixed(2)}% 0 ${side.toFixed(2)}%)`
         : `inset(0 ${((1 - reveal) * 100).toFixed(2)}% 0 0)`;
       const nudge = alone ? 0 : (1 - reveal) * F * 0.12;
+      const restW = alone ? blockW : qW + (GAP * F + blockW) * 1;
+      const restLeft = W / 2 - restW / 2;
+      const bRest = alone ? restLeft : restLeft + qW + GAP * F;
+      const shift = bLeft - nudge - bRest;
       out.push(
         <div
           key={`b${i}`}
           style={{
             position: "absolute",
-            left: bLeft - nudge,
+            left: bRest,
             top: base + blockTop,
+            transform:
+              Math.abs(shift) < 1e-3 ? undefined : `translateX(${shift}px)`,
             width: blockW,
             height: blockH,
             clipPath: clip,
@@ -362,7 +411,16 @@ export function YesRun({
       );
     });
     return (
-      <div key={x.start} style={{ position: "absolute", inset: 0 }}>
+      <div
+        key={x.start}
+        style={{
+          position: "absolute",
+          inset: 0,
+          // Kept at rest too: an exchange handed back to plain layout when
+          // the push ends would jump to the nearest whole pixel.
+          transform: `translateY(${Math.abs(dy) < 1e-3 ? 0 : dy}px)${glide(pushing)}`,
+        }}
+      >
         {out}
       </div>
     );
@@ -384,15 +442,17 @@ export function YesRun({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          clipPath: `inset(${(cy - winH / 2 - padTop).toFixed(1)}px 0 ${(H - cy - winH / 2 - padBottom).toFixed(1)}px 0)`,
-        }}
-      >
-        {nodes}
-      </div>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            clipPath: `inset(${(cy - winH / 2 - padTop).toFixed(1)}px 0 ${(H - cy - winH / 2 - padBottom).toFixed(1)}px 0)`,
+          }}
+        >
+          {nodes}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

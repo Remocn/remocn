@@ -1,0 +1,127 @@
+{
+  "component": "band-shift",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-cut",
+      "label": "Rapid Cut",
+      "description": "Many thin bands snap across in a tight, punchy stagger for an energetic swap.",
+      "askedAs": [
+        "fast snappy band transition",
+        "quick energetic bar wipe",
+        "lots of thin stripes fast",
+        "быстрый резкий переход полосами",
+        "много тонких полос быстро"
+      ],
+      "props": {
+        "bands": 14,
+        "stagger": 1,
+        "travel": 12,
+        "speed": 1.5,
+        "fontWeight": 700,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-editorial",
+      "label": "Slow Editorial",
+      "description": "A few wide warm bands glide slowly over cream paper with elegant serif type.",
+      "askedAs": [
+        "slow elegant band transition",
+        "calm editorial serif swap",
+        "wide bars gentle movement",
+        "медленный элегантный переход",
+        "спокойная смена с засечками"
+      ],
+      "props": {
+        "bands": 3,
+        "travel": 48,
+        "stagger": 6,
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4efe6"
+      }
+    },
+    {
+      "id": "midnight-mono",
+      "label": "Midnight Mono",
+      "description": "Teal bands sweep over a near-black field with crisp monospaced text.",
+      "askedAs": [
+        "dark tech band transition",
+        "code style bar swap dark",
+        "developer launch transition",
+        "тёмный технологичный переход",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "background": "#0e1116",
+        "ink": "#e6edf3",
+        "accent": "#2bb3a3",
+        "fontFamily": "JetBrains Mono",
+        "grain": false,
+        "bands": 9
+      }
+    },
+    {
+      "id": "bold-coral",
+      "label": "Bold Coral",
+      "description": "Large heavy headline with coral bands on a soft off-white for a confident launch look.",
+      "askedAs": [
+        "big bold coral transition",
+        "heavy headline launch swap",
+        "large text warm color bars",
+        "крупный жирный заголовок коралловый",
+        "яркий запуск продукта переход"
+      ],
+      "props": {
+        "accent": "#e8664a",
+        "background": "#faf7f2",
+        "ink": "#1c1a17",
+        "fontWeight": 800,
+        "scale": 1.3,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Small light type and a clean grain-free frame with a soft slate wave of bands.",
+      "askedAs": [
+        "minimal clean band transition",
+        "subtle quiet swap no grain",
+        "small light text transition",
+        "минималистичный чистый переход",
+        "тихая аккуратная смена"
+      ],
+      "props": {
+        "grain": false,
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "scale": 0.8,
+        "accent": "#5b6b82",
+        "delay": 30
+      }
+    },
+    {
+      "id": "forest-cascade",
+      "label": "Forest Cascade",
+      "description": "Deep green bands cascade in a long staggered wave under a rich serif headline.",
+      "askedAs": [
+        "green cascading bars",
+        "long staggered wave transition",
+        "natural deep green swap",
+        "зелёный каскад полос",
+        "длинная волна переход"
+      ],
+      "props": {
+        "accent": "#2f6b4f",
+        "bands": 10,
+        "stagger": 9,
+        "travel": 34,
+        "fontFamily": "Fraunces",
+        "fontWeight": 600
+      }
+    }
+  ]
+}

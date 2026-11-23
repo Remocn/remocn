@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="FractionSplit"
     component={FractionSplitScene}
-    durationInFrames={175}
-    fps={30}
+    durationInFrames={350}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -73,6 +73,52 @@ A bar of eight segments splits into halves, quarters and eighths with a fraction
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color of the filled piece.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Schibsted Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between words as the line rises in.",
+    },
+    {
+      name: "radius",
+      type: "number",
+      default: "8",
+      description: "Corner radius of the bar pieces, in pixels at 1280×720.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

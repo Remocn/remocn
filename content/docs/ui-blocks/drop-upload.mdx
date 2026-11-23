@@ -45,8 +45,8 @@ export const RemotionRoot = () => (
   <Composition
     id="DropUpload"
     component={DropUploadScene}
-    durationInFrames={162}
-    fps={30}
+    durationInFrames={324}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -102,6 +102,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Helper text inside the drop zone.",
     },
     {
+      name: "dropLabel",
+      type: "string",
+      default: "\"Drag and drop a file, or\"",
+      description: "Line inside the empty drop zone, before the browse link.",
+    },
+    {
+      name: "releaseLabel",
+      type: "string",
+      default: "\"Release to upload\"",
+      description: "Line shown while the file hovers over the zone.",
+    },
+    {
+      name: "doneLabel",
+      type: "string",
+      default: "\"Uploaded\"",
+      description: "Status shown once the upload finishes.",
+    },
+    {
       name: "history",
       type: "{ name: string; kind: string; size: string; ago: string }[]",
       description: "Earlier uploads listed below. Shown in portrait only.",
@@ -115,6 +133,40 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

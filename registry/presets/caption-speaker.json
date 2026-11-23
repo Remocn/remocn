@@ -1,0 +1,97 @@
+{
+  "component": "caption-speaker",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "podcast-bold",
+      "label": "Podcast Bold",
+      "description": "Big, heavy captions with short pages that punch each phrase out for vertical social clips.",
+      "askedAs": [
+        "big bold podcast captions",
+        "punchy short caption chunks",
+        "tiktok style speaker subtitles",
+        "крупные жирные субтитры для подкаста",
+        "короткие резкие фразы субтитров"
+      ],
+      "props": {
+        "fontSize": 96,
+        "fontWeight": 900,
+        "combineTokensWithinMilliseconds": 600,
+        "holdMs": 300
+      }
+    },
+    {
+      "id": "calm-interview",
+      "label": "Calm Interview",
+      "description": "Medium-weight captions in longer pages that linger, suited to slow, thoughtful conversation.",
+      "askedAs": [
+        "relaxed interview subtitles",
+        "longer caption lines that stay on screen",
+        "calm documentary style captions",
+        "спокойные субтитры для интервью",
+        "длинные фразы которые дольше держатся"
+      ],
+      "props": {
+        "fontSize": 52,
+        "fontWeight": 500,
+        "combineTokensWithinMilliseconds": 2400,
+        "holdMs": 1200,
+        "upcomingOpacity": 0.6
+      }
+    },
+    {
+      "id": "karaoke-reveal",
+      "label": "Karaoke Reveal",
+      "description": "Upcoming words stay nearly hidden so each word pops in as it is spoken.",
+      "askedAs": [
+        "words appear as they are spoken",
+        "hide upcoming words",
+        "karaoke style dialogue captions",
+        "слова появляются по мере речи",
+        "субтитры как в караоке"
+      ],
+      "props": {
+        "upcomingOpacity": 0.1,
+        "fontWeight": 800,
+        "combineTokensWithinMilliseconds": 1500
+      }
+    },
+    {
+      "id": "clean-flat",
+      "label": "Clean Flat",
+      "description": "Small, flat, shadowless captions with fully visible pages for a minimal editorial look.",
+      "askedAs": [
+        "minimal captions without shadow",
+        "small clean subtitles",
+        "subtle editorial dialogue text",
+        "минималистичные субтитры без тени",
+        "мелкие аккуратные титры"
+      ],
+      "props": {
+        "shadow": false,
+        "fontSize": 40,
+        "fontWeight": 600,
+        "upcomingOpacity": 0.75
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Word-by-word chunks with almost no hold for fast back-and-forth banter.",
+      "askedAs": [
+        "fast captions for quick banter",
+        "one word at a time subtitles",
+        "snappy rapid dialogue text",
+        "быстрые субтитры по одному слову",
+        "динамичные титры для быстрого диалога"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 200,
+        "holdMs": 100,
+        "fontSize": 110,
+        "upcomingOpacity": 0
+      }
+    }
+  ]
+}

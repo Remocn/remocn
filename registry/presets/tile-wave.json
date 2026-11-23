@@ -1,0 +1,123 @@
+{
+  "component": "tile-wave",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "fine-mosaic",
+      "label": "Fine Mosaic",
+      "description": "A dense grid of small tiles ripples slowly across the frame for a detailed, pixel-like build.",
+      "askedAs": [
+        "lots of small tiles",
+        "dense grid slow ripple",
+        "fine pixel wave transition",
+        "много мелких плиток",
+        "плотная сетка с медленной волной"
+      ],
+      "props": {
+        "rows": 20,
+        "spread": 60,
+        "swap": 18,
+        "accent": "#5b7cfa"
+      }
+    },
+    {
+      "id": "snap-cut",
+      "label": "Snap Cut",
+      "description": "A few big tiles flip almost at once for a fast, punchy graphic cut.",
+      "askedAs": [
+        "fast chunky tile flip",
+        "quick hard cut with big tiles",
+        "snappy block swap",
+        "быстрая смена крупными плитками",
+        "резкий переход блоками"
+      ],
+      "props": {
+        "rows": 3,
+        "spread": 6,
+        "swap": 8,
+        "delay": 4,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Warm off-white stage with serif type and a terracotta accent for a calm, magazine feel.",
+      "askedAs": [
+        "light editorial serif look",
+        "warm paper background",
+        "elegant magazine style tiles",
+        "светлый журнальный стиль с засечками",
+        "тёплый бумажный фон"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#c2562f",
+        "fontFamily": "Instrument Serif",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "terminal-scan",
+      "label": "Terminal Scan",
+      "description": "Near-black stage with mono type and a muted green accent, like a methodical system scan.",
+      "askedAs": [
+        "code terminal style",
+        "monospace tech scan",
+        "dark hacker look green",
+        "стиль терминала с моноширинным шрифтом",
+        "техничное сканирование"
+      ],
+      "props": {
+        "background": "#0d1110",
+        "ink": "#d7e4dc",
+        "accent": "#3fa37a",
+        "fontFamily": "JetBrains Mono",
+        "rows": 12,
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "An unhurried, long wave with a held opening and smaller centered type for a cinematic reveal.",
+      "askedAs": [
+        "slow cinematic tile reveal",
+        "gentle relaxed transition",
+        "long wave with pause before",
+        "медленное кинематографичное появление",
+        "плавная неспешная волна"
+      ],
+      "props": {
+        "speed": 0.5,
+        "delay": 36,
+        "swap": 40,
+        "scale": 0.85,
+        "accent": "#7a6ff0"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "Crisp white stage with Inter type, a deep navy accent and no grain for a tidy product look.",
+      "askedAs": [
+        "clean white product style",
+        "minimal light no grain",
+        "simple corporate tiles",
+        "чистый белый минимализм",
+        "светлый продуктовый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#fafafa",
+        "ink": "#111827",
+        "accent": "#1e3a8a",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    }
+  ]
+}

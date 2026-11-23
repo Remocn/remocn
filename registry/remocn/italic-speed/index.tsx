@@ -2,15 +2,11 @@
 
 import { loadFont } from "@remotion/google-fonts/Archivo";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("italic", {
   weights: ["500"],
@@ -26,7 +22,23 @@ export interface ItalicSpeedProps {
   title?: string;
   /** Second line, set smaller under the underline. Pass "" to hide. */
   subtitle?: string;
+  /** Frames each letter trails the one ahead of it. */
+  stagger?: number;
+  /** Skew (degrees) the letters arrive with before they snap upright. */
+  lean?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /**
+   * Typeface for the title. Load it yourself; Archivo italic by default.
+   * Layout uses Archivo metrics, so another face may set looser or tighter.
+   */
+  fontFamily?: string;
+  /** Size of the type, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -174,16 +186,43 @@ function layout(text: string) {
   return { pens, advance: pen };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ItalicSpeed({
   title = "FASTER",
   subtitle = "Ship at race pace.",
+  stagger = STAGGER,
+  lean: arriveLean = LEAN,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: ItalicSpeedProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const text = title.trim().toUpperCase() || "GO";
@@ -212,18 +251,28 @@ export function ItalicSpeed({
   // Letters: the last one leads; each trails the next by STAGGER frames.
   const n = text.length;
   const letters = text.split("").map((ch, i) => {
-    const arrive = ARRIVE + (n - 1 - i) * STAGGER;
+    const arrive = ARRIVE + (n - 1 - i) * stagger;
     const ride = RIDE(interpolate(t, [arrive - TRAVEL, arrive], [0, 1], CLAMP));
     const dx = -(1.05 * W) * (1 - ride);
-    const snap = spring({
-      frame: t - (arrive - 2),
-      fps,
-      config: { damping: 11, stiffness: 320, mass: 0.55 },
-    });
-    const lean = -LEAN * (1 - snap);
+    const leanAt = (tt: number) =>
+      -arriveLean *
+      (1 -
+        spring({
+          frame: tt - (arrive - 2),
+          fps,
+          config: { damping: 11, stiffness: 320, mass: 0.55 },
+        }));
+    const lean = leanAt(t);
+    // The spring overshoots and trails off: the lean moves while it differs
+    // from a neighbouring frame's by more than a thousandth of a pixel at the
+    // cap height.
+    const still = 1e-3 / ((Math.PI / 180) * cap);
+    const leaning =
+      Math.abs(leanAt(t + speed) - lean) > still ||
+      Math.abs(lean - leanAt(t - speed)) > still;
     const x = penX + pens[i] * fs + dx;
     const pivot = x + (ADV[code(ch)] / 2000) * fs;
-    return { ch, x, lean, pivot, visible: ride > 0 };
+    return { ch, x, lean, leaning, pivot, visible: ride > 0 };
   });
   const lead = letters[n - 1];
   const leadRight = lead.x + (ADV[code(lead.ch)] / 1000) * fs;
@@ -255,100 +304,112 @@ export function ItalicSpeed({
   });
   const done = strips.every((s) => s.ret >= 1);
 
-  const subP = SUB(interpolate(t, [SUB_AT, SUB_AT + SUB_LEN], [0, 1], CLAMP));
+  const subAt = (tt: number) =>
+    SUB(interpolate(tt, [SUB_AT, SUB_AT + SUB_LEN], [0, 1], CLAMP));
+  const subP = subAt(t);
+  const subMoving = subAt(t + speed) !== subP || subAt(t - speed) !== subP;
   const subLean = -14 * (1 - subP);
   const subBase = ruleY + ruleH + subGap + subFs * CAP;
   const subDy = -(subFs * 1.2) * (1 - subP);
   const subX = ruleL + 0.004 * W;
 
   return (
-    <AbsoluteFill style={{ background: c.stage }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        role="img"
-        aria-label={sub ? `${text}. ${sub}` : text}
-      >
-        <defs>
-          <linearGradient id={`${uid}-beam`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor={c.beam[0]} stopOpacity={0} />
-            <stop offset="0.35" stopColor={c.beam[0]} />
-            <stop offset="0.7" stopColor={c.beam[1]} />
-            <stop offset="0.92" stopColor={c.beam[2]} />
-            <stop offset="1" stopColor={c.beam[3]} />
-          </linearGradient>
-          <linearGradient id={`${uid}-rule`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor={accent} />
-            <stop offset="0.75" stopColor={c.beam[1]} />
-            <stop offset="1" stopColor={c.beam[2]} />
-          </linearGradient>
-          <clipPath id={`${uid}-sub`}>
-            <rect x={0} y={ruleY + ruleH} width={W} height={H} />
-          </clipPath>
-        </defs>
-        {done ? (
-          <rect
-            x={ruleL}
-            y={ruleY}
-            width={ruleR - ruleL}
-            height={ruleH}
-            fill={`url(#${uid}-rule)`}
-          />
-        ) : (
-          [
-            ...strips.filter((s) => !s.accent),
-            ...strips.filter((s) => s.accent),
-          ]
-            .filter((s) => s.r > s.l)
-            .map((s) => (
-              <rect
-                key={s.key}
-                x={s.l}
-                y={s.y}
-                width={s.r - s.l}
-                height={s.h}
-                fill={s.color}
-              />
-            ))
-        )}
-        {letters.map((g, i) =>
-          g.visible && g.ch !== " " ? (
-            <text
-              key={i}
-              x={g.x}
-              y={baseline}
-              transform={`translate(${g.pivot} ${baseline}) skewX(${g.lean}) translate(${-g.pivot} ${-baseline})`}
-              fill={c.ink}
-              fontFamily={display}
-              fontStyle="italic"
-              fontWeight={500}
-              fontSize={fs}
-              style={{ fontKerning: "none" }}
-            >
-              {g.ch}
-            </text>
-          ) : null,
-        )}
-        {sub && subP > 0 ? (
-          <g clipPath={`url(#${uid}-sub)`}>
-            <text
-              x={subX}
-              y={subBase + subDy}
-              transform={`translate(${subX} ${subBase}) skewX(${subLean}) translate(${-subX} ${-subBase})`}
-              fill={c.sub}
-              fontFamily={serif}
-              fontStyle="italic"
-              fontWeight={400}
-              fontSize={subFs}
-              style={{ letterSpacing: "-0.01em" }}
-            >
-              {sub}
-            </text>
-          </g>
-        ) : null}
-      </svg>
+    <AbsoluteFill style={{ background: stage }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{
+            position: "absolute",
+            inset: 0,
+            // A skew alone keeps a glyph raster on the pixel grid, so a letter
+            // whose italic lean springs, or a subtitle that rises, would click
+            // along; SVG text can't carry the mark, so the drawing does.
+            transform: glide(letters.some((g) => g.leaning) || subMoving),
+          }}
+          role="img"
+          aria-label={sub ? `${text}. ${sub}` : text}
+        >
+          <defs>
+            <linearGradient id={`${uid}-beam`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor={c.beam[0]} stopOpacity={0} />
+              <stop offset="0.35" stopColor={c.beam[0]} />
+              <stop offset="0.7" stopColor={c.beam[1]} />
+              <stop offset="0.92" stopColor={c.beam[2]} />
+              <stop offset="1" stopColor={c.beam[3]} />
+            </linearGradient>
+            <linearGradient id={`${uid}-rule`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor={accent} />
+              <stop offset="0.75" stopColor={c.beam[1]} />
+              <stop offset="1" stopColor={c.beam[2]} />
+            </linearGradient>
+            <clipPath id={`${uid}-sub`}>
+              <rect x={0} y={ruleY + ruleH} width={W} height={H} />
+            </clipPath>
+          </defs>
+          {done ? (
+            <rect
+              x={ruleL}
+              y={ruleY}
+              width={ruleR - ruleL}
+              height={ruleH}
+              fill={`url(#${uid}-rule)`}
+            />
+          ) : (
+            [
+              ...strips.filter((s) => !s.accent),
+              ...strips.filter((s) => s.accent),
+            ]
+              .filter((s) => s.r > s.l)
+              .map((s) => (
+                <rect
+                  key={s.key}
+                  x={s.l}
+                  y={s.y}
+                  width={s.r - s.l}
+                  height={s.h}
+                  fill={s.color}
+                />
+              ))
+          )}
+          {letters.map((g, i) =>
+            g.visible && g.ch !== " " ? (
+              <text
+                key={i}
+                x={g.x}
+                y={baseline}
+                transform={`translate(${g.pivot} ${baseline}) skewX(${g.lean}) translate(${-g.pivot} ${-baseline})`}
+                fill={fg}
+                fontFamily={fontFamily}
+                fontStyle="italic"
+                fontWeight={500}
+                fontSize={fs}
+                style={{ fontKerning: "none" }}
+              >
+                {g.ch}
+              </text>
+            ) : null,
+          )}
+          {sub && subP > 0 ? (
+            <g clipPath={`url(#${uid}-sub)`}>
+              <text
+                x={subX}
+                y={subBase + subDy}
+                transform={`translate(${subX} ${subBase}) skewX(${subLean}) translate(${-subX} ${-subBase})`}
+                fill={c.sub}
+                fontFamily={serif}
+                fontStyle="italic"
+                fontWeight={400}
+                fontSize={subFs}
+                style={{ letterSpacing: "-0.01em" }}
+              >
+                {sub}
+              </text>
+            </g>
+          ) : null}
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

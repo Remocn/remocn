@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const spotlightTextConfig: ComponentConfig = {
   componentName: "SpotlightText",
@@ -13,11 +19,6 @@ export const spotlightTextConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     title: {
       type: "text-content",
       default: "Launch videos, in code.",
@@ -28,6 +29,30 @@ export const spotlightTextConfig: ComponentConfig = {
       default: "remocn 2.0",
       description: "Eyebrow",
     },
+    sweep: {
+      type: "number",
+      default: 78,
+      min: 30,
+      max: 150,
+      step: 1,
+      description: "Sweep (frames)",
+      hiddenFromList: false,
+    },
+    spotSize: {
+      type: "number",
+      default: 1.25,
+      min: 0.5,
+      max: 3,
+      step: 0.05,
+      description: "Spotlight size",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

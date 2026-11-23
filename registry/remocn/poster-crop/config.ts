@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const posterCropConfig: ComponentConfig = {
   componentName: "PosterCrop",
@@ -39,6 +45,16 @@ export const posterCropConfig: ComponentConfig = {
         "Production-ready motion for launch videos. Install a component, drop in your words, render.",
       description: "Note",
     },
+    pull: {
+      type: "number",
+      default: 96,
+      min: 30,
+      max: 130,
+      step: 1,
+      description: "Pull back (frames)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

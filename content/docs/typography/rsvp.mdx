@@ -46,8 +46,8 @@ export const RemotionRoot = () => (
   <Composition
     id="Rsvp"
     component={RsvpScene}
-    durationInFrames={180}
-    fps={30}
+    durationInFrames={360}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -83,14 +83,49 @@ The `headline` rises word by word, then rows of label and value (the `fields`) b
       description: "Text of the final row, such as a link or command; empty hides the row.",
     },
     {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "Weight of the headline.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "4",
+      description: "Frames between headline words as they rise in.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of the labels and the final row.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Lexend\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

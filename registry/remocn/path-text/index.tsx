@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -8,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const serif = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 const serifItalic = loadFont("italic", {
@@ -26,6 +27,20 @@ export interface PathTextProps {
   looseness?: number;
   /** Kept for the shared draft API; the stroke takes the theme's gradient instead. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the text. Load it yourself; Instrument Serif by default. */
+  fontFamily?: string;
+  /** Frames between letters as the text writes on. */
+  stagger?: number;
+  /** Frame the stroke starts pulling taut. */
+  pullAt?: number;
+  /** Size of the text and stroke, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -96,7 +111,7 @@ function splitItalic(text: string, italicWords: number) {
   return [roman ? `${roman} ` : "", italic] as const;
 }
 
-function useTextWidth(roman: string, italic: string) {
+function useTextWidth(roman: string, italic: string, fontFamily: string) {
   const [width, setWidth] = useState<number | null>(null);
   const [handle] = useState(() => delayRender("path-text: measuring"));
   const released = useRef(false);
@@ -106,8 +121,8 @@ function useTextWidth(roman: string, italic: string) {
     Promise.all([
       serif.waitUntilDone(),
       serifItalic.waitUntilDone(),
-      document.fonts.load(`400 100px "${serif.fontFamily}"`),
-      document.fonts.load(`italic 400 100px "${serif.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
+      document.fonts.load(`italic 400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -115,9 +130,9 @@ function useTextWidth(roman: string, italic: string) {
         const ctx = document.createElement("canvas").getContext("2d");
         let em = (roman.length + italic.length) * 0.42;
         if (ctx) {
-          ctx.font = `400 ${PROBE}px "${serif.fontFamily}"`;
+          ctx.font = `400 ${PROBE}px "${fontFamily}"`;
           em = ctx.measureText(roman).width / PROBE;
-          ctx.font = `italic 400 ${PROBE}px "${serif.fontFamily}"`;
+          ctx.font = `italic 400 ${PROBE}px "${fontFamily}"`;
           em += ctx.measureText(italic).width / PROBE;
         }
         setWidth(em + TRACK * [...roman, ...italic].length);
@@ -129,29 +144,58 @@ function useTextWidth(roman: string, italic: string) {
     return () => {
       live = false;
     };
-  }, [roman, italic, handle]);
+  }, [roman, italic, handle, fontFamily]);
 
   return width;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function PathText({
   text = "From rough to ready.",
   italicWords = 1,
   looseness = 0.15,
+  ink,
+  background,
+  fontFamily = serif.fontFamily,
+  stagger = 2,
+  pullAt = 46,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: PathTextProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
   const u = W / 1280;
   const id = `pt${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const gradId = `${id}g`;
   const [roman, italic] = splitItalic(text, italicWords);
-  const em = useTextWidth(roman, italic);
+  const em = useTextWidth(roman, italic, fontFamily);
 
   if (em === null)
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return (
+      <div style={{ position: "absolute", inset: 0, background: stage }} />
+    );
 
   const size = Math.min(H * 0.22, (W * 0.82) / em);
   const textW = em * size;
@@ -164,7 +208,7 @@ export function PathText({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const morphStart = 46;
+  const morphStart = pullAt;
   const morphLen = 40;
   const thin = interpolate(t, [morphStart + 6, morphStart + morphLen], [0, 1], {
     ...CLAMP,
@@ -207,73 +251,86 @@ export function PathText({
   const palette = STROKE[theme];
   const gradSpan = startSpan + (endSpan - startSpan) * thin;
   const writeStart = 14;
+  // Chrome parks a glyph raster on a whole pixel vertically for as long as
+  // its matrix is axis-aligned, and as the stroke pulls taut the glyphs riding
+  // it straighten and click down pixel by pixel. The drawing is marked so
+  // they lean off that grid for the pull. The mark counts as moving from the
+  // frame before the pull to the frame after it, so the lean comes and goes
+  // on a frame where the glyphs stand still rather than as they set off.
+  const pulling = t + speed > morphStart && t - speed < morphStart + morphLen;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <path id={id} d={d} />
-          <linearGradient
-            id={gradId}
-            gradientUnits="userSpaceOnUse"
-            x1={W / 2 - gradSpan / 2}
-            y1={0}
-            x2={W / 2 + gradSpan / 2}
-            y2={0}
-          >
-            {palette.map((col, k) => (
-              <stop
-                key={col}
-                offset={Math.min(1, Math.max(0, k / 3 - 0.05 + slide))}
-                stopColor={col}
-              />
-            ))}
-          </linearGradient>
-        </defs>
-        <path
-          d={d}
-          pathLength={1}
-          fill="none"
-          stroke={`url(#${gradId})`}
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray="1 1"
-          strokeDashoffset={1 - drawIn}
-        />
-        <text
-          fontFamily={serif.fontFamily}
-          fontSize={size}
-          letterSpacing={`${TRACK}em`}
-          fill={c.fg}
-          dy={-interpolate(thin, [0, 1], [size * 0.06, gap])}
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(pulling),
+          }}
+          aria-hidden
         >
-          <textPath href={`#${id}`} startOffset="50%" textAnchor="middle">
-            {glyphs.map((g, i) => {
-              const o = interpolate(
-                t,
-                [writeStart + i * 2, writeStart + i * 2 + 8],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
-              return (
-                <tspan
-                  key={i}
-                  opacity={o}
-                  fontStyle={i >= romanCount ? "italic" : undefined}
-                >
-                  {g}
-                </tspan>
-              );
-            })}
-          </textPath>
-        </text>
-      </svg>
+          <defs>
+            <path id={id} d={d} />
+            <linearGradient
+              id={gradId}
+              gradientUnits="userSpaceOnUse"
+              x1={W / 2 - gradSpan / 2}
+              y1={0}
+              x2={W / 2 + gradSpan / 2}
+              y2={0}
+            >
+              {palette.map((col, k) => (
+                <stop
+                  key={col}
+                  offset={Math.min(1, Math.max(0, k / 3 - 0.05 + slide))}
+                  stopColor={col}
+                />
+              ))}
+            </linearGradient>
+          </defs>
+          <path
+            d={d}
+            pathLength={1}
+            fill="none"
+            stroke={`url(#${gradId})`}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray="1 1"
+            strokeDashoffset={1 - drawIn}
+          />
+          <text
+            fontFamily={fontFamily}
+            fontSize={size}
+            letterSpacing={`${TRACK}em`}
+            fill={fg}
+            dy={-interpolate(thin, [0, 1], [size * 0.06, gap])}
+          >
+            <textPath href={`#${id}`} startOffset="50%" textAnchor="middle">
+              {glyphs.map((g, i) => {
+                const o = interpolate(
+                  t,
+                  [writeStart + i * stagger, writeStart + i * stagger + 8],
+                  [0, 1],
+                  { ...CLAMP, easing: EASE_OUT },
+                );
+                return (
+                  <tspan
+                    key={i}
+                    opacity={o}
+                    fontStyle={i >= romanCount ? "italic" : undefined}
+                  >
+                    {g}
+                  </tspan>
+                );
+              })}
+            </textPath>
+          </text>
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

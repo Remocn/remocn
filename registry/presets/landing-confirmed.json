@@ -1,0 +1,119 @@
+{
+  "component": "landing-confirmed",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-orbit",
+      "label": "Slow Orbit",
+      "description": "A long, unhurried descent with a soft violet gradient that lets the landing feel weighty and cinematic.",
+      "askedAs": [
+        "make the countdown slower and more dramatic",
+        "cinematic slow landing",
+        "gentle long descent before shipped",
+        "медленный плавный спуск",
+        "более кинематографично и медленно"
+      ],
+      "props": {
+        "descent": 110,
+        "speed": 0.5,
+        "accent": "#6e5bd8"
+      }
+    },
+    {
+      "id": "hard-landing",
+      "label": "Hard Landing",
+      "description": "A short, fast drop with a bold warm red gradient and oversized type for a punchy impact.",
+      "askedAs": [
+        "faster and punchier landing",
+        "quick impact with big text",
+        "energetic shipped hit",
+        "быстрое резкое приземление",
+        "сделай энергичнее и крупнее"
+      ],
+      "props": {
+        "descent": 18,
+        "speed": 1.75,
+        "scale": 1.15,
+        "accent": "#e5484d",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "paper-edition",
+      "label": "Paper Edition",
+      "description": "A warm off-white card with dark ink, editorial Fraunces type and a terracotta gradient.",
+      "askedAs": [
+        "light editorial version",
+        "warm paper background with serif",
+        "print magazine style landing",
+        "светлая версия в стиле журнала",
+        "тёплый бумажный фон с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b4532a",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "mission-control",
+      "label": "Mission Control",
+      "description": "A near-black terminal look with monospaced type, a muted green gradient and no grain.",
+      "askedAs": [
+        "make it look like mission control",
+        "terminal monospace style",
+        "nasa console countdown",
+        "в стиле центра управления полётами",
+        "моноширинный шрифт как терминал"
+      ],
+      "props": {
+        "background": "#0b0f0c",
+        "ink": "#d7e3d4",
+        "accent": "#4faf7a",
+        "fontFamily": "JetBrains Mono",
+        "grain": false
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "A deep ink-black stage with ivory text, an Instrument Serif headline and a restrained gold gradient.",
+      "askedAs": [
+        "luxury black and gold",
+        "premium dark with gold title",
+        "elegant serif shipped card",
+        "чёрный с золотом премиально",
+        "элегантный тёмный вариант с золотом"
+      ],
+      "props": {
+        "background": "#0e0d12",
+        "ink": "#f2ede4",
+        "accent": "#c9a54c",
+        "fontFamily": "Instrument Serif",
+        "descent": 80
+      }
+    },
+    {
+      "id": "clean-studio",
+      "label": "Clean Studio",
+      "description": "A crisp light theme with Inter, a deep teal gradient, slightly smaller scale and no grain.",
+      "askedAs": [
+        "clean minimal light version",
+        "simple corporate look",
+        "smaller tidy shipped title",
+        "минималистичная светлая версия",
+        "чистый строгий стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#2f6f5e",
+        "scale": 0.85,
+        "grain": false
+      }
+    }
+  ]
+}

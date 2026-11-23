@@ -1,0 +1,83 @@
+{
+  "component": "frosted-clear",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-fog",
+      "label": "Slow Fog",
+      "description": "Heavy frost that lifts slowly after a pause, building maximum suspense.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "heavy blur that clears slowly",
+        "suspenseful number reveal",
+        "медленное раскрытие под матовым стеклом",
+        "драматичное появление цифры"
+      ],
+      "props": {
+        "blur": 64,
+        "clear": 110,
+        "delay": 24,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "A bright paper-white card with serif type and a deep ink accent for a magazine feel.",
+      "askedAs": [
+        "light theme with serif font",
+        "elegant white editorial stat",
+        "magazine style number",
+        "светлый вариант с засечками",
+        "элегантная журнальная цифра"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f5f2ec",
+        "ink": "#1a1a1a",
+        "accent": "#8a5a2b",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "emerald-night",
+      "label": "Emerald Night",
+      "description": "Deep green-black backdrop with a soft emerald edge glow and clean geometric type.",
+      "askedAs": [
+        "dark green premium look",
+        "emerald accent stat card",
+        "luxury dark green glass",
+        "тёмно-зелёная премиальная карточка",
+        "изумрудный акцент на тёмном"
+      ],
+      "props": {
+        "background": "#0b1a16",
+        "ink": "#e8f3ee",
+        "accent": "#2fbf8f",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Grain-free charcoal with monospaced type and an amber accent for a technical, dev-tool tone.",
+      "askedAs": [
+        "monospace tech style stat",
+        "developer terminal look",
+        "clean code font number",
+        "моноширинный технический стиль",
+        "как в терминале"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#111214",
+        "ink": "#ededed",
+        "accent": "#f2a93b",
+        "grain": false,
+        "scale": 0.9
+      }
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "component": "caption-teleprompter",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "focus-single-line",
+      "label": "Single Line Focus",
+      "description": "One large bold line at a time glides in place, with unspoken words dimmed until they are read.",
+      "askedAs": [
+        "show only one line at a time",
+        "big single caption line",
+        "focus on current sentence only",
+        "только одна строка субтитров",
+        "крупная одна строка текста"
+      ],
+      "props": {
+        "visibleLines": 1,
+        "fontSize": 88,
+        "fontWeight": 900,
+        "upcomingOpacity": 0.3,
+        "combineTokensWithinMilliseconds": 1000
+      }
+    },
+    {
+      "id": "script-reader",
+      "label": "Script Reader",
+      "description": "A tall, lighter-weight column of five lines reads like a real teleprompter script with generous context.",
+      "askedAs": [
+        "teleprompter with more lines",
+        "show lots of transcript at once",
+        "scrolling script view",
+        "телесуфлёр с несколькими строками",
+        "показать больше текста сразу"
+      ],
+      "props": {
+        "visibleLines": 5,
+        "fontSize": 48,
+        "fontWeight": 500,
+        "pastOpacity": 0.25,
+        "futureOpacity": 0.5,
+        "combineTokensWithinMilliseconds": 2500
+      }
+    },
+    {
+      "id": "warm-paper",
+      "label": "Warm Paper",
+      "description": "Warm ivory text in a medium weight with soft fades and no shadow for a calm, editorial feel.",
+      "askedAs": [
+        "soft warm cream captions",
+        "calm editorial subtitles",
+        "no shadow warm text",
+        "тёплые мягкие субтитры",
+        "кремовый текст без тени"
+      ],
+      "props": {
+        "color": "#f3e9d7",
+        "fontWeight": 600,
+        "shadow": false,
+        "pastOpacity": 0.2,
+        "futureOpacity": 0.2,
+        "upcomingOpacity": 0.45
+      }
+    },
+    {
+      "id": "ink-on-light",
+      "label": "Ink On Light",
+      "description": "Dark navy ink text without shadow, made for bright or white backgrounds.",
+      "askedAs": [
+        "dark text for white background",
+        "captions on light video",
+        "black subtitles no shadow",
+        "тёмный текст на светлом фоне",
+        "субтитры для белого фона"
+      ],
+      "props": {
+        "color": "#14213d",
+        "shadow": false,
+        "fontWeight": 700,
+        "pastOpacity": 0.3,
+        "futureOpacity": 0.3
+      }
+    },
+    {
+      "id": "brisk-lines",
+      "label": "Brisk Lines",
+      "description": "Short, fast-breaking lines in a compact size keep pace with quick talkers.",
+      "askedAs": [
+        "fast paced captions",
+        "short lines for quick speech",
+        "snappy subtitle breaks",
+        "быстрые короткие субтитры",
+        "субтитры для быстрой речи"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 700,
+        "holdMs": 300,
+        "fontSize": 56,
+        "upcomingOpacity": 0.4
+      }
+    },
+    {
+      "id": "slow-lecture",
+      "label": "Slow Lecture",
+      "description": "Long flowing lines with lingering pauses and gently visible neighbours suit unhurried narration.",
+      "askedAs": [
+        "captions for a slow lecture",
+        "long relaxed subtitle lines",
+        "calm narration captions",
+        "спокойные субтитры для лекции",
+        "длинные плавные строки"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 3500,
+        "holdMs": 1200,
+        "fontSize": 52,
+        "fontWeight": 600,
+        "futureOpacity": 0.45,
+        "color": "#e6edf3"
+      }
+    }
+  ]
+}

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const macroPanConfig: ComponentConfig = {
   componentName: "MacroPan",
@@ -12,11 +18,6 @@ export const macroPanConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -33,6 +34,30 @@ export const macroPanConfig: ComponentConfig = {
       default: "01",
       description: "Index",
     },
+    panLen: {
+      type: "number",
+      default: 100,
+      min: 20,
+      max: 200,
+      step: 2,
+      description: "Pan (frames)",
+      hiddenFromList: false,
+    },
+    pullLen: {
+      type: "number",
+      default: 34,
+      min: 6,
+      max: 90,
+      step: 1,
+      description: "Pull-back (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Fraunces", grain: true }),
     speed: {
       type: "number",
       default: 1,

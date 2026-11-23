@@ -1,15 +1,18 @@
 "use client";
 
 import { loadFont as loadDisplay } from "@remotion/google-fonts/BarlowCondensed";
-import { useId } from "react";
+import type React from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   AbsoluteFill,
+  continueRender,
+  delayRender,
   Easing,
   Img,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -24,6 +27,21 @@ export interface PhotoFillTypeProps {
   /** Image seen through the letters. Defaults to a generated dusk landscape. */
   src?: string;
   accent?: string;
+  /** Caption color; white over the image by default. */
+  ink?: string;
+  /** Background fill around the word; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the word and caption. Load it yourself; Barlow Condensed by default. */
+  fontFamily?: string;
+  /** Frame the letters start filling and the word opens to the full image. */
+  expandAt?: number;
+  /** Frames between letters filling, center letters first. */
+  stagger?: number;
+  /** Size of the word and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -105,6 +123,12 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+// Chrome parks a glyph raster on a whole pixel vertically for as long as the
+// matrix is axis-aligned, so text under a slow transform clicks along pixel by
+// pixel. A transform that carries text is marked, and told when it moves, so
+// the text leans off that grid.
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const THEMES = {
   dark: { bg: "#0A0A0B", grain: 0.05 },
@@ -515,24 +539,100 @@ function Grain({ opacity, uid }: { opacity: number; uid: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+/**
+ * Letter advances in em. Barlow Condensed uses the table above; another
+ * family is measured once it has loaded, since the word is set letter by
+ * letter at computed x positions.
+ */
+function useAdvances(letters: string[], family: string): number[] {
+  const custom = family !== display;
+  const key = letters.join("");
+  const [measured, setMeasured] = useState<{
+    key: string;
+    family: string;
+    adv: number[];
+  } | null>(null);
+  const [handle] = useState(() =>
+    custom ? delayRender("photo-fill-type: measuring") : null,
+  );
+  const released = useRef(false);
+  useEffect(() => {
+    if (!custom) return;
+    let live = true;
+    document.fonts
+      .load(`500 100px "${family}"`)
+      .catch(() => undefined)
+      .then(() => {
+        if (!live) return;
+        const ctx = document.createElement("canvas").getContext("2d");
+        if (ctx) {
+          ctx.font = `500 100px "${family}"`;
+          setMeasured({
+            key,
+            family,
+            adv: [...key].map((ch) => ctx.measureText(ch).width / 100),
+          });
+        }
+        if (handle !== null && !released.current) {
+          released.current = true;
+          continueRender(handle);
+        }
+      });
+    return () => {
+      live = false;
+    };
+  }, [custom, family, key, handle]);
+  if (custom && measured && measured.key === key && measured.family === family)
+    return measured.adv;
+  return letters.map((ch) => ADVANCE[ch] ?? 0.45);
+}
+
 export function PhotoFillType({
   title = "Dusk",
   caption = "Not a photograph. Every pixel is code.",
   src,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  expandAt = EXPAND,
+  stagger = 3,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: PhotoFillTypeProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
+  const captionAt = CAPTION + (expandAt - EXPAND);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const maskId = `pft-mask-${uid}`;
 
   const letters = title.toUpperCase().split("");
   const n = Math.max(letters.length, 1);
-  const adv = letters.map((ch) => ADVANCE[ch] ?? 0.45);
+  const adv = useAdvances(letters, fontFamily);
   const sumAdv = adv.reduce((a, b) => a + b, 0) || 0.45;
   // Condensed caps at 500: size, not weight, carries the word. Tracking opens
   // from 0 to TRACK1 while the letters fill, so fit both widths.
@@ -545,29 +645,38 @@ export function PhotoFillType({
   const capH = fs * CAP;
 
   // Open.
-  const open = interpolate(frame, [0, 22], [0.18, 1], {
-    ...CLAMP,
-    easing: SETTLE,
-  });
-  const wordScaleIn = interpolate(open, [0, 1], [1.035, 1]);
+  const openAt = (f: number) =>
+    interpolate(f, [0, 22], [0.18, 1], {
+      ...CLAMP,
+      easing: SETTLE,
+    });
+  const open = openAt(frame);
 
   // Expand: tracking opens while each letter fills with image from the
   // baseline up (center letters first), the gutters between the filled
   // windows close into one band, and the band opens like a letterbox.
-  const track = interpolate(frame, [EXPAND, EXPAND + 20], [0, 1], {
+  const trackAt = (f: number) =>
+    interpolate(f, [expandAt, expandAt + 20], [0, 1], {
+      ...CLAMP,
+      easing: CAMERA,
+    });
+  const track = trackAt(frame);
+  const closeP = interpolate(frame, [expandAt + 18, expandAt + 30], [0, 1], {
     ...CLAMP,
     easing: CAMERA,
   });
-  const closeP = interpolate(frame, [EXPAND + 18, EXPAND + 30], [0, 1], {
-    ...CLAMP,
-    easing: CAMERA,
-  });
-  const openP = interpolate(frame, [EXPAND + 26, EXPAND + 52], [0, 1], {
+  const openP = interpolate(frame, [expandAt + 26, expandAt + 52], [0, 1], {
     ...CLAMP,
     easing: OPEN,
   });
   const trackEm = TRACK1 * track * (1 - closeP * 0.35);
-  const wordScale = wordScaleIn * (1 + 0.02 * track);
+  const wordScaleAt = (f: number) =>
+    interpolate(openAt(f), [0, 1], [1.035, 1]) * (1 + 0.02 * trackAt(f));
+  const wordScale = wordScaleAt(frame);
+  // The word's edge sits ~W/2 from the pivot; a step under 1e-3px there is rest.
+  const wordMoving =
+    Math.abs(wordScaleAt(frame + speed) - wordScale) * W > 2e-3 ||
+    Math.abs(wordScale - wordScaleAt(frame - speed)) * W > 2e-3;
   const baseline = H / 2 + capH / 2;
 
   const totalW = (sumAdv + (n - 1) * trackEm) * fs;
@@ -584,7 +693,7 @@ export function PhotoFillType({
     const order = Math.floor(Math.abs(i - mid) + 0.01);
     const fill = interpolate(
       frame,
-      [EXPAND + 3 + order * 3, EXPAND + 17 + order * 3],
+      [expandAt + 3 + order * stagger, expandAt + 17 + order * stagger],
       [0, 1],
       { ...CLAMP, easing: CAMERA },
     );
@@ -611,13 +720,13 @@ export function PhotoFillType({
   const pan = interpolate(frame, [0, Math.max(durationInFrames, 60)], [-1, 1]);
   const photoScale = interpolate(
     frame,
-    [EXPAND + 22, EXPAND + 64],
+    [expandAt + 22, expandAt + 64],
     [1.1, 1.02],
     { ...CLAMP, easing: CAMERA },
   );
 
   // Caption.
-  const cap = interpolate(frame, [CAPTION, CAPTION + 18], [0, 1], {
+  const cap = interpolate(frame, [captionAt, captionAt + 18], [0, 1], {
     ...CLAMP,
     easing: SETTLE,
   });
@@ -639,121 +748,130 @@ export function PhotoFillType({
   );
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <mask
-            id={maskId}
-            maskUnits="userSpaceOnUse"
-            maskContentUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-          >
-            <rect x={0} y={0} width={W} height={H} fill="black" />
-            <g
-              transform={`translate(${W / 2} ${H / 2}) scale(${wordScale}) translate(${-W / 2} ${-H / 2})`}
-              opacity={open}
-            >
-              {letters.map((ch, i) => (
-                <text
-                  key={i}
-                  x={xs[i]}
-                  y={baseline}
-                  fill="white"
-                  style={{
-                    fontFamily: display,
-                    fontWeight: 500,
-                    fontSize: fs,
-                  }}
-                >
-                  {ch}
-                </text>
-              ))}
-              {openP <= 0 &&
-                cells.map((cell, i) =>
-                  cell.fill > 0 ? (
-                    <rect
-                      key={i}
-                      x={cell.left}
-                      y={cell.top}
-                      width={Math.max(0, cell.right - cell.left)}
-                      height={cellBottom - cell.top}
-                      fill="white"
-                    />
-                  ) : null,
-                )}
-              {openP > 0 && (
-                <rect x={bx} y={by} width={bw} height={bh} fill="white" />
-              )}
-            </g>
-          </mask>
-        </defs>
-      </svg>
-
-      <AbsoluteFill
-        style={{
-          maskImage: `url(#${maskId})`,
-          WebkitMaskImage: `url(#${maskId})`,
-        }}
-      >
-        <AbsoluteFill style={{ transform: `scale(${photoScale})` }}>
-          {photo}
-        </AbsoluteFill>
-        {/* a low scrim so the caption sits on the image without a box */}
-        <AbsoluteFill
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(0,0,0,0) 58%, rgba(0,0,0,0.45) 100%)",
-            opacity: cap,
-          }}
-        />
-      </AbsoluteFill>
-
-      {caption && cap > 0 && (
-        <div
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
           style={{
             position: "absolute",
-            left: 56 * u,
-            bottom: 50 * u,
-            display: "flex",
-            flexDirection: "column",
-            gap: 14 * u,
-            opacity: cap,
-            transform: `translateY(${(1 - cap) * 12 * u}px)`,
+            inset: 0,
+            // A drawing in SVG leans only while its mark says it moves; the
+            // word also holds under a scale, off the pixel grid, where
+            // dropping the lean would snap it to the nearest pixel.
+            transform: glide(wordMoving || Math.abs(wordScale - 1) > 1e-9),
+          }}
+          aria-hidden
+        >
+          <defs>
+            <mask
+              id={maskId}
+              maskUnits="userSpaceOnUse"
+              maskContentUnits="userSpaceOnUse"
+              x={0}
+              y={0}
+              width={W}
+              height={H}
+            >
+              <rect x={0} y={0} width={W} height={H} fill="black" />
+              <g
+                transform={`translate(${W / 2} ${H / 2}) scale(${wordScale}) translate(${-W / 2} ${-H / 2})`}
+                opacity={open}
+              >
+                {letters.map((ch, i) => (
+                  <text
+                    key={i}
+                    x={xs[i]}
+                    y={baseline}
+                    fill="white"
+                    style={{
+                      fontFamily,
+                      fontWeight: 500,
+                      fontSize: fs,
+                    }}
+                  >
+                    {ch}
+                  </text>
+                ))}
+                {openP <= 0 &&
+                  cells.map((cell, i) =>
+                    cell.fill > 0 ? (
+                      <rect
+                        key={i}
+                        x={cell.left}
+                        y={cell.top}
+                        width={Math.max(0, cell.right - cell.left)}
+                        height={cellBottom - cell.top}
+                        fill="white"
+                      />
+                    ) : null,
+                  )}
+                {openP > 0 && (
+                  <rect x={bx} y={by} width={bw} height={bh} fill="white" />
+                )}
+              </g>
+            </mask>
+          </defs>
+        </svg>
+
+        <AbsoluteFill
+          style={{
+            maskImage: `url(#${maskId})`,
+            WebkitMaskImage: `url(#${maskId})`,
           }}
         >
-          <div
+          <AbsoluteFill style={{ transform: `scale(${photoScale})` }}>
+            {photo}
+          </AbsoluteFill>
+          {/* a low scrim so the caption sits on the image without a box */}
+          <AbsoluteFill
             style={{
-              width: 36 * u * interpolate(cap, [0, 1], [0.4, 1]),
-              height: 2 * u,
-              background: accent,
+              background:
+                "linear-gradient(180deg, rgba(0,0,0,0) 58%, rgba(0,0,0,0.45) 100%)",
+              opacity: cap,
             }}
           />
+        </AbsoluteFill>
+
+        {caption && cap > 0 && (
           <div
             style={{
-              fontFamily: display,
-              fontWeight: 400,
-              fontSize: 38 * u,
-              letterSpacing: "0.005em",
-              lineHeight: 1.15,
-              color: "rgba(255,255,255,0.94)",
-              maxWidth: W * 0.62,
-              textWrap: "balance",
+              position: "absolute",
+              left: 56 * u,
+              bottom: 50 * u,
+              display: "flex",
+              flexDirection: "column",
+              gap: 14 * u,
+              opacity: cap,
+              transform: `translateY(${(1 - cap) * 12 * u}px)${glide(midway(cap))}`,
             }}
           >
-            {caption}
+            <div
+              style={{
+                width: 36 * u * interpolate(cap, [0, 1], [0.4, 1]),
+                height: 2 * u,
+                background: accent,
+              }}
+            />
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 38 * u,
+                letterSpacing: "0.005em",
+                lineHeight: 1.15,
+                color: ink ?? "rgba(255,255,255,0.94)",
+                maxWidth: W * 0.62,
+                textWrap: "balance",
+              }}
+            >
+              {caption}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </ScaleLayer>
 
-      <Grain opacity={c.grain + 0.03 * openP} uid={uid} />
+      {grain ? <Grain opacity={c.grain + 0.03 * openP} uid={uid} /> : null}
     </AbsoluteFill>
   );
 }

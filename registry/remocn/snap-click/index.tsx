@@ -1,14 +1,10 @@
 "use client";
 
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: mono } = loadMono("normal", {
   weights: ["400"],
@@ -23,6 +19,18 @@ export interface SnapClickProps {
   /** Small line typed under the lockup after the click. */
   label?: string;
   accent?: string;
+  /** Color of the left half of the lockup; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Frame the two halves snap together; the label follows 11 frames later. */
+  click?: number;
+  /** Size of the lockup and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -332,16 +340,38 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SnapClick({
   text = "emocn",
   seam,
   label = "Animations for Remotion",
   accent = "#3B5BFD",
+  ink,
+  background,
+  click = 13,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: SnapClickProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const u = W / 1280;
   const id = `sc${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -364,8 +394,8 @@ export function SnapClick({
   const baseline = H * 0.47 + (R_HEIGHT / 2) * k;
 
   // Beats: halves slam in (0 → CLICK), snap, shake, label types from TYPE.
-  const CLICK = 13;
-  const TYPE = 24;
+  const CLICK = click;
+  const TYPE = click + 11;
   const seamScreen = ox + seamX * k;
   // Both halves open the shot whole, pushed out to the frame margins, so the
   // first frame is already a composed picture: two pieces and a gap.
@@ -399,7 +429,7 @@ export function SnapClick({
   const caretOn = !done || Math.floor((t - TYPE) / 9) % 2 === 0;
 
   const drift = Math.min(t, 105) * 0.04;
-  const background = [
+  const ground = [
     ...c.blobs.map(
       ([col, x, y], i) =>
         `radial-gradient(85% 95% at ${x + (i % 2 ? -drift : drift)}% ${y}%, ${col} 0%, transparent 68%)`,
@@ -428,114 +458,128 @@ export function SnapClick({
   const labelSize = 24 * u;
 
   return (
-    <AbsoluteFill style={{ background, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <clipPath id={`${id}-l`}>
-            <rect x={-big} y={-big} width={big + seamX} height={big * 2} />
-          </clipPath>
-          <clipPath id={`${id}-r`}>
-            <rect x={seamX} y={-big} width={big} height={big * 2} />
-          </clipPath>
-          <clipPath id={`${id}-glyphs`}>{lockup}</clipPath>
-          <linearGradient
-            id={`${id}-fill`}
-            gradientUnits="userSpaceOnUse"
-            x1={seamX}
-            y1={-R_HEIGHT}
-            x2={set.ink}
-            y2={0}
-          >
-            <stop offset="0" stopColor={fill[0]} />
-            <stop offset="0.45" stopColor={fill[1]} />
-            <stop offset="1" stopColor={fill[2]} />
-          </linearGradient>
-        </defs>
-        <g transform={`translate(${shake} 0)`}>
-          <g transform={`translate(${ox + dxL} ${baseline}) scale(${k})`}>
-            <g clipPath={`url(#${id}-l)`}>
-              <rect
-                x={-R_WIDTH}
-                y={-1200}
-                width={seamX + R_WIDTH * 2}
-                height={1600}
-                fill={c.fg}
-                clipPath={`url(#${id}-glyphs)`}
-              />
-            </g>
-          </g>
-          <g transform={`translate(${ox + dxR} ${baseline}) scale(${k})`}>
-            <g clipPath={`url(#${id}-r)`}>
-              <rect
-                x={seamX - 200}
-                y={-1200}
-                width={set.ink - seamX + 400}
-                height={1600}
-                fill={`url(#${id}-fill)`}
-                clipPath={`url(#${id}-glyphs)`}
-              />
-            </g>
-          </g>
-          {flash > 0 && t >= CLICK ? (
-            <rect
-              x={seamScreen - u}
-              y={baseline - (R_HEIGHT / 2) * k - (flashH / 2) * k}
-              width={2 * u}
-              height={flashH * k}
-              fill={c.flash}
-              opacity={flash}
-            />
-          ) : null}
-        </g>
-      </svg>
-      {typing ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: baseline + 92 * u,
-            textAlign: "center",
-            fontFamily: mono,
-            fontWeight: 400,
-            fontSize: labelSize,
-            letterSpacing: "0.01em",
-            lineHeight: 1,
-            color: c.muted,
-            whiteSpace: "pre",
-          }}
+    <AbsoluteFill
+      style={{
+        background:
+          background === undefined
+            ? ground
+            : background === "transparent"
+              ? undefined
+              : background,
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
         >
-          <span>{label.slice(0, typed)}</span>
-          <span
+          <defs>
+            <clipPath id={`${id}-l`}>
+              <rect x={-big} y={-big} width={big + seamX} height={big * 2} />
+            </clipPath>
+            <clipPath id={`${id}-r`}>
+              <rect x={seamX} y={-big} width={big} height={big * 2} />
+            </clipPath>
+            <clipPath id={`${id}-glyphs`}>{lockup}</clipPath>
+            <linearGradient
+              id={`${id}-fill`}
+              gradientUnits="userSpaceOnUse"
+              x1={seamX}
+              y1={-R_HEIGHT}
+              x2={set.ink}
+              y2={0}
+            >
+              <stop offset="0" stopColor={fill[0]} />
+              <stop offset="0.45" stopColor={fill[1]} />
+              <stop offset="1" stopColor={fill[2]} />
+            </linearGradient>
+          </defs>
+          <g transform={`translate(${shake} 0)`}>
+            <g transform={`translate(${ox + dxL} ${baseline}) scale(${k})`}>
+              <g clipPath={`url(#${id}-l)`}>
+                <rect
+                  x={-R_WIDTH}
+                  y={-1200}
+                  width={seamX + R_WIDTH * 2}
+                  height={1600}
+                  fill={ink ?? c.fg}
+                  clipPath={`url(#${id}-glyphs)`}
+                />
+              </g>
+            </g>
+            <g transform={`translate(${ox + dxR} ${baseline}) scale(${k})`}>
+              <g clipPath={`url(#${id}-r)`}>
+                <rect
+                  x={seamX - 200}
+                  y={-1200}
+                  width={set.ink - seamX + 400}
+                  height={1600}
+                  fill={`url(#${id}-fill)`}
+                  clipPath={`url(#${id}-glyphs)`}
+                />
+              </g>
+            </g>
+            {flash > 0 && t >= CLICK ? (
+              <rect
+                x={seamScreen - u}
+                y={baseline - (R_HEIGHT / 2) * k - (flashH / 2) * k}
+                width={2 * u}
+                height={flashH * k}
+                fill={c.flash}
+                opacity={flash}
+              />
+            ) : null}
+          </g>
+        </svg>
+        {typing ? (
+          <div
             style={{
-              display: "inline-block",
-              width: 0,
-              position: "relative",
-              verticalAlign: "top",
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: baseline + 92 * u,
+              textAlign: "center",
+              fontFamily: mono,
+              fontWeight: 400,
+              fontSize: labelSize,
+              letterSpacing: "0.01em",
+              lineHeight: 1,
+              color: c.muted,
+              whiteSpace: "pre",
             }}
           >
+            <span>{label.slice(0, typed)}</span>
             <span
               style={{
-                position: "absolute",
-                left: labelSize * 0.08,
-                top: -labelSize * 0.08,
-                width: labelSize * 0.55,
-                height: labelSize * 1.12,
-                background: accent,
-                opacity: caretOn ? 1 : 0,
+                display: "inline-block",
+                width: 0,
+                position: "relative",
+                verticalAlign: "top",
               }}
-            />
-          </span>
-          <span style={{ color: "transparent" }}>{label.slice(typed)}</span>
-        </div>
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  left: labelSize * 0.08,
+                  top: -labelSize * 0.08,
+                  width: labelSize * 0.55,
+                  height: labelSize * 1.12,
+                  background: accent,
+                  opacity: caretOn ? 1 : 0,
+                }}
+              />
+            </span>
+            <span style={{ color: "transparent" }}>{label.slice(typed)}</span>
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {background !== "transparent" && grain ? (
+        <Grain opacity={c.grain} />
       ) : null}
-      <Grain opacity={c.grain} />
     </AbsoluteFill>
   );
 }

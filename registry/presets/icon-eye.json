@@ -1,0 +1,100 @@
+{
+  "component": "icon-eye",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-reveal",
+      "label": "Hairline Reveal",
+      "description": "A large, thin-stroked eye that slowly draws itself in a soft slate tone.",
+      "askedAs": [
+        "slow thin eye drawing",
+        "elegant line eye icon",
+        "big delicate eye outline",
+        "тонкий глаз медленно рисуется",
+        "элегантная иконка глаза"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 128,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "quick-blink",
+      "label": "Quick Blink",
+      "description": "A compact, bold eye that blinks briskly on a continuous loop.",
+      "askedAs": [
+        "eye blinking repeatedly",
+        "fast blinking eye icon",
+        "looping blink animation",
+        "глаз быстро моргает",
+        "моргающий глаз по кругу"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 2,
+        "strokeWidth": 2.5,
+        "size": 40
+      }
+    },
+    {
+      "id": "watchful-blue",
+      "label": "Watchful Blue",
+      "description": "A medium-large eye in calm cobalt that draws in and keeps looking around in a gentle loop.",
+      "askedAs": [
+        "blue eye icon looping",
+        "calm watching eye",
+        "visibility icon in blue",
+        "синий глаз анимация",
+        "спокойный наблюдающий глаз"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "size": 96,
+        "loop": true,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "An oversized, heavy-stroked eye in deep charcoal that snaps in at double speed.",
+      "askedAs": [
+        "huge thick eye icon",
+        "bold eye for title card",
+        "big punchy eye animation",
+        "большой жирный глаз",
+        "крупная иконка глаза с толстой линией"
+      ],
+      "props": {
+        "size": 180,
+        "strokeWidth": 3,
+        "speed": 1.5,
+        "color": "#0f172a"
+      }
+    },
+    {
+      "id": "warm-glance",
+      "label": "Warm Glance",
+      "description": "A terracotta eye with a medium stroke that plays its glance at an unhurried pace.",
+      "askedAs": [
+        "warm colored eye icon",
+        "orange brown eye animation",
+        "soft earthy eye look",
+        "тёплый глаз терракотовый",
+        "глаз в тёплых тонах"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "size": 72,
+        "strokeWidth": 1.75,
+        "speed": 0.75,
+        "animation": "action"
+      }
+    }
+  ]
+}

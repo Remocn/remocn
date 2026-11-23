@@ -1,0 +1,99 @@
+{
+  "component": "icon-volume-2",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked speaker that slowly sketches itself in a soft slate grey.",
+      "askedAs": [
+        "thin slow drawing speaker icon",
+        "elegant line volume icon",
+        "big delicate sound icon",
+        "тонкая иконка громкости рисуется медленно",
+        "изящная линия динамика"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-pulse",
+      "label": "Bold Pulse",
+      "description": "A heavy-stroked blue speaker whose sound waves pulse continuously at a brisk pace.",
+      "askedAs": [
+        "looping volume waves",
+        "thick pulsing speaker icon",
+        "sound playing animation blue",
+        "пульсирующий значок звука",
+        "толстая иконка динамика в цикле"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 2.75,
+        "speed": 1.5,
+        "color": "#1f6feb"
+      }
+    },
+    {
+      "id": "quick-tick",
+      "label": "Quick Tick",
+      "description": "A small, compact speaker that draws and animates in a fast snappy burst.",
+      "askedAs": [
+        "small fast volume icon",
+        "quick sound icon for ui",
+        "snappy speaker animation",
+        "маленькая быстрая иконка звука",
+        "быстрая анимация динамика"
+      ],
+      "props": {
+        "size": 32,
+        "speed": 2.5,
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "warm-hero",
+      "label": "Warm Hero",
+      "description": "An oversized terracotta speaker with calm, looping motion for title cards.",
+      "askedAs": [
+        "huge volume icon warm color",
+        "big orange speaker looping",
+        "hero sound icon slow",
+        "большая тёплая иконка громкости",
+        "огромный динамик терракотовый"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#c2410c",
+        "loop": true,
+        "speed": 0.75,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "forest-loop",
+      "label": "Forest Loop",
+      "description": "A medium deep-green speaker that redraws and plays its waves on an endless loop.",
+      "askedAs": [
+        "green speaker icon repeating",
+        "calm looping audio icon",
+        "volume icon draws over and over",
+        "зелёная иконка звука в цикле",
+        "спокойный повторяющийся динамик"
+      ],
+      "props": {
+        "color": "#166534",
+        "loop": true,
+        "size": 80,
+        "speed": 0.75
+      }
+    }
+  ]
+}

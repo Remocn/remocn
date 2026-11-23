@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="FeatureTrio"
     component={FeatureTrioScene}
-    durationInFrames={165}
-    fps={30}
+    durationInFrames={330}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -57,15 +57,44 @@ Each feature title rises from a mask with a note beneath it while progress ticks
       description: "2–4 short benefits.",
     },
     {
+      name: "hold",
+      type: "number",
+      default: "36",
+      description: "Frames the finished row holds at the end; each item's slot shrinks to make room.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the progress ticks and highlights.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage fill. \"transparent\" drops the stage and its glow.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Bricolage Grotesque\"",
+      description: "Typeface for the titles. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

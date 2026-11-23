@@ -1,0 +1,87 @@
+{
+  "component": "skeleton",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "calm-text-lines",
+      "label": "Calm Text Lines",
+      "description": "Paragraph-style placeholder lines with a slow, relaxed shimmer sweep.",
+      "askedAs": [
+        "slow loading text lines",
+        "gentle skeleton for paragraphs",
+        "calm shimmer on text placeholder",
+        "медленные строки загрузки",
+        "плавный скелетон текста"
+      ],
+      "props": {
+        "layout": "lines",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "lazy-card-shimmer",
+      "label": "Lazy Card",
+      "description": "A card skeleton with a very slow, almost breathing shimmer that lingers in the loading state.",
+      "askedAs": [
+        "very slow card loading",
+        "sleepy shimmer card placeholder",
+        "long loading card animation",
+        "очень медленная загрузка карточки",
+        "ленивый шиммер карточки"
+      ],
+      "props": {
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "snappy-lines",
+      "label": "Snappy Lines",
+      "description": "Text-line placeholders with a fast, energetic shimmer for quick-paced edits.",
+      "askedAs": [
+        "fast shimmer text lines",
+        "quick loading lines",
+        "energetic skeleton text",
+        "быстрые строки скелетона",
+        "резвый шиммер текста"
+      ],
+      "props": {
+        "layout": "lines",
+        "speed": 3
+      }
+    },
+    {
+      "id": "quick-card-reveal",
+      "label": "Quick Card Reveal",
+      "description": "The card placeholder crossfades briskly into its resolved content.",
+      "askedAs": [
+        "card loads in fast",
+        "quick reveal of real content",
+        "skeleton fades to loaded card",
+        "быстрое появление карточки",
+        "карточка загружается и показывается"
+      ],
+      "props": {
+        "state": "loaded",
+        "speed": 2
+      }
+    },
+    {
+      "id": "lines-resolved",
+      "label": "Lines Resolved",
+      "description": "Text lines settle into the loaded state with a measured, smooth crossfade.",
+      "askedAs": [
+        "text finishes loading",
+        "lines resolve into content",
+        "loaded paragraph after skeleton",
+        "текст загрузился плавно",
+        "строки превращаются в контент"
+      ],
+      "props": {
+        "layout": "lines",
+        "state": "loaded",
+        "speed": 1.5
+      }
+    }
+  ]
+}

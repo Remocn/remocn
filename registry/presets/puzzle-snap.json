@@ -1,0 +1,120 @@
+{
+  "component": "puzzle-snap",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-studio",
+      "label": "Paper Studio",
+      "description": "Warm off-white backdrop with ink-navy and coral pieces snapping together at a relaxed pace.",
+      "askedAs": [
+        "light background puzzle logo",
+        "calm friendly logo build on cream",
+        "soft paper look for the mark",
+        "светлый фон с пазлом",
+        "спокойная сборка логотипа на светлом"
+      ],
+      "props": {
+        "backgroundColor": "#f4efe6",
+        "primaryColor": "#1f2a44",
+        "secondaryColor": "#e07a5f",
+        "sparkColor": "#e07a5f",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-click",
+      "label": "Quick Click",
+      "description": "Snappy double-speed build with a different scatter, for punchy short stings.",
+      "askedAs": [
+        "fast puzzle snap",
+        "quick logo assembly",
+        "short punchy sting",
+        "быстрая сборка логотипа",
+        "резкий короткий заставка"
+      ],
+      "props": {
+        "speed": 2,
+        "seed": 17
+      }
+    },
+    {
+      "id": "midnight-teal",
+      "label": "Midnight Teal",
+      "description": "Deep navy ground with teal and pale mint pieces and soft gold sparks.",
+      "askedAs": [
+        "dark blue and teal logo",
+        "cool techy puzzle mark",
+        "navy background with gold sparks",
+        "тёмно-синий фон с бирюзой",
+        "холодная палитра для логотипа"
+      ],
+      "props": {
+        "backgroundColor": "#0e1a2b",
+        "primaryColor": "#2a9d8f",
+        "secondaryColor": "#d8f3ec",
+        "sparkColor": "#e9c46a",
+        "seed": 42
+      }
+    },
+    {
+      "id": "round-mono",
+      "label": "Round Mono",
+      "description": "Monochrome build without the square piece, using graphite and white for a minimal mark.",
+      "askedAs": [
+        "black and white puzzle logo",
+        "minimal monochrome mark",
+        "no square piece grayscale",
+        "чёрно-белая сборка логотипа",
+        "минималистичный монохром"
+      ],
+      "props": {
+        "square": false,
+        "primaryColor": "#8a8a8a",
+        "secondaryColor": "#f2f2f2",
+        "sparkColor": "#bdbdbd",
+        "backgroundColor": "#0a0a0a"
+      }
+    },
+    {
+      "id": "slow-bloom",
+      "label": "Slow Bloom",
+      "description": "Unhurried half-speed assembly in plum and blush tones on a dusky backdrop.",
+      "askedAs": [
+        "slow elegant logo build",
+        "purple and pink puzzle mark",
+        "gentle cinematic snap",
+        "медленная плавная сборка",
+        "фиолетовый и розовый логотип"
+      ],
+      "props": {
+        "speed": 0.5,
+        "backgroundColor": "#1e1424",
+        "primaryColor": "#8e5a9e",
+        "secondaryColor": "#f2c6cf",
+        "sparkColor": "#f2c6cf",
+        "seed": 64
+      }
+    },
+    {
+      "id": "sunny-kit",
+      "label": "Sunny Kit",
+      "description": "Cheerful mustard and white pieces on a forest green field with a brisk snap.",
+      "askedAs": [
+        "bright playful puzzle logo",
+        "yellow and green brand mark",
+        "cheerful kids style sting",
+        "яркий весёлый логотип",
+        "жёлтый на зелёном фоне"
+      ],
+      "props": {
+        "backgroundColor": "#1f3d2b",
+        "primaryColor": "#f2b630",
+        "secondaryColor": "#ffffff",
+        "sparkColor": "#f2b630",
+        "speed": 1.5,
+        "seed": 8
+      }
+    }
+  ]
+}

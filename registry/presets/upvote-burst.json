@@ -1,0 +1,118 @@
+{
+  "component": "upvote-burst",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-launch",
+      "label": "Midnight Launch",
+      "description": "Dark theme on a deep afterhours ground with a warm orange accent and a slightly slower, dramatic climb.",
+      "askedAs": [
+        "dark launch leaderboard",
+        "night mode product hunt ranking",
+        "moody upvote animation",
+        "тёмная версия рейтинга запуска",
+        "ночной стиль с оранжевым акцентом"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "afterhours",
+        "accent": "#ff6b3d",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-pop",
+      "label": "Quick Pop",
+      "description": "A snappy, oversized burst in Bricolage Grotesque with a coral accent that races to the badge.",
+      "askedAs": [
+        "fast upvote burst",
+        "punchy big leaderboard for social",
+        "quick energetic ranking climb",
+        "быстрая яркая анимация голосов",
+        "крупный и энергичный рейтинг"
+      ],
+      "props": {
+        "speed": 2,
+        "scale": 1.2,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#f2545b"
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A calm cream page with serif type, ink-black text and a forest green accent for an understated award feel.",
+      "askedAs": [
+        "elegant serif leaderboard",
+        "newspaper style product of the day",
+        "warm paper background ranking",
+        "элегантный рейтинг с засечками",
+        "спокойный бумажный стиль"
+      ],
+      "props": {
+        "background": "#f5f0e6",
+        "ink": "#1c1a17",
+        "fontFamily": "Fraunces",
+        "accent": "#2f6b4f",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-dev",
+      "label": "Terminal Dev",
+      "description": "Monospace type on a charcoal satin ground with a mint accent for a developer-tool launch.",
+      "askedAs": [
+        "dev tool launch ranking",
+        "monospace code style leaderboard",
+        "hacker look upvotes",
+        "рейтинг в стиле терминала",
+        "моноширинный шрифт для запуска"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3ddc97"
+      }
+    },
+    {
+      "id": "golden-hour",
+      "label": "Golden Hour",
+      "description": "A glowing copper ground with a honey-gold accent and a short delayed entrance that feels celebratory.",
+      "askedAs": [
+        "warm celebratory badge",
+        "gold product of the day",
+        "sunset colored leaderboard",
+        "тёплый золотой бейдж",
+        "праздничный рейтинг в тёплых тонах"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "copper",
+        "accent": "#f2b33d",
+        "fontFamily": "Manrope",
+        "delay": 15
+      }
+    },
+    {
+      "id": "compact-corner",
+      "label": "Compact Corner",
+      "description": "A smaller, unhurried card on a cool polar ground in Inter, sized to sit beside other content.",
+      "askedAs": [
+        "small leaderboard overlay",
+        "compact upvote widget",
+        "subtle ranking in the corner",
+        "маленький компактный рейтинг",
+        "сдержанная версия поменьше"
+      ],
+      "props": {
+        "scale": 0.7,
+        "ground": "polar",
+        "fontFamily": "Inter",
+        "accent": "#1f6feb",
+        "speed": 0.5
+      }
+    }
+  ]
+}

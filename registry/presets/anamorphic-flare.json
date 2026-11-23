@@ -1,0 +1,102 @@
+{
+  "component": "anamorphic-flare",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "classic-blue-anamorphic",
+      "label": "Classic Blue",
+      "description": "The signature cool-blue anamorphic streak on deep navy, like a blockbuster studio opener.",
+      "askedAs": [
+        "blue lens flare like a sci-fi movie",
+        "cinematic blue streak intro",
+        "jj abrams style flare",
+        "синий анаморфный блик",
+        "киношная синяя вспышка"
+      ],
+      "props": {
+        "tint": "#2f7bff",
+        "coreColor": "#eaf3ff",
+        "backgroundColor": "#060b16",
+        "ghosts": 5
+      }
+    },
+    {
+      "id": "golden-hour",
+      "label": "Golden Hour",
+      "description": "A warm amber streak with a cream core over dark espresso, slowed for a luxurious reveal.",
+      "askedAs": [
+        "warm gold light sweep",
+        "luxury golden flare intro",
+        "slow amber lens flare",
+        "золотой блик для премиум логотипа",
+        "тёплая медленная вспышка"
+      ],
+      "props": {
+        "tint": "#e0a23a",
+        "coreColor": "#fff6e3",
+        "backgroundColor": "#140e08",
+        "speed": 0.5,
+        "ghosts": 3
+      }
+    },
+    {
+      "id": "clean-mono",
+      "label": "Clean Mono",
+      "description": "A pure silver-white streak with no ghosts on black for a minimal, editorial reveal.",
+      "askedAs": [
+        "minimal white light streak",
+        "no ghosts clean flare",
+        "monochrome logo reveal",
+        "минималистичный белый блик",
+        "чистая вспышка без бликов"
+      ],
+      "props": {
+        "tint": "#bfc5cc",
+        "coreColor": "#ffffff",
+        "backgroundColor": "#000000",
+        "ghosts": 0
+      }
+    },
+    {
+      "id": "horizon-strike",
+      "label": "Horizon Strike",
+      "description": "A fast, low teal streak with plenty of ghosts that snaps across the lower third like headlights.",
+      "askedAs": [
+        "fast automotive headlight flare",
+        "quick low streak across screen",
+        "energetic car commercial intro",
+        "быстрый блик как от фар",
+        "резкая вспышка внизу кадра"
+      ],
+      "props": {
+        "tint": "#1fb5a8",
+        "coreColor": "#e8fffc",
+        "backgroundColor": "#071312",
+        "y": 0.68,
+        "speed": 2,
+        "ghosts": 7
+      }
+    },
+    {
+      "id": "violet-dusk",
+      "label": "Violet Dusk",
+      "description": "A soft violet streak riding high in the frame over deep plum, with a gentle, dreamy pace.",
+      "askedAs": [
+        "purple dreamy lens flare",
+        "soft violet light reveal",
+        "moody high streak intro",
+        "фиолетовый мягкий блик",
+        "мечтательная вспышка сверху"
+      ],
+      "props": {
+        "tint": "#8a6cf0",
+        "coreColor": "#f3eeff",
+        "backgroundColor": "#0f0a1a",
+        "y": 0.36,
+        "speed": 0.75,
+        "seed": 17
+      }
+    }
+  ]
+}

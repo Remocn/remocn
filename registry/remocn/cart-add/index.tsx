@@ -4,15 +4,9 @@ import { loadFont as loadSans } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -47,8 +41,24 @@ export interface CartAddProps {
   images?: string[];
   currency?: string;
   freeShippingAt?: number;
+  /** Label of the main button before it is pressed. */
+  addLabel?: string;
+  /** Label of the main button once the item is in the bag. */
+  addedLabel?: string;
+  /** Button at the bottom of the bag drawer. */
+  checkoutLabel?: string;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Size of the store window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -94,6 +104,7 @@ const B = {
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const tw = (f: number, a: number, b: number, e = ENTER) =>
   interpolate(f, [a, b], [0, 1], { ...CL, easing: e });
 
@@ -190,7 +201,20 @@ function Icon({
   );
 }
 
-function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
+function Cursor({
+  x,
+  y,
+  at,
+  press,
+}: {
+  x: number;
+  y: number;
+  /** Where the cursor comes to rest; its travel there is a transform. */
+  at: { x: number; y: number };
+  press: number;
+}) {
+  // Layout rounds a box to whole pixels, so a cursor glided by `left`/`top`
+  // steps pixel by pixel; it is laid out at rest and travels by transform.
   return (
     <svg
       width={26}
@@ -198,10 +222,10 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: at.x - 2,
+        top: at.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.04 * press})`,
+        transform: `translate(${x - at.x}px, ${y - at.y}px) scale(${1 - 0.04 * press})`,
         filter:
           "drop-shadow(0 1px 1px rgba(0,0,0,0.25)) drop-shadow(0 6px 10px rgba(0,0,0,0.2))",
         overflow: "visible",
@@ -375,6 +399,22 @@ function Photo({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function layoutFor(portrait: boolean) {
   if (portrait) {
     const win = { x: 32, y: 56, w: 656, h: 1168 };
@@ -422,18 +462,28 @@ export function CartAdd({
   images,
   currency = "$",
   freeShippingAt = 75,
+  addLabel = "Add to bag",
+  addedLabel = "Added to bag",
+  checkoutLabel = "Checkout",
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: CartAddProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const portrait = H > W;
   const L = layoutFor(portrait);
   const u = Math.min(W / L.stageW, H / L.stageH);
-  const pal = theme === "dark" ? DARK : LIGHT;
+  const base = theme === "dark" ? DARK : LIGHT;
+  const pal: Pal = { ...base, text: ink ?? base.text };
   const sp = (at: number, config: typeof CARD | typeof MORPH = CARD) =>
     spring({ frame: frame - at, fps, config });
 
@@ -477,8 +527,22 @@ export function CartAdd({
   const winY = L.winShift.y * shift;
   const winS = lerp(1, L.winShift.s, shift);
   const D = L.drawer;
-  const dX = D.x + L.drawerFrom.x * (1 - drawerIn);
-  const dY = D.y + L.drawerFrom.y * (1 - drawerIn);
+  // The drawer is laid out where it lands and slides in by transform; the
+  // spring never quite reaches 1, so the leftover is dropped below 1e-3px.
+  // The transform itself stays to the end: it carries the drawer's mark.
+  const drawerAt = (f: number) =>
+    1 - spring({ frame: f - B.drawer, fps, config: HEAVY });
+  const dTx = L.drawerFrom.x * (1 - drawerIn);
+  const dTy = L.drawerFrom.y * (1 - drawerIn);
+  const drawerMoving =
+    Math.abs(drawerAt(frame + 1) - drawerAt(frame)) *
+      Math.hypot(L.drawerFrom.x, L.drawerFrom.y) >
+      1e-3 ||
+    Math.abs(drawerAt(frame) - drawerAt(frame - 1)) *
+      Math.hypot(L.drawerFrom.x, L.drawerFrom.y) >
+      1e-3;
+  const settled = Math.abs(dTx) < 1e-3 && Math.abs(dTy) < 1e-3;
+  const drawerT = `translate(${settled ? 0 : dTx}px, ${settled ? 0 : dTy}px)${glide(drawerMoving)}`;
   const checkoutPt = { x: D.x + D.w * 0.62, y: D.y + D.h - 28 - 32 + 6 };
 
   const arc = (
@@ -554,7 +618,12 @@ export function CartAdd({
     s: lerp(1, 0.16, clamp01(flyP)),
   };
   const bump = 1 + 0.16 * Math.max(0, click(B.land + 2));
-  const badge = sp(B.land, CHIP);
+  const badgeAt = (f: number) =>
+    spring({ frame: f - B.land, fps, config: CHIP });
+  const badge = badgeAt(frame);
+  const badgeMoving =
+    Math.abs(badgeAt(frame + 1) - badge) > 1e-4 ||
+    Math.abs(badge - badgeAt(frame - 1)) > 1e-4;
 
   const item = (k: number) =>
     tw(frame, B.drawer + 6 + k * 3, B.drawer + 18 + k * 3);
@@ -606,526 +675,597 @@ export function CartAdd({
   const label16: React.CSSProperties = { fontSize: 16, color: pal.muted };
 
   return (
-    <AbsoluteFill style={{ fontFamily: sans.fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={resolvedParams}
-        timeOffset={4}
-        timeScale={0.4}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: (W - L.stageW * u) / 2,
-          top: (H - L.stageH * u) / 2,
-          width: L.stageW,
-          height: L.stageH,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-          WebkitFontSmoothing: "antialiased",
-        }}
-      >
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <GshGround
+          preset={resolvedGround}
+          params={resolvedParams}
+          timeOffset={4}
+          timeScale={0.4}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transformOrigin: "50% 50%",
-            transform: `translate(${winX}px, ${winY}px) scale(${winS * (1 + 0.015 * (frame / 200))})`,
+            left: (W - L.stageW * u) / 2,
+            top: (H - L.stageH * u) / 2,
+            width: L.stageW,
+            height: L.stageH,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
+            WebkitFontSmoothing: "antialiased",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: L.win.x,
-              top: L.win.y,
-              width: L.win.w,
-              height: L.win.h,
-              borderRadius: 28,
-              overflow: "hidden",
-              background: pal.win,
-              color: pal.text,
-              boxShadow: pal.shadow,
-              opacity: winO,
-              transform: `translateY(${(1 - winIn) * 56}px) scale(${0.96 + 0.04 * winIn})`,
+              inset: 0,
+              transformOrigin: "50% 50%",
+              // The slow push never stops, so this layer carries the tilt
+              // throughout; it covers every line of text in the window.
+              transform: `translate(${winX}px, ${winY}px) scale(${winS * (1 + 0.015 * (frame / 200))})${glide(true)}`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: 36,
-                right: 36,
-                top: 0,
-                height: L.navH,
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: serif.fontFamily,
-                  fontSize: 30,
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {brand}
-              </span>
-              <div style={{ flex: 1 }} />
-              <div
-                style={{ position: "relative", transform: `scale(${bump})` }}
-              >
-                <Icon name="bag" color={pal.text} size={26} />
-                {frame >= B.land ? (
-                  <div
-                    style={{
-                      position: "absolute",
-                      right: -10,
-                      top: -8,
-                      minWidth: 20,
-                      height: 20,
-                      borderRadius: 10,
-                      background: accent,
-                      color: "#fff",
-                      fontSize: 13,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontVariantNumeric: "tabular-nums",
-                      boxShadow: `0 0 0 2px ${pal.win}`,
-                      transform: `scale(${Math.max(0, badge)})`,
-                    }}
-                  >
-                    1
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: L.photo.x,
-                top: L.photo.y,
-                width: L.photo.w,
-                height: L.photo.h,
-                borderRadius: 18,
+                left: L.win.x,
+                top: L.win.y,
+                width: L.win.w,
+                height: L.win.h,
+                borderRadius: 28,
                 overflow: "hidden",
-                outline: `1px solid ${pal.outline}`,
-                outlineOffset: -1,
-              }}
-            >
-              <div style={{ position: "absolute", inset: 0 }}>
-                <Photo swatch={c0.swatch} pal={pal} src={img0} brand={brand} />
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  opacity: colorP,
-                  transform: `scale(${1.03 - 0.03 * colorP})`,
-                }}
-              >
-                <Photo swatch={c1.swatch} pal={pal} src={img1} brand={brand} />
-              </div>
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: box.x,
-                top: y.cat,
-                width: box.w,
-              }}
-            >
-              <div style={label16}>{category}</div>
-              <div
-                style={{
-                  fontFamily: serif.fontFamily,
-                  fontSize: L.nameSize,
-                  lineHeight: 1,
-                  letterSpacing: "-0.015em",
-                  marginTop: 12,
-                }}
-              >
-                {product}
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "baseline",
-                  gap: 14,
-                  marginTop: 18,
-                }}
-              >
-                <span
-                  style={{ fontSize: 24, fontVariantNumeric: "tabular-nums" }}
-                >
-                  {swap(
-                    money(s0.price, currency),
-                    money(s1.price, currency),
-                    priceP,
-                  )}
-                </span>
-                <span
-                  style={{
-                    ...label16,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  <svg width={14} height={14} viewBox="0 0 16 16">
-                    <path d={ICONS.star} fill={pal.text} />
-                  </svg>
-                  {rating.toFixed(1)} · {reviews} reviews
-                </span>
-              </div>
-              <div
-                style={{
-                  fontSize: 17,
-                  lineHeight: "26px",
-                  color: pal.muted,
-                  marginTop: 16,
-                  textWrap: "pretty",
-                  height: descLines * 26,
-                  overflow: "hidden",
-                }}
-              >
-                {description}
-              </div>
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: box.x,
-                top: colorY,
-                fontSize: 16,
+                background: pal.win,
                 color: pal.text,
-              }}
-            >
-              Color{" "}
-              <span style={{ color: pal.muted }}>
-                · {swap(c0.name, c1.name, colorP, 8)}
-              </span>
-            </div>
-            {colors.map((c, i) => {
-              const sel =
-                i === startColor ? 1 - ring : i === pickColor ? ring : 0;
-              return (
-                <div
-                  key={c.name}
-                  style={{
-                    position: "absolute",
-                    left: box.x + i * 56,
-                    top: swY,
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    boxShadow: `inset 0 0 0 ${1.5 * Math.max(0, sel)}px ${pal.text}`,
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 5,
-                      borderRadius: 17,
-                      background: c.swatch,
-                      boxShadow: `inset 0 0 0 1px ${pal.outline}`,
-                    }}
-                  />
-                </div>
-              );
-            })}
-
-            <div
-              style={{
-                position: "absolute",
-                left: box.x,
-                top: sizeY,
-                width: box.w,
-                display: "flex",
-                fontSize: 16,
-                color: pal.text,
-              }}
-            >
-              Size
-              <span
-                style={{
-                  marginLeft: "auto",
-                  color: pal.muted,
-                  textDecoration: "underline",
-                  textUnderlineOffset: 4,
-                  textDecorationColor: pal.ring,
-                }}
-              >
-                Size guide
-              </span>
-            </div>
-            {sizes.slice(0, 3).map((sz, j) => {
-              const sel =
-                j === startSize ? 1 - sizeSel : j === pickSize ? sizeSel : 0;
-              return (
-                <div
-                  key={sz.label}
-                  style={{
-                    position: "absolute",
-                    left: box.x + j * (chipW + chipGap),
-                    top: chipY,
-                    width: chipW,
-                    height: 64,
-                    borderRadius: 14,
-                    boxShadow: `inset 0 0 0 1px ${pal.ring}, inset 0 0 0 ${1.5 * Math.max(0, sel)}px ${pal.text}`,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 2,
-                  }}
-                >
-                  <span style={{ fontSize: 18 }}>{sz.label}</span>
-                  <span
-                    style={{
-                      fontSize: 16,
-                      color: pal.faint,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    {money(sz.price, currency)}
-                  </span>
-                </div>
-              );
-            })}
-
-            <div
-              style={{
-                position: "absolute",
-                left: box.x,
-                top: btnY,
-                width: box.w,
-                height: 64,
-                borderRadius: 32,
-                background: pal.btn,
-                color: pal.btnText,
-                transform: `scale(${1 - 0.04 * Math.max(0, btnPress)})`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 18,
-                boxShadow: pal.dark
-                  ? "none"
-                  : "0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.12)",
+                boxShadow: pal.shadow,
+                opacity: winO,
+                transform: `translateY(${(1 - winIn) * 56}px) scale(${0.96 + 0.04 * winIn})`,
               }}
             >
               <div
                 style={{
                   position: "absolute",
-                  opacity: 1 - loadP,
-                  transform: `translateY(${-loadP * 8}px)`,
-                  display: "flex",
-                  gap: 8,
-                }}
-              >
-                Add to bag
-                <span style={{ opacity: 0.5 }}>·</span>
-                <span style={{ fontVariantNumeric: "tabular-nums" }}>
-                  {swap(
-                    money(s0.price, currency),
-                    money(s1.price, currency),
-                    priceP,
-                    8,
-                  )}
-                </span>
-              </div>
-              <svg
-                width={20}
-                height={20}
-                viewBox="0 0 18 18"
-                style={{
-                  position: "absolute",
-                  opacity: loadP * (1 - doneP),
-                  transform: `rotate(${frame * 20}deg)`,
-                }}
-              >
-                <circle
-                  cx={9}
-                  cy={9}
-                  r={7}
-                  fill="none"
-                  stroke={pal.btnText}
-                  strokeOpacity={0.25}
-                  strokeWidth={1.6}
-                />
-                <path
-                  d="M9 2a7 7 0 0 1 7 7"
-                  fill="none"
-                  stroke={pal.btnText}
-                  strokeWidth={1.6}
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div
-                style={{
-                  position: "absolute",
+                  left: 36,
+                  right: 36,
+                  top: 0,
+                  height: L.navH,
                   display: "flex",
                   alignItems: "center",
-                  gap: 10,
-                  opacity: doneP,
-                  transform: `translateY(${(1 - doneP) * 8}px)`,
                 }}
               >
-                <svg width={18} height={18} viewBox="0 0 16 16">
-                  <path
-                    d={ICONS.check}
-                    fill="none"
-                    stroke={pal.btnText}
-                    strokeWidth={1.6}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    pathLength={1}
-                    strokeDasharray={1}
-                    strokeDashoffset={1 - checkDraw}
-                  />
-                </svg>
-                Added to bag
-              </div>
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: pal.dark ? "#000" : "#2a1a10",
-                opacity: (pal.dark ? 0.3 : 0.1) * shift,
-              }}
-            />
-          </div>
-
-          {frame >= B.fly && frame < B.land + 2 ? (
-            <div
-              style={{
-                position: "absolute",
-                left: fly.x - 90,
-                top: fly.y - 90,
-                width: 180,
-                height: 180,
-                borderRadius: 20,
-                overflow: "hidden",
-                opacity: flyO,
-                transform: `scale(${fly.s})`,
-                boxShadow:
-                  "0 18px 40px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.06)",
-              }}
-            >
-              <Photo swatch={c1.swatch} pal={pal} src={img1} brand={brand} />
-            </div>
-          ) : null}
-        </div>
-
-        {frame >= B.drawer ? (
-          <div
-            style={{
-              position: "absolute",
-              left: dX,
-              top: dY,
-              width: D.w,
-              height: D.h,
-              borderRadius: 28,
-              background: pal.win,
-              color: pal.text,
-              boxShadow: pal.shadow,
-              padding: 28,
-              boxSizing: "border-box",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <span
-                style={{
-                  fontFamily: serif.fontFamily,
-                  fontSize: 34,
-                  letterSpacing: "-0.01em",
-                  lineHeight: 1,
-                }}
-              >
-                Your bag
-              </span>
-              <span style={{ ...label16, marginLeft: 12 }}>1 item</span>
-              <div style={{ flex: 1 }} />
-              <Icon name="x" color={pal.muted} size={22} />
-            </div>
-
-            <div
-              style={{
-                marginTop: 26,
-                opacity: item(0),
-                transform: `translateY(${(1 - item(0)) * 12}px)`,
-              }}
-            >
-              <div style={{ ...label16, fontVariantNumeric: "tabular-nums" }}>
-                {remaining > 0 ? (
-                  <>
-                    <span style={{ color: pal.text }}>
-                      {money(remaining, currency, true)}
-                    </span>{" "}
-                    away from free shipping
-                  </>
-                ) : (
-                  "Free shipping unlocked"
-                )}
-              </div>
-              <div
-                style={{
-                  height: 6,
-                  borderRadius: 3,
-                  background: pal.fill,
-                  marginTop: 12,
-                  overflow: "hidden",
-                  boxShadow: `inset 0 0 0 1px ${pal.line}`,
-                }}
-              >
-                <div
+                <span
                   style={{
-                    height: 6,
-                    borderRadius: 3,
-                    background: accent,
-                    transformOrigin: "0 50%",
-                    transform: `scaleX(${shipFill * shipRatio})`,
+                    fontFamily: serif.fontFamily,
+                    fontSize: 30,
+                    letterSpacing: "-0.01em",
                   }}
-                />
+                >
+                  {brand}
+                </span>
+                <div style={{ flex: 1 }} />
+                <div
+                  style={{ position: "relative", transform: `scale(${bump})` }}
+                >
+                  <Icon name="bag" color={pal.text} size={26} />
+                  {frame >= B.land ? (
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: -10,
+                        top: -8,
+                        minWidth: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        background: accent,
+                        color: "#fff",
+                        fontSize: 13,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontVariantNumeric: "tabular-nums",
+                        boxShadow: `0 0 0 2px ${pal.win}`,
+                        transform: `scale(${Math.max(0, badge)})${glide(badgeMoving)}`,
+                      }}
+                    >
+                      1
+                    </div>
+                  ) : null}
+                </div>
               </div>
-            </div>
 
-            <div
-              style={{
-                display: "flex",
-                gap: 18,
-                marginTop: 28,
-                paddingTop: 24,
-                borderTop: `1px solid ${pal.line}`,
-                opacity: item(1),
-                transform: `translateY(${(1 - item(1)) * 12}px)`,
-              }}
-            >
               <div
                 style={{
-                  width: 100,
-                  height: 116,
-                  borderRadius: 14,
+                  position: "absolute",
+                  left: L.photo.x,
+                  top: L.photo.y,
+                  width: L.photo.w,
+                  height: L.photo.h,
+                  borderRadius: 18,
                   overflow: "hidden",
-                  flexShrink: 0,
                   outline: `1px solid ${pal.outline}`,
                   outlineOffset: -1,
                 }}
               >
+                <div style={{ position: "absolute", inset: 0 }}>
+                  <Photo
+                    swatch={c0.swatch}
+                    pal={pal}
+                    src={img0}
+                    brand={brand}
+                  />
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    opacity: colorP,
+                    transform: `scale(${1.03 - 0.03 * colorP})`,
+                  }}
+                >
+                  <Photo
+                    swatch={c1.swatch}
+                    pal={pal}
+                    src={img1}
+                    brand={brand}
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: box.x,
+                  top: y.cat,
+                  width: box.w,
+                }}
+              >
+                <div style={label16}>{category}</div>
+                <div
+                  style={{
+                    fontFamily: serif.fontFamily,
+                    fontSize: L.nameSize,
+                    lineHeight: 1,
+                    letterSpacing: "-0.015em",
+                    marginTop: 12,
+                  }}
+                >
+                  {product}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 14,
+                    marginTop: 18,
+                  }}
+                >
+                  <span
+                    style={{ fontSize: 24, fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {swap(
+                      money(s0.price, currency),
+                      money(s1.price, currency),
+                      priceP,
+                    )}
+                  </span>
+                  <span
+                    style={{
+                      ...label16,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    <svg width={14} height={14} viewBox="0 0 16 16">
+                      <path d={ICONS.star} fill={pal.text} />
+                    </svg>
+                    {rating.toFixed(1)} · {reviews} reviews
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: 17,
+                    lineHeight: "26px",
+                    color: pal.muted,
+                    marginTop: 16,
+                    textWrap: "pretty",
+                    height: descLines * 26,
+                    overflow: "hidden",
+                  }}
+                >
+                  {description}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: box.x,
+                  top: colorY,
+                  fontSize: 16,
+                  color: pal.text,
+                }}
+              >
+                Color{" "}
+                <span style={{ color: pal.muted }}>
+                  · {swap(c0.name, c1.name, colorP, 8)}
+                </span>
+              </div>
+              {colors.map((c, i) => {
+                const sel =
+                  i === startColor ? 1 - ring : i === pickColor ? ring : 0;
+                return (
+                  <div
+                    key={c.name}
+                    style={{
+                      position: "absolute",
+                      left: box.x + i * 56,
+                      top: swY,
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      boxShadow: `inset 0 0 0 ${1.5 * Math.max(0, sel)}px ${pal.text}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 5,
+                        borderRadius: 17,
+                        background: c.swatch,
+                        boxShadow: `inset 0 0 0 1px ${pal.outline}`,
+                      }}
+                    />
+                  </div>
+                );
+              })}
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: box.x,
+                  top: sizeY,
+                  width: box.w,
+                  display: "flex",
+                  fontSize: 16,
+                  color: pal.text,
+                }}
+              >
+                Size
+                <span
+                  style={{
+                    marginLeft: "auto",
+                    color: pal.muted,
+                    textDecoration: "underline",
+                    textUnderlineOffset: 4,
+                    textDecorationColor: pal.ring,
+                  }}
+                >
+                  Size guide
+                </span>
+              </div>
+              {sizes.slice(0, 3).map((sz, j) => {
+                const sel =
+                  j === startSize ? 1 - sizeSel : j === pickSize ? sizeSel : 0;
+                return (
+                  <div
+                    key={sz.label}
+                    style={{
+                      position: "absolute",
+                      left: box.x + j * (chipW + chipGap),
+                      top: chipY,
+                      width: chipW,
+                      height: 64,
+                      borderRadius: 14,
+                      boxShadow: `inset 0 0 0 1px ${pal.ring}, inset 0 0 0 ${1.5 * Math.max(0, sel)}px ${pal.text}`,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 2,
+                    }}
+                  >
+                    <span style={{ fontSize: 18 }}>{sz.label}</span>
+                    <span
+                      style={{
+                        fontSize: 16,
+                        color: pal.faint,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      {money(sz.price, currency)}
+                    </span>
+                  </div>
+                );
+              })}
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: box.x,
+                  top: btnY,
+                  width: box.w,
+                  height: 64,
+                  borderRadius: 32,
+                  background: pal.btn,
+                  color: pal.btnText,
+                  transform: `scale(${1 - 0.04 * Math.max(0, btnPress)})`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 18,
+                  boxShadow: pal.dark
+                    ? "none"
+                    : "0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.12)",
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    opacity: 1 - loadP,
+                    transform: `translateY(${-loadP * 8}px)`,
+                    display: "flex",
+                    gap: 8,
+                  }}
+                >
+                  {addLabel}
+                  <span style={{ opacity: 0.5 }}>·</span>
+                  <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {swap(
+                      money(s0.price, currency),
+                      money(s1.price, currency),
+                      priceP,
+                      8,
+                    )}
+                  </span>
+                </div>
+                <svg
+                  width={20}
+                  height={20}
+                  viewBox="0 0 18 18"
+                  style={{
+                    position: "absolute",
+                    opacity: loadP * (1 - doneP),
+                    transform: `rotate(${frame * 20}deg)`,
+                  }}
+                >
+                  <circle
+                    cx={9}
+                    cy={9}
+                    r={7}
+                    fill="none"
+                    stroke={pal.btnText}
+                    strokeOpacity={0.25}
+                    strokeWidth={1.6}
+                  />
+                  <path
+                    d="M9 2a7 7 0 0 1 7 7"
+                    fill="none"
+                    stroke={pal.btnText}
+                    strokeWidth={1.6}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div
+                  style={{
+                    position: "absolute",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    opacity: doneP,
+                    transform: `translateY(${(1 - doneP) * 8}px)`,
+                  }}
+                >
+                  <svg width={18} height={18} viewBox="0 0 16 16">
+                    <path
+                      d={ICONS.check}
+                      fill="none"
+                      stroke={pal.btnText}
+                      strokeWidth={1.6}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      pathLength={1}
+                      strokeDasharray={1}
+                      strokeDashoffset={1 - checkDraw}
+                    />
+                  </svg>
+                  {addedLabel}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: pal.dark ? "#000" : "#2a1a10",
+                  opacity: (pal.dark ? 0.3 : 0.1) * shift,
+                }}
+              />
+            </div>
+
+            {frame >= B.fly && frame < B.land + 2 ? (
+              <div
+                style={{
+                  position: "absolute",
+                  // Flies by transform, not `left`/`top`, which would step
+                  // the photo pixel by pixel.
+                  left: fromPt.x - 90,
+                  top: fromPt.y - 90,
+                  width: 180,
+                  height: 180,
+                  borderRadius: 20,
+                  overflow: "hidden",
+                  opacity: flyO,
+                  transform: `translate(${fly.x - fromPt.x}px, ${fly.y - fromPt.y}px) scale(${fly.s})${glide(true)}`,
+                  boxShadow:
+                    "0 18px 40px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.06)",
+                }}
+              >
                 <Photo swatch={c1.swatch} pal={pal} src={img1} brand={brand} />
               </div>
+            ) : null}
+          </div>
+
+          {frame >= B.drawer ? (
+            <div
+              style={{
+                position: "absolute",
+                left: D.x,
+                top: D.y,
+                transform: drawerT,
+                width: D.w,
+                height: D.h,
+                borderRadius: 28,
+                background: pal.win,
+                color: pal.text,
+                boxShadow: pal.shadow,
+                padding: 28,
+                boxSizing: "border-box",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <span
+                  style={{
+                    fontFamily: serif.fontFamily,
+                    fontSize: 34,
+                    letterSpacing: "-0.01em",
+                    lineHeight: 1,
+                  }}
+                >
+                  Your bag
+                </span>
+                <span style={{ ...label16, marginLeft: 12 }}>1 item</span>
+                <div style={{ flex: 1 }} />
+                <Icon name="x" color={pal.muted} size={22} />
+              </div>
+
               <div
-                style={{ flex: 1, display: "flex", flexDirection: "column" }}
+                style={{
+                  marginTop: 26,
+                  opacity: item(0),
+                  transform: `translateY(${(1 - item(0)) * 12}px)${glide(midway(item(0)))}`,
+                }}
+              >
+                <div style={{ ...label16, fontVariantNumeric: "tabular-nums" }}>
+                  {remaining > 0 ? (
+                    <>
+                      <span style={{ color: pal.text }}>
+                        {money(remaining, currency, true)}
+                      </span>{" "}
+                      away from free shipping
+                    </>
+                  ) : (
+                    "Free shipping unlocked"
+                  )}
+                </div>
+                <div
+                  style={{
+                    height: 6,
+                    borderRadius: 3,
+                    background: pal.fill,
+                    marginTop: 12,
+                    overflow: "hidden",
+                    boxShadow: `inset 0 0 0 1px ${pal.line}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      height: 6,
+                      borderRadius: 3,
+                      background: accent,
+                      transformOrigin: "0 50%",
+                      transform: `scaleX(${shipFill * shipRatio})`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: 18,
+                  marginTop: 28,
+                  paddingTop: 24,
+                  borderTop: `1px solid ${pal.line}`,
+                  opacity: item(1),
+                  transform: `translateY(${(1 - item(1)) * 12}px)${glide(midway(item(1)))}`,
+                }}
+              >
+                <div
+                  style={{
+                    width: 100,
+                    height: 116,
+                    borderRadius: 14,
+                    overflow: "hidden",
+                    flexShrink: 0,
+                    outline: `1px solid ${pal.outline}`,
+                    outlineOffset: -1,
+                  }}
+                >
+                  <Photo
+                    swatch={c1.swatch}
+                    pal={pal}
+                    src={img1}
+                    brand={brand}
+                  />
+                </div>
+                <div
+                  style={{ flex: 1, display: "flex", flexDirection: "column" }}
+                >
+                  <div style={{ display: "flex", fontSize: 18 }}>
+                    <span>{product}</span>
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      {money(s1.price, currency, true)}
+                    </span>
+                  </div>
+                  <div style={{ ...label16, marginTop: 6 }}>
+                    {c1.name} · {s1.label}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: "auto",
+                      alignSelf: "flex-start",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 16,
+                      height: 36,
+                      padding: "0 12px",
+                      borderRadius: 18,
+                      boxShadow: `inset 0 0 0 1px ${pal.ring}`,
+                      fontSize: 16,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    <Icon name="minus" color={pal.faint} size={16} />1
+                    <Icon name="plus" color={pal.text} size={16} />
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: "auto",
+                  opacity: item(2),
+                  transform: `translateY(${(1 - item(2)) * 12}px)${glide(midway(item(2)))}`,
+                }}
               >
                 <div style={{ display: "flex", fontSize: 18 }}>
-                  <span>{product}</span>
+                  <span>Subtotal</span>
                   <span
                     style={{
                       marginLeft: "auto",
@@ -1136,76 +1276,35 @@ export function CartAdd({
                   </span>
                 </div>
                 <div style={{ ...label16, marginTop: 6 }}>
-                  {c1.name} · {s1.label}
+                  Taxes calculated at checkout
                 </div>
                 <div
                   style={{
-                    marginTop: "auto",
-                    alignSelf: "flex-start",
+                    marginTop: 20,
+                    height: 64,
+                    borderRadius: 32,
+                    background: pal.btn,
+                    color: pal.btnText,
                     display: "flex",
                     alignItems: "center",
-                    gap: 16,
-                    height: 36,
-                    padding: "0 12px",
-                    borderRadius: 18,
-                    boxShadow: `inset 0 0 0 1px ${pal.ring}`,
-                    fontSize: 16,
-                    fontVariantNumeric: "tabular-nums",
+                    justifyContent: "center",
+                    gap: 10,
+                    fontSize: 18,
+                    filter: `brightness(${1 + (pal.dark ? -0.08 : 0.3) * checkoutHover})`,
                   }}
                 >
-                  <Icon name="minus" color={pal.faint} size={16} />1
-                  <Icon name="plus" color={pal.text} size={16} />
+                  <Icon name="lock" color={pal.btnText} size={18} />
+                  {checkoutLabel}
                 </div>
               </div>
             </div>
+          ) : null}
 
-            <div
-              style={{
-                marginTop: "auto",
-                opacity: item(2),
-                transform: `translateY(${(1 - item(2)) * 12}px)`,
-              }}
-            >
-              <div style={{ display: "flex", fontSize: 18 }}>
-                <span>Subtotal</span>
-                <span
-                  style={{
-                    marginLeft: "auto",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {money(s1.price, currency, true)}
-                </span>
-              </div>
-              <div style={{ ...label16, marginTop: 6 }}>
-                Taxes calculated at checkout
-              </div>
-              <div
-                style={{
-                  marginTop: 20,
-                  height: 64,
-                  borderRadius: 32,
-                  background: pal.btn,
-                  color: pal.btnText,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
-                  fontSize: 18,
-                  filter: `brightness(${1 + (pal.dark ? -0.08 : 0.3) * checkoutHover})`,
-                }}
-              >
-                <Icon name="lock" color={pal.btnText} size={18} />
-                Checkout
-              </div>
-            </div>
+          <div style={{ opacity: cursorO }}>
+            <Cursor x={cur.x} y={cur.y} at={checkoutPt} press={press} />
           </div>
-        ) : null}
-
-        <div style={{ opacity: cursorO }}>
-          <Cursor x={cur.x} y={cur.y} press={press} />
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

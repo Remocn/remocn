@@ -1,0 +1,104 @@
+{
+  "component": "ticker-tape",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A trading-terminal look with monospaced type on near-black and an amber accent.",
+      "askedAs": [
+        "bloomberg terminal style",
+        "monospace trading screen",
+        "retro finance terminal",
+        "как терминал блумберг",
+        "моноширинный биржевой экран"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0b0c",
+        "ink": "#f2e9d8",
+        "accent": "#f5a524",
+        "blur": 0.4
+      }
+    },
+    {
+      "id": "financial-paper",
+      "label": "Financial Paper",
+      "description": "A calm editorial quote set in serif on warm newsprint, like a weekend markets page.",
+      "askedAs": [
+        "newspaper stock quote",
+        "elegant serif finance look",
+        "light editorial ticker",
+        "как в финансовой газете",
+        "светлый тикер с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#9a3b2e",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "opening-bell",
+      "label": "Opening Bell",
+      "description": "A fast, punchy tape with heavy motion blur and a bigger symbol for a high-energy reveal.",
+      "askedAs": [
+        "fast energetic ticker",
+        "big dramatic stock reveal",
+        "quick hype market intro",
+        "быстрый энергичный тикер",
+        "крупный драматичный показ акции"
+      ],
+      "props": {
+        "speed": 2,
+        "blur": 2,
+        "scale": 1.3,
+        "accent": "#e5484d"
+      }
+    },
+    {
+      "id": "quiet-fintech",
+      "label": "Quiet Fintech",
+      "description": "A clean, light product-style quote in Inter with a soft teal accent and gentle pace.",
+      "askedAs": [
+        "clean fintech app style",
+        "minimal light stock card",
+        "soft modern finance look",
+        "минималистичный финтех стиль",
+        "светлый чистый тикер"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#0f9d8a",
+        "blur": 0.2,
+        "scale": 0.9,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-navy",
+      "label": "Midnight Navy",
+      "description": "A deep navy private-banking palette with Space Grotesk type and a slow, composed entrance.",
+      "askedAs": [
+        "dark navy premium finance",
+        "slow luxury investment look",
+        "calm dark blue ticker",
+        "тёмно-синий премиальный стиль",
+        "медленный солидный тикер"
+      ],
+      "props": {
+        "background": "#0e1a2b",
+        "ink": "#e6ecf5",
+        "accent": "#c9a961",
+        "fontFamily": "Space Grotesk",
+        "speed": 0.5,
+        "delay": 15
+      }
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 
 import { loadFont as loadInstrument } from "@remotion/google-fonts/InstrumentSans";
 import { loadVariableFont } from "@remotion/google-fonts/RobotoFlex";
+import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -10,9 +11,9 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const flex = loadVariableFont("oblique 0deg 10deg", { subsets: ["latin"] });
 const instrument = loadInstrument("normal", {
@@ -28,7 +29,20 @@ export interface TallCountProps {
   suffix?: string;
   label?: string;
   accent?: string;
+  /** Color of the label; overrides the theme. */
+  ink?: string;
   background?: string;
+  /** Typeface for the label. Load it yourself; Instrument Sans by default. The figure keeps Roboto Flex, whose width axis it animates. */
+  fontFamily?: string;
+  /** Frames the figure takes to count up and grow. */
+  growDuration?: number;
+  /** How much taller the figure springs once it lands; 0 keeps it still. */
+  stretch?: number;
+  /** Size of the figure and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -227,6 +241,28 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+// Chrome parks a glyph raster on a whole pixel vertically for as long as the
+// matrix is axis-aligned, so text under a slow transform clicks along pixel by
+// pixel. The transforms that carry text are marked, so it leans off that grid
+// while they move.
+const midway = (p: number) => p > 0 && p < 1;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TallCount({
   value = 240,
   from = 0,
@@ -235,12 +271,20 @@ export function TallCount({
   suffix = "%",
   label = "more watch time on launch posts that move",
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = instrument.fontFamily,
+  growDuration = GROW_END - GROW_AT,
+  stretch = 0.16,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: TallCountProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const m = useMetrics(prefix, suffix);
   const finalText = useMemo(() => format(value, decimals), [value, decimals]);
@@ -275,7 +319,8 @@ export function TallCount({
   const labelFs = (portrait ? 48 : 38) * s;
   const baseY = portrait ? H * 0.6 : H * 0.84;
 
-  const STRETCH = 0.16;
+  const STRETCH = stretch;
+  const growEnd = GROW_AT + growDuration;
   const maxInk = portrait ? H * 0.36 : H * 0.7;
   const finalCurve = curveOf(finalText);
   const F1 = Math.min(
@@ -286,7 +331,7 @@ export function TallCount({
   const F0 = F1 * 0.3;
   const finalW = widthAt(finalCurve, solveWdth(finalCurve, measureW / F1)) * F1;
 
-  const g = interpolate(t, [GROW_AT, GROW_END], [0, 1], {
+  const g = interpolate(t, [GROW_AT, growEnd], [0, 1], {
     ...CLAMP,
     easing: EASE_GROW,
   });
@@ -299,12 +344,25 @@ export function TallCount({
   const F = F0 + (F1 - F0) * g;
   const wdth = Math.min(WDTH[1], solveWdth(curve, measureW / F));
   const ytfi = YTFI[0] + (YTFI[1] - YTFI[0]) * g * g;
-  const lift = spring({
-    frame: t - LIFT_AT,
-    fps,
-    config: { damping: 11, stiffness: 110, mass: 0.9 },
-  });
-  const sy = 1 + STRETCH * lift;
+  const syAt = (f: number) =>
+    (
+      1 +
+      STRETCH *
+        spring({
+          frame: f - (growEnd - (GROW_END - LIFT_AT)),
+          fps,
+          config: { damping: 11, stiffness: 110, mass: 0.9 },
+        })
+    ).toFixed(4);
+  const sy = syAt(t);
+  // The lift overshoots, so it moves for as long as the stretch it renders
+  // differs from a neighbouring frame.
+  const lifting = sy !== syAt(t - 1) || sy !== syAt(t + 1);
+  // The number is laid out once at its full size and grows by transform:
+  // layout rounds a baseline to whole pixels, so a figure eased by `top` and
+  // `fontSize` clicks up pixel by pixel. Blur and the fill are drawn in the
+  // scaled space, so they're divided back by `k`.
+  const k = g === 1 ? 1 : F / F1;
   const numW = widthAt(curve, wdth) * F;
 
   const enter = interpolate(t, [0, 12], [0, 1], {
@@ -314,6 +372,7 @@ export function TallCount({
 
   const numLeft = portrait ? (W - numW) / 2 : marginX;
   const boxTop = baseY - m.baseline * F;
+  const restTop = baseY - m.baseline * F1;
   const fill = `linear-gradient(0deg, ${c.fill[0]} ${(100 - (baseY / H) * 100).toFixed(1)}%, ${c.fill[1]} ${(100 - ((baseY - maxInk * 0.35) / H) * 100).toFixed(1)}%, ${c.fill[2]} ${(100 - ((baseY - maxInk * 0.7) / H) * 100).toFixed(1)}%, ${c.fill[3]} ${(100 - ((baseY - maxInk * 1.02) / H) * 100).toFixed(1)}%, ${c.fill[4]} 100%)`;
 
   const labelP = interpolate(t, [LABEL_AT, LABEL_AT + 18], [0, 1], {
@@ -330,72 +389,74 @@ export function TallCount({
             position: "absolute",
             inset: 0,
             background: c.glow(accent),
-            opacity: interpolate(t, [GROW_AT, GROW_END], [0.35, 1], CLAMP),
+            opacity: interpolate(t, [GROW_AT, growEnd], [0.35, 1], CLAMP),
           }}
         />
       )}
 
-      <div
-        style={{
-          position: "absolute",
-          left: numLeft,
-          top: boxTop,
-          height: F,
-          lineHeight: `${F}px`,
-          whiteSpace: "pre",
-          fontFamily: flex.fontFamily,
-          fontStyle: "normal",
-          fontSize: F,
-          fontVariantNumeric: "tabular-nums",
-          fontVariationSettings: fvs(wdth, ytfi),
-          letterSpacing: `${TRACK}em`,
-          transformOrigin: `0 ${(m.baseline * F).toFixed(2)}px`,
-          transform: `scaleY(${sy.toFixed(4)})`,
-          opacity: enter,
-          filter:
-            enter < 1
-              ? `blur(${((1 - enter) * 10 * s).toFixed(2)}px)`
-              : undefined,
-          backgroundImage: fill,
-          backgroundSize: `${W}px ${H}px`,
-          backgroundPosition: `${-numLeft}px ${-boxTop}px`,
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-          color: "transparent",
-        }}
-      >
-        {prefix}
-        {text}
-        {suffix}
-      </div>
-
-      {label ? (
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: portrait ? marginX : marginX + finalW + labelGap,
-            width: portrait
-              ? labelW
-              : Math.min(W * 0.32, W - marginX * 2 - finalW - labelGap),
-            ...(portrait
-              ? { top: labelTop, textAlign: "center" as const }
-              : { bottom: H - baseY - labelFs * 0.22 }),
-            fontFamily: instrument.fontFamily,
-            fontWeight: 400,
-            fontSize: labelFs,
-            lineHeight: 1.22,
-            letterSpacing: "-0.012em",
-            textWrap: "balance",
-            color: c.muted,
-            opacity: labelP,
-            transform: `translateY(${((1 - labelP) * labelFs * 0.6).toFixed(2)}px)`,
+            left: numLeft,
+            top: restTop,
+            height: F1,
+            lineHeight: `${F1}px`,
+            whiteSpace: "pre",
+            fontFamily: flex.fontFamily,
+            fontStyle: "normal",
+            fontSize: F1,
+            fontVariantNumeric: "tabular-nums",
+            fontVariationSettings: fvs(wdth, ytfi),
+            letterSpacing: `${TRACK}em`,
+            transformOrigin: `0 ${(m.baseline * F1).toFixed(2)}px`,
+            transform: `${k === 1 ? "" : `scale(${k}) `}scaleY(${sy})${glide(midway(g) || lifting)}`,
+            opacity: enter,
+            filter:
+              enter < 1
+                ? `blur(${(((1 - enter) * 10 * s) / k).toFixed(2)}px)`
+                : undefined,
+            backgroundImage: fill,
+            backgroundSize: `${W / k}px ${H / k}px`,
+            backgroundPosition: `${-numLeft / k}px ${-boxTop / k}px`,
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            color: "transparent",
           }}
         >
-          {label}
+          {prefix}
+          {text}
+          {suffix}
         </div>
-      ) : null}
 
-      {transparent ? null : <Grain opacity={c.grain} />}
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: portrait ? marginX : marginX + finalW + labelGap,
+              width: portrait
+                ? labelW
+                : Math.min(W * 0.32, W - marginX * 2 - finalW - labelGap),
+              ...(portrait
+                ? { top: labelTop, textAlign: "center" as const }
+                : { bottom: H - baseY - labelFs * 0.22 }),
+              fontFamily,
+              fontWeight: 400,
+              fontSize: labelFs,
+              lineHeight: 1.22,
+              letterSpacing: "-0.012em",
+              textWrap: "balance",
+              color: ink ?? c.muted,
+              opacity: labelP,
+              transform: `translateY(${((1 - labelP) * labelFs * 0.6).toFixed(2)}px)${glide(midway(labelP))}`,
+            }}
+          >
+            {label}
+          </div>
+        ) : null}
+      </ScaleLayer>
+
+      {transparent || !grain ? null : <Grain opacity={c.grain} />}
     </AbsoluteFill>
   );
 }

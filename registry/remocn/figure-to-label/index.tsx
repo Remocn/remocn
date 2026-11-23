@@ -11,9 +11,9 @@ import {
   interpolate,
   random,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -62,7 +62,21 @@ export interface FigureToLabelProps {
   eyebrow?: string;
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
   background?: string;
+  /** Typeface for the figure and words. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Weight of the figure and the typed word. */
+  fontWeight?: number;
+  /** Frames between letters as the word types in. */
+  stagger?: number;
+  /** Replaces the remocn mark. */
+  logo?: React.ReactNode;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -172,20 +186,25 @@ interface Sampled {
   figEm: number;
 }
 
-function buildSampled(_version: number, value: string): Sampled {
+function buildSampled(
+  _version: number,
+  value: string,
+  fontFamily: string,
+  weight: number,
+): Sampled {
   const mctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   const text = (s: string, weight: number) => {
     const key = `${weight}|${s}`;
     if (cache[key] === undefined) {
       if (!mctx) return s.length * 0.55;
-      mctx.font = `${weight} ${FONT_PX}px "${onest.fontFamily}"`;
+      mctx.font = `${weight} ${FONT_PX}px "${fontFamily}"`;
       cache[key] = mctx.measureText(s).width / FONT_PX;
     }
     return cache[key];
   };
   const boxEm = 1.2;
-  const figEm = text(value, 300);
+  const figEm = text(value, weight);
   const cw = Math.ceil(figEm * FONT_PX) + 4;
   const ch = Math.ceil(boxEm * FONT_PX);
   const canvas = document.createElement("canvas");
@@ -194,7 +213,7 @@ function buildSampled(_version: number, value: string): Sampled {
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   const dots: Dot[] = [];
   if (ctx) {
-    ctx.font = `300 ${FONT_PX}px "${onest.fontFamily}"`;
+    ctx.font = `${weight} ${FONT_PX}px "${fontFamily}"`;
     const mt = ctx.measureText(value);
     const asc = mt.fontBoundingBoxAscent;
     const desc = mt.fontBoundingBoxDescent;
@@ -233,7 +252,7 @@ function buildSampled(_version: number, value: string): Sampled {
   return { text, dots, boxEm, figEm };
 }
 
-function useSampled(value: string) {
+function useSampled(value: string, fontFamily: string, fontWeight: number) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("figure-to-label: sampling"));
   const released = useRef(false);
@@ -246,8 +265,8 @@ function useSampled(value: string) {
     Promise.all([
       onest.waitUntilDone(),
       manrope.waitUntilDone(),
-      document.fonts.load(`300 100px "${onest.fontFamily}"`),
-      document.fonts.load(`400 100px "${onest.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -261,8 +280,27 @@ function useSampled(value: string) {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildSampled(version, value), [version, value]);
+  }, [handle, fontFamily, fontWeight]);
+  return useMemo(
+    () => buildSampled(version, value, fontFamily, fontWeight),
+    [version, value, fontFamily, fontWeight],
+  );
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function FigureToLabel({
@@ -272,19 +310,27 @@ export function FigureToLabel({
   accent,
   ink,
   background,
+  fontFamily = onest.fontFamily,
+  fontWeight = 300,
+  stagger = BEAT.charStep,
+  logo,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: FigureToLabelProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
   const bg = background ?? gshParams(preset, gParams).background;
-  const m = useSampled(value);
+  const m = useSampled(value, fontFamily, fontWeight);
   const portrait = H > W * 1.1;
 
   let content: React.ReactNode = <div />;
@@ -312,8 +358,8 @@ export function FigureToLabel({
       ? cy - (cardH + lineLen + noteE) / 2
       : cy - cardH / 2;
 
-    const sp = m.text(" ", 300);
-    const wordEm = m.text(word, 300);
+    const sp = m.text(" ", fontWeight);
+    const wordEm = m.text(word, fontWeight);
     const Fi = portrait
       ? Math.min(W * 0.26, (W * 0.84) / Math.max(m.figEm, wordEm))
       : Math.min(H * 0.18, (W * 0.8) / (m.figEm + sp + wordEm));
@@ -334,8 +380,11 @@ export function FigureToLabel({
     const colE = Math.min(1, Math.max(0, col));
     const startX = cardX + padX;
     const startY = cardY;
-    const figX = startX + (finX - startX) * col;
-    const figY = startY + (finY - startY) * col;
+    // The figure is laid out where it lands and travels there by transform:
+    // layout rounds a box and a baseline to whole pixels, so a figure eased
+    // by `left`/`top` clicks along pixel by pixel.
+    const figDx = (startX - finX) * (1 - col);
+    const figDy = (startY - finY) * (1 - col);
     const figS = 1 + (Fi / Fg - 1) * col;
     const moveBlur = Math.min(6, Math.abs(col - colPrev) * 60);
 
@@ -366,16 +415,20 @@ export function FigureToLabel({
       (finY + (boxH * Fi) / Fg / 2 - (cardY + cardH / 2)) * col;
     const cardH2 = cardH * (1 - colE) + boxH * figS * colE;
     const cardIntro = (1 - Math.min(1, Math.max(0, cardIn))) * H * 0.03;
+    const cardDy = cardCy - cardH2 / 2 + cardIntro - cardY;
 
     const card = (
       <div
         style={{
           position: "absolute",
           left: cardCx - cardW / 2,
-          top: cardCy - cardH2 / 2 + cardIntro,
+          // Laid out where it rests before the collapse; the intro rise and
+          // the collapse travel by transform, since layout rounds a box edge
+          // to whole pixels and an eased `top` steps unevenly.
+          top: cardY,
           width: cardW,
           height: cardH2,
-          transform: `scaleX(${cardScaleX.toFixed(4)})`,
+          transform: `${Math.abs(cardDy) < 1e-3 ? "" : `translateY(${cardDy}px) `}scaleX(${cardScaleX.toFixed(4)})`,
           borderRadius: Fg * 0.07,
           background: c.card,
           boxShadow: c.cardShadow,
@@ -457,12 +510,12 @@ export function FigureToLabel({
       <div
         style={{
           position: "absolute",
-          left: figX,
-          top: figY,
+          left: finX,
+          top: finY,
           width: figW,
           height: boxH,
           transformOrigin: "0 0",
-          transform: `scale(${figS.toFixed(5)})`,
+          transform: `translate(${figDx}px, ${figDy}px) scale(${figS.toFixed(5)})`,
           filter: moveBlur > 0.1 ? `blur(${moveBlur.toFixed(2)}px)` : undefined,
         }}
       >
@@ -483,8 +536,8 @@ export function FigureToLabel({
             width: figW * 1.1,
             height: boxH,
             lineHeight: `${boxH}px`,
-            fontFamily: onest.fontFamily,
-            fontWeight: 300,
+            fontFamily,
+            fontWeight,
             fontSize: Fg,
             color: figColor,
             whiteSpace: "pre",
@@ -554,11 +607,11 @@ export function FigureToLabel({
               transform: `scale(${(0.7 + 0.3 * noteLogo).toFixed(4)})`,
             }}
           >
-            <RemocnLogo fontSize={noteE} color={inkC} />
+            {logo ?? <RemocnLogo fontSize={noteE} color={inkC} />}
           </div>
           <div
             style={{
-              fontFamily: onest.fontFamily,
+              fontFamily,
               fontWeight: 400,
               fontSize: noteE,
               lineHeight: 1,
@@ -576,17 +629,17 @@ export function FigureToLabel({
     const nChars = Array.from(word).length;
     const typedN = Math.max(
       0,
-      Math.min(nChars, Math.floor((frame - BEAT.type) / BEAT.charStep) + 1),
+      Math.min(nChars, Math.floor((frame - BEAT.type) / stagger) + 1),
     );
     const typedStr = Array.from(word).slice(0, typedN).join("");
-    const typedPx = m.text(typedStr, 300) * Fi;
+    const typedPx = m.text(typedStr, fontWeight) * Fi;
     const wordX = portrait
       ? cx - (wordEm * Fi) / 2
       : finX + (m.figEm + sp) * Fi;
     const caretVisible =
       frame >= BEAT.type - 4 &&
       frame < BEAT.caretOff &&
-      (frame < BEAT.type + nChars * BEAT.charStep + 2 ||
+      (frame < BEAT.type + nChars * stagger + 2 ||
         Math.floor(frame / 9) % 2 === 0);
     const lineTop = finY + (m.boxEm * Fi - Fi) / 2;
     const wordTop = wordY + (m.boxEm * Fi - Fi) / 2;
@@ -600,8 +653,8 @@ export function FigureToLabel({
             top: wordY,
             height: m.boxEm * Fi,
             lineHeight: `${m.boxEm * Fi}px`,
-            fontFamily: onest.fontFamily,
-            fontWeight: 300,
+            fontFamily,
+            fontWeight,
             fontSize: Fi,
             color: inkC,
             whiteSpace: "pre",
@@ -651,12 +704,12 @@ export function FigureToLabel({
             transform: `translateY(${((1 - logoP) * eyeE).toFixed(2)}px) scale(${(0.8 + 0.2 * logoP).toFixed(4)})`,
           }}
         >
-          <RemocnLogo fontSize={eyeE} color={inkC} />
+          {logo ?? <RemocnLogo fontSize={eyeE} color={inkC} />}
         </div>
         {eyebrow ? (
           <div
             style={{
-              fontFamily: onest.fontFamily,
+              fontFamily,
               fontWeight: 400,
               fontSize: eyeE,
               lineHeight: 1,
@@ -675,7 +728,9 @@ export function FigureToLabel({
     content = (
       <AbsoluteFill
         style={{
-          transform: `scale(${push.toFixed(5)})`,
+          // The push never rests, so it marks everything in it as moving.
+          // Unrounded: a scale rounded to 1e-5 parks between steps as well.
+          transform: `scale(${push})${glide(true)}`,
         }}
       >
         {card}
@@ -689,18 +744,20 @@ export function FigureToLabel({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.5}
-      />
+      {background === undefined ? (
+        <GshGround
+          preset={preset}
+          params={gParams}
+          timeOffset={c.groundOffset}
+          timeScale={0.5}
+        />
+      ) : null}
       <AbsoluteFill
         style={{
           background: `radial-gradient(${portrait ? "95% 55%" : "70% 75%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},${(c.scrimAlpha * 0.35).toFixed(3)}) 100%)`,
         }}
       />
-      {content}
+      <ScaleLayer scale={scale}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

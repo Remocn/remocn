@@ -1,0 +1,101 @@
+{
+  "component": "icon-loader",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-calm",
+      "label": "Hairline Calm",
+      "description": "A large, thin-stroked icon in soft slate that draws itself slowly and quietly.",
+      "askedAs": [
+        "thin slow loading icon",
+        "elegant minimal spinner",
+        "large delicate line loader",
+        "тонкий медленный лоадер",
+        "изящная иконка загрузки"
+      ],
+      "props": {
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#64748b",
+        "animation": "draw"
+      }
+    },
+    {
+      "id": "bold-snappy",
+      "label": "Bold Snappy",
+      "description": "A small, heavy-stroked icon in deep blue that plays its action motion at a brisk pace.",
+      "askedAs": [
+        "fast thick loader",
+        "quick bold spinner icon",
+        "snappy small loading indicator",
+        "быстрый жирный лоадер",
+        "энергичная иконка загрузки"
+      ],
+      "props": {
+        "size": 32,
+        "strokeWidth": 3,
+        "speed": 2,
+        "color": "#1e40af",
+        "animation": "action"
+      }
+    },
+    {
+      "id": "hero-terracotta",
+      "label": "Hero Terracotta",
+      "description": "An oversized warm terracotta icon with a medium stroke that draws and moves at a relaxed tempo.",
+      "askedAs": [
+        "big warm loading icon",
+        "large orange-brown loader",
+        "hero sized animated icon",
+        "большая тёплая иконка загрузки",
+        "крупный терракотовый лоадер"
+      ],
+      "props": {
+        "size": 180,
+        "strokeWidth": 1.5,
+        "speed": 0.75,
+        "color": "#c2410c"
+      }
+    },
+    {
+      "id": "one-shot-reveal",
+      "label": "One-Shot Reveal",
+      "description": "A mid-sized forest green icon that draws in once and holds still instead of looping.",
+      "askedAs": [
+        "icon draws once and stops",
+        "no loop icon reveal",
+        "single play line drawing",
+        "иконка рисуется один раз",
+        "анимация без повтора"
+      ],
+      "props": {
+        "loop": false,
+        "animation": "draw",
+        "size": 96,
+        "color": "#166534",
+        "strokeWidth": 2.5
+      }
+    },
+    {
+      "id": "muted-pulse",
+      "label": "Muted Pulse",
+      "description": "A soft violet icon looping only its action motion at a gentle, steady rhythm.",
+      "askedAs": [
+        "subtle purple loader",
+        "gentle looping icon motion",
+        "soft calm action animation",
+        "мягкий фиолетовый лоадер",
+        "спокойная пульсирующая иконка"
+      ],
+      "props": {
+        "animation": "action",
+        "color": "#6d28d9",
+        "speed": 0.75,
+        "size": 64,
+        "strokeWidth": 1.75
+      }
+    }
+  ]
+}

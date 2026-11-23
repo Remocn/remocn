@@ -17,9 +17,9 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -69,7 +69,21 @@ export interface WordPullbackProps {
   after?: string;
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
   background?: string;
+  /** Typeface for the line around the accent word. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  /** Weight of the line around the accent word. */
+  fontWeight?: number;
+  /** Frames between words as the rest of the line rises. */
+  stagger?: number;
+  /** Replaces the remocn mark above the line. */
+  logo?: React.ReactNode;
+  /** Size of the line and logo, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -145,7 +159,11 @@ interface Measure {
   serif: (s: string) => number;
 }
 
-function buildMeasure(_version: number): Measure {
+function buildMeasure(
+  _version: number,
+  fontFamily: string,
+  fontWeight: number,
+): Measure {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   const get = (font: string, track: number, s: string) => {
@@ -159,14 +177,14 @@ function buildMeasure(_version: number): Measure {
     return cache[key];
   };
   return {
-    sans: (s) => get(`300 ${FONT_PX}px "${sans.fontFamily}"`, TRACK, s),
+    sans: (s) => get(`${fontWeight} ${FONT_PX}px "${fontFamily}"`, TRACK, s),
     serif: (s) =>
       get(`italic 400 ${FONT_PX}px "${serif.fontFamily}"`, -0.01, s) *
       SERIF_SCALE,
   };
 }
 
-function useMeasure() {
+function useMeasure(fontFamily: string, fontWeight: number) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("word-pullback: measuring"));
   const released = useRef(false);
@@ -180,7 +198,7 @@ function useMeasure() {
       sans.waitUntilDone(),
       serif.waitUntilDone(),
       manrope.waitUntilDone(),
-      document.fonts.load(`300 100px "${sans.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
       document.fonts.load(`italic 400 100px "${serif.fontFamily}"`),
       document.fonts.load(`600 100px "${manrope.fontFamily}"`),
     ])
@@ -196,14 +214,33 @@ function useMeasure() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMeasure(version), [version]);
+  }, [handle, fontFamily, fontWeight]);
+  return useMemo(
+    () => buildMeasure(version, fontFamily, fontWeight),
+    [version, fontFamily, fontWeight],
+  );
 }
 
 interface Token {
   text: string;
   serif: boolean;
   w: number;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function WordPullback({
@@ -213,19 +250,27 @@ export function WordPullback({
   accent,
   ink,
   background,
+  fontFamily = sans.fontFamily,
+  fontWeight = 300,
+  stagger = BEAT.wordStep,
+  logo,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: WordPullbackProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
   const bg = background ?? gshParams(preset, gParams).background;
-  const m = useMeasure();
+  const m = useMeasure(fontFamily, fontWeight);
   const portrait = H > W * 1.1;
 
   const flood = interpolate(
@@ -390,13 +435,26 @@ export function WordPullback({
     const Cp = cam(frame - 1);
     const vel = Math.abs(C.lnZ - Cp.lnZ);
     const screenBlur = Math.min(8, vel * 30);
-    const push = interpolate(
-      frame,
-      [BEAT.pull2 + BEAT.pull2Len, durationInFrames],
-      [1, 1.03],
-      CLAMP,
-    );
+    const pushAt = (f: number) =>
+      interpolate(
+        f,
+        [BEAT.pull2 + BEAT.pull2Len, durationInFrames],
+        [1, 1.03],
+        CLAMP,
+      );
+    const push = pushAt(frame);
     const Z = Math.exp(C.lnZ) * push;
+    // Where the frame's corner lands in the layer at frame `f`; the camera
+    // moves while that point does.
+    const corner = (f: number) => {
+      const q = cam(f);
+      const z = Math.exp(q.lnZ) * pushAt(f);
+      return [q.fx * z, q.fy * z, z * W * 0.5];
+    };
+    const here = corner(frame);
+    const camMoving = [corner(frame - speed), corner(frame + speed)].some((o) =>
+      o.some((v, i) => Math.abs(v - here[i]) > 1e-3),
+    );
     const depth = Math.max(0, Math.min(1, (Z - 1) / Math.max(0.001, z0 - 1)));
 
     const reveal = Math.min(1, typedPx / Math.max(1, accentPx) + 0.015);
@@ -407,13 +465,13 @@ export function WordPullback({
       let enterAt = -99;
       if (!isAccent && i > accentIdx) {
         if (li === accentLine) {
-          enterAt = typeEnd - 3 + (i - accentIdx - 1) * BEAT.wordStep;
+          enterAt = typeEnd - 3 + (i - accentIdx - 1) * stagger;
         } else {
           const firstOnLine = lines[li][0];
           enterAt =
             BEAT.line2 +
             (li - accentLine - 1) * 6 +
-            (i - firstOnLine) * BEAT.wordStep;
+            (i - firstOnLine) * stagger;
         }
       }
       const e = interpolate(frame, [enterAt, enterAt + BEAT.rise], [0, 1], {
@@ -433,9 +491,9 @@ export function WordPullback({
         whiteSpace: "pre",
         lineHeight: 1,
         color: isAccent ? hi : inkC,
-        fontFamily: isAccent ? serif.fontFamily : sans.fontFamily,
+        fontFamily: isAccent ? serif.fontFamily : fontFamily,
         fontStyle: isAccent ? "italic" : "normal",
-        fontWeight: isAccent ? 400 : 300,
+        fontWeight: isAccent ? 400 : fontWeight,
         fontSize: isAccent ? T * SERIF_SCALE : T,
         letterSpacing: isAccent ? "-0.01em" : `${TRACK}em`,
         clipPath: isAccent
@@ -476,7 +534,12 @@ export function WordPullback({
           width: W,
           height: H,
           transformOrigin: "0 0",
-          transform: `translate(${cx}px, ${cy}px) scale(${(Z * scale).toFixed(5)}) translate(${(-C.fx).toFixed(3)}px, ${(-C.fy).toFixed(3)}px)`,
+          // The tilt pivots on the frame's centre, not on the far-off origin.
+          // Rounding is kept only at rest: a stepped scale or focus moves
+          // text in steps of its own while the camera travels.
+          transform: camMoving
+            ? `translate(${cx}px, ${cy}px)${glide(true)} scale(${Z * scale}) translate(${-C.fx}px, ${-C.fy}px)`
+            : `translate(${cx}px, ${cy}px) scale(${(Z * scale).toFixed(5)}) translate(${(-C.fx).toFixed(3)}px, ${(-C.fy).toFixed(3)}px)`,
           opacity,
         }}
       >
@@ -513,7 +576,7 @@ export function WordPullback({
                   : undefined,
             }}
           >
-            <RemocnLogo fontSize={logoSize} color={c.logo} />
+            {logo ?? <RemocnLogo fontSize={logoSize} color={c.logo} />}
           </div>
         </div>
       </div>
@@ -535,21 +598,31 @@ export function WordPullback({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.6}
-        style={{
-          transform: `scale(${(1.12 - 0.12 * flood).toFixed(4)}) translateY(${((1 - flood) * H * 0.06).toFixed(2)}px)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${portrait ? "95% 60%" : "75% 80%"} at 50% 46%, rgba(${c.veil},${(veil + 0.25 * (1 - veil)).toFixed(3)}) 0%, rgba(${c.veil},${veil.toFixed(3)}) 100%)`,
-        }}
-      />
-      {content}
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={preset}
+            params={gParams}
+            timeOffset={c.groundOffset}
+            timeScale={0.6}
+            style={{
+              transform: `scale(${(1.12 - 0.12 * flood).toFixed(4)}) translateY(${((1 - flood) * H * 0.06).toFixed(2)}px)`,
+            }}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${portrait ? "95% 60%" : "75% 80%"} at 50% 46%, rgba(${c.veil},${(veil + 0.25 * (1 - veil)).toFixed(3)}) 0%, rgba(${c.veil},${veil.toFixed(3)}) 100%)`,
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

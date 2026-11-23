@@ -1,0 +1,124 @@
+{
+  "component": "glyph-block-decode",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A fast, code-flavoured decode in JetBrains Mono on near-black with a cool green accent.",
+      "askedAs": [
+        "hacker style decode",
+        "monospace terminal reveal",
+        "fast code-like text intro",
+        "терминальный стиль с моноширинным шрифтом",
+        "быстрая расшифровка как в коде"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0d",
+        "ink": "#d7e4dc",
+        "accent": "#4fbf8a",
+        "speed": 1.75,
+        "seed": 13
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, elegant reveal in Instrument Serif on warm paper with deep ink.",
+      "askedAs": [
+        "elegant serif name reveal",
+        "magazine style title card",
+        "slow classy decode on light paper",
+        "элегантный шрифт с засечками",
+        "медленное появление в журнальном стиле"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "ink": "#1d1a16",
+        "accent": "#9a5b3c",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Large, heavy Space Grotesk with a cobalt glow that lands with confidence.",
+      "askedAs": [
+        "big bold logo reveal",
+        "heavy text with blue glow",
+        "punchy product name intro",
+        "крупный жирный заголовок",
+        "яркое появление названия с синим фоном"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "scale": 1.3,
+        "ground": "cobalt-rise",
+        "accent": "#7aa2ff"
+      }
+    },
+    {
+      "id": "velvet-night",
+      "label": "Velvet Night",
+      "description": "A moody, unhurried light-weight decode over a plum velvet ground with a rose accent.",
+      "askedAs": [
+        "moody dark purple reveal",
+        "soft luxurious slow intro",
+        "thin font on velvet background",
+        "тёмное бархатное появление текста",
+        "медленная роскошная заставка"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "fontWeight": 300,
+        "accent": "#d99aa8",
+        "speed": 0.5,
+        "delay": 12
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "A quiet, compact Inter decode on a light polar ground with no underline.",
+      "askedAs": [
+        "minimal light title without underline",
+        "small clean text reveal",
+        "simple white background decode",
+        "минималистичная светлая заставка",
+        "без подчёркивания, чисто и просто"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "ground": "polar",
+        "underline": false,
+        "scale": 0.8,
+        "seed": 3
+      }
+    },
+    {
+      "id": "ember-warmth",
+      "label": "Ember Warmth",
+      "description": "Fraunces in medium weight glowing over a warm ember ground with an amber accent.",
+      "askedAs": [
+        "warm orange glow title",
+        "cozy fire toned reveal",
+        "serif text on warm dark background",
+        "тёплое оранжевое свечение",
+        "уютная заставка в огненных тонах"
+      ],
+      "props": {
+        "ground": "ember",
+        "fontFamily": "Fraunces",
+        "fontWeight": 500,
+        "accent": "#e8a15a",
+        "seed": 18
+      }
+    }
+  ]
+}

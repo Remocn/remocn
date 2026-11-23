@@ -1,0 +1,126 @@
+{
+  "component": "letter-gate",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, paper-toned gate set in a refined serif with an unhurried push.",
+      "askedAs": [
+        "elegant serif letter transition",
+        "magazine style gate on light background",
+        "slow classy typographic reveal",
+        "элегантный переход с засечками",
+        "светлый журнальный стиль букв"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "groundB": "lunar",
+        "speed": 0.75,
+        "accent": "#8a5a3b"
+      }
+    },
+    {
+      "id": "midnight-cobalt",
+      "label": "Midnight Cobalt",
+      "description": "Deep blue grounds and crisp white letters for a cool, high-end tech launch.",
+      "askedAs": [
+        "dark blue tech launch transition",
+        "cool night letter gate",
+        "premium blue product reveal",
+        "тёмно-синий переход для запуска",
+        "холодный технологичный стиль"
+      ],
+      "props": {
+        "ground": "blue-hour",
+        "groundB": "cobalt-rise",
+        "ink": "#f4f6fb",
+        "accent": "#7fa8ff",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "ember-rush",
+      "label": "Ember Rush",
+      "description": "Warm ember-to-copper grounds with a fast, punchy push through the letters.",
+      "askedAs": [
+        "fast warm letter transition",
+        "energetic orange gate reveal",
+        "quick punchy typographic cut",
+        "быстрый тёплый переход",
+        "энергичный оранжевый стиль"
+      ],
+      "props": {
+        "ground": "ember",
+        "groundB": "copper",
+        "speed": 1.75,
+        "scale": 1.2,
+        "ink": "#fff4ea",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced light-weight letters on charcoal for a developer-tool feel.",
+      "askedAs": [
+        "code style letter transition",
+        "monospace developer reveal",
+        "terminal look gate into editor",
+        "моноширинный шрифт для разработчиков",
+        "стиль терминала"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 300,
+        "ground": "charcoal-satin",
+        "groundB": "nightfold",
+        "ink": "#e6e8e3",
+        "accent": "#9be3b0"
+      }
+    },
+    {
+      "id": "velvet-slow",
+      "label": "Velvet Slow",
+      "description": "A slow, cinematic push through soft velvet-hour tones with a held start.",
+      "askedAs": [
+        "slow cinematic letter push",
+        "moody luxury transition",
+        "dramatic delayed gate open",
+        "медленный кинематографичный переход",
+        "роскошный тёмный стиль"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "groundB": "garnet",
+        "speed": 0.5,
+        "delay": 20,
+        "fontFamily": "Fraunces",
+        "ink": "#f7edea"
+      }
+    },
+    {
+      "id": "compact-polar",
+      "label": "Compact Polar",
+      "description": "Smaller, airy letters over icy polar light for a clean, minimal handoff.",
+      "askedAs": [
+        "minimal clean white transition",
+        "small subtle letter gate",
+        "icy light product handoff",
+        "минималистичный светлый переход",
+        "аккуратный небольшой текст"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "groundB": "coldlight",
+        "scale": 0.75,
+        "fontFamily": "Manrope",
+        "ink": "#1a1f2b"
+      }
+    }
+  ]
+}

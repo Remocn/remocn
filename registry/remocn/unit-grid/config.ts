@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const unitGridConfig: ComponentConfig = {
   componentName: "UnitGrid",
@@ -41,6 +47,25 @@ export const unitGridConfig: ComponentConfig = {
       description: "Highlighted",
       hiddenFromList: false,
     },
+    flip: {
+      type: "number",
+      default: 10,
+      min: 2,
+      max: 30,
+      step: 1,
+      description: "Flip (frames)",
+      hiddenFromList: false,
+    },
+    dotSize: {
+      type: "number",
+      default: 0.34,
+      min: 0.1,
+      max: 0.5,
+      step: 0.01,
+      description: "Unit size",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

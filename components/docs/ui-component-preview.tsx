@@ -60,10 +60,8 @@ function UiPreview({
     [controls, honored],
   );
 
-  const { values, isDefault, change, reset } = useCustomizer(
-    name,
-    visibleControls,
-  );
+  const { values, isDefault, change, reset, apply, batch, ...history } =
+    useCustomizer(name, visibleControls);
 
   // The scene's template interpolates only honored keys that differ from
   // their default; the same `values` feed the Player, so code and preview match.
@@ -93,6 +91,9 @@ function UiPreview({
           isDefault={isDefault}
           onChange={change}
           onReset={reset}
+          onApply={apply}
+          batch={batch}
+          history={history}
         />
       ) : null}
     </DocsPlayer>

@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { smokeDissolve } from "@/registry/remocn/smoke-dissolve";
 
 const FONT_FAMILY =
@@ -42,20 +43,21 @@ export function SmokeDissolveExampleScene({
   colorBack,
   speed,
 }: SmokeDissolveExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={110}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(110)}>
         <Scene label="Scene A" background="#141318" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 104 })}
+        timing={linearTiming({ durationInFrames: toFrames(104) })}
         presentation={smokeDissolve({
           colors: ringColor ? [ringColor] : undefined,
           colorBack,
           speed,
         })}
       />
-      <TransitionSeries.Sequence durationInFrames={110}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(110)}>
         <Scene label="Scene B" background="transparent" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -73,14 +75,14 @@ import { smokeDissolve } from "@/components/remocn/smoke-dissolve";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={110}>
+    <TransitionSeries.Sequence durationInFrames={220}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 104 })}
+      timing={linearTiming({ durationInFrames: 208 })}
       presentation={smokeDissolve({ colors: ["${ringColor}"], colorBack: "${colorBack}", speed: ${speed} })}
     />
-    <TransitionSeries.Sequence durationInFrames={110}>
+    <TransitionSeries.Sequence durationInFrames={220}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

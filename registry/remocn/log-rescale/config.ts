@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const logRescaleConfig: ComponentConfig = {
   componentName: "LogRescale",
@@ -13,16 +19,36 @@ export const logRescaleConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     title: {
       type: "text-content",
       default: "remocn renders per year",
       description: "Title",
     },
+    linearLabel: {
+      type: "text-content",
+      default: "Linear",
+      description: "Linear tag",
+    },
+    logLabel: {
+      type: "text-content",
+      default: "Log",
+      description: "Log tag",
+    },
+    morphAt: {
+      type: "number",
+      default: 64,
+      min: 20,
+      max: 100,
+      step: 1,
+      description: "Rescale at (frame)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Hanken Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

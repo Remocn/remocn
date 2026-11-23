@@ -39,8 +39,8 @@ export const RemotionRoot = () => (
   <Composition
     id="NdotResolve"
     component={NdotResolveScene}
-    durationInFrames={135}
-    fps={30}
+    durationInFrames={270}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -66,10 +66,38 @@ The headline appears row by row as dot-matrix glyphs, then a wipe converts each 
       description: "Word in the text shown in the accent color",
     },
     {
+      name: "resolveAt",
+      type: "number",
+      default: "34",
+      description: "Frame the dots start resolving into solid type.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "2.2",
+      description: "Frames between letters resolving, left to right.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface the dots resolve into. Load the font in your project first.",
     },
     {
       name: "speed",
@@ -82,6 +110,18 @@ The headline appears row by row as dot-matrix glyphs, then a wipe converts each 
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
       description: "Ships light and dark palettes",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
   ]}
 />

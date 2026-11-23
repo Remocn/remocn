@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   random,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -32,6 +32,13 @@ export interface CoolingTypeProps {
   hot?: string;
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the typed copy. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Strength of the heat glow around fresh letters; 0 turns it off. */
+  glow?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -39,6 +46,11 @@ export interface CoolingTypeProps {
   charFrames?: number;
   coolFrames?: number;
   seed?: number;
+  /** Size of the copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -96,7 +108,11 @@ const CLAMP = {
 
 type Measure = (s: string, serifFace: boolean) => number;
 
-function buildMeasure(_version: number): Measure {
+function buildMeasure(
+  _version: number,
+  fontFamily: string,
+  fontWeight: number,
+): Measure {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   return (s: string, serifFace: boolean) => {
@@ -105,7 +121,7 @@ function buildMeasure(_version: number): Measure {
       if (!ctx) return s.length * 0.5;
       ctx.font = serifFace
         ? `italic 400 ${FONT_PX}px "${serif.fontFamily}"`
-        : `300 ${FONT_PX}px "${inter.fontFamily}"`;
+        : `${fontWeight} ${FONT_PX}px "${fontFamily}"`;
       const tr = serifFace ? -0.01 : TRACK;
       cache[k] = ctx.measureText(s).width / FONT_PX + tr * Array.from(s).length;
     }
@@ -113,7 +129,7 @@ function buildMeasure(_version: number): Measure {
   };
 }
 
-function useMeasure() {
+function useMeasure(fontFamily: string, fontWeight: number) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("cooling-type: fonts"));
   const released = useRef(false);
@@ -126,7 +142,7 @@ function useMeasure() {
     Promise.all([
       inter.waitUntilDone(),
       serif.waitUntilDone(),
-      document.fonts.load(`300 100px "${inter.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
       document.fonts.load(`italic 400 100px "${serif.fontFamily}"`),
     ])
       .catch(() => undefined)
@@ -141,8 +157,11 @@ function useMeasure() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMeasure(version), [version]);
+  }, [handle, fontFamily, fontWeight]);
+  return useMemo(
+    () => buildMeasure(version, fontFamily, fontWeight),
+    [version, fontFamily, fontWeight],
+  );
 }
 
 interface Ch {
@@ -154,12 +173,32 @@ interface Ch {
   t: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CoolingType({
   text = "What if your launch video could write itself?",
   accentWord = "itself?",
   hot,
   accent,
   ink,
+  background,
+  fontFamily = inter.fontFamily,
+  fontWeight = 300,
+  glow = 1,
   theme = "dark",
   ground,
   groundParams,
@@ -167,10 +206,15 @@ export function CoolingType({
   charFrames = 1.6,
   coolFrames = 20,
   seed = 5,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: CoolingTypeProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
+  const glowK = c.glow * glow;
   const inkC = ink ?? c.ink;
   const hotC = hot ?? c.hot;
   const accC = accent ?? c.accent;
@@ -178,7 +222,7 @@ export function CoolingType({
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
   const bg = gshParams(preset, gParams).background;
   const portrait = H > W * 1.1;
-  const m = useMeasure();
+  const m = useMeasure(fontFamily, fontWeight);
 
   let content: ReactNode = <div />;
   if (m) {
@@ -308,6 +352,18 @@ export function CoolingType({
       );
     });
 
+    const pushAt = (fr: number) =>
+      interpolate(fr, [0, durationInFrames], [1, 1.04], {
+        ...CLAMP,
+        easing: CAMERA,
+      });
+    const push = pushAt(frame);
+    // The camera's ease is very flat at both ends, so "moving" is the scale
+    // step weighed at the frame's edge, against the neighbouring frames.
+    const pushMoving =
+      Math.abs(pushAt(frame + speed) - push) * W * 0.5 > 1e-3 ||
+      Math.abs(push - pushAt(frame - speed)) * W * 0.5 > 1e-3;
+
     const glyphEls = chars.map((ch, i) => {
       if (ch.t > f) return null;
       const a = f - ch.t;
@@ -315,7 +371,7 @@ export function CoolingType({
       const e = KEY(Math.min(1, a / 4));
       const target = ch.serif ? accC : inkC;
       const flare = ch.serif ? 1.4 : 1;
-      const g = heat * c.glow * flare;
+      const g = heat * glowK * flare;
       const shadow =
         g > 0.02
           ? `0 0 ${(size * 0.12 * g).toFixed(2)}px color-mix(in oklab, ${hotC} ${pct(0.9 * g)}, transparent), 0 0 ${(size * 0.42 * g).toFixed(2)}px color-mix(in oklab, ${hotC} ${pct(0.4 * g)}, transparent)`
@@ -330,16 +386,16 @@ export function CoolingType({
             height: size,
             display: "flex",
             alignItems: "center",
-            fontFamily: ch.serif ? serif.fontFamily : inter.fontFamily,
+            fontFamily: ch.serif ? serif.fontFamily : fontFamily,
             fontStyle: ch.serif ? "italic" : "normal",
-            fontWeight: ch.serif ? 400 : 300,
+            fontWeight: ch.serif ? 400 : fontWeight,
             fontSize: ch.serif ? size * 1.04 : size,
             lineHeight: 1,
             whiteSpace: "pre",
             color: `color-mix(in oklab, ${hotC} ${pct(heat)}, ${target})`,
             textShadow: shadow,
             opacity: Math.min(1, 0.35 + a / 1.5),
-            transform: `translateY(${((1 - e) * size * 0.1).toFixed(2)}px)`,
+            transform: `translateY(${((1 - e) * size * 0.1).toFixed(2)}px)${glide(a < 4 && !pushMoving)}`,
             filter:
               e < 0.98 ? `blur(${((1 - e) * 4).toFixed(2)}px)` : undefined,
           }}
@@ -380,7 +436,7 @@ export function CoolingType({
               width: trail,
               height: caretH * 0.4,
               borderRadius: caretH,
-              background: `linear-gradient(90deg, color-mix(in oklab, ${hotC} 0%, transparent) 0%, color-mix(in oklab, ${hotC} ${pct(0.55 * c.glow + 0.15)}, transparent) 100%)`,
+              background: `linear-gradient(90deg, color-mix(in oklab, ${hotC} 0%, transparent) 0%, color-mix(in oklab, ${hotC} ${pct(0.55 * glowK + 0.15)}, transparent) 100%)`,
               filter: `blur(${(size * 0.09).toFixed(2)}px)`,
             }}
           />
@@ -395,20 +451,18 @@ export function CoolingType({
             borderRadius: caretW,
             background: caretC,
             opacity: blink ? 1 : 0,
-            boxShadow: `0 0 ${(size * 0.18 * caretHeat * c.glow).toFixed(2)}px color-mix(in oklab, ${hotC} ${pct(0.8 * caretHeat)}, transparent)`,
+            boxShadow: `0 0 ${(size * 0.18 * caretHeat * glowK).toFixed(2)}px color-mix(in oklab, ${hotC} ${pct(0.8 * caretHeat)}, transparent)`,
           }}
         />
       </>
     );
 
-    const push = interpolate(frame, [0, durationInFrames], [1, 1.04], {
-      ...CLAMP,
-      easing: CAMERA,
-    });
     content = (
       <AbsoluteFill
         style={{
-          transform: `scale(${push.toFixed(5)})`,
+          // Rounded only at rest: a scale stepped by 1e-5 moves the frame's
+          // edge in 0.01px steps of its own while the camera pushes.
+          transform: `scale(${pushMoving ? push : push.toFixed(5)})${glide(pushMoving)}`,
           transformOrigin: "50% 50%",
         }}
       >
@@ -420,19 +474,34 @@ export function CoolingType({
   }
 
   return (
-    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${portrait ? "95% 50%" : "72% 62%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
-        }}
-      />
-      {content}
+    <AbsoluteFill
+      style={{
+        background: background === undefined ? bg : undefined,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={preset}
+            params={gParams}
+            timeOffset={c.groundOffset}
+            timeScale={0.5}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${portrait ? "95% 50%" : "72% 62%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

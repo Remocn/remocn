@@ -4,20 +4,22 @@ import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import type React from "react";
-import { useId } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
+  continueRender,
+  delayRender,
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const geist = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -50,9 +52,27 @@ export interface PromptToAppProps {
   siteBody?: string;
   siteLinks?: string[];
   pours?: AppPour[];
+  /** Heading of the empty chat before the prompt is sent. */
+  emptyTitle?: string;
+  /** Booking button in the generated site's nav and hero. */
+  siteCta?: string;
+  /** Heading over the generated site's pour cards. */
+  poursTitle?: string;
   children?: React.ReactNode;
+  /** Replaces the remocn mark in the chat header and beside the replies. */
+  logo?: React.ReactNode;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color of the chat and preview chrome; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the windows, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -126,10 +146,20 @@ const tween = (f: number, a: number, b: number, easing = enterE) =>
   interpolate(f, [a, b], [0, 1], { ...clampX, easing });
 
 type SpringCfg = { mass?: number; damping: number; stiffness?: number };
+
+/** Whether a value of the frame moves into or out of `f`. */
+const stirs = (at: (f: number) => number, f: number, eps = 1e-3) =>
+  Math.abs(at(f + 1) - at(f)) > eps || Math.abs(at(f) - at(f - 1)) > eps;
 const HEAVY: SpringCfg = { mass: 1, damping: 26, stiffness: 120 };
 const CARD: SpringCfg = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP: SpringCfg = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH: SpringCfg = { damping: 200 };
+
+const THREAD_TOP = 20;
+const FILES_GAP = 14;
+// Taller than any block of the thread; scales a block's progress to px for the
+// test that picks the frames on which something is still opening.
+const BLOCK_REACH = 100;
 
 const REMOCN_R_PATH =
   "M 0.01 0.81 C 0.01 1.73, 0.36 2.79, 1.09 4.13 C 4.91 11.04, 13.45 17.16, 21.7 18.9 C 22.94 19.16, 23.18 19.16, 51.39 19.27 C 76.07 19.36, 80.02 19.4, 81.32 19.57 C 89.89 20.69, 96.2 24.68, 99.38 31.01 C 103.19 38.56, 102.53 50.1, 97.91 57.07 C 94.66 61.96, 89.68 64.99, 83.26 66 C 82.81 66.07, 70.18 66.83, 55.2 67.69 C 24.82 69.43, 27.03 69.23, 24.18 70.4 C 19.9 72.15, 14.84 75.7, 10.65 79.89 C 4.86 85.68, 1.3 91.91, 0.25 98.13 C 0.12 98.85, 0.08 103.13, 0.04 116.66 L 0 134.26 9.5 134.26 L 19 134.26 19.05 119.41 C 19.1 103.27, 19.08 103.82, 19.82 101.04 C 21.79 93.65, 27.86 88.75, 36.45 87.63 C 37.23 87.53, 39.41 87.5, 43.57 87.53 C 50.12 87.59, 50.75 87.65, 53.22 88.45 C 56.61 89.56, 59.67 91.86, 62.02 95.07 C 62.52 95.76, 69.35 103.85, 77.2 113.07 C 85.04 122.28, 91.63 130.04, 91.85 130.32 C 92.07 130.59, 92.5 131.34, 92.82 131.97 C 93.52 133.35, 94.11 133.93, 95.06 134.13 C 95.5 134.23, 98.97 134.26, 106.36 134.23 L 117.01 134.19 100.82 113.07 C 91.91 101.45, 84.52 91.78, 84.39 91.57 C 83.36 89.89, 83.66 87.53, 85.09 86 C 85.79 85.25, 86.36 84.94, 88.07 84.38 C 96.18 81.72, 104.15 76.62, 109.97 70.36 C 120.59 58.93, 124.06 44.32, 119.44 30.43 C 114.59 15.81, 101.93 4.02, 87.64 0.83 C 83.93 0.01, 88.09 0.08, 41.85 0.04 L 0.01 0 0.01 0.81 Z";
@@ -356,7 +386,25 @@ function Spinner({
   );
 }
 
-function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
+function Cursor({
+  x,
+  y,
+  rest,
+  press,
+}: {
+  x: number;
+  y: number;
+  rest: { x: number; y: number };
+  press: number;
+}) {
+  // Eased by `left`/`top`, the cursor stepped in uneven whole pixels; layout
+  // holds it on the button it clicks and the travel is a transform.
+  const dx = x - rest.x;
+  const dy = y - rest.y;
+  const travel =
+    Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3
+      ? ""
+      : `translate(${dx}px, ${dy}px) `;
   return (
     <svg
       width={22}
@@ -364,10 +412,10 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: rest.x - 2,
+        top: rest.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.12 * press})`,
+        transform: `${travel}scale(${1 - 0.12 * press})`,
         filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.28))",
         overflow: "visible",
         zIndex: 5,
@@ -399,12 +447,111 @@ function arc(
   };
 }
 
-function Grow({ p, children }: { p: number; children: React.ReactNode }) {
+// A block that opens by its grid row pushes the rest of the thread by layout,
+// and layout rounds every baseline and box edge it moves: each line clicks
+// along pixel by pixel. While any block is opening, the thread is laid out
+// with all of them fully open (`held`) and the travel is on transforms: this
+// one is clipped to its open part and lifted by what the blocks above it
+// still hide. A block at rest is the plain grid row.
+//
+// A lone `${p}fr` row under 1fr takes `p` of the content's height for the
+// grid, then only `p` of that for the row itself: the block is `p` tall and
+// shows the top `p * p` of its content. The clip keeps that.
+function Grow({
+  p,
+  held,
+  lift = 0,
+  heightRef,
+  children,
+}: {
+  p: number;
+  held?: boolean;
+  lift?: number;
+  heightRef?: (el: HTMLDivElement | null) => void;
+  children: React.ReactNode;
+}) {
   return (
-    <div style={{ display: "grid", gridTemplateRows: `${p}fr` }}>
-      <div style={{ minHeight: 0, overflow: "hidden" }}>{children}</div>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateRows: held ? "1fr" : `${p}fr`,
+        transform: held && lift ? `translateY(${lift}px)` : undefined,
+      }}
+    >
+      <div
+        ref={heightRef}
+        style={{
+          minHeight: 0,
+          overflow: "hidden",
+          clipPath: held
+            ? `inset(0 0 ${Math.max(0, 1 - p * p) * 100}% 0)`
+            : undefined,
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
+}
+
+/**
+ * Used heights of the bound elements, read after layout while `on`: the thread
+ * is laid out fully open then, so each block reports its natural height.
+ */
+function useHeights(on: boolean, fontFamily: string) {
+  const nodes = useRef(new Map<string, HTMLElement>());
+  const binders = useRef(new Map<string, (el: HTMLElement | null) => void>());
+  const [heights, setHeights] = useState<Record<string, number>>({});
+  // A frame rendered on its own lays text out in the fallback face first, and
+  // a paragraph wraps differently there. The frame waits for the typeface and
+  // renders once more, so the heights below are read from the real lines.
+  const [fontsIn, setFontsIn] = useState(false);
+  const [handle] = useState(() => delayRender("prompt-to-app: fonts"));
+  useEffect(() => {
+    let live = true;
+    Promise.all([
+      geist.waitUntilDone(),
+      document.fonts.load(`400 15px "${fontFamily}"`),
+    ])
+      .catch(() => undefined)
+      .then(() => {
+        if (live) setFontsIn(true);
+      });
+    return () => {
+      live = false;
+    };
+  }, [fontFamily]);
+  // Released from an effect rather than next to `setFontsIn`: by then the
+  // render with the typeface in is committed, heights included.
+  useEffect(() => {
+    if (fontsIn) continueRender(handle);
+    return () => continueRender(handle);
+  }, [fontsIn, handle]);
+  // No dependency list: every render while `on` reads again. The computed
+  // height is in layout px, whatever scale sits above, and a layout effect
+  // runs before the frame is painted.
+  useLayoutEffect(() => {
+    if (!on) return;
+    const next: Record<string, number> = {};
+    let changed = false;
+    for (const [key, el] of nodes.current) {
+      next[key] = Number.parseFloat(getComputedStyle(el).height) || 0;
+      if (next[key] !== heights[key]) changed = true;
+    }
+    if (changed) setHeights((before) => ({ ...before, ...next }));
+  });
+  const bind = (key: string) => {
+    let binder = binders.current.get(key);
+    if (!binder) {
+      binder = (el) => {
+        if (el) nodes.current.set(key, el);
+        else nodes.current.delete(key);
+      };
+      binders.current.set(key, binder);
+    }
+    return binder;
+  };
+  return [bind, heights] as const;
 }
 
 function Skeleton({
@@ -437,6 +584,7 @@ function Section({
   frame,
   label,
   accent,
+  fontFamily,
   skeleton,
   children,
   height,
@@ -446,6 +594,7 @@ function Section({
   frame: number;
   label: string;
   accent: string;
+  fontFamily: string;
   skeleton: React.ReactNode;
   children: React.ReactNode;
   height: number;
@@ -604,6 +753,9 @@ function Site({
   siteBody,
   siteLinks,
   pours,
+  siteCta,
+  poursTitle,
+  fontFamily,
 }: {
   frame: number;
   accent: string;
@@ -614,6 +766,9 @@ function Site({
   siteBody: string;
   siteLinks: string[];
   pours: AppPour[];
+  siteCta: string;
+  poursTitle: string;
+  fontFamily: string;
 }) {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const skel = { line: "rgba(42,33,28,0.08)" };
@@ -651,6 +806,7 @@ function Site({
         frame={frame}
         label="Nav"
         accent={accent}
+        fontFamily={fontFamily}
         height={58}
         skeleton={
           <div
@@ -724,7 +880,7 @@ function Site({
               <span key={l}>{l}</span>
             ))}
           </div>
-          <div style={{ marginLeft: "auto" }}>{btn("Book a table", true)}</div>
+          <div style={{ marginLeft: "auto" }}>{btn(siteCta, true)}</div>
         </div>
       </Section>
 
@@ -734,6 +890,7 @@ function Site({
         frame={frame}
         label="Hero"
         accent={accent}
+        fontFamily={fontFamily}
         height={276}
         skeleton={
           <div style={{ display: "flex", gap: 32, padding: "32px 32px 0" }}>
@@ -799,7 +956,7 @@ function Site({
               {siteBody}
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-              {btn("Book a table", true)}
+              {btn(siteCta, true)}
               {btn("See the menu", false)}
             </div>
           </div>
@@ -824,6 +981,7 @@ function Site({
         frame={frame}
         label="PourCards"
         accent={accent}
+        fontFamily={fontFamily}
         height={196}
         skeleton={
           <div style={{ display: "flex", gap: 14, padding: "58px 32px 0" }}>
@@ -843,9 +1001,7 @@ function Site({
       >
         <div style={{ padding: "18px 32px 0" }}>
           <div style={{ display: "flex", alignItems: "baseline" }}>
-            <div style={{ fontFamily: serif, fontSize: 24 }}>
-              Tonight’s pours
-            </div>
+            <div style={{ fontFamily: serif, fontSize: 24 }}>{poursTitle}</div>
             <div
               style={{ marginLeft: "auto", fontSize: 13, color: SITE.muted }}
             >
@@ -936,6 +1092,22 @@ function Site({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PromptToApp({
   prompt = DEFAULT_PROMPT,
   plan = DEFAULT_PLAN,
@@ -954,39 +1126,57 @@ export function PromptToApp({
   siteBody = "Low-intervention bottles and seasonal plates in the Mission. Walk-ins welcome until 10.",
   siteLinks = ["Menu", "Wine list", "Events", "Visit"],
   pours = DEFAULT_POURS,
+  emptyTitle = "What should we build?",
+  siteCta = "Book a table",
+  poursTitle = "Tonight’s pours",
   children,
+  logo,
   theme = "light",
   accent = "#3B5BFD",
+  ink: inkProp,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: PromptToAppProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const tall = H > W;
   const L = tall ? LAYOUT_TALL : LAYOUT_WIDE;
   const u = W / L.w;
-  const pal = palette(theme);
+  const themePal = palette(theme);
+  const pal = inkProp ? { ...themePal, text: inkProp } : themePal;
   const planWords = plan.split(" ");
   const tl = timeline(prompt.length, planWords.length);
   const file = (i: number) => tl.file(i);
   const sp = (at: number, config: SpringCfg, durationInFrames?: number) =>
     spring({ frame: frame - at, fps, config, durationInFrames });
+  const spAt = (f: number, at: number, config: SpringCfg) =>
+    spring({ frame: f - at, fps, config });
 
   const chatIn = sp(0, HEAVY);
   const dock = sp(tl.send - 6, HEAVY);
   const pvIn = sp(tl.send - 2, HEAVY);
   const chatW = L.chat.w * L.chat.s;
   const chatH = L.chat.h * L.chat.s;
-  const chatX = interpolate(
-    dock,
-    [0, 1],
-    [tall ? L.chat.x : (L.w - chatW) / 2, L.chat.x],
+  // The chat docks by a transform, laid out where it docks: layout rounds a
+  // box and a baseline to whole pixels, so a window eased by `left`/`top`
+  // clicks along. The dock spring never quite lands, so the leftover is
+  // dropped once it is under a thousandth of a pixel.
+  const dockPx = Math.hypot(
+    (tall ? L.chat.x : (L.w - chatW) / 2) - L.chat.x,
+    (tall ? (L.h - chatH) / 2 : L.chat.y) - L.chat.y,
   );
-  const chatY = interpolate(
-    dock,
-    [0, 1],
-    [tall ? (L.h - chatH) / 2 : L.chat.y, L.chat.y],
+  const undock = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
+  const chatDX = undock(
+    ((tall ? L.chat.x : (L.w - chatW) / 2) - L.chat.x) * (1 - dock),
+  );
+  const chatDY = undock(
+    ((tall ? (L.h - chatH) / 2 : L.chat.y) - L.chat.y) * (1 - dock),
   );
   const typed = Math.max(
     0,
@@ -996,12 +1186,20 @@ export function PromptToApp({
   const sendScale =
     1 - 0.06 * (sp(tl.send - 2, MORPH, 3) - sp(tl.send + 1, CHIP));
   const emptyOut = tween(frame, tl.send + 1, tl.send + 6, exitE);
-  const bubble = sp(tl.send, MORPH);
-  const thinkIn = sp(tl.think, MORPH);
+  const opening = (at: number) =>
+    frame >= at &&
+    stirs((f) => (f >= at ? BLOCK_REACH * spAt(f, at, MORPH) : 0), frame);
+  // A spring never quite lands, and a grid row left a hair short is laid out
+  // 1/64px short: on a half-pixel resting place that puts everything under it
+  // a whole pixel off, made up two seconds later in one hop. Past its last
+  // stir a block is simply open.
+  const grown = (at: number) => (opening(at) ? spAt(frame, at, MORPH) : 1);
+  const bubble = grown(tl.send);
+  const thinkIn = grown(tl.think);
   const thinking = frame < tl.planAt;
-  const planIn = sp(tl.planAt - 2, MORPH);
-  const filesIn = (i: number) => sp(file(i).start - 2, MORPH);
-  const doneIn = sp(tl.doneMsg, MORPH);
+  const planIn = grown(tl.planAt - 2);
+  const filesIn = (i: number) => grown(file(i).start - 2);
+  const doneIn = grown(tl.doneMsg);
   const ready =
     tween(frame, tl.think, tl.think + 6) *
     (1 - tween(frame, file(0).start - 4, file(0).start + 2, exitE));
@@ -1023,14 +1221,64 @@ export function PromptToApp({
   const popOp = tween(frame, tl.deployed + 2, tl.deployed + 6);
   const urlSwap = tween(frame, tl.deployed, tl.deployed + 8);
 
-  const cam = interpolate(frame, [0, tl.end], [1, 1.025], {
-    ...clampX,
-    easing: camE,
-  });
+  const camAt = (f: number) =>
+    interpolate(f, [0, tl.end], [1, 1.025], { ...clampX, easing: camE });
+  const cam = camAt(frame);
+  // Asked of the px at the frame's far side: the push eases in and out so
+  // gently that its progress says "moving" long after the picture rests.
+  const camMoving = stirs((f) => camAt(f) * 1000, frame, 2e-3);
+  const chatMoving =
+    !camMoving &&
+    (stirs((f) => 40 * spAt(f, 0, HEAVY), frame) ||
+      stirs((f) => dockPx * spAt(f, tl.send - 6, HEAVY), frame));
+  const pvMoving =
+    !camMoving && stirs((f) => 56 * spAt(f, tl.send - 2, HEAVY), frame);
+  const popMoving =
+    !camMoving && stirs((f) => 6 * spAt(f, tl.deployed + 2, CHIP), frame);
+
+  // The thread's opening blocks from the top down, each with the frame it
+  // mounts on. See `Grow` for what `held` switches.
+  const blocks = [
+    { key: "bubble", at: tl.send },
+    { key: "think", at: tl.think },
+    { key: "plan", at: tl.planAt - 2 },
+    ...files
+      .slice(1, 4)
+      .map((_, i) => ({ key: `file${i + 1}`, at: file(i + 1).start - 2 })),
+    { key: "done", at: tl.doneMsg },
+  ];
+  const held = blocks.some((b) => opening(b.at));
+  const [bind, heights] = useHeights(held, fontFamily);
+  const natural = (key: string) => heights[key] ?? 0;
+  /** What a block still hides, in px. */
+  const shut = (key: string) => {
+    const b = blocks.find((it) => it.key === key);
+    return b && frame >= b.at ? natural(key) * (1 - grown(b.at)) : 0;
+  };
+  const shutAboveFiles = shut("bubble") + shut("think") + shut("plan");
+  const shutRows = (before: number) => {
+    let sum = 0;
+    for (let i = 1; i < before; i += 1) sum += shut(`file${i}`);
+    return sum;
+  };
+  const filesOn = frame >= file(0).start - 2;
+  // The thread sits at the top of its pane until it outgrows it, then sticks
+  // to the bottom. Laid out fully open it may already overflow while the real
+  // one still fits, so it is put back where the real one would be.
+  const threadFull =
+    THREAD_TOP +
+    blocks.reduce((sum, b) => sum + (frame >= b.at ? natural(b.key) : 0), 0) +
+    (filesOn ? FILES_GAP + natural("file0") : 0);
+  const threadNow = threadFull - blocks.reduce((s, b) => s + shut(b.key), 0);
+  const threadDY = held
+    ? Math.min(0, natural("pane") - threadNow) -
+      Math.min(0, natural("pane") - threadFull)
+    : 0;
+  const threadTilt = glide(held && !camMoving && !chatMoving);
 
   const composerText = sent ? "" : prompt.slice(0, typed);
   const caretOn = !sent && Math.floor(frame / 8) % 2 === 0;
-  const ink = pal.dark ? "#EDEDEF" : "#18181B";
+  const ink = inkProp ?? (pal.dark ? "#EDEDEF" : "#18181B");
   const inkOn = pal.dark ? "#18181B" : "#FFFFFF";
 
   return (
@@ -1039,639 +1287,566 @@ export function PromptToApp({
         fontFamily,
         overflow: "hidden",
         WebkitFontSmoothing: "antialiased",
-        background: pal.base,
+        background: background === undefined ? pal.base : undefined,
       }}
     >
-      <GshGround
-        preset={ground ?? (pal.dark ? "hearth" : "paper-crease")}
-        params={groundParams}
-        timeOffset={pal.dark ? 5 : 3}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: pal.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: L.w,
-          height: L.h,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (pal.dark ? "hearth" : "paper-crease")}
+            params={groundParams}
+            timeOffset={pal.dark ? 5 : 3}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: pal.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${cam})`,
-            transformOrigin: `${(target.x / L.w) * 100}% ${(target.y / L.h) * 100}%`,
+            left: 0,
+            top: 0,
+            width: L.w,
+            height: L.h,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: chatX,
-              top: chatY,
-              width: L.chat.w,
-              height: L.chat.h,
-              transformOrigin: "0 0",
-              transform: `translateY(${(1 - chatIn) * 40}px) scale(${L.chat.s})`,
-              opacity: Math.min(1, chatIn * 1.6),
+              inset: 0,
+              transform: `scale(${cam})${glide(camMoving)}`,
+              transformOrigin: `${(target.x / L.w) * 100}% ${(target.y / L.h) * 100}%`,
             }}
           >
             <div
               style={{
-                position: "relative",
+                position: "absolute",
+                left: L.chat.x,
+                top: L.chat.y,
                 width: L.chat.w,
                 height: L.chat.h,
-                borderRadius: 18,
-                background: pal.win,
-                boxShadow: pal.shadow,
-                overflow: "hidden",
-                display: "flex",
-                flexDirection: "column",
+                transformOrigin: "0 0",
+                transform: `${chatDX || chatDY ? `translate(${chatDX}px, ${chatDY}px) ` : ""}translateY(${(1 - chatIn) * 40}px) scale(${L.chat.s})${glide(chatMoving)}`,
+                opacity: Math.min(1, chatIn * 1.6),
               }}
             >
               <div
                 style={{
-                  height: 52,
-                  flexShrink: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "0 20px",
-                  borderBottom: `1px solid ${pal.line}`,
-                  fontSize: 15,
-                }}
-              >
-                <RemocnR height={15} color={pal.text} />
-                <span style={{ color: pal.faint }}>/</span>
-                <span style={{ color: pal.text }}>{projectName}</span>
-                <Icon name="chevDown" color={pal.faint} size={14} />
-              </div>
-              <div
-                style={{
-                  flex: 1,
-                  minHeight: 0,
+                  position: "relative",
+                  width: L.chat.w,
+                  height: L.chat.h,
+                  borderRadius: 18,
+                  background: pal.win,
+                  boxShadow: pal.shadow,
                   overflow: "hidden",
                   display: "flex",
                   flexDirection: "column",
-                  justifyContent: "flex-end",
-                  padding: "0 22px",
                 }}
               >
-                <div style={{ marginBottom: "auto", paddingTop: 20 }}>
-                  {frame >= tl.send ? (
-                    <Grow p={bubble}>
-                      <div
-                        style={{
-                          marginLeft: 28,
-                          background: pal.bubble,
-                          borderRadius: 14,
-                          padding: "12px 15px",
-                          fontSize: 15,
-                          lineHeight: 1.5,
-                          color: pal.text,
-                          textWrap: "pretty",
-                          opacity: tween(frame, tl.send, tl.send + 4),
-                        }}
+                <div
+                  style={{
+                    height: 52,
+                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "0 20px",
+                    borderBottom: `1px solid ${pal.line}`,
+                    fontSize: 15,
+                  }}
+                >
+                  {logo ?? <RemocnR height={15} color={pal.text} />}
+                  <span style={{ color: pal.faint }}>/</span>
+                  <span style={{ color: pal.text }}>{projectName}</span>
+                  <Icon name="chevDown" color={pal.faint} size={14} />
+                </div>
+                <div
+                  ref={bind("pane")}
+                  style={{
+                    flex: 1,
+                    minHeight: 0,
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-end",
+                    padding: "0 22px",
+                  }}
+                >
+                  <div
+                    style={{
+                      marginBottom: "auto",
+                      paddingTop: THREAD_TOP,
+                      transform:
+                        threadDY || threadTilt
+                          ? `translateY(${threadDY}px)${threadTilt}`
+                          : undefined,
+                    }}
+                  >
+                    {frame >= tl.send ? (
+                      <Grow p={bubble} held={held} heightRef={bind("bubble")}>
+                        <div
+                          style={{
+                            marginLeft: 28,
+                            background: pal.bubble,
+                            borderRadius: 14,
+                            padding: "12px 15px",
+                            fontSize: 15,
+                            lineHeight: 1.5,
+                            color: pal.text,
+                            textWrap: "pretty",
+                            opacity: tween(frame, tl.send, tl.send + 4),
+                          }}
+                        >
+                          {prompt}
+                        </div>
+                      </Grow>
+                    ) : null}
+                    {frame >= tl.think ? (
+                      <Grow
+                        p={thinkIn}
+                        held={held}
+                        lift={-shut("bubble")}
+                        heightRef={bind("think")}
                       >
-                        {prompt}
-                      </div>
-                    </Grow>
-                  ) : null}
-                  {frame >= tl.think ? (
-                    <Grow p={thinkIn}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          marginTop: 20,
-                          fontSize: 14,
-                          color: pal.muted,
-                        }}
-                      >
-                        <RemocnR height={13} color={pal.text} />
-                        {thinking ? (
-                          <span
-                            style={{
-                              opacity:
-                                0.45 + 0.55 * Math.abs(Math.cos(frame / 9)),
-                            }}
-                          >
-                            Thinking
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 2,
-                              color: pal.faint,
-                            }}
-                          >
-                            Thought for 3s
-                            <Icon
-                              name="chevRight"
-                              color={pal.faint}
-                              size={13}
-                            />
-                          </span>
-                        )}
-                      </div>
-                    </Grow>
-                  ) : null}
-                  {frame >= tl.planAt - 2 ? (
-                    <Grow p={planIn}>
-                      <div
-                        style={{
-                          marginTop: 10,
-                          fontSize: 15,
-                          lineHeight: 1.5,
-                          color: pal.text,
-                          textWrap: "pretty",
-                        }}
-                      >
-                        {planWords.map((w, k) => (
-                          <span
-                            key={k}
-                            style={{
-                              opacity: tween(
-                                frame,
-                                tl.planAt + k * 1.3,
-                                tl.planAt + k * 1.3 + 5,
-                              ),
-                            }}
-                          >
-                            {w}{" "}
-                          </span>
-                        ))}
-                      </div>
-                    </Grow>
-                  ) : null}
-                  {frame >= file(0).start - 2 ? (
-                    <div
-                      style={{
-                        marginTop: 14,
-                        opacity: tween(
-                          frame,
-                          file(0).start - 2,
-                          file(0).start + 4,
-                        ),
-                      }}
-                    >
-                      {files.slice(0, 4).map((f, i) => {
-                        const st =
-                          frame >= file(i).done
-                            ? 2
-                            : frame >= file(i).start
-                              ? 1
-                              : 0;
-                        const ok = sp(file(i).done, CHIP);
-                        if (i > 0 && frame < file(i).start - 2) return null;
-                        return (
-                          <Grow key={f} p={i === 0 ? 1 : filesIn(i)}>
-                            <div
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            marginTop: 20,
+                            fontSize: 14,
+                            color: pal.muted,
+                          }}
+                        >
+                          {logo ?? <RemocnR height={13} color={pal.text} />}
+                          {thinking ? (
+                            <span
+                              style={{
+                                opacity:
+                                  0.45 + 0.55 * Math.abs(Math.cos(frame / 9)),
+                              }}
+                            >
+                              Thinking
+                            </span>
+                          ) : (
+                            <span
                               style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 10,
-                                height: 32,
-                                fontSize: 14,
-                                color: pal.muted,
-                                borderTop:
-                                  i === 0 ? "none" : `1px solid ${pal.line}`,
+                                gap: 2,
+                                color: pal.faint,
                               }}
                             >
-                              <span
-                                style={{
-                                  width: 58,
-                                  color: st === 1 ? pal.text : pal.faint,
-                                }}
-                              >
-                                {st === 2 ? "Edited" : "Writing"}
-                              </span>
-                              <span
-                                style={{
-                                  fontFamily: mono,
-                                  fontSize: 13,
-                                  color: st === 1 ? pal.text : pal.muted,
-                                }}
-                              >
-                                {f}
-                              </span>
-                              <span
-                                style={{
-                                  marginLeft: "auto",
-                                  position: "relative",
-                                  width: 15,
-                                  height: 15,
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    position: "absolute",
-                                    inset: 0,
-                                    opacity: 1 - Math.min(1, ok),
-                                  }}
-                                >
-                                  <Spinner
-                                    color={pal.muted}
-                                    size={15}
-                                    frame={frame}
-                                  />
-                                </span>
-                                <span
-                                  style={{
-                                    position: "absolute",
-                                    inset: 0,
-                                    opacity: Math.min(1, ok),
-                                    transform: `scale(${0.4 + 0.6 * ok})`,
-                                  }}
-                                >
-                                  <Icon
-                                    name="check"
-                                    color={pal.green}
-                                    size={15}
-                                    stroke={2}
-                                  />
-                                </span>
-                              </span>
-                            </div>
-                          </Grow>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                  {frame >= tl.doneMsg ? (
-                    <Grow p={doneIn}>
-                      <div
-                        style={{
-                          marginTop: 12,
-                          fontSize: 15,
-                          lineHeight: 1.5,
-                          color: pal.text,
-                          opacity: tween(frame, tl.doneMsg + 2, tl.doneMsg + 8),
-                          textWrap: "pretty",
-                        }}
+                              Thought for 3s
+                              <Icon
+                                name="chevRight"
+                                color={pal.faint}
+                                size={13}
+                              />
+                            </span>
+                          )}
+                        </div>
+                      </Grow>
+                    ) : null}
+                    {frame >= tl.planAt - 2 ? (
+                      <Grow
+                        p={planIn}
+                        held={held}
+                        lift={-shut("bubble") - shut("think")}
+                        heightRef={bind("plan")}
                       >
-                        {doneMessage}
-                      </div>
-                    </Grow>
-                  ) : null}
-                </div>
-              </div>
-
-              {emptyOut < 1 ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 28,
-                    right: 28,
-                    top: L.chat.h * 0.3,
-                    opacity: 1 - emptyOut,
-                    transform: `translateY(${-emptyOut * 10}px)`,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 26,
-                      fontWeight: 300,
-                      letterSpacing: "-0.03em",
-                      lineHeight: 1.15,
-                      color: pal.text,
-                    }}
-                  >
-                    What should we build?
-                  </div>
-                </div>
-              ) : null}
-
-              <div style={{ padding: "12px 14px 14px", flexShrink: 0 }}>
-                <div
-                  style={{
-                    borderRadius: 14,
-                    background: pal.field,
-                    boxShadow: `inset 0 0 0 1px ${pal.border}`,
-                    padding: "12px 10px 10px 14px",
-                  }}
-                >
-                  <div
-                    style={{
-                      height: 45,
-                      fontSize: 15,
-                      lineHeight: 1.5,
-                      color: composerText ? pal.text : pal.faint,
-                      overflow: "hidden",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <div style={{ marginBottom: "auto" }}>
-                      {composerText || "Describe an app or a page"}
-                      {caretOn && composerText ? (
-                        <span
-                          style={{
-                            display: "inline-block",
-                            width: 1.5,
-                            height: 18,
-                            background: ink,
-                            verticalAlign: "-3px",
-                            marginLeft: 1,
-                          }}
-                        />
-                      ) : null}
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      marginTop: 6,
-                    }}
-                  >
-                    <Icon name="paperclip" color={pal.faint} size={17} />
-                    <div
-                      style={{
-                        marginLeft: "auto",
-                        width: 32,
-                        height: 32,
-                        borderRadius: 99,
-                        background:
-                          typed > 0 && !sent
-                            ? ink
-                            : pal.dark
-                              ? "rgba(255,255,255,0.08)"
-                              : "rgba(17,19,24,0.06)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transform: `scale(${sendScale})`,
-                      }}
-                    >
-                      {sent && frame < tl.doneMsg ? (
                         <div
                           style={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: 2,
-                            background: pal.muted,
+                            marginTop: 10,
+                            fontSize: 15,
+                            lineHeight: 1.5,
+                            color: pal.text,
+                            textWrap: "pretty",
                           }}
-                        />
-                      ) : (
-                        <Icon
-                          name="arrowUp"
-                          color={typed > 0 && !sent ? inkOn : pal.faint}
-                          size={16}
-                          stroke={2}
-                        />
-                      )}
+                        >
+                          {planWords.map((w, k) => (
+                            <span
+                              key={k}
+                              style={{
+                                opacity: tween(
+                                  frame,
+                                  tl.planAt + k * 1.3,
+                                  tl.planAt + k * 1.3 + 5,
+                                ),
+                              }}
+                            >
+                              {w}{" "}
+                            </span>
+                          ))}
+                        </div>
+                      </Grow>
+                    ) : null}
+                    {frame >= file(0).start - 2 ? (
+                      <div
+                        style={{
+                          marginTop: FILES_GAP,
+                          opacity: tween(
+                            frame,
+                            file(0).start - 2,
+                            file(0).start + 4,
+                          ),
+                          transform:
+                            held && shutAboveFiles
+                              ? `translateY(${-shutAboveFiles}px)`
+                              : undefined,
+                        }}
+                      >
+                        {files.slice(0, 4).map((f, i) => {
+                          const st =
+                            frame >= file(i).done
+                              ? 2
+                              : frame >= file(i).start
+                                ? 1
+                                : 0;
+                          const ok = sp(file(i).done, CHIP);
+                          if (i > 0 && frame < file(i).start - 2) return null;
+                          return (
+                            <Grow
+                              key={f}
+                              p={i === 0 ? 1 : filesIn(i)}
+                              held={held}
+                              lift={-shutRows(i)}
+                              heightRef={bind(`file${i}`)}
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 10,
+                                  height: 32,
+                                  fontSize: 14,
+                                  color: pal.muted,
+                                  borderTop:
+                                    i === 0 ? "none" : `1px solid ${pal.line}`,
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    width: 58,
+                                    color: st === 1 ? pal.text : pal.faint,
+                                  }}
+                                >
+                                  {st === 2 ? "Edited" : "Writing"}
+                                </span>
+                                <span
+                                  style={{
+                                    fontFamily: mono,
+                                    fontSize: 13,
+                                    color: st === 1 ? pal.text : pal.muted,
+                                  }}
+                                >
+                                  {f}
+                                </span>
+                                <span
+                                  style={{
+                                    marginLeft: "auto",
+                                    position: "relative",
+                                    width: 15,
+                                    height: 15,
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      position: "absolute",
+                                      inset: 0,
+                                      opacity: 1 - Math.min(1, ok),
+                                    }}
+                                  >
+                                    <Spinner
+                                      color={pal.muted}
+                                      size={15}
+                                      frame={frame}
+                                    />
+                                  </span>
+                                  <span
+                                    style={{
+                                      position: "absolute",
+                                      inset: 0,
+                                      opacity: Math.min(1, ok),
+                                      transform: `scale(${0.4 + 0.6 * ok})`,
+                                    }}
+                                  >
+                                    <Icon
+                                      name="check"
+                                      color={pal.green}
+                                      size={15}
+                                      stroke={2}
+                                    />
+                                  </span>
+                                </span>
+                              </div>
+                            </Grow>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                    {frame >= tl.doneMsg ? (
+                      <Grow
+                        p={doneIn}
+                        held={held}
+                        lift={-shutAboveFiles - shutRows(4)}
+                        heightRef={bind("done")}
+                      >
+                        <div
+                          style={{
+                            marginTop: 12,
+                            fontSize: 15,
+                            lineHeight: 1.5,
+                            color: pal.text,
+                            opacity: tween(
+                              frame,
+                              tl.doneMsg + 2,
+                              tl.doneMsg + 8,
+                            ),
+                            textWrap: "pretty",
+                          }}
+                        >
+                          {doneMessage}
+                        </div>
+                      </Grow>
+                    ) : null}
+                  </div>
+                </div>
+
+                {emptyOut < 1 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 28,
+                      right: 28,
+                      top: L.chat.h * 0.3,
+                      opacity: 1 - emptyOut,
+                      transform: `translateY(${-emptyOut * 10}px)`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 26,
+                        fontWeight: 300,
+                        letterSpacing: "-0.03em",
+                        lineHeight: 1.15,
+                        color: pal.text,
+                      }}
+                    >
+                      {emptyTitle}
+                    </div>
+                  </div>
+                ) : null}
+
+                <div style={{ padding: "12px 14px 14px", flexShrink: 0 }}>
+                  <div
+                    style={{
+                      borderRadius: 14,
+                      background: pal.field,
+                      boxShadow: `inset 0 0 0 1px ${pal.border}`,
+                      padding: "12px 10px 10px 14px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: 45,
+                        fontSize: 15,
+                        lineHeight: 1.5,
+                        color: composerText ? pal.text : pal.faint,
+                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      <div style={{ marginBottom: "auto" }}>
+                        {composerText || "Describe an app or a page"}
+                        {caretOn && composerText ? (
+                          <span
+                            style={{
+                              display: "inline-block",
+                              width: 1.5,
+                              height: 18,
+                              background: ink,
+                              verticalAlign: "-3px",
+                              marginLeft: 1,
+                            }}
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        marginTop: 6,
+                      }}
+                    >
+                      <Icon name="paperclip" color={pal.faint} size={17} />
+                      <div
+                        style={{
+                          marginLeft: "auto",
+                          width: 32,
+                          height: 32,
+                          borderRadius: 99,
+                          background:
+                            typed > 0 && !sent
+                              ? ink
+                              : pal.dark
+                                ? "rgba(255,255,255,0.08)"
+                                : "rgba(17,19,24,0.06)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transform: `scale(${sendScale})`,
+                        }}
+                      >
+                        {sent && frame < tl.doneMsg ? (
+                          <div
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: 2,
+                              background: pal.muted,
+                            }}
+                          />
+                        ) : (
+                          <Icon
+                            name="arrowUp"
+                            color={typed > 0 && !sent ? inkOn : pal.faint}
+                            size={16}
+                            stroke={2}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div
-            style={{
-              position: "absolute",
-              left: L.pv.x,
-              top: L.pv.y,
-              width: PVW,
-              height: L.pvH,
-              transformOrigin: "0 0",
-              transform: `translateY(${(1 - pvIn) * 56}px) scale(${L.pv.s})`,
-              opacity: Math.min(1, pvIn * 1.6),
-            }}
-          >
             <div
               style={{
-                position: "relative",
+                position: "absolute",
+                left: L.pv.x,
+                top: L.pv.y,
                 width: PVW,
                 height: L.pvH,
-                borderRadius: 14,
-                overflow: "hidden",
-                background: pal.win,
-                boxShadow: pal.shadow,
+                transformOrigin: "0 0",
+                transform: `translateY(${(1 - pvIn) * 56}px) scale(${L.pv.s})${glide(pvMoving)}`,
+                opacity: Math.min(1, pvIn * 1.6),
               }}
             >
               <div
                 style={{
-                  height: PV_BAR,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "0 12px 0 16px",
-                  borderBottom: `1px solid ${pal.line}`,
+                  position: "relative",
+                  width: PVW,
+                  height: L.pvH,
+                  borderRadius: 14,
+                  overflow: "hidden",
+                  background: pal.win,
+                  boxShadow: pal.shadow,
                 }}
               >
-                <div style={{ display: "flex", gap: 7 }}>
-                  {[0, 1, 2].map((d) => (
-                    <div
-                      key={d}
-                      style={{
-                        width: 11,
-                        height: 11,
-                        borderRadius: 99,
-                        boxShadow: `inset 0 0 0 1px ${pal.border}`,
-                      }}
-                    />
-                  ))}
-                </div>
                 <div
                   style={{
-                    marginLeft: 70,
-                    width: 330,
-                    height: 30,
-                    borderRadius: 8,
-                    background: pal.well,
+                    height: PV_BAR,
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 13,
-                    color: pal.muted,
-                    position: "relative",
-                    overflow: "hidden",
-                    fontVariantNumeric: "tabular-nums",
+                    gap: 12,
+                    padding: "0 12px 0 16px",
+                    borderBottom: `1px solid ${pal.line}`,
                   }}
                 >
-                  <span
-                    style={{
-                      position: "absolute",
-                      opacity: 1 - urlSwap,
-                      transform: `translateY(${-urlSwap * 8}px)`,
-                    }}
-                  >
-                    localhost:3000
-                  </span>
-                  <span
-                    style={{
-                      position: "absolute",
-                      opacity: urlSwap,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      transform: `translateY(${(1 - urlSwap) * 8}px)`,
-                    }}
-                  >
-                    <Icon name="lock" color={pal.muted} size={12} />
-                    <span style={{ color: pal.text }}>{deployUrl}</span>
-                  </span>
-                </div>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: DEPLOY.x,
-                  top: DEPLOY.y,
-                  width: DEPLOY.w,
-                  height: DEPLOY.h,
-                  borderRadius: 8,
-                  background: isLive ? "transparent" : ink,
-                  boxShadow: isLive ? `inset 0 0 0 1px ${pal.border}` : "none",
-                  color: isLive ? pal.text : inkOn,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 7,
-                  fontSize: 14,
-                  transform: `scale(${1 - 0.04 * press})`,
-                  filter: `brightness(${1 + (pal.dark ? -0.08 : 0.25) * hover * (isLive ? 0 : 1)})`,
-                }}
-              >
-                {deploying ? (
-                  <Spinner color={inkOn} size={13} frame={frame} />
-                ) : isLive ? (
-                  <div
-                    style={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: 99,
-                      background: pal.green,
-                    }}
-                  />
-                ) : null}
-                {deploying ? "Deploying" : isLive ? "Live" : "Deploy"}
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: PV_BAR,
-                  bottom: 0,
-                  background: pal.dark ? "#141416" : "#F6F6F7",
-                }}
-              >
-                {children ? (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      opacity: tween(frame, file(0).start, file(0).start + 10),
-                    }}
-                  >
-                    {children}
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      height: "100%",
-                      opacity: tween(
-                        frame,
-                        file(0).start - 4,
-                        file(0).start + 2,
-                      ),
-                    }}
-                  >
-                    <Site
-                      frame={frame}
-                      accent={accent}
-                      file={file}
-                      siteName={siteName}
-                      siteEyebrow={siteEyebrow}
-                      siteHeadline={siteHeadline}
-                      siteBody={siteBody}
-                      siteLinks={siteLinks}
-                      pours={pours}
-                    />
-                  </div>
-                )}
-                {ready > 0 ? (
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 9,
-                      opacity: ready,
-                      fontSize: 14,
-                      color: pal.muted,
-                    }}
-                  >
-                    <Spinner color={pal.muted} size={14} frame={frame} />
-                    Starting dev server
-                  </div>
-                ) : null}
-              </div>
-
-              {popOp > 0 ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    right: 12,
-                    top: DEPLOY.y + DEPLOY.h + 8,
-                    width: 316,
-                    borderRadius: 14,
-                    background: pal.pop,
-                    boxShadow: pal.popShadow,
-                    padding: 6,
-                    opacity: popOp,
-                    transform: `translateY(${(1 - pop) * -6}px) scale(${0.94 + 0.06 * pop})`,
-                    transformOrigin: `${316 - DEPLOY.w / 2}px 0`,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "baseline",
-                      padding: "8px 10px 10px",
-                    }}
-                  >
-                    <span style={{ fontSize: 16, color: pal.text }}>
-                      Deployed to production
-                    </span>
-                    <span
-                      style={{
-                        marginLeft: "auto",
-                        fontSize: 13,
-                        color: pal.faint,
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      21.4s
-                    </span>
+                  <div style={{ display: "flex", gap: 7 }}>
+                    {[0, 1, 2].map((d) => (
+                      <div
+                        key={d}
+                        style={{
+                          width: 11,
+                          height: 11,
+                          borderRadius: 99,
+                          boxShadow: `inset 0 0 0 1px ${pal.border}`,
+                        }}
+                      />
+                    ))}
                   </div>
                   <div
                     style={{
-                      height: 40,
+                      marginLeft: 70,
+                      width: 330,
+                      height: 30,
                       borderRadius: 8,
                       background: pal.well,
                       display: "flex",
                       alignItems: "center",
-                      gap: 9,
-                      padding: "0 5px 0 12px",
-                      fontSize: 14,
-                      color: pal.text,
+                      justifyContent: "center",
+                      fontSize: 13,
+                      color: pal.muted,
+                      position: "relative",
+                      overflow: "hidden",
+                      fontVariantNumeric: "tabular-nums",
                     }}
                   >
+                    <span
+                      style={{
+                        position: "absolute",
+                        opacity: 1 - urlSwap,
+                        transform: `translateY(${-urlSwap * 8}px)`,
+                      }}
+                    >
+                      localhost:3000
+                    </span>
+                    <span
+                      style={{
+                        position: "absolute",
+                        opacity: urlSwap,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        transform: `translateY(${(1 - urlSwap) * 8}px)`,
+                      }}
+                    >
+                      <Icon name="lock" color={pal.muted} size={12} />
+                      <span style={{ color: pal.text }}>{deployUrl}</span>
+                    </span>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: DEPLOY.x,
+                    top: DEPLOY.y,
+                    width: DEPLOY.w,
+                    height: DEPLOY.h,
+                    borderRadius: 8,
+                    background: isLive ? "transparent" : ink,
+                    boxShadow: isLive
+                      ? `inset 0 0 0 1px ${pal.border}`
+                      : "none",
+                    color: isLive ? pal.text : inkOn,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 7,
+                    fontSize: 14,
+                    transform: `scale(${1 - 0.04 * press})`,
+                    filter: `brightness(${1 + (pal.dark ? -0.08 : 0.25) * hover * (isLive ? 0 : 1)})`,
+                  }}
+                >
+                  {deploying ? (
+                    <Spinner color={inkOn} size={13} frame={frame} />
+                  ) : isLive ? (
                     <div
                       style={{
                         width: 7,
@@ -1680,42 +1855,180 @@ export function PromptToApp({
                         background: pal.green,
                       }}
                     />
-                    {deployUrl}
+                  ) : null}
+                  {deploying ? "Deploying" : isLive ? "Live" : "Deploy"}
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: PV_BAR,
+                    bottom: 0,
+                    background: pal.dark ? "#141416" : "#F6F6F7",
+                  }}
+                >
+                  {children ? (
                     <div
                       style={{
-                        marginLeft: "auto",
-                        height: 30,
-                        padding: "0 11px",
-                        borderRadius: 6,
-                        background: ink,
-                        color: inkOn,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 5,
-                        fontSize: 13,
+                        width: "100%",
+                        height: "100%",
+                        opacity: tween(
+                          frame,
+                          file(0).start,
+                          file(0).start + 10,
+                        ),
                       }}
                     >
-                      Visit
-                      <Icon
-                        name="external"
-                        color={inkOn}
-                        size={12}
-                        stroke={1.75}
+                      {children}
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        height: "100%",
+                        opacity: tween(
+                          frame,
+                          file(0).start - 4,
+                          file(0).start + 2,
+                        ),
+                      }}
+                    >
+                      <Site
+                        frame={frame}
+                        accent={accent}
+                        file={file}
+                        siteName={siteName}
+                        siteEyebrow={siteEyebrow}
+                        siteHeadline={siteHeadline}
+                        siteBody={siteBody}
+                        siteLinks={siteLinks}
+                        pours={pours}
+                        siteCta={siteCta}
+                        poursTitle={poursTitle}
+                        fontFamily={fontFamily}
                       />
                     </div>
-                  </div>
+                  )}
+                  {ready > 0 ? (
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 9,
+                        opacity: ready,
+                        fontSize: 14,
+                        color: pal.muted,
+                      }}
+                    >
+                      <Spinner color={pal.muted} size={14} frame={frame} />
+                      Starting dev server
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
-            </div>
-          </div>
 
-          {cursorOp > 0 ? (
-            <div style={{ opacity: cursorOp }}>
-              <Cursor x={cur.x} y={cur.y} press={press} />
+                {popOp > 0 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      right: 12,
+                      top: DEPLOY.y + DEPLOY.h + 8,
+                      width: 316,
+                      borderRadius: 14,
+                      background: pal.pop,
+                      boxShadow: pal.popShadow,
+                      padding: 6,
+                      opacity: popOp,
+                      transform: `translateY(${(1 - pop) * -6}px) scale(${0.94 + 0.06 * pop})${glide(popMoving)}`,
+                      transformOrigin: `${316 - DEPLOY.w / 2}px 0`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "baseline",
+                        padding: "8px 10px 10px",
+                      }}
+                    >
+                      <span style={{ fontSize: 16, color: pal.text }}>
+                        Deployed to production
+                      </span>
+                      <span
+                        style={{
+                          marginLeft: "auto",
+                          fontSize: 13,
+                          color: pal.faint,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        21.4s
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        height: 40,
+                        borderRadius: 8,
+                        background: pal.well,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 9,
+                        padding: "0 5px 0 12px",
+                        fontSize: 14,
+                        color: pal.text,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: 99,
+                          background: pal.green,
+                        }}
+                      />
+                      {deployUrl}
+                      <div
+                        style={{
+                          marginLeft: "auto",
+                          height: 30,
+                          padding: "0 11px",
+                          borderRadius: 6,
+                          background: ink,
+                          color: inkOn,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 5,
+                          fontSize: 13,
+                        }}
+                      >
+                        Visit
+                        <Icon
+                          name="external"
+                          color={inkOn}
+                          size={12}
+                          stroke={1.75}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </div>
-          ) : null}
+
+            {cursorOp > 0 ? (
+              <div style={{ opacity: cursorOp }}>
+                <Cursor
+                  x={cur.x}
+                  y={cur.y}
+                  rest={arc(L.cursorFrom, target, 1)}
+                  press={press}
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

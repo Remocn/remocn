@@ -1,0 +1,113 @@
+{
+  "component": "shader-dot-orbit",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-constellation",
+      "label": "Slow Constellation",
+      "description": "Tiny, widely spread dots drifting slowly over a deep navy field.",
+      "askedAs": [
+        "slow tiny dots like stars",
+        "calm sparse dot background",
+        "gentle starfield orbit",
+        "медленные маленькие точки как звёзды",
+        "спокойный редкий фон из точек"
+      ],
+      "props": {
+        "speed": 0.5,
+        "size": 0.4,
+        "spreading": 1.8,
+        "colorBack": "#0b1020"
+      }
+    },
+    {
+      "id": "dense-network",
+      "label": "Dense Network",
+      "description": "Large, tightly packed dots orbiting at a brisk pace for a busy system feel.",
+      "askedAs": [
+        "busy dense dot pattern",
+        "fast network of big dots",
+        "packed tech dot grid",
+        "плотная сетка крупных точек",
+        "быстрая насыщенная сеть точек"
+      ],
+      "props": {
+        "speed": 2,
+        "size": 2,
+        "spreading": 0.4,
+        "colorBack": "#141821"
+      }
+    },
+    {
+      "id": "ink-black",
+      "label": "Ink Black",
+      "description": "Pure black backdrop with medium dots in a steady, unhurried orbit.",
+      "askedAs": [
+        "black background dots",
+        "minimal dark orbit",
+        "clean pitch black dot backdrop",
+        "точки на чёрном фоне",
+        "минималистичный тёмный фон"
+      ],
+      "props": {
+        "colorBack": "#000000",
+        "speed": 0.75,
+        "size": 0.8
+      }
+    },
+    {
+      "id": "hyperdrive",
+      "label": "Hyperdrive",
+      "description": "Small dots whipping around their orbits at high speed over a dark violet ground.",
+      "askedAs": [
+        "very fast spinning dots",
+        "energetic orbit animation",
+        "high speed dot motion",
+        "очень быстрые вращающиеся точки",
+        "энергичная анимация орбит"
+      ],
+      "props": {
+        "speed": 3.5,
+        "size": 0.6,
+        "spreading": 1.2,
+        "colorBack": "#1a1326"
+      }
+    },
+    {
+      "id": "deep-teal",
+      "label": "Deep Teal",
+      "description": "Bold, evenly spaced dots turning slowly over a dark teal background.",
+      "askedAs": [
+        "teal dot background",
+        "big slow dots on green blue",
+        "dark cyan system backdrop",
+        "точки на бирюзовом фоне",
+        "крупные медленные точки"
+      ],
+      "props": {
+        "colorBack": "#0c1f22",
+        "size": 1.6,
+        "speed": 0.5,
+        "spreading": 1
+      }
+    },
+    {
+      "id": "graphite-grid",
+      "label": "Graphite Grid",
+      "description": "Mid-grey graphite field with compact, closely spaced dots at default pace.",
+      "askedAs": [
+        "grey dot grid",
+        "neutral graphite backdrop",
+        "tight compact dots",
+        "серая сетка из точек",
+        "нейтральный графитовый фон"
+      ],
+      "props": {
+        "colorBack": "#2a2c31",
+        "spreading": 0.2,
+        "size": 0.7
+      }
+    }
+  ]
+}

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const tittleDropConfig: ComponentConfig = {
   componentName: "TittleDrop",
@@ -12,11 +18,6 @@ export const tittleDropConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -37,6 +38,30 @@ export const tittleDropConfig: ComponentConfig = {
       description: "Accent dot",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 5,
+      min: 0,
+      max: 15,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    hopGap: {
+      type: "number",
+      default: 12,
+      min: 4,
+      max: 30,
+      step: 1,
+      description: "Hop gap (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "DM Sans" }),
     speed: {
       type: "number",
       default: 1,

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const slimCountConfig: ComponentConfig = {
   componentName: "SlimCount",
@@ -55,6 +61,26 @@ export const slimCountConfig: ComponentConfig = {
       description: "Decimals",
       hiddenFromList: false,
     },
+    countDuration: {
+      type: "number",
+      default: 60,
+      min: 10,
+      max: 120,
+      step: 1,
+      description: "Count (frames)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Anton" }),
     speed: {
       type: "number",
       default: 1,

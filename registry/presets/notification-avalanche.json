@@ -1,0 +1,119 @@
+{
+  "component": "notification-avalanche",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-calm",
+      "label": "Paper Calm",
+      "description": "Light theme on a soft paper ground with a muted green accent and a slower, unhurried pile-up.",
+      "askedAs": [
+        "light calm version",
+        "soft paper background slow",
+        "gentle daytime inbox look",
+        "светлая спокойная версия",
+        "мягкий светлый фон медленно"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accent": "#2f7d5b",
+        "speed": 0.75,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "desktop-flood",
+      "label": "Desktop Flood",
+      "description": "Desktop surface flooded fast under a deep cobalt ground with a crisp Inter face.",
+      "askedAs": [
+        "desktop notifications overload",
+        "fast chaotic laptop version",
+        "work inbox flooding quickly",
+        "уведомления на компьютере",
+        "быстрый хаос на десктопе"
+      ],
+      "props": {
+        "surface": "desktop",
+        "ground": "cobalt-rise",
+        "speed": 1.5,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "ember-alert",
+      "label": "Ember Alert",
+      "description": "Dark ember ground with a warm coral accent that makes the runaway counter feel urgent.",
+      "askedAs": [
+        "warm urgent red look",
+        "alarm style notifications",
+        "hot stressful overload",
+        "тревожный красный вариант",
+        "срочные уведомления тёплые цвета"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#e8664a",
+        "fontFamily": "Space Grotesk",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "editorial-night",
+      "label": "Editorial Night",
+      "description": "Charcoal satin backdrop with Fraunces type and a pale gold accent for a refined, slower reveal.",
+      "askedAs": [
+        "elegant serif dark version",
+        "premium editorial style",
+        "classy slow notification scene",
+        "элегантный тёмный с засечками",
+        "премиальный стиль медленно"
+      ],
+      "props": {
+        "ground": "charcoal-satin",
+        "fontFamily": "Fraunces",
+        "accent": "#c9a86a",
+        "speed": 0.5,
+        "delay": 12
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Flat near-black background with light grey mono text and a mint accent for a dev-tool feel.",
+      "askedAs": [
+        "developer terminal look",
+        "monospace hacker style",
+        "minimal black code vibe",
+        "стиль терминала",
+        "моноширинный шрифт тёмный"
+      ],
+      "props": {
+        "background": "#0e1012",
+        "ink": "#e6e8ea",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#5fd3a4",
+        "speed": 2
+      }
+    },
+    {
+      "id": "polar-closeup",
+      "label": "Polar Close-Up",
+      "description": "Enlarged phone on a cool polar light ground with an icy blue accent for vertical crops.",
+      "askedAs": [
+        "bigger phone for vertical video",
+        "cool icy light close up",
+        "zoomed in clean phone",
+        "крупный телефон для вертикали",
+        "холодный светлый крупный план"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "accent": "#2a7fbf",
+        "scale": 1.3,
+        "fontFamily": "Geist"
+      }
+    }
+  ]
+}

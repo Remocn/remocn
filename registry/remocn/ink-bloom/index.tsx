@@ -4,14 +4,9 @@ import { loadFont } from "@remotion/google-fonts/Fraunces";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadFont("normal", {
   weights: ["400"],
@@ -57,6 +52,22 @@ export interface InkBloomProps {
   logo?: React.ReactNode;
   name?: string;
   accent?: string;
+  /** Color of the logo and name; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the name beside a custom logo. Load it yourself; Fraunces by default. */
+  fontFamily?: string;
+  /** Frame the lockup starts to condense out of the ink. */
+  resolveAt?: number;
+  /** How far the ink ring sinks, as a share of the frame height. */
+  sink?: number;
+  /** Size of the bloom and lockup, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   /** Light = off-white paper with near-black ink (default); dark = light ink on black. */
@@ -126,13 +137,20 @@ interface Puff {
  * and a faint veil. Every motion decays exponentially, so the ink slows and
  * settles on its own; the filter supplies all the fine structure.
  */
-function bloom(age: number, ox: number, oy: number, h: number, seed: number) {
+function bloom(
+  age: number,
+  ox: number,
+  oy: number,
+  h: number,
+  seed: number,
+  sink: number,
+) {
   const u = h / 720;
   const puffs: Puff[] = [];
   if (age < 0) return puffs;
   const H = (n: number) => hash(n + seed * 97.13);
 
-  const sinkAt = (a: number) => oy + SINK * h * sat(a, 24);
+  const sinkAt = (a: number) => oy + sink * h * sat(a, 24);
   const ringAt = (a: number) => (8 + 290 * sat(a, 34)) * u;
   const cy = sinkAt(age);
   const cx = ox + 16 * u * sat(age, 40);
@@ -267,24 +285,53 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function InkBloom({
   logo,
   name = "remocn",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = serif,
+  resolveAt = 100,
+  sink = SINK,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "light",
   seed = 3,
 }: InkBloomProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const pal = THEMES[theme];
+  const fg = ink ?? pal.fg;
+  const late = resolveAt - 100;
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const ox = width / 2;
   const oy = height * 0.17;
   const age = t - IMPACT;
-  const puffs = bloom(age, ox, oy, height, seed);
+  const puffs = bloom(age, ox, oy, height, seed, sink);
 
   // The noise field evolves: seeds cross-fade, features grow as the ink diffuses.
   // Shapes move through a fixed field, which is what makes the plumes billow.
@@ -295,7 +342,7 @@ export function InkBloom({
   const warp = (60 + 40 * sat(age, 40)) * u;
 
   // resolve: the cloud thins while the lockup condenses from the same turbulence
-  const thin = interpolate(t, [92, 150], [0, 1], {
+  const thin = interpolate(t, [92 + late, 150 + late], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -303,7 +350,7 @@ export function InkBloom({
   const envBlur = (3 + 3 * sat(age, 60) + thin * 5) * u;
   const veinK = 0.85;
   const fray = (26 + 14 * sat(age, 40)) * u;
-  const resolve = interpolate(t, [100, 150], [0, 1], {
+  const resolve = interpolate(t, [100 + late, 150 + late], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -323,7 +370,7 @@ export function InkBloom({
   const cond = `cond${id}`;
 
   const markSize = 96 * u;
-  const lockY = oy + SINK * height * 0.98;
+  const lockY = oy + sink * height * 0.98;
 
   // as the cloud thins, the map slides toward the saturated middle of the palette
   const inkMap = pal.map.map((c, i) =>
@@ -451,156 +498,164 @@ export function InkBloom({
   );
 
   return (
-    <AbsoluteFill style={{ background: pal.bg, overflow: "hidden" }}>
-      <svg
-        width={width}
-        height={height}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <radialGradient id={soft}>
-            <stop offset="0%" stopColor={pal.ink} stopOpacity={1} />
-            <stop offset="50%" stopColor={pal.ink} stopOpacity={0.6} />
-            <stop offset="100%" stopColor={pal.ink} stopOpacity={0} />
-          </radialGradient>
-          <radialGradient id={rim}>
-            <stop offset="0%" stopColor={pal.ink} stopOpacity={0.1} />
-            <stop offset="60%" stopColor={pal.ink} stopOpacity={0.28} />
-            <stop offset="86%" stopColor={pal.ink} stopOpacity={0.75} />
-            <stop offset="100%" stopColor={pal.ink} stopOpacity={0} />
-          </radialGradient>
-          <radialGradient id={softA}>
-            <stop offset="0%" stopColor={accent} stopOpacity={1} />
-            <stop offset="50%" stopColor={accent} stopOpacity={0.55} />
-            <stop offset="100%" stopColor={accent} stopOpacity={0} />
-          </radialGradient>
-          {/*
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? pal.bg),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        <svg
+          width={width}
+          height={height}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <radialGradient id={soft}>
+              <stop offset="0%" stopColor={pal.ink} stopOpacity={1} />
+              <stop offset="50%" stopColor={pal.ink} stopOpacity={0.6} />
+              <stop offset="100%" stopColor={pal.ink} stopOpacity={0} />
+            </radialGradient>
+            <radialGradient id={rim}>
+              <stop offset="0%" stopColor={pal.ink} stopOpacity={0.1} />
+              <stop offset="60%" stopColor={pal.ink} stopOpacity={0.28} />
+              <stop offset="86%" stopColor={pal.ink} stopOpacity={0.75} />
+              <stop offset="100%" stopColor={pal.ink} stopOpacity={0} />
+            </radialGradient>
+            <radialGradient id={softA}>
+              <stop offset="0%" stopColor={accent} stopOpacity={1} />
+              <stop offset="50%" stopColor={accent} stopOpacity={0.55} />
+              <stop offset="100%" stopColor={accent} stopOpacity={0} />
+            </radialGradient>
+            {/*
             ink = soft envelope (the puffs, blurred, swirled by low noise)
                   x billowing density texture (fractal noise as alpha)
           */}
-          {inkFilter(body, true)}
-          {inkFilter(`${body}a`, false)}
-          <filter
-            id={cond}
-            x="-30%"
-            y="-80%"
-            width="160%"
-            height="260%"
-            colorInterpolationFilters="sRGB"
-          >
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency={0.014 / u}
-              numOctaves={3}
-              seed={seed + 5}
-              result="n"
-            />
-            <feDisplacementMap
-              in="SourceGraphic"
-              in2="n"
-              scale={lockWarp}
-              xChannelSelector="R"
-              yChannelSelector="G"
-              result="d"
-            />
-            <feGaussianBlur in="d" stdDeviation={lockBlur} />
-          </filter>
-        </defs>
+            {inkFilter(body, true)}
+            {inkFilter(`${body}a`, false)}
+            <filter
+              id={cond}
+              x="-30%"
+              y="-80%"
+              width="160%"
+              height="260%"
+              colorInterpolationFilters="sRGB"
+            >
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency={0.014 / u}
+                numOctaves={3}
+                seed={seed + 5}
+                result="n"
+              />
+              <feDisplacementMap
+                in="SourceGraphic"
+                in2="n"
+                scale={lockWarp}
+                xChannelSelector="R"
+                yChannelSelector="G"
+                result="d"
+              />
+              <feGaussianBlur in="d" stdDeviation={lockBlur} />
+            </filter>
+          </defs>
 
-        <g filter={`url(#${body}a)`} opacity={cloudO * 0.9}>
-          {puffs
-            .filter((p) => p.accent)
-            .map((p, i) => (
+          <g filter={`url(#${body}a)`} opacity={cloudO * 0.9}>
+            {puffs
+              .filter((p) => p.accent)
+              .map((p, i) => (
+                <circle
+                  key={i}
+                  cx={p.x}
+                  cy={p.y}
+                  r={p.r * 0.9}
+                  fill={`url(#${softA})`}
+                  opacity={Math.min(1, p.o * 1.25)}
+                />
+              ))}
+          </g>
+          <g filter={`url(#${body})`} opacity={cloudO}>
+            {puffs.map((p, i) => (
               <circle
                 key={i}
                 cx={p.x}
                 cy={p.y}
-                r={p.r * 0.9}
-                fill={`url(#${softA})`}
-                opacity={Math.min(1, p.o * 1.25)}
+                r={p.r}
+                fill={`url(#${p.rim ? rim : soft})`}
+                opacity={Math.min(1, p.o * 1.7)}
               />
             ))}
-        </g>
-        <g filter={`url(#${body})`} opacity={cloudO}>
-          {puffs.map((p, i) => (
-            <circle
-              key={i}
-              cx={p.x}
-              cy={p.y}
-              r={p.r}
-              fill={`url(#${p.rim ? rim : soft})`}
-              opacity={Math.min(1, p.o * 1.7)}
-            />
-          ))}
-        </g>
-
-        {/* the falling drop */}
-        {dropShow && (
-          <g transform={`translate(${ox} ${dropY}) scale(${1.45 * u})`}>
-            {[3, 2, 1].map((g) => (
-              <ellipse
-                key={g}
-                cx={0}
-                cy={-g * stretch * 8}
-                rx={5}
-                ry={6 + stretch * 3}
-                fill={pal.map[4]}
-                opacity={0.07 * (4 - g) * fall}
-              />
-            ))}
-            <path
-              d={`M0 ${-(13 + stretch * 6)} C2 -6 6.5 -2 6.5 2.5 A6.5 6.5 0 0 1 -6.5 2.5 C-6.5 -2 -2 -6 0 ${-(13 + stretch * 6)}Z`}
-              fill={pal.map[4]}
-            />
           </g>
-        )}
-      </svg>
 
-      {/* the lockup condenses out of the turbulence */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: lockY - markSize / 2,
-          height: markSize,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 14 * u,
-          opacity: interpolate(resolve, [0, 0.3, 1], [0, 0.75, 1]),
-          filter: resolve < 1 ? `url(#${cond})` : undefined,
-          transform: `scale(${0.985 + resolve * 0.015})`,
-        }}
-      >
-        {logo ? (
-          <>
-            {logo}
-            <div
-              style={{
-                fontFamily: serif,
-                fontWeight: 400,
-                fontSize: 92 * u,
-                lineHeight: 1,
-                letterSpacing: "-0.03em",
-                color: pal.fg,
-              }}
-            >
-              {name}
-            </div>
-          </>
-        ) : (
-          <RemocnLogo fontSize={112 * u} color={pal.fg} />
-        )}
-      </div>
+          {/* the falling drop */}
+          {dropShow && (
+            <g transform={`translate(${ox} ${dropY}) scale(${1.45 * u})`}>
+              {[3, 2, 1].map((g) => (
+                <ellipse
+                  key={g}
+                  cx={0}
+                  cy={-g * stretch * 8}
+                  rx={5}
+                  ry={6 + stretch * 3}
+                  fill={pal.map[4]}
+                  opacity={0.07 * (4 - g) * fall}
+                />
+              ))}
+              <path
+                d={`M0 ${-(13 + stretch * 6)} C2 -6 6.5 -2 6.5 2.5 A6.5 6.5 0 0 1 -6.5 2.5 C-6.5 -2 -2 -6 0 ${-(13 + stretch * 6)}Z`}
+                fill={pal.map[4]}
+              />
+            </g>
+          )}
+        </svg>
+
+        {/* the lockup condenses out of the turbulence */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: lockY - markSize / 2,
+            height: markSize,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 14 * u,
+            opacity: interpolate(resolve, [0, 0.3, 1], [0, 0.75, 1]),
+            filter: resolve < 1 ? `url(#${cond})` : undefined,
+            transform: `scale(${0.985 + resolve * 0.015})${glide(midway(resolve))}`,
+          }}
+        >
+          {logo ? (
+            <>
+              {logo}
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 92 * u,
+                  lineHeight: 1,
+                  letterSpacing: "-0.03em",
+                  color: fg,
+                }}
+              >
+                {name}
+              </div>
+            </>
+          ) : (
+            <RemocnLogo fontSize={112 * u} color={fg} />
+          )}
+        </div>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 80% 75% at 50% 50%, transparent 50%, ${pal.vignette} 100%)`,
         }}
       />
-      <Grain opacity={pal.grain} />
+      {grain ? <Grain opacity={pal.grain} /> : null}
     </AbsoluteFill>
   );
 }

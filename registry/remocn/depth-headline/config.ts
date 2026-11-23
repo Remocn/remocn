@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const depthHeadlineConfig: ComponentConfig = {
   componentName: "DepthHeadline",
@@ -33,6 +39,25 @@ export const depthHeadlineConfig: ComponentConfig = {
       default: true,
       description: "Show logo",
     },
+    fontWeight: {
+      type: "number",
+      default: 400,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    riseFrames: {
+      type: "number",
+      default: 44,
+      min: 8,
+      max: 90,
+      step: 1,
+      description: "Rise (frames)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Fraunces" }),
     speed: {
       type: "number",
       default: 1,

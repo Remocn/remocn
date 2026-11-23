@@ -1,0 +1,106 @@
+{
+  "component": "absorb-stack",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Large light Instrument Serif lines on deep espresso with a muted terracotta final line, unfolding slowly.",
+      "askedAs": [
+        "elegant serif slogan",
+        "slow magazine style text stack",
+        "luxury quote ending in brand color",
+        "элегантный шрифт с засечками",
+        "медленный изысканный слоган"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "scale": 1.25,
+        "speed": 0.75,
+        "stagger": 9,
+        "background": "#1e1612",
+        "accent": "#c8553d"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Charcoal Fraunces type on a warm cream ground with a deep oxblood closing line.",
+      "askedAs": [
+        "light version on cream",
+        "warm paper background text",
+        "soft bright poetic lines",
+        "светлый фон как бумага",
+        "тёплый светлый вариант текста"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f4eee4",
+        "ink": "#2a2420",
+        "accent": "#8e2a2a"
+      }
+    },
+    {
+      "id": "swift-bold",
+      "label": "Swift Bold",
+      "description": "Heavy Space Grotesk lines that snap in quickly with tight staggering on near-black.",
+      "askedAs": [
+        "fast bold punchy text",
+        "quick heavy slogan",
+        "energetic tight stack",
+        "быстрый жирный текст",
+        "энергичный слоган"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "speed": 2,
+        "stagger": 2,
+        "background": "#111111",
+        "ink": "#f2f2f2"
+      }
+    },
+    {
+      "id": "whisper-thin",
+      "label": "Whisper Thin",
+      "description": "Small hairline Manrope text on deep navy with a pale gold finish, drifting in after a pause.",
+      "askedAs": [
+        "quiet minimal thin text",
+        "subtle pause between scenes",
+        "delicate small lines",
+        "тихий тонкий текст",
+        "минималистичная пауза"
+      ],
+      "props": {
+        "fontFamily": "Manrope",
+        "fontWeight": 200,
+        "scale": 0.8,
+        "delay": 20,
+        "background": "#0f1724",
+        "accent": "#d4b483"
+      }
+    },
+    {
+      "id": "forest-mono",
+      "label": "Forest Mono",
+      "description": "JetBrains Mono lines on dark pine green with a sage accent and measured, even timing.",
+      "askedAs": [
+        "monospace technical slogan",
+        "green dark code style text",
+        "calm mono statement",
+        "моноширинный шрифт на зелёном",
+        "технический стиль текста"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#14211b",
+        "ink": "#e6ede8",
+        "accent": "#9dbf9e",
+        "stagger": 7,
+        "scale": 0.9
+      }
+    }
+  ]
+}

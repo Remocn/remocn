@@ -39,8 +39,8 @@ export const RemotionRoot = () => (
   <Composition
     id="CardCreate"
     component={CardCreateScene}
-    durationInFrames={370}
-    fps={30}
+    durationInFrames={740}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -76,10 +76,51 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Finish names matching each swatch color, in the same order.",
     },
     {
+      name: "brand",
+      type: "string",
+      default: "\"fernway\"",
+      description: "Wordmark printed on the cards and in the wallet header.",
+    },
+    {
+      name: "ctaLabel",
+      type: "string",
+      default: "\"Add to wallet\"",
+      description: "Button under the new card.",
+    },
+    {
+      name: "toastLabel",
+      type: "string",
+      default: "\"Card ready to use\"",
+      description: "Toast shown once the card is in the wallet.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for taps, highlights and buttons.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color of the lines beside the phone; overrides the theme ink.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hanken Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",
@@ -102,6 +143,11 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "ground",
       type: "GshPresetId",
       description: "Preset id for the shader background.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
     },
     {
       name: "groundParams",

@@ -5,7 +5,8 @@ import type {
   TransitionPresentationComponentProps,
 } from "@remotion/transitions";
 import type React from "react";
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 
 const LIFT_RATIO = 1.28;
 
@@ -31,7 +32,7 @@ const PageTurnPresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
-  const { height } = useVideoConfig();
+  const { height } = useSceneConfig();
   const { angle = -7, origin = "18% 100%", poses = 8 } = passedProps;
 
   if (presentationDirection === "entering") {

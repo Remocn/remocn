@@ -1,6 +1,4 @@
 "use client";
-
-import { useCurrentFrame } from "remotion";
 import {
   BrushGrain,
   type BrushPoint,
@@ -9,6 +7,7 @@ import {
   brushRibbon,
   sampleCubic,
 } from "@/components/remocn/brush";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { DEFAULT_STEP, hashRange, steppedRamp } from "@/lib/remocn/stop-motion";
 
 const SAMPLES = 40;
@@ -54,7 +53,7 @@ export function InkUnderline({
   seed = "ink",
   step = DEFAULT_STEP,
 }: InkUnderlineProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const progress = steppedRamp(frame, delay, delay + durationSteps * step, {
     step,
   });

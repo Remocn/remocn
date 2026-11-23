@@ -1,6 +1,8 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface InlinePillTakeoverProps {
   before: string;
@@ -59,7 +61,8 @@ export function InlinePillTakeover({
   speed = 1,
   className,
 }: InlinePillTakeoverProps) {
-  const frame = useCurrentFrame() * speed;
+  const glide = useGlide();
+  const frame = useSceneFrame() * speed;
   const safeExpandFrames = Math.max(expandFrames, 0.001);
   const pillGrowEnd = pillGrowAt + Math.max(pillGrowFrames, 0.001);
   const outerExitEnd = Math.max(outerExitFrames, 2.001);
@@ -89,27 +92,27 @@ export function InlinePillTakeover({
     extrapolateRight: "clamp",
   });
   const pillTextOpacity = frame >= 3 ? 1 : 0;
-  const preCutCameraScale = interpolate(
-    frame,
-    [takeoverAt, cutAt - 1],
-    [1, PRE_CUT_CAMERA_SCALE],
-    {
-      easing: preCutEasing,
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    },
-  );
-  const postCutCameraScale = interpolate(
-    frame,
-    [cutAt, cutAt + TAKEOVER_SETTLE_FRAMES],
-    [cutEntryScale, takeoverScale],
-    {
-      easing: takeoverSettleEasing,
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    },
-  );
-  const cameraScale = frame < cutAt ? preCutCameraScale : postCutCameraScale;
+  const cameraAt = (f: number) =>
+    f < cutAt
+      ? interpolate(f, [takeoverAt, cutAt - 1], [1, PRE_CUT_CAMERA_SCALE], {
+          easing: preCutEasing,
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+        })
+      : interpolate(
+          f,
+          [cutAt, cutAt + TAKEOVER_SETTLE_FRAMES],
+          [cutEntryScale, takeoverScale],
+          {
+            easing: takeoverSettleEasing,
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          },
+        );
+  const cameraScale = cameraAt(frame);
+  const cameraMoving =
+    Math.abs(cameraAt(frame + speed) - cameraScale) > 1e-6 ||
+    Math.abs(cameraScale - cameraAt(frame - speed)) > 1e-6;
   const revealedPillWidth = dashWidth + (pillWidth - dashWidth) * expand;
   const revealedPillHeight =
     pillHeight * (pillRevealHeightScale + (1 - pillRevealHeightScale) * expand);
@@ -138,16 +141,20 @@ export function InlinePillTakeover({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          transform: `scale(${cameraScale})`,
+          transform: `scale(${cameraScale})${glide(cameraMoving)}`,
           transformOrigin: "center",
         }}
       >
+        {/* The row is as tall as a line of text and the growing pill spills
+            out of it evenly: a row that grew with the pill would re-centre
+            the words around it by layout, a whole pixel at a time. */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             width: "100%",
+            height: fontSize,
             gap: `${fontSize * 0.16}px`,
             whiteSpace: "nowrap",
             fontFamily:

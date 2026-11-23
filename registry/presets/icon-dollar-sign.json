@@ -1,0 +1,100 @@
+{
+  "component": "icon-dollar-sign",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked dollar sign that slowly traces itself in soft slate grey.",
+      "askedAs": [
+        "thin elegant dollar icon drawing slowly",
+        "minimal line dollar sign",
+        "slow outline money icon",
+        "тонкий знак доллара рисуется медленно",
+        "минималистичная иконка доллара"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1,
+        "size": 128,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-cash",
+      "label": "Bold Cash",
+      "description": "A heavy, deep-green dollar sign that snaps into its action quickly.",
+      "askedAs": [
+        "bold green dollar icon",
+        "fast punchy money sign",
+        "thick dollar symbol animation",
+        "жирный зелёный знак доллара",
+        "быстрая иконка денег"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "color": "#15803d",
+        "speed": 1.75,
+        "size": 96
+      }
+    },
+    {
+      "id": "gold-loop",
+      "label": "Gold Loop",
+      "description": "A muted gold dollar sign that draws and animates on a continuous loop.",
+      "askedAs": [
+        "looping gold dollar sign",
+        "repeating money icon animation",
+        "golden dollar that keeps animating",
+        "зацикленный золотой доллар",
+        "повторяющаяся анимация знака доллара"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#b45309",
+        "strokeWidth": 2.5,
+        "size": 72
+      }
+    },
+    {
+      "id": "tiny-ui",
+      "label": "Tiny UI",
+      "description": "A compact, quick indigo dollar sign sized for interface badges and buttons.",
+      "askedAs": [
+        "small dollar icon for buttons",
+        "compact price icon",
+        "quick little money symbol",
+        "маленькая иконка доллара для интерфейса",
+        "компактный значок цены"
+      ],
+      "props": {
+        "size": 24,
+        "color": "#4f46e5",
+        "speed": 2,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "hero-pulse",
+      "label": "Hero Pulse",
+      "description": "An oversized near-black dollar sign that repeats its action gently as a hero accent.",
+      "askedAs": [
+        "huge dollar sign for title screen",
+        "big looping money symbol",
+        "large slow pulsing dollar",
+        "огромный знак доллара на весь экран",
+        "большой зацикленный символ денег"
+      ],
+      "props": {
+        "size": 200,
+        "animation": "action",
+        "loop": true,
+        "speed": 0.75,
+        "strokeWidth": 1.5
+      }
+    }
+  ]
+}

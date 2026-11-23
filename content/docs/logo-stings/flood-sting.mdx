@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="FloodSting"
     component={FloodStingScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -77,6 +77,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Index of the tile that is pressed and floods the frame.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "2",
+      description: "Frames between tiles as the row pops in.",
+    },
+    {
+      name: "radius",
+      type: "number",
+      default: "0.24",
+      description: "Corner radius of the hopping highlight, as a share of the tile size.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
@@ -106,6 +118,29 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "hops",
       type: "string[]",
       description: "Colours the highlight takes as it hops between tiles.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
     {
       name: "ground",

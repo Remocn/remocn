@@ -1,0 +1,105 @@
+{
+  "component": "color-bars",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-whip",
+      "label": "Snap Whip",
+      "description": "A fast, steep whip with many tight bars that snaps the cut in a blink.",
+      "askedAs": [
+        "fast aggressive whip transition",
+        "quick snappy color bar cut",
+        "energetic fast swipe between shots",
+        "быстрый резкий переход полосами",
+        "энергичная смена кадра"
+      ],
+      "props": {
+        "speed": 2,
+        "bars": 9,
+        "angle": 28,
+        "stagger": 1,
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "slow-sweep",
+      "label": "Slow Sweep",
+      "description": "A calm, gentle sweep of a few wide bars on a light theme with a soft sage accent.",
+      "askedAs": [
+        "slow gentle bar transition",
+        "calm soft wipe on light background",
+        "relaxed elegant scene change",
+        "медленный плавный переход",
+        "спокойная мягкая смена кадра"
+      ],
+      "props": {
+        "speed": 0.5,
+        "bars": 3,
+        "stagger": 6,
+        "theme": "light",
+        "accent": "#6b8f71",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "straight-drop",
+      "label": "Straight Drop",
+      "description": "Upright bars fall straight down with a clean vertical cascade and no slant.",
+      "askedAs": [
+        "vertical bars dropping down transition",
+        "straight top to bottom wipe",
+        "no angle falling bars",
+        "вертикальные полосы сверху вниз",
+        "прямой переход без наклона"
+      ],
+      "props": {
+        "direction": "down",
+        "angle": 0,
+        "bars": 7,
+        "stagger": 4,
+        "accent": "#f2b33d"
+      }
+    },
+    {
+      "id": "mono-tech",
+      "label": "Mono Tech",
+      "description": "A dark, techy wipe going left with a mint accent, monospace type and no grain.",
+      "askedAs": [
+        "developer style tech transition",
+        "dark minimal code look wipe",
+        "clean digital bars no grain",
+        "технологичный переход в стиле кода",
+        "тёмный минималистичный вайп"
+      ],
+      "props": {
+        "direction": "left",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#2dd4a7",
+        "grain": false,
+        "angle": 8,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "bold-rise",
+      "label": "Bold Rise",
+      "description": "Oversized, heavily slanted bars rise upward in a dramatic coral-pink cascade.",
+      "askedAs": [
+        "big dramatic upward transition",
+        "large diagonal bars rising",
+        "bold playful launch wipe",
+        "крупный драматичный переход вверх",
+        "большие диагональные полосы"
+      ],
+      "props": {
+        "direction": "up",
+        "scale": 1.4,
+        "angle": 40,
+        "stagger": 8,
+        "accent": "#e85d8a",
+        "fontFamily": "Space Grotesk"
+      }
+    }
+  ]
+}

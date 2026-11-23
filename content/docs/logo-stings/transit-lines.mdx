@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="TransitLines"
     component={TransitLinesScene}
-    durationInFrames={135}
-    fps={30}
+    durationInFrames={270}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -85,6 +85,57 @@ Coloured line routes draw across a grid, stations pop as the lines pass, and all
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
       description: "Dark or light palette and ground.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "4",
+      description: "Frames between one line reaching the hub and the next.",
+    },
+    {
+      name: "draw",
+      type: "number",
+      default: "38",
+      description: "Frames each line takes to draw in.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

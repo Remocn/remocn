@@ -1,7 +1,8 @@
 "use client";
 
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { previewCaptions } from "@/components/docs/examples/caption-fixture";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { CaptionWeight } from "@/registry/remocn/caption-weight";
 
 interface CaptionWeightExampleProps {
@@ -25,7 +26,7 @@ export function CaptionWeightExampleScene({
   holdMs,
   shadow,
 }: CaptionWeightExampleProps) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   return (
     <AbsoluteFill
       style={{

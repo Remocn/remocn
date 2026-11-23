@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="SmashCount"
     component={SmashCountScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -69,6 +69,18 @@ A giant numeral hard-cuts through a series of larger and larger values, each cut
       description: "How many hard cuts, including the final one.",
     },
     {
+      name: "firstGap",
+      type: "number",
+      default: "13",
+      description: "Frames between the first two cuts; the gaps shrink evenly toward `lastGap`.",
+    },
+    {
+      name: "lastGap",
+      type: "number",
+      default: "6",
+      description: "Frames between the last two cuts.",
+    },
+    {
       name: "prefix",
       type: "string",
       default: "\"\"",
@@ -93,9 +105,32 @@ A giant numeral hard-cuts through a series of larger and larger values, each cut
       description: "Color of the numeral.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Rubik\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

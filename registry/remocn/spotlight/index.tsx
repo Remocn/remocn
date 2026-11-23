@@ -2,14 +2,8 @@
 
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type SpotlightProps = {
   /** Lockup the beam lands on. Falls back to a placeholder "remocn" lockup. */
@@ -96,8 +90,8 @@ export function Spotlight(props: SpotlightProps) {
     ...props,
   };
   const uid = `spotlight-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const t = frame * Math.max(0, speed);
 
   // Beam target, as a fraction of the width: search left, overshoot right, land.

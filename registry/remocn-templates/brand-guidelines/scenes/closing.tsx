@@ -1,9 +1,10 @@
 import { AbsoluteFill, Interactive } from "remotion";
 import type { SceneProps } from "../content";
-import { fitSize, progress, slide } from "../motion";
+import { fitSize, midway, progress, slide, useGlide } from "../motion";
 import { FormStudyMark, Label } from "../ui";
 
 export function ClosingIdentity({ scene, frame }: SceneProps) {
+  const glide = useGlide();
   const { theme, reducedMotion, content } = scene;
   const wordsOut = reducedMotion
     ? Number(frame >= 942)
@@ -66,7 +67,7 @@ export function ClosingIdentity({ scene, frame }: SceneProps) {
                       lineHeight: 1.2,
                       transform: reducedMotion
                         ? undefined
-                        : `rotateX(${-180 * (1 - turn)}deg)`,
+                        : `rotateX(${-180 * (1 - turn)}deg)${glide(midway(turn) || midway(wordsOut))}`,
                     }}
                   >
                     {word}
@@ -86,10 +87,20 @@ export function ClosingIdentity({ scene, frame }: SceneProps) {
             top: 175,
             height: 190,
             opacity: markIn,
-            scale: reducedMotion ? 1 : 0.88 + 0.12 * markIn,
+            transform: `scale(${reducedMotion ? 1 : 0.88 + 0.12 * markIn})${glide(midway(markIn))}`,
           }}
         >
-          <div style={{ position: "absolute", left: 333, top: 44 * nameOut }}>
+          <div
+            style={{
+              position: "absolute",
+              left: 333,
+              // Laid out where the mark ends up; the drop there is a
+              // translate, because layout rounds a box to whole pixels and a
+              // mark eased by `top` clicks down pixel by pixel.
+              top: 44,
+              translate: nameOut < 1 ? `0 ${44 * (nameOut - 1)}px` : undefined,
+            }}
+          >
             <FormStudyMark scene={scene} color={theme.paper} size={94} />
           </div>
           <div
@@ -102,7 +113,7 @@ export function ClosingIdentity({ scene, frame }: SceneProps) {
               fontWeight: 800,
               letterSpacing: "-0.05em",
               opacity: 1 - nameOut,
-              translate: `0 ${-12 * nameOut}px`,
+              transform: `translateY(${-12 * nameOut}px)${glide(midway(nameOut))}`,
             }}
           >
             {content.brandName}

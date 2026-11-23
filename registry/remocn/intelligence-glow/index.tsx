@@ -3,14 +3,11 @@
 import { loadFont as loadSans } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["500"],
@@ -34,7 +31,24 @@ export interface IntelligenceGlowProps {
   answer?: string;
   /** Show the remocn logo under the answer on the poster frame. */
   showLogo?: boolean;
+  /** Replaces the remocn mark. */
+  logo?: React.ReactNode;
+  /** Frames between answer words as they resolve. */
+  stagger?: number;
+  /** Strength of the edge glow; 1 is the default light. */
+  intensity?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the question and answer. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -141,19 +155,48 @@ function lerp(a: number, b: number, k: number) {
   return a + (b - a) * k;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function IntelligenceGlow({
   question = "Make a launch film for Friday?",
   answerLead = "Done.",
   answer = "14 shots, cut to the beat.",
   showLogo = true,
+  logo,
+  stagger = A_STAGGER,
+  intensity = 1,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: IntelligenceGlowProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
   const glow = c.glow.map((col) => col || accent);
 
   // A looping band of the palette, drifted sideways so the colours travel
@@ -258,7 +301,12 @@ export function IntelligenceGlow({
       b,
       color: glow[[3, 2, 1, 2, 3, 1, 2][i % 7]],
       opacity:
-        c.haze * intro * blobsOut * (0.8 + 0.2 * wob) * (1 + ripple * 0.25),
+        c.haze *
+        intensity *
+        intro *
+        blobsOut *
+        (0.8 + 0.2 * wob) *
+        (1 + ripple * 0.25),
     };
   });
   const rule = interpolate(t, [SQUEEZE[1] - 9, SQUEEZE[1] + 3], [0, 1], {
@@ -273,123 +321,191 @@ export function IntelligenceGlow({
     90 * u,
     (W * 0.74) / Math.max(6, question.length * 0.3),
   );
-  const qOut = interpolate(t, [Q_OUT, Q_OUT + 16], [0, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.5, 0, 0.75, 0),
-  });
+  const qOutAt = (tt: number) =>
+    interpolate(tt, [Q_OUT, Q_OUT + 16], [0, 1], {
+      ...CLAMP,
+      easing: Easing.bezier(0.5, 0, 0.75, 0),
+    });
+  const qOut = qOutAt(t);
   const shimmerPos = interpolate(t, [THINK, Q_OUT], [-2, qWords.length + 4]);
 
-  const logoIn = interpolate(t, [LOGO_IN, LOGO_IN + 16], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const logoAt = (tt: number) =>
+    interpolate(tt, [LOGO_IN, LOGO_IN + 16], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const logoIn = logoAt(t);
+  // The eases have long tails that still cross pixels once a progress is all
+  // but settled, so a mover counts as moving while its travel in px changes
+  // against either neighbouring frame.
+  const stirs = (at: (tt: number) => number, reach: number) => {
+    const now = at(t);
+    return (
+      Math.abs(at(t + speed) - now) * reach > 1e-3 ||
+      Math.abs(now - at(t - speed)) * reach > 1e-3
+    );
+  };
+  const qMoving = stirs(qOutAt, Math.max(14 * u, W * 0.4 * 0.04));
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      {blobs.map((bl) =>
-        bl.opacity > 0.002 ? (
-          <div
-            key={bl.key}
-            style={{
-              position: "absolute",
-              left: bl.x - bl.a,
-              top: bl.y - bl.b,
-              width: bl.a * 2,
-              height: bl.b * 2,
-              background: `radial-gradient(closest-side, ${bl.color} 0%, color-mix(in oklab, ${bl.color} 62%, transparent) 32%, color-mix(in oklab, ${bl.color} 20%, transparent) 66%, transparent 100%)`,
-              opacity: bl.opacity,
-              mixBlendMode: theme === "dark" ? "screen" : "multiply",
-            }}
-          />
-        ) : null,
-      )}
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        {blobs.map((bl) =>
+          bl.opacity > 0.002 ? (
+            <div
+              key={bl.key}
+              style={{
+                position: "absolute",
+                left: bl.x - bl.a,
+                top: bl.y - bl.b,
+                width: bl.a * 2,
+                height: bl.b * 2,
+                background: `radial-gradient(closest-side, ${bl.color} 0%, color-mix(in oklab, ${bl.color} 62%, transparent) 32%, color-mix(in oklab, ${bl.color} 20%, transparent) 66%, transparent 100%)`,
+                opacity: bl.opacity,
+                mixBlendMode: theme === "dark" ? "screen" : "multiply",
+              }}
+            />
+          ) : null,
+        )}
 
-      {/* The rule the light settles into, with a soft bloom of its own. */}
-      {rule > 0 ? (
-        <>
-          <div
-            style={{
-              position: "absolute",
-              left: ring.left + rw(ring) * 0.05,
-              width: rw(ring) * 0.9,
-              top: lineY - 12 * u,
-              height: 24 * u,
-              borderRadius: 999,
-              backgroundImage: band,
-              backgroundSize: "200% 100%",
-              backgroundPosition: drift,
-              filter: `blur(${16 * u}px)`,
-              opacity: rule * 0.55,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: ring.left,
-              width: rw(ring),
-              top: lineY - lineT / 2,
-              height: lineT,
-              borderRadius: 999,
-              backgroundImage: band,
-              backgroundSize: "200% 100%",
-              backgroundPosition: drift,
-              opacity: rule * c.core,
-            }}
-          />
-        </>
-      ) : null}
+        {/* The rule the light settles into, with a soft bloom of its own. */}
+        {rule > 0 ? (
+          <>
+            <div
+              style={{
+                position: "absolute",
+                left: ring.left + rw(ring) * 0.05,
+                width: rw(ring) * 0.9,
+                top: lineY - 12 * u,
+                height: 24 * u,
+                borderRadius: 999,
+                backgroundImage: band,
+                backgroundSize: "200% 100%",
+                backgroundPosition: drift,
+                filter: `blur(${16 * u}px)`,
+                opacity: rule * 0.55,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: ring.left,
+                width: rw(ring),
+                top: lineY - lineT / 2,
+                height: lineT,
+                borderRadius: 999,
+                backgroundImage: band,
+                backgroundSize: "200% 100%",
+                backgroundPosition: drift,
+                opacity: rule * c.core,
+              }}
+            />
+          </>
+        ) : null}
 
-      {/* Question */}
-      {qOut < 1 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: W * 0.1,
-            right: W * 0.1,
-            top: 0,
-            bottom: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: 1 - qOut,
-            filter: qOut > 0 ? `blur(${qOut * 14 * u}px)` : undefined,
-            transform: `translateY(${-qOut * 14 * u}px) scale(${1 - qOut * 0.04})`,
-          }}
-        >
+        {/* Question */}
+        {qOut < 1 ? (
           <div
             style={{
-              fontFamily: sans,
-              fontWeight: 500,
-              fontSize: qSize,
-              lineHeight: 1.06,
-              letterSpacing: "-0.035em",
-              color: c.fg,
-              textAlign: "center",
-              textWrap: "balance",
-              maxWidth: W * 0.72,
+              position: "absolute",
+              left: W * 0.1,
+              right: W * 0.1,
+              top: 0,
+              bottom: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: 1 - qOut,
+              filter: qOut > 0 ? `blur(${qOut * 14 * u}px)` : undefined,
+              transform: `translateY(${-qOut * 14 * u}px) scale(${1 - qOut * 0.04})${glide(qMoving)}`,
             }}
           >
-            {qWords.map((w, i) => {
-              const k = interpolate(
-                t,
-                [Q_IN + i * 3, Q_IN + i * 3 + 14],
-                [0, 1],
-                {
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 500,
+                fontSize: qSize,
+                lineHeight: 1.06,
+                letterSpacing: "-0.035em",
+                color: fg,
+                textAlign: "center",
+                textWrap: "balance",
+                maxWidth: W * 0.72,
+              }}
+            >
+              {qWords.map((w, i) => {
+                const kAt = (tt: number) =>
+                  interpolate(tt, [Q_IN + i * 3, Q_IN + i * 3 + 14], [0, 1], {
+                    ...CLAMP,
+                    easing: EASE_OUT,
+                  });
+                const k = kAt(t);
+                const d = i - shimmerPos;
+                const shimmer = thinking * (1 - Math.exp(-(d * d) / 2.2));
+                return (
+                  <span
+                    key={`${i}-${w}`}
+                    style={{
+                      display: "inline-block",
+                      marginRight: i < qWords.length - 1 ? "0.24em" : 0,
+                      opacity: k * (1 - shimmer * 0.55),
+                      transform: `translateY(${(1 - k) * 0.28}em)${glide(
+                        !qMoving && stirs(kAt, 0.28 * qSize),
+                      )}`,
+                      filter: k < 1 ? `blur(${(1 - k) * 8 * u}px)` : undefined,
+                    }}
+                  >
+                    {w}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Answer */}
+        {t >= A_IN - 1 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: aY - aSize * 0.62,
+              height: aSize * 1.1,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "baseline",
+              whiteSpace: "nowrap",
+              color: fg,
+            }}
+          >
+            {[answerLead, ...aWords].map((w, i) => {
+              const lead = i === 0;
+              const s = A_IN + i * stagger;
+              const kAt = (tt: number) =>
+                interpolate(tt, [s, s + 16], [0, 1], {
                   ...CLAMP,
                   easing: EASE_OUT,
-                },
-              );
-              const d = i - shimmerPos;
-              const shimmer = thinking * (1 - Math.exp(-(d * d) / 2.2));
+                });
+              const k = kAt(t);
               return (
                 <span
                   key={`${i}-${w}`}
                   style={{
                     display: "inline-block",
-                    marginRight: i < qWords.length - 1 ? "0.24em" : 0,
-                    opacity: k * (1 - shimmer * 0.55),
-                    transform: `translateY(${(1 - k) * 0.28}em)`,
-                    filter: k < 1 ? `blur(${(1 - k) * 8 * u}px)` : undefined,
+                    fontFamily: lead ? serif : fontFamily,
+                    fontStyle: lead ? "italic" : "normal",
+                    fontWeight: lead ? 400 : 500,
+                    fontSize: lead ? aSize * 1.14 : aSize,
+                    letterSpacing: lead ? "-0.02em" : "-0.035em",
+                    lineHeight: 1,
+                    marginRight:
+                      i === aWords.length ? 0 : lead ? "0.26em" : "0.22em",
+                    opacity: k,
+                    transform: `translateY(${(1 - k) * 0.3}em)${glide(
+                      stirs(kAt, 0.3 * aSize * 1.14),
+                    )}`,
+                    filter: k < 1 ? `blur(${(1 - k) * 10 * u}px)` : undefined,
                   }}
                 >
                   {w}
@@ -397,74 +513,28 @@ export function IntelligenceGlow({
               );
             })}
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {/* Answer */}
-      {t >= A_IN - 1 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: aY - aSize * 0.62,
-            height: aSize * 1.1,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "baseline",
-            whiteSpace: "nowrap",
-            color: c.fg,
-          }}
-        >
-          {[answerLead, ...aWords].map((w, i) => {
-            const lead = i === 0;
-            const s = A_IN + i * A_STAGGER;
-            const k = interpolate(t, [s, s + 16], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            return (
-              <span
-                key={`${i}-${w}`}
-                style={{
-                  display: "inline-block",
-                  fontFamily: lead ? serif : sans,
-                  fontStyle: lead ? "italic" : "normal",
-                  fontWeight: lead ? 400 : 500,
-                  fontSize: lead ? aSize * 1.14 : aSize,
-                  letterSpacing: lead ? "-0.02em" : "-0.035em",
-                  lineHeight: 1,
-                  marginRight:
-                    i === aWords.length ? 0 : lead ? "0.26em" : "0.22em",
-                  opacity: k,
-                  transform: `translateY(${(1 - k) * 0.3}em)`,
-                  filter: k < 1 ? `blur(${(1 - k) * 10 * u}px)` : undefined,
-                }}
-              >
-                {w}
-              </span>
-            );
-          })}
-        </div>
-      ) : null}
-
-      {showLogo && logoIn > 0 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: H * 0.82,
-            display: "flex",
-            justifyContent: "center",
-            opacity: logoIn,
-            transform: `translateY(${(1 - logoIn) * 10 * u}px)`,
-          }}
-        >
-          <RemocnLogo fontSize={26 * u} color={c.fg} />
-        </div>
-      ) : null}
-      <Grain opacity={c.grain} />
+        {showLogo && logoIn > 0 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: H * 0.82,
+              display: "flex",
+              justifyContent: "center",
+              opacity: logoIn,
+              transform: `translateY(${(1 - logoIn) * 10 * u}px)${glide(
+                stirs(logoAt, 10 * u),
+              )}`,
+            }}
+          >
+            {logo ?? <RemocnLogo fontSize={26 * u} color={fg} />}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

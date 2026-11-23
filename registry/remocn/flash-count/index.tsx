@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const hanken = loadHanken("normal", {
   weights: ["300", "400", "500"],
@@ -29,7 +29,19 @@ export interface FlashCountProps {
   eyebrow?: string;
   flashAt?: number;
   accent?: string;
+  /** Text color of the lit figure and eyebrow; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Weight of the figure. */
+  fontWeight?: number;
+  /** Hard shadow behind the figure once the flash fires. */
+  shadow?: boolean;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -71,24 +83,36 @@ interface Metrics {
   eyebrow: number;
 }
 
-function measure(chars: string[], label: string, eyebrow: string): Metrics {
+function measure(
+  chars: string[],
+  label: string,
+  eyebrow: string,
+  fontFamily: string,
+  weight: number,
+): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) throw new Error("flash-count: no 2d context");
-  ctx.font = `300 100px "${hanken.fontFamily}"`;
+  ctx.font = `${weight} 100px "${fontFamily}"`;
   const adv: Record<string, number> = {};
   for (const ch of chars) adv[ch] = ctx.measureText(ch).width / 100;
   let digit = 0;
   for (const d of "0123456789") digit = Math.max(digit, adv[d] ?? 0);
   const cap = ctx.measureText("8").actualBoundingBoxAscent / 100;
-  ctx.font = `400 100px "${hanken.fontFamily}"`;
+  ctx.font = `400 100px "${fontFamily}"`;
   const lw = label ? ctx.measureText(label).width / 100 : 0;
-  ctx.font = `500 100px "${hanken.fontFamily}"`;
+  ctx.font = `500 100px "${fontFamily}"`;
   const ew = eyebrow ? ctx.measureText(eyebrow).width / 100 : 0;
   return { adv, digit, cap, label: lw, eyebrow: ew };
 }
 
-function useMetrics(chars: string, label: string, eyebrow: string) {
-  const key = `${chars}\u0001${label}\u0001${eyebrow}`;
+function useMetrics(
+  chars: string,
+  label: string,
+  eyebrow: string,
+  fontFamily: string,
+  fontWeight: number,
+) {
+  const key = `${chars}\u0001${label}\u0001${eyebrow}\u0001${fontFamily}\u0001${fontWeight}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("flash-count: measuring"));
   const released = useRef(false);
@@ -96,15 +120,15 @@ function useMetrics(chars: string, label: string, eyebrow: string) {
     let live = true;
     Promise.all([
       hanken.waitUntilDone(),
-      document.fonts.load(`300 100px "${hanken.fontFamily}"`),
-      document.fonts.load(`400 100px "${hanken.fontFamily}"`),
-      document.fonts.load(`500 100px "${hanken.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        const [c, l, e] = key.split("\u0001");
-        setState({ key, m: measure(Array.from(c), l, e) });
+        const [c, l, e, f, w] = key.split("\u0001");
+        setState({ key, m: measure(Array.from(c), l, e, f, Number(w)) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -113,7 +137,7 @@ function useMetrics(chars: string, label: string, eyebrow: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -126,6 +150,22 @@ function format(n: number, decimals: number) {
 
 const isDigit = (ch: string) => ch >= "0" && ch <= "9";
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FlashCount({
   value = 3600,
   from = 120,
@@ -136,13 +176,22 @@ export function FlashCount({
   eyebrow = "f/8  ·  1/250 s",
   flashAt = 54,
   accent,
+  ink,
   background,
+  fontFamily = hanken.fontFamily,
+  fontWeight = 300,
+  shadow = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: FlashCountProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const t = Math.max(0, frame - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const dot = accent ?? RED;
   const transparent = background === "transparent";
 
@@ -150,7 +199,7 @@ export function FlashCount({
   const chars = Array.from(
     new Set(Array.from(`${finalText}0123456789,.-`)),
   ).join("");
-  const m = useMetrics(chars, label, eyebrow);
+  const m = useMetrics(chars, label, eyebrow, fontFamily, fontWeight);
 
   const F_ = flashAt;
   const lit = t >= F_;
@@ -209,7 +258,11 @@ export function FlashCount({
   const baseline = H - marginY;
   const right = W - marginX;
 
-  const driftP = Math.min(1, t / F_);
+  const driftAt = (f: number) =>
+    Math.min(1, (Math.max(0, f - delay) * speed) / F_);
+  const driftP = driftAt(frame);
+  const drifting =
+    driftAt(frame + 1) !== driftP || driftAt(frame - 1) !== driftP;
   const drift = 1 - driftP;
   const dx = drift * -W * 0.05;
   const ds = 1 - drift * 0.06;
@@ -251,8 +304,8 @@ export function FlashCount({
         width: textW + F * 0.1,
         height: F * 1.3,
         lineHeight: `${F * 1.2}px`,
-        fontFamily: hanken.fontFamily,
-        fontWeight: 300,
+        fontFamily,
+        fontWeight,
         fontSize: F,
         whiteSpace: "pre",
         ...style,
@@ -268,74 +321,76 @@ export function FlashCount({
   });
   const cx = right;
   const cy = baseline - capPx / 2;
-  const subject = `translate(${dx.toFixed(2)}px, 0px) translate(${cx}px, ${cy}px) scale(${ds.toFixed(4)}) translate(${-cx}px, ${-cy}px)`;
+  const subject = `translate(${dx.toFixed(2)}px, 0px) translate(${cx}px, ${cy}px) scale(${ds.toFixed(4)}) translate(${-cx}px, ${-cy}px)${glide(drifting)}`;
   const dotR = smallFs * 0.32;
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: marginX,
-          top: marginY,
-          display: "flex",
-          alignItems: "center",
-          gap: smallFs * 0.6,
-          fontFamily: hanken.fontFamily,
-          fontWeight: 500,
-          fontSize: smallFs,
-          lineHeight: 1,
-          whiteSpace: "pre",
-          color: lit ? c.ink : c.dim,
-        }}
-      >
-        <div
-          style={{
-            width: dotR * 2,
-            height: dotR * 2,
-            borderRadius: "50%",
-            background: dot,
-            opacity: lit ? 1 : 0.35 + pre * 0.65,
-            flexShrink: 0,
-          }}
-        />
-        {eyebrow}
-      </div>
-
-      <div style={{ position: "absolute", inset: 0, transform: subject }}>
-        {lit
-          ? numberBox(
-              {
-                transform: `translate(${shadowDx}px, ${shadowDy}px)`,
-                color: c.shadow,
-              },
-              "s",
-            )
-          : null}
-        {numberBox({ color: lit ? c.ink : c.dim }, "n")}
-      </div>
-
-      {label ? (
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
             left: marginX,
-            width: labelW,
-            ...(portrait
-              ? { top: baseline - capPx - smallFs * 4.2 }
-              : { bottom: H - baseline }),
-            fontFamily: hanken.fontFamily,
-            fontWeight: 400,
+            top: marginY,
+            display: "flex",
+            alignItems: "center",
+            gap: smallFs * 0.6,
+            fontFamily,
+            fontWeight: 500,
             fontSize: smallFs,
-            lineHeight: 1.3,
-            color: c.muted,
-            textWrap: "balance",
-            opacity: labelP,
+            lineHeight: 1,
+            whiteSpace: "pre",
+            color: lit ? fg : c.dim,
           }}
         >
-          {label}
+          <div
+            style={{
+              width: dotR * 2,
+              height: dotR * 2,
+              borderRadius: "50%",
+              background: dot,
+              opacity: lit ? 1 : 0.35 + pre * 0.65,
+              flexShrink: 0,
+            }}
+          />
+          {eyebrow}
         </div>
-      ) : null}
+
+        <div style={{ position: "absolute", inset: 0, transform: subject }}>
+          {lit && shadow
+            ? numberBox(
+                {
+                  transform: `translate(${shadowDx}px, ${shadowDy}px)`,
+                  color: c.shadow,
+                },
+                "s",
+              )
+            : null}
+          {numberBox({ color: lit ? fg : c.dim }, "n")}
+        </div>
+
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: marginX,
+              width: labelW,
+              ...(portrait
+                ? { top: baseline - capPx - smallFs * 4.2 }
+                : { bottom: H - baseline }),
+              fontFamily,
+              fontWeight: 400,
+              fontSize: smallFs,
+              lineHeight: 1.3,
+              color: c.muted,
+              textWrap: "balance",
+              opacity: labelP,
+            }}
+          >
+            {label}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

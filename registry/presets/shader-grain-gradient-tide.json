@@ -1,0 +1,98 @@
+{
+  "component": "shader-grain-gradient-tide",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-deep",
+      "label": "Slow Deep",
+      "description": "A barely moving, very soft ring that breathes quietly over an almost black field.",
+      "askedAs": [
+        "calm slow pulse",
+        "subtle dark background ring",
+        "gentle sonar glow",
+        "медленная спокойная пульсация",
+        "мягкий тёмный фон"
+      ],
+      "props": {
+        "speed": 0.5,
+        "softness": 0.9,
+        "intensity": 0.15,
+        "noise": 0.1,
+        "colorBack": "#010d10"
+      }
+    },
+    {
+      "id": "sharp-sonar",
+      "label": "Sharp Sonar",
+      "description": "A fast, crisp-edged ring pinging outward like an active radar sweep.",
+      "askedAs": [
+        "fast radar ping",
+        "crisp sonar ring",
+        "energetic pulse effect",
+        "быстрый сонар",
+        "чёткое кольцо радара"
+      ],
+      "props": {
+        "speed": 2.25,
+        "softness": 0.15,
+        "intensity": 0.6,
+        "noise": 0.15
+      }
+    },
+    {
+      "id": "film-grain",
+      "label": "Film Grain",
+      "description": "A heavily grained, filmic texture over a medium-paced tide with a slightly lifted backdrop.",
+      "askedAs": [
+        "grainy textured gradient",
+        "film noise look",
+        "analog grain background",
+        "зернистый градиент",
+        "эффект плёнки"
+      ],
+      "props": {
+        "noise": 0.7,
+        "softness": 0.5,
+        "intensity": 0.4,
+        "colorBack": "#0a2328"
+      }
+    },
+    {
+      "id": "midnight-navy",
+      "label": "Midnight Navy",
+      "description": "The teal ring set against a deep navy field for a cooler, corporate tech feel.",
+      "askedAs": [
+        "blue navy background",
+        "cool corporate pulse",
+        "dark blue sonar",
+        "тёмно-синий фон",
+        "холодный корпоративный стиль"
+      ],
+      "props": {
+        "colorBack": "#0a1428",
+        "intensity": 0.45,
+        "speed": 0.75,
+        "noise": 0.1
+      }
+    },
+    {
+      "id": "surge",
+      "label": "Surge",
+      "description": "An intense, rapid, bold ring with strong contrast that demands attention.",
+      "askedAs": [
+        "strong bold pulse",
+        "high energy glow",
+        "intense fast ripple",
+        "мощная яркая пульсация",
+        "интенсивная волна"
+      ],
+      "props": {
+        "speed": 3.5,
+        "intensity": 0.9,
+        "softness": 0.35,
+        "noise": 0.3
+      }
+    }
+  ]
+}

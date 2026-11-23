@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const glyphBlockDecodeConfig: ComponentConfig = {
   componentName: "GlyphBlockDecode",
@@ -32,6 +39,23 @@ export const glyphBlockDecodeConfig: ComponentConfig = {
       description: "Seed",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 400,
+      min: 300,
+      max: 700,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    underline: {
+      type: "boolean",
+      default: true,
+      description: "Underline",
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,
@@ -44,6 +68,8 @@ export const glyphBlockDecodeConfig: ComponentConfig = {
   },
   durationInFrames: 138,
   fps: FPS,
+  // Does not hold 60 fps in the browser yet (`audit:playback`: pixels).
+  previewFps: 30,
   compositionWidth: W,
   compositionHeight: H,
 };

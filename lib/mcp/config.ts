@@ -1,3 +1,4 @@
+import { customizerUrlKey } from "@/lib/customizer-config";
 import { SITE_URL } from "@/lib/get-llm-text";
 
 /** URI of the MCP App view shared by `preview_component` and `plan_video`. */
@@ -32,6 +33,28 @@ export function embedUrl(
   const url = new URL(`/embed/${encodeURIComponent(name)}`, embedBaseUrl());
   if (props && Object.keys(props).length > 0) {
     url.searchParams.set("props", JSON.stringify(props));
+  }
+  return url.toString();
+}
+
+/**
+ * A docs page with the customizer already set to `props`, so a chat preview
+ * can hand off to the full panel. Only scalar props have a control; the page
+ * ignores keys it has no control for and values its control can't take.
+ */
+export function customizedDocsUrl(
+  page: string,
+  name: string,
+  props?: Record<string, unknown>,
+): string {
+  const url = new URL(page);
+  for (const [key, value] of Object.entries(props ?? {})) {
+    const scalar =
+      typeof value === "string" ||
+      typeof value === "boolean" ||
+      (typeof value === "number" && Number.isFinite(value));
+    if (scalar)
+      url.searchParams.set(customizerUrlKey(name, key), String(value));
   }
   return url.toString();
 }

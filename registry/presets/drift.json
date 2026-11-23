@@ -1,0 +1,87 @@
+{
+  "component": "drift",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "barely-there",
+      "label": "Barely There",
+      "description": "An almost imperceptible creep that keeps the frame alive without anyone noticing the camera.",
+      "askedAs": [
+        "very subtle zoom",
+        "tiny slow push in",
+        "almost no movement but not static",
+        "едва заметный зум",
+        "очень лёгкое приближение"
+      ],
+      "props": {
+        "grow": 0.01,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "slow-pull-back",
+      "label": "Slow Pull Back",
+      "description": "A gentle reverse dolly that eases the scene away and opens up breathing room.",
+      "askedAs": [
+        "zoom out slowly",
+        "camera pulls back",
+        "reverse push in",
+        "медленное отдаление",
+        "камера отъезжает назад"
+      ],
+      "props": {
+        "grow": -0.05,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "cinematic-push",
+      "label": "Cinematic Push",
+      "description": "A deliberate, deeper push-in that builds tension like a film dolly move.",
+      "askedAs": [
+        "dramatic slow zoom in",
+        "movie style push in",
+        "build tension with zoom",
+        "кинематографичный наезд камеры",
+        "драматичное приближение"
+      ],
+      "props": {
+        "grow": 0.1,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-punch",
+      "label": "Quick Punch",
+      "description": "A fast, energetic push that lands the zoom early for snappy, short scenes.",
+      "askedAs": [
+        "fast zoom in",
+        "energetic punch in",
+        "quick camera push",
+        "быстрый наезд",
+        "резкое приближение"
+      ],
+      "props": {
+        "grow": 0.06,
+        "speed": 2
+      }
+    },
+    {
+      "id": "wide-retreat",
+      "label": "Wide Retreat",
+      "description": "A pronounced, steady pull-out that reveals the full scene as it settles.",
+      "askedAs": [
+        "big zoom out reveal",
+        "pull back to show everything",
+        "strong zoom out",
+        "сильное отдаление камеры",
+        "показать всю сцену отдалением"
+      ],
+      "props": {
+        "grow": -0.1,
+        "speed": 1
+      }
+    }
+  ]
+}

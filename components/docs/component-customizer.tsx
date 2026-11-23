@@ -1,10 +1,17 @@
 "use client";
 
+import {
+  Collapsible,
+  CollapsiblePanel,
+  CollapsibleTrigger,
+} from "@ui-sdk/react/collapsible";
 import { type CSSProperties, useState, useSyncExternalStore } from "react";
+import type { ChangeSource } from "@/lib/analytics";
 import type { ControlConfig, ControlType } from "@/lib/customizer-config";
 import { cn } from "@/lib/utils";
 import { BooleanControl } from "./blocks/controls/boolean-control";
 import { ColorControl } from "./blocks/controls/color-control";
+import { ListControl } from "./blocks/controls/list-control";
 import { NumberControl } from "./blocks/controls/number-control";
 import { SelectControl } from "./blocks/controls/select-control";
 import { SliderControl } from "./blocks/controls/slider-control";
@@ -23,13 +30,14 @@ const TIMING =
   /speed|frame|duration|delay|interval|accelerat|stagger|hold|loop|timing|tempo|\(ms\)|seconds|fps|pause/i;
 
 function groupOf(key: string, ctrl: ControlType): Group["id"] {
-  if (ctrl.type === "text") return "content";
+  if (ctrl.type === "text" || ctrl.type === "list") return "content";
   if (TIMING.test(key) || TIMING.test(ctrl.label)) return "timing";
   return "style";
 }
 
 const isLong = (ctrl: ControlType) =>
-  ctrl.type === "text" && ctrl.default.length > LONG_TEXT;
+  (ctrl.type === "text" && ctrl.default.length > LONG_TEXT) ||
+  (ctrl.type === "list" && ctrl.default.join("").length > LONG_TEXT);
 
 /**
  * Flex slot per control. Short copy is sized to its label and value so it
@@ -40,6 +48,7 @@ function slot(ctrl: ControlType): {
   style?: CSSProperties;
 } {
   if (isLong(ctrl)) return { className: "basis-full" };
+  if (ctrl.type === "list") return { className: "flex-[3_1_260px]" };
   if (ctrl.type === "text" && ctrl.default.length > 40) {
     return { className: "flex-[3_1_260px]" };
   }
@@ -47,7 +56,7 @@ function slot(ctrl: ControlType): {
     const width = (ctrl.label.length + ctrl.default.length) * 7 + 40;
     return { style: { flex: `1 1 ${width}px` } };
   }
-  if (ctrl.type === "select") {
+  if (ctrl.type === "select" || ctrl.type === "font") {
     const longest = Math.max(...ctrl.options.map((option) => option.length));
     const width = (ctrl.label.length + longest) * 7.5 + 64;
     return { style: { flex: `1 1 ${Math.max(width, 160)}px` } };
@@ -78,7 +87,7 @@ function Control({
   id: string;
   ctrl: ControlType;
   value: unknown;
-  onChange: (value: unknown) => void;
+  onChange: (value: unknown, source?: ChangeSource) => void;
 }) {
   switch (ctrl.type) {
     case "number":
@@ -105,6 +114,7 @@ function Control({
         />
       );
     case "select":
+    case "font":
       return (
         <SelectControl
           id={id}
@@ -129,6 +139,19 @@ function Control({
           id={id}
           label={ctrl.label}
           value={value as string}
+          auto={ctrl.default === ""}
+          onChange={onChange}
+        />
+      );
+    case "list":
+      return (
+        <ListControl
+          id={id}
+          label={ctrl.label}
+          value={value as string[]}
+          fallback={ctrl.default}
+          min={ctrl.min}
+          max={ctrl.max}
           onChange={onChange}
         />
       );
@@ -182,7 +205,7 @@ const COMPACT = [
   "[&_.customizer-control]:h-7 [&_.customizer-control]:gap-2 [&_.customizer-control]:rounded-[8px] [&_.customizer-control]:px-2.5 [&_.customizer-control]:text-xs [&_.customizer-control]:leading-4 [&_.customizer-control]:whitespace-nowrap",
   "[&_.customizer-control_input]:text-xs",
   // The swatch already shows the colour; the hex would crowd out the label.
-  "[&_.customizer-control:has(input[type=color])_.tabular-nums]:hidden",
+  "[&_.customizer-control:has([data-slot=color-picker-swatch])_.tabular-nums]:hidden",
 ].join(" ");
 
 /**
@@ -199,7 +222,7 @@ export function ComponentCustomizer({
 }: {
   controls: ControlConfig;
   values: Record<string, unknown>;
-  onChange: (key: string, value: unknown) => void;
+  onChange: (key: string, value: unknown, source?: ChangeSource) => void;
   density?: "default" | "compact";
 }) {
   const phone = usePhone();
@@ -216,13 +239,17 @@ export function ComponentCustomizer({
         {Object.entries(controls).map(([key, ctrl]) => (
           <div
             key={key}
-            className={cn("min-w-0", isLong(ctrl) && "col-span-full")}
+            data-control={key}
+            className={cn(
+              "min-w-0 scroll-mb-44 rounded-tile transition-shadow duration-200 data-agent-active:ring-[1.5px] data-agent-active:ring-primary-bright data-agent-active:ring-offset-0 motion-reduce:transition-none",
+              isLong(ctrl) && "col-span-full",
+            )}
           >
             <Control
               id={`ctrl-${key}`}
               ctrl={ctrl}
               value={values[key]}
-              onChange={(value) => onChange(key, value)}
+              onChange={(value, source) => onChange(key, value, source)}
             />
           </div>
         ))}
@@ -244,54 +271,60 @@ export function ComponentCustomizer({
         // Undecided groups follow the layout: open on desktop, first-only on phones.
         const autoCollapsed = chosen === undefined && index > 0;
         const expanded = chosen ?? !(phone && index > 0);
-        const panelId = `customize-${group.id}`;
         return (
           <section
             key={group.id}
             aria-label={group.title}
             className={cn(
-              "flex flex-col pb-2 max-md:gap-1.5",
+              "flex flex-col max-md:gap-1.5",
               index > 0 && "border-t border-white/6",
             )}
           >
-            <button
-              type="button"
-              aria-expanded={expanded}
-              aria-controls={panelId}
-              onClick={() =>
-                setOpen((prev) => ({ ...prev, [group.id]: !expanded }))
+            <Collapsible
+              open={expanded}
+              onOpenChange={(next) =>
+                setOpen((prev) => ({ ...prev, [group.id]: next }))
               }
-              className="flex h-9 shrink-0 cursor-pointer items-center justify-between rounded-tile px-0.5 text-caption leading-[17px] font-semibold text-white/70 outline-none hover:text-[#fafafa] focus-visible:ring-2 focus-visible:ring-white/40 max-md:h-11 max-md:px-1.5 max-md:text-small max-md:leading-[18px]"
+              className="contents"
             >
-              {group.title}
-              <GroupChevron open={chosen ?? true} auto={autoCollapsed} />
-            </button>
-            <div
-              id={panelId}
-              className={cn(
-                "flex flex-wrap gap-1.5",
-                chosen === false && "hidden",
-                autoCollapsed && "max-md:hidden",
-              )}
-            >
-              {group.entries.map(([key, ctrl]) => {
-                const { className, style } = slot(ctrl);
-                return (
-                  <div
-                    key={key}
-                    style={style}
-                    className={cn("min-w-0 max-md:basis-full!", className)}
-                  >
-                    <Control
-                      id={`ctrl-${key}`}
-                      ctrl={ctrl}
-                      value={values[key]}
-                      onChange={(value) => onChange(key, value)}
-                    />
-                  </div>
-                );
-              })}
-            </div>
+              <CollapsibleTrigger className="flex h-9 shrink-0 scroll-mb-44 cursor-pointer items-center justify-between rounded-tile px-0.5 data-agent-active:text-[#fafafa] data-agent-active:ring-[1.5px] data-agent-active:ring-primary-bright text-caption leading-[17px] font-semibold text-white/70 outline-none hover:text-[#fafafa] focus-visible:ring-2 focus-visible:ring-white/40 max-md:h-11 max-md:px-1.5 max-md:text-small max-md:leading-[18px]">
+                {group.title}
+                <GroupChevron open={chosen ?? true} auto={autoCollapsed} />
+              </CollapsibleTrigger>
+              {/* Before hydration a phone still renders every group open;
+                  the class keeps the later ones shut until state catches up. */}
+              <CollapsiblePanel
+                keepMounted
+                className={cn(
+                  "flex flex-wrap gap-1.5 pb-2",
+                  autoCollapsed && "max-md:hidden",
+                )}
+              >
+                {group.entries.map(([key, ctrl]) => {
+                  const { className, style } = slot(ctrl);
+                  return (
+                    <div
+                      key={key}
+                      data-control={key}
+                      style={style}
+                      className={cn(
+                        "min-w-0 max-md:basis-full! scroll-mb-44 rounded-tile transition-shadow duration-200 data-agent-active:ring-[1.5px] data-agent-active:ring-primary-bright data-agent-active:ring-offset-0 motion-reduce:transition-none",
+                        className,
+                      )}
+                    >
+                      <Control
+                        id={`ctrl-${key}`}
+                        ctrl={ctrl}
+                        value={values[key]}
+                        onChange={(value, source) =>
+                          onChange(key, value, source)
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </CollapsiblePanel>
+            </Collapsible>
           </section>
         );
       })}

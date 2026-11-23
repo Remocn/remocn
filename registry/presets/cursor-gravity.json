@@ -1,0 +1,106 @@
+{
+  "component": "cursor-gravity",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-slow-pull",
+      "label": "Midnight Pull",
+      "description": "A deep navy scene where a pale cursor drags the button out slowly against heavy resistance.",
+      "askedAs": [
+        "slow heavy dark pull",
+        "dark blue calm version",
+        "dramatic slow reveal",
+        "тёмная медленная версия",
+        "тяжёлое вытягивание кнопки"
+      ],
+      "props": {
+        "backgroundColor": "#0f172a",
+        "color": "#e2e8f0",
+        "textColor": "#0f172a",
+        "cursorColor": "#f8fafc",
+        "tension": 1.5,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "paper-snap",
+      "label": "Paper Snap",
+      "description": "A warm off-white canvas with an ink-black button that snaps out quickly with light tension.",
+      "askedAs": [
+        "light minimal quick pull",
+        "white background fast",
+        "clean editorial style",
+        "светлый минималистичный вариант",
+        "быстрое лёгкое вытягивание"
+      ],
+      "props": {
+        "backgroundColor": "#f5f1e8",
+        "color": "#1c1917",
+        "textColor": "#f5f1e8",
+        "cursorColor": "#1c1917",
+        "tension": 0.4,
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "forest-steady",
+      "label": "Forest Steady",
+      "description": "A muted forest green with a cream button and a soft amber cursor at an unhurried pace.",
+      "askedAs": [
+        "green natural look",
+        "calm earthy colors",
+        "soft relaxed pull",
+        "зелёная спокойная тема",
+        "природные цвета"
+      ],
+      "props": {
+        "backgroundColor": "#1f3d2b",
+        "color": "#f3ecd8",
+        "textColor": "#1f3d2b",
+        "cursorColor": "#e0a458",
+        "speed": 0.75,
+        "tension": 0.8
+      }
+    },
+    {
+      "id": "coral-bounce",
+      "label": "Coral Bounce",
+      "description": "A sunny coral backdrop with a navy button tugged out in a fast, springy burst.",
+      "askedAs": [
+        "bright energetic fast",
+        "warm coral playful",
+        "bouncy quick button",
+        "яркий быстрый вариант",
+        "кораллово-весёлый стиль"
+      ],
+      "props": {
+        "backgroundColor": "#ff7a59",
+        "color": "#1e2a4a",
+        "textColor": "#fff4ec",
+        "cursorColor": "#fff4ec",
+        "speed": 2.5,
+        "tension": 1.2
+      }
+    },
+    {
+      "id": "slate-effortless",
+      "label": "Slate Glide",
+      "description": "A cool slate-blue scene where the button glides out with almost no resistance.",
+      "askedAs": [
+        "smooth no resistance",
+        "cool blue easy slide",
+        "gentle effortless reveal",
+        "плавное выдвижение без сопротивления",
+        "холодный синий стиль"
+      ],
+      "props": {
+        "backgroundColor": "#3b5b7a",
+        "color": "#dbe7f3",
+        "textColor": "#1b2c3d",
+        "cursorColor": "#ffffff",
+        "tension": 0.1
+      }
+    }
+  ]
+}

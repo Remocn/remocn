@@ -1,5 +1,6 @@
 ---
-title: Installation
+title: Install Remocn components in a Remotion project
+navTitle: Installation
 description: Add Remocn to an existing Remotion project
 ---
 
@@ -43,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="HelloWorld"
     component={SoftBlurIn}
-    durationInFrames={60}
-    fps={30}
+    durationInFrames={120}
+    fps={60}
     width={1280}
     height={720}
     defaultProps={{ text: "Hello, world" }}
@@ -53,3 +54,26 @@ export const RemotionRoot = () => (
 ```
 
 That's it. Render with `npx remotion render HelloWorld out.mp4`.
+
+## Frame rate
+
+Timings in Remocn are written for 30 fps, and every component keeps them at any frame rate. For 60 fps, set `fps={60}` and double `durationInFrames`: the scene lasts the same number of seconds and draws a new picture on every frame.
+
+```tsx
+<Composition
+  id="HelloWorld"
+  component={SoftBlurIn}
+  durationInFrames={120}
+  fps={60}
+  width={1280}
+  height={720}
+  defaultProps={{ text: "Hello, world" }}
+/>
+```
+
+Two kinds of frame counts meet in a 60 fps project:
+
+- **What you pass to a component** stays in 30 fps frames: `delay`, a stagger, the `length` on its docs page.
+- **What you hand to Remotion** is counted in your composition's frames, so at 60 fps it doubles: `durationInFrames` of a `<Composition>` or a `<Sequence>`, `from`, the length in `linearTiming`.
+
+The [templates](/docs/templates) are 60 fps already and follow whatever rate you give their composition.

@@ -1,0 +1,119 @@
+{
+  "component": "home-widget",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-glance",
+      "label": "Midnight Glance",
+      "description": "Dark theme on a deep blue-hour ground with a soft violet accent and an unhurried pace.",
+      "askedAs": [
+        "dark mode widget at night",
+        "calm dark home screen",
+        "moody blue widget reveal",
+        "тёмный виджет ночью",
+        "спокойный тёмный экран"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#8b7cf6",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "citrus-pop",
+      "label": "Citrus Pop",
+      "description": "Bright light theme with a tangerine accent, Bricolage Grotesque type and a quick, bouncy tempo.",
+      "askedAs": [
+        "playful orange widget",
+        "fast fun app launch",
+        "bright energetic widget",
+        "яркий оранжевый виджет",
+        "быстрый весёлый запуск"
+      ],
+      "props": {
+        "accent": "#ff7a30",
+        "fontFamily": "Bricolage Grotesque",
+        "ground": "solstice",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paper-journal",
+      "label": "Paper Journal",
+      "description": "Warm cream paper background with charcoal serif type and a muted terracotta accent.",
+      "askedAs": [
+        "warm editorial widget",
+        "serif cream look",
+        "cozy paper style",
+        "тёплый бумажный стиль",
+        "виджет с засечками"
+      ],
+      "props": {
+        "background": "#f4eee3",
+        "ink": "#2a2622",
+        "accent": "#c0573e",
+        "fontFamily": "Fraunces",
+        "ground": "paper-crease"
+      }
+    },
+    {
+      "id": "dev-stats",
+      "label": "Dev Stats",
+      "description": "Compact small widget in dark charcoal with monospace type and a mint green accent.",
+      "askedAs": [
+        "developer dashboard widget",
+        "monospace stats look",
+        "small terminal style widget",
+        "виджет для разработчиков",
+        "моноширинный тёмный стиль"
+      ],
+      "props": {
+        "theme": "dark",
+        "size": "small",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3dd68c",
+        "ground": "charcoal-satin"
+      }
+    },
+    {
+      "id": "hero-closeup",
+      "label": "Hero Closeup",
+      "description": "Enlarged widget on a glassy ground with a rose accent, arriving after a short beat.",
+      "askedAs": [
+        "big zoomed widget",
+        "close up for vertical video",
+        "large hero widget shot",
+        "крупный план виджета",
+        "большой виджет для вертикального видео"
+      ],
+      "props": {
+        "scale": 1.3,
+        "accent": "#e2557a",
+        "ground": "petal-arc",
+        "fontFamily": "Manrope",
+        "delay": 12
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "Dark theme over a warm ember ground with an amber accent and slow, cinematic motion.",
+      "askedAs": [
+        "warm dark cinematic widget",
+        "slow amber reveal",
+        "glowing dark launch",
+        "тёплый тёмный виджет",
+        "медленное кинематографичное появление"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "ember",
+        "accent": "#f2a93b",
+        "speed": 0.5,
+        "fontFamily": "Geist"
+      }
+    }
+  ]
+}

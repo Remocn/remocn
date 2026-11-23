@@ -1,0 +1,121 @@
+{
+  "component": "ink-underline",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "sumi-slash",
+      "label": "Sumi Slash",
+      "description": "A thick, near-black brush stroke that lands in just a few heavy poses and tapers hard to a dry tail.",
+      "askedAs": [
+        "bold black brush underline",
+        "heavy ink stroke under title",
+        "fast thick calligraphy underline",
+        "жирное чёрное подчёркивание кистью",
+        "толстый мазок туши под заголовком"
+      ],
+      "props": {
+        "color": "#1f1d1a",
+        "thickness": 18,
+        "release": 0.05,
+        "durationSteps": 3,
+        "grain": 1.6
+      }
+    },
+    {
+      "id": "fine-pen",
+      "label": "Fine Pen",
+      "description": "A slim, even sepia line with smooth pressure and little grain, like a careful nib underline.",
+      "askedAs": [
+        "thin pen underline",
+        "delicate handwritten line under text",
+        "subtle fine ink underline",
+        "тонкое подчёркивание пером",
+        "аккуратная тонкая линия под текстом"
+      ],
+      "props": {
+        "color": "#5a3e2b",
+        "thickness": 3,
+        "pressure": 0.7,
+        "release": 0.5,
+        "grain": 0.3
+      }
+    },
+    {
+      "id": "red-marker",
+      "label": "Editor Red",
+      "description": "A brick-red correction stroke that swipes in quickly with a punchy, slightly rough edge.",
+      "askedAs": [
+        "red pen underline",
+        "teacher correction mark",
+        "quick red emphasis stroke",
+        "красное подчёркивание ручкой",
+        "пометка редактора красным"
+      ],
+      "props": {
+        "color": "#b23a2e",
+        "thickness": 11,
+        "step": 2,
+        "durationSteps": 4,
+        "grain": 1.2
+      }
+    },
+    {
+      "id": "slow-indigo",
+      "label": "Slow Indigo",
+      "description": "A deep indigo stroke that drags across in many deliberate poses with a gentle taper.",
+      "askedAs": [
+        "slow drawn blue underline",
+        "calm indigo ink stroke",
+        "gradual stop motion underline",
+        "медленное синее подчёркивание",
+        "плавно рисуемая линия индиго"
+      ],
+      "props": {
+        "color": "#2e3a6b",
+        "durationSteps": 9,
+        "step": 4,
+        "release": 0.3,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "dry-brush",
+      "label": "Dry Brush",
+      "description": "A wide, faint-pressure charcoal swipe with heavy grain that looks scratched on with a nearly empty brush.",
+      "askedAs": [
+        "dry brush texture underline",
+        "rough grainy charcoal stroke",
+        "scratchy textured underline",
+        "сухая кисть подчёркивание",
+        "шершавый угольный мазок"
+      ],
+      "props": {
+        "color": "#4a4744",
+        "thickness": 22,
+        "pressure": 0.6,
+        "grain": 2,
+        "release": 0.1
+      }
+    },
+    {
+      "id": "quick-flick",
+      "label": "Quick Flick",
+      "description": "A short, snappy olive flick that appears in two fast poses for punchy emphasis.",
+      "askedAs": [
+        "fast short underline",
+        "snappy quick ink swipe",
+        "short emphasis flick",
+        "быстрый короткий росчерк",
+        "резкое короткое подчёркивание"
+      ],
+      "props": {
+        "width": 220,
+        "durationSteps": 2,
+        "step": 2,
+        "speed": 1.5,
+        "thickness": 7
+      }
+    }
+  ]
+}

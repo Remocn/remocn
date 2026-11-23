@@ -1,0 +1,105 @@
+{
+  "component": "area-compare",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-report",
+      "label": "Paper Report",
+      "description": "Light editorial page with a warm off-white ground, deep ink and a calm serif finish.",
+      "askedAs": [
+        "light newspaper style comparison",
+        "make it look like a printed report",
+        "calm serif on cream background",
+        "светлый газетный стиль",
+        "как в печатном отчёте"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b5482f",
+        "fontFamily": "Fraunces",
+        "shrink": 60
+      }
+    },
+    {
+      "id": "terminal-blocks",
+      "label": "Terminal Blocks",
+      "description": "Square blocks in mono type on near-black with a muted green accent, like a build log.",
+      "askedAs": [
+        "developer console look with squares",
+        "monospace dark build output",
+        "hacker style size comparison",
+        "стиль терминала с квадратами",
+        "моноширинный тёмный вариант"
+      ],
+      "props": {
+        "shape": "square",
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1110",
+        "ink": "#e3e8e4",
+        "accent": "#4fb37a",
+        "grain": false
+      }
+    },
+    {
+      "id": "snap-shrink",
+      "label": "Snap Shrink",
+      "description": "Fast, punchy shrink with a bold grotesk and bigger framing for quick social cuts.",
+      "askedAs": [
+        "faster punchier shrink",
+        "quick version for reels",
+        "bold big and snappy",
+        "быстрее и резче",
+        "динамичный вариант для соцсетей"
+      ],
+      "props": {
+        "speed": 1.75,
+        "shrink": 16,
+        "fontFamily": "Space Grotesk",
+        "scale": 1.2,
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Unhurried, cinematic shrink with a delayed start and a soft violet accent on deep navy.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "cinematic calm version",
+        "let it breathe before shrinking",
+        "медленное плавное появление",
+        "кинематографичный спокойный темп"
+      ],
+      "props": {
+        "speed": 0.5,
+        "shrink": 90,
+        "delay": 30,
+        "background": "#111427",
+        "ink": "#ecebf5",
+        "accent": "#8b7cf6"
+      }
+    },
+    {
+      "id": "clean-product",
+      "label": "Clean Product",
+      "description": "Crisp light UI style with Inter, no grain and a slightly smaller, tidy composition.",
+      "askedAs": [
+        "clean minimal light version",
+        "looks like a product landing page",
+        "no grain simple white",
+        "минималистичный светлый",
+        "чистый продуктовый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "grain": false,
+        "accent": "#0f766e",
+        "scale": 0.85
+      }
+    }
+  ]
+}

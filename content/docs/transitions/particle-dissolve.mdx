@@ -41,14 +41,14 @@ import { particleDissolve } from "@/components/remocn/particle-dissolve";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={60}>
+    <TransitionSeries.Sequence durationInFrames={120}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 36 })}
+      timing={linearTiming({ durationInFrames: 72 })}
       presentation={particleDissolve()}
     />
-    <TransitionSeries.Sequence durationInFrames={60}>
+    <TransitionSeries.Sequence durationInFrames={120}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

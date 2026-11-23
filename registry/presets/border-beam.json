@@ -1,0 +1,123 @@
+{
+  "component": "border-beam",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "copper-slow-burn",
+      "label": "Copper Slow Burn",
+      "description": "A warm copper beam takes a long, unhurried lap around the card before an elegant serif title settles in.",
+      "askedAs": [
+        "slow warm glowing border",
+        "luxury copper edge light",
+        "elegant serif release card",
+        "медленный тёплый луч по краю",
+        "премиальная карточка с медным светом"
+      ],
+      "props": {
+        "accent": "#d08a5a",
+        "ground": "copper",
+        "lap": 140,
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "A fast cyan beam whips around once and the card lands in monospace type for a developer-tool feel.",
+      "askedAs": [
+        "quick dev tool announcement",
+        "fast beam monospace card",
+        "snappy cli release reveal",
+        "быстрая карточка в стиле терминала",
+        "моноширинный шрифт и быстрый луч"
+      ],
+      "props": {
+        "accent": "#3fc8d4",
+        "ground": "cyan-drift",
+        "lap": 36,
+        "fontFamily": "JetBrains Mono",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A light paper-toned card with a deep ink-blue beam and crisp dark text for a calm editorial look.",
+      "askedAs": [
+        "light mode version card",
+        "clean white release announcement",
+        "minimal bright border beam",
+        "светлая карточка релиза",
+        "минималистичный светлый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accent": "#1f3a8a",
+        "background": "#f5f3ee",
+        "ink": "#1a1a1f",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "velvet-close",
+      "label": "Velvet Close",
+      "description": "A muted violet beam on a velvet-hour ground with a slight delay and larger scale for a cinematic final beat.",
+      "askedAs": [
+        "cinematic ending card",
+        "purple glow launch outro",
+        "big dramatic closing reveal",
+        "кинематографичная финальная карточка",
+        "фиолетовое свечение в конце ролика"
+      ],
+      "props": {
+        "accent": "#9b7be0",
+        "ground": "velvet-hour",
+        "scale": 1.2,
+        "delay": 20,
+        "lap": 104,
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "mercury-mono",
+      "label": "Mercury Mono",
+      "description": "A silver beam on a cool mercury ground with no logo, a compact, understated chrome finish.",
+      "askedAs": [
+        "silver chrome border card",
+        "monochrome premium card no logo",
+        "subtle grey edge light",
+        "серебристая карточка без логотипа",
+        "сдержанный монохромный стиль"
+      ],
+      "props": {
+        "accent": "#c9ced6",
+        "ground": "mercury",
+        "showLogo": false,
+        "fontFamily": "Inter",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "ember-pulse",
+      "label": "Ember Pulse",
+      "description": "A glowing ember-orange beam races around a dark hearth ground with bold grotesque type for an energetic launch.",
+      "askedAs": [
+        "energetic orange launch card",
+        "fiery border glow",
+        "bold fast release hero",
+        "энергичная оранжевая карточка запуска",
+        "огненный луч по рамке"
+      ],
+      "props": {
+        "accent": "#f07a3a",
+        "ground": "ember",
+        "fontFamily": "Bricolage Grotesque",
+        "lap": 52,
+        "speed": 1.25
+      }
+    }
+  ]
+}

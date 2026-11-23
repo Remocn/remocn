@@ -6,14 +6,9 @@ import type {
 } from "@remotion/transitions";
 import type React from "react";
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  spring,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random, spring } from "remotion";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type PaperTearProps = {
   /** Strength of the impact: shake, flash and debris. 0 turns them off. */
@@ -145,7 +140,8 @@ const PaperTearPresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
-  const { width, height, fps } = useVideoConfig();
+  const { width, height, fps } = useSceneConfig();
+  const glide = useGlide();
   const { seed, edgeColor, roughness, shadowColor, impact } = {
     ...paperTearDefaults,
     ...passedProps,
@@ -168,10 +164,13 @@ const PaperTearPresentation: React.FC<
       ...clamp,
       easing: Easing.out(Easing.cubic),
     });
+    // Before the impact this scene waits still under the sheet; from it on
+    // the punch and the jolt move it until the transition hands over.
+    const moving = p > IMPACT && p < 1;
     return (
       <AbsoluteFill
         style={{
-          transform: `translate(${shake.x}px, ${shake.y}px) scale(${scale})`,
+          transform: `translate(${shake.x}px, ${shake.y}px) scale(${scale})${glide(moving)}`,
         }}
       >
         {children}
@@ -187,6 +186,8 @@ const PaperTearPresentation: React.FC<
   const tremble =
     p < IMPACT ? Math.sin(p * 260) * unit * 0.004 * strain * impact : 0;
   const lean = 1 + 0.025 * strain * (p < IMPACT ? 1 : 0);
+  // The sheet strains, then jolts, for the whole transition.
+  const moving = p > 0 && p < 1;
   const front =
     -unit * 0.1 +
     ripEase(interpolate(p, [STRAIN, IMPACT], [0, 1], clamp)) *
@@ -266,7 +267,7 @@ const PaperTearPresentation: React.FC<
         // Overscan just enough that the jolt never exposes the frame edge.
         transform: `translate(${shake.x + tremble}px, ${shake.y}px) scale(${
           lean + (2.2 * shake.amp) / unit
-        })`,
+        })${glide(moving)}`,
       }}
     >
       {front < height + unit * 0.05 ? (
@@ -332,19 +333,21 @@ const PaperTearPresentation: React.FC<
             const y =
               shard.y + shard.vy * dt * impact + 0.5 * gravity * dt * dt;
             const size = shard.size * (0.5 + 0.5 * Math.min(1, impact));
+            // Laid out where the scrap leaves the seam; the flight is a
+            // transform, since layout rounds a box's edges to whole pixels.
             return (
               <div
                 key={i}
                 style={{
                   position: "absolute",
-                  left: x - size / 2,
-                  top: y - size / 2,
+                  left: shard.x - size / 2,
+                  top: shard.y - size / 2,
                   width: size,
                   height: size,
                   backgroundColor: edgeColor,
                   clipPath: shard.shape,
                   opacity: fade,
-                  transform: `rotate(${shard.spin * dt}deg)`,
+                  transform: `translate(${x - shard.x}px, ${y - shard.y}px) rotate(${shard.spin * dt}deg)`,
                 }}
               />
             );

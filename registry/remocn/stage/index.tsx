@@ -6,9 +6,8 @@ import {
   type EasingFunction,
   interpolate,
   random,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { CLAMP, EXPO, SETTLE_SOFT } from "@/lib/remocn/scene-motion";
 
 export interface StageKey {
@@ -215,8 +214,8 @@ export function Stage({
   light = 0.55,
   className,
 }: StageProps) {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
   const settle = interpolate(frame, [0, 24], [0, 1], {
     ...CLAMP,
     easing: SETTLE_SOFT,
@@ -253,7 +252,6 @@ export function Stage({
     transformOrigin: `${geometry.targetX}px ${geometry.targetY}px`,
     transformStyle: "preserve-3d",
     backfaceVisibility: "visible",
-    willChange: "transform",
   };
 
   return (

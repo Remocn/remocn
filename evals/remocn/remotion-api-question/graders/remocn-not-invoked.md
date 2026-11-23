@@ -1,7 +1,7 @@
 ---
 type: tool_used
 tool: Skill
-input_match: '"skill"\s*:\s*"(?:remocn:)?(?:remocn|video|add|changelog|studio)"'
+input_match: '"skill"\s*:\s*"(?:remocn:)?(?:remocn|video|add|changelog|setup)"'
 min: 0
 max: 0
 arm: both

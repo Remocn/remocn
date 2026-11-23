@@ -50,7 +50,7 @@ const COUNT_ENDS = handCountDuration({
 
 const PricingScene = () => (
   <AbsoluteFill style={{ background: "#f1eee7" }}>
-    <Sequence durationInFrames={COUNT_ENDS + 30}>
+    <Sequence durationInFrames={(COUNT_ENDS + 30) * 2}>
       <HandCount
         to={19}
         delay={COUNT_AT}
@@ -67,8 +67,8 @@ export const RemotionRoot = () => (
   <Composition
     id="HandCount"
     component={PricingScene}
-    durationInFrames={COUNT_ENDS + 30}
-    fps={30}
+    durationInFrames={(COUNT_ENDS + 30) * 2}
+    fps={60}
     width={1280}
     height={720}
   />

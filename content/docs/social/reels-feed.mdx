@@ -45,8 +45,8 @@ export const RemotionRoot = () => (
   <Composition
     id="ReelsFeed"
     component={ReelsFeedScene}
-    durationInFrames={300}
-    fps={30}
+    durationInFrames={600}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -95,10 +95,55 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Like count before and after the double-tap.",
     },
     {
+      name: "postCaption",
+      type: "string",
+      default: "\"Our launch film is out. Cut it in an afternoon with remocn\"",
+      description: "Caption of the feed post on the home screen.",
+    },
+    {
+      name: "reelCaption",
+      type: "string",
+      default: "\"v2 is live. 200+ components for launch videos\"",
+      description: "Caption of the reel.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Color of the lines beside the phone; overrides the theme.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Onest\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

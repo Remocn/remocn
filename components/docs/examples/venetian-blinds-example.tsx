@@ -5,6 +5,7 @@ import {
   CanvasSceneA,
   CanvasScenePoster,
 } from "@/components/docs/examples/canvas-scenes";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import {
   type VenetianBlindsProps,
   venetianBlinds,
@@ -23,16 +24,17 @@ export function VenetianBlindsExampleScene({
   direction,
   shadeColor,
 }: VenetianBlindsExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <CanvasSceneA />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 26 })}
+        timing={linearTiming({ durationInFrames: toFrames(26) })}
         presentation={venetianBlinds({ slats, stagger, direction, shadeColor })}
       />
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <CanvasScenePoster />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -51,14 +53,14 @@ import { venetianBlinds } from "@/components/remocn/venetian-blinds";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 26 })}
+      timing={linearTiming({ durationInFrames: 52 })}
       presentation={venetianBlinds({ slats: ${slats}, stagger: ${stagger}, direction: "${direction}", shadeColor: "${shadeColor}" })}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

@@ -1,0 +1,97 @@
+{
+  "component": "icon-skip-forward",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked icon that slowly sketches itself in a soft slate tone.",
+      "askedAs": [
+        "thin slow drawing skip icon",
+        "elegant line skip forward",
+        "big delicate outline next button",
+        "тонкая иконка перемотки рисуется медленно",
+        "изящная линия кнопки вперёд"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "A chunky, heavy-stroked icon that jumps forward with a quick, punchy action.",
+      "askedAs": [
+        "thick fast skip animation",
+        "punchy next track icon",
+        "bold quick forward button",
+        "жирная быстрая иконка вперёд",
+        "резкая анимация пропуска"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 72
+      }
+    },
+    {
+      "id": "player-loop",
+      "label": "Player Loop",
+      "description": "A blue media-player icon that keeps nudging forward on a continuous loop.",
+      "askedAs": [
+        "looping skip forward icon",
+        "repeating next button animation",
+        "blue media player skip",
+        "зацикленная иконка следующего трека",
+        "повторяющаяся синяя кнопка вперёд"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#1f6feb",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "tiny-inline",
+      "label": "Tiny Inline",
+      "description": "A small, compact icon that draws and moves briskly, sized for inline UI.",
+      "askedAs": [
+        "small skip icon for toolbar",
+        "compact fast next icon",
+        "mini forward button",
+        "маленькая иконка перемотки",
+        "компактная кнопка вперёд"
+      ],
+      "props": {
+        "size": 24,
+        "strokeWidth": 1.5,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "warm-hero",
+      "label": "Warm Hero",
+      "description": "An oversized terracotta icon that draws in and skips forward at a calm, cinematic pace.",
+      "askedAs": [
+        "huge warm colored skip icon",
+        "cinematic slow next button",
+        "large orange forward animation",
+        "большая тёплая иконка вперёд",
+        "медленная кинематографичная перемотка"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#c2410c",
+        "strokeWidth": 2.5,
+        "speed": 0.75
+      }
+    }
+  ]
+}

@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const jakarta = loadJakarta("normal", {
   weights: ["400"],
@@ -22,8 +22,17 @@ export interface SlideDoorsProps {
   lines?: string[];
   highlight?: string;
   hold?: number;
+  fontWeight?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines. Load it yourself; Plus Jakarta Sans by default. */
+  fontFamily?: string;
+  /** Size of the lines and track, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -55,6 +64,8 @@ const CLEAR = 14;
 const OPEN = CRACK + PUSH + CLEAR;
 const PAD = 0.22;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_PUSH = Easing.bezier(0.45, 0, 0.35, 1);
 const CLAMP = {
@@ -70,7 +81,11 @@ interface LineMetrics {
   full: number;
 }
 
-function measure(lines: string[]): LineMetrics[] {
+function measure(
+  lines: string[],
+  fontFamily: string,
+  fontWeight: number,
+): LineMetrics[] {
   const probe = document.createElement("span");
   Object.assign(probe.style, {
     position: "absolute",
@@ -78,8 +93,8 @@ function measure(lines: string[]): LineMetrics[] {
     top: "0",
     visibility: "hidden",
     whiteSpace: "pre",
-    fontFamily: `"${jakarta.fontFamily}"`,
-    fontWeight: String(WGHT),
+    fontFamily: `"${fontFamily}"`,
+    fontWeight: String(fontWeight),
     fontSize: "100px",
     lineHeight: "1",
     letterSpacing: `${TRACK}em`,
@@ -111,7 +126,7 @@ function measure(lines: string[]): LineMetrics[] {
   return out;
 }
 
-function useLines(lines: string[]) {
+function useLines(lines: string[], fontFamily: string, fontWeight: number) {
   const key = lines.join("\u0001");
   const [state, setState] = useState<{ key: string; m: LineMetrics[] } | null>(
     null,
@@ -122,12 +137,15 @@ function useLines(lines: string[]) {
     let live = true;
     Promise.all([
       jakarta.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${jakarta.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(key.split("\u0001")) });
+        setState({
+          key,
+          m: measure(key.split("\u0001"), fontFamily, fontWeight),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -136,30 +154,52 @@ function useLines(lines: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
   return state && state.key === key ? state : null;
 }
 
 const stripPunct = (s: string) => s.replace(/[.,!?;:’'"]+$/u, "");
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SlideDoors({
   lines = ["Scenes that move.", "Code you own.", "Arriving in your repo."],
   highlight = "repo.",
   hold = 28,
+  fontWeight = WGHT,
   accent,
+  ink,
   background,
+  fontFamily = jakarta.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: SlideDoorsProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.teal;
   const list = useMemo(
     () => (lines.length > 0 ? lines : ["Arriving in your repo."]),
     [lines],
   );
-  const state = useLines(list);
+  const state = useLines(list, fontFamily, fontWeight);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -199,12 +239,12 @@ export function SlideDoors({
     height: lineH,
     lineHeight: `${lineH}px`,
     whiteSpace: "pre",
-    fontFamily: jakarta.fontFamily,
-    fontWeight: WGHT,
+    fontFamily,
+    fontWeight,
     fontSize: F,
     letterSpacing: `${TRACK}em`,
     wordSpacing: `${WORD}em`,
-    color: c.ink,
+    color: ink ?? c.ink,
   };
 
   const renderWords = (k: number, words: string[]) =>
@@ -317,7 +357,7 @@ export function SlideDoors({
             ...textStyle,
             left: centre - (ln.full * F) / 2,
             transformOrigin: `${((ln.full * F) / 2).toFixed(2)}px ${(lineH * 0.7).toFixed(2)}px`,
-            transform: `scale(${s.toFixed(4)})`,
+            transform: `scale(${s.toFixed(4)})${glide(midway(push))}`,
             opacity: fits,
           }}
         >
@@ -345,39 +385,41 @@ export function SlideDoors({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: cx - halfW,
-          width: halfW * 2,
-          top: trackY,
-          height: stroke,
-          background: c.track,
-        }}
-      />
-      {opening ? (
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: Math.max(0, gapL),
-            width: Math.max(0, Math.min(W, gapR) - Math.max(0, gapL)),
-            top: trackY - stroke * 0.5,
-            height: stroke * 2,
-            background: hi,
+            left: cx - halfW,
+            width: halfW * 2,
+            top: trackY,
+            height: stroke,
+            background: c.track,
           }}
         />
-      ) : null}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top,
-          width: W,
-          height: lineH,
-        }}
-      >
-        {content}
-      </div>
+        {opening ? (
+          <div
+            style={{
+              position: "absolute",
+              left: Math.max(0, gapL),
+              width: Math.max(0, Math.min(W, gapR) - Math.max(0, gapL)),
+              top: trackY - stroke * 0.5,
+              height: stroke * 2,
+              background: hi,
+            }}
+          />
+        ) : null}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top,
+            width: W,
+            height: lineH,
+          }}
+        >
+          {content}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

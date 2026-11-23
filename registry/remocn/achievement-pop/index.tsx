@@ -3,14 +3,10 @@
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -72,6 +68,22 @@ export interface AchievementPopProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Small caps label above the running total (portrait only). */
+  totalLabel?: string;
+  /** Unit after each points value and the total. */
+  unit?: string;
+  /** Replaces the remocn mark under the stack. */
+  logo?: React.ReactNode;
+  /** Text color of the titles and total; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the titles and numbers. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the stack, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
 }
 
@@ -147,6 +159,24 @@ const THEMES = {
   },
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function Icon({
   name,
   size,
@@ -207,13 +237,23 @@ export function AchievementPop({
   theme = "dark",
   ground,
   groundParams,
+  totalLabel = "Launch week",
+  unit = "XP",
+  logo,
+  ink: inkProp,
+  background,
+  fontFamily = geist,
+  scale = 1,
+  delay = 0,
   speed = 1,
 }: AchievementPopProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const tall = H > W;
   const dark = theme === "dark";
   const c = THEMES[theme];
+  const fg = inkProp ?? c.ink;
   const u = tall ? (W * 0.88) / 820 : Math.min(W / 1280, H / 720);
   const resolvedGround: GshPresetId | undefined =
     ground ?? (groundParams ? undefined : dark ? "kiln" : undefined);
@@ -267,296 +307,332 @@ export function AchievementPop({
   });
 
   return (
-    <AbsoluteFill style={{ background: c.base, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={resolvedParams}
-        timeOffset={dark ? 5 : 3}
-        timeScale={0.45}
-      />
-      <AbsoluteFill style={{ background: c.scrim }} />
+    <AbsoluteFill
+      style={{
+        background:
+          background === undefined
+            ? c.base
+            : background === "transparent"
+              ? undefined
+              : background,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={resolvedGround}
+            params={resolvedParams}
+            timeOffset={dark ? 5 : 3}
+            timeScale={0.45}
+          />
+          <AbsoluteFill style={{ background: c.scrim }} />
+        </>
+      ) : null}
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `scale(${groupK})`,
-          transformOrigin: `50% ${(cy / H) * 100}%`,
-        }}
-      >
-        {list.map((a, i) => {
-          const s = starts[i];
-          if (t < s) return null;
-          const rare = i === n - 1 && n > 1;
-          const y = cy + (i - (kf - 1) / 2) * gap;
-          const pop = sp(s, CHIP);
-          const badgeK = 0.5 + 0.5 * pop;
-          const open = sp(s + BEATS.open, MORPH, 16);
-          const pillW = D + (pw - D) * open;
-          const left = W / 2 - pillW / 2;
-          const textP = interpolate(
-            t,
-            [s + BEATS.open + 4, s + BEATS.open + 16],
-            [0, 1],
-            { ...CLAMP, easing: ENTER },
-          );
-          const ptsP = interpolate(
-            t,
-            [s + BEATS.open + 8, s + BEATS.open + 20],
-            [0, 1],
-            { ...CLAMP, easing: ENTER },
-          );
-          const flashP = interpolate(t, [s + 2, s + 16], [0, 1], {
-            ...CLAMP,
-            easing: ENTER,
-          });
-          const sheen = interpolate(
-            t,
-            [s + BEATS.open + 14, s + BEATS.open + 32],
-            [0, 1],
-            { ...CLAMP, easing: Easing.bezier(0.65, 0, 0.35, 1) },
-          );
-          const ink = rare ? "#FFF4E8" : c.ink;
-          const dim = rare ? "rgba(255,233,199,0.72)" : c.dim;
-          const bx = left + D / 2;
-          const R = D / 2;
-          const appear = interpolate(t, [s, s + 3], [0, 1], CLAMP);
-          return (
-            <div key={`${a.title}-${s}`}>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            // The cards below ride `kf` through `top`, so the tilt covers
+            // their text as well.
+            transform: `scale(${groupK})${glide(midway(kf - Math.floor(kf)) || midway(poster))}`,
+            transformOrigin: `50% ${(cy / H) * 100}%`,
+          }}
+        >
+          {list.map((a, i) => {
+            const s = starts[i];
+            if (t < s) return null;
+            const rare = i === n - 1 && n > 1;
+            // The stack recentres as it grows. That travel is a transform on
+            // the card, not `top`: layout rounds a box and a baseline to whole
+            // pixels, so a card eased by `top` clicks down pixel by pixel.
+            const y = cy + i * gap;
+            const lift = -((kf - 1) / 2) * gap;
+            const pop = sp(s, CHIP);
+            const badgeK = 0.5 + 0.5 * pop;
+            const open = sp(s + BEATS.open, MORPH, 16);
+            const pillW = D + (pw - D) * open;
+            const left = W / 2 - pillW / 2;
+            const textP = interpolate(
+              t,
+              [s + BEATS.open + 4, s + BEATS.open + 16],
+              [0, 1],
+              { ...CLAMP, easing: ENTER },
+            );
+            const ptsP = interpolate(
+              t,
+              [s + BEATS.open + 8, s + BEATS.open + 20],
+              [0, 1],
+              { ...CLAMP, easing: ENTER },
+            );
+            const flashP = interpolate(t, [s + 2, s + 16], [0, 1], {
+              ...CLAMP,
+              easing: ENTER,
+            });
+            const sheen = interpolate(
+              t,
+              [s + BEATS.open + 14, s + BEATS.open + 32],
+              [0, 1],
+              { ...CLAMP, easing: Easing.bezier(0.65, 0, 0.35, 1) },
+            );
+            const ink = rare ? "#FFF4E8" : fg;
+            const dim = rare ? "rgba(255,233,199,0.72)" : c.dim;
+            const bx = left + D / 2;
+            const R = D / 2;
+            const appear = interpolate(t, [s, s + 3], [0, 1], CLAMP);
+            return (
               <div
+                key={`${a.title}-${s}`}
                 style={{
                   position: "absolute",
-                  left,
-                  top: y - ph / 2,
-                  width: pillW,
-                  height: ph,
-                  borderRadius: ph / 2,
-                  overflow: "hidden",
-                  background: rare ? RARE_FILL : c.pill,
-                  boxShadow: rare
-                    ? `inset 0 1px 0 rgba(255,233,199,0.28), 0 0 0 1px rgba(255,154,58,0.28), 0 22px 48px -14px rgba(120,24,4,${dark ? 0.8 : 0.45})`
-                    : c.depth,
-                  opacity: appear,
+                  inset: 0,
+                  transform: `translateY(${lift}px)`,
                 }}
               >
-                {rare && sheen > 0 && sheen < 1 ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left,
+                    top: y - ph / 2,
+                    width: pillW,
+                    height: ph,
+                    borderRadius: ph / 2,
+                    overflow: "hidden",
+                    background: rare ? RARE_FILL : c.pill,
+                    boxShadow: rare
+                      ? `inset 0 1px 0 rgba(255,233,199,0.28), 0 0 0 1px rgba(255,154,58,0.28), 0 22px 48px -14px rgba(120,24,4,${dark ? 0.8 : 0.45})`
+                      : c.depth,
+                    opacity: appear,
+                  }}
+                >
+                  {rare && sheen > 0 && sheen < 1 ? (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        bottom: 0,
+                        width: 160 * u,
+                        left: interpolate(
+                          sheen,
+                          [0, 1],
+                          [-200 * u, pw + 40 * u],
+                        ),
+                        background:
+                          "linear-gradient(100deg, transparent 0%, rgba(255,233,199,0.32) 50%, transparent 100%)",
+                        transform: "skewX(-20deg)",
+                      }}
+                    />
+                  ) : null}
                   <div
                     style={{
                       position: "absolute",
+                      left: D + 22 * u,
                       top: 0,
                       bottom: 0,
-                      width: 160 * u,
-                      left: interpolate(sheen, [0, 1], [-200 * u, pw + 40 * u]),
-                      background:
-                        "linear-gradient(100deg, transparent 0%, rgba(255,233,199,0.32) 50%, transparent 100%)",
-                      transform: "skewX(-20deg)",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      gap: 10 * u,
+                      opacity: textP,
+                      transform: `translateX(${(1 - textP) * -24 * u}px)`,
+                      whiteSpace: "nowrap",
                     }}
-                  />
+                  >
+                    <div
+                      style={{
+                        fontFamily: mono,
+                        fontWeight: 400,
+                        fontSize: 17 * u,
+                        lineHeight: 1,
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                        color: dim,
+                      }}
+                    >
+                      {a.label}
+                    </div>
+                    <div
+                      style={{
+                        fontFamily,
+                        fontWeight: 400,
+                        fontSize: 40 * u,
+                        lineHeight: 1,
+                        letterSpacing: "-0.03em",
+                        color: ink,
+                      }}
+                    >
+                      {a.title}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: pw - 220 * u,
+                      width: 180 * u,
+                      top: 0,
+                      bottom: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "flex-end",
+                      gap: 8 * u,
+                      opacity: ptsP,
+                      transform: `translateX(${(1 - ptsP) * -16 * u}px)`,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily,
+                        fontWeight: 300,
+                        fontSize: 40 * u,
+                        lineHeight: 1,
+                        letterSpacing: "-0.03em",
+                        fontVariantNumeric: "tabular-nums",
+                        color: ink,
+                      }}
+                    >
+                      +{a.points}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: mono,
+                        fontWeight: 400,
+                        fontSize: 17 * u,
+                        letterSpacing: "0.04em",
+                        color: dim,
+                        transform: `translateY(${4 * u}px)`,
+                      }}
+                    >
+                      {unit}
+                    </span>
+                  </div>
+                </div>
+
+                {flashP > 0 && flashP < 1 ? (
+                  <svg
+                    width={W}
+                    height={H}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      overflow: "visible",
+                    }}
+                    aria-hidden
+                  >
+                    <circle
+                      cx={bx}
+                      cy={y}
+                      r={R * interpolate(flashP, [0, 1], [0.9, 1.7])}
+                      fill="none"
+                      stroke={rare ? KILN[2] : c.flash}
+                      strokeWidth={interpolate(flashP, [0, 1], [5, 0.5]) * u}
+                      opacity={(1 - flashP) * 0.9}
+                    />
+                  </svg>
                 ) : null}
+
                 <div
                   style={{
                     position: "absolute",
-                    left: D + 22 * u,
-                    top: 0,
-                    bottom: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    gap: 10 * u,
-                    opacity: textP,
-                    transform: `translateX(${(1 - textP) * -24 * u}px)`,
-                    whiteSpace: "nowrap",
+                    // Laid out where the open pill leaves it; the ride
+                    // there as the pill opens is a transform, for the same
+                    // reason as the lift above.
+                    left: W / 2 - pw / 2,
+                    top: y - R,
+                    width: D,
+                    height: D,
+                    transform: `translateX(${(pw - pillW) / 2}px) scale(${badgeK})`,
+                    opacity: appear,
                   }}
                 >
                   <div
                     style={{
-                      fontFamily: mono,
-                      fontWeight: 400,
-                      fontSize: 17 * u,
-                      lineHeight: 1,
-                      letterSpacing: "0.04em",
-                      textTransform: "uppercase",
-                      color: dim,
+                      position: "absolute",
+                      inset: 10 * u,
+                      borderRadius: "50%",
+                      background: rare ? "rgba(255,233,199,0.12)" : c.badge,
+                      boxShadow: rare
+                        ? "inset 0 0 0 1px rgba(255,233,199,0.45)"
+                        : `inset 0 0 0 1px ${c.ring}`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    {a.label}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: geist,
-                      fontWeight: 400,
-                      fontSize: 40 * u,
-                      lineHeight: 1,
-                      letterSpacing: "-0.03em",
-                      color: ink,
-                    }}
-                  >
-                    {a.title}
+                    <Icon name={a.icon ?? "trophy"} size={40 * u} color={ink} />
                   </div>
                 </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: pw - 220 * u,
-                    width: 180 * u,
-                    top: 0,
-                    bottom: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                    gap: 8 * u,
-                    opacity: ptsP,
-                    transform: `translateX(${(1 - ptsP) * -16 * u}px)`,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: geist,
-                      fontWeight: 300,
-                      fontSize: 40 * u,
-                      lineHeight: 1,
-                      letterSpacing: "-0.03em",
-                      fontVariantNumeric: "tabular-nums",
-                      color: ink,
-                    }}
-                  >
-                    +{a.points}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: mono,
-                      fontWeight: 400,
-                      fontSize: 17 * u,
-                      letterSpacing: "0.04em",
-                      color: dim,
-                      transform: `translateY(${4 * u}px)`,
-                    }}
-                  >
-                    XP
-                  </span>
-                </div>
               </div>
+            );
+          })}
+        </div>
 
-              {flashP > 0 && flashP < 1 ? (
-                <svg
-                  width={W}
-                  height={H}
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    overflow: "visible",
-                  }}
-                  aria-hidden
-                >
-                  <circle
-                    cx={bx}
-                    cy={y}
-                    r={R * interpolate(flashP, [0, 1], [0.9, 1.7])}
-                    fill="none"
-                    stroke={rare ? KILN[2] : c.flash}
-                    strokeWidth={interpolate(flashP, [0, 1], [5, 0.5]) * u}
-                    opacity={(1 - flashP) * 0.9}
-                  />
-                </svg>
-              ) : null}
-
-              <div
-                style={{
-                  position: "absolute",
-                  left: bx - R,
-                  top: y - R,
-                  width: D,
-                  height: D,
-                  transform: `scale(${badgeK})`,
-                  opacity: appear,
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 10 * u,
-                    borderRadius: "50%",
-                    background: rare ? "rgba(255,233,199,0.12)" : c.badge,
-                    boxShadow: rare
-                      ? "inset 0 0 0 1px rgba(255,233,199,0.45)"
-                      : `inset 0 0 0 1px ${c.ring}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Icon name={a.icon ?? "trophy"} size={40 * u} color={ink} />
-                </div>
-              </div>
+        {tall ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: 0.66 * H,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 18 * u,
+              opacity: totalIn,
+              transform: `translateY(${(1 - totalIn) * 24 * u}px)${glide(midway(totalIn))}`,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: mono,
+                fontWeight: 400,
+                fontSize: 20 * u,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: c.dim,
+              }}
+            >
+              {totalLabel}
             </div>
-          );
-        })}
-      </div>
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 300,
+                fontSize: 170 * u,
+                lineHeight: 1,
+                letterSpacing: "-0.05em",
+                fontVariantNumeric: "tabular-nums",
+                color: fg,
+              }}
+            >
+              {Math.round(total)}
+              <span
+                style={{ fontSize: 56 * u, letterSpacing: "0", color: c.dim }}
+              >
+                {" "}
+                {unit}
+              </span>
+            </div>
+          </div>
+        ) : null}
 
-      {tall ? (
         <div
           style={{
             position: "absolute",
             left: 0,
-            right: 0,
-            top: 0.66 * H,
+            width: W,
+            top: tall ? 0.88 * H : 0.885 * H,
             display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 18 * u,
-            opacity: totalIn,
-            transform: `translateY(${(1 - totalIn) * 24 * u}px)`,
+            justifyContent: "center",
+            opacity: logoP,
+            transform: `translateY(${(1 - logoP) * 14 * u}px)${glide(midway(logoP))}`,
           }}
         >
-          <div
-            style={{
-              fontFamily: mono,
-              fontWeight: 400,
-              fontSize: 20 * u,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              color: c.dim,
-            }}
-          >
-            Launch week
-          </div>
-          <div
-            style={{
-              fontFamily: geist,
-              fontWeight: 300,
-              fontSize: 170 * u,
-              lineHeight: 1,
-              letterSpacing: "-0.05em",
-              fontVariantNumeric: "tabular-nums",
-              color: c.ink,
-            }}
-          >
-            {Math.round(total)}
-            <span
-              style={{ fontSize: 56 * u, letterSpacing: "0", color: c.dim }}
-            >
-              {" "}
-              XP
-            </span>
-          </div>
+          {logo ?? <RemocnLogo fontSize={30 * u} color={c.logo} />}
         </div>
-      ) : null}
-
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: tall ? 0.88 * H : 0.885 * H,
-          display: "flex",
-          justifyContent: "center",
-          opacity: logoP,
-          transform: `translateY(${(1 - logoP) * 14 * u}px)`,
-        }}
-      >
-        <RemocnLogo fontSize={30 * u} color={c.logo} />
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

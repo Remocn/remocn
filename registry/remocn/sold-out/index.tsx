@@ -2,14 +2,11 @@
 
 import { loadFont } from "@remotion/google-fonts/Archivo";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -34,8 +31,22 @@ export interface SoldOutProps {
   lead?: string;
   /** Subline accent, in the serif italic. */
   tail?: string;
+  /** Frames "0" holds before the band slams in. */
+  hold?: number;
+  /** Tilt of the band, in degrees. */
+  angle?: number;
   /** Kept for the shared draft API; the band takes the "chrome" gradient. */
   accent?: string;
+  /** Text color of the counter and subline; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the counter, stamp and subline lead; the subline accent keeps its serif. Load it yourself; Archivo by default. */
+  fontFamily?: string;
+  /** Size of the counter, band and subline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -162,6 +173,24 @@ function reelPos(v: number, p: number) {
   return whole + Math.max(0, rem - (p - 1));
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SoldOut({
   stock = 128,
   unit = "LEFT",
@@ -169,11 +198,19 @@ export function SoldOut({
   stamp = "SOLD OUT",
   lead = "Restocking:",
   tail = "every launch.",
+  hold = ZERO_HOLD,
+  angle = -11,
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: SoldOutProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = Math.min(W / 1280, H / 720);
   const c = THEMES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -181,7 +218,7 @@ export function SoldOut({
   const total = Math.max(1, Math.round(stock));
   const low = Math.min(LOW, total);
   const zeroAt = RACE_END + low * TICK;
-  const bandAt = zeroAt + ZERO_HOLD;
+  const bandAt = zeroAt + hold;
   const places = String(total).length;
 
   const v = level(t, total);
@@ -219,30 +256,48 @@ export function SoldOut({
   const enterBlur = (1 - enter) * 14;
   const isLow = v <= low + 0.01 && t >= RACE_END;
   const lowAt = RACE_END;
-  // the tremble grows as the stock drains, then drops away under the band
   const drain = 1 - v / total;
   const band = SLAM(ramp(t, bandAt, BAND_LEN));
-  const tremble = 9 * u * drain ** 2.2 * (1 - ramp(t, bandAt, 4));
-  let sx =
-    tremble * (0.6 * Math.sin(t * 2.31 + 0.4) + 0.4 * Math.sin(t * 5.17 + 1.3));
-  let sy =
-    tremble * (0.6 * Math.cos(t * 2.83 + 2.1) + 0.4 * Math.sin(t * 4.41 + 0.2));
-  let bump = 0;
-  for (let k = 0; k < low; k++) {
-    const d = t - (RACE_END + k * TICK);
-    if (d < 0 || d > 12) continue;
-    const g = 0.5 + (0.7 * k) / Math.max(1, low - 1);
-    bump = Math.max(bump, 0.6 * g * kick(d));
-    const s = shake(d, 5 * u * g, k * 1.9);
-    sx += s.x;
-    sy += s.y;
-  }
-  const hitD = t - bandAt - BAND_LEN + 2;
-  bump = Math.max(bump, 1.5 * kick(hitD));
-  const s3 = shake(hitD, 16 * u, 3.3);
-  sx += s3.x;
-  sy += s3.y;
-  const camScale = 1 + 0.035 * bump;
+  const camAt = (tt: number) => {
+    // the tremble grows as the stock drains, then drops away under the band
+    const dr = 1 - level(tt, total) / total;
+    const tremble = 9 * u * dr ** 2.2 * (1 - ramp(tt, bandAt, 4));
+    let x =
+      tremble *
+      (0.6 * Math.sin(tt * 2.31 + 0.4) + 0.4 * Math.sin(tt * 5.17 + 1.3));
+    let y =
+      tremble *
+      (0.6 * Math.cos(tt * 2.83 + 2.1) + 0.4 * Math.sin(tt * 4.41 + 0.2));
+    let bump = 0;
+    for (let k = 0; k < low; k++) {
+      const d = tt - (RACE_END + k * TICK);
+      if (d < 0 || d > 12) continue;
+      const g = 0.5 + (0.7 * k) / Math.max(1, low - 1);
+      bump = Math.max(bump, 0.6 * g * kick(d));
+      const s = shake(d, 5 * u * g, k * 1.9);
+      x += s.x;
+      y += s.y;
+    }
+    const hitD = tt - bandAt - BAND_LEN + 2;
+    bump = Math.max(bump, 1.5 * kick(hitD));
+    const s3 = shake(hitD, 16 * u, 3.3);
+    x += s3.x;
+    y += s3.y;
+    return { x, y, k: 1 + 0.035 * bump };
+  };
+  const cam = camAt(t);
+  const sx = cam.x;
+  const sy = cam.y;
+  const camScale = cam.k;
+  // The camera shakes and bumps with no clean progress, so it counts as
+  // moving while any point out to the frame corner still shifts.
+  const camShift = (a: number, b: number) => {
+    const p = camAt(Math.max(0, a));
+    const q = camAt(Math.max(0, b));
+    return Math.abs(p.x - q.x) + Math.abs(p.y - q.y) + Math.abs(p.k - q.k) * W;
+  };
+  const camMoving =
+    camShift(t + speed, t) > 1e-3 || camShift(t, t - speed) > 1e-3;
   const flash = interpolate(
     t,
     [bandAt + BAND_LEN - 2, bandAt + BAND_LEN - 1, bandAt + BAND_LEN + 3],
@@ -250,7 +305,8 @@ export function SoldOut({
     CLAMP,
   );
 
-  const figInk = isLow ? c.red : c.ink;
+  const fg = ink ?? c.ink;
+  const figInk = isLow ? c.red : fg;
   const sinceLow = t - lowAt;
   const tagOn =
     t >= lowAt &&
@@ -260,7 +316,6 @@ export function SoldOut({
   const behind = ramp(t, bandAt + 1, 8);
 
   // ── Band ──
-  const angle = -11;
   const bandH = 0.34 * H;
   const bandLen = 1.5 * Math.hypot(W, H);
   const bandX = -1.25 * bandLen * (1 - band);
@@ -273,7 +328,13 @@ export function SoldOut({
   const digit = (n: number) => ((n % 10) + 10) % 10;
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.stage),
+        overflow: "hidden",
+      }}
+    >
       {/* A low red haze creeps up as the stock runs out. */}
       <div
         style={{
@@ -284,228 +345,232 @@ export function SoldOut({
         }}
       />
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `translate(${sx}px, ${sy}px) scale(${camScale})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        {/* The counter. */}
-        <svg
-          width={W}
-          height={H}
-          viewBox={`0 0 ${W} ${H}`}
+      <ScaleLayer scale={scale}>
+        <div
           style={{
             position: "absolute",
             inset: 0,
-            overflow: "visible",
-            opacity: Math.min(ramp(t, 0, 2), 1 - 0.6 * behind),
-            transform: `scale(${enterScale * (1 - 0.04 * behind)})`,
-            transformOrigin: "50% 52%",
-            filter: enterBlur > 0.2 ? `blur(${enterBlur * u}px)` : undefined,
+            transform: `translate(${sx}px, ${sy}px) scale(${camScale})${glide(camMoving)}`,
+            transformOrigin: "50% 50%",
           }}
-          role="img"
-          aria-label={t >= bandAt ? stamp : `${shown} ${unit}`}
         >
-          <defs>
-            <linearGradient id={`${uid}feather`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#fff" stopOpacity={0} />
-              <stop offset="0.1" stopColor="#fff" />
-              <stop offset="0.9" stopColor="#fff" />
-              <stop offset="1" stopColor="#fff" stopOpacity={0} />
-            </linearGradient>
-            <mask
-              id={`${uid}win`}
-              maskUnits="userSpaceOnUse"
-              x={0}
-              y={0}
-              width={W}
-              height={H}
-            >
-              <rect
-                x={0}
-                y={baseline - capH - 0.07 * N}
-                width={W}
-                height={capH + 0.14 * N}
-                fill={`url(#${uid}feather)`}
-              />
-            </mask>
-          </defs>
-
-          {/* LOW STOCK tag over the figures. */}
-          {tagOn ? (
-            <g
-              transform={`translate(${groupX} ${baseline - capH - 0.1 * H}) scale(${0.9 + 0.1 * tagPop})`}
-            >
-              <rect
-                x={0}
-                y={-0.062 * H}
-                width={
-                  (textEm(warning.toUpperCase(), 0.06) * 0.042 + 0.036) * H
-                }
-                height={0.074 * H}
-                fill={c.red}
-              />
-              <text
-                x={0.018 * H}
-                y={-0.009 * H}
-                fontFamily={sans}
-                fontWeight={500}
-                fontSize={0.042 * H}
-                fill={c.tagInk}
-                style={{ letterSpacing: "0.06em" }}
-              >
-                {warning.toUpperCase()}
-              </text>
-            </g>
-          ) : null}
-
-          <g
-            fontFamily={sans}
-            fontWeight={500}
-            fontSize={N}
-            textAnchor="middle"
-            fill={figInk}
-            mask={`url(#${uid}win)`}
-            style={{ letterSpacing: "-0.02em" }}
-          >
-            {placeVis.map((vis, i) => {
-              const p = 10 ** (places - 1 - i);
-              const r = reelPos(v, p);
-              const base = Math.floor(r);
-              const f = r - base;
-              const x =
-                groupX +
-                (placeVis.slice(0, i).reduce((a, b) => a + b, 0) + 0.5) *
-                  CELL *
-                  N;
-              const placeVel = vel / p;
-              const sd = Math.min(0.22, placeVel * 0.06) * N;
-              if (vis < 0.01) return null;
-              return (
-                <g
-                  key={p}
-                  opacity={vis}
-                  transform={`translate(0 ${-f * step})`}
-                >
-                  <g filter={sd > 0.3 ? `url(#${uid}b${i})` : undefined}>
-                    <text x={x} y={baseline}>
-                      {digit(base)}
-                    </text>
-                    {f > 0.001 ? (
-                      <text x={x} y={baseline + step}>
-                        {digit(base + 1)}
-                      </text>
-                    ) : null}
-                  </g>
-                  <filter
-                    id={`${uid}b${i}`}
-                    filterUnits="userSpaceOnUse"
-                    x={0}
-                    y={-H}
-                    width={W}
-                    height={3 * H}
-                  >
-                    <feGaussianBlur stdDeviation={`0 ${sd.toFixed(2)}`} />
-                  </filter>
-                </g>
-              );
-            })}
-          </g>
-          <text
-            x={unitX - 0.081 * N * unitRatio}
-            y={baseline}
-            fontFamily={sans}
-            fontWeight={500}
-            fontSize={N * unitRatio}
-            fill={figInk}
-            opacity={ramp(t, 2, 6)}
-            style={{ letterSpacing: `${unitTrack}em` }}
-          >
-            {unit}
-          </text>
-        </svg>
-
-        {/* The SOLD OUT band. */}
-        {t >= bandAt ? (
-          <div
+          {/* The counter. */}
+          <svg
+            width={W}
+            height={H}
+            viewBox={`0 0 ${W} ${H}`}
             style={{
               position: "absolute",
-              left: W / 2 - bandLen / 2,
-              top: H * 0.5 - bandH / 2,
-              width: bandLen,
-              height: bandH,
-              transform: `rotate(${angle}deg) translateX(${bandX}px)`,
-              transformOrigin: "50% 50%",
-              background: bandGrad,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              filter:
-                band < 0.98 ? `blur(${(1 - band) * 10 * u}px)` : undefined,
+              inset: 0,
+              overflow: "visible",
+              opacity: Math.min(ramp(t, 0, 2), 1 - 0.6 * behind),
+              transform: `scale(${enterScale * (1 - 0.04 * behind)})${glide(
+                (midway(ramp(t, 0, ENTER_LEN)) || midway(behind)) && !camMoving,
+              )}`,
+              transformOrigin: "50% 52%",
+              filter: enterBlur > 0.2 ? `blur(${enterBlur * u}px)` : undefined,
             }}
+            role="img"
+            aria-label={t >= bandAt ? stamp : `${shown} ${unit}`}
           >
+            <defs>
+              <linearGradient id={`${uid}feather`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#fff" stopOpacity={0} />
+                <stop offset="0.1" stopColor="#fff" />
+                <stop offset="0.9" stopColor="#fff" />
+                <stop offset="1" stopColor="#fff" stopOpacity={0} />
+              </linearGradient>
+              <mask
+                id={`${uid}win`}
+                maskUnits="userSpaceOnUse"
+                x={0}
+                y={0}
+                width={W}
+                height={H}
+              >
+                <rect
+                  x={0}
+                  y={baseline - capH - 0.07 * N}
+                  width={W}
+                  height={capH + 0.14 * N}
+                  fill={`url(#${uid}feather)`}
+                />
+              </mask>
+            </defs>
+
+            {/* LOW STOCK tag over the figures. */}
+            {tagOn ? (
+              <g
+                transform={`translate(${groupX} ${baseline - capH - 0.1 * H}) scale(${0.9 + 0.1 * tagPop})`}
+              >
+                <rect
+                  x={0}
+                  y={-0.062 * H}
+                  width={
+                    (textEm(warning.toUpperCase(), 0.06) * 0.042 + 0.036) * H
+                  }
+                  height={0.074 * H}
+                  fill={c.red}
+                />
+                <text
+                  x={0.018 * H}
+                  y={-0.009 * H}
+                  fontFamily={fontFamily}
+                  fontWeight={500}
+                  fontSize={0.042 * H}
+                  fill={c.tagInk}
+                  style={{ letterSpacing: "0.06em" }}
+                >
+                  {warning.toUpperCase()}
+                </text>
+              </g>
+            ) : null}
+
+            <g
+              fontFamily={fontFamily}
+              fontWeight={500}
+              fontSize={N}
+              textAnchor="middle"
+              fill={figInk}
+              mask={`url(#${uid}win)`}
+              style={{ letterSpacing: "-0.02em" }}
+            >
+              {placeVis.map((vis, i) => {
+                const p = 10 ** (places - 1 - i);
+                const r = reelPos(v, p);
+                const base = Math.floor(r);
+                const f = r - base;
+                const x =
+                  groupX +
+                  (placeVis.slice(0, i).reduce((a, b) => a + b, 0) + 0.5) *
+                    CELL *
+                    N;
+                const placeVel = vel / p;
+                const sd = Math.min(0.22, placeVel * 0.06) * N;
+                if (vis < 0.01) return null;
+                return (
+                  <g
+                    key={p}
+                    opacity={vis}
+                    transform={`translate(0 ${-f * step})`}
+                  >
+                    <g filter={sd > 0.3 ? `url(#${uid}b${i})` : undefined}>
+                      <text x={x} y={baseline}>
+                        {digit(base)}
+                      </text>
+                      {f > 0.001 ? (
+                        <text x={x} y={baseline + step}>
+                          {digit(base + 1)}
+                        </text>
+                      ) : null}
+                    </g>
+                    <filter
+                      id={`${uid}b${i}`}
+                      filterUnits="userSpaceOnUse"
+                      x={0}
+                      y={-H}
+                      width={W}
+                      height={3 * H}
+                    >
+                      <feGaussianBlur stdDeviation={`0 ${sd.toFixed(2)}`} />
+                    </filter>
+                  </g>
+                );
+              })}
+            </g>
+            <text
+              x={unitX - 0.081 * N * unitRatio}
+              y={baseline}
+              fontFamily={fontFamily}
+              fontWeight={500}
+              fontSize={N * unitRatio}
+              fill={figInk}
+              opacity={ramp(t, 2, 6)}
+              style={{ letterSpacing: `${unitTrack}em` }}
+            >
+              {unit}
+            </text>
+          </svg>
+
+          {/* The SOLD OUT band. */}
+          {t >= bandAt ? (
             <div
               style={{
-                fontFamily: sans,
-                fontStyle: "italic",
-                fontWeight: 500,
-                fontSize: stampFs,
-                lineHeight: 1,
-                letterSpacing: "-0.02em",
-                color: c.bandInk,
-                whiteSpace: "nowrap",
-                transform: `translateY(${0.04 * stampFs}px)`,
+                position: "absolute",
+                left: W / 2 - bandLen / 2,
+                top: H * 0.5 - bandH / 2,
+                width: bandLen,
+                height: bandH,
+                transform: `rotate(${angle}deg) translateX(${bandX}px)`,
+                transformOrigin: "50% 50%",
+                background: bandGrad,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                filter:
+                  band < 0.98 ? `blur(${(1 - band) * 10 * u}px)` : undefined,
               }}
             >
-              {stamp}
+              <div
+                style={{
+                  fontFamily,
+                  fontStyle: "italic",
+                  fontWeight: 500,
+                  fontSize: stampFs,
+                  lineHeight: 1,
+                  letterSpacing: "-0.02em",
+                  color: c.bandInk,
+                  whiteSpace: "nowrap",
+                  transform: `translateY(${0.04 * stampFs}px)`,
+                }}
+              >
+                {stamp}
+              </div>
             </div>
-          </div>
-        ) : null}
-      </div>
+          ) : null}
+        </div>
 
-      {/* Subline. */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: H * 0.845,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "baseline",
-          gap: 0.012 * H,
-          color: c.ink,
-          lineHeight: 1,
-          whiteSpace: "nowrap",
-          opacity: rise,
-          transform: `translateY(${(1 - rise) * 14 * u}px)`,
-        }}
-      >
-        <span
+        {/* Subline. */}
+        <div
           style={{
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: 0.05 * H,
-            letterSpacing: "-0.02em",
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: H * 0.845,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "baseline",
+            gap: 0.012 * H,
+            color: fg,
+            lineHeight: 1,
+            whiteSpace: "nowrap",
+            opacity: rise,
+            transform: `translateY(${(1 - rise) * 14 * u}px)${glide(midway(rise))}`,
           }}
         >
-          {lead}
-        </span>
-        <span
-          style={{
-            fontFamily: serif,
-            fontStyle: "italic",
-            fontWeight: 400,
-            fontSize: 0.062 * H,
-            letterSpacing: "-0.01em",
-          }}
-        >
-          {tail}
-        </span>
-      </div>
+          <span
+            style={{
+              fontFamily,
+              fontWeight: 400,
+              fontSize: 0.05 * H,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            {lead}
+          </span>
+          <span
+            style={{
+              fontFamily: serif,
+              fontStyle: "italic",
+              fontWeight: 400,
+              fontSize: 0.062 * H,
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {tail}
+          </span>
+        </div>
+      </ScaleLayer>
 
       <div
         style={{

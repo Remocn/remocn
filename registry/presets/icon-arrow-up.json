@@ -1,0 +1,98 @@
+{
+  "component": "icon-arrow-up",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A thin, slow-drawn arrow in soft graphite for calm, editorial layouts.",
+      "askedAs": [
+        "thin slow arrow drawing in",
+        "delicate line arrow up",
+        "minimal hairline arrow icon",
+        "тонкая стрелка вверх рисуется",
+        "медленная тонкая стрелка"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#525252"
+      }
+    },
+    {
+      "id": "bold-bounce",
+      "label": "Bold Bounce",
+      "description": "A large, heavy-stroked arrow that pops upward quickly and repeats.",
+      "askedAs": [
+        "big bold arrow jumping up",
+        "thick looping up arrow",
+        "fast bouncing arrow icon",
+        "большая жирная стрелка прыгает",
+        "стрелка вверх в цикле"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "size": 120,
+        "strokeWidth": 3,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "growth-green",
+      "label": "Growth Green",
+      "description": "A muted emerald arrow that draws and lifts, suited to positive metrics.",
+      "askedAs": [
+        "green arrow for growth",
+        "stats going up arrow",
+        "positive trend up icon",
+        "зелёная стрелка роста",
+        "стрелка вверх для графика"
+      ],
+      "props": {
+        "color": "#15803d",
+        "size": 72,
+        "strokeWidth": 2.5
+      }
+    },
+    {
+      "id": "scroll-hint",
+      "label": "Scroll Hint",
+      "description": "A small indigo arrow gently nudging upward on a slow loop, like a back-to-top cue.",
+      "askedAs": [
+        "subtle back to top arrow",
+        "gentle looping arrow hint",
+        "small calm up arrow animation",
+        "стрелка наверх подсказка",
+        "маленькая плавная стрелка в цикле"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "size": 32,
+        "color": "#4f46e5",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snap-accent",
+      "label": "Snap Accent",
+      "description": "A punchy terracotta arrow that draws and launches in a quick snap.",
+      "askedAs": [
+        "fast energetic up arrow",
+        "quick orange arrow icon",
+        "snappy arrow animation",
+        "быстрая оранжевая стрелка",
+        "резкая стрелка вверх"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "speed": 2.5,
+        "size": 96,
+        "strokeWidth": 2.75
+      }
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "component": "whole-page",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ivory-letter",
+      "label": "Ivory Letter",
+      "description": "A warm cream page with deep brown Instrument Serif type and a slow, contemplative pull back.",
+      "askedAs": [
+        "warm paper founder letter",
+        "cream background serif manifesto",
+        "slow elegant light page of values",
+        "кремовая страница с письмом основателя",
+        "тёплый светлый манифест с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#2b2420",
+        "accent": "#9a6b3f",
+        "fontFamily": "Instrument Serif",
+        "pull": 64
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Near-black page with soft ivory Fraunces text and a muted gold accent for a luxurious closing beat.",
+      "askedAs": [
+        "black and gold manifesto",
+        "luxury dark values page",
+        "premium closing principles scene",
+        "чёрно-золотой манифест",
+        "роскошная тёмная страница ценностей"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0e0e10",
+        "ink": "#ece6d8",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "hold": 70
+      }
+    },
+    {
+      "id": "swiss-brief",
+      "label": "Swiss Brief",
+      "description": "Clean white page with crisp Inter type, slightly smaller scale and a brisk, efficient reveal.",
+      "askedAs": [
+        "modern clean sans values page",
+        "fast minimal mission statement",
+        "corporate white manifesto",
+        "чистый современный манифест без засечек",
+        "быстрая минималистичная страница миссии"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111418",
+        "fontFamily": "Inter",
+        "scale": 0.9,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-read",
+      "label": "Slow Read",
+      "description": "The default navy page held long and pulled back gently at a large scale so every line can be read.",
+      "askedAs": [
+        "give viewers time to read",
+        "slow lingering manifesto",
+        "big readable principles page",
+        "медленный манифест чтобы успеть прочитать",
+        "крупный текст и долгая пауза"
+      ],
+      "props": {
+        "hold": 110,
+        "pull": 80,
+        "speed": 0.75,
+        "scale": 1.15,
+        "delay": 20
+      }
+    },
+    {
+      "id": "forest-studio",
+      "label": "Forest Studio",
+      "description": "Deep forest green page with pale sage Bricolage Grotesque type for a contemporary, grounded brand voice.",
+      "askedAs": [
+        "green sustainable brand values",
+        "earthy dark manifesto",
+        "modern grotesque mission page",
+        "зелёная страница ценностей бренда",
+        "природный тёмный манифест"
+      ],
+      "props": {
+        "background": "#14261f",
+        "ink": "#e3ece4",
+        "accent": "#8fb996",
+        "fontFamily": "Bricolage Grotesque",
+        "pull": 48
+      }
+    },
+    {
+      "id": "terminal-code",
+      "label": "Code Of Conduct",
+      "description": "Graphite page with light mono JetBrains type at a compact scale for a technical, engineering-culture feel.",
+      "askedAs": [
+        "developer culture principles",
+        "monospace manifesto",
+        "tech team values page",
+        "манифест моноширинным шрифтом",
+        "ценности команды разработчиков"
+      ],
+      "props": {
+        "background": "#1a1c1f",
+        "ink": "#d6dbe0",
+        "accent": "#6fa3c7",
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.85,
+        "speed": 1.25
+      }
+    }
+  ]
+}

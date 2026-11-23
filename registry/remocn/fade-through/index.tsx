@@ -1,6 +1,8 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface FadeThroughProps {
   fromText: string;
@@ -12,6 +14,8 @@ export interface FadeThroughProps {
   className?: string;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export function FadeThrough({
   fromText,
   toText,
@@ -21,7 +25,8 @@ export function FadeThrough({
   speed = 1,
   className,
 }: FadeThroughProps) {
-  const frame = useCurrentFrame() * speed;
+  const glide = useGlide();
+  const frame = useSceneFrame() * speed;
 
   const exitDur = 8;
   const enterDur = 13;
@@ -34,6 +39,10 @@ export function FadeThrough({
   const exitEasing = Easing.bezier(0.4, 0, 1, 1);
   const enterEasing = Easing.bezier(0.2, 0, 0, 1);
 
+  const fromP = interpolate(frame, [0, exitDur], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
   const fromOpacity = interpolate(frame, [0, exitDur], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -46,6 +55,10 @@ export function FadeThrough({
   });
 
   const local = frame - newStart;
+  const toP = interpolate(local, [0, enterDur], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
   const toOpacity = interpolate(local, [0, enterDur], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -98,7 +111,9 @@ export function FadeThrough({
             display: "inline-block",
             transformOrigin: "50% 50%",
             opacity: fromOpacity,
-            translate: `0 ${fromY}px`,
+            // One transform rather than `translate`: the mark that gets the
+            // line its lean is read from `transform` only.
+            transform: `translateY(${fromY}px)${glide(midway(fromP))}`,
           }}
         >
           {fromText}
@@ -124,8 +139,7 @@ export function FadeThrough({
             display: "inline-block",
             transformOrigin: "50% 50%",
             opacity: toOpacity,
-            translate: `0 ${toY}px`,
-            scale: `${toScale}`,
+            transform: `translateY(${toY}px) scale(${toScale})${glide(midway(toP))}`,
             filter: `blur(${blurVal}px)`,
           }}
         >

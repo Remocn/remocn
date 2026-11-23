@@ -3,19 +3,14 @@
 import { loadFont as loadDisplay } from "@remotion/google-fonts/BricolageGrotesque";
 import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: hanken } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -47,6 +42,18 @@ export interface YearInReviewProps {
   speed?: number;
   device?: "phone" | "card";
   chapters?: string[];
+  /** Chapter list beside the device; false leaves the device alone. */
+  rail?: boolean;
+  /** Color of the chapter titles and progress; overrides the default cream. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the body copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the device and chapter list, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 }
@@ -105,6 +112,7 @@ function mix(a: string, b: string, t: number) {
   const m = (i: number) => Math.round(x[i] + (y[i] - x[i]) * t);
   return `rgb(${m(0)}, ${m(1)}, ${m(2)})`;
 }
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const hash = (n: number) => {
   const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return s - Math.floor(s);
@@ -322,14 +330,16 @@ function Intro(c: Ctx) {
       {SHAPES.map((sh, i) => {
         const p = pop(c, 2 + i * 3, CHIP);
         const float = Math.sin((c.lf + i * 20) * 0.06) * 6;
+        // Layout rounds a box to whole pixels, so a shape flown in and bobbed
+        // by `left`/`top` steps; the flight and the bob are a transform.
         return (
           <div
             key={sh.kind + i}
             style={{
               position: "absolute",
-              left: sh.x + sh.from[0] * (1 - p),
-              top: sh.y + sh.from[1] * (1 - p) + float,
-              transform: `rotate(${sh.spin * (1 - p) + c.lf * (i % 2 ? 0.4 : -0.3)}deg) scale(${0.4 + 0.6 * p})`,
+              left: sh.x,
+              top: sh.y,
+              transform: `translate(${sh.from[0] * (1 - p)}px, ${sh.from[1] * (1 - p) + float}px) rotate(${sh.spin * (1 - p) + c.lf * (i % 2 ? 0.4 : -0.3)}deg) scale(${0.4 + 0.6 * p})`,
             }}
           >
             <Shape
@@ -621,6 +631,7 @@ function TopComponent(c: Ctx) {
 
 function Percentile(c: Ctx) {
   const big = pop(c, 3, CHIP);
+  const swing = (1 - big) * -8;
   const draw = interpolate(c.lf, [14, 64], [0, 1], { ...CL, easing: outCubic });
   const strip = interpolate(c.lf, [2, 28], [1, 0], { ...CL, easing: outCubic });
   return (
@@ -671,7 +682,7 @@ function Percentile(c: Ctx) {
             justifyContent: "center",
             marginTop: 14,
             opacity: clamp(big * 2),
-            transform: `scale(${0.6 + 0.4 * big}) rotate(${(1 - big) * -8}deg)`,
+            transform: `scale(${0.6 + 0.4 * big}) rotate(${swing}deg)`,
           }}
         >
           <Display
@@ -721,6 +732,7 @@ function Percentile(c: Ctx) {
       >
         {c.s.crew.slice(0, 6).map((m, i) => {
           const p = pop(c, 22 + i * 3, CARD);
+          const turn = (1 - p) * (i % 2 ? 14 : -14) + (i % 3 === 1 ? 2 : -1.5);
           return (
             <div
               key={m.name}
@@ -728,7 +740,7 @@ function Percentile(c: Ctx) {
                 background: CREAM,
                 padding: 4,
                 opacity: clamp(p * 2),
-                transform: `scale(${0.7 + 0.3 * p}) rotate(${(1 - p) * (i % 2 ? 14 : -14) + (i % 3 === 1 ? 2 : -1.5)}deg)`,
+                transform: `scale(${0.7 + 0.3 * p}) rotate(${turn}deg)`,
                 boxShadow: "0 6px 16px rgba(0,0,0,0.35)",
               }}
             >
@@ -901,20 +913,17 @@ function Share(c: Ctx) {
         ? Array.from({ length: 14 }, (_, i) => {
             const a = (i / 14) * Math.PI * 2 + hash(i) * 0.4;
             const d = 150 + hash(i + 7) * 130;
+            // The burst flies by transform for the same reason as the intro
+            // shapes: `left`/`top` would step it pixel by pixel.
             return (
               <div
                 key={`b${i}`}
                 style={{
                   position: "absolute",
-                  left: 196 + Math.cos(a) * d * outCubic(burst) - 9,
-                  top:
-                    c.top +
-                    330 +
-                    Math.sin(a) * d * outCubic(burst) -
-                    9 +
-                    burst * burst * 60,
+                  left: 196 - 9,
+                  top: c.top + 330 - 9,
                   opacity: 1 - burst,
-                  transform: `rotate(${burst * 300 * (i % 2 ? 1 : -1)}deg)`,
+                  transform: `translate(${Math.cos(a) * d * outCubic(burst)}px, ${Math.sin(a) * d * outCubic(burst) + burst * burst * 60}px) rotate(${burst * 300 * (i % 2 ? 1 : -1)}deg)`,
                 }}
               >
                 <Shape
@@ -1021,6 +1030,9 @@ function Screen({
           durationInFrames: TR,
         });
         const leaving = i < cur ? clamp((frame - STARTS[cur]) / TR) : 0;
+        const entering = i === cur && i === 3;
+        const slideK = entering ? 1.05 - 0.05 * e : 1 - leaving * 0.08;
+        const turn = entering ? 0 : leaving * (i % 2 ? 3 : -3);
         const Body = sl.body;
         const circles = i === 4 && lf < TR + 6;
         return (
@@ -1032,10 +1044,9 @@ function Screen({
               background: circles ? "transparent" : bg,
               overflow: "hidden",
               ...(i === cur && i > 0 ? enterClip(i, e) : {}),
-              transform:
-                i === cur && i === 3
-                  ? `scale(${1.05 - 0.05 * e})`
-                  : `scale(${1 - leaving * 0.08}) rotate(${leaving * (i % 2 ? 3 : -3)}deg)`,
+              transform: entering
+                ? `scale(${slideK})`
+                : `scale(${slideK}) rotate(${turn}deg)`,
             }}
           >
             {circles
@@ -1217,17 +1228,41 @@ function StatusBar({ color }: { color: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function YearInReview({
   stats,
   accent = "#3B5BFD",
   speed = 1,
   device = "phone",
   chapters = ["Your year", "Shipped", "Top component", "Your rank", "Share"],
+  rail: showRail = true,
+  ink,
+  background,
+  fontFamily = hanken,
+  scale = 1,
+  delay = 0,
   ground,
   groundParams,
 }: YearInReviewProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const fg = ink ?? "#F4F1EA";
+  const { width, height, fps } = useSceneConfig();
   const tall = height > width;
   const s = { ...DEFAULT_STATS, ...stats };
   const phone = device === "phone";
@@ -1289,7 +1324,7 @@ export function YearInReview({
               style={{
                 width: `${clamp((frame - STARTS[i]) / ((STARTS[i + 1] ?? STARTS[i] + 120) - STARTS[i])) * 100}%`,
                 height: "100%",
-                background: "#F4F1EA",
+                background: fg,
               }}
             />
           </div>
@@ -1322,8 +1357,8 @@ export function YearInReview({
                   fontWeight: 300,
                   lineHeight: 1,
                   letterSpacing: "-0.045em",
-                  color: "#F4F1EA",
-                  transform: `translateY(${(1 - a) * 105}%)`,
+                  color: fg,
+                  transform: `translateY(${(1 - a) * 105}%)${glide(midway(a))}`,
                 }}
               >
                 {ch}
@@ -1348,7 +1383,7 @@ export function YearInReview({
           color: "rgba(244,241,234,0.55)",
           marginBottom: 22 * u,
           opacity: railIn,
-          transform: `translateY(${(1 - railIn) * 10}px)`,
+          transform: `translateY(${(1 - railIn) * 10}px)${glide(midway(railIn))}`,
         }}
       >
         {s.year} in {s.product}
@@ -1387,7 +1422,7 @@ export function YearInReview({
                 fontSize: 44 * u,
                 fontWeight: 300,
                 letterSpacing: "-0.04em",
-                color: "#F4F1EA",
+                color: fg,
               }}
             >
               {ch}
@@ -1399,95 +1434,109 @@ export function YearInReview({
   );
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? "charcoal-satin"}
-        params={groundParams}
-        timeOffset={3}
-        timeScale={0.3}
-      />
-      <AbsoluteFill
-        style={{
-          background: tall
-            ? "linear-gradient(180deg, rgba(6,6,8,0.15) 40%, rgba(6,6,8,0.7) 100%)"
-            : "linear-gradient(90deg, rgba(6,6,8,0.72) 0%, rgba(6,6,8,0.25) 50%, rgba(6,6,8,0.1) 100%)",
-        }}
-      />
-      {rail}
-      <div
-        style={{
-          position: "absolute",
-          left: center.x - fw / 2,
-          top: center.y - fh / 2,
-          width: fw,
-          height: fh,
-          transform: `translateY(${(1 - enter) * height * 0.7}px) scale(${k * push})`,
-        }}
-      >
-        {phone ? (
-          <div
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? "charcoal-satin"}
+            params={groundParams}
+            timeOffset={3}
+            timeScale={0.3}
+          />
+          <AbsoluteFill
             style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: 66,
-              background: "#0B0B0C",
-              boxShadow:
-                "inset 0 0 0 1.5px #6E6E73, inset 0 0 0 3px #1C1C1E, 0 50px 100px -20px rgba(0,0,0,0.75)",
+              background: tall
+                ? "linear-gradient(180deg, rgba(6,6,8,0.15) 40%, rgba(6,6,8,0.7) 100%)"
+                : "linear-gradient(90deg, rgba(6,6,8,0.72) 0%, rgba(6,6,8,0.25) 50%, rgba(6,6,8,0.1) 100%)",
             }}
           />
-        ) : null}
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        {showRail ? rail : null}
         <div
           style={{
             position: "absolute",
-            left: phone ? BEZEL : 0,
-            top: phone ? BEZEL : 0,
-            width: SW,
-            height: SH,
-            borderRadius: phone ? 55 : 30,
-            overflow: "hidden",
-            boxShadow: phone
-              ? "none"
-              : "0 0 0 1px rgba(255,255,255,0.08), 0 50px 100px -20px rgba(0,0,0,0.75)",
+            left: center.x - fw / 2,
+            top: center.y - fh / 2,
+            width: fw,
+            height: fh,
+            // `push` grows on every frame, so the device never rests and
+            // carries the tilt throughout; it covers all the screen text.
+            transform: `translateY(${(1 - enter) * height * 0.7}px) scale(${k * push})${glide(true)}`,
           }}
         >
-          <Screen
-            frame={frame}
-            fps={fps}
-            s={s}
-            accent={accent}
-            top={phone ? 104 : 64}
-          />
           {phone ? (
-            <>
-              <StatusBar color={ui} />
-              <div
-                style={{
-                  position: "absolute",
-                  top: 11,
-                  left: (SW - 126) / 2,
-                  width: 126,
-                  height: 37,
-                  borderRadius: 19,
-                  background: "#000",
-                  zIndex: 20,
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 8,
-                  left: (SW - 140) / 2,
-                  width: 140,
-                  height: 5,
-                  borderRadius: 3,
-                  background: ui,
-                  opacity: 0.85,
-                  zIndex: 20,
-                }}
-              />
-            </>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: 66,
+                background: "#0B0B0C",
+                boxShadow:
+                  "inset 0 0 0 1.5px #6E6E73, inset 0 0 0 3px #1C1C1E, 0 50px 100px -20px rgba(0,0,0,0.75)",
+              }}
+            />
           ) : null}
+          <div
+            style={{
+              position: "absolute",
+              left: phone ? BEZEL : 0,
+              top: phone ? BEZEL : 0,
+              width: SW,
+              height: SH,
+              borderRadius: phone ? 55 : 30,
+              overflow: "hidden",
+              boxShadow: phone
+                ? "none"
+                : "0 0 0 1px rgba(255,255,255,0.08), 0 50px 100px -20px rgba(0,0,0,0.75)",
+            }}
+          >
+            <Screen
+              frame={frame}
+              fps={fps}
+              s={s}
+              accent={accent}
+              top={phone ? 104 : 64}
+            />
+            {phone ? (
+              <>
+                <StatusBar color={ui} />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 11,
+                    left: (SW - 126) / 2,
+                    width: 126,
+                    height: 37,
+                    borderRadius: 19,
+                    background: "#000",
+                    zIndex: 20,
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 8,
+                    left: (SW - 140) / 2,
+                    width: 140,
+                    height: 5,
+                    borderRadius: 3,
+                    background: ui,
+                    opacity: 0.85,
+                    zIndex: 20,
+                  }}
+                />
+              </>
+            ) : null}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

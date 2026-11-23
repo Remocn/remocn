@@ -1,7 +1,8 @@
 "use client";
 
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { previewCaptions } from "@/components/docs/examples/caption-fixture";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { CaptionSubtitle } from "@/registry/remocn/caption-subtitle";
 
 interface CaptionSubtitleExampleProps {
@@ -27,7 +28,7 @@ export function CaptionSubtitleExampleScene({
   boxColor,
   boxOpacity,
 }: CaptionSubtitleExampleProps) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   return (
     <AbsoluteFill
       style={{

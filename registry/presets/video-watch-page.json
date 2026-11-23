@@ -1,0 +1,101 @@
+{
+  "component": "video-watch-page",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-theater",
+      "label": "Midnight Theater",
+      "description": "A dark cinema-mode page with a warm red accent on a deep charcoal ground, paced slow and deliberate.",
+      "askedAs": [
+        "dark mode video page",
+        "cinema style watch screen",
+        "moody night theater look",
+        "тёмная тема видеоплеера",
+        "кинотеатральный тёмный стиль"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#e5484d",
+        "ground": "charcoal-satin",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "viral-rush",
+      "label": "Viral Rush",
+      "description": "A fast, punchy light page with a hot coral accent and bold grotesk type that makes the numbers explode.",
+      "askedAs": [
+        "fast viral growth animation",
+        "energetic hype video page",
+        "quick punchy engagement spike",
+        "быстрый вирусный рост просмотров",
+        "энергичная анимация лайков"
+      ],
+      "props": {
+        "accent": "#ff5a36",
+        "fontFamily": "Bricolage Grotesque",
+        "speed": 2,
+        "ground": "static-sunset"
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A calm, magazine-like page in serif type on warm off-white with an ink-green accent.",
+      "askedAs": [
+        "elegant serif video page",
+        "warm paper editorial look",
+        "classy minimal watch page",
+        "элегантный журнальный стиль",
+        "тёплый бумажный фон с засечками"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#f6f1e7",
+        "ink": "#1f1b16",
+        "accent": "#2f6b4f",
+        "ground": "paper-crease",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "creator-studio",
+      "label": "Creator Studio",
+      "description": "A dark, technical creator-tool look with monospace type, a cyan accent and a tighter, zoomed-out frame.",
+      "askedAs": [
+        "developer style video dashboard",
+        "creator tool dark interface",
+        "monospace tech watch page",
+        "интерфейс студии для авторов",
+        "техничный тёмный стиль с моноширинным шрифтом"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#22b8cf",
+        "ground": "low-orbit",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "spotlight-hero",
+      "label": "Spotlight Hero",
+      "description": "An enlarged, close-up page on a spotlight ground with a violet accent and a beat of delay before it lands.",
+      "askedAs": [
+        "zoomed in featured video",
+        "big hero shot of the player",
+        "dramatic reveal of my video",
+        "крупный план страницы видео",
+        "эффектное появление плеера"
+      ],
+      "props": {
+        "scale": 1.25,
+        "ground": "spotlight",
+        "accent": "#7c5cff",
+        "fontFamily": "Manrope",
+        "delay": 15
+      }
+    }
+  ]
+}

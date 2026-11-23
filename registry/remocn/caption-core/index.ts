@@ -4,7 +4,7 @@ import {
   type TikTokPage,
 } from "@remotion/captions";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useCurrentFrame, useVideoConfig } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type SpeakerCaption = Caption & { speaker?: string };
 
@@ -305,8 +305,8 @@ export function useCaptions({
   combineTokensWithinMilliseconds: number;
   holdMs?: number;
 }): CaptionsState | null {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps } = useSceneConfig();
   const windows = useMemo(
     () =>
       buildCaptionPages(captions, { combineTokensWithinMilliseconds, holdMs }),

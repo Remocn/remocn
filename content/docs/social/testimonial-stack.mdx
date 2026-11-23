@@ -51,8 +51,8 @@ export const RemotionRoot = () => (
   <Composition
     id="TestimonialStack"
     component={TestimonialStackScene}
-    durationInFrames={236}
-    fps={30}
+    durationInFrames={472}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -100,6 +100,46 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "number",
       default: "50",
       description: "Frames between each card landing.",
+    },
+    {
+      name: "radius",
+      type: "number",
+      default: "20",
+      description: "Corner radius of the cards, in px.",
+    },
+    {
+      name: "tilt",
+      type: "number",
+      default: "1",
+      description: "Rotation of the piled cards; 0 lays them straight.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color of the cards and title; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "ground",

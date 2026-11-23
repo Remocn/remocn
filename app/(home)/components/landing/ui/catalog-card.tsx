@@ -3,10 +3,13 @@
 import { Player, type PlayerRef } from "@remotion/player";
 import { useReducedMotion } from "motion/react";
 import { type ComponentType, useEffect, useRef, useState } from "react";
+import { previewScale } from "@/lib/previews/frame-rate";
 import { Clip, nativeDuration } from "../sections/hero/tiles/clips";
 import type { ClipSpec } from "../sections/hero/tiles/config";
 
+// The scenes below count in 30 fps frames; the player runs at the site's rate.
 const FPS = 30;
+const RATE = previewScale(FPS);
 const HOLD_FRAMES = 45;
 const DENSITY = 2;
 
@@ -73,7 +76,7 @@ export function LivePlayer<T extends Record<string, unknown>>({
     const player = playerRef.current;
     if (reduced || !visible || !active) {
       player?.pause();
-      if (reduced) player?.seekTo(stillFrame);
+      if (reduced) player?.seekTo(stillFrame * RATE);
       return;
     }
     const ensure = () => {
@@ -92,8 +95,8 @@ export function LivePlayer<T extends Record<string, unknown>>({
           ref={playerRef}
           component={component}
           inputProps={{ ...inputProps, ...size }}
-          durationInFrames={Math.max(durationInFrames, 1)}
-          fps={FPS}
+          durationInFrames={Math.max(durationInFrames, 1) * RATE}
+          fps={FPS * RATE}
           compositionWidth={size.width}
           compositionHeight={size.height}
           style={{ width: "100%", height: "100%" }}

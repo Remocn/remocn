@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Img, Interactive } from "remotion";
-import { clamp, tween } from "./motion";
+import { clamp, midway, tween, useGlide } from "./motion";
 
 export function Center({
   children,
@@ -25,6 +25,12 @@ export function Center({
   );
 }
 
+/** The headline size after the cap that keeps a long line inside the frame. */
+export function fitSize(text: string, size: number) {
+  const longest = Math.max(...text.split("\n").map((line) => line.length), 1);
+  return Math.min(size, 720 / longest);
+}
+
 export function Title({
   text,
   size = 44,
@@ -34,12 +40,11 @@ export function Title({
   size?: number;
   style?: CSSProperties;
 }) {
-  const longest = Math.max(...text.split("\n").map((line) => line.length), 1);
   return (
     <Interactive.Div
       name="Headline"
       style={{
-        fontSize: Math.min(size, 720 / longest),
+        fontSize: fitSize(text, size),
         fontWeight: 500,
         lineHeight: 1.13,
         letterSpacing: "-0.04em",
@@ -94,14 +99,21 @@ export function RevealCopy({
   t,
   start,
   size = 43,
+  zoom = 1,
+  zooming = false,
   dark = false,
 }: {
   text: string;
   t: number;
   start: number;
   size?: number;
+  /** Scales the copy around its centre, over the type laid out at `size`. */
+  zoom?: number;
+  /** Whether `zoom` is changing on this frame. */
+  zooming?: boolean;
   dark?: boolean;
 }) {
+  const glide = useGlide();
   const amount = tween(t, start, start + 0.55);
   return (
     <Title
@@ -113,7 +125,7 @@ export function RevealCopy({
         backgroundClip: "text",
         WebkitBackgroundClip: "text",
         color: "transparent",
-        transform: `translateY(${(1 - amount) * 6}px)`,
+        transform: `translateY(${(1 - amount) * 6}px) scale(${zoom})${glide(midway(amount) || zooming)}`,
         filter: `blur(${(1 - amount) * 1.4}px)`,
       }}
     />

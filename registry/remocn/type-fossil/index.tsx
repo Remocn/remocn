@@ -1,7 +1,9 @@
 "use client";
 
 import { useId } from "react";
-import { Easing, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface TypeFossilProps {
   text?: string;
@@ -152,14 +154,30 @@ export function TypeFossil({
   className,
 }: TypeFossilProps) {
   const id = useId().replace(/:/g, "");
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const { fps } = useSceneConfig();
   const finalText = text.trim().replace(/\s+/g, " ");
   const revisions = [...parseFossilDrafts(drafts), finalText];
-  const state = getTypeFossilState(
-    ((frame * 30) / fps) * Math.max(0, finite(speed, 1)),
-    { layers, depth, draftCount: revisions.length - 1 },
-  );
+  const stateAt = (f: number) =>
+    getTypeFossilState(((f * 30) / fps) * Math.max(0, finite(speed, 1)), {
+      layers,
+      depth,
+      draftCount: revisions.length - 1,
+    });
+  const state = stateAt(frame);
+  // The slice opens and collapses by moving every contour, so the drawing is
+  // marked as moving while the far contour still travels, by the neighbouring
+  // frames. SVG text leans only while its drawing is marked as moving, and
+  // while the slice holds open its contours rest off the pixel grid: they
+  // stay marked through the hold too, or each would snap to a whole pixel
+  // when the opening stops and snap back when the collapse starts.
+  const travel = (a: ReturnType<typeof stateAt>) =>
+    Math.abs(a.spanX) + Math.abs(a.spanY);
+  const moving =
+    travel(state) > 1e-3 ||
+    Math.abs(travel(stateAt(frame + 1)) - travel(state)) > 1e-3 ||
+    Math.abs(travel(state) - travel(stateAt(frame - 1))) > 1e-3;
   const size = Math.max(24, Math.min(300, finite(fontSize, 220)));
   const weight = Math.max(100, Math.min(900, finite(Number(fontWeight), 600)));
   const wipeX = mix(-100, 1380, state.change);
@@ -207,6 +225,7 @@ export function TypeFossil({
         preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label={finalText || "Empty type fossil"}
+        style={{ transform: glide(moving) }}
       >
         <defs>
           <clipPath id={`${id}-old`}>

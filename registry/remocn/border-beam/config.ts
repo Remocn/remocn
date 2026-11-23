@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const borderBeamConfig: ComponentConfig = {
   componentName: "BorderBeam",
@@ -38,6 +45,17 @@ export const borderBeamConfig: ComponentConfig = {
       default: true,
       description: "Show logo",
     },
+    lap: {
+      type: "number",
+      default: 80,
+      min: 20,
+      max: 160,
+      step: 4,
+      description: "Beam lap (frames)",
+      hiddenFromList: false,
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

@@ -4,13 +4,9 @@ import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/Sora";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["400", "500"],
@@ -72,8 +68,23 @@ export interface SpeedTrapProps {
   comparison?: string;
   /** Small label at the top left. */
   label?: string;
+  /** Frame the readout locks on the value; the run up to it is the count. */
+  lockAt?: number;
+  /** Number of sectors the bar is split into. */
+  sectors?: number;
   /** The live dot next to the label. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the readout and the comparison. Load it yourself; Sora by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark at the top right. */
+  logo?: React.ReactNode;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -124,12 +135,30 @@ function ramp(t: number, from: number, len: number) {
   return interpolate(t, [from, from + len], [0, 1], CLAMP);
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** A short hit: up in 1 frame, eases back over `len`. */
 function kick(d: number, len: number) {
   if (d < 0 || d > len + 1) return 0;
   if (d < 1) return d;
   const k = 1 - (d - 1) / len;
   return k * k;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function SpeedTrap({
@@ -141,24 +170,34 @@ export function SpeedTrap({
   previousLabel = "2025",
   comparison = "vs last year",
   label = "Speed trap · Sector 3",
+  lockAt = LOCK_AT,
+  sectors = 3,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sora,
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: SpeedTrapProps) {
+  const glide = useGlide();
   // Starts three frames in, so frame 0 already shows the bar snapping out.
-  const t = useCurrentFrame() * speed + 3;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + 3;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const u = Math.min(W / 1280, H / 720);
 
   // ── Readout ───────────────────────────────────────────────────────────────
-  const run = RUN(ramp(t, COUNT_AT, LOCK_AT - COUNT_AT));
-  const locked = t >= LOCK_AT;
+  const run = RUN(ramp(t, COUNT_AT, lockAt - COUNT_AT));
+  const locked = t >= lockAt;
   const now = locked ? value : Math.floor(value * run);
   const digits = String(Math.max(0, Math.round(value))).length;
   const shown = String(now).padStart(digits, " ");
-  const lockKick = kick(t - LOCK_AT, 9);
-  const barFlash = locked && t < LOCK_AT + 2 ? 1 : 0;
+  const lockKick = kick(t - lockAt, 9);
+  const barFlash = locked && t < lockAt + 2 ? 1 : 0;
 
   // ── Layout ────────────────────────────────────────────────────────────────
   const marginX = 76 * u;
@@ -167,7 +206,6 @@ export function SpeedTrap({
   const barH = 64 * u;
   const barY = H * 0.69;
   const sectorGap = 6 * u;
-  const sectors = 3;
   const sectorW = (barW - (sectors - 1) * sectorGap) / sectors;
   const xAt = (v: number) => barX + (Math.min(v, max) / max) * barW;
 
@@ -179,14 +217,21 @@ export function SpeedTrap({
   const labelsIn = ramp(t, 3, 8);
   const fillFrac = (locked ? value : value * run) / max;
 
-  const bannerIn = SLAM(ramp(t, LOCK_AT + 2, 6));
-  const bannerBlink = t >= LOCK_AT + 11 && t < LOCK_AT + 14 ? 0 : 1;
-  const markIn = SLAM(ramp(t, LOCK_AT + 8, 8));
-  const deltaIn = SLAM(ramp(t, LOCK_AT + 13, 8));
-  const compIn = SLAM(ramp(t, LOCK_AT + 16, 10));
+  const bannerIn = SLAM(ramp(t, lockAt + 2, 6));
+  const bannerBlink = t >= lockAt + 11 && t < lockAt + 14 ? 0 : 1;
+  const markIn = SLAM(ramp(t, lockAt + 8, 8));
+  const deltaIn = SLAM(ramp(t, lockAt + 13, 8));
+  const compIn = SLAM(ramp(t, lockAt + 16, 10));
 
-  const push = 1 + 0.035 * Easing.bezier(0.65, 0, 0.35, 1)(ramp(t, 0, LOCK_AT));
-  const scale = push * (1 + 0.012 * lockKick);
+  const zoomAt = (f: number) =>
+    (1 + 0.035 * Easing.bezier(0.65, 0, 0.35, 1)(ramp(f, 0, lockAt))) *
+    (1 + 0.012 * kick(f - lockAt, 9));
+  const zoom = zoomAt(t);
+  // The push and the kick chain into each other, so the camera is tested on
+  // its neighbouring frames rather than on one progress.
+  const camMoving =
+    Math.abs(zoomAt(t + speed) - zoom) > 1e-6 ||
+    Math.abs(zoom - zoomAt(t - speed)) > 1e-6;
 
   const delta = Math.round(value - previous);
   const deltaText = `${delta >= 0 ? "+" : "−"}${Math.abs(delta)} ${unit}`;
@@ -204,281 +249,288 @@ export function SpeedTrap({
   const valX = xAt(value);
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `scale(${scale})`,
-          transformOrigin: `${W / 2}px ${barY}px`,
-        }}
-      >
-        {/* Top row: label and logo. */}
+    <AbsoluteFill
+      style={{ background: background ?? c.stage, overflow: "hidden" }}
+    >
+      <ScaleLayer scale={scale}>
         <div
           style={{
-            ...small,
             position: "absolute",
-            left: marginX,
-            top: 64 * u,
-            display: "flex",
-            alignItems: "center",
-            gap: 12 * u,
-            opacity: labelsIn,
+            inset: 0,
+            transform: `scale(${zoom})${glide(camMoving)}`,
+            transformOrigin: `${W / 2}px ${barY}px`,
           }}
         >
+          {/* Top row: label and logo. */}
           <div
             style={{
-              width: 8 * u,
-              height: 8 * u,
-              background: accent,
-              opacity: locked ? 1 : Math.floor(t / 6) % 2 === 0 ? 1 : 0.3,
-            }}
-          />
-          {label}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            right: marginX,
-            top: 58 * u,
-            opacity: labelsIn,
-          }}
-        >
-          <RemocnLogo fontSize={28 * u} color={c.ink} />
-        </div>
-
-        {/* Readout. */}
-        <div
-          style={{
-            position: "absolute",
-            left: marginX - 0.04 * numFs,
-            top: numTop,
-            display: "flex",
-            alignItems: "baseline",
-            fontFamily: sora,
-            fontWeight: 500,
-            color: c.ink,
-            transform: `scale(${1 + 0.05 * lockKick})`,
-            transformOrigin: "0% 100%",
-          }}
-        >
-          {shown.split("").map((ch, i) => (
-            <div
-              key={i}
-              style={{
-                width: cellW,
-                textAlign: "center",
-                fontSize: numFs,
-                lineHeight: 1,
-                letterSpacing: "-0.04em",
-              }}
-            >
-              {ch === " " ? "" : ch}
-            </div>
-          ))}
-          <div
-            style={{
-              marginLeft: 14 * u,
-              fontSize: 64 * u,
-              fontWeight: 400,
-              letterSpacing: "-0.02em",
-              color: c.dim,
+              ...small,
+              position: "absolute",
+              left: marginX,
+              top: 64 * u,
+              display: "flex",
+              alignItems: "center",
+              gap: 12 * u,
+              opacity: labelsIn,
             }}
           >
-            {unit}
+            <div
+              style={{
+                width: 8 * u,
+                height: 8 * u,
+                background: accent,
+                opacity: locked ? 1 : Math.floor(t / 6) % 2 === 0 ? 1 : 0.3,
+              }}
+            />
+            {label}
           </div>
-        </div>
+          <div
+            style={{
+              position: "absolute",
+              right: marginX,
+              top: 58 * u,
+              opacity: labelsIn,
+            }}
+          >
+            {logo ?? <RemocnLogo fontSize={28 * u} color={fg} />}
+          </div>
 
-        {/* Top speed banner. */}
-        <div
-          style={{
-            position: "absolute",
-            left: marginX + digits * cellW + 190 * u,
-            top: numTop + numFs * 0.22,
-            height: 72 * u,
-            clipPath: `inset(0 ${(1 - bannerIn) * 100}% 0 0)`,
-            opacity: bannerBlink,
-            background:
-              t < LOCK_AT + 4
-                ? "#FFFFFF"
-                : `linear-gradient(100deg, ${FLUTED[2]} 0%, #FF9A5E 100%)`,
-            display: "flex",
-            alignItems: "center",
-            paddingLeft: 22 * u,
-            paddingRight: 26 * u,
-            fontFamily: sora,
-            fontWeight: 500,
-            fontSize: 38 * u,
-            letterSpacing: "0.02em",
-            textTransform: "uppercase",
-            color: "#0A0A0B",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {banner}
-        </div>
-
-        {/* Sector labels. */}
-        {Array.from({ length: sectors }, (_, i) => {
-          const lit = fillFrac * barW >= i * (sectorW + sectorGap);
-          return (
-            <div
-              key={`s${i + 1}`}
-              style={{
-                ...small,
-                position: "absolute",
-                left: barX + i * (sectorW + sectorGap),
-                top: barY - 30 * u,
-                color: lit ? c.ink : c.dim,
-                opacity: labelsIn,
-              }}
-            >
-              S{i + 1}
-            </div>
-          );
-        })}
-
-        {/* Bar: three sector tracks, gradient fill clipped to the speed. */}
-        {Array.from({ length: sectors }, (_, i) => {
-          const x0 = i * (sectorW + sectorGap);
-          const fillPx = Math.max(0, Math.min(sectorW, fillFrac * barW - x0));
-          const vis = Math.max(0, Math.min(sectorW, trackIn * barW - x0));
-          return (
-            <div
-              key={`b${i + 1}`}
-              style={{
-                position: "absolute",
-                left: barX + x0,
-                top: barY,
-                width: vis,
-                height: barH,
-                background: c.track,
-                overflow: "hidden",
-              }}
-            >
+          {/* Readout. */}
+          <div
+            style={{
+              position: "absolute",
+              left: marginX - 0.04 * numFs,
+              top: numTop,
+              display: "flex",
+              alignItems: "baseline",
+              fontFamily,
+              fontWeight: 500,
+              color: fg,
+              transform: `scale(${1 + 0.05 * lockKick})`,
+              transformOrigin: "0% 100%",
+            }}
+          >
+            {shown.split("").map((ch, i) => (
               <div
+                key={i}
+                style={{
+                  width: cellW,
+                  textAlign: "center",
+                  fontSize: numFs,
+                  lineHeight: 1,
+                  letterSpacing: "-0.04em",
+                }}
+              >
+                {ch === " " ? "" : ch}
+              </div>
+            ))}
+            <div
+              style={{
+                marginLeft: 14 * u,
+                fontSize: 64 * u,
+                fontWeight: 400,
+                letterSpacing: "-0.02em",
+                color: c.dim,
+              }}
+            >
+              {unit}
+            </div>
+          </div>
+
+          {/* Top speed banner. */}
+          <div
+            style={{
+              position: "absolute",
+              left: marginX + digits * cellW + 190 * u,
+              top: numTop + numFs * 0.22,
+              height: 72 * u,
+              clipPath: `inset(0 ${(1 - bannerIn) * 100}% 0 0)`,
+              opacity: bannerBlink,
+              background:
+                t < lockAt + 4
+                  ? "#FFFFFF"
+                  : `linear-gradient(100deg, ${FLUTED[2]} 0%, #FF9A5E 100%)`,
+              display: "flex",
+              alignItems: "center",
+              paddingLeft: 22 * u,
+              paddingRight: 26 * u,
+              fontFamily,
+              fontWeight: 500,
+              fontSize: 38 * u,
+              letterSpacing: "0.02em",
+              textTransform: "uppercase",
+              color: "#0A0A0B",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {banner}
+          </div>
+
+          {/* Sector labels. */}
+          {Array.from({ length: sectors }, (_, i) => {
+            const lit = fillFrac * barW >= i * (sectorW + sectorGap);
+            return (
+              <div
+                key={`s${i + 1}`}
+                style={{
+                  ...small,
+                  position: "absolute",
+                  left: barX + i * (sectorW + sectorGap),
+                  top: barY - 30 * u,
+                  color: lit ? fg : c.dim,
+                  opacity: labelsIn,
+                }}
+              >
+                S{i + 1}
+              </div>
+            );
+          })}
+
+          {/* Bar: three sector tracks, gradient fill clipped to the speed. */}
+          {Array.from({ length: sectors }, (_, i) => {
+            const x0 = i * (sectorW + sectorGap);
+            const fillPx = Math.max(0, Math.min(sectorW, fillFrac * barW - x0));
+            const vis = Math.max(0, Math.min(sectorW, trackIn * barW - x0));
+            return (
+              <div
+                key={`b${i + 1}`}
                 style={{
                   position: "absolute",
-                  left: 0,
-                  top: 0,
-                  width: fillPx,
+                  left: barX + x0,
+                  top: barY,
+                  width: vis,
                   height: barH,
+                  background: c.track,
                   overflow: "hidden",
                 }}
               >
                 <div
                   style={{
                     position: "absolute",
-                    left: -x0,
+                    left: 0,
                     top: 0,
-                    width: barW,
+                    width: fillPx,
                     height: barH,
-                    background: barFlash ? "#FFFFFF" : FILL,
+                    overflow: "hidden",
                   }}
-                />
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: -x0,
+                      top: 0,
+                      width: barW,
+                      height: barH,
+                      background: barFlash ? "#FFFFFF" : FILL,
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
 
-        {/* Leading edge while the bar runs. */}
-        {!locked && run > 0 ? (
+          {/* Leading edge while the bar runs. It sweeps by a transform: an
+              edge moved by `left` rounds to whole pixels and steps unevenly
+              as the run eases out. */}
+          {!locked && run > 0 ? (
+            <div
+              style={{
+                position: "absolute",
+                left: barX - 3 * u,
+                transform: `translateX(${fillFrac * barW}px)`,
+                top: barY - 8 * u,
+                width: 3 * u,
+                height: barH + 16 * u,
+                background: c.mark,
+              }}
+            />
+          ) : null}
+
+          {/* Delta slice between last year's mark and the new top speed. */}
           <div
             style={{
               position: "absolute",
-              left: barX + fillFrac * barW - 3 * u,
-              top: barY - 8 * u,
-              width: 3 * u,
-              height: barH + 16 * u,
-              background: c.mark,
+              left: prevX,
+              top: barY,
+              width: (valX - prevX) * deltaIn,
+              height: barH,
+              boxShadow: `inset 0 0 0 ${3 * u}px ${c.mark}`,
             }}
           />
-        ) : null}
 
-        {/* Delta slice between last year's mark and the new top speed. */}
-        <div
-          style={{
-            position: "absolute",
-            left: prevX,
-            top: barY,
-            width: (valX - prevX) * deltaIn,
-            height: barH,
-            boxShadow: `inset 0 0 0 ${3 * u}px ${c.mark}`,
-          }}
-        />
-
-        {/* Last year's mark. */}
-        <div
-          style={{
-            position: "absolute",
-            left: prevX - 1.5 * u,
-            top: barY - 46 * u,
-            width: 3 * u,
-            height: barH + 46 * u,
-            background: c.mark,
-            transformOrigin: "50% 100%",
-            transform: `scaleY(${markIn})`,
-          }}
-        />
-        <div
-          style={{
-            ...small,
-            position: "absolute",
-            right: W - prevX + 12 * u,
-            top: barY - 48 * u,
-            color: c.ink,
-            opacity: markIn,
-            transform: `translateY(${(1 - markIn) * 10 * u}px)`,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {previousLabel} · {previous}
-        </div>
-
-        {/* Comparison line, sliding out from under the bar. */}
-        <div
-          style={{
-            position: "absolute",
-            right: W - valX,
-            top: barY + barH,
-            height: 90 * u,
-            overflow: "hidden",
-          }}
-        >
+          {/* Last year's mark. */}
           <div
             style={{
-              display: "flex",
-              alignItems: "baseline",
-              gap: 14 * u,
-              paddingTop: 18 * u,
-              transform: `translateY(${-(1 - compIn) * 90 * u}px)`,
+              position: "absolute",
+              left: prevX - 1.5 * u,
+              top: barY - 46 * u,
+              width: 3 * u,
+              height: barH + 46 * u,
+              background: c.mark,
+              transformOrigin: "50% 100%",
+              transform: `scaleY(${markIn})`,
+            }}
+          />
+          <div
+            style={{
+              ...small,
+              position: "absolute",
+              right: W - prevX + 12 * u,
+              top: barY - 48 * u,
+              color: fg,
+              opacity: markIn,
+              transform: `translateY(${(1 - markIn) * 10 * u}px)${glide(midway(ramp(t, lockAt + 8, 8)) && !camMoving)}`,
               whiteSpace: "nowrap",
             }}
           >
-            <span
+            {previousLabel} · {previous}
+          </div>
+
+          {/* Comparison line, sliding out from under the bar. */}
+          <div
+            style={{
+              position: "absolute",
+              right: W - valX,
+              top: barY + barH,
+              height: 90 * u,
+              overflow: "hidden",
+            }}
+          >
+            <div
               style={{
-                fontFamily: sora,
-                fontWeight: 500,
-                fontSize: 52 * u,
-                letterSpacing: "-0.02em",
-                color: c.ink,
+                display: "flex",
+                alignItems: "baseline",
+                gap: 14 * u,
+                paddingTop: 18 * u,
+                transform: `translateY(${-(1 - compIn) * 90 * u}px)${glide(midway(ramp(t, lockAt + 16, 10)) && !camMoving)}`,
+                whiteSpace: "nowrap",
               }}
             >
-              {deltaText}
-            </span>
-            <span
-              style={{
-                fontFamily: sora,
-                fontWeight: 400,
-                fontSize: 30 * u,
-                color: c.dim,
-              }}
-            >
-              {comparison}
-            </span>
+              <span
+                style={{
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: 52 * u,
+                  letterSpacing: "-0.02em",
+                  color: fg,
+                }}
+              >
+                {deltaText}
+              </span>
+              <span
+                style={{
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 30 * u,
+                  color: c.dim,
+                }}
+              >
+                {comparison}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

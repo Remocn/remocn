@@ -1,0 +1,123 @@
+{
+  "component": "three-steps",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Warm off-white page with serif numerals in a deep terracotta accent and an unhurried reveal.",
+      "askedAs": [
+        "light editorial serif steps",
+        "warm paper look with slow reveal",
+        "magazine style how it works",
+        "светлый редакционный стиль с засечками",
+        "тёплый бумажный фон, медленно"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#b5532f",
+        "fontFamily": "Fraunces",
+        "travel": 28
+      }
+    },
+    {
+      "id": "snappy-launch",
+      "label": "Snappy Launch",
+      "description": "Fast, punchy step-through on dark with a crisp grotesk and bright mint accent.",
+      "askedAs": [
+        "quick energetic three steps",
+        "fast startup launch style",
+        "punchy dark how it works",
+        "быстрые энергичные шаги",
+        "динамичный тёмный стиль"
+      ],
+      "props": {
+        "travel": 8,
+        "pause": 4,
+        "speed": 1.5,
+        "accent": "#2bd4a0",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Developer-flavoured monospace numerals on near-black with an amber accent and no grain.",
+      "askedAs": [
+        "code terminal style steps",
+        "monospace developer look",
+        "cli install walkthrough style",
+        "стиль терминала моноширинный",
+        "для разработчиков, как консоль"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#e6e8e3",
+        "accent": "#f2a93b",
+        "grain": false,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "calm-keynote",
+      "label": "Calm Keynote",
+      "description": "Oversized numerals with long holds and slow travel for a measured, stage-ready pace.",
+      "askedAs": [
+        "big slow presentation steps",
+        "keynote style large numbers",
+        "calm deliberate pacing",
+        "крупные цифры как на презентации",
+        "медленно и спокойно"
+      ],
+      "props": {
+        "scale": 1.3,
+        "travel": 34,
+        "pause": 28,
+        "speed": 0.75,
+        "delay": 12,
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "Bright minimal white layout with Inter type, a cool violet accent and no texture.",
+      "askedAs": [
+        "minimal white saas look",
+        "clean light background steps",
+        "simple bright product explainer",
+        "минималистичный светлый вариант",
+        "белый фон без шума"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#6a4cf5",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "forest-night",
+      "label": "Forest Night",
+      "description": "Deep green-black backdrop with soft sage accent and expressive Bricolage numerals.",
+      "askedAs": [
+        "dark green moody steps",
+        "earthy calm dark palette",
+        "natural tones how it works",
+        "тёмно-зелёная палитра",
+        "природные спокойные цвета"
+      ],
+      "props": {
+        "background": "#0f1a15",
+        "ink": "#e4ede6",
+        "accent": "#8fbf9f",
+        "fontFamily": "Bricolage Grotesque",
+        "travel": 22
+      }
+    }
+  ]
+}

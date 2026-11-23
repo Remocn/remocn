@@ -1,9 +1,10 @@
 import { AbsoluteFill, Interactive } from "remotion";
 import type { SceneProps } from "../content";
-import { fitSize, slide } from "../motion";
+import { fitSize, midway, slide, useGlide } from "../motion";
 import { FormStudyMark } from "../ui";
 
 export function Identity({ scene, frame }: SceneProps) {
+  const glide = useGlide();
   const reveal = scene.reducedMotion ? 1 : slide(frame, 18, 33);
   return (
     <AbsoluteFill style={{ background: scene.theme.paper }}>
@@ -25,7 +26,7 @@ export function Identity({ scene, frame }: SceneProps) {
           fontWeight: 800,
           letterSpacing: "-0.04em",
           opacity: reveal,
-          translate: `0 ${10 * (1 - reveal)}px`,
+          transform: `translateY(${10 * (1 - reveal)}px)${glide(midway(reveal))}`,
         }}
       >
         {scene.content.openingTagline}

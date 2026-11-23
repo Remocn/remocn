@@ -1,0 +1,99 @@
+{
+  "component": "caption-stack",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "poster-punch",
+      "label": "Poster Punch",
+      "description": "Heavy black-weight type with an oversized coral keyword that dominates each page like a gig poster.",
+      "askedAs": [
+        "make the keyword huge",
+        "big bold poster captions",
+        "keyword much bigger than the rest",
+        "огромное ключевое слово",
+        "субтитры как постер"
+      ],
+      "props": {
+        "fontWeight": 900,
+        "emphasisScale": 2.3,
+        "emphasisColor": "#ff6b4a",
+        "fontSize": 72
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Short pages that flip almost word by word with barely any hold, for fast energetic edits.",
+      "askedAs": [
+        "faster captions",
+        "one or two words at a time",
+        "snappy quick subtitles",
+        "быстрые субтитры",
+        "по одному слову"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 600,
+        "holdMs": 150,
+        "emphasisScale": 1.5,
+        "emphasisColor": "#38bdf8"
+      }
+    },
+    {
+      "id": "calm-read",
+      "label": "Calm Read",
+      "description": "Lighter, smaller type in longer pages with a soft sage keyword and a generous hold for relaxed pacing.",
+      "askedAs": [
+        "slower calmer captions",
+        "subtle readable subtitles",
+        "less shouty text",
+        "спокойные субтитры",
+        "медленнее и мягче"
+      ],
+      "props": {
+        "fontSize": 52,
+        "fontWeight": 600,
+        "emphasisColor": "#a7f3d0",
+        "emphasisScale": 1.3,
+        "combineTokensWithinMilliseconds": 2600,
+        "holdMs": 1200
+      }
+    },
+    {
+      "id": "ink-on-paper",
+      "label": "Ink On Paper",
+      "description": "Flat dark ink text with a deep red keyword and no shadow, made for light or pastel backgrounds.",
+      "askedAs": [
+        "dark text for light background",
+        "black captions no shadow",
+        "editorial print look",
+        "тёмный текст на светлом фоне",
+        "субтитры без тени"
+      ],
+      "props": {
+        "color": "#1c1917",
+        "emphasisColor": "#dc2626",
+        "shadow": false,
+        "fontWeight": 800
+      }
+    },
+    {
+      "id": "candy-pop",
+      "label": "Candy Pop",
+      "description": "Warm cream text with a bubblegum pink keyword at a bouncy large scale for playful social clips.",
+      "askedAs": [
+        "pink keyword captions",
+        "cute fun subtitles",
+        "playful colorful text",
+        "розовые субтитры",
+        "весёлые яркие подписи"
+      ],
+      "props": {
+        "color": "#fff7ed",
+        "emphasisColor": "#f472b6",
+        "emphasisScale": 1.95,
+        "fontSize": 68
+      }
+    }
+  ]
+}

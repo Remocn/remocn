@@ -2,14 +2,9 @@
 
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -25,6 +20,20 @@ export interface RotaryDialProps {
   unit?: string;
   label?: string;
   accent?: string;
+  /** Frames the knob takes to turn from `from` to `to`. */
+  turn?: number;
+  /** Minor ticks per labelled step on the scale. */
+  minorTicks?: number;
+  /** Text color of the value and the reached end label; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the foreground around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -206,22 +215,50 @@ function Odometer({
   return <>{cols}</>;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RotaryDial({
   from = 1,
   to = 10,
   unit = "×",
   label = "Render speed",
   accent = "#3B5BFD",
+  turn = BEATS.land - BEATS.turn,
+  minorTicks = 5,
+  ink: inkColor,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   ground,
   groundParams,
   speed = 1,
 }: RotaryDialProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: VW, height: VH, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const t = Math.max(0, frame - delay) * speed;
+  const { width: VW, height: VH, fps } = useSceneConfig();
   const tall = VH > VW;
   const u = tall ? VW / 760 : Math.min(VW / 1280, VH / 720);
   const p = THEMES[theme];
+  const fg = inkColor ?? p.fg;
+  // The grab ramp eases off over the last 6 frames of the turn, so it needs more than 6.
+  const land = BEATS.turn + Math.max(7, turn);
   const dark = theme === "dark";
   const acc = hexToRgb(accent);
   const lit = p.lit || accent;
@@ -238,11 +275,11 @@ export function RotaryDial({
   const A0 = -135;
   const A1 = 135;
   const prog = (f: number) => {
-    const move = interpolate(f, [BEATS.turn, BEATS.land], [0, 1.025], {
+    const move = interpolate(f, [BEATS.turn, land], [0, 1.025], {
       ...CLAMP,
       easing: MOVE,
     });
-    const detent = spring({ frame: f - BEATS.land, fps, config: CHIP });
+    const detent = spring({ frame: f - land, fps, config: CHIP });
     return move - 0.025 * Math.min(1, detent);
   };
   const k = prog(t);
@@ -254,11 +291,11 @@ export function RotaryDial({
 
   const grab = interpolate(
     t,
-    [BEATS.grab, BEATS.turn, BEATS.land - 6, BEATS.land],
+    [BEATS.grab, BEATS.turn, land - 6, land],
     [0, 1, 1, 0],
     { ...CLAMP, easing: MOVE },
   );
-  const click = spring({ frame: t - BEATS.land, fps, config: CHIP });
+  const click = spring({ frame: t - land, fps, config: CHIP });
   const clickPunch = Math.sin(Math.min(1, click) * Math.PI) * 0.025;
   const knobScale = 1 - grab * 0.03 + clickPunch;
 
@@ -271,7 +308,7 @@ export function RotaryDial({
 
   const ticks: React.ReactNode[] = [];
   const labels: React.ReactNode[] = [];
-  const minorPer = 5;
+  const minorPer = minorTicks;
   const count = Math.round(span / step) * minorPer;
   for (let i = 0; i <= count; i++) {
     const frac = i / count;
@@ -315,11 +352,11 @@ export function RotaryDial({
             height: 24 * u,
             lineHeight: `${24 * u}px`,
             textAlign: "center",
-            fontFamily: sans,
+            fontFamily,
             fontWeight: 400,
             fontSize: 18 * u,
             fontVariantNumeric: "tabular-nums",
-            color: on > 0.5 ? p.fg : p.muted,
+            color: on > 0.5 ? fg : p.muted,
           }}
         >
           {formatLabel(v)}
@@ -340,31 +377,36 @@ export function RotaryDial({
   });
   const ridge = 3;
 
-  const cam = spring({
-    frame: t,
-    fps,
-    config: HEAVY,
-    durationInFrames: 54,
-  });
-  const push = interpolate(t, [BEATS.land, BEATS.land + 60], [0, 1], {
-    ...CLAMP,
-    easing: MOVE,
-  });
-  const camK = interpolate(cam, [0, 1], [1.08, 1]) + push * 0.02;
-  const light = interpolate(t, [BEATS.turn, BEATS.land + 6], [0, 1], {
+  const camAt = (f: number) => {
+    const tt = Math.max(0, f - delay) * speed;
+    const cam = spring({
+      frame: tt,
+      fps,
+      config: HEAVY,
+      durationInFrames: 54,
+    });
+    const push = interpolate(tt, [land, land + 60], [0, 1], {
+      ...CLAMP,
+      easing: MOVE,
+    });
+    return interpolate(cam, [0, 1], [1.08, 1]) + push * 0.02;
+  };
+  const camK = camAt(frame);
+  // The camera has two drivers, so whether it moves is read off the
+  // neighbouring frames, weighed by the distance to the frame's edge.
+  const reach = Math.max(VW, VH) / 2;
+  const camMoving =
+    Math.abs(camAt(frame + 1) - camK) * reach > 1e-3 ||
+    Math.abs(camK - camAt(frame - 1)) * reach > 1e-3;
+  const light = interpolate(t, [BEATS.turn, land + 6], [0, 1], {
     ...CLAMP,
     easing: ENTER,
   });
   const scrim = interpolate(light, [0, 1], [p.scrimFrom, p.scrimTo]);
-  const bloom = interpolate(
-    t,
-    [BEATS.land, BEATS.land + 4, BEATS.land + 40],
-    [0, 1, 0.55],
-    {
-      ...CLAMP,
-      easing: ENTER,
-    },
-  );
+  const bloom = interpolate(t, [land, land + 4, land + 40], [0, 1, 0.55], {
+    ...CLAMP,
+    easing: ENTER,
+  });
 
   const word = (start: number) =>
     interpolate(t, [start, start + 14], [0, 1], { ...CLAMP, easing: ENTER });
@@ -505,7 +547,7 @@ export function RotaryDial({
       <div
         style={{
           ...ink(wLabel),
-          fontFamily: sans,
+          fontFamily,
           fontWeight: 400,
           fontSize: (tall ? 34 : 28) * u,
           letterSpacing: "-0.01em",
@@ -520,13 +562,13 @@ export function RotaryDial({
           ...ink(wValue),
           display: "flex",
           alignItems: "baseline",
-          fontFamily: sans,
+          fontFamily,
           fontWeight: 300,
           fontSize: numSize,
           lineHeight: `${numSize}px`,
           letterSpacing: "-0.04em",
           fontVariantNumeric: "tabular-nums",
-          color: p.fg,
+          color: fg,
           whiteSpace: "nowrap",
         }}
       >
@@ -547,39 +589,48 @@ export function RotaryDial({
 
   return (
     <AbsoluteFill
-      style={{ overflow: "hidden", background: dark ? "#03050b" : "#eeece8" }}
+      style={{
+        overflow: "hidden",
+        background: background ?? (dark ? "#03050b" : "#eeece8"),
+      }}
     >
-      <GshGround
-        preset={resolvedGround}
-        params={groundParams}
-        timeOffset={dark ? 3 : 6}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(70% 60% at 50% 45%, rgba(${p.scrim},${scrim}) 0%, rgba(${p.scrim},${Math.min(1, scrim + 0.12)}) 100%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{
-          alignItems: "center",
-          justifyContent: "center",
-          transform: `scale(${camK})`,
-        }}
-      >
-        <div
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={resolvedGround}
+            params={groundParams}
+            timeOffset={dark ? 3 : 6}
+            timeScale={0.5}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(70% 60% at 50% 45%, rgba(${p.scrim},${scrim}) 0%, rgba(${p.scrim},${Math.min(1, scrim + 0.12)}) 100%)`,
+            }}
+          />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            display: "flex",
-            flexDirection: tall ? "column" : "row",
             alignItems: "center",
-            gap: (tall ? 40 : 40) * u,
-            transform: tall ? `translateY(${-150 * u}px)` : undefined,
+            justifyContent: "center",
+            transform: `scale(${camK})${glide(camMoving)}`,
           }}
         >
-          {dial}
-          {readout}
-        </div>
-      </AbsoluteFill>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: tall ? "column" : "row",
+              alignItems: "center",
+              gap: (tall ? 40 : 40) * u,
+              transform: tall ? `translateY(${-150 * u}px)` : undefined,
+            }}
+          >
+            {dial}
+            {readout}
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

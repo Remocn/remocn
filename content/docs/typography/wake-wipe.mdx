@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="WakeWipe"
     component={WakeWipeScene}
-    durationInFrames={180}
-    fps={30}
+    durationInFrames={360}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -74,10 +74,56 @@ Each line is revealed by a wipe with a soft wake behind it and cleared by the ne
       description: "Frames the final line holds.",
     },
     {
+      name: "wake",
+      type: "number",
+      default: "28",
+      description: "Frames for one wake to sweep across the frame.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "Weight of the lines.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Figtree\"",
+      description: "Typeface for the lines; the eyebrow stays mono. Load the font in your project first.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the text around the frame's center; the background and the wake stay put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

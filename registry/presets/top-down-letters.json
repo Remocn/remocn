@@ -1,0 +1,117 @@
+{
+  "component": "top-down-letters",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "heavy-stamp",
+      "label": "Heavy Stamp",
+      "description": "Oversized bold letters drop hard from high above, each landing with a weighty thud.",
+      "askedAs": [
+        "big bold letters slamming down",
+        "heavy title drop",
+        "stamp each letter in hard",
+        "крупные жирные буквы падают сверху",
+        "тяжёлый заголовок с ударом"
+      ],
+      "props": {
+        "fontSize": 140,
+        "fontWeight": "700",
+        "distance": 110,
+        "staggerDelay": 5,
+        "color": "#0a0a0a"
+      }
+    },
+    {
+      "id": "quick-cascade",
+      "label": "Quick Cascade",
+      "description": "A brisk, tight ripple of letters with a short drop for snappy, energetic titles.",
+      "askedAs": [
+        "fast letter drop",
+        "snappy quick title",
+        "letters fall in rapidly",
+        "быстрое появление букв",
+        "резкий быстрый заголовок"
+      ],
+      "props": {
+        "speed": 2,
+        "staggerDelay": 1,
+        "distance": 24
+      }
+    },
+    {
+      "id": "slow-staircase",
+      "label": "Slow Staircase",
+      "description": "A deliberate, widely spaced descent where every letter gets its own beat.",
+      "askedAs": [
+        "slow dramatic letter reveal",
+        "one letter at a time slowly",
+        "cinematic staircase title",
+        "медленное появление по буквам",
+        "драматичный медленный заголовок"
+      ],
+      "props": {
+        "speed": 0.5,
+        "staggerDelay": 10,
+        "distance": 80,
+        "fontSize": 96
+      }
+    },
+    {
+      "id": "quiet-caption",
+      "label": "Quiet Caption",
+      "description": "Small, light slate-gray letters settle gently with a subtle drop for understated labels.",
+      "askedAs": [
+        "subtle small text drop",
+        "minimal light caption",
+        "gentle understated title",
+        "тонкая маленькая подпись",
+        "спокойный минималистичный текст"
+      ],
+      "props": {
+        "fontSize": 32,
+        "fontWeight": "400",
+        "distance": 12,
+        "color": "#475569",
+        "staggerDelay": 2
+      }
+    },
+    {
+      "id": "ink-blue",
+      "label": "Ink Blue",
+      "description": "Medium-weight deep navy letters falling at a measured pace for a refined editorial feel.",
+      "askedAs": [
+        "navy blue elegant title",
+        "editorial blue letters",
+        "refined dark blue heading",
+        "элегантный синий заголовок",
+        "тёмно-синие буквы в редакционном стиле"
+      ],
+      "props": {
+        "color": "#1e3a8a",
+        "fontWeight": "500",
+        "fontSize": 88,
+        "speed": 0.75,
+        "staggerDelay": 4
+      }
+    },
+    {
+      "id": "rust-accent",
+      "label": "Rust Accent",
+      "description": "Warm terracotta bold letters dropping in a crisp, compact staircase.",
+      "askedAs": [
+        "warm orange brown title",
+        "terracotta letters falling",
+        "earthy accent heading",
+        "тёплый терракотовый заголовок",
+        "рыжие буквы падают сверху"
+      ],
+      "props": {
+        "color": "#b45309",
+        "fontWeight": "700",
+        "distance": 60,
+        "speed": 1.5
+      }
+    }
+  ]
+}

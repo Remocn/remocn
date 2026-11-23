@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const coolingTypeConfig: ComponentConfig = {
   componentName: "CoolingType",
@@ -22,6 +29,15 @@ export const coolingTypeConfig: ComponentConfig = {
       type: "text-content",
       default: "itself?",
       description: "Accent word",
+    },
+    startAt: {
+      type: "number",
+      default: -3,
+      min: -10,
+      max: 30,
+      step: 1,
+      description: "Start (frames)",
+      hiddenFromList: false,
     },
     charFrames: {
       type: "number",
@@ -48,6 +64,37 @@ export const coolingTypeConfig: ComponentConfig = {
       max: 15,
       step: 1,
       description: "Seed",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 300,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    glow: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 3,
+      step: 0.1,
+      description: "Glow",
+      hiddenFromList: false,
+    },
+    hot: { type: "color", default: undefined, description: "Hot color" },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Inter Tight" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

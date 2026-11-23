@@ -1,13 +1,9 @@
 "use client";
 
+import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type DynamicLetterVariant =
   | "solid"
@@ -31,7 +27,21 @@ export interface DynamicLetterProps {
   final?: DynamicLetterVariant;
   /** Frames per treatment at the start; the cuts tighten from here. */
   beat?: number;
+  /** Shortest beat, in frames, the cuts tighten to. */
+  minBeat?: number;
   accent?: string;
+  /** Color of the wordmark; overrides the theme ink. */
+  ink?: string;
+  /** Background fill in place of the theme glow; "transparent" drops it. */
+  background?: string;
+  /** Replaces the R mark before the wordmark. */
+  logo?: React.ReactNode;
+  /** Size of the wordmark, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -312,12 +322,12 @@ function setText(text: string) {
 }
 
 /** Cut frames: the first beats are `beat` long, then they tighten by a frame every two cuts. */
-function cutFrames(count: number, beat: number) {
+function cutFrames(count: number, beat: number, minBeat: number) {
   const frames: number[] = [];
   let f = 8;
   for (let i = 0; i < count; i++) {
     frames.push(f);
-    const step = Math.max(5, beat - Math.floor(i / 2));
+    const step = Math.max(minBeat, beat - Math.floor(i / 2));
     // A held breath before the final treatment lands.
     f += i === count - 2 ? step + 4 : step;
   }
@@ -547,19 +557,48 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DynamicLetter({
   text = "emocn",
   letterIndex,
   variants = DEFAULT_VARIANTS,
   final = "overflow",
   beat = 8,
+  minBeat = 5,
   accent = "#3B5BFD",
+  ink,
+  background,
+  logo,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: DynamicLetterProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  // The knock-out stroke around the letters has to match what sits behind them.
+  const knock =
+    background === undefined || background === "transparent"
+      ? c.bg
+      : background;
   const id = `dl${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const set = useMemo(() => setText(text), [text]);
@@ -572,7 +611,7 @@ export function DynamicLetter({
   }, [set, letterIndex]);
 
   const sequence = [...variants.filter((v) => v !== final), final];
-  const cuts = cutFrames(sequence.length, beat);
+  const cuts = cutFrames(sequence.length, beat, minBeat);
   const step = cuts.findLastIndex((f) => t >= f);
   const current: DynamicLetterVariant | "plain" =
     step >= 0 ? sequence[step] : "plain";
@@ -623,7 +662,7 @@ export function DynamicLetter({
         variant={current}
         g={active.g}
         id={id}
-        fg={c.fg}
+        fg={fg}
         fill={`url(#${id}-fill)`}
         land={land}
       />
@@ -633,42 +672,67 @@ export function DynamicLetter({
   return (
     <AbsoluteFill
       style={{
-        background: `radial-gradient(62% 46% at ${50 + drift}% 104%, ${c.glow[0]} 0%, transparent 72%), radial-gradient(34% 26% at ${50 - drift}% 102%, ${c.glow[1]} 0%, transparent 70%), radial-gradient(70% 50% at 50% -18%, ${c.glow[2]} 0%, transparent 70%), ${c.bg}`,
+        background:
+          background === undefined
+            ? `radial-gradient(62% 46% at ${50 + drift}% 104%, ${c.glow[0]} 0%, transparent 72%), radial-gradient(34% 26% at ${50 - drift}% 102%, ${c.glow[1]} 0%, transparent 70%), radial-gradient(70% 50% at 50% -18%, ${c.glow[2]} 0%, transparent 70%), ${c.bg}`
+            : background === "transparent"
+              ? undefined
+              : background,
         overflow: "hidden",
       }}
     >
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <g transform={`translate(${ox} ${baseline}) scale(${k})`}>
-          {behind ? treatment : null}
-          <path
-            d={REMOCN_R_PATH}
-            fill={c.fg}
-            transform={`translate(0 -760) scale(${R_SCALE})`}
-          />
-          {set.placed.map((p, i) =>
-            i === slot ? null : (
+      <ScaleLayer scale={scale}>
+        {logo ? (
+          <div
+            style={{
+              position: "absolute",
+              left: ox,
+              top: baseline - 760 * k,
+              width: R_WIDTH * k,
+              height: 760 * k,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {logo}
+          </div>
+        ) : null}
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <g transform={`translate(${ox} ${baseline}) scale(${k})`}>
+            {behind ? treatment : null}
+            {logo ? null : (
               <path
-                key={`${p.index}-${p.ch}`}
-                d={p.g[5]}
-                fill={c.fg}
-                stroke={c.bg}
-                strokeWidth={current === "overflow" ? 36 : 0}
-                paintOrder="stroke"
-                strokeLinejoin="round"
-                transform={`translate(${p.x} 0)`}
+                d={REMOCN_R_PATH}
+                fill={fg}
+                transform={`translate(0 -760) scale(${R_SCALE})`}
               />
-            ),
-          )}
-          {behind ? null : treatment}
-        </g>
-      </svg>
-      <Grain opacity={c.grain} />
+            )}
+            {set.placed.map((p, i) =>
+              i === slot ? null : (
+                <path
+                  key={`${p.index}-${p.ch}`}
+                  d={p.g[5]}
+                  fill={fg}
+                  stroke={knock}
+                  strokeWidth={current === "overflow" ? 36 : 0}
+                  paintOrder="stroke"
+                  strokeLinejoin="round"
+                  transform={`translate(${p.x} 0)`}
+                />
+              ),
+            )}
+            {behind ? null : treatment}
+          </g>
+        </svg>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface ShortSlideDownProps {
   text: string;
@@ -16,6 +18,8 @@ export interface ShortSlideDownProps {
 const FONT_FAMILY =
   "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif";
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export function ShortSlideDown({
   text,
   entryOffset = 28,
@@ -25,7 +29,8 @@ export function ShortSlideDown({
   speed = 1,
   className,
 }: ShortSlideDownProps) {
-  const frame = useCurrentFrame() * speed;
+  const glide = useGlide();
+  const frame = useSceneFrame() * speed;
 
   const words = useMemo(() => text.split(" "), [text]);
   const n = words.length;
@@ -86,6 +91,7 @@ export function ShortSlideDown({
           let opacity = 1;
           let scale = 1;
           let blur = 0;
+          let moving = false;
 
           if (frame < entryStart) {
             opacity = 0;
@@ -107,6 +113,7 @@ export function ShortSlideDown({
             opacity = interpolate(frame, range, [0, 1], opts);
             scale = interpolate(frame, range, [entryScale, 1], opts);
             blur = interpolate(frame, range, [entryBlur, 0], opts);
+            moving = midway(interpolate(frame, range, [0, 1], opts));
           } else {
             for (let w = j + 1; w < n; w++) {
               const pushStart = firstDur + (w - 1) * pushDur;
@@ -116,16 +123,18 @@ export function ShortSlideDown({
               if (frame >= pushEnd) {
                 y = toY;
               } else if (frame >= pushStart) {
-                y = interpolate(
+                const push = interpolate(
                   frame,
                   [pushStart, Math.min(pushStart + travelDur, pushEnd)],
-                  [fromY, toY],
+                  [0, 1],
                   {
                     extrapolateLeft: "clamp",
                     extrapolateRight: "clamp",
                     easing,
                   },
                 );
+                y = interpolate(push, [0, 1], [fromY, toY]);
+                moving = midway(push);
                 blur = interpolate(
                   frame,
                   [pushStart, (pushStart + pushEnd) / 2, pushEnd],
@@ -149,7 +158,7 @@ export function ShortSlideDown({
                 top: "50%",
                 whiteSpace: "nowrap",
                 backfaceVisibility: "hidden",
-                transform: `translate(-50%, -50%) translate3d(0px, ${y}px, 0) scale(${scale})`,
+                transform: `translate(-50%, -50%) translate3d(0px, ${y}px, 0) scale(${scale})${glide(moving)}`,
                 filter: `blur(${blur}px)`,
                 opacity,
               }}

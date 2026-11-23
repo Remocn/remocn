@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const inter = loadInterTight("normal", {
   weights: ["400", "500"],
@@ -25,7 +25,16 @@ export interface LayoutSwapProps {
   hold?: number;
   move?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the headlines. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -68,7 +77,11 @@ const EASE_IN = Easing.bezier(0.5, 0, 0.9, 0.4);
 
 const norm = (w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
 
-function useWordWidths(words: string[]) {
+function useWordWidths(
+  words: string[],
+  fontFamily: string,
+  fontWeight: number,
+) {
   const key = words.join("\u0001");
   const estimate = words.map((w) => w.length * 0.52);
   const [widths, setWidths] = useState<{
@@ -81,7 +94,7 @@ function useWordWidths(words: string[]) {
 
   useEffect(() => {
     let live = true;
-    const font = `500 100px "${inter.fontFamily}"`;
+    const font = `${fontWeight} 100px "${fontFamily}"`;
     Promise.all([inter.waitUntilDone(), document.fonts.load(font)])
       .catch(() => undefined)
       .then(() => {
@@ -108,7 +121,7 @@ function useWordWidths(words: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
 
   return widths && widths.key === key
     ? widths
@@ -210,6 +223,22 @@ function layoutHeadline(
   return placed;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LayoutSwap({
   headlines = [
     "Animations.",
@@ -221,18 +250,25 @@ export function LayoutSwap({
   hold = 28,
   move = 28,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = inter.fontFamily,
+  fontWeight = 500,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: LayoutSwapProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, durationInFrames } = useSceneConfig();
   const t = THEMES[theme];
+  const fg = ink ?? t.fg;
   const steps = headlines.length > 0 ? headlines : ["remocn"];
 
   const split = steps.map((h) => h.split(/\s+/).filter(Boolean));
   const all = split.flat();
-  const m = useWordWidths(all);
+  const m = useWordWidths(all, fontFamily, fontWeight);
   let cursor = 0;
   const widthsPer = split.map((ws) => {
     const w = m.w.slice(cursor, cursor + ws.length);
@@ -256,6 +292,16 @@ export function LayoutSwap({
     layoutHeadline(ws, widthsPer[k], m.space, box, maxFs, align),
   );
 
+  const last = steps.length - 1;
+  // Where a word finally comes to rest: the last of the headlines it stays
+  // through, counted on from `step`.
+  const keyed = layouts.map((L) => new Map(L.map((p) => [p.key, p])));
+  const restOf = (step: number, p: Placed) => {
+    let s = step;
+    while (s < last && keyed[s + 1].has(p.key)) s++;
+    return keyed[s].get(p.key) ?? p;
+  };
+
   const ENTER = 20;
   const stepStart = (k: number) => ENTER + k * (hold + move);
   let k = 0;
@@ -270,7 +316,6 @@ export function LayoutSwap({
   const hlKeys = new Set(
     (highlight ?? "").split(/\s+/).map(norm).filter(Boolean),
   );
-  const last = steps.length - 1;
   const drift = interpolate(
     frame,
     [0, durationInFrames * speed],
@@ -284,6 +329,10 @@ export function LayoutSwap({
     x: number;
     y: number;
     fs: number;
+    /** Where layout puts the word: the place it finally rests at. */
+    at: Placed;
+    /** Whether its ride changes on this frame. */
+    moving: boolean;
     opacity: number;
     blur: number;
     hl: number;
@@ -309,6 +358,8 @@ export function LayoutSwap({
         x: p.x,
         y: p.y + (1 - e) * 0.32 * p.fs,
         fs: p.fs,
+        at: restOf(to, p),
+        moving: e > 0 && e < 1,
         opacity: e,
         blur: (1 - e) * 0.08 * p.fs,
         hl: hlOf(to, p),
@@ -351,6 +402,7 @@ export function LayoutSwap({
       const soft = depth * 0.035 * fs;
       const hlA = hlOf(from, a);
       const hlB = hlOf(to, b);
+      const at = restOf(to, b);
       if (a.text === b.text) {
         draws.push({
           id: `s:${a.key}`,
@@ -358,6 +410,8 @@ export function LayoutSwap({
           x,
           y,
           fs,
+          at,
+          moving,
           opacity: dim,
           blur: soft,
           hl: hlA + (hlB - hlA) * u,
@@ -370,6 +424,8 @@ export function LayoutSwap({
           x,
           y,
           fs,
+          at,
+          moving,
           opacity: (1 - c) * dim,
           blur: soft,
           hl: hlA,
@@ -380,6 +436,8 @@ export function LayoutSwap({
           x,
           y,
           fs,
+          at,
+          moving,
           opacity: c * dim,
           blur: soft,
           hl: hlB,
@@ -394,6 +452,8 @@ export function LayoutSwap({
         x: a.x,
         y: a.y + o * 0.22 * a.fs,
         fs: a.fs * (1 - o * 0.06),
+        at: a,
+        moving,
         opacity: 1 - o,
         blur: o * 0.07 * a.fs,
         hl: hlOf(from, a),
@@ -411,6 +471,8 @@ export function LayoutSwap({
         x: b.x,
         y: b.y + (1 - e) * 0.3 * b.fs,
         fs: b.fs,
+        at: restOf(to, b),
+        moving,
         opacity: e,
         blur: (1 - e) * 0.08 * b.fs,
         hl: hlOf(to, b),
@@ -438,45 +500,57 @@ export function LayoutSwap({
           }}
         />
       ) : null}
-      {draws.map((d) => {
-        const base: React.CSSProperties = {
-          position: "absolute",
-          left: d.x,
-          top: d.y,
-          fontFamily: inter.fontFamily,
-          fontWeight: 500,
-          fontSize: d.fs,
-          lineHeight: LINE,
-          letterSpacing: `${TRACK}em`,
-          whiteSpace: "pre",
-          opacity: d.opacity,
-          filter: d.blur > 0.05 ? `blur(${d.blur.toFixed(2)}px)` : undefined,
-        };
-        return (
-          <div key={d.id} style={base}>
-            <span style={{ color: t.fg, opacity: 1 - d.hl }}>{d.text}</span>
-            {d.hl > 0 ? (
-              <span
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  opacity: d.hl,
-                  backgroundImage: hlImage,
-                  backgroundSize: "180% 100%",
-                  backgroundPosition: `${(drift * 60).toFixed(2)}% 0%`,
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  color: "transparent",
-                  paddingRight: "0.06em",
-                }}
-              >
-                {d.text}
-              </span>
-            ) : null}
-          </div>
-        );
-      })}
+      <ScaleLayer scale={scale}>
+        {draws.map((d) => {
+          // Layout rounds a baseline to whole pixels, so a word eased by
+          // `left`/`top`/`fontSize` clicks along pixel by pixel, and jumps
+          // where layout takes over from a transform. It is laid out once,
+          // where it finally rests, and carried by a transform all its life.
+          const dx = d.x - d.at.x;
+          const dy = d.y - d.at.y;
+          const k = d.fs / d.at.fs;
+          const base: React.CSSProperties = {
+            position: "absolute",
+            left: d.at.x,
+            top: d.at.y,
+            fontFamily,
+            fontWeight,
+            fontSize: d.at.fs,
+            transform: `translate(${Math.abs(dx) > 1e-3 ? dx : 0}px, ${Math.abs(dy) > 1e-3 ? dy : 0}px) scale(${Math.abs(k - 1) > 1e-6 ? k : 1})${glide(d.moving)}`,
+            transformOrigin: "0 0",
+            lineHeight: LINE,
+            letterSpacing: `${TRACK}em`,
+            whiteSpace: "pre",
+            opacity: d.opacity,
+            filter:
+              d.blur > 0.05 ? `blur(${(d.blur / k).toFixed(2)}px)` : undefined,
+          };
+          return (
+            <div key={d.id} style={base}>
+              <span style={{ color: fg, opacity: 1 - d.hl }}>{d.text}</span>
+              {d.hl > 0 ? (
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    opacity: d.hl,
+                    backgroundImage: hlImage,
+                    backgroundSize: "180% 100%",
+                    backgroundPosition: `${(drift * 60).toFixed(2)}% 0%`,
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    color: "transparent",
+                    paddingRight: "0.06em",
+                  }}
+                >
+                  {d.text}
+                </span>
+              ) : null}
+            </div>
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

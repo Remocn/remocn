@@ -10,9 +10,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const sans = loadInstrumentSans("normal", {
   weights: ["400", "500"],
@@ -25,7 +25,18 @@ export interface DiffSwapProps {
   after?: string;
   highlight?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frame the removed line folds away and the added one grows. */
+  foldAt?: number;
+  /** Size of the diff, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -79,7 +90,7 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
 type Measure = (s: string) => number;
 
-function useMeasure(): Measure {
+function useMeasure(family: string, weight: number): Measure {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("diff-swap: measuring"));
   const released = useRef(false);
@@ -87,7 +98,7 @@ function useMeasure(): Measure {
 
   useEffect(() => {
     let live = true;
-    const font = `500 100px "${sans.fontFamily}"`;
+    const font = `${weight} 100px "${family}"`;
     Promise.all([sans.waitUntilDone(), document.fonts.load(font)])
       .catch(() => undefined)
       .then(() => {
@@ -104,7 +115,7 @@ function useMeasure(): Measure {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, family, weight]);
 
   const ctx = ready ? ctxRef.current : null;
   return (s: string) =>
@@ -139,19 +150,43 @@ function splitHighlight(line: string, phrase: string) {
   ] as const;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DiffSwap({
   before = "Keyframe every frame by hand.",
   after = "Install the scene. Edit the props.",
   highlight = "Edit the props.",
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = sans.fontFamily,
+  fontWeight = 500,
+  foldAt = 72,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: DiffSwapProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, durationInFrames } = useSceneConfig();
   const t = THEMES[theme];
-  const measure = useMeasure();
+  const fg = ink ?? t.fg;
+  const measure = useMeasure(fontFamily, fontWeight);
 
   const portrait = height > width * 1.1;
   const s = portrait ? width / 1080 : Math.min(width / 1280, height / 720);
@@ -184,6 +219,7 @@ export function DiffSwap({
   const hB = rowH(rows.b.lines.length);
   const hA = rowH(rows.a.lines.length);
   const gap = fs * 0.12;
+  const bandWOf = (f: number) => width - padX * 2 + f * 0.3;
 
   const scaleEnd = Math.min(
     portrait ? 1.5 : 1.42,
@@ -191,15 +227,21 @@ export function DiffSwap({
     (height * (portrait ? 0.5 : 0.62)) / (rows.a.lines.length * LINE * fs),
   );
 
-  const enter = (i: number) => EASE_OUT(clamp01((frame - i * 3) / 18));
+  const enterAt = (f: number, i: number) => EASE_OUT(clamp01((f - i * 3) / 18));
+  const enter = (i: number) => enterAt(frame, i);
   const mark = EASE_OUT(clamp01((frame - 30) / 14));
-  const open = EASE_IO(clamp01((frame - 42) / 18));
-  const addIn = (i: number) => EASE_OUT(clamp01((frame - 53 - i * 3) / 18));
+  const openAt = (f: number) => EASE_IO(clamp01((f - 42) / 18));
+  const open = openAt(frame);
+  const addInAt = (f: number, i: number) =>
+    EASE_OUT(clamp01((f - 53 - i * 3) / 18));
+  const addIn = (i: number) => addInAt(frame, i);
   const plusBand = EASE_OUT(clamp01((frame - 46) / 14));
-  const fold = EASE_IO(clamp01((frame - 72) / 20));
-  const clear = EASE_OUT(clamp01((frame - 78) / 16));
-  const grow = EASE_IO(clamp01((frame - 76) / 22));
-  const hlT = EASE_OUT(clamp01((frame - 84) / 18));
+  const foldAtFrame = (f: number) => EASE_IO(clamp01((f - foldAt) / 20));
+  const fold = foldAtFrame(frame);
+  const clear = EASE_OUT(clamp01((frame - (foldAt + 6)) / 16));
+  const growAt = (f: number) => EASE_IO(clamp01((f - (foldAt + 4)) / 22));
+  const grow = growAt(frame);
+  const hlT = EASE_OUT(clamp01((frame - (foldAt + 12)) / 18));
   const drift = interpolate(
     frame,
     [0, durationInFrames * speed],
@@ -207,22 +249,51 @@ export function DiffSwap({
     CLAMP,
   );
 
-  const curB = hB * (1 - fold);
-  const curGap = gap * open * (1 - fold);
-  const curA = hA * open;
-  const scale = 1 + (scaleEnd - 1) * grow;
-  const total = curB + curGap + curA * scale;
-  const top = height / 2 - total / 2;
-  const topA = top + curB + curGap;
+  const stack = (op: number, fo: number, gr: number) => {
+    const b = hB * (1 - fo);
+    const g = gap * op * (1 - fo);
+    const a = hA * op;
+    const z = 1 + (scaleEnd - 1) * gr;
+    const tp = height / 2 - (b + g + a * z) / 2;
+    return { curB: b, curA: a, zoom: z, top: tp, topA: tp + b + g };
+  };
+  const { curB, curA, zoom, top, topA } = stack(open, fold, grow);
+  // Layout rounds a box and a baseline to whole pixels, so rows eased by
+  // `top` clicked along. Each row is laid out where it rests longest (the
+  // removed line before the diff opens, the added one once it has grown)
+  // and travels by transform.
+  const topB0 = stack(0, 0, 0).top;
+  const topA1 = stack(1, 1, 1).topA;
+  const pose = (f: number) => {
+    const g = stack(openAt(f), foldAtFrame(f), growAt(f));
+    return {
+      ...g,
+      foldY: foldAtFrame(f) * hB * 0.55,
+      eB: rows.b.lines.map((_, i) => enterAt(f, i) * fs),
+      eA: rows.a.lines.map((_, i) => addInAt(f, i) * fs),
+    };
+  };
+  const now = pose(frame);
+  const near = [pose(frame - speed), pose(frame + speed)];
+  const moved = (pick: (q: typeof now) => number[]) =>
+    near.some((q) => {
+      const a = pick(q);
+      const b = pick(now);
+      return a.some((v, i) => Math.abs(v - b[i]) > 1e-3);
+    });
+  const movingB = moved((q) => [q.top, q.foldY, ...q.eB]);
+  const movingA = moved((q) => [q.topA, q.zoom * bandWOf(fs), ...q.eA]);
+  const travel = (dy: number) =>
+    Math.abs(dy) < 1e-3 ? "" : `translateY(${dy}px)`;
 
   const transparent = background === "transparent";
   const gutter = gutterEm * fs;
   const left = padX;
-  const bandW = width - padX * 2 + fs * 0.3;
+  const bandW = bandWOf(fs);
 
   const lineStyle: React.CSSProperties = {
-    fontFamily: sans.fontFamily,
-    fontWeight: 500,
+    fontFamily,
+    fontWeight,
     fontSize: fs,
     lineHeight: LINE,
     letterSpacing: `${TRACK}em`,
@@ -261,169 +332,179 @@ export function DiffSwap({
         />
       ) : null}
 
-      <div
-        style={{
-          position: "absolute",
-          left: left - fs * 0.15,
-          top,
-          width: bandW,
-          height: curB,
-          overflow: "hidden",
-          borderRadius: fs * 0.12,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            background: t.minusBand,
-            clipPath: `inset(0 ${((1 - mark) * 100).toFixed(2)}% 0 0)`,
-            opacity: 1 - clear,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: Math.max(2, fs * 0.04),
-            background: t.minusEdge,
-            opacity: mark * (1 - clear),
-          }}
-        />
-        <div style={signStyle(mark * (1 - fold), (1 - mark) * -fs * 0.3)}>
-          −
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: gutter + fs * 0.15,
-            top: rowPadY - fold * hB * 0.55,
-            opacity: clamp01(1 - fold * 1.5),
+            left: left - fs * 0.15,
+            top: topB0,
+            width: bandW,
+            height: curB,
+            overflow: "hidden",
+            borderRadius: fs * 0.12,
+            transform:
+              `${travel(top - topB0)}${glide(movingB)}`.trim() || undefined,
           }}
         >
-          {rows.b.lines.map((ln, i) => {
-            const e = enter(i);
-            return (
-              <div
-                key={`b${i}`}
-                style={{
-                  overflow: "hidden",
-                  paddingBottom: fs * 0.12,
-                  marginBottom: -fs * 0.12,
-                }}
-              >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: t.minusBand,
+              clipPath: `inset(0 ${((1 - mark) * 100).toFixed(2)}% 0 0)`,
+              opacity: 1 - clear,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: Math.max(2, fs * 0.04),
+              background: t.minusEdge,
+              opacity: mark * (1 - clear),
+            }}
+          />
+          <div style={signStyle(mark * (1 - fold), (1 - mark) * -fs * 0.3)}>
+            −
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: gutter + fs * 0.15,
+              top: rowPadY,
+              transform: travel(-fold * hB * 0.55) || undefined,
+              opacity: clamp01(1 - fold * 1.5),
+            }}
+          >
+            {rows.b.lines.map((ln, i) => {
+              const e = enter(i);
+              return (
                 <div
+                  key={`b${i}`}
                   style={{
-                    ...lineStyle,
-                    color: `color-mix(in oklab, ${t.fg} ${((1 - mark) * 100).toFixed(1)}%, ${t.dim})`,
-                    transform: `translateY(${((1 - e) * 105).toFixed(2)}%)`,
+                    overflow: "hidden",
+                    paddingBottom: fs * 0.12,
+                    marginBottom: -fs * 0.12,
                   }}
                 >
-                  {ln}
+                  <div
+                    style={{
+                      ...lineStyle,
+                      color: `color-mix(in oklab, ${fg} ${((1 - mark) * 100).toFixed(1)}%, ${t.dim})`,
+                      transform: `translateY(${((1 - e) * 105).toFixed(2)}%)`,
+                    }}
+                  >
+                    {ln}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      <div
-        style={{
-          position: "absolute",
-          left: left - fs * 0.15,
-          top: topA,
-          width: bandW,
-          height: curA,
-          overflow: "hidden",
-          borderRadius: fs * 0.12,
-          transform: `translateX(${(grow * (fs * 0.15 - (gutter + fs * 0.15) * scale)).toFixed(2)}px) scale(${scale.toFixed(4)})`,
-          transformOrigin: "left top",
-        }}
-      >
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            background: t.plusBand(accent),
-            clipPath: `inset(0 ${((1 - plusBand) * 100).toFixed(2)}% 0 0)`,
-            opacity: 1 - clear,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: Math.max(2, fs * 0.04),
-            background: accent,
-            opacity: plusBand * (1 - clear),
-          }}
-        />
-        <div
-          style={signStyle(plusBand * (1 - clear), (1 - plusBand) * -fs * 0.3)}
-        >
-          +
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: gutter + fs * 0.15,
-            top: rowPadY,
+            left: left - fs * 0.15,
+            top: topA1,
+            width: bandW,
+            height: curA,
+            overflow: "hidden",
+            borderRadius: fs * 0.12,
+            // The mark stays on at rest: the row rests under a zoom, off the
+            // pixel grid, and its text keeps the lean there.
+            transform: `${travel(topA - topA1)} translateX(${(grow * (fs * 0.15 - (gutter + fs * 0.15) * zoom)).toFixed(2)}px) scale(${zoom.toFixed(4)})${glide(movingA)}`,
+            transformOrigin: "left top",
           }}
         >
-          {rows.a.lines.map((ln, i) => {
-            const e = addIn(i);
-            const [pre, hl, post] = splitHighlight(ln, highlight);
-            return (
-              <div
-                key={`a${i}`}
-                style={{
-                  overflow: "hidden",
-                  paddingBottom: fs * 0.12,
-                  marginBottom: -fs * 0.12,
-                }}
-              >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: t.plusBand(accent),
+              clipPath: `inset(0 ${((1 - plusBand) * 100).toFixed(2)}% 0 0)`,
+              opacity: 1 - clear,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: Math.max(2, fs * 0.04),
+              background: accent,
+              opacity: plusBand * (1 - clear),
+            }}
+          />
+          <div
+            style={signStyle(
+              plusBand * (1 - clear),
+              (1 - plusBand) * -fs * 0.3,
+            )}
+          >
+            +
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: gutter + fs * 0.15,
+              top: rowPadY,
+            }}
+          >
+            {rows.a.lines.map((ln, i) => {
+              const e = addIn(i);
+              const [pre, hl, post] = splitHighlight(ln, highlight);
+              return (
                 <div
+                  key={`a${i}`}
                   style={{
-                    ...lineStyle,
-                    color: t.fg,
-                    opacity: clamp01(e * 1.8),
-                    transform: `translateY(${((1 - e) * 105).toFixed(2)}%)`,
+                    overflow: "hidden",
+                    paddingBottom: fs * 0.12,
+                    marginBottom: -fs * 0.12,
                   }}
                 >
-                  {pre}
-                  {hl ? (
-                    <span style={{ position: "relative" }}>
-                      <span style={{ opacity: 1 - hlT }}>{hl}</span>
-                      <span
-                        style={{
-                          position: "absolute",
-                          left: 0,
-                          top: 0,
-                          opacity: hlT,
-                          backgroundImage: t.hl(accent),
-                          backgroundSize: "160% 100%",
-                          backgroundPosition: `${(drift * 50).toFixed(2)}% 0%`,
-                          WebkitBackgroundClip: "text",
-                          backgroundClip: "text",
-                          color: "transparent",
-                          paddingRight: "0.05em",
-                        }}
-                      >
-                        {hl}
+                  <div
+                    style={{
+                      ...lineStyle,
+                      color: fg,
+                      opacity: clamp01(e * 1.8),
+                      transform: `translateY(${((1 - e) * 105).toFixed(2)}%)`,
+                    }}
+                  >
+                    {pre}
+                    {hl ? (
+                      <span style={{ position: "relative" }}>
+                        <span style={{ opacity: 1 - hlT }}>{hl}</span>
+                        <span
+                          style={{
+                            position: "absolute",
+                            left: 0,
+                            top: 0,
+                            opacity: hlT,
+                            backgroundImage: t.hl(accent),
+                            backgroundSize: "160% 100%",
+                            backgroundPosition: `${(drift * 50).toFixed(2)}% 0%`,
+                            WebkitBackgroundClip: "text",
+                            backgroundClip: "text",
+                            color: "transparent",
+                            paddingRight: "0.05em",
+                          }}
+                        >
+                          {hl}
+                        </span>
                       </span>
-                    </span>
-                  ) : null}
-                  {post}
+                    ) : null}
+                    {post}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

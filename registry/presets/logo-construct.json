@@ -1,0 +1,103 @@
+{
+  "component": "logo-construct",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "classic-blueprint",
+      "label": "Classic Blueprint",
+      "description": "Deep cyanotype blue paper with pale chalk lines and a monospaced wordmark, like an engineer's drawing.",
+      "askedAs": [
+        "make it look like a real blueprint",
+        "blue technical drawing style",
+        "engineering sheet with white lines",
+        "как настоящий чертёж на синей бумаге",
+        "синий технический чертёж"
+      ],
+      "props": {
+        "background": "#1e3a6e",
+        "ink": "#eaf1fb",
+        "accent": "#9cc3f0",
+        "fontFamily": "JetBrains Mono",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm cream paper with a slow, elegant serif wordmark and a terracotta construction line.",
+      "askedAs": [
+        "elegant serif logo reveal",
+        "warm magazine style construction",
+        "slow classy paper look",
+        "элегантный шрифт с засечками",
+        "тёплая бумага, медленно и красиво"
+      ],
+      "props": {
+        "background": "#f4ede1",
+        "ink": "#2b2420",
+        "accent": "#b5532f",
+        "fontFamily": "Fraunces",
+        "stagger": 6,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "night-draft",
+      "label": "Night Draft",
+      "description": "Dark graphite sheet with an amber accent and a crisp grotesk wordmark at a steady pace.",
+      "askedAs": [
+        "dark mode logo construction",
+        "black background with gold lines",
+        "moody night version",
+        "тёмная версия чертежа",
+        "чёрный фон с янтарными линиями"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#e0a84a",
+        "fontFamily": "Space Grotesk",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "quick-mark",
+      "label": "Quick Mark",
+      "description": "Fast, clean reveal on plain white with no grid or grain and letters landing together.",
+      "askedAs": [
+        "fast clean logo reveal",
+        "no grid, just quick",
+        "short snappy version",
+        "быстрое появление логотипа",
+        "чисто и быстро без сетки"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "grid": false,
+        "grain": false,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "sage-sketch",
+      "label": "Sage Sketch",
+      "description": "Soft sage paper with forest-green lines and a smaller, airy Geist wordmark that builds patiently.",
+      "askedAs": [
+        "calm green paper look",
+        "muted natural colours",
+        "small quiet logo build",
+        "спокойный зелёный оттенок",
+        "маленький логотип, неспешно"
+      ],
+      "props": {
+        "background": "#e6ebe0",
+        "ink": "#1f2a22",
+        "accent": "#3f6b4f",
+        "fontFamily": "Geist",
+        "scale": 0.8,
+        "delay": 20
+      }
+    }
+  ]
+}

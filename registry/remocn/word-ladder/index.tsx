@@ -2,14 +2,9 @@
 
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
 import { type ReactNode, useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -19,7 +14,21 @@ const { fontFamily: sans } = loadFont("normal", {
 export interface WordLadderProps {
   /** Rungs of the ladder, first to last. Neighbours should differ by a letter or two. */
   words?: string[];
+  /** Frames between one rung and the next. */
+  rung?: number;
+  /** Frames between letters that change on the same rung. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the word. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the word and its floor line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -87,7 +96,7 @@ const SETTLE = 12;
 const POSTER_GAP = 6;
 const POSTER = 18;
 
-const stepAt = (k: number) => FIRST + k * RUNG;
+const stepAt = (k: number, rung: number) => FIRST + k * rung;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN = Easing.bezier(0.55, 0, 1, 0.45);
@@ -96,6 +105,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 // The ground under the floor line: light spilling down from the slot line the
 // outgoing letters sink through. gradients.sh "beam" (dark), "pixel-glass" (light).
@@ -187,15 +198,43 @@ interface Mark {
   out: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WordLadder({
   words = ["idea", "item", "stem", "step", "ship"],
+  rung = RUNG,
+  stagger = SUB,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: WordLadderProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const tilt = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const rungs = useMemo(
     () => (words.length > 0 ? words : [""]).map((w) => Array.from(w)),
@@ -221,29 +260,34 @@ export function WordLadder({
         const to = b[i] ?? "";
         row.push(from !== to);
         if (from === to) continue;
-        swaps[i].push({ step: k, at: stepAt(k) + order * SUB, from, to });
+        swaps[i].push({
+          step: k,
+          at: stepAt(k, rung) + order * stagger,
+          from,
+          to,
+        });
         order++;
       }
       changed.push(row);
     }
     const lastSwap = Math.max(
-      stepAt(0),
+      stepAt(0, rung),
       ...swaps.flat().map((s) => s.at + RISE_DELAY + RISE),
     );
-    const posterAt = steps > 0 ? lastSwap + POSTER_GAP : stepAt(0);
+    const posterAt = steps > 0 ? lastSwap + POSTER_GAP : stepAt(0, rung);
     // Accent marks: one per slot and run of consecutive steps that change it.
     const marks: Mark[][] = Array.from({ length: slots }, () => []);
     for (let i = 0; i < slots; i++) {
       for (let k = 0; k < steps; k++) {
         if (!changed[k][i]) continue;
         const prev = marks[i][marks[i].length - 1];
-        const end = k + 1 < steps ? stepAt(k + 1) - BAR_LEAD : posterAt;
+        const end = k + 1 < steps ? stepAt(k + 1, rung) - BAR_LEAD : posterAt;
         if (prev && k > 0 && changed[k - 1][i]) prev.out = end;
-        else marks[i].push({ in: stepAt(k) - BAR_LEAD, out: end });
+        else marks[i].push({ in: stepAt(k, rung) - BAR_LEAD, out: end });
       }
     }
     return { swaps, changed, posterAt, marks };
-  }, [rungs, slots, steps]);
+  }, [rungs, slots, steps, rung, stagger]);
 
   const F = Math.min(
     H * 0.42,
@@ -258,18 +302,34 @@ export function WordLadder({
   const glide = (k: number) =>
     interpolate(
       t,
-      [stepAt(k) + GLIDE_DELAY, stepAt(k) + GLIDE_DELAY + GLIDE],
+      [stepAt(k, rung) + GLIDE_DELAY, stepAt(k, rung) + GLIDE_DELAY + GLIDE],
       [0, 1],
       { ...CLAMP, easing: EASE_IO },
     );
   const glides = Array.from({ length: steps }, (_, k) => glide(k));
-  const slotX = (i: number) => {
+  const slotXAt = (i: number, gs: number[]) => {
     let x = layouts[0].cx[i];
-    glides.forEach((g, k) => {
+    gs.forEach((g, k) => {
       x += (layouts[k + 1].cx[i] - layouts[k].cx[i]) * g;
     });
     return W / 2 + x * F;
   };
+  const slotX = (i: number) => slotXAt(i, glides);
+  // The same slot on a rung: where a mark rests, so its glide to the next rung
+  // can ride a transform and be exactly 0 once there. The mark is laid out at
+  // the rung it leaves until its letter swaps, then at the one it heads for:
+  // that frame changes its width anyway, while switching on a frame of its
+  // own steps the box by however little the slot moves between rungs.
+  const restX = (i: number) =>
+    slotXAt(
+      i,
+      glides.map((g, k) => {
+        if (g <= 0 || g >= 1) return g;
+        const swap = plan.swaps[i].find((s) => s.step === k);
+        if (!swap) return g < 0.5 ? 0 : 1;
+        return t < swap.at + RISE_DELAY ? 0 : 1;
+      }),
+    );
 
   const poster = interpolate(
     t,
@@ -298,6 +358,7 @@ export function WordLadder({
       ch: string,
       y: number,
       color: string,
+      moving: boolean,
       opacity = 1,
     ) => {
       if (!ch || opacity <= 0) return;
@@ -310,7 +371,7 @@ export function WordLadder({
             top: baseline - ASC * F,
             color,
             opacity,
-            transform: `translateY(${y}px)`,
+            transform: `translateY(${y}px)${tilt(moving)}`,
           }}
         >
           {ch}
@@ -325,7 +386,7 @@ export function WordLadder({
         [0, 1],
         { ...CLAMP, easing: EASE_OUT },
       );
-      draw(`s${i}`, rungs[0][i] ?? "", (1 - enter) * dropD, c.fg);
+      draw(`s${i}`, rungs[0][i] ?? "", (1 - enter) * dropD, fg, midway(enter));
     } else {
       const drop = interpolate(t, [current.at, current.at + DROP], [0, 1], {
         ...CLAMP,
@@ -336,7 +397,8 @@ export function WordLadder({
           `o${i}-${current.step}`,
           current.from,
           drop * dropD,
-          interpolateColors(drop, [0, 1], [c.fg, c.dim]),
+          interpolateColors(drop, [0, 1], [fg, c.dim]),
+          midway(drop),
         );
       const rise = interpolate(
         t,
@@ -346,7 +408,7 @@ export function WordLadder({
       );
       const settleAt =
         current.step + 1 < steps
-          ? stepAt(current.step + 1) - BAR_LEAD
+          ? stepAt(current.step + 1, rung) - BAR_LEAD
           : plan.posterAt;
       const settle = interpolate(t, [settleAt, settleAt + SETTLE], [0, 1], {
         ...CLAMP,
@@ -356,7 +418,8 @@ export function WordLadder({
         `i${i}-${current.step}`,
         current.to,
         (1 - rise) * dropD,
-        interpolateColors(settle, [0, 1], [accent, c.fg]),
+        interpolateColors(settle, [0, 1], [accent, fg]),
+        midway(rise),
       );
     }
 
@@ -381,18 +444,22 @@ export function WordLadder({
       const v = grow * (1 - shrink);
       if (v <= 0) continue;
       const [l, r] = barSpan(i, glyphNow);
+      // Layout rounds a box edge to whole pixels, so a mark eased by `left`
+      // clicks across pixel by pixel; it sits at its rung and the glide
+      // between rungs is a transform.
+      const dx = slotX(i) - restX(i);
       bars.push(
         <div
           key={`b${i}-${m.in}`}
           style={{
             position: "absolute",
-            left: l,
+            left: l - dx,
             top: floorY,
             width: r - l,
             height: barH,
             background: accent,
             opacity: isLast ? 1 : Math.min(1, v * 1.4),
-            transform: `scaleX(${isLast ? 0.35 + 0.65 * grow : 0.35 + 0.65 * v})`,
+            transform: `${dx ? `translateX(${dx}px) ` : ""}scaleX(${isLast ? 0.35 + 0.65 * grow : 0.35 + 0.65 * v})`,
           }}
         />,
       );
@@ -440,37 +507,39 @@ export function WordLadder({
   const ground = `radial-gradient(${spread.toFixed(2)}% 100% at 50% 0%, ${c.beam[0]} 0%, ${c.beam[1]} 30%, ${c.beam[2]} 62%, transparent 100%)`;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: groundTop,
-          width: W,
-          height: H - groundTop,
-          background: ground,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: W,
-          height: floorY,
-          overflow: "hidden",
-          fontFamily: sans,
-          fontWeight: 500,
-          fontSize: F,
-          lineHeight: LINE,
-          fontKerning: "none",
-          whiteSpace: "pre",
-        }}
-      >
-        {glyphs}
-      </div>
-      {bars}
-      <Grain opacity={c.grain} />
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: groundTop,
+            width: W,
+            height: H - groundTop,
+            background: ground,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: W,
+            height: floorY,
+            overflow: "hidden",
+            fontFamily,
+            fontWeight: 500,
+            fontSize: F,
+            lineHeight: LINE,
+            fontKerning: "none",
+            whiteSpace: "pre",
+          }}
+        >
+          {glyphs}
+        </div>
+        {bars}
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -2,12 +2,8 @@
 
 import { Spiral, type SpiralProps } from "@paper-design/shaders-react";
 import { useCallback, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface ShaderSpiralProps extends Omit<SpiralProps, "frame" | "ref"> {}
 
@@ -21,8 +17,8 @@ export function ShaderSpiral({
   className,
   ...rest
 }: ShaderSpiralProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
 
   const [handle] = useState(() => delayRender("shader-spiral"));
   const gate = useCallback(

@@ -1,0 +1,99 @@
+{
+  "component": "shader-swirl-ember",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-smolder",
+      "label": "Slow Smolder",
+      "description": "A calm, glowing vortex with few wide bands drifting slowly over a near-black field.",
+      "askedAs": [
+        "slow calm fire swirl",
+        "gentle glowing embers background",
+        "subtle warm vortex behind text",
+        "медленный тлеющий вихрь",
+        "спокойный огненный фон"
+      ],
+      "props": {
+        "speed": 0.5,
+        "bandCount": 2,
+        "twist": 0.15,
+        "softness": 1,
+        "colorBack": "#0d0604"
+      }
+    },
+    {
+      "id": "inferno-spin",
+      "label": "Inferno Spin",
+      "description": "A fast, tightly wound blaze with many crisp bands for a high-energy hit.",
+      "askedAs": [
+        "fast intense fire vortex",
+        "aggressive spinning flames",
+        "high energy swirl for a drop",
+        "быстрый огненный вихрь",
+        "интенсивное пламя по кругу"
+      ],
+      "props": {
+        "speed": 2.5,
+        "bandCount": 9,
+        "twist": 0.75,
+        "softness": 0.35
+      }
+    },
+    {
+      "id": "molten-spiral",
+      "label": "Molten Spiral",
+      "description": "Deeply twisted, liquid-looking bands that coil like molten metal at a steady pace.",
+      "askedAs": [
+        "twisted lava spiral",
+        "molten gold swirl",
+        "deep spiral fire look",
+        "спираль из расплавленного металла",
+        "закрученная лава"
+      ],
+      "props": {
+        "twist": 1,
+        "bandCount": 5,
+        "speed": 0.75,
+        "colorBack": "#140803"
+      }
+    },
+    {
+      "id": "hard-rays",
+      "label": "Hard Rays",
+      "description": "Sharp, straight sunburst-like rays of fire with crisp edges and almost no twist.",
+      "askedAs": [
+        "sharp fire rays",
+        "sunburst flame background",
+        "crisp straight light beams",
+        "резкие огненные лучи",
+        "солнечные лучи из огня"
+      ],
+      "props": {
+        "twist": 0,
+        "softness": 0.1,
+        "bandCount": 12,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "ember-haze",
+      "label": "Ember Haze",
+      "description": "A single soft swirl of warm light over a deep oxblood field for a moody, premium backdrop.",
+      "askedAs": [
+        "soft hazy warm glow",
+        "moody dark red background",
+        "minimal single swirl",
+        "мягкая тёплая дымка",
+        "тёмно-красный атмосферный фон"
+      ],
+      "props": {
+        "bandCount": 1,
+        "softness": 0.95,
+        "twist": 0.45,
+        "speed": 0.25,
+        "colorBack": "#2a0508"
+      }
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -11,9 +12,9 @@ import {
   interpolateColors,
   random,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -82,8 +83,9 @@ function face(
   ctx: CanvasRenderingContext2D | null,
   weight: number,
   fallback: number,
+  family: string,
 ): Face {
-  const font = `${weight} ${MEASURE_PX}px "${manrope.fontFamily}"`;
+  const font = `${weight} ${MEASURE_PX}px "${family}"`;
   const cache: Record<string, number> = {};
   let asc = 1.02;
   let desc = 0.28;
@@ -108,12 +110,15 @@ function face(
   };
 }
 
-function buildMetrics(_version: number): Metrics {
+function buildMetrics(_version: number, family: string): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
-  return { cta: face(ctx, 400, 0.55), logo: face(ctx, 600, 0.6) };
+  return {
+    cta: face(ctx, 400, 0.55, family),
+    logo: face(ctx, 600, 0.6, manrope.fontFamily),
+  };
 }
 
-function useMetrics() {
+function useMetrics(family: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("cta-collapse-mark: measuring"));
   const released = useRef(false);
@@ -127,6 +132,8 @@ function useMetrics() {
       manrope.waitUntilDone(),
       document.fonts.load(`400 ${MEASURE_PX}px "${manrope.fontFamily}"`),
       document.fonts.load(`600 ${MEASURE_PX}px "${manrope.fontFamily}"`),
+      document.fonts.load(`300 ${MEASURE_PX}px "${family}"`),
+      document.fonts.load(`400 ${MEASURE_PX}px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -140,8 +147,8 @@ function useMetrics() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMetrics(version), [version]);
+  }, [handle, family]);
+  return useMemo(() => buildMetrics(version, family), [version, family]);
 }
 
 function computeCells(): { c: number; r: number }[] {
@@ -198,8 +205,40 @@ export interface CtaCollapseMarkProps {
   accent?: string;
   cta?: string;
   url?: string;
+  /** Text color of the call to action and wordmark; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the call to action and URL. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Frames between words as the call to action comes in. */
+  stagger?: number;
+  /** Replaces the remocn lockup the letters collapse into. */
+  logo?: React.ReactNode;
+  /** Size of the copy and lockup, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Playback multiplier. */
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function CtaCollapseMark({
@@ -207,12 +246,21 @@ export function CtaCollapseMark({
   accent = "#3B5BFD",
   cta = "Ship your first launch film",
   url = "remocn.dev",
+  ink: inkProp,
+  background,
+  fontFamily = manrope.fontFamily,
+  stagger = B.wordStep,
+  logo,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: CtaCollapseMarkProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
-  const m = useMetrics();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
+  const m = useMetrics(fontFamily);
   const cells = useMemo(() => computeCells(), []);
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
@@ -220,7 +268,7 @@ export function CtaCollapseMark({
   const stageH = portrait ? 1920 : 720;
   const sc = width / stageW;
 
-  const ink = dark ? "#f2f3f8" : "#14161c";
+  const ink = inkProp ?? (dark ? "#f2f3f8" : "#14161c");
   const markColor = dark
     ? interpolateColors(0.16, [0, 1], [accent, "#ffffff"])
     : accent;
@@ -319,6 +367,12 @@ export function CtaCollapseMark({
   const tail = L * 0.04 + wordW - L * 0.025 * 4 + extra * 4;
   const lockW = RwS + reveal * tail;
   const lockL = cx - lockW / 2;
+  // Where the mark settles once the wordmark is out; the ride there is a
+  // transform, since layout would round its box to whole pixels on the way.
+  const lockLRest = cx - (Rw + L * 0.04 + wordW - L * 0.025 * 4) / 2;
+  const rTopRest = cy - Rh / 2;
+  const markDx = lockL - lockLRest;
+  const markDy = rTop - rTopRest;
   const letterX = (i: number) =>
     lockL + RwS + L * 0.04 + wPrefix[i] - L * 0.025 * i + extra * i;
 
@@ -336,13 +390,18 @@ export function CtaCollapseMark({
 
   const merge = ramp(frame, B.merge, 4, MOVE);
   const snap = ramp(frame, B.snap, 5, LIGHT);
-  const punch = interpolate(
-    frame,
-    [B.snap, B.snap + 2, B.snap + 9],
-    [1, 1.05, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: SWAY },
-  );
-  const push = 1 + 0.03 * ramp(frame, 0, B.end, SWAY);
+  const pushAt = (f: number) =>
+    (1 + 0.03 * ramp(f, 0, B.end, SWAY)) *
+    interpolate(f, [B.snap, B.snap + 2, B.snap + 9], [1, 1.05, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: SWAY,
+    });
+  // The slow push carries every glyph and the wordmark, so its tilt covers
+  // them all; it is on for as long as the push still moves.
+  const pushMoving =
+    Math.abs(pushAt(frame + 1) - pushAt(frame)) > 1e-6 ||
+    Math.abs(pushAt(frame) - pushAt(frame - 1)) > 1e-6;
 
   const ctaFace = manrope.fontFamily;
   const baseOff = (size: number) =>
@@ -370,179 +429,218 @@ export function CtaCollapseMark({
 
   return (
     <AbsoluteFill style={{ fontFamily: ctaFace, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          background: gshParams(resolvedGround, resolvedParams).background,
-        }}
-      >
+      {background !== undefined ? (
         <AbsoluteFill
           style={{
-            transform:
-              dark && !ground && !groundParams
-                ? `translateY(${portrait ? 16 : 22}%)`
-                : undefined,
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: gshParams(resolvedGround, resolvedParams).background,
           }}
         >
-          <GshGround
-            preset={resolvedGround}
-            params={resolvedParams}
-            timeOffset={5}
-            timeScale={0.4}
-          />
+          <AbsoluteFill
+            style={{
+              transform:
+                dark && !ground && !groundParams
+                  ? `translateY(${portrait ? 16 : 22}%)`
+                  : undefined,
+            }}
+          >
+            <GshGround
+              preset={resolvedGround}
+              params={resolvedParams}
+              timeOffset={5}
+              timeScale={0.4}
+            />
+          </AbsoluteFill>
         </AbsoluteFill>
-      </AbsoluteFill>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${sc})`,
-          transformOrigin: "0 0",
-          overflow: "hidden",
-        }}
-      >
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${push * punch})`,
-            transformOrigin: `${cx}px ${cy}px`,
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${sc})`,
+            transformOrigin: "0 0",
+            overflow: "hidden",
           }}
         >
-          {glyphs.map((g, i) => {
-            const enterAt = g.url ? B.url : B.cta + g.word * B.wordStep;
-            const inK = ramp(frame, enterAt, 12, LIGHT);
-            const s0 = shedAt(g);
-            const out = ramp(frame, s0, 10, EXIT);
-            if (out >= 1) return null;
-            const jx = (random(`ccm-gx-${i}`) - 0.5) * g.size * 0.12;
-            const jy = -random(`ccm-gy-${i}`) * g.size * 0.1;
-            return (
-              <span
-                key={`g${i.toString()}`}
-                style={{
-                  position: "absolute",
-                  left: g.x,
-                  top: g.base - baseOff(g.size),
-                  fontSize: g.size,
-                  lineHeight: `${g.size}px`,
-                  fontWeight: g.url ? 400 : 300,
-                  letterSpacing: 0,
-                  whiteSpace: "pre",
-                  color: g.url ? urlColor : ink,
-                  opacity: inK * (1 - out),
-                  filter:
-                    inK < 0.99 || out > 0.01
-                      ? `blur(${(1 - inK) * 8 + out * 9}px)`
-                      : undefined,
-                  transform: `translate(${jx * out}px, ${(1 - inK) * g.size * 0.32 + jy * out}px) scale(${1 - 0.12 * out})`,
-                }}
-              >
-                {g.ch}
-              </span>
-            );
-          })}
-
-          {sortedCells.map((cell, k) => {
-            const src = srcGlyphs[Math.min(G - 1, Math.floor((k * G) / N))];
-            if (!src) return null;
-            const g = src.g;
-            const s0 = shedAt(g) + (k % 3);
-            if (frame < s0) return null;
-            const r1 = random(`ccm-a-${k}`);
-            const r2 = random(`ccm-b-${k}`);
-            const r3 = random(`ccm-c-${k}`);
-            const ox = g.x + r1 * g.adv;
-            const oy = g.base - r2 * g.size * 0.62;
-            const dx = (r3 - 0.5) * g.size * 0.7;
-            const dy = -(0.2 + r2 * 0.5) * g.size * 0.5;
-            const dr = ramp(frame, s0, B.drift, ENTER);
-            const startT = s0 + 5;
-            const tr = ramp(frame, startT, B.travel + Math.round(r1 * 4), MOVE);
-            const tx = lockL + (cell.c + 0.5) * cellW;
-            const ty = rTop + (cell.r + 0.5) * cellH;
-            const sx = ox + dx * dr;
-            const sy = oy + dy * dr;
-            const arc = Math.sin(Math.PI * tr) * (r3 - 0.5) * g.size * 1.2;
-            const x = mix(sx, tx, tr) + arc * 0.4;
-            const y = mix(sy, ty, tr) - Math.abs(arc) * 0.3;
-            const size = mix(sq * 0.5, sq * mix(0.84, 1.04, merge), tr);
-            const color = interpolateColors(
-              tr,
-              [0, 0.6, 1],
-              [g.url ? urlColor : ink, markColor, markColor],
-            );
-            const vis = ramp(frame, s0, 3, LIGHT) * (1 - snap);
-            const speed = tr > 0.05 && tr < 0.95 ? 1 : 0;
-            return (
-              <div
-                key={`f${cell.k.toString()}`}
-                style={{
-                  position: "absolute",
-                  left: x - size / 2,
-                  top: y - size / 2,
-                  width: size,
-                  height: size,
-                  borderRadius: size * 0.12,
-                  background: color,
-                  opacity: vis,
-                  filter: speed ? "blur(0.6px)" : undefined,
-                }}
-              />
-            );
-          })}
-
-          <svg
-            viewBox={`0 0 ${R_W} ${R_H}`}
-            width={RwS}
-            height={RhS}
+          <div
             style={{
               position: "absolute",
-              left: lockL,
-              top: rTop,
-              opacity: snap,
+              inset: 0,
+              transform: `scale(${pushAt(frame)})${glide(pushMoving)}`,
+              transformOrigin: `${cx}px ${cy}px`,
             }}
-            aria-hidden
           >
-            <path fill={markColor} d={REMOCN_R_PATH} />
-          </svg>
+            {glyphs.map((g, i) => {
+              const enterAt = g.url ? B.url : B.cta + g.word * stagger;
+              const inK = ramp(frame, enterAt, 12, LIGHT);
+              const s0 = shedAt(g);
+              const out = ramp(frame, s0, 10, EXIT);
+              if (out >= 1) return null;
+              const jx = (random(`ccm-gx-${i}`) - 0.5) * g.size * 0.12;
+              const jy = -random(`ccm-gy-${i}`) * g.size * 0.1;
+              return (
+                <span
+                  key={`g${i.toString()}`}
+                  style={{
+                    position: "absolute",
+                    left: g.x,
+                    top: g.base - baseOff(g.size),
+                    fontFamily,
+                    fontSize: g.size,
+                    lineHeight: `${g.size}px`,
+                    fontWeight: g.url ? 400 : 300,
+                    letterSpacing: 0,
+                    whiteSpace: "pre",
+                    color: g.url ? urlColor : ink,
+                    opacity: inK * (1 - out),
+                    filter:
+                      inK < 0.99 || out > 0.01
+                        ? `blur(${(1 - inK) * 8 + out * 9}px)`
+                        : undefined,
+                    transform: `translate(${jx * out}px, ${(1 - inK) * g.size * 0.32 + jy * out}px) scale(${1 - 0.12 * out})`,
+                  }}
+                >
+                  {g.ch}
+                </span>
+              );
+            })}
 
-          {wChars.map((ch, i) => {
-            const p = spring({
-              frame: frame - B.word - 6 - i * B.letterStep,
-              fps,
-              config: LETTER,
-            });
-            const vis = Math.min(
-              1,
-              ramp(frame, B.word + 6 + i * B.letterStep, 6),
-            );
-            return (
-              <span
-                key={`w${i.toString()}`}
+            {sortedCells.map((cell, k) => {
+              const src = srcGlyphs[Math.min(G - 1, Math.floor((k * G) / N))];
+              if (!src) return null;
+              const g = src.g;
+              const s0 = shedAt(g) + (k % 3);
+              if (frame < s0) return null;
+              const r1 = random(`ccm-a-${k}`);
+              const r2 = random(`ccm-b-${k}`);
+              const r3 = random(`ccm-c-${k}`);
+              const ox = g.x + r1 * g.adv;
+              const oy = g.base - r2 * g.size * 0.62;
+              const dx = (r3 - 0.5) * g.size * 0.7;
+              const dy = -(0.2 + r2 * 0.5) * g.size * 0.5;
+              const dr = ramp(frame, s0, B.drift, ENTER);
+              const startT = s0 + 5;
+              const tr = ramp(
+                frame,
+                startT,
+                B.travel + Math.round(r1 * 4),
+                MOVE,
+              );
+              const tx = lockL + (cell.c + 0.5) * cellW;
+              const ty = rTop + (cell.r + 0.5) * cellH;
+              const sx = ox + dx * dr;
+              const sy = oy + dy * dr;
+              const arc = Math.sin(Math.PI * tr) * (r3 - 0.5) * g.size * 1.2;
+              const x = mix(sx, tx, tr) + arc * 0.4;
+              const y = mix(sy, ty, tr) - Math.abs(arc) * 0.3;
+              const size = mix(sq * 0.5, sq * mix(0.84, 1.04, merge), tr);
+              const color = interpolateColors(
+                tr,
+                [0, 0.6, 1],
+                [g.url ? urlColor : ink, markColor, markColor],
+              );
+              const vis = ramp(frame, s0, 3, LIGHT) * (1 - snap);
+              const speed = tr > 0.05 && tr < 0.95 ? 1 : 0;
+              return (
+                <div
+                  key={`f${cell.k.toString()}`}
+                  style={{
+                    position: "absolute",
+                    // The flight is a transform, not `left`/`top`: layout
+                    // rounds a box edge to whole pixels, so a cell eased by
+                    // position steps along pixel by pixel.
+                    left: 0,
+                    top: 0,
+                    transform: `translate(${x - size / 2}px, ${y - size / 2}px)`,
+                    width: size,
+                    height: size,
+                    borderRadius: size * 0.12,
+                    background: color,
+                    opacity: vis,
+                    filter: speed ? "blur(0.6px)" : undefined,
+                  }}
+                />
+              );
+            })}
+
+            {logo ? (
+              <div
                 style={{
                   position: "absolute",
-                  left: letterX(i),
-                  top: baseY - logoOff,
-                  fontSize: L,
-                  lineHeight: `${L}px`,
-                  fontWeight: 600,
-                  color: ink,
-                  whiteSpace: "pre",
-                  opacity: vis,
-                  transform: `translateY(${(1 - p) * L * 0.18}px) scale(${mix(0.82, 1, p)})`,
-                  transformOrigin: "50% 80%",
-                  filter: vis < 0.99 ? `blur(${(1 - vis) * 6}px)` : undefined,
+                  left: cx,
+                  top: cy,
+                  transform: "translate(-50%, -50%)",
+                  opacity: snap,
                 }}
               >
-                {ch}
-              </span>
-            );
-          })}
+                {logo}
+              </div>
+            ) : null}
+            {logo ? null : (
+              <svg
+                viewBox={`0 0 ${R_W} ${R_H}`}
+                width={RwS}
+                height={RhS}
+                style={{
+                  position: "absolute",
+                  left: lockLRest,
+                  top: rTopRest,
+                  transform:
+                    Math.abs(markDx) > 1e-3 || Math.abs(markDy) > 1e-3
+                      ? `translate(${markDx}px, ${markDy}px)`
+                      : undefined,
+                  opacity: snap,
+                }}
+                aria-hidden
+              >
+                <path fill={markColor} d={REMOCN_R_PATH} />
+              </svg>
+            )}
+
+            {(logo ? [] : wChars).map((ch, i) => {
+              const p = spring({
+                frame: frame - B.word - 6 - i * B.letterStep,
+                fps,
+                config: LETTER,
+              });
+              const vis = Math.min(
+                1,
+                ramp(frame, B.word + 6 + i * B.letterStep, 6),
+              );
+              return (
+                <span
+                  key={`w${i.toString()}`}
+                  style={{
+                    position: "absolute",
+                    left: letterX(i),
+                    top: baseY - logoOff,
+                    fontSize: L,
+                    lineHeight: `${L}px`,
+                    fontWeight: 600,
+                    color: ink,
+                    whiteSpace: "pre",
+                    opacity: vis,
+                    transform: `translateY(${(1 - p) * L * 0.18}px) scale(${mix(0.82, 1, p)})`,
+                    transformOrigin: "50% 80%",
+                    filter: vis < 0.99 ? `blur(${(1 - vis) * 6}px)` : undefined,
+                  }}
+                >
+                  {ch}
+                </span>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

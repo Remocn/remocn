@@ -1,0 +1,125 @@
+{
+  "component": "verbed",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "old-paper",
+      "label": "Old Paper",
+      "description": "Warm cream paper with sepia ink and a classic serif, like a printed dictionary page.",
+      "askedAs": [
+        "vintage dictionary page",
+        "old book paper look",
+        "sepia printed entry",
+        "как старый словарь",
+        "бумажный винтажный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3ead8",
+        "ink": "#3b2f22",
+        "accent": "#9a3b26",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "midnight-lexicon",
+      "label": "Midnight Lexicon",
+      "description": "Deep navy page with soft ivory text and a muted gold accent in an elegant serif.",
+      "askedAs": [
+        "dark elegant dictionary",
+        "navy and gold definition",
+        "night mode serif entry",
+        "тёмный элегантный словарь",
+        "ночная тема с золотом"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0f1626",
+        "ink": "#ece6d6",
+        "accent": "#c9a45c",
+        "fontFamily": "Instrument Serif",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "terminal-def",
+      "label": "Terminal Def",
+      "description": "Monospace definition on near-black with a calm green accent, like a man page for developers.",
+      "askedAs": [
+        "code style definition",
+        "developer terminal look",
+        "monospace dictionary entry",
+        "как в терминале",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#d7e2dc",
+        "accent": "#4fb38a",
+        "scale": 0.9,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "quick-cut",
+      "label": "Quick Cut",
+      "description": "Clean modern sans on white that snaps in fast with a tight stagger for punchy edits.",
+      "askedAs": [
+        "fast clean version",
+        "quick snappy dictionary intro",
+        "modern minimal white",
+        "быстрая анимация",
+        "чистый современный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "speed": 2,
+        "turnAt": 45,
+        "stagger": 0,
+        "accent": "#1f6feb"
+      }
+    },
+    {
+      "id": "slow-read",
+      "label": "Slow Read",
+      "description": "A large, unhurried reveal with generous word stagger that lets every sense breathe.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "big calm definition",
+        "let it read slowly",
+        "медленное появление",
+        "крупно и неторопливо"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 6,
+        "turnAt": 130,
+        "scale": 1.25,
+        "delay": 15
+      }
+    },
+    {
+      "id": "playful-pop",
+      "label": "Playful Pop",
+      "description": "Soft blush paper with a quirky grotesque and a tomato accent for a friendly brand voice.",
+      "askedAs": [
+        "fun playful dictionary",
+        "friendly warm brand look",
+        "pink paper quirky font",
+        "весёлый игривый стиль",
+        "тёплый дружелюбный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Bricolage Grotesque",
+        "background": "#fbe9e2",
+        "ink": "#2a1d1a",
+        "accent": "#d9482b",
+        "speed": 1.5
+      }
+    }
+  ]
+}

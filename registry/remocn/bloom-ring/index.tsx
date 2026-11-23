@@ -17,9 +17,13 @@ import {
   interpolateColors,
   random,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -75,7 +79,7 @@ function ringState(p: number) {
 }
 
 function Bloom({ p, props }: { p: number; props: Required<BloomRingProps> }) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const { radius, width, heat } = ringState(p);
   const cx = props.centerX * W;
   const cy = props.centerY * H;
@@ -142,7 +146,7 @@ const BloomRingPresentation: React.FC<
   passedProps,
 }) => {
   const props = { ...bloomRingDefaults, ...passedProps };
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const p = presentationProgress;
 
   if (presentationDirection === "exiting") {
@@ -275,13 +279,17 @@ function RiseWord({
   children,
   at,
   style,
+  delay,
+  speed,
 }: {
   children: React.ReactNode;
   at: number;
   style?: React.CSSProperties;
+  delay: number;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { fps } = useSceneConfig();
   const s = spring({
     frame: frame - at,
     fps,
@@ -317,78 +325,120 @@ function SceneLine({
   accent,
   ground,
   groundParams,
+  fontFamily,
+  ink,
+  hue,
+  background,
+  stagger,
+  scale,
+  delay,
+  speed,
 }: {
   theme: Theme;
   lead: string;
   accent: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  fontFamily: string;
+  ink?: string;
+  hue?: string;
+  background?: string;
+  stagger: number;
+  scale: number;
+  delay: number;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const t = THEMES[theme];
   const tall = H > W;
   const size = tall ? W * 0.09 : Math.min(W * 0.066, H * 0.12);
-  const push = interpolate(frame, [0, durationInFrames], [1, 1.035], CLAMP);
+  const push = interpolate(
+    frame,
+    [0, (durationInFrames - delay) * speed],
+    [1, 1.035],
+    CLAMP,
+  );
   const words = lead.split(" ");
   const accentWords = accent.split(" ");
   return (
     <AbsoluteFill>
-      <GshGround
-        preset={ground ?? t.groundA}
-        params={groundParams ?? t.paramsA}
-        timeOffset={4}
-        timeScale={0.5}
-      />
-      <AbsoluteFill style={{ backgroundColor: t.scrim }} />
-      <AbsoluteFill
-        style={{
-          justifyContent: "center",
-          alignItems: "center",
-          transform: `scale(${push})`,
-        }}
-      >
-        <div
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? t.groundA}
+            params={groundParams ?? t.paramsA}
+            timeOffset={4}
+            timeScale={0.5}
+          />
+          <AbsoluteFill style={{ backgroundColor: t.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
           style={{
-            width: tall ? W * 0.84 : W * 0.8,
-            textAlign: "center",
-            fontFamily: geist.fontFamily,
-            fontWeight: 300,
-            fontSize: size,
-            lineHeight: 1.08,
-            letterSpacing: "-0.035em",
-            color: t.ink,
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            // The push never rests, so neither does the tilt.
+            transform: `scale(${push})${glide(true)}`,
           }}
         >
-          <div>
-            {words.map((w, i) => (
-              <RiseWord key={`${w}-${i}`} at={BEATS.lineIn + i * BEATS.wordGap}>
-                {w}
-                {" "}
-              </RiseWord>
-            ))}
+          <div
+            style={{
+              width: tall ? W * 0.84 : W * 0.8,
+              textAlign: "center",
+              fontFamily,
+              fontWeight: 300,
+              fontSize: size,
+              lineHeight: 1.08,
+              letterSpacing: "-0.035em",
+              color: ink ?? t.ink,
+            }}
+          >
+            <div>
+              {words.map((w, i) => (
+                <RiseWord
+                  key={`${w}-${i}`}
+                  at={BEATS.lineIn + i * stagger}
+                  delay={delay}
+                  speed={speed}
+                >
+                  {w}
+                  {" "}
+                </RiseWord>
+              ))}
+            </div>
+            <div>
+              {accentWords.map((w, i) => (
+                <RiseWord
+                  key={`${w}-${i}`}
+                  at={BEATS.accentIn + i * stagger}
+                  delay={delay}
+                  speed={speed}
+                  style={{
+                    fontFamily: serif.fontFamily,
+                    fontStyle: "italic",
+                    fontWeight: 400,
+                    letterSpacing: "-0.02em",
+                    color: hue ?? t.accent,
+                    fontSize: size * 1.08,
+                  }}
+                >
+                  {w}
+                  {i < accentWords.length - 1 ? " " : ""}
+                </RiseWord>
+              ))}
+            </div>
           </div>
-          <div>
-            {accentWords.map((w, i) => (
-              <RiseWord
-                key={`${w}-${i}`}
-                at={BEATS.accentIn + i * BEATS.wordGap}
-                style={{
-                  fontFamily: serif.fontFamily,
-                  fontStyle: "italic",
-                  fontWeight: 400,
-                  letterSpacing: "-0.02em",
-                  color: t.accent,
-                  fontSize: size * 1.08,
-                }}
-              >
-                {w}
-                {i < accentWords.length - 1 ? " " : ""}
-              </RiseWord>
-            ))}
-          </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -398,14 +448,25 @@ function SceneLogo({
   tagline,
   ground,
   groundParams,
+  fontFamily,
+  background,
+  logo,
+  scale,
+  speed,
 }: {
   theme: Theme;
   tagline: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  fontFamily: string;
+  background?: string;
+  logo?: React.ReactNode;
+  scale: number;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame() * speed;
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const t = THEMES[theme];
   const tall = H > W;
   const logoSize = tall ? W * 0.2 : Math.min(W * 0.11, H * 0.2);
@@ -419,54 +480,70 @@ function SceneLogo({
     fps,
     config: { mass: 0.8, damping: 18, stiffness: 160 },
   });
-  const push = interpolate(frame, [0, durationInFrames], [1, 1.03], CLAMP);
+  const push = interpolate(
+    frame,
+    [0, durationInFrames * speed],
+    [1, 1.03],
+    CLAMP,
+  );
   return (
     <AbsoluteFill>
-      <GshGround
-        preset={ground ?? t.groundB}
-        params={groundParams ?? t.paramsB}
-        timeOffset={2}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          justifyContent: "center",
-          alignItems: "center",
-          gap: logoSize * 0.34,
-          transform: `scale(${push})`,
-        }}
-      >
-        <div
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? t.groundB}
+          params={groundParams ?? t.paramsB}
+          timeOffset={2}
+          timeScale={0.5}
+        />
+      ) : (
+        <AbsoluteFill
           style={{
-            transform: `translateY(${(1 - s) * logoSize * 0.18}px) scale(${0.94 + s * 0.06})`,
-            opacity: interpolate(s, [0, 0.5], [0.2, 1], CLAMP),
-            filter: `blur(${((1 - s) * 8).toFixed(2)}px)`,
+            background: background === "transparent" ? undefined : background,
           }}
-        >
-          <RemocnLogo fontSize={logoSize} color={t.logo} />
-        </div>
-        <div
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            overflow: "hidden",
-            paddingBottom: "0.12em",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: logoSize * 0.34,
+            // The same tilt as the headline's push, for the same reason.
+            transform: `scale(${push})${glide(true)}`,
           }}
         >
           <div
             style={{
-              fontFamily: geist.fontFamily,
-              fontWeight: 300,
-              fontSize: logoSize * 0.27,
-              letterSpacing: "-0.015em",
-              color: t.muted,
-              transform: `translateY(${(1 - tag) * 110}%)`,
-              textAlign: "center",
-              maxWidth: W * 0.8,
+              transform: `translateY(${(1 - s) * logoSize * 0.18}px) scale(${0.94 + s * 0.06})`,
+              opacity: interpolate(s, [0, 0.5], [0.2, 1], CLAMP),
+              filter: `blur(${((1 - s) * 8).toFixed(2)}px)`,
             }}
           >
-            {tagline}
+            {logo ?? <RemocnLogo fontSize={logoSize} color={t.logo} />}
           </div>
-        </div>
-      </AbsoluteFill>
+          <div
+            style={{
+              overflow: "hidden",
+              paddingBottom: "0.12em",
+            }}
+          >
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 300,
+                fontSize: logoSize * 0.27,
+                letterSpacing: "-0.015em",
+                color: t.muted,
+                transform: `translateY(${(1 - tag) * 110}%)`,
+                textAlign: "center",
+                maxWidth: W * 0.8,
+              }}
+            >
+              {tagline}
+            </div>
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -484,7 +561,40 @@ export type BloomRingDemoProps = {
   sceneA?: number;
   sceneB?: number;
   transition?: number;
+  /** Color of the scene A accent line; overrides the theme accent. */
+  accent?: string;
+  /** Frames between words as the scene A headline rises. */
+  stagger?: number;
+  /** Typeface for the headline and tagline. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Color of the scene A lead line; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of both gradient grounds; "transparent" drops it. */
+  background?: string;
+  /** Replaces the remocn mark in scene B. */
+  logo?: React.ReactNode;
+  /** Size of each scene's text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 };
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
 
 export const BLOOM_RING_DEMO = { sceneA: 72, sceneB: 84, transition: 30 };
 
@@ -501,31 +611,65 @@ export function BloomRingDemo({
   sceneA = BLOOM_RING_DEMO.sceneA,
   sceneB = BLOOM_RING_DEMO.sceneB,
   transition = BLOOM_RING_DEMO.transition,
+  accent,
+  stagger = BEATS.wordGap,
+  fontFamily = geist.fontFamily,
+  ink,
+  background,
+  logo,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: BloomRingDemoProps) {
+  // Speed scales the series itself so the transition keeps pace with the scenes.
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   return (
     <AbsoluteFill
-      style={{ backgroundColor: theme === "light" ? "#f6f2ec" : "#050303" }}
+      style={{
+        backgroundColor:
+          background === "transparent"
+            ? undefined
+            : (background ?? (theme === "light" ? "#f6f2ec" : "#050303")),
+      }}
     >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={sceneA}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(sceneA)}
+        >
           <SceneLine
             theme={theme}
             lead={lead}
             accent={accentLine}
             ground={groundA}
             groundParams={groundAParams}
+            fontFamily={fontFamily}
+            ink={ink}
+            hue={accent}
+            background={background}
+            stagger={stagger}
+            scale={scale}
+            delay={delay}
+            speed={speed}
           />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
           presentation={bloomRing(ring)}
-          timing={linearTiming({ durationInFrames: transition })}
+          timing={linearTiming({ durationInFrames: len(transition) })}
         />
-        <TransitionSeries.Sequence durationInFrames={sceneB}>
+        <TransitionSeries.Sequence durationInFrames={len(sceneB)}>
           <SceneLogo
             theme={theme}
             tagline={tagline}
             ground={groundB}
             groundParams={groundBParams}
+            fontFamily={fontFamily}
+            background={background}
+            logo={logo}
+            scale={scale}
+            speed={speed}
           />
         </TransitionSeries.Sequence>
       </TransitionSeries>

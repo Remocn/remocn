@@ -1,0 +1,121 @@
+{
+  "component": "year-in-review",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ember-wrapped",
+      "label": "Ember Wrapped",
+      "description": "Warm coral accent on a glowing ember ground with chunky Bricolage type for a festive recap.",
+      "askedAs": [
+        "warm orange wrapped story",
+        "cozy festive year recap",
+        "bold warm stats card",
+        "тёплая оранжевая история итогов года",
+        "яркие тёплые итоги года"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#ff6b4a",
+        "fontFamily": "Bricolage Grotesque",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A calm paper-toned card with Fraunces headlines and a deep ink accent, played slowly like a magazine spread.",
+      "askedAs": [
+        "elegant serif year review",
+        "magazine style recap card",
+        "slow classy stats story",
+        "элегантные итоги года с засечками",
+        "спокойная журнальная карточка итогов"
+      ],
+      "props": {
+        "device": "card",
+        "background": "#f4efe6",
+        "ink": "#1e1b18",
+        "accent": "#b5452b",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "night-terminal",
+      "label": "Night Terminal",
+      "description": "Dark charcoal phone story with mono type and a mint accent for a developer-flavoured recap.",
+      "askedAs": [
+        "dark developer wrapped",
+        "code style year stats",
+        "monospace dark recap",
+        "тёмные итоги года для разработчиков",
+        "моноширинный тёмный стиль"
+      ],
+      "props": {
+        "ground": "charcoal-satin",
+        "background": "#14161a",
+        "ink": "#e6eaf0",
+        "accent": "#3ddc97",
+        "fontFamily": "JetBrains Mono",
+        "rail": false
+      }
+    },
+    {
+      "id": "quick-burst",
+      "label": "Quick Burst",
+      "description": "A punchy, fast-cut version at double speed and slightly larger scale on a cobalt ground.",
+      "askedAs": [
+        "fast energetic recap",
+        "snappy wrapped for reels",
+        "quick big stats story",
+        "быстрые динамичные итоги",
+        "энергичная история для рилс"
+      ],
+      "props": {
+        "speed": 2,
+        "scale": 1.15,
+        "ground": "cobalt-rise",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "petal-soft",
+      "label": "Petal Soft",
+      "description": "Soft pink petal-arc ground with a berry accent and gentle delayed entrance for a friendly, light recap.",
+      "askedAs": [
+        "pink soft year review",
+        "pastel wrapped story",
+        "gentle cute stats card",
+        "нежные розовые итоги года",
+        "пастельная история итогов"
+      ],
+      "props": {
+        "ground": "petal-arc",
+        "accent": "#c2336b",
+        "fontFamily": "Manrope",
+        "delay": 15,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "compact-card",
+      "label": "Compact Card",
+      "description": "A small, clean card layout without the chapter rail on a cool polar ground, ideal for embedding.",
+      "askedAs": [
+        "small summary card",
+        "minimal recap without chapters",
+        "clean compact stats",
+        "компактная карточка итогов",
+        "минималистичная карточка без глав"
+      ],
+      "props": {
+        "device": "card",
+        "rail": false,
+        "scale": 0.8,
+        "ground": "polar",
+        "fontFamily": "Inter"
+      }
+    }
+  ]
+}

@@ -16,9 +16,9 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -39,6 +39,17 @@ export interface CaretDollyProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Typeface for the prompt and toolbar. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Multiplier on how close the camera gets to the focus phrase. */
+  zoom?: number;
+  /** Directional blur while the camera punches in and pulls out. */
+  motionBlur?: boolean;
+  /** Size of the box and cursor, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -118,13 +129,13 @@ const CLAMP = {
 
 type Measure = (s: string) => number;
 
-function buildMeasure(_version: number): Measure {
+function buildMeasure(_version: number, fontFamily: string): Measure {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   return (s: string) => {
     if (cache[s] === undefined) {
       if (!ctx) return s.length * 0.52;
-      ctx.font = `400 ${FONT_PX}px "${face.fontFamily}"`;
+      ctx.font = `400 ${FONT_PX}px "${fontFamily}"`;
       cache[s] =
         ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
     }
@@ -132,7 +143,7 @@ function buildMeasure(_version: number): Measure {
   };
 }
 
-function useMeasure() {
+function useMeasure(fontFamily: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("caret-dolly: measuring"));
   const released = useRef(false);
@@ -144,7 +155,7 @@ function useMeasure() {
     document.fonts.addEventListener("loadingdone", bump);
     Promise.all([
       face.waitUntilDone(),
-      document.fonts.load(`400 100px "${face.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -158,8 +169,11 @@ function useMeasure() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMeasure(version), [version]);
+  }, [handle, fontFamily]);
+  return useMemo(
+    () => buildMeasure(version, fontFamily),
+    [version, fontFamily],
+  );
 }
 
 function Icon({
@@ -207,6 +221,22 @@ interface Layout {
   sendD: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CaretDolly({
   prompt = "Make a launch video for our new app with a bold title, product shots and a calm ending",
   focus = "launch video",
@@ -218,16 +248,23 @@ export function CaretDolly({
   theme = "dark",
   ground,
   groundParams,
+  fontFamily = face.fontFamily,
+  zoom = 1,
+  motionBlur = true,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: CaretDollyProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
   const bg = background ?? gshParams(preset, gParams).background;
-  const m = useMeasure();
+  const m = useMeasure(fontFamily);
   const portrait = H > W * 1.1;
   const filterId = `cd${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
@@ -315,7 +352,7 @@ export function CaretDolly({
     const { T, charX, lineOf, lineY } = layout;
     const C = { x: W / 2, y: H / 2 };
     const A = portrait ? W * 0.11 : H * 0.1;
-    const giant = portrait ? W * 0.27 : Math.min(H * 0.36, W * 0.27);
+    const giant = (portrait ? W * 0.27 : Math.min(H * 0.36, W * 0.27)) * zoom;
     const sA = A / T;
     const sG = giant / T;
     const xAt = (ci: number) => {
@@ -391,13 +428,34 @@ export function CaretDolly({
   if (layout && cams.length > 0) {
     const L = layout;
     const f = frame;
-    const cam = cams[Math.min(cams.length - 1, f)];
-    const prev = cams[Math.max(0, Math.min(cams.length - 1, f - 1))];
-    const push =
-      f >= pullEnd
-        ? interpolate(f, [pullEnd, durationInFrames], [1, 1.03], CLAMP)
+    const camAt = (ff: number) =>
+      cams[Math.max(0, Math.min(cams.length - 1, Math.floor(ff)))];
+    const pushAt = (ff: number) =>
+      ff >= pullEnd
+        ? interpolate(ff, [pullEnd, durationInFrames], [1, 1.03], CLAMP)
         : 1;
+    const cam = camAt(f);
+    const prev = camAt(Math.floor(f) - 1);
+    const push = pushAt(f);
     const s = cam.s * push;
+    // Where the card's two corners land on screen at frame `ff`: the camera
+    // moves the text through them, so the glide mark moves while either one moves.
+    const cornersAt = (ff: number) => {
+      const k = camAt(ff).s * pushAt(ff);
+      const { x, y } = camAt(ff);
+      return [
+        W / 2 + (L.cardX - x) * k,
+        H / 2 + (L.cardY - y) * k,
+        W / 2 + (L.cardX + L.cardW - x) * k,
+        H / 2 + (L.cardY + L.cardH - y) * k,
+      ];
+    };
+    const here = cornersAt(f);
+    const before = cornersAt(f - speed);
+    const after = cornersAt(f + speed);
+    const camMoving = here.some(
+      (v, i) => Math.abs(after[i] - v) > 1e-3 || Math.abs(v - before[i]) > 1e-3,
+    );
     const zoomV = Math.abs(Math.log(cam.s) - Math.log(prev.s));
     const panV = Math.abs(cam.x - prev.x) * cam.s;
     const zoomBlur = Math.min(7, zoomV * 26);
@@ -439,7 +497,7 @@ export function CaretDolly({
               fontSize: L.T,
               lineHeight: 1,
               whiteSpace: "pre",
-              fontFamily: face.fontFamily,
+              fontFamily,
               fontWeight: 400,
               letterSpacing: `${TRACK}em`,
               color: inkC,
@@ -484,13 +542,19 @@ export function CaretDolly({
       easing: LIGHT_IN,
     });
     const u = L.u;
-    const pop = (at: number) =>
+    const popAt = (at: number, ff: number) =>
       spring({
-        frame: f - at,
+        frame: ff - at,
         fps,
         config: { mass: 0.5, damping: 12, stiffness: 200 },
       });
+    const pop = (at: number) => popAt(at, f);
     const toolIn = [0, 1, 2, 3, 4].map((i) => pop(pullEnd - 8 + i * 2));
+    // The chip's label pops in on a spring that overshoots, so it is moving
+    // while its printed scale differs from a neighbouring frame's.
+    const chipAt = (ff: number) => popAt(pullEnd - 6, ff).toFixed(4);
+    const chipMoving =
+      chipAt(f + speed) !== chipAt(f) || chipAt(f) !== chipAt(f - speed);
     const armed = interpolate(f, [postEnd, postEnd + 4], [0, 1], CLAMP);
     const PRESS = { mass: 0.5, damping: 14, stiffness: 260 };
     const dip =
@@ -542,7 +606,7 @@ export function CaretDolly({
             display: "flex",
             alignItems: "center",
             gap: 8 * u,
-            fontFamily: face.fontFamily,
+            fontFamily,
             fontWeight: 400,
             fontSize: labelF,
             color: c.muted,
@@ -574,7 +638,7 @@ export function CaretDolly({
               alignItems: "center",
               gap: 6 * u,
               whiteSpace: "pre",
-              transform: `scale(${toolIn[1].toFixed(4)})`,
+              transform: `scale(${toolIn[1].toFixed(4)})${glide(chipMoving)}`,
               transformOrigin: "0% 50%",
             }}
           >
@@ -682,7 +746,7 @@ export function CaretDolly({
           width: W,
           height: H,
           transformOrigin: "0 0",
-          transform: `translate(${(W / 2).toFixed(2)}px, ${(H / 2).toFixed(2)}px) scale(${s.toFixed(5)}) translate(${(-cam.x).toFixed(3)}px, ${(-cam.y).toFixed(3)}px)`,
+          transform: `translate(${(W / 2).toFixed(2)}px, ${(H / 2).toFixed(2)}px) scale(${s.toFixed(5)}) translate(${(-cam.x).toFixed(3)}px, ${(-cam.y).toFixed(3)}px)${glide(camMoving)}`,
         }}
       >
         {card}
@@ -722,9 +786,11 @@ export function CaretDolly({
           height={curSize}
           style={{
             position: "absolute",
-            left: curX - curSize * 0.17,
-            top: curY - curSize * 0.1,
-            transform: `scale(${(1 - 0.12 * click).toFixed(4)})`,
+            // Laid out where the cursor enters; its travel is a transform,
+            // since layout would round the eased box to whole pixels.
+            left: sx0 - curSize * 0.17,
+            top: sy0 - curSize * 0.1,
+            transform: `translate(${curX - sx0}px, ${curY - sy0}px) scale(${(1 - 0.12 * click).toFixed(4)})`,
             transformOrigin: "17% 10%",
             filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.28))",
           }}
@@ -750,7 +816,9 @@ export function CaretDolly({
           </filter>
         </svg>
         <AbsoluteFill
-          style={{ filter: bx > 0.2 ? `url(#${filterId})` : undefined }}
+          style={{
+            filter: motionBlur && bx > 0.2 ? `url(#${filterId})` : undefined,
+          }}
         >
           {world}
         </AbsoluteFill>
@@ -761,18 +829,22 @@ export function CaretDolly({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.6}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${portrait ? "90% 46%" : "64% 60%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
-        }}
-      />
-      {content}
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={preset}
+            params={gParams}
+            timeOffset={c.groundOffset}
+            timeScale={0.6}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${portrait ? "90% 46%" : "64% 60%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
+            }}
+          />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

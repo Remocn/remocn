@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const nunito = loadFont("normal", {
   weights: ["400", "500"],
@@ -22,7 +22,19 @@ export interface SpellOutProps {
   name?: string;
   line?: string;
   accent?: string;
+  /** Color of the spelled word; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the word and line. Load it yourself; Nunito by default. */
+  fontFamily?: string;
+  /** Frames between letters as they drop in. */
+  stagger?: number;
+  /** Frames the spelled-out word holds before it closes up. */
+  hold?: number;
+  /** Size of the word and line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -74,11 +86,11 @@ interface Metrics {
   lineCap: number;
 }
 
-function measure(chars: string[], line: string): Metrics {
+function measure(chars: string[], line: string, font: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("spell-out: no 2d context");
-  const fam = `"${nunito.fontFamily}"`;
+  const fam = `"${font}"`;
   ctx.font = `500 ${FONT_PX}px ${fam}`;
   const adv = chars.map((ch) => ctx.measureText(ch).width / FONT_PX);
   const pos: number[] = [];
@@ -111,7 +123,7 @@ function measure(chars: string[], line: string): Metrics {
   };
 }
 
-function useMetrics(chars: string[], line: string) {
+function useMetrics(chars: string[], line: string, font: string) {
   const key = chars.join("");
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("spell-out: measuring"));
@@ -120,12 +132,12 @@ function useMetrics(chars: string[], line: string) {
     let live = true;
     Promise.all([
       nunito.waitUntilDone(),
-      document.fonts.load(`500 100px "${nunito.fontFamily}"`),
+      document.fonts.load(`500 100px "${font}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(Array.from(key), line));
+        setMetrics(measure(Array.from(key), line, font));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -134,7 +146,7 @@ function useMetrics(chars: string[], line: string) {
     return () => {
       live = false;
     };
-  }, [key, line, handle]);
+  }, [key, line, font, handle]);
   return metrics;
 }
 
@@ -143,21 +155,47 @@ function impact(u: number) {
   return Math.exp(-u / 3.6) * Math.cos(u * 0.55);
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SpellOut({
   name = "remocn",
   line = "Say it once. Remember it.",
   accent,
+  ink,
   background,
+  fontFamily = nunito.fontFamily,
+  stagger = LETTER_GAP,
+  hold = HOLD_SPELLED,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: SpellOutProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
   const dash = accent ?? c.accent;
   const chars = useMemo(() => Array.from(name.replace(/\s+/g, "")), [name]);
-  const m = useMetrics(chars, line);
+  const m = useMetrics(chars, line, fontFamily);
 
   if (!m || chars.length === 0) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -185,12 +223,14 @@ export function SpellOut({
   const lh = R * 1.4;
   const bo = (lh - (m.asc + m.desc) * R) / 2 + m.asc * R;
 
-  const lastLand = SPELL_AT + (n - 1) * LETTER_GAP + FALL;
-  const closeAt = lastLand + HOLD_SPELLED;
-  const close = interpolate(t, [closeAt, closeAt + CLOSE_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IN_OUT,
-  });
+  const lastLand = SPELL_AT + (n - 1) * stagger + FALL;
+  const closeAt = lastLand + hold;
+  const closeOf = (tt: number) =>
+    interpolate(tt, [closeAt, closeAt + CLOSE_LEN], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IN_OUT,
+    });
+  const close = closeOf(t);
   const size = S + (F - S) * close;
   const spellLeft = (W - spelledW * S) / 2;
   const finalLeft = (W - m.width * F) / 2;
@@ -198,25 +238,47 @@ export function SpellOut({
 
   const nodes: React.ReactNode[] = [];
   for (let i = 0; i < n; i++) {
-    const landAt = SPELL_AT + i * LETTER_GAP + FALL;
-    const fall = interpolate(t, [landAt - FALL, landAt], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IN,
-    });
+    const landAt = SPELL_AT + i * stagger + FALL;
     if (t < landAt - FALL) continue;
+    const centre = (n - 1) / 2;
+    const settleAt = closeAt + CLOSE_LEN - 2 + Math.abs(i - centre) * 1.5;
+    // The letter is laid out on the closed word's baseline; the fall and the
+    // climb there are a transform, since layout rounds a baseline to whole
+    // pixels and a letter eased by `top` clicks down pixel by pixel.
+    const letterAt = (tt: number) => {
+      const fall = interpolate(tt, [landAt - FALL, landAt], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IN,
+      });
+      const cl = closeOf(tt);
+      const air = fall < 1 ? Math.sin(fall * Math.PI * 0.5) : 1;
+      const stretch = fall < 1 ? 0.22 * air : 0;
+      const q = impact(tt - landAt);
+      const q2 = impact(tt - settleAt) * 0.6;
+      const s = (S + (F - S) * cl) / R;
+      return {
+        fall,
+        dy: (spellBase - finalBase) * (1 - cl) + (1 - fall) * -S * 0.9,
+        sx: s * (1 - stretch * 0.5 + 0.12 * q + 0.08 * q2),
+        sy: s * (1 + stretch - 0.2 * q - 0.12 * q2),
+      };
+    };
+    const { fall, dy, sx, sy } = letterAt(t);
+    // The bounces decay without a clean end: compare the drawn values with
+    // the neighbouring frames.
+    const differs = (
+      a: ReturnType<typeof letterAt>,
+      b: ReturnType<typeof letterAt>,
+    ) =>
+      Math.abs(a.dy - b.dy) > 1e-3 ||
+      Math.abs(a.sy - b.sy) * lh > 1e-3 ||
+      Math.abs(a.sx - b.sx) * lh > 1e-3;
+    const here = { fall, dy, sx, sy };
+    const moving =
+      differs(letterAt(t + speed), here) || differs(here, letterAt(t - speed));
     const x0 = spellLeft + spelled[i] * S;
     const x1 = finalLeft + m.pos[i] * F;
     const x = x0 + (x1 - x0) * close;
-    const dy = (1 - fall) * -S * 0.9;
-    const air = fall < 1 ? Math.sin(fall * Math.PI * 0.5) : 1;
-    const stretch = fall < 1 ? 0.22 * air : 0;
-    const q = impact(t - landAt);
-    const centre = (n - 1) / 2;
-    const settleAt = closeAt + CLOSE_LEN - 2 + Math.abs(i - centre) * 1.5;
-    const q2 = impact(t - settleAt) * 0.6;
-    const sy = 1 + stretch - 0.2 * q - 0.12 * q2;
-    const sx = 1 - stretch * 0.5 + 0.12 * q + 0.08 * q2;
-    const s = size / R;
     const o = interpolate(fall, [0, 0.35], [0, 1], CLAMP);
     nodes.push(
       <div
@@ -224,16 +286,16 @@ export function SpellOut({
         style={{
           position: "absolute",
           left: x + (m.adv[i] * (size - R)) / 2,
-          top: base - bo + dy,
+          top: finalBase - bo,
           height: lh,
-          fontFamily: nunito.fontFamily,
+          fontFamily,
           fontWeight: 500,
           fontSize: R,
           lineHeight: `${lh}px`,
           whiteSpace: "pre",
-          color: c.ink,
+          color: fg,
           opacity: o,
-          transform: `scale(${(s * sx).toFixed(4)}, ${(s * sy).toFixed(4)})`,
+          transform: `${Math.abs(dy) > 1e-3 ? `translateY(${dy}px) ` : ""}scale(${sx.toFixed(4)}, ${sy.toFixed(4)})${glide(moving)}`,
           transformOrigin: `${((m.adv[i] * R) / 2).toFixed(1)}px ${bo.toFixed(1)}px`,
         }}
       >
@@ -287,36 +349,38 @@ export function SpellOut({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      {nodes}
-      {line ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: lineBase - lbo,
-            height: llh,
-            overflow: "hidden",
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
+      <ScaleLayer scale={scale}>
+        {nodes}
+        {line ? (
           <div
             style={{
-              fontFamily: nunito.fontFamily,
-              fontWeight: 500,
-              fontSize: lineSize0,
-              lineHeight: `${llh}px`,
-              letterSpacing: `${LINE_TRACK}em`,
-              color: c.line,
-              whiteSpace: "pre",
-              transform: `translateY(${((1 - lp) * llh).toFixed(2)}px)`,
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: lineBase - lbo,
+              height: llh,
+              overflow: "hidden",
+              display: "flex",
+              justifyContent: "center",
             }}
           >
-            {line}
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 500,
+                fontSize: lineSize0,
+                lineHeight: `${llh}px`,
+                letterSpacing: `${LINE_TRACK}em`,
+                color: c.line,
+                whiteSpace: "pre",
+                transform: `translateY(${((1 - lp) * llh).toFixed(2)}px)${glide(midway(lp))}`,
+              }}
+            >
+              {line}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -4,14 +4,9 @@ import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: GEIST } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -124,7 +119,23 @@ export interface FeatureChipsFlowProps {
   name?: string;
   /** Shown before a custom `name` (ignored for the built-in logo). */
   logo?: React.ReactNode;
+  /** Frame the headliners peel out of the stream; the name lands 38 frames later. */
+  converge?: number;
+  /** How far the cluster pushes in over the hold (0.045 = 4.5%). */
+  push?: number;
   accent?: string;
+  /** Color of the chip labels and the name; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the chips and a custom name. Load it yourself; Geist by default. Chip widths are fitted to Geist. */
+  fontFamily?: string;
+  /** Size of the stream and cluster, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -195,6 +206,7 @@ const CONVERGE = 58;
 const HIT = 96;
 
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
+
 const INOUT = Easing.bezier(0.65, 0, 0.35, 1);
 
 function hash(n: number): number {
@@ -256,16 +268,42 @@ interface Placed {
   target?: { x: number; y: number };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FeatureChipsFlow({
   features = DEFAULT_FEATURES,
   name = "remocn",
   logo,
+  converge = CONVERGE,
+  push: pushBy = 0.045,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = GEIST,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: FeatureChipsFlowProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const hit = converge + HIT - CONVERGE;
+  const { width: W, height: H, fps } = useSceneConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const isLight = theme === "light";
   const isLogo = name.trim().toLowerCase() === "remocn";
@@ -291,6 +329,7 @@ export function FeatureChipsFlow({
         muted: "rgba(237,237,239,0.62)",
         shadow: "0 6px 18px rgba(0,0,0,0.35)",
       };
+  const inkColor = ink ?? p.ink;
 
   const chipH = H * 0.06;
   const font = chipH * 0.36;
@@ -355,7 +394,7 @@ export function FeatureChipsFlow({
       return (((raw % span) + span) % span) - (c.w * s) / 2 - span * 0.12;
     };
     const ordered = [...heads].sort(
-      (a, b) => a.rowY - b.rowY || flowX(a, CONVERGE) - flowX(b, CONVERGE),
+      (a, b) => a.rowY - b.rowY || flowX(a, converge) - flowX(b, converge),
     );
     const nameW = isLogo
       ? H * 0.13 * LOGO_EM
@@ -365,7 +404,7 @@ export function FeatureChipsFlow({
     CLUSTER_ROWS.forEach((count, r) => {
       const members = ordered
         .slice(k, k + count)
-        .sort((a, b) => flowX(a, CONVERGE) - flowX(b, CONVERGE));
+        .sort((a, b) => flowX(a, converge) - flowX(b, converge));
       k += count;
       const dy =
         (r - NAME_ROW) * rowGap +
@@ -397,10 +436,23 @@ export function FeatureChipsFlow({
       }
     });
     return { list, flowX };
-  }, [chips, W, H, chipH, font, iconSize, padX, gap, name, isLogo, logo]);
+  }, [
+    chips,
+    W,
+    H,
+    chipH,
+    font,
+    iconSize,
+    padX,
+    gap,
+    name,
+    isLogo,
+    logo,
+    converge,
+  ]);
 
   // The hit: name lands, the cluster takes a small outward nudge and settles.
-  const hitT = frame - HIT;
+  const hitT = frame - hit;
   const nameIn = interpolate(hitT, [-2, 8], [0, 1], {
     easing: OUT,
     extrapolateLeft: "clamp",
@@ -422,7 +474,7 @@ export function FeatureChipsFlow({
     extrapolateRight: "clamp",
   });
   const beamChip = `radial-gradient(90% 160% at ${18 + drift * 10}% -10%, rgba(143,180,255,0.75) 0%, rgba(143,180,255,0) 60%), linear-gradient(${100 + drift * 12}deg, ${accent} 0%, #3d5bff 45%, #1a1660 135%)`;
-  const pool = interpolate(frame, [CONVERGE, HIT + 20], [0.55, 1], {
+  const pool = interpolate(frame, [converge, hit + 20], [0.55, 1], {
     easing: INOUT,
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -431,7 +483,7 @@ export function FeatureChipsFlow({
     ? `radial-gradient(62% 52% at ${48 + drift * 4}% 56%, rgba(143,180,255,${(0.34 * pool).toFixed(3)}) 0%, rgba(143,180,255,0) 72%), radial-gradient(110% 85% at 50% 45%, ${p.top} 0%, ${p.stage} 70%)`
     : `radial-gradient(58% 50% at ${48 + drift * 4}% 56%, rgba(61,91,255,${(0.2 * pool).toFixed(3)}) 0%, rgba(26,22,96,${(0.16 * pool).toFixed(3)}) 50%, rgba(2,3,10,0) 78%), radial-gradient(110% 85% at 50% 45%, ${p.top} 0%, ${p.stage} 70%)`;
 
-  const push = interpolate(frame, [CONVERGE, 170], [1, 1.045], {
+  const push = interpolate(frame, [converge, 170], [1, 1 + pushBy], {
     easing: INOUT,
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -445,12 +497,12 @@ export function FeatureChipsFlow({
     const farOp = 0.4 + c.depth * 0.6;
     if (c.target) {
       // Nearest headliners peel off first (distance measured at the cue).
-      const cx0 = placed.flowX(c, CONVERGE);
+      const cx0 = placed.flowX(c, converge);
       const d =
         Math.hypot(cx0 - c.target.x, fy - c.target.y) / Math.hypot(W, H);
       const delay = d * 22 + hash(i * 2.1) * 4;
       const pr = spring({
-        frame: f - CONVERGE - delay,
+        frame: f - converge - delay,
         fps,
         config: { damping: 17, stiffness: 120, mass: 0.8 },
       });
@@ -469,7 +521,7 @@ export function FeatureChipsFlow({
     }
     const out = interpolate(
       f,
-      [CONVERGE + 4 + hash(i) * 10, CONVERGE + 30 + hash(i) * 10],
+      [converge + 4 + hash(i) * 10, converge + 30 + hash(i) * 10],
       [0, 1],
       { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: INOUT },
     );
@@ -487,11 +539,12 @@ export function FeatureChipsFlow({
     c: Placed,
     key: string,
     st: ReturnType<typeof stateAt>,
+    shown = true,
   ) => {
     const v = c.chip.variant ?? "neutral";
     const isAccent = v === "accent";
     const isOutline = v === "outline";
-    const fg = isAccent ? "#FFFFFF" : isOutline ? p.muted : p.ink;
+    const fg = isAccent ? "#FFFFFF" : isOutline ? p.muted : inkColor;
     return (
       <div
         key={key}
@@ -512,11 +565,11 @@ export function FeatureChipsFlow({
             : isOutline
               ? `inset 0 0 0 1px ${p.outline}`
               : `inset 0 0 0 1px ${p.hair}, ${p.shadow}`,
-          display: "flex",
+          display: shown ? "flex" : "none",
           alignItems: "center",
           justifyContent: "center",
           gap,
-          fontFamily: GEIST,
+          fontFamily,
           fontWeight: 500,
           fontSize: font,
           letterSpacing: `${CHIP_TRACKING}em`,
@@ -531,29 +584,36 @@ export function FeatureChipsFlow({
   };
 
   const nodes: React.ReactNode[] = [];
+  // Every chip and trail copy keeps its node, hidden with `display: none`
+  // when it has nothing to paint, so the node order never shifts as chips
+  // come and go.
   placed.list.forEach((c, i) => {
     const st = stateAt(c, i, frame);
-    if (st.op <= 0.01) return;
+    const visible = st.op > 0.01;
     // Fake motion blur: two faint trailing copies while a chip snaps fast.
     if (c.target) {
       const prev = stateAt(c, i, frame - 1);
       const v = Math.hypot(st.x - prev.x, st.y - prev.y);
-      if (v > chipH * 0.25) {
-        const k = Math.min(1, (v - chipH * 0.25) / (chipH * 0.5));
-        [0.45, 0.9].forEach((back, g) => {
-          const gs = stateAt(c, i, frame - back);
-          nodes.push(
-            renderChip(c, `${i}-g${g}`, {
+      const trail = visible && v > chipH * 0.25;
+      const k = Math.min(1, (v - chipH * 0.25) / (chipH * 0.5));
+      [0.45, 0.9].forEach((back, g) => {
+        const gs = trail ? stateAt(c, i, frame - back) : st;
+        nodes.push(
+          renderChip(
+            c,
+            `${i}-g${g}`,
+            {
               ...gs,
               op: gs.op * k * (g ? 0.12 : 0.22),
               blur: gs.blur + 1.5,
               z: st.z - 1,
-            }),
-          );
-        });
-      }
+            },
+            trail,
+          ),
+        );
+      });
     }
-    nodes.push(renderChip(c, `${i}`, st));
+    nodes.push(renderChip(c, `${i}`, st, visible));
   });
 
   const nameSize = H * 0.13;
@@ -561,79 +621,93 @@ export function FeatureChipsFlow({
   return (
     <AbsoluteFill
       style={{
-        background: ground,
+        background:
+          background === undefined
+            ? ground
+            : background === "transparent"
+              ? undefined
+              : background,
         overflow: "hidden",
       }}
     >
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
-      >
-        {nodes}
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          // The river never stops, so the tilt never does either: one tilt
+          // here covers every chip and the name.
           style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: H * 0.5 - nameSize * 0.62,
-            height: nameSize * 1.24,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: nameSize * 0.2,
-            opacity: nameIn,
-            transform: `scale(${nameScale})`,
-            filter: nameIn < 1 ? `blur(${(1 - nameIn) * 10}px)` : undefined,
-            zIndex: 400,
+            transform: `scale(${push})${glide(true)}`,
+            transformOrigin: "50% 50%",
           }}
         >
-          {isLogo ? (
-            <RemocnLogo fontSize={nameSize} color={p.ink} />
-          ) : (
-            <>
-              {logo}
-              <span
-                style={{
-                  fontFamily: GEIST,
-                  fontWeight: 500,
-                  fontSize: nameSize,
-                  letterSpacing: "-0.04em",
-                  lineHeight: 1,
-                  color: p.ink,
-                  paddingBottom: nameSize * 0.06,
-                }}
-              >
-                {name}
-              </span>
-            </>
-          )}
-        </div>
-      </AbsoluteFill>
-      <svg
-        width={W}
-        height={H}
-        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
-        aria-hidden
-      >
-        <filter id={`${uid}-grain`}>
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency={0.85}
-            numOctaves={2}
-            seed={11}
-          />
-          <feColorMatrix
-            type="matrix"
-            values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1 0"
-          />
-        </filter>
-        <rect
+          {nodes}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: H * 0.5 - nameSize * 0.62,
+              height: nameSize * 1.24,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: nameSize * 0.2,
+              opacity: nameIn,
+              transform: `scale(${nameScale})`,
+              filter: nameIn < 1 ? `blur(${(1 - nameIn) * 10}px)` : undefined,
+              zIndex: 400,
+            }}
+          >
+            {isLogo ? (
+              <RemocnLogo fontSize={nameSize} color={inkColor} />
+            ) : (
+              <>
+                {logo}
+                <span
+                  style={{
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: nameSize,
+                    letterSpacing: "-0.04em",
+                    lineHeight: 1,
+                    color: inkColor,
+                    paddingBottom: nameSize * 0.06,
+                  }}
+                >
+                  {name}
+                </span>
+              </>
+            )}
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? (
+        <svg
           width={W}
           height={H}
-          filter={`url(#${uid}-grain)`}
-          opacity={isLight ? 0.05 : 0.06}
-          style={{ mixBlendMode: isLight ? "multiply" : "screen" }}
-        />
-      </svg>
+          style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+          aria-hidden
+        >
+          <filter id={`${uid}-grain`}>
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency={0.85}
+              numOctaves={2}
+              seed={11}
+            />
+            <feColorMatrix
+              type="matrix"
+              values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1 0"
+            />
+          </filter>
+          <rect
+            width={W}
+            height={H}
+            filter={`url(#${uid}-grain)`}
+            opacity={isLight ? 0.05 : 0.06}
+            style={{ mixBlendMode: isLight ? "multiply" : "screen" }}
+          />
+        </svg>
+      ) : null}
     </AbsoluteFill>
   );
 }

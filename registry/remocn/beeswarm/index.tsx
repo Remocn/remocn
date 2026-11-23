@@ -9,9 +9,9 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -33,6 +33,22 @@ export interface BeeswarmProps {
   axisLabel?: string;
   totalLabel?: string;
   accent?: string;
+  /** Frames each dot takes to cross from the mixed swarm to its group. */
+  split?: number;
+  /** Weight of the two median numbers. */
+  fontWeight?: number;
+  /** Text color of the medians; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; DM Sans by default. */
+  fontFamily?: string;
+  /** Size of the chart, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -89,7 +105,6 @@ const FALL_T = 16;
 const SPLIT = 64;
 const SPLIT_STAGGER = 10;
 const SPLIT_T = 32;
-const HIT = SPLIT + SPLIT_STAGGER + SPLIT_T - 4;
 
 function hash(n: number) {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -130,6 +145,24 @@ function swarm(xs: number[], d: number) {
   return ys;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
@@ -165,13 +198,25 @@ export function Beeswarm({
   axisLabel = "launch videos shipped per quarter",
   totalLabel = "200 teams",
   accent = "#3B5BFD",
+  split = SPLIT_T,
+  fontWeight = 400,
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: BeeswarmProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage = background ?? p.bg;
+  const HIT = SPLIT + SPLIT_STAGGER + split - 4;
 
   const N = Math.max(20, Math.min(320, Math.round(count)));
   const [d0, d1] = domain;
@@ -291,7 +336,7 @@ export function Beeswarm({
         : 0;
     const y1 = fromY + (ty1 - fromY) * fall + settle;
     const sStart = SPLIT + hash(i + 2.9) * SPLIT_STAGGER;
-    const k = interpolate(t, [sStart, sStart + SPLIT_T], [0, 1], {
+    const k = interpolate(t, [sStart, sStart + split], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -344,197 +389,201 @@ export function Beeswarm({
       a,
       lab,
       color: g === 0 ? p.muted : p.label,
-      line: g === 0 ? p.fg : accent,
+      line: g === 0 ? fg : accent,
     };
   });
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${camScale})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          <line
-            x1={W / 2 - ((x1 - x0) / 2) * ruleIn}
-            x2={W / 2 + ((x1 - x0) / 2) * ruleIn}
-            y1={axisY}
-            y2={axisY}
-            stroke={p.rule}
-            strokeWidth={Math.max(1, u)}
-          />
-          <line
-            x1={W / 2 - ((x1 - x0) / 2) * ruleIn}
-            x2={W / 2 + ((x1 - x0) / 2) * ruleIn}
-            y1={axisBase}
-            y2={axisBase}
-            stroke={p.axis}
-            strokeWidth={Math.max(1, u)}
-          />
-          {ticks.map((v) => (
-            <line
-              key={v}
-              x1={xOf(v)}
-              x2={xOf(v)}
-              y1={axisBase}
-              y2={axisBase + 6 * u}
-              stroke={p.axis}
-              strokeWidth={Math.max(1, u)}
-              opacity={ruleIn}
-            />
-          ))}
-          <defs>
-            <radialGradient
-              id={meshId}
-              gradientUnits="userSpaceOnUse"
-              cx={bloomX + (push - 0.5) * 6 * u}
-              cy={axisY}
-              r={bloomR}
-            >
-              {meshStops.map((c, k) => (
-                <stop
-                  key={c}
-                  offset={(k / (meshStops.length - 1)) ** 1.15}
-                  stopColor={c}
-                />
-              ))}
-            </radialGradient>
-          </defs>
-          {circles}
-          {groups.map((m) => {
-            const len = (m.bot - m.top) * (0.4 + 0.6 * m.snap);
-            const cy = (m.top + m.bot) / 2;
-            return (
-              <g key={m.grp.label} opacity={m.a}>
-                <line
-                  x1={m.x}
-                  x2={m.x}
-                  y1={cy - len / 2}
-                  y2={cy + len / 2}
-                  stroke={p.bg}
-                  strokeWidth={6 * u}
-                  strokeLinecap="round"
-                />
-                <line
-                  x1={m.x}
-                  x2={m.x}
-                  y1={cy - len / 2}
-                  y2={cy + len / 2}
-                  stroke={m.line}
-                  strokeWidth={2.4 * u}
-                  strokeLinecap="round"
-                />
-              </g>
-            );
-          })}
-        </svg>
-
-        <div
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: axisY - layout.ext1 - 52 * u,
-            textAlign: "center",
-            fontFamily: sans,
-            fontWeight: 500,
-            fontSize: 18 * u,
-            letterSpacing: "-0.01em",
-            color: p.muted,
-            opacity: totalIn,
+            // The push outlasts every move inside it, so this one tilt
+            // covers all the text in the chart.
+            transform: `scale(${camScale})${glide(midway(push))}`,
+            transformOrigin: "50% 50%",
           }}
         >
-          {totalLabel}
-        </div>
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <line
+              x1={W / 2 - ((x1 - x0) / 2) * ruleIn}
+              x2={W / 2 + ((x1 - x0) / 2) * ruleIn}
+              y1={axisY}
+              y2={axisY}
+              stroke={p.rule}
+              strokeWidth={Math.max(1, u)}
+            />
+            <line
+              x1={W / 2 - ((x1 - x0) / 2) * ruleIn}
+              x2={W / 2 + ((x1 - x0) / 2) * ruleIn}
+              y1={axisBase}
+              y2={axisBase}
+              stroke={p.axis}
+              strokeWidth={Math.max(1, u)}
+            />
+            {ticks.map((v) => (
+              <line
+                key={v}
+                x1={xOf(v)}
+                x2={xOf(v)}
+                y1={axisBase}
+                y2={axisBase + 6 * u}
+                stroke={p.axis}
+                strokeWidth={Math.max(1, u)}
+                opacity={ruleIn}
+              />
+            ))}
+            <defs>
+              <radialGradient
+                id={meshId}
+                gradientUnits="userSpaceOnUse"
+                cx={bloomX + (push - 0.5) * 6 * u}
+                cy={axisY}
+                r={bloomR}
+              >
+                {meshStops.map((c, k) => (
+                  <stop
+                    key={c}
+                    offset={(k / (meshStops.length - 1)) ** 1.15}
+                    stopColor={c}
+                  />
+                ))}
+              </radialGradient>
+            </defs>
+            {circles}
+            {groups.map((m) => {
+              const len = (m.bot - m.top) * (0.4 + 0.6 * m.snap);
+              const cy = (m.top + m.bot) / 2;
+              return (
+                <g key={m.grp.label} opacity={m.a}>
+                  <line
+                    x1={m.x}
+                    x2={m.x}
+                    y1={cy - len / 2}
+                    y2={cy + len / 2}
+                    stroke={stage === "transparent" ? p.bg : stage}
+                    strokeWidth={6 * u}
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1={m.x}
+                    x2={m.x}
+                    y1={cy - len / 2}
+                    y2={cy + len / 2}
+                    stroke={m.line}
+                    strokeWidth={2.4 * u}
+                    strokeLinecap="round"
+                  />
+                </g>
+              );
+            })}
+          </svg>
 
-        {groups.map((m) => (
           <div
-            key={`lab${m.grp.label}`}
             style={{
               position: "absolute",
-              left: m.x - 200 * u,
-              width: 400 * u,
-              bottom: m.labelBottom,
+              left: 0,
+              width: W,
+              top: axisY - layout.ext1 - 52 * u,
               textAlign: "center",
-              opacity: m.lab,
-              transform: `translateY(${(1 - m.lab) * 10 * u}px)`,
+              fontFamily,
+              fontWeight: 500,
+              fontSize: 18 * u,
+              letterSpacing: "-0.01em",
+              color: p.muted,
+              opacity: totalIn,
             }}
           >
-            <div
-              style={{
-                fontFamily: sans,
-                fontWeight: 500,
-                fontSize: 18 * u,
-                letterSpacing: "-0.01em",
-                color: m.color,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {m.grp.label}
-            </div>
-            <div
-              style={{
-                marginTop: 2 * u,
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: 64 * u,
-                lineHeight: 1,
-                letterSpacing: "-0.035em",
-                color: p.fg,
-                fontVariantNumeric: "tabular-nums",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {fmt(m.grp.median)}
-            </div>
+            {totalLabel}
           </div>
-        ))}
 
-        {ticks.map((v) => (
+          {groups.map((m) => (
+            <div
+              key={`lab${m.grp.label}`}
+              style={{
+                position: "absolute",
+                left: m.x - 200 * u,
+                width: 400 * u,
+                bottom: m.labelBottom,
+                textAlign: "center",
+                opacity: m.lab,
+                transform: `translateY(${(1 - m.lab) * 10 * u}px)`,
+              }}
+            >
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: 18 * u,
+                  letterSpacing: "-0.01em",
+                  color: m.color,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {m.grp.label}
+              </div>
+              <div
+                style={{
+                  marginTop: 2 * u,
+                  fontFamily,
+                  fontWeight,
+                  fontSize: 64 * u,
+                  lineHeight: 1,
+                  letterSpacing: "-0.035em",
+                  color: fg,
+                  fontVariantNumeric: "tabular-nums",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {fmt(m.grp.median)}
+              </div>
+            </div>
+          ))}
+
+          {ticks.map((v) => (
+            <div
+              key={`t${v}`}
+              style={{
+                position: "absolute",
+                left: xOf(v) - 30 * u,
+                width: 60 * u,
+                top: axisBase + 12 * u,
+                textAlign: "center",
+                fontFamily,
+                fontWeight: 500,
+                fontSize: 15 * u,
+                color: p.muted,
+                fontVariantNumeric: "tabular-nums",
+                opacity: ruleIn,
+              }}
+            >
+              {fmt(v)}
+            </div>
+          ))}
           <div
-            key={`t${v}`}
             style={{
               position: "absolute",
-              left: xOf(v) - 30 * u,
-              width: 60 * u,
-              top: axisBase + 12 * u,
+              left: 0,
+              width: W,
+              top: axisBase + 40 * u,
               textAlign: "center",
-              fontFamily: sans,
+              fontFamily,
               fontWeight: 500,
-              fontSize: 15 * u,
+              fontSize: 16 * u,
               color: p.muted,
-              fontVariantNumeric: "tabular-nums",
               opacity: ruleIn,
             }}
           >
-            {fmt(v)}
+            {axisLabel}
           </div>
-        ))}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: axisBase + 40 * u,
-            textAlign: "center",
-            fontFamily: sans,
-            fontWeight: 500,
-            fontSize: 16 * u,
-            color: p.muted,
-            opacity: ruleIn,
-          }}
-        >
-          {axisLabel}
-        </div>
-      </AbsoluteFill>
-      <Grain opacity={p.grain} />
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

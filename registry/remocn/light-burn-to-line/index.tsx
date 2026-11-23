@@ -19,9 +19,13 @@ import {
   random,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -392,7 +396,7 @@ const LightBurnToLinePresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const o = { ...lightBurnToLineDefaults, ...passedProps };
   const s = burnState(presentationProgress, W, H, o);
 
@@ -627,6 +631,47 @@ function layout(W: number, H: number) {
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+/** The shader ground, or a solid `background` fill in its place. */
+function Ground({
+  background,
+  children,
+}: {
+  background?: string;
+  children: React.ReactNode;
+}) {
+  if (background === undefined) return children;
+  return (
+    <AbsoluteFill
+      style={{
+        background: background === "transparent" ? undefined : background,
+      }}
+    />
+  );
+}
+
+type SceneLook = {
+  fontFamily: string;
+  background?: string;
+  scale: number;
+  speed: number;
+};
+
 function Icon({ d, size, color }: { d: string; size: number; color: string }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden>
@@ -655,18 +700,33 @@ function SceneA({
   palette,
   ground,
   groundParams,
+  request,
+  headline,
+  delay,
+  look: { fontFamily, background, scale, speed },
 }: {
   palette: Palette;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  request: string;
+  headline: [string, string];
+  delay: number;
+  look: SceneLook;
 }) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const raw = useSceneFrame();
+  const frame = Math.max(0, raw - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const L = layout(W, H);
   const [sx, sy, sw, sh] = L.subject;
   const u = Math.min(W, H) / 720;
   const lift = spring({ frame: frame - A_BEATS.window, fps, config: HEAVY });
-  const push = interpolate(frame, [0, A_LEN], [1, 1.035], CLAMP);
+  const pushAt = (r: number) =>
+    interpolate(Math.max(0, r - delay) * speed, [0, A_LEN], [1, 1.035], CLAMP);
+  const push = pushAt(raw);
+  // The push carries the window and everything in it, so its tilt covers
+  // the window's own rise as well.
+  const pushMoving = pushAt(raw + 1) !== push || pushAt(raw - 1) !== push;
   const chat = interpolate(frame, [A_BEATS.chat, A_BEATS.chat + 12], [0, 1], {
     ...CLAMP,
     easing: ENTER,
@@ -681,350 +741,371 @@ function SceneA({
 
   return (
     <AbsoluteFill>
-      <GshGround
-        preset={ground}
-        params={ground ? groundParams : { ...palette.groundA, ...groundParams }}
-        timeOffset={5}
-        timeScale={0.7}
-      />
-      <AbsoluteFill style={{ transform: `scale(${push})` }}>
-        <div
-          style={{
-            position: "absolute",
-            left: sx * W,
-            top: sy * H,
-            width: sw * W,
-            height: sh * H,
-            borderRadius: 14 * u,
-            overflow: "hidden",
-            backgroundColor: palette.windowBg,
-            fontFamily: geist.fontFamily,
-            transform: `translateY(${(1 - lift) * 40 * u}px) scale(${0.96 + 0.04 * lift})`,
-            opacity: interpolate(lift, [0, 0.3], [0, 1], CLAMP),
-            boxShadow: `0 1px 2px rgba(${palette.shadow},0.3), 0 18px 40px rgba(${palette.shadow},0.35), 0 50px 110px rgba(${palette.shadow},0.45), inset 0 0 0 1px ${palette.hairline}`,
-            display: "flex",
-            flexDirection: "column",
-          }}
+      <Ground background={background}>
+        <GshGround
+          preset={ground}
+          params={
+            ground ? groundParams : { ...palette.groundA, ...groundParams }
+          }
+          timeOffset={5}
+          timeScale={0.7}
+        />
+      </Ground>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${push})${glide(pushMoving)}` }}
         >
           <div
             style={{
-              height: 44 * u,
-              flexShrink: 0,
+              position: "absolute",
+              left: sx * W,
+              top: sy * H,
+              width: sw * W,
+              height: sh * H,
+              borderRadius: 14 * u,
+              overflow: "hidden",
+              backgroundColor: palette.windowBg,
+              fontFamily,
+              transform: `translateY(${(1 - lift) * 40 * u}px) scale(${0.96 + 0.04 * lift})`,
+              opacity: interpolate(lift, [0, 0.3], [0, 1], CLAMP),
+              boxShadow: `0 1px 2px rgba(${palette.shadow},0.3), 0 18px 40px rgba(${palette.shadow},0.35), 0 50px 110px rgba(${palette.shadow},0.45), inset 0 0 0 1px ${palette.hairline}`,
               display: "flex",
-              alignItems: "center",
-              gap: 10 * u,
-              padding: `0 ${14 * u}px`,
-              borderBottom: `1px solid ${palette.hairline}`,
-              backgroundColor: palette.sidebar,
+              flexDirection: "column",
             }}
           >
-            {["#ff6159", "#ffbd2e", "#28c941"].map((c) => (
-              <div
-                key={c}
-                style={{
-                  width: 10 * u,
-                  height: 10 * u,
-                  borderRadius: 99,
-                  backgroundColor: c,
-                  opacity: 0.85,
-                }}
-              />
-            ))}
-            <div style={{ display: "flex", gap: 4 * u, marginLeft: 8 * u }}>
-              <Icon d={ICONS.back} size={16 * u} color={palette.sideMuted} />
-              <Icon d={ICONS.fwd} size={16 * u} color={palette.sideMuted} />
-            </div>
             <div
               style={{
-                flex: 1,
+                height: 44 * u,
+                flexShrink: 0,
                 display: "flex",
-                justifyContent: "center",
+                alignItems: "center",
+                gap: 10 * u,
+                padding: `0 ${14 * u}px`,
+                borderBottom: `1px solid ${palette.hairline}`,
+                backgroundColor: palette.sidebar,
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6 * u,
-                  padding: `${5 * u}px ${14 * u}px`,
-                  borderRadius: 8 * u,
-                  backgroundColor: palette.chip,
-                  color: palette.sideMuted,
-                  fontSize: fs,
-                }}
-              >
-                <Icon d={ICONS.lock} size={12 * u} color={palette.sideMuted} />
-                lumen.app/launch
-              </div>
-            </div>
-            <div
-              style={{
-                padding: `${6 * u}px ${12 * u}px`,
-                borderRadius: 8 * u,
-                backgroundColor: palette.accent,
-                color: "#fff",
-                fontSize: fs,
-                fontWeight: 400,
-              }}
-            >
-              Publish
-            </div>
-          </div>
-          <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-            {L.tall ? null : (
-              <div
-                style={{
-                  width: sideW,
-                  flexShrink: 0,
-                  backgroundColor: palette.sidebar,
-                  borderRight: `1px solid ${palette.hairline}`,
-                  padding: 14 * u,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10 * u,
-                  color: palette.sideInk,
-                  fontSize: fs,
-                }}
-              >
+              {["#ff6159", "#ffbd2e", "#28c941"].map((c) => (
                 <div
+                  key={c}
                   style={{
-                    alignSelf: "flex-end",
-                    maxWidth: "88%",
-                    padding: `${8 * u}px ${11 * u}px`,
-                    borderRadius: 10 * u,
-                    backgroundColor: palette.chip,
-                    boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
-                    lineHeight: 1.35,
-                    opacity: chat,
-                    transform: `translateY(${(1 - chat) * 10 * u}px)`,
+                    width: 10 * u,
+                    height: 10 * u,
+                    borderRadius: 99,
+                    backgroundColor: c,
+                    opacity: 0.85,
                   }}
-                >
-                  Make the hero calmer and add the product shots.
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 7 * u,
-                    color: palette.sideMuted,
-                    opacity: chat,
-                  }}
-                >
-                  {[
-                    "Softened the headline",
-                    "Added 3 product shots",
-                    "Tuned the type scale",
-                  ].map((t, i) => (
-                    <div
-                      key={t}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 7 * u,
-                        opacity: interpolate(
-                          check,
-                          [i * 0.2, i * 0.2 + 0.4],
-                          [0, 1],
-                          CLAMP,
-                        ),
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 16 * u,
-                          height: 16 * u,
-                          borderRadius: 99,
-                          backgroundColor: "rgba(59,91,253,0.18)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          transform: `scale(${0.6 + 0.4 * check})`,
-                        }}
-                      >
-                        <Icon d={ICONS.check} size={11 * u} color="#7d97ff" />
-                      </div>
-                      {t}
-                    </div>
-                  ))}
-                </div>
-                <div style={{ flex: 1 }} />
-                <div
-                  style={{
-                    borderRadius: 10 * u,
-                    boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
-                    padding: 10 * u,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 10 * u,
-                    color: palette.sideMuted,
-                  }}
-                >
-                  Ask for a change…
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Icon
-                      d={ICONS.plus}
-                      size={15 * u}
-                      color={palette.sideMuted}
-                    />
-                    <div
-                      style={{
-                        width: 22 * u,
-                        height: 22 * u,
-                        borderRadius: 99,
-                        backgroundColor: palette.accent,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Icon d={ICONS.send} size={13 * u} color="#fff" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div
-              style={{
-                flex: 1,
-                backgroundColor: palette.page,
-                padding: pagePad,
-                display: "flex",
-                flexDirection: "column",
-                gap: 14 * u,
-                color: palette.pageInk,
-                minWidth: 0,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  fontSize: fs,
-                  color: palette.pageMuted,
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: serif.fontFamily,
-                    fontStyle: "italic",
-                    fontSize: 20 * u,
-                    color: palette.pageInk,
-                  }}
-                >
-                  Lumen
-                </div>
-                <div
-                  style={{ display: "flex", gap: 14 * u, alignItems: "center" }}
-                >
-                  {L.tall ? null : (
-                    <>
-                      <span>Product</span>
-                      <span>Stories</span>
-                      <span>Pricing</span>
-                    </>
-                  )}
-                  <span
-                    style={{
-                      padding: `${5 * u}px ${11 * u}px`,
-                      borderRadius: 99,
-                      backgroundColor: "#c2412d",
-                      color: "#fff",
-                    }}
-                  >
-                    Get early access
-                  </span>
-                </div>
-              </div>
-              <div
-                style={{
-                  fontFamily: serif.fontFamily,
-                  fontStyle: "italic",
-                  fontSize: (L.tall ? 50 : 42) * u,
-                  lineHeight: 1,
-                  letterSpacing: "-0.02em",
-                  marginTop: 8 * u,
-                }}
-              >
-                Your next launch,
-                <br />
-                already in motion.
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8 * u,
-                  fontSize: 14.5 * u,
-                  color: palette.pageMuted,
-                }}
-              >
-                {["Teaser", "Walkthrough", "Changelog", "Cutdowns"].map(
-                  (t, i) => (
-                    <span
-                      key={t}
-                      style={{
-                        padding: `${4 * u}px ${10 * u}px`,
-                        borderRadius: 99,
-                        backgroundColor:
-                          i === 0 ? palette.pageInk : "rgba(29,26,22,0.06)",
-                        color: i === 0 ? palette.page : palette.pageMuted,
-                      }}
-                    >
-                      {t}
-                    </span>
-                  ),
-                )}
+                />
+              ))}
+              <div style={{ display: "flex", gap: 4 * u, marginLeft: 8 * u }}>
+                <Icon d={ICONS.back} size={16 * u} color={palette.sideMuted} />
+                <Icon d={ICONS.fwd} size={16 * u} color={palette.sideMuted} />
               </div>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
-                  gap: 10 * u,
-                  minHeight: 0,
+                  justifyContent: "center",
                 }}
               >
-                {[
-                  "templates/product-showcase/sculpture.jpg",
-                  "templates/launch-anything/horizon.jpg",
-                  "templates/brand-guidelines/ceramics.jpg",
-                ].map((src, i) => (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6 * u,
+                    padding: `${5 * u}px ${14 * u}px`,
+                    borderRadius: 8 * u,
+                    backgroundColor: palette.chip,
+                    color: palette.sideMuted,
+                    fontSize: fs,
+                  }}
+                >
+                  <Icon
+                    d={ICONS.lock}
+                    size={12 * u}
+                    color={palette.sideMuted}
+                  />
+                  lumen.app/launch
+                </div>
+              </div>
+              <div
+                style={{
+                  padding: `${6 * u}px ${12 * u}px`,
+                  borderRadius: 8 * u,
+                  backgroundColor: palette.accent,
+                  color: "#fff",
+                  fontSize: fs,
+                  fontWeight: 400,
+                }}
+              >
+                Publish
+              </div>
+            </div>
+            <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
+              {L.tall ? null : (
+                <div
+                  style={{
+                    width: sideW,
+                    flexShrink: 0,
+                    backgroundColor: palette.sidebar,
+                    borderRight: `1px solid ${palette.hairline}`,
+                    padding: 14 * u,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10 * u,
+                    color: palette.sideInk,
+                    fontSize: fs,
+                  }}
+                >
                   <div
-                    key={src}
                     style={{
-                      flex: i === 1 ? 1.25 : 1,
+                      alignSelf: "flex-end",
+                      maxWidth: "88%",
+                      padding: `${8 * u}px ${11 * u}px`,
                       borderRadius: 10 * u,
-                      overflow: "hidden",
-                      position: "relative",
-                      opacity: interpolate(photos[i], [0, 0.35], [0, 1], CLAMP),
-                      transform: `translateY(${(1 - photos[i]) * 24 * u}px)`,
-                      boxShadow:
-                        "0 1px 2px rgba(0,0,0,0.12), 0 10px 24px rgba(0,0,0,0.12)",
+                      backgroundColor: palette.chip,
+                      boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
+                      lineHeight: 1.35,
+                      opacity: chat,
+                      transform: `translateY(${(1 - chat) * 10 * u}px)`,
                     }}
                   >
-                    <Img
-                      src={staticFile(src)}
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        transform: `scale(${1.1 - 0.1 * photos[i]})`,
-                      }}
-                    />
+                    {request}
                   </div>
-                ))}
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 7 * u,
+                      color: palette.sideMuted,
+                      opacity: chat,
+                    }}
+                  >
+                    {[
+                      "Softened the headline",
+                      "Added 3 product shots",
+                      "Tuned the type scale",
+                    ].map((t, i) => (
+                      <div
+                        key={t}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 7 * u,
+                          opacity: interpolate(
+                            check,
+                            [i * 0.2, i * 0.2 + 0.4],
+                            [0, 1],
+                            CLAMP,
+                          ),
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 16 * u,
+                            height: 16 * u,
+                            borderRadius: 99,
+                            backgroundColor: "rgba(59,91,253,0.18)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            transform: `scale(${0.6 + 0.4 * check})`,
+                          }}
+                        >
+                          <Icon d={ICONS.check} size={11 * u} color="#7d97ff" />
+                        </div>
+                        {t}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ flex: 1 }} />
+                  <div
+                    style={{
+                      borderRadius: 10 * u,
+                      boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
+                      padding: 10 * u,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10 * u,
+                      color: palette.sideMuted,
+                    }}
+                  >
+                    Ask for a change…
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Icon
+                        d={ICONS.plus}
+                        size={15 * u}
+                        color={palette.sideMuted}
+                      />
+                      <div
+                        style={{
+                          width: 22 * u,
+                          height: 22 * u,
+                          borderRadius: 99,
+                          backgroundColor: palette.accent,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Icon d={ICONS.send} size={13 * u} color="#fff" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div
+                style={{
+                  flex: 1,
+                  backgroundColor: palette.page,
+                  padding: pagePad,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 14 * u,
+                  color: palette.pageInk,
+                  minWidth: 0,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    fontSize: fs,
+                    color: palette.pageMuted,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: serif.fontFamily,
+                      fontStyle: "italic",
+                      fontSize: 20 * u,
+                      color: palette.pageInk,
+                    }}
+                  >
+                    Lumen
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 14 * u,
+                      alignItems: "center",
+                    }}
+                  >
+                    {L.tall ? null : (
+                      <>
+                        <span>Product</span>
+                        <span>Stories</span>
+                        <span>Pricing</span>
+                      </>
+                    )}
+                    <span
+                      style={{
+                        padding: `${5 * u}px ${11 * u}px`,
+                        borderRadius: 99,
+                        backgroundColor: "#c2412d",
+                        color: "#fff",
+                      }}
+                    >
+                      Get early access
+                    </span>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    fontFamily: serif.fontFamily,
+                    fontStyle: "italic",
+                    fontSize: (L.tall ? 50 : 42) * u,
+                    lineHeight: 1,
+                    letterSpacing: "-0.02em",
+                    marginTop: 8 * u,
+                  }}
+                >
+                  {headline[0]}
+                  <br />
+                  {headline[1]}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8 * u,
+                    fontSize: 14.5 * u,
+                    color: palette.pageMuted,
+                  }}
+                >
+                  {["Teaser", "Walkthrough", "Changelog", "Cutdowns"].map(
+                    (t, i) => (
+                      <span
+                        key={t}
+                        style={{
+                          padding: `${4 * u}px ${10 * u}px`,
+                          borderRadius: 99,
+                          backgroundColor:
+                            i === 0 ? palette.pageInk : "rgba(29,26,22,0.06)",
+                          color: i === 0 ? palette.page : palette.pageMuted,
+                        }}
+                      >
+                        {t}
+                      </span>
+                    ),
+                  )}
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    gap: 10 * u,
+                    minHeight: 0,
+                  }}
+                >
+                  {[
+                    "templates/product-showcase/sculpture.jpg",
+                    "templates/launch-anything/horizon.jpg",
+                    "templates/brand-guidelines/ceramics.jpg",
+                  ].map((src, i) => (
+                    <div
+                      key={src}
+                      style={{
+                        flex: i === 1 ? 1.25 : 1,
+                        borderRadius: 10 * u,
+                        overflow: "hidden",
+                        position: "relative",
+                        opacity: interpolate(
+                          photos[i],
+                          [0, 0.35],
+                          [0, 1],
+                          CLAMP,
+                        ),
+                        transform: `translateY(${(1 - photos[i]) * 24 * u}px)`,
+                        boxShadow:
+                          "0 1px 2px rgba(0,0,0,0.12), 0 10px 24px rgba(0,0,0,0.12)",
+                      }}
+                    >
+                      <Img
+                        src={staticFile(src)}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          transform: `scale(${1.1 - 0.1 * photos[i]})`,
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -1036,6 +1117,8 @@ function SceneB({
   palette,
   ground,
   groundParams,
+  logo,
+  look: { fontFamily, background, scale, speed },
 }: {
   line: string;
   cta: string;
@@ -1043,13 +1126,21 @@ function SceneB({
   palette: Palette;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  logo?: React.ReactNode;
+  look: SceneLook;
 }) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const raw = useSceneFrame();
+  const frame = raw * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const L = layout(W, H);
   const u = Math.min(W, H) / 720;
   const fs = L.tall ? W * 0.105 : W * 0.06;
   const pu = L.tall ? W / 480 : u;
+  const pushAt = (r: number) =>
+    interpolate(r * speed, [0, B_LEN], [1.02, 1.05], CLAMP);
+  const pushMoving =
+    pushAt(raw + 1) !== pushAt(raw) || pushAt(raw - 1) !== pushAt(raw);
   const settle = interpolate(frame, [B_BEATS.line, B_BEATS.settle], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.45, 0, 0.25, 1),
@@ -1061,97 +1152,104 @@ function SceneB({
 
   return (
     <AbsoluteFill>
-      <GshGround
-        preset={ground}
-        params={ground ? groundParams : { ...palette.groundB, ...groundParams }}
-        timeOffset={9}
-        timeScale={0.6}
-      />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${push})`,
-          transformOrigin: `${L.to[0] * 100}% ${L.to[1] * 100}%`,
-        }}
-      >
-        <div
+      <Ground background={background}>
+        <GshGround
+          preset={ground}
+          params={
+            ground ? groundParams : { ...palette.groundB, ...groundParams }
+          }
+          timeOffset={9}
+          timeScale={0.6}
+        />
+      </Ground>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: L.to[1] * H,
-            transform: "translateY(-50%)",
-            display: "flex",
-            justifyContent: "center",
+            // Covers the line and the pill riding up inside it.
+            transform: `scale(${push})${glide(pushMoving)}`,
+            transformOrigin: `${L.to[0] * 100}% ${L.to[1] * 100}%`,
           }}
         >
           <div
             style={{
-              fontFamily: geist.fontFamily,
-              fontWeight: 300,
-              fontSize: fs,
-              lineHeight: 1.04,
-              color: palette.ink,
-              textAlign: "center",
-              letterSpacing: `${(0.16 * (1 - settle) - 0.035).toFixed(4)}em`,
-              filter:
-                settle < 0.99
-                  ? `blur(${((1 - settle) * 8 * u).toFixed(2)}px)`
-                  : undefined,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {L.tall ? (
-              <>
-                {words.slice(0, mid).join(" ")}
-                <br />
-                {words.slice(mid).join(" ")}
-              </>
-            ) : (
-              line
-            )}
-          </div>
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: L.to[1] * H + fs * (L.tall ? 1.45 : 0.95),
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: L.to[1] * H,
+              transform: "translateY(-50%)",
               display: "flex",
-              alignItems: "center",
-              gap: 12 * pu,
-              padding: `${7 * pu}px ${7 * pu}px ${7 * pu}px ${16 * pu}px`,
-              borderRadius: 99,
-              backgroundColor: palette.pill,
-              boxShadow: `inset 0 0 0 1px ${palette.hairline}, inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 30px rgba(${palette.shadow},0.3)`,
-              fontFamily: geist.fontFamily,
-              fontSize: 20 * pu,
-              color: palette.muted,
-              opacity: interpolate(pill, [0, 0.3], [0, 1], CLAMP),
-              transform: `translateY(${(1 - pill) * 16 * pu}px) scale(${0.9 + 0.1 * pill})`,
+              justifyContent: "center",
             }}
           >
-            <RemocnLogo fontSize={20 * pu} color={palette.ink} />
-            <span>{url}</span>
-            <span
+            <div
               style={{
-                padding: `${7 * pu}px ${14 * pu}px`,
-                borderRadius: 99,
-                backgroundColor: palette.accent,
-                color: "#fff",
+                fontFamily,
+                fontWeight: 300,
+                fontSize: fs,
+                lineHeight: 1.04,
+                color: palette.ink,
+                textAlign: "center",
+                letterSpacing: `${(0.16 * (1 - settle) - 0.035).toFixed(4)}em`,
+                filter:
+                  settle < 0.99
+                    ? `blur(${((1 - settle) * 8 * u).toFixed(2)}px)`
+                    : undefined,
+                whiteSpace: "nowrap",
               }}
             >
-              {cta}
-            </span>
+              {L.tall ? (
+                <>
+                  {words.slice(0, mid).join(" ")}
+                  <br />
+                  {words.slice(mid).join(" ")}
+                </>
+              ) : (
+                line
+              )}
+            </div>
           </div>
-        </div>
-      </AbsoluteFill>
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: L.to[1] * H + fs * (L.tall ? 1.45 : 0.95),
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12 * pu,
+                padding: `${7 * pu}px ${7 * pu}px ${7 * pu}px ${16 * pu}px`,
+                borderRadius: 99,
+                backgroundColor: palette.pill,
+                boxShadow: `inset 0 0 0 1px ${palette.hairline}, inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 30px rgba(${palette.shadow},0.3)`,
+                fontFamily,
+                fontSize: 20 * pu,
+                color: palette.muted,
+                opacity: interpolate(pill, [0, 0.3], [0, 1], CLAMP),
+                transform: `translateY(${(1 - pill) * 16 * pu}px) scale(${0.9 + 0.1 * pill})`,
+              }}
+            >
+              {logo ?? <RemocnLogo fontSize={20 * pu} color={palette.ink} />}
+              <span>{url}</span>
+              <span
+                style={{
+                  padding: `${7 * pu}px ${14 * pu}px`,
+                  borderRadius: 99,
+                  backgroundColor: palette.accent,
+                  color: "#fff",
+                }}
+              >
+                {cta}
+              </span>
+            </div>
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -1162,6 +1260,24 @@ export interface LightBurnToLineDemoProps {
   line?: string;
   cta?: string;
   url?: string;
+  /** Request in the chat bubble of the outgoing app window. */
+  request?: string;
+  /** Two-line hero headline on the outgoing landing page. */
+  headline?: [string, string];
+  /** Text color of the incoming line; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of both gradient grounds; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark in the incoming pill. */
+  logo?: React.ReactNode;
+  /** Size of both scenes' foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Playback multiplier for the whole series. */
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   groundB?: GshPresetId;
@@ -1175,40 +1291,78 @@ export function LightBurnToLineDemo({
   line = "Now ship your first film.",
   cta = "Start free",
   url = "remocn.dev/new",
+  request = "Make the hero calmer and add the product shots.",
+  headline = ["Your next launch,", "already in motion."],
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  logo,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
   groundB,
   groundParamsB,
   transition,
 }: LightBurnToLineDemoProps) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const base = THEMES[theme];
-  const palette = accent ? { ...base, accent } : base;
+  const themed = accent ? { ...base, accent } : base;
+  const palette = ink ? { ...themed, ink } : themed;
   const L = layout(W, H);
+  const look: SceneLook = { fontFamily, background, scale, speed };
+  // Speed scales the series itself so the transition keeps pace with the scenes.
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
+  // The burn reads the window and the line where the scale layer draws them.
+  const at = (v: number) => (scale === 1 ? v : 0.5 + (v - 0.5) * scale);
+  const subject: [number, number, number, number] =
+    scale === 1
+      ? L.subject
+      : [
+          at(L.subject[0]),
+          at(L.subject[1]),
+          L.subject[2] * scale,
+          L.subject[3] * scale,
+        ];
   return (
-    <AbsoluteFill style={{ backgroundColor: palette.sink }}>
+    <AbsoluteFill
+      style={{
+        backgroundColor:
+          background === "transparent" ? undefined : palette.sink,
+      }}
+    >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={A_LEN}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(A_LEN)}
+        >
           <SceneA
             palette={palette}
             ground={ground}
             groundParams={groundParams}
+            request={request}
+            headline={headline}
+            delay={delay}
+            look={look}
           />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
           presentation={lightBurnToLine({
-            subject: L.subject,
-            to: L.to,
-            lineWidth: L.lineWidth,
-            lineHeight: L.lineHeight,
+            subject,
+            to: scale === 1 ? L.to : [at(L.to[0]), at(L.to[1])],
+            lineWidth: L.lineWidth * scale,
+            lineHeight: L.lineHeight * scale,
             light: palette.light,
             bloom: palette.bloom,
             sink: palette.sink,
             ...transition,
           })}
-          timing={linearTiming({ durationInFrames: T_LEN })}
+          timing={linearTiming({ durationInFrames: len(T_LEN) })}
         />
-        <TransitionSeries.Sequence durationInFrames={B_LEN}>
+        <TransitionSeries.Sequence durationInFrames={len(B_LEN)}>
           <SceneB
             line={line}
             cta={cta}
@@ -1216,6 +1370,8 @@ export function LightBurnToLineDemo({
             palette={palette}
             ground={groundB}
             groundParams={groundParamsB}
+            logo={logo}
+            look={look}
           />
         </TransitionSeries.Sequence>
       </TransitionSeries>

@@ -1,0 +1,106 @@
+{
+  "component": "scissors-cut",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-craft",
+      "label": "Paper Craft",
+      "description": "Warm cream paper with a terracotta cut line and a friendly serif, like a scrapbook edit.",
+      "askedAs": [
+        "cut paper scrapbook look",
+        "warm cream background with serif text",
+        "crafty handmade tagline swap",
+        "тёплый бумажный стиль с засечками",
+        "как вырезка из журнала"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4ede1",
+        "ink": "#2b2420",
+        "accent": "#c8553d",
+        "fontFamily": "Fraunces",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "snappy-bold",
+      "label": "Snappy Bold",
+      "description": "Heavy grotesque type with a fast, punchy cut and tight letter timing.",
+      "askedAs": [
+        "fast punchy word swap",
+        "bold quick cut animation",
+        "energetic replacement for a promo",
+        "быстрая резкая замена слова",
+        "жирный шрифт и быстрый темп"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 700,
+        "speed": 1.75,
+        "stagger": 0.5,
+        "accent": "#ff6b4a",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "editorial-slow",
+      "label": "Editorial Slow",
+      "description": "Elegant thin serif on deep ink with a slow, deliberate cut and gentle letter cascade.",
+      "askedAs": [
+        "elegant slow tagline edit",
+        "luxury serif word replace",
+        "calm cinematic closing line",
+        "медленная элегантная анимация",
+        "изящный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "speed": 0.5,
+        "stagger": 3,
+        "background": "#14161c",
+        "accent": "#d4b483"
+      }
+    },
+    {
+      "id": "code-diff",
+      "label": "Code Diff",
+      "description": "Monospace text on a terminal-dark background with a green cut, like editing a line of code.",
+      "askedAs": [
+        "developer code edit style",
+        "terminal monospace word swap",
+        "looks like a git diff",
+        "моноширинный шрифт как в коде",
+        "стиль терминала для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#c9d1d9",
+        "accent": "#3fb950",
+        "stagger": 0,
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "Bright white canvas, compact Inter type and a muted slate accent for a quiet product look.",
+      "askedAs": [
+        "clean white minimal version",
+        "simple light product tagline",
+        "subtle understated cut",
+        "минималистичный светлый вариант",
+        "чистый белый фон без лишнего"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 500,
+        "accent": "#475569",
+        "scale": 0.85
+      }
+    }
+  ]
+}

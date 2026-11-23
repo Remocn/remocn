@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const benchmarkRaceConfig: ComponentConfig = {
   componentName: "BenchmarkRace",
@@ -12,11 +18,6 @@ export const benchmarkRaceConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     unit: {
       type: "text-content",
@@ -33,6 +34,11 @@ export const benchmarkRaceConfig: ComponentConfig = {
       default: "Cold render, 1080p · median of 50 runs",
       description: "Title",
     },
+    note: {
+      type: "text-content",
+      default: "lower is better",
+      description: "Note",
+    },
     decimals: {
       type: "number",
       default: 2,
@@ -42,6 +48,21 @@ export const benchmarkRaceConfig: ComponentConfig = {
       description: "Decimals",
       hiddenFromList: false,
     },
+    race: {
+      type: "number",
+      default: 42,
+      min: 12,
+      max: 120,
+      step: 2,
+      description: "Race (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -201,13 +201,17 @@ function Shoppers({ scene, t }: SceneProps) {
           key={i}
           style={{
             position: "absolute",
-            left: Number(x) + Math.sin(t * 3 + i) * 15,
+            // Here and on the screens below, whatever drifts moves by a
+            // transform over a fixed layout box. Layout rounds a box and a
+            // baseline to whole pixels, so a `left` or `top` that eases
+            // slowly hops from pixel to pixel instead of gliding.
+            left: Number(x),
             top: Number(y),
             width: 50,
             height: 50,
             background: String(color),
             borderRadius: i % 2 ? "30%" : "4px",
-            transform: `rotate(${i * 30 + t * 15}deg)`,
+            transform: `translateX(${Math.sin(t * 3 + i) * 15}px) rotate(${i * 30 + t * 15}deg)`,
             boxShadow: "inset 0 4px 5px #ffffff70, 3px 6px 2px #0002",
           }}
         />
@@ -342,10 +346,11 @@ function Exchange({ scene, t }: SceneProps) {
             key={i}
             style={{
               position: "absolute",
-              left: 308 + Math.cos(angle) * 102 * p,
-              top: 237 + Math.sin(angle) * 103 * p,
+              left: 308,
+              top: 237,
               width: 23,
               height: 23,
+              transform: `translate(${Math.cos(angle) * 102 * p}px, ${Math.sin(angle) * 103 * p}px)`,
               borderRadius: "50%",
               display: "grid",
               placeItems: "center",
@@ -573,8 +578,8 @@ function Loyalty({ scene, t }: SceneProps) {
           key={side}
           style={{
             position: "absolute",
-            left: 285 + side * (164 + grow * 68),
-            top: 160 + side * grow * 21,
+            left: 285 + side * 164,
+            top: 160,
             width: 177,
             height: 130,
             background: "#fffefb",
@@ -582,7 +587,7 @@ function Loyalty({ scene, t }: SceneProps) {
             border: "1px solid #e0dce4",
             padding: 14,
             boxShadow: `${side * 24}px 0 20px ${scene.accent}35`,
-            transform: `rotate(${side * grow * 14}deg) translateX(${tween(age, 0, 0.4, side * 140, -70)}px)`,
+            transform: `translate(${side * grow * 68}px, ${side * grow * 21}px) rotate(${side * grow * 14}deg) translateX(${tween(age, 0, 0.4, side * 140, -70)}px)`,
             fontSize: 10,
           }}
         >
@@ -658,13 +663,13 @@ function Loyalty({ scene, t }: SceneProps) {
           key={i}
           style={{
             position: "absolute",
-            left: 302 + side * (205 + Math.sin(age * 3 + i) * 24),
+            left: 302 + side * 205,
             top: y,
             width: 26 + i * 5,
             height: 26 + i * 5,
             borderRadius: 5,
             background: i === 1 ? "#d3bb7b" : scene.accent,
-            transform: `rotate(${age * 70 + i * 30}deg)`,
+            transform: `translateX(${side * Math.sin(age * 3 + i) * 24}px) rotate(${age * 70 + i * 30}deg)`,
             opacity: tween(age, 0.1 + i * 0.1, 0.45 + i * 0.1),
           }}
         />

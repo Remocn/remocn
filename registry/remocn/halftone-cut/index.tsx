@@ -2,13 +2,9 @@
 
 import { loadFont as loadSerif } from "@remotion/google-fonts/Fraunces";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadSerif("normal", {
   weights: ["500"],
@@ -21,6 +17,22 @@ export interface HalftoneCutProps {
   to?: string;
   accent?: string;
   theme?: "dark" | "light";
+  /** Color of both headlines; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the incoming gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for both headlines. Load it yourself; Fraunces by default. */
+  fontFamily?: string;
+  /** Frames the dot wave takes to cross the frame. */
+  spread?: number;
+  /** Spacing of the halftone dots, in pixels at 720p. */
+  dotSize?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of both headlines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
 }
 
@@ -38,7 +50,6 @@ const INK_LEAD = 6;
 const INK_OUT = 10;
 const INK_LAG = 8;
 const INK_IN = 14;
-const END = T0 + SPREAD + LAG + INK_LAG + INK_IN;
 
 const SHRINK = Easing.bezier(0.45, 0, 0.6, 1);
 const GROW = Easing.bezier(0.3, 0, 0.2, 1);
@@ -218,15 +229,25 @@ export function HalftoneCut({
   to = "Final cut",
   accent = "#3B5BFD",
   theme = "dark",
+  ink,
+  background,
+  fontFamily = serif,
+  spread = SPREAD,
+  dotSize = 20,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
 }: HalftoneCutProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const stage = STAGES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const end = T0 + spread + LAG + INK_LAG + INK_IN;
 
-  const pitch = 20 * u;
+  const pitch = dotSize * u;
   const R = 0.74 * pitch;
   const cols = Math.ceil(W / pitch) + 1;
   const rows = Math.ceil(H / pitch) + 1;
@@ -250,7 +271,7 @@ export function HalftoneCut({
       const cx = ox + i * pitch;
       const cy = oy + j * pitch;
       const d = Math.min(1, Math.max(0, (cx * ca + cy * sa) / span));
-      const a0 = T0 + d * SPREAD;
+      const a0 = T0 + d * spread;
       const pa = SHRINK(interpolate(t, [a0, a0 + SHRINK_LEN], [0, 1], CLAMP));
       const pb = GROW(
         interpolate(t, [a0 + LAG, a0 + LAG + GROW_LEN], [0, 1], CLAMP),
@@ -286,11 +307,21 @@ export function HalftoneCut({
   const fsA = Math.min(176 * u, (0.8 * W) / widthEm(from, ITALIC));
   const fsB = Math.min(200 * u, (0.82 * W) / widthEm(to, ROMAN));
   const drift = interpolate(t, [0, 108], [0, 1], CLAMP);
-  const driftA = 1 + 0.025 * interpolate(t, [0, T0 + SPREAD], [0, 1], CLAMP);
-  const settle = SETTLE(
-    interpolate(t, [T0 + LAG + 10, END + 14], [0, 1], CLAMP),
-  );
-  const scaleB = 1.045 - 0.045 * settle;
+  const driftAt = (tt: number) =>
+    1 + 0.025 * interpolate(tt, [0, T0 + spread], [0, 1], CLAMP);
+  const scaleAt = (tt: number) =>
+    1.045 -
+    0.045 * SETTLE(interpolate(tt, [T0 + LAG + 10, end + 14], [0, 1], CLAMP));
+  const driftA = driftAt(t);
+  const scaleB = scaleAt(t);
+  // Chrome parks a glyph raster on a whole pixel vertically for as long as
+  // the matrix is axis-aligned, so a title under a slow scale clicks along
+  // pixel by pixel. The drawing is marked, and told while a title's scale
+  // changes at all.
+  const moving = (at: (tt: number) => number) =>
+    at(t + speed) !== at(t) || at(t) !== at(t - speed);
+  const titleMoving =
+    (!aEmpty && moving(driftAt)) || (!bEmpty && moving(scaleAt));
   const about = (k: number) =>
     `translate(${W / 2} ${H / 2}) scale(${k}) translate(${-W / 2} ${-H / 2})`;
 
@@ -305,25 +336,34 @@ export function HalftoneCut({
       x={W / 2}
       y={H / 2 + 0.35 * size}
       textAnchor="middle"
-      fontFamily={serif}
+      fontFamily={fontFamily}
       fontStyle={italic ? "italic" : "normal"}
       fontWeight={italic ? 400 : 500}
       fontSize={size}
       letterSpacing={TRACK * size}
       fill={fill}
-      transform={about(k)}
+      transform={about(k * scale)}
     >
       {text}
     </text>
   );
 
   return (
-    <AbsoluteFill style={{ background: stage.base, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background: background === "transparent" ? undefined : stage.base,
+        overflow: "hidden",
+      }}
+    >
       <svg
         width={W}
         height={H}
         viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          transform: glide(titleMoving),
+        }}
         aria-hidden
       >
         <defs>
@@ -388,29 +428,35 @@ export function HalftoneCut({
             <rect width={W} height={H} fill={stage.bg} />
             <rect width={W} height={H} fill={`url(#l${uid})`} />
             {aFull ? (
-              title(from, fsA, stage.fg, driftA, true)
+              title(from, fsA, ink ?? stage.fg, driftA, true)
             ) : (
               <g mask={`url(#ia${uid})`}>
-                {title(from, fsA, stage.fg, driftA, true)}
+                {title(from, fsA, ink ?? stage.fg, driftA, true)}
               </g>
             )}
           </g>
         )}
         {bEmpty ? null : (
           <g mask={bFull ? undefined : `url(#b${uid})`}>
-            <Ground id={`d${uid}`} W={W} H={H} stage={stage} k={drift} />
-            <rect width={W} height={H} fill={`url(#s${uid})`} />
+            {background === undefined ? (
+              <>
+                <Ground id={`d${uid}`} W={W} H={H} stage={stage} k={drift} />
+                <rect width={W} height={H} fill={`url(#s${uid})`} />
+              </>
+            ) : background === "transparent" ? null : (
+              <rect width={W} height={H} fill={background} />
+            )}
             {bFull ? (
-              title(to, fsB, stage.toFg, scaleB, false)
+              title(to, fsB, ink ?? stage.toFg, scaleB, false)
             ) : (
               <g mask={`url(#ib${uid})`}>
-                {title(to, fsB, stage.toFg, scaleB, false)}
+                {title(to, fsB, ink ?? stage.toFg, scaleB, false)}
               </g>
             )}
           </g>
         )}
       </svg>
-      <Grain opacity={theme === "light" ? 0.04 : 0.055} />
+      {grain ? <Grain opacity={theme === "light" ? 0.04 : 0.055} /> : null}
     </AbsoluteFill>
   );
 }

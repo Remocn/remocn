@@ -3,13 +3,9 @@
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: manrope } = loadManrope("normal", {
   weights: ["400", "500"],
@@ -26,6 +22,22 @@ export interface DotMapProps {
   label?: string;
   cities?: DotMapCity[];
   accent?: string;
+  /** Text color of the count; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the count and label. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Weight of the count. */
+  fontWeight?: number;
+  /** Frames for the lights to sweep across the map, west to east. */
+  sweep?: number;
+  /** Size of the map and count, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -331,7 +343,6 @@ const MAP_DUR = 26;
 const LIGHT_AT = 20;
 const LIGHT_SPAN = 66;
 const RIPPLE = 26;
-const DONE = LIGHT_AT + LIGHT_SPAN + 6;
 
 function hash(n: number) {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -419,18 +430,46 @@ function snap(lon: number, lat: number) {
   return best;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DotMap({
   count = 142,
   label = "countries",
   cities = DEFAULT_CITIES,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = manrope,
+  fontWeight = 400,
+  sweep = LIGHT_SPAN,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: DotMapProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg = background ?? p.bg;
+  const done = LIGHT_AT + sweep + 6;
 
   const mapW = Math.min(W * 0.84, (H * 0.6 * COLS) / ROWS);
   const pitch = mapW / COLS;
@@ -452,11 +491,11 @@ export function DotMap({
       const x = (city.lon + 180) / 360;
       out.push({
         cell,
-        at: LIGHT_AT + x * LIGHT_SPAN + (hash(i + 0.7) - 0.5) * 8,
+        at: LIGHT_AT + x * sweep + (hash(i + 0.7) - 0.5) * 8,
       });
     });
     return out.sort((a, b) => a.at - b.at);
-  }, [cities]);
+  }, [cities, sweep]);
   const litAt = useMemo(() => {
     const m = new Map<number, number>();
     for (const l of lit) m.set(l.cell, l.at);
@@ -467,11 +506,18 @@ export function DotMap({
   const drift = interpolate(t, [0, 135], [0, 1.2]);
   const liftTo = rgb(theme === "dark" ? "#FFFFFF" : p.bg);
 
-  const push = interpolate(t, [0, DONE + 40], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const scale = 0.975 + 0.03 * push;
+  const zoomAt = (tt: number) =>
+    0.975 +
+    0.03 *
+      interpolate(tt, [0, done + 40], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const zoom = zoomAt(t);
+  // The push is a slow in-out ease, so it is weighed in px at the frame edge
+  // rather than by progress: the tilt stays on while the counter under it
+  // still creeps.
+  const zoomStep = (a: number, b: number) =>
+    Math.abs(zoomAt(a) - zoomAt(b)) * (H / 2);
+  const zooming =
+    zoomStep(t + speed, t) > 1e-3 || zoomStep(t, t - speed) > 1e-3;
 
   const dots: React.ReactNode[] = [];
   const accents: React.ReactNode[] = [];
@@ -561,75 +607,80 @@ export function DotMap({
   });
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${scale})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          {dots}
-          {accents}
-        </svg>
-        <div
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: mapY + mapH + gap,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "baseline",
-            gap: 18 * u,
-            whiteSpace: "nowrap",
+            transform: `scale(${zoom})${glide(zooming)}`,
+            transformOrigin: "50% 50%",
           }}
         >
-          <span
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            {dots}
+            {accents}
+          </svg>
+          <div
             style={{
-              fontFamily: manrope,
-              fontWeight: 400,
-              fontSize: numSize,
-              lineHeight: 0.9,
-              letterSpacing: "-0.04em",
-              color: p.fg,
-              fontVariantNumeric: "tabular-nums",
-              opacity: numIn,
-              transform: `translateY(${(1 - numIn) * 12 * u}px)`,
-              display: "inline-block",
-              minWidth: `${String(Math.round(count)).length * 0.6}em`,
-              textAlign: "right",
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: mapY + mapH + gap,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "baseline",
+              gap: 18 * u,
+              whiteSpace: "nowrap",
             }}
           >
-            {value}
-          </span>
-          <span
-            style={{
-              fontFamily: manrope,
-              fontWeight: 500,
-              fontSize: 30 * u,
-              letterSpacing: "-0.015em",
-              color: p.muted,
-              opacity: labIn,
-              transform: `translateY(${(1 - labIn) * 8 * u}px)`,
-              display: "inline-block",
-            }}
-          >
-            {label}
-          </span>
-        </div>
-      </AbsoluteFill>
+            <span
+              style={{
+                fontFamily,
+                fontWeight,
+                fontSize: numSize,
+                lineHeight: 0.9,
+                letterSpacing: "-0.04em",
+                color: fg,
+                fontVariantNumeric: "tabular-nums",
+                opacity: numIn,
+                transform: `translateY(${(1 - numIn) * 12 * u}px)`,
+                display: "inline-block",
+                minWidth: `${String(Math.round(count)).length * 0.6}em`,
+                textAlign: "right",
+              }}
+            >
+              {value}
+            </span>
+            <span
+              style={{
+                fontFamily,
+                fontWeight: 500,
+                fontSize: 30 * u,
+                letterSpacing: "-0.015em",
+                color: p.muted,
+                opacity: labIn,
+                transform: `translateY(${(1 - labIn) * 8 * u}px)`,
+                display: "inline-block",
+              }}
+            >
+              {label}
+            </span>
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${bg} 100%)`,
           opacity: 0.6,
           pointerEvents: "none",
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

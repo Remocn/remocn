@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const epilogue = loadFont("normal", {
   weights: ["400", "500"],
@@ -28,8 +28,18 @@ export interface KnownTermsPair {
 export interface KnownTermsProps {
   pairs?: KnownTermsPair[];
   joiner?: string;
+  /** Frames the last pair holds at the end. */
+  hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the terms. Load it yourself; Epilogue by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -81,13 +91,13 @@ type Metrics = Record<string, number>;
 
 const wKey = (weight: number, s: string) => `${weight}\u0002${s}`;
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], fontFamily: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("known-terms: no 2d context");
   const w: Metrics = {};
   for (const weight of [WGHT, JOIN_WGHT]) {
-    ctx.font = `${weight} ${FONT_PX}px "${epilogue.fontFamily}"`;
+    ctx.font = `${weight} ${FONT_PX}px "${fontFamily}"`;
     for (const s of texts) {
       w[wKey(weight, s)] =
         ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
@@ -96,7 +106,7 @@ function measureAll(texts: string[]): Metrics {
   return w;
 }
 
-function useMetrics(texts: string[]) {
+function useMetrics(texts: string[], fontFamily: string) {
   const key = texts.join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("known-terms: measuring"));
@@ -105,13 +115,13 @@ function useMetrics(texts: string[]) {
     let live = true;
     Promise.all([
       epilogue.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${epilogue.fontFamily}"`),
-      document.fonts.load(`${JOIN_WGHT} 100px "${epilogue.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${fontFamily}"`),
+      document.fonts.load(`${JOIN_WGHT} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureAll(key.split("\u0001")) });
+        setState({ key, m: measureAll(key.split("\u0001"), fontFamily) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -120,7 +130,7 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -169,28 +179,56 @@ interface Layout {
   blockW: number;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function KnownTerms({
   pairs = DEFAULT_PAIRS,
   joiner = "is",
+  hold = HOLD,
   accent,
+  ink,
   background,
+  fontFamily = epilogue.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: KnownTermsProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const list = pairs.length > 0 ? pairs : DEFAULT_PAIRS;
   const joins = list.map((p) => p.joiner ?? joiner);
-  const m = useMetrics([
-    " ",
-    ...list.flatMap((p) => [...splitWords(p.video), ...splitWords(p.dev)]),
-    ...joins,
-  ]);
+  const m = useMetrics(
+    [
+      " ",
+      ...list.flatMap((p) => [...splitWords(p.video), ...splitWords(p.dev)]),
+      ...joins,
+    ],
+    fontFamily,
+  );
 
   if (!m) {
     return (
@@ -201,7 +239,7 @@ export function KnownTerms({
   const n = list.length;
   const span = durationInFrames * speed;
   const period =
-    n > 1 ? Math.min(40, Math.max(24, (span - LINE_LEN - HOLD) / (n - 1))) : 0;
+    n > 1 ? Math.min(40, Math.max(24, (span - LINE_LEN - hold) / (n - 1))) : 0;
   const starts = list.map((_, k) => k * period);
 
   const portrait = H > W * 1.1;
@@ -264,15 +302,30 @@ export function KnownTerms({
   const devX = gutterL + (GAP_EM * 2 + maxJ) * F;
   const pitch = INNER * F;
 
+  const easeAt = (at: number, from: number, dur: number, curve = EASE_OUT) =>
+    interpolate(at, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
   const ease = (from: number, dur: number, curve = EASE_OUT) =>
-    interpolate(t, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
+    easeAt(t, from, dur, curve);
 
-  let visible = rowsEm[0] * F;
-  for (let k = 1; k < n; k++) {
-    visible += ease(starts[k], STEP, EASE_MOVE) * rowsEm[k] * F;
-  }
+  // The block recentres as rows join. That travel is a transform on every
+  // node, laid out where the full block settles: layout rounds a baseline
+  // moved by `top` to whole pixels, so the rows would click up one by one.
+  const liftAt = (at: number) => {
+    let missing = 0;
+    for (let k = 1; k < n; k++) {
+      missing += (1 - easeAt(at, starts[k], STEP, EASE_MOVE)) * rowsEm[k] * F;
+    }
+    return missing / 2;
+  };
+  const lift = liftAt(t);
+  const shifting =
+    Math.abs(liftAt(t + speed) - lift) > 1e-6 ||
+    Math.abs(lift - liftAt(t - speed)) > 1e-6;
+  // It stays a transform while the block stands with only some rows in, too:
+  // handed back to layout there, the rows would jump by the rounding.
+  const shiftY = `translateY(${lift}px) `;
   const rowTops: number[] = [];
-  let acc = H / 2 - visible / 2;
+  let acc = H / 2 - rowsEm.reduce((a, r) => a + r * F, 0) / 2;
   for (let k = 0; k < n; k++) {
     rowTops.push(acc);
     acc += rowsEm[k] * F;
@@ -285,7 +338,7 @@ export function KnownTerms({
     height: F,
     lineHeight: `${F}px`,
     whiteSpace: "pre",
-    fontFamily: epilogue.fontFamily,
+    fontFamily,
     fontWeight: weight,
     fontSize: F,
     letterSpacing: `${TRACK}em`,
@@ -314,9 +367,7 @@ export function KnownTerms({
     const vx1 = gutterL - vw;
     const vx = vx0 + (vx1 - vx0) * slide;
 
-    const termColor = last
-      ? interpolateColors(settled, [0, 1], [c.ink, hi])
-      : c.ink;
+    const termColor = last ? interpolateColors(settled, [0, 1], [fg, hi]) : fg;
 
     nodes.push(
       <div
@@ -329,6 +380,7 @@ export function KnownTerms({
           height: vh + F * 0.36,
           overflow: "hidden",
           opacity: lead,
+          transform: shiftY.trim(),
         }}
       >
         {v.lines.map((line, i) => (
@@ -339,7 +391,7 @@ export function KnownTerms({
               left: F * 0.06 + vw - lineW(line) * F,
               top: F * 0.26 + i * pitch,
               color: termColor,
-              transform: `translateY(${((1 - arrive) * (vh + F * 0.3)).toFixed(2)}px)`,
+              transform: `translateY(${((1 - arrive) * (vh + F * 0.3)).toFixed(2)}px)${glide(midway(arrive) || shifting)}`,
             }}
           >
             {line.join(" ")}
@@ -363,7 +415,7 @@ export function KnownTerms({
             top: top + F * 0.1 + i * pitch,
             color: termColor,
             opacity: lead,
-            transform: `translateX(${dx.toFixed(2)}px)`,
+            transform: `${shiftY}translateX(${dx.toFixed(2)}px)${glide(shifting)}`,
           }}
         >
           {line.join(" ")}
@@ -379,9 +431,9 @@ export function KnownTerms({
         style={{
           ...textStyle(JOIN_WGHT),
           top: top + F * 0.1,
-          color: c.ink,
+          color: fg,
           opacity: joinIn * JOIN_DIM * (0.6 + 0.4 * lead),
-          transform: `translate(${(joinMid - jw / 2).toFixed(2)}px, ${((1 - joinIn) * F * 0.35).toFixed(2)}px)`,
+          transform: `${shiftY}translate(${(joinMid - jw / 2).toFixed(2)}px, ${((1 - joinIn) * F * 0.35).toFixed(2)}px)${glide(midway(joinIn) || shifting)}`,
         }}
       >
         {joins[k]}
@@ -391,7 +443,7 @@ export function KnownTerms({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,0 +1,118 @@
+{
+  "component": "table-filter",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-ops",
+      "label": "Midnight Ops",
+      "description": "Dark table on a deep charcoal ground with a cool teal accent and crisp Geist type.",
+      "askedAs": [
+        "dark mode crm table",
+        "night theme data grid",
+        "sleek dark database view",
+        "тёмная тема таблицы",
+        "ночной стиль crm"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "accent": "#2bb5a6",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "terminal-grid",
+      "label": "Terminal Grid",
+      "description": "Monospaced dark table with an amber accent and a brisk, technical pace.",
+      "askedAs": [
+        "developer style table",
+        "monospace database look",
+        "fast technical data filter",
+        "таблица в стиле терминала",
+        "моноширинный шрифт и быстрая анимация"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#e3a23b",
+        "ground": "nightfold",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "paper-ledger",
+      "label": "Paper Ledger",
+      "description": "Warm off-white editorial table set in Fraunces with a muted terracotta accent and an unhurried pace.",
+      "askedAs": [
+        "warm editorial table",
+        "classic ledger look",
+        "slow elegant crm demo",
+        "тёплая бумажная таблица",
+        "элегантный медленный стиль"
+      ],
+      "props": {
+        "background": "#f6f1e8",
+        "ink": "#2a2420",
+        "accent": "#b5573a",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "cobalt-launch",
+      "label": "Cobalt Launch",
+      "description": "Large, bold light table floating on a cobalt gradient ground for a punchy launch hero shot.",
+      "askedAs": [
+        "big hero product shot",
+        "bold launch table",
+        "zoomed in crm on blue",
+        "крупная таблица для запуска",
+        "яркий синий фон"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "scale": 1.25,
+        "fontFamily": "Space Grotesk",
+        "accent": "#1f3bd1"
+      }
+    },
+    {
+      "id": "quiet-greenhouse",
+      "label": "Quiet Greenhouse",
+      "description": "Compact light table on a soft green ground with a forest accent and a gentle delayed start.",
+      "askedAs": [
+        "calm green table",
+        "small subtle data scene",
+        "soft natural colors crm",
+        "спокойная зелёная таблица",
+        "мягкий компактный вид"
+      ],
+      "props": {
+        "ground": "greenhouse",
+        "accent": "#2f7d5b",
+        "fontFamily": "Manrope",
+        "scale": 0.85,
+        "delay": 20
+      }
+    },
+    {
+      "id": "velvet-evening",
+      "label": "Velvet Evening",
+      "description": "Dark table on a plum velvet ground with a soft rose accent and Inter type.",
+      "askedAs": [
+        "purple dark table",
+        "moody crm scene",
+        "plum and pink data grid",
+        "фиолетовая тёмная таблица",
+        "вечерний стиль"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "velvet-hour",
+        "accent": "#e07a9b",
+        "fontFamily": "Inter"
+      }
+    }
+  ]
+}

@@ -17,9 +17,14 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+  useSceneFrameCount,
+} from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -74,6 +79,9 @@ const TYPE_IN = Easing.bezier(0.32, 0.72, 0, 1);
 const PANEL = { mass: 1, damping: 26, stiffness: 120 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 
+const moves = (at: (f: number) => number, f: number, eps: number) =>
+  Math.abs(at(f + 1) - at(f)) > eps || Math.abs(at(f) - at(f - 1)) > eps;
+
 export const STROBE_MONTAGE_IMAGES = [
   "templates/launch-anything/desk.jpg",
   "templates/product-showcase/workbench.jpg",
@@ -123,14 +131,13 @@ const StrobeMontagePresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
-  const { width: W, height: H } = useVideoConfig();
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
+  const { width: W, height: H } = useSceneConfig();
   const o = { ...strobeMontageDefaults, ...passedProps };
   const p = presentationProgress;
-  const { slots, k, local } = slotAt(
-    p,
-    presentationDurationInFrames,
-    o.framesPerHit,
-  );
+  const { slots, k, local } = slotAt(p, sceneLength, o.framesPerHit);
   const u = Math.min(W, H) / 720;
   const growSlots = Math.max(1, o.growHits);
 
@@ -264,6 +271,47 @@ const THEMES = {
 
 type Theme = (typeof THEMES)["dark"];
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+type SceneLook = {
+  fontFamily: string;
+  background?: string;
+  scale: number;
+  speed: number;
+};
+
+/** The shader ground, or a solid `background` fill in its place. */
+function Ground({
+  background,
+  children,
+}: {
+  background?: string;
+  children: React.ReactNode;
+}) {
+  if (background === undefined) return children;
+  return (
+    <AbsoluteFill
+      style={{
+        background: background === "transparent" ? undefined : background,
+      }}
+    />
+  );
+}
+
 export const STROBE_MONTAGE_TIMING = { a: 72, transition: 28, b: 84 };
 export const strobeMontageDemoLength =
   STROBE_MONTAGE_TIMING.a +
@@ -308,15 +356,22 @@ function OpenerScene({
   accentWord,
   ground,
   groundParams,
+  logo,
+  delay,
+  look: { fontFamily, background, scale, speed },
 }: {
   c: Theme;
   lead: string;
   accentWord: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  logo?: React.ReactNode;
+  delay: number;
+  look: SceneLook;
 }) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const landscape = W >= H;
   const u = Math.min(W, H) / 720;
   const longest = Math.max(lead.length, accentWord.length * 0.85);
@@ -333,60 +388,69 @@ function OpenerScene({
     TYPE_IN(interpolate(frame, [-3 + 3 * i, 11 + 3 * i], [0, 1], CLAMP));
   const logoIn = TYPE_IN(interpolate(frame, [-6, 6], [0, 1], CLAMP));
   return (
-    <AbsoluteFill style={{ background: c.base, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background: background === "transparent" ? undefined : c.base,
+        overflow: "hidden",
+      }}
+    >
       <AbsoluteFill style={{ transform: `scale(${push})` }}>
-        <GshGround preset={ground} params={groundParams} timeOffset={4} />
+        <Ground background={background}>
+          <GshGround preset={ground} params={groundParams} timeOffset={4} />
+        </Ground>
       </AbsoluteFill>
-      <AbsoluteFill
-        style={{
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          gap: 34 * u,
-          transform: `scale(${push})`,
-        }}
-      >
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            opacity: logoIn,
-            transform: `translateY(${(1 - logoIn) * 10 * u}px)`,
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: 34 * u,
+            transform: `scale(${push})${glide(frame > 0 && frame < 110)}`,
           }}
         >
-          <RemocnLogo fontSize={28 * u} color={c.ink} />
-        </div>
-        <div
-          style={{
-            fontFamily: sans.fontFamily,
-            fontWeight: 300,
-            fontSize: size,
-            lineHeight: 0.98,
-            letterSpacing: "-0.045em",
-            color: c.ink,
-            textAlign: "center",
-          }}
-        >
-          {words.map((w, i) => (
-            <span key={`${w}-${i}`}>
-              <Rise v={at(i)}>{w}</Rise>
-              {i < words.length - 1 ? " " : ""}
-            </span>
-          ))}
-          <br />
-          <span
+          <div
             style={{
-              fontFamily: serif.fontFamily,
-              fontStyle: "italic",
-              fontWeight: 400,
-              letterSpacing: "-0.02em",
-              color: c.accentInk,
+              opacity: logoIn,
+              transform: `translateY(${(1 - logoIn) * 10 * u}px)`,
             }}
           >
-            <Rise v={at(words.length + 1)} italic>
-              {accentWord}
-            </Rise>
-          </span>
-        </div>
-      </AbsoluteFill>
+            {logo ?? <RemocnLogo fontSize={28 * u} color={c.ink} />}
+          </div>
+          <div
+            style={{
+              fontFamily,
+              fontWeight: 300,
+              fontSize: size,
+              lineHeight: 0.98,
+              letterSpacing: "-0.045em",
+              color: c.ink,
+              textAlign: "center",
+            }}
+          >
+            {words.map((w, i) => (
+              <span key={`${w}-${i}`}>
+                <Rise v={at(i)}>{w}</Rise>
+                {i < words.length - 1 ? " " : ""}
+              </span>
+            ))}
+            <br />
+            <span
+              style={{
+                fontFamily: serif.fontFamily,
+                fontStyle: "italic",
+                fontWeight: 400,
+                letterSpacing: "-0.02em",
+                color: c.accentInk,
+              }}
+            >
+              <Rise v={at(words.length + 1)} italic>
+                {accentWord}
+              </Rise>
+            </span>
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -421,21 +485,28 @@ function PromptScene({
   accentMark,
   prompt,
   file,
+  fileMeta,
+  placeholder,
   ground,
   groundParams,
   start,
+  look: { fontFamily, background, scale, speed },
 }: {
   c: Theme;
   heading: [string, string];
   accentMark: string;
   prompt: string;
   file: string;
+  fileMeta: string;
+  placeholder: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   start: number;
+  look: SceneLook;
 }) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame() * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const landscape = W >= H;
   const u = Math.min(W, H) / 720;
   const t = frame - start;
@@ -456,177 +527,197 @@ function PromptScene({
     config: CHIP,
   });
   const caretOn = done ? Math.floor(t / 8) % 2 === 0 : true;
-  const lift = spring({ frame: t + 2, fps, config: PANEL });
+  const liftAt = (f: number) =>
+    (1 - spring({ frame: f + 2, fps, config: PANEL })) * 18 * u;
+  const chipAt = (f: number) =>
+    0.8 + 0.2 * spring({ frame: f - 6, fps, config: CHIP });
+  // The strobe lands on this scene with a scale kick that eases out to 1, and
+  // its wrapper paints the whole frame, so it can't lean without a seam at the
+  // edges. The blocks lean here instead, for as long as the transition runs.
+  const kicking = frame > 0 && frame < start;
+  const cardMoving = moves(liftAt, t, 1e-3);
+  // Weighed by the chip's width from its left-edge origin.
+  const chipMoving = !cardMoving && moves(chipAt, t, 5e-6);
   return (
-    <AbsoluteFill style={{ background: c.base, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background: background === "transparent" ? undefined : c.base,
+        overflow: "hidden",
+      }}
+    >
       <AbsoluteFill style={{ transform: `scale(${push})` }}>
-        <GshGround preset={ground} params={groundParams} timeOffset={6} />
+        <Ground background={background}>
+          <GshGround preset={ground} params={groundParams} timeOffset={6} />
+        </Ground>
       </AbsoluteFill>
-      <AbsoluteFill
-        style={{
-          alignItems: "center",
-          justifyContent: landscape ? "center" : "center",
-          flexDirection: "column",
-          gap: 40 * u,
-          fontFamily: sans.fontFamily,
-          paddingBottom: landscape ? 40 * u : 120 * u,
-        }}
-      >
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            fontWeight: 300,
-            fontSize: headSize,
-            lineHeight: 1.04,
-            letterSpacing: "-0.04em",
-            color: c.ink,
-            textAlign: "center",
-          }}
-        >
-          {heading[0]}
-          <br />
-          {heading[1]}
-          <span style={{ color: c.accentInk }}>{accentMark}</span>
-        </div>
-        <div
-          style={{
-            width: cardW,
-            borderRadius: 18 * u,
-            background: c.card,
-            backdropFilter: "blur(18px)",
-            boxShadow: `inset 0 0 0 1px ${c.cardHair}, ${c.cardLift}, ${c.cardShadow}`,
-            padding: 14 * u,
-            transform: `translateY(${(1 - lift) * 18 * u}px)`,
+            alignItems: "center",
+            justifyContent: landscape ? "center" : "center",
+            flexDirection: "column",
+            gap: 40 * u,
+            fontFamily,
+            paddingBottom: landscape ? 40 * u : 120 * u,
+            transform: kicking ? glide(true).trim() : undefined,
           }}
         >
           <div
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 10 * u,
-              padding: `${7 * u}px ${10 * u}px ${7 * u}px ${8 * u}px`,
-              borderRadius: 10 * u,
-              background: c.chip,
-              boxShadow: `inset 0 0 0 1px ${c.chipHair}`,
-              transform: `scale(${0.8 + 0.2 * chipIn})`,
-              transformOrigin: "0% 50%",
-              opacity: Math.min(1, chipIn * 1.5),
+              fontWeight: 300,
+              fontSize: headSize,
+              lineHeight: 1.04,
+              letterSpacing: "-0.04em",
+              color: c.ink,
+              textAlign: "center",
             }}
           >
-            <div
-              style={{
-                width: 30 * u,
-                height: 30 * u,
-                borderRadius: 7 * u,
-                background: c.accent,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Icon d={ICON.file} size={16 * u} color="#fff" />
-            </div>
-            <div>
-              <div style={{ fontSize: 14 * u, color: c.ink, fontWeight: 400 }}>
-                {file}
-              </div>
-              <div style={{ fontSize: 12 * u, color: c.sub }}>
-                Release notes · 2.4 KB
-              </div>
-            </div>
-            <Icon d={ICON.x} size={14 * u} color={c.sub} />
+            {heading[0]}
+            <br />
+            {heading[1]}
+            <span style={{ color: c.accentInk }}>{accentMark}</span>
           </div>
           <div
             style={{
-              minHeight: 64 * u,
-              padding: `${14 * u}px ${4 * u}px ${8 * u}px`,
-              fontSize: 21 * u,
-              lineHeight: 1.45,
-              color: typed > 0 ? c.ink : c.sub,
-              fontWeight: 400,
-              letterSpacing: "-0.005em",
+              width: cardW,
+              borderRadius: 18 * u,
+              background: c.card,
+              backdropFilter: "blur(18px)",
+              boxShadow: `inset 0 0 0 1px ${c.cardHair}, ${c.cardLift}, ${c.cardShadow}`,
+              padding: 14 * u,
+              transform: `translateY(${liftAt(t)}px)${glide(cardMoving && !kicking)}`,
             }}
           >
-            {typed > 0 ? prompt.slice(0, typed) : "Describe your launch film"}
-            <span
-              style={{
-                display: "inline-block",
-                width: 2 * u,
-                height: 22 * u,
-                marginLeft: 2 * u,
-                verticalAlign: "-0.2em",
-                background: c.accentInk,
-                opacity: caretOn ? 1 : 0,
-              }}
-            />
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 * u }}>
             <div
               style={{
-                width: 34 * u,
-                height: 34 * u,
-                borderRadius: 99,
-                boxShadow: `inset 0 0 0 1px ${c.chipHair}`,
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Icon d={ICON.plus} size={16 * u} color={c.sub} />
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6 * u,
-                height: 34 * u,
-                padding: `0 ${10 * u}px`,
-                borderRadius: 9 * u,
-                color: c.sub,
-                fontSize: 14 * u,
-              }}
-            >
-              <Icon d={ICON.spark} size={15 * u} color={c.sub} />
-              Model
-              <Icon d={ICON.chevron} size={14 * u} color={c.sub} />
-            </div>
-            <div style={{ flex: 1 }} />
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6 * u,
-                height: 34 * u,
-                padding: `0 ${10 * u}px`,
-                borderRadius: 9 * u,
-                color: c.sub,
-                fontSize: 14 * u,
-              }}
-            >
-              Film
-              <Icon d={ICON.chevron} size={14 * u} color={c.sub} />
-            </div>
-            <Icon d={ICON.mic} size={17 * u} color={c.sub} />
-            <div
-              style={{
-                width: 34 * u,
-                height: 34 * u,
+                gap: 10 * u,
+                padding: `${7 * u}px ${10 * u}px ${7 * u}px ${8 * u}px`,
                 borderRadius: 10 * u,
-                marginLeft: 4 * u,
-                background: done ? c.accent : c.chip,
-                boxShadow: done
-                  ? `inset 0 1px 0 rgba(255,255,255,0.25), 0 6px 18px ${c.accent}66`
-                  : `inset 0 0 0 1px ${c.chipHair}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transform: `scale(${1 + 0.08 * Math.sin(Math.PI * Math.min(1, sendOn))})`,
+                background: c.chip,
+                boxShadow: `inset 0 0 0 1px ${c.chipHair}`,
+                transform: `scale(${0.8 + 0.2 * chipIn})${glide(chipMoving)}`,
+                transformOrigin: "0% 50%",
+                opacity: Math.min(1, chipIn * 1.5),
               }}
             >
-              <Icon d={ICON.up} size={16 * u} color={done ? "#fff" : c.sub} />
+              <div
+                style={{
+                  width: 30 * u,
+                  height: 30 * u,
+                  borderRadius: 7 * u,
+                  background: c.accent,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icon d={ICON.file} size={16 * u} color="#fff" />
+              </div>
+              <div>
+                <div
+                  style={{ fontSize: 14 * u, color: c.ink, fontWeight: 400 }}
+                >
+                  {file}
+                </div>
+                <div style={{ fontSize: 12 * u, color: c.sub }}>{fileMeta}</div>
+              </div>
+              <Icon d={ICON.x} size={14 * u} color={c.sub} />
+            </div>
+            <div
+              style={{
+                minHeight: 64 * u,
+                padding: `${14 * u}px ${4 * u}px ${8 * u}px`,
+                fontSize: 21 * u,
+                lineHeight: 1.45,
+                color: typed > 0 ? c.ink : c.sub,
+                fontWeight: 400,
+                letterSpacing: "-0.005em",
+              }}
+            >
+              {typed > 0 ? prompt.slice(0, typed) : placeholder}
+              <span
+                style={{
+                  display: "inline-block",
+                  width: 2 * u,
+                  height: 22 * u,
+                  marginLeft: 2 * u,
+                  verticalAlign: "-0.2em",
+                  background: c.accentInk,
+                  opacity: caretOn ? 1 : 0,
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 * u }}>
+              <div
+                style={{
+                  width: 34 * u,
+                  height: 34 * u,
+                  borderRadius: 99,
+                  boxShadow: `inset 0 0 0 1px ${c.chipHair}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icon d={ICON.plus} size={16 * u} color={c.sub} />
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6 * u,
+                  height: 34 * u,
+                  padding: `0 ${10 * u}px`,
+                  borderRadius: 9 * u,
+                  color: c.sub,
+                  fontSize: 14 * u,
+                }}
+              >
+                <Icon d={ICON.spark} size={15 * u} color={c.sub} />
+                Model
+                <Icon d={ICON.chevron} size={14 * u} color={c.sub} />
+              </div>
+              <div style={{ flex: 1 }} />
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6 * u,
+                  height: 34 * u,
+                  padding: `0 ${10 * u}px`,
+                  borderRadius: 9 * u,
+                  color: c.sub,
+                  fontSize: 14 * u,
+                }}
+              >
+                Film
+                <Icon d={ICON.chevron} size={14 * u} color={c.sub} />
+              </div>
+              <Icon d={ICON.mic} size={17 * u} color={c.sub} />
+              <div
+                style={{
+                  width: 34 * u,
+                  height: 34 * u,
+                  borderRadius: 10 * u,
+                  marginLeft: 4 * u,
+                  background: done ? c.accent : c.chip,
+                  boxShadow: done
+                    ? `inset 0 1px 0 rgba(255,255,255,0.25), 0 6px 18px ${c.accent}66`
+                    : `inset 0 0 0 1px ${c.chipHair}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: `scale(${1 + 0.08 * Math.sin(Math.PI * Math.min(1, sendOn))})`,
+                }}
+              >
+                <Icon d={ICON.up} size={16 * u} color={done ? "#fff" : c.sub} />
+              </div>
             </div>
           </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -640,6 +731,24 @@ export interface StrobeMontageDemoProps extends StrobeMontageProps {
   accentMark?: string;
   prompt?: string;
   file?: string;
+  /** Size and type line under the file name on the attachment chip. */
+  fileMeta?: string;
+  /** Prompt box text before typing starts. */
+  placeholder?: string;
+  /** Text color of both scenes; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of both gradient grounds; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark above the opener. */
+  logo?: React.ReactNode;
+  /** Size of both scenes' copy and prompt box, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Playback multiplier for the whole series. */
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   groundB?: GshPresetId;
@@ -656,6 +765,15 @@ export function StrobeMontage({
   accentMark = "?",
   prompt = "A 30-second film for our 2.0 release",
   file = "launch-notes.md",
+  fileMeta = "Release notes · 2.4 KB",
+  placeholder = "Describe your launch film",
+  ink,
+  background,
+  fontFamily = sans.fontFamily,
+  logo,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
   groundB,
@@ -664,35 +782,67 @@ export function StrobeMontage({
   ...montage
 }: StrobeMontageDemoProps) {
   const base = THEMES[theme];
-  const c = { ...base, accent: accent ?? base.accent };
+  const c = {
+    ...base,
+    accent: accent ?? base.accent,
+    ink: ink ?? base.ink,
+  };
   const presetA = ground ?? (groundParams ? undefined : c.groundA);
   const presetB = groundB ?? (groundBParams ? undefined : c.groundB);
+  const look: SceneLook = { fontFamily, background, scale, speed };
+  // Speed scales the series itself so the transition keeps pace with the scenes.
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
+  // The strobe keeps its count of hits when the transition gets shorter.
+  const strobe =
+    speed === 1
+      ? montage
+      : {
+          ...montage,
+          framesPerHit:
+            (montage.framesPerHit ?? strobeMontageDefaults.framesPerHit) /
+            speed,
+        };
   return (
-    <AbsoluteFill style={{ background: "#000" }}>
+    <AbsoluteFill
+      style={{ background: background === "transparent" ? undefined : "#000" }}
+    >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={STROBE_MONTAGE_TIMING.a}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(STROBE_MONTAGE_TIMING.a)}
+        >
           <OpenerScene
             c={c}
             lead={lead}
             accentWord={accentWord}
             ground={presetA}
             groundParams={groundParams ?? c.groundAParams}
+            logo={logo}
+            delay={delay}
+            look={look}
           />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
-          presentation={strobeMontage(montage)}
-          timing={linearTiming({ durationInFrames: transitionFrames })}
+          presentation={strobeMontage(strobe)}
+          timing={linearTiming({ durationInFrames: len(transitionFrames) })}
         />
-        <TransitionSeries.Sequence durationInFrames={STROBE_MONTAGE_TIMING.b}>
+        <TransitionSeries.Sequence
+          durationInFrames={len(STROBE_MONTAGE_TIMING.b)}
+        >
           <PromptScene
             c={c}
             heading={heading}
             accentMark={accentMark}
             prompt={prompt}
             file={file}
+            fileMeta={fileMeta}
+            placeholder={placeholder}
             ground={presetB}
             groundParams={groundBParams ?? c.groundBParams}
             start={transitionFrames}
+            look={look}
           />
         </TransitionSeries.Sequence>
       </TransitionSeries>

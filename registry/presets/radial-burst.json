@@ -1,0 +1,107 @@
+{
+  "component": "radial-burst",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-bloom",
+      "label": "Midnight Bloom",
+      "description": "Many slim ribbons in soft ivory and gold unfurl slowly across a deep navy field.",
+      "askedAs": [
+        "dark elegant burst with thin lines",
+        "slow gold ribbons on navy",
+        "calm luxurious intro animation",
+        "тёмный элегантный взрыв с тонкими линиями",
+        "медленные золотые ленты на синем фоне"
+      ],
+      "props": {
+        "segments": 14,
+        "thickness": 14,
+        "color": "#f5f1e8",
+        "accentColor": "#d4b26a",
+        "backgroundColor": "#0f1a2e",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "chunky-pop",
+      "label": "Chunky Pop",
+      "description": "A few fat ribbons snap outward fast in cream and coral over a bold tomato red.",
+      "askedAs": [
+        "thick bold fast burst",
+        "punchy red playful opener",
+        "big chunky shapes quick stinger",
+        "толстые яркие ленты быстро",
+        "энергичная красная заставка"
+      ],
+      "props": {
+        "segments": 5,
+        "thickness": 56,
+        "twist": 60,
+        "color": "#fff4e0",
+        "accentColor": "#ffb38a",
+        "backgroundColor": "#e2412f"
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A small, untwisted ring of charcoal strokes expands gently on warm paper white with no echoes.",
+      "askedAs": [
+        "minimal clean burst on white",
+        "subtle simple ring animation",
+        "light background understated intro",
+        "минималистичный взрыв на белом фоне",
+        "простое спокойное кольцо"
+      ],
+      "props": {
+        "radius": 150,
+        "twist": 0,
+        "echoes": 0,
+        "intensity": 0.6,
+        "color": "#2b2b2b",
+        "backgroundColor": "#f4f1ea"
+      }
+    },
+    {
+      "id": "vortex-spin",
+      "label": "Vortex Spin",
+      "description": "Heavily twisted teal and mint ribbons spiral counter-clockwise through extra echoes on a deep forest green, looping continuously.",
+      "askedAs": [
+        "swirling spiral loop",
+        "twisty hypnotic background loop",
+        "green vortex animation",
+        "закрученная спираль по кругу",
+        "зелёный вихрь зацикленный"
+      ],
+      "props": {
+        "twist": -170,
+        "rotation": -270,
+        "echoes": 5,
+        "color": "#bff0e0",
+        "backgroundColor": "#0d3b33",
+        "loop": true
+      }
+    },
+    {
+      "id": "wide-flare",
+      "label": "Wide Flare",
+      "description": "An oversized, high-intensity burst in blush and lilac sweeps the full frame over a soft plum.",
+      "askedAs": [
+        "huge full screen burst",
+        "big dramatic explosive opener",
+        "pink purple large flare",
+        "огромный взрыв на весь экран",
+        "большая драматичная вспышка"
+      ],
+      "props": {
+        "radius": 280,
+        "intensity": 1.5,
+        "segments": 10,
+        "color": "#ffe3ec",
+        "accentColor": "#c9b6ff",
+        "backgroundColor": "#3d1f4a"
+      }
+    }
+  ]
+}

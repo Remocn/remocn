@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const rotaryDialConfig: ComponentConfig = {
   componentName: "RotaryDial",
@@ -12,11 +19,6 @@ export const rotaryDialConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     unit: {
       type: "text-content",
@@ -46,6 +48,31 @@ export const rotaryDialConfig: ComponentConfig = {
       description: "To",
       hiddenFromList: false,
     },
+    turn: {
+      type: "number",
+      default: 48,
+      min: 12,
+      max: 120,
+      step: 2,
+      description: "Turn (frames)",
+      hiddenFromList: false,
+    },
+    minorTicks: {
+      type: "number",
+      default: 5,
+      min: 1,
+      max: 10,
+      step: 1,
+      description: "Minor ticks",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Space Grotesk" }),
     speed: {
       type: "number",
       default: 1,

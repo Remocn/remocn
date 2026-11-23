@@ -1,13 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
-import {
-  Easing,
-  interpolate,
-  interpolateColors,
-  spring,
-  useVideoConfig,
-} from "remotion";
+import { Easing, interpolate, interpolateColors, spring } from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -15,6 +9,8 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionActivePopProps extends CaptionBaseProps {
   activeColor?: string;
@@ -30,6 +26,8 @@ const LEGIBILITY_SHADOW =
 
 const POP_SPRING = { damping: 12, stiffness: 220, mass: 0.6 };
 const RELEASE_SPRING = { damping: 20, stiffness: 200, mass: 0.6 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const enterEasing = Easing.bezier(0.2, 0.8, 0.2, 1);
 
@@ -50,7 +48,8 @@ export function CaptionActivePop({
   shadow = true,
   className,
 }: CaptionActivePopProps) {
-  const { fps } = useVideoConfig();
+  const glide = useGlide();
+  const { fps } = useSceneConfig();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -82,12 +81,12 @@ export function CaptionActivePop({
   );
   const toFrames = (ms: number) => (ms / 1000) * fps;
 
-  const emphasis = (w: number): number => {
+  const emphasisAt = (w: number, timeMs: number): number => {
     if (activeWord < 0 || w > activeWord) return 0;
     const startMs = words[w][0].token.fromMs;
     if (w === activeWord) {
       return spring({
-        frame: toFrames(state.timeMs - startMs),
+        frame: toFrames(timeMs - startMs),
         fps,
         config: POP_SPRING,
       });
@@ -100,12 +99,25 @@ export function CaptionActivePop({
       config: POP_SPRING,
     });
     const release = spring({
-      frame: toFrames(state.timeMs - releaseMs),
+      frame: toFrames(timeMs - releaseMs),
       fps,
       config: RELEASE_SPRING,
     });
     return peak * (1 - release);
   };
+  const emphasis = (w: number) => emphasisAt(w, state.timeMs);
+  // The pop overshoots and settles on a long tail, so a word counts as moving
+  // while its scale still shifts a glyph (~1em from the origin) by 2e-3px a
+  // frame; below that the tail is a held word, and a tilt would change it.
+  const frameMs = 1000 / fps;
+  const popping = (w: number, amount: number) => {
+    const reach = (popScale - 1) * fontSize;
+    return (
+      Math.abs(emphasisAt(w, state.timeMs + frameMs) - amount) * reach > 2e-3 ||
+      Math.abs(amount - emphasisAt(w, state.timeMs - frameMs)) * reach > 2e-3
+    );
+  };
+  const rising = midway(enter);
 
   return (
     <div
@@ -117,7 +129,7 @@ export function CaptionActivePop({
         lineHeight: 1.2,
         textAlign: "center",
         opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)`,
+        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(rising)}`,
       }}
     >
       {words.map((word, w) => {
@@ -131,7 +143,7 @@ export function CaptionActivePop({
                 zIndex: w === activeWord ? 1 : 0,
                 display: "inline-block",
                 whiteSpace: "nowrap",
-                transform: `scale(${1 + (popScale - 1) * amount})`,
+                transform: `scale(${1 + (popScale - 1) * amount})${glide(!rising && popping(w, amount))}`,
                 transformOrigin: "50% 60%",
                 color: interpolateColors(
                   Math.min(1, Math.max(0, amount)),

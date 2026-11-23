@@ -1,0 +1,125 @@
+{
+  "component": "transit-lines",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "swiss-transit",
+      "label": "Swiss Transit",
+      "description": "Crisp light map on warm paper with a signal-red accent and fast, tight line timing.",
+      "askedAs": [
+        "clean light metro map",
+        "swiss style subway diagram",
+        "red accent on white map",
+        "светлая схема метро",
+        "швейцарский стиль карта линий"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#141414",
+        "accent": "#d7372b",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "night-line",
+      "label": "Night Line",
+      "description": "Deep navy night map with a soft amber accent and slow, unhurried line draws.",
+      "askedAs": [
+        "slow dark night subway",
+        "amber lines on navy",
+        "calm late night metro",
+        "ночная схема метро",
+        "медленные линии на тёмно-синем"
+      ],
+      "props": {
+        "background": "#0e1424",
+        "ink": "#ede6d6",
+        "accent": "#e8a23a",
+        "draw": 48,
+        "stagger": 10,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "express",
+      "label": "Express",
+      "description": "Snappy dark diagram where all lines shoot in almost together for a punchy, energetic reveal.",
+      "askedAs": [
+        "fast quick logo reveal",
+        "energetic metro lines",
+        "all lines at once",
+        "быстрая анимация линий",
+        "энергичное появление логотипа"
+      ],
+      "props": {
+        "draw": 14,
+        "stagger": 1,
+        "speed": 1.5,
+        "accent": "#2fbf8f",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "editorial-map",
+      "label": "Editorial Map",
+      "description": "Magazine-style serif on cream with a muted forest-green accent and a gentle cascading reveal.",
+      "askedAs": [
+        "editorial serif map",
+        "elegant magazine diagram",
+        "green lines on cream",
+        "редакционный стиль схема",
+        "элегантная карта с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#efe8da",
+        "ink": "#1e2a22",
+        "accent": "#2f6b4f",
+        "fontFamily": "Fraunces",
+        "stagger": 8
+      }
+    },
+    {
+      "id": "control-room",
+      "label": "Control Room",
+      "description": "Monospace terminal look on near-black with a cool cyan accent, framed smaller with a beat of delay.",
+      "askedAs": [
+        "technical monospace diagram",
+        "developer platform integrations",
+        "dark terminal style map",
+        "техническая схема моноширинный шрифт",
+        "тёмная схема для разработчиков"
+      ],
+      "props": {
+        "background": "#0a0c0f",
+        "ink": "#d8e1e8",
+        "accent": "#4fb3d9",
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.85,
+        "delay": 12
+      }
+    },
+    {
+      "id": "grand-terminal",
+      "label": "Grand Terminal",
+      "description": "Oversized, close-up hub with a plum accent and a slow, stately convergence.",
+      "askedAs": [
+        "big bold hub reveal",
+        "zoomed in logo station",
+        "slow premium convergence",
+        "крупный план станции",
+        "медленное премиальное появление"
+      ],
+      "props": {
+        "scale": 1.35,
+        "accent": "#7a4bd0",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.5,
+        "stagger": 6
+      }
+    }
+  ]
+}

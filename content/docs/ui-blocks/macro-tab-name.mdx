@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="MacroTabName"
     component={MacroTabNameScene}
-    durationInFrames={108}
-    fps={30}
+    durationInFrames={216}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -100,6 +100,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Body lines of the document; portrait shows all, landscape the first.",
     },
     {
+      name: "placeholder",
+      type: "string",
+      default: "\"Untitled\"",
+      description: "Tab and title text before the name resolves.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between typed letters.",
+    },
+    {
       name: "ground",
       type: "GshPresetId",
       description: "Shader preset id for the animated background.",
@@ -108,6 +120,40 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Inter Tight\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

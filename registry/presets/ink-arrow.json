@@ -1,0 +1,106 @@
+{
+  "component": "ink-arrow",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-flick",
+      "label": "Quick Flick",
+      "description": "A thin, nearly straight pen stroke that snaps across fast with a small crisp head.",
+      "askedAs": [
+        "fast thin arrow",
+        "quick pen pointer",
+        "snappy straight arrow",
+        "быстрая тонкая стрелка",
+        "резкая прямая стрелка"
+      ],
+      "props": {
+        "curvature": 0.1,
+        "strokeWidth": 4,
+        "headSize": 14,
+        "drawDur": 16,
+        "headDur": 6,
+        "step": 2
+      }
+    },
+    {
+      "id": "fat-marker",
+      "label": "Fat Marker",
+      "description": "A heavy, slow marker sweep with a big blunt head and almost no grain.",
+      "askedAs": [
+        "thick marker arrow",
+        "bold heavy arrow",
+        "big chunky pointer",
+        "толстая стрелка маркером",
+        "жирная крупная стрелка"
+      ],
+      "props": {
+        "strokeWidth": 18,
+        "headSize": 42,
+        "pressure": 0.6,
+        "grain": 0.2,
+        "drawDur": 48,
+        "headDur": 16
+      }
+    },
+    {
+      "id": "red-pencil",
+      "label": "Red Pencil",
+      "description": "An editor's red-pencil loop with a gritty, scratchy texture and a deep bend.",
+      "askedAs": [
+        "red correction arrow",
+        "teacher red pen arrow",
+        "editor markup arrow",
+        "красная стрелка карандашом",
+        "стрелка как правка редактора"
+      ],
+      "props": {
+        "color": "#b23a2e",
+        "curvature": 0.65,
+        "strokeWidth": 5,
+        "grain": 1.8,
+        "headSize": 18
+      }
+    },
+    {
+      "id": "slow-sumi",
+      "label": "Slow Sumi",
+      "description": "A deliberate ink-brush stroke that tapers in and out, drawn slowly on choppy poses.",
+      "askedAs": [
+        "calligraphy brush arrow",
+        "slow ink brush arrow",
+        "japanese ink style pointer",
+        "стрелка тушью кистью",
+        "медленная каллиграфическая стрелка"
+      ],
+      "props": {
+        "strokeWidth": 14,
+        "pressure": 0.05,
+        "release": 0.4,
+        "drawDur": 72,
+        "step": 5,
+        "color": "#141318"
+      }
+    },
+    {
+      "id": "blue-ballpoint",
+      "label": "Blue Ballpoint",
+      "description": "A smooth blue ballpoint doodle curving the other way with fluid, frame-by-frame motion.",
+      "askedAs": [
+        "blue pen doodle arrow",
+        "smooth ballpoint arrow",
+        "notebook sketch pointer",
+        "синяя стрелка ручкой",
+        "стрелка как в тетради"
+      ],
+      "props": {
+        "color": "#2b4c8c",
+        "curvature": -0.45,
+        "strokeWidth": 3,
+        "grain": 0.4,
+        "step": 1,
+        "headSize": 16
+      }
+    }
+  ]
+}

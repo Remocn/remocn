@@ -39,8 +39,8 @@ export const RemotionRoot = () => (
   <Composition
     id="CartAdd"
     component={CartAddScene}
-    durationInFrames={200}
-    fps={30}
+    durationInFrames={400}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -143,6 +143,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Order total that unlocks free shipping in the drawer bar.",
     },
     {
+      name: "addLabel",
+      type: "string",
+      default: "\"Add to bag\"",
+      description: "Label of the main button before it is pressed.",
+    },
+    {
+      name: "addedLabel",
+      type: "string",
+      default: "\"Added to bag\"",
+      description: "Label of the main button once the item is in the bag.",
+    },
+    {
+      name: "checkoutLabel",
+      type: "string",
+      default: "\"Checkout\"",
+      description: "Button at the bottom of the bag drawer.",
+    },
+    {
       name: "theme",
       type: "\"light\" | \"dark\"",
       default: "\"light\"",
@@ -155,6 +173,29 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Accent color for selection, buttons and the progress bar.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
       name: "speed",
       type: "number",
       default: "1",
@@ -164,6 +205,11 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "ground",
       type: "GshPresetId",
       description: "Preset id for the shader background.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
     },
     {
       name: "groundParams",

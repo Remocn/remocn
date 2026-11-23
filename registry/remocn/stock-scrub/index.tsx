@@ -9,14 +9,14 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const geist = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -28,7 +28,23 @@ export interface StockScrubProps {
   series?: number[];
   /** Prices for the 1Y range; rescaled so it ends on the same price as `series`. */
   yearSeries?: number[];
+  /** Label of the buy button on the stock page. */
+  ctaLabel?: string;
+  /** Label of the button at the bottom of the buy sheet. */
+  orderLabel?: string;
+  /** Replaces the remocn mark in the app icon. */
+  logo?: React.ReactNode;
   accent?: string;
+  /** Color of the lines beside the phone; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the scene, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   /** Four lines beside the phone: live, scrub, range, buy. */
@@ -68,6 +84,8 @@ const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const DARK = {
   copy: "#f4f4f6",
@@ -358,12 +376,36 @@ function Phone({ children, c }: { children: React.ReactNode; c: Palette }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function StockScrub({
   ticker = "RMCN",
   name = "remocn Inc.",
   series = DAY,
   yearSeries = YEAR,
+  ctaLabel = "Buy",
+  orderLabel = "Review order",
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   lines = [
@@ -375,11 +417,13 @@ export function StockScrub({
   ground,
   groundParams,
 }: StockScrubProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { fps, width, height } = useSceneConfig();
   const f = frame * speed;
   const dark = theme !== "light";
-  const c: Palette = dark ? DARK : LIGHT;
+  const pal: Palette = dark ? DARK : LIGHT;
+  const c: Palette = { ...pal, copy: ink ?? pal.copy };
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const tall = height > width;
@@ -511,6 +555,7 @@ export function StockScrub({
   const sheetRows = [0, 1, 2, 3].map((i) => sp(BUY_TAP + 10 + i * 3, CARD));
   const pulse = ((f - DRAW - 40) % 36) / 36;
   const camS = interpolate(f, [0, 270], [1, 1.03], clamp);
+  const camMoving = f > 0 && f < 270;
 
   const enter = (v: number, dy = 12): React.CSSProperties => ({
     opacity: Math.min(1, v * 1.4),
@@ -559,7 +604,7 @@ export function StockScrub({
           left: 0,
           right: 0,
           top: 0,
-          transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
+          transform: `translateY(${(1 - pin) * 70 - pout * 50}%)${glide(midway(pin) || midway(pout))}`,
           opacity: pin * (1 - pout),
         }}
       >
@@ -568,586 +613,617 @@ export function StockScrub({
     );
   };
   const readIn = sp(18, CARD);
+  // The spring overshoots, so it is still moving past 1: the neighbouring
+  // frames say whether it is, not the progress.
+  const readMoving =
+    Math.abs(sp(17, CARD) - readIn) > 1e-5 ||
+    Math.abs(readIn - sp(19, CARD)) > 1e-5;
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? (dark ? "velvet-hour" : "glasswork")}
-        params={groundParams}
-        timeOffset={dark ? 6 : 4}
-        timeScale={0.35}
-      />
-      <AbsoluteFill style={{ background: c.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - W * u) / 2,
-          top: (height - H * u) / 2,
-          width: W,
-          height: H,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (dark ? "velvet-hour" : "glasswork")}
+            params={groundParams}
+            timeOffset={dark ? 6 : 4}
+            timeScale={0.35}
+          />
+          <AbsoluteFill style={{ background: c.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: tall ? 56 : 88,
-            top: tall ? 84 : H / 2 - 112,
-            width: tall ? W - 112 : 480,
-            height: tall ? 140 : 160,
-            fontSize: tall ? 62 : 70,
-            fontWeight: 300,
-            lineHeight: 1.04,
-            letterSpacing: "-0.035em",
-            color: c.copy,
-            overflow: "hidden",
-            textWrap: "balance",
+            left: (width - W * u) / 2,
+            top: (height - H * u) / 2,
+            width: W,
+            height: H,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
-          {[0, 1, 2, 3].map((i) => copyLine(i))}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: tall ? 56 : 88,
-            top: tall ? 236 : H / 2 + 72,
-            display: "flex",
-            alignItems: "baseline",
-            gap: 14,
-            fontSize: tall ? 26 : 22,
-            fontWeight: 400,
-            color: c.copyMuted,
-            fontVariantNumeric: "tabular-nums",
-            opacity: Math.min(1, readIn * 1.4),
-            transform: `translateY(${(1 - readIn) * 16}px)`,
-          }}
-        >
-          <span>{ticker}</span>
-          <span style={{ color: c.copy }}>${money(price)}</span>
-          <span style={{ color: lineColor }}>
-            {delta >= 0 ? "+" : "−"}
-            {Math.abs(pct).toFixed(2)}%
-          </span>
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: phoneCx - BW / 2,
-            top: phoneCy - BH / 2,
-            width: BW,
-            height: BH,
-            transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})`,
-          }}
-        >
-          <Phone c={c}>
-            <StatusBar color={c.text} />
-            <div
-              style={{
-                position: "absolute",
-                top: 56,
-                left: 14,
-                right: 16,
-                height: 44,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                ...enter(headIn[0]),
-              }}
-            >
-              <Glyph d={ICON.back} size={22} color={c.text} sw={2.2} />
+          <div
+            style={{
+              position: "absolute",
+              left: tall ? 56 : 88,
+              top: tall ? 84 : H / 2 - 112,
+              width: tall ? W - 112 : 480,
+              height: tall ? 140 : 160,
+              fontSize: tall ? 62 : 70,
+              fontWeight: 300,
+              lineHeight: 1.04,
+              letterSpacing: "-0.035em",
+              color: c.copy,
+              overflow: "hidden",
+              textWrap: "balance",
+            }}
+          >
+            {[0, 1, 2, 3].map((i) => copyLine(i))}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: tall ? 56 : 88,
+              top: tall ? 236 : H / 2 + 72,
+              display: "flex",
+              alignItems: "baseline",
+              gap: 14,
+              fontSize: tall ? 26 : 22,
+              fontWeight: 400,
+              color: c.copyMuted,
+              fontVariantNumeric: "tabular-nums",
+              opacity: Math.min(1, readIn * 1.4),
+              transform: `translateY(${(1 - readIn) * 16}px)${glide(readMoving)}`,
+            }}
+          >
+            <span>{ticker}</span>
+            <span style={{ color: c.copy }}>${money(price)}</span>
+            <span style={{ color: lineColor }}>
+              {delta >= 0 ? "+" : "−"}
+              {Math.abs(pct).toFixed(2)}%
+            </span>
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: phoneCx - BW / 2,
+              top: phoneCy - BH / 2,
+              width: BW,
+              height: BH,
+              // The camera push runs the whole scene, so the tilt here
+              // covers every label on the screen while it lasts.
+              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})${glide(camMoving || midway(rise))}`,
+            }}
+          >
+            <Phone c={c}>
+              <StatusBar color={c.text} />
               <div
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  background: accent,
+                  position: "absolute",
+                  top: 56,
+                  left: 14,
+                  right: 16,
+                  height: 44,
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 8,
+                  ...enter(headIn[0]),
                 }}
               >
-                <svg viewBox="0 0 124.06 134.26" height={14} aria-hidden>
-                  <path fill="#fff" d={REMOCN_R_PATH} />
-                </svg>
-              </div>
-              <span style={{ fontSize: 16, fontWeight: 400, color: c.text }}>
-                {ticker}
-              </span>
-              <div style={{ flex: 1 }} />
-              <div style={circleBtn}>
-                <Glyph d={ICON.heart} size={18} color={c.text} sw={1.9} />
-              </div>
-              <div style={circleBtn}>
-                <Glyph d={ICON.more} size={20} color={c.text} sw={3} />
-              </div>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                top: 110,
-                left: 18,
-                right: 18,
-                color: c.text,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontSize: 26,
-                  fontWeight: 400,
-                  letterSpacing: "-0.02em",
-                  ...enter(headIn[1]),
-                }}
-              >
-                {name}
-                <Glyph d={ICON.chev} size={18} color={c.muted} sw={2.4} />
-              </div>
-              <div
-                style={{
-                  marginTop: 4,
-                  fontSize: 34,
-                  fontWeight: 400,
-                  letterSpacing: "-0.03em",
-                  fontVariantNumeric: "tabular-nums",
-                  ...enter(headIn[2]),
-                }}
-              >
-                ${money(price)}
-              </div>
-              <div
-                style={{
-                  marginTop: 4,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontSize: 15,
-                  fontWeight: 400,
-                  color: lineColor,
-                  fontVariantNumeric: "tabular-nums",
-                  ...enter(headIn[3]),
-                }}
-              >
-                <svg width={10} height={10} viewBox="0 0 10 10">
-                  <path
-                    d={delta >= 0 ? "M5 1l4.5 7h-9z" : "M5 9L.5 2h9z"}
-                    fill={lineColor}
-                  />
-                </svg>
-                <span>
-                  {delta >= 0 ? "+" : "−"}${money(delta)} (
-                  {delta >= 0 ? "+" : "−"}
-                  {Math.abs(pct).toFixed(2)}%)
-                </span>
-                <span style={{ color: c.muted, fontWeight: 400 }}>
-                  {changeLabel}
-                </span>
-              </div>
-            </div>
-            <svg
-              width={SW}
-              height={CH_H + 30}
-              viewBox={`0 -30 ${SW} ${CH_H + 30}`}
-              style={{ position: "absolute", left: 0, top: CH_Y - 30 }}
-            >
-              <defs>
-                <linearGradient id={`${uid}a`} x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="0"
-                    stopColor={lineColor}
-                    stopOpacity={dark ? 0.2 : 0.28}
-                  />
-                  <stop offset="1" stopColor={lineColor} stopOpacity={0} />
-                </linearGradient>
-                <clipPath id={`${uid}l`}>
-                  <rect
-                    x={-4}
-                    y={-30}
-                    width={4 + (cross > 0 ? crossX : SW + 8)}
-                    height={CH_H + 40}
-                  />
-                </clipPath>
-                <clipPath id={`${uid}r`}>
-                  <rect
-                    x={cross > 0 ? crossX : SW + 8}
-                    y={-30}
-                    width={SW}
-                    height={CH_H + 40}
-                  />
-                </clipPath>
-              </defs>
-              <line
-                x1={0}
-                x2={SW}
-                y1={baseY}
-                y2={baseY}
-                stroke={c.muted}
-                strokeWidth={1.2}
-                strokeDasharray="2 5"
-                strokeLinecap="round"
-                opacity={0.35 + cross * 0.45}
-              />
-              <path
-                d={area}
-                fill={`url(#${uid}a)`}
-                opacity={draw}
-                clipPath={`url(#${uid}l)`}
-              />
-              {(["l", "r"] as const).map((side) => (
-                <path
-                  key={side}
-                  d={line}
-                  fill="none"
-                  stroke={side === "l" ? lineColor : c.muted}
-                  strokeWidth={2.4}
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                  pathLength={1}
-                  strokeDasharray={1}
-                  strokeDashoffset={1 - draw}
-                  opacity={side === "l" ? 1 : 0.55}
-                  clipPath={`url(#${uid}${side})`}
-                />
-              ))}
-              {draw >= 1 && cross < 0.5 ? (
-                <g>
-                  <circle
-                    cx={lineEnd.x}
-                    cy={lineEnd.y}
-                    r={4 + pulse * 12}
-                    fill={lineColor}
-                    opacity={(1 - pulse) * 0.35}
-                  />
-                  <circle
-                    cx={lineEnd.x}
-                    cy={lineEnd.y}
-                    r={4}
-                    fill={lineColor}
-                  />
-                </g>
-              ) : null}
-              {cross > 0 ? (
-                <g opacity={cross}>
-                  <line
-                    x1={crossX}
-                    x2={crossX}
-                    y1={-8}
-                    y2={CH_H}
-                    stroke={c.muted}
-                    strokeWidth={1.2}
-                  />
-                  <circle
-                    cx={crossX}
-                    cy={yDay(scrub.price)}
-                    r={6.5}
-                    fill={c.screen}
-                    stroke={lineColor}
-                    strokeWidth={3}
-                  />
-                  <text
-                    x={Math.min(SW - 36, Math.max(36, crossX))}
-                    y={-14}
-                    textAnchor="middle"
-                    fontSize={13}
-                    fontWeight={400}
-                    fill={c.muted}
-                    fontFamily={fontFamily}
-                    style={{ fontVariantNumeric: "tabular-nums" }}
-                  >
-                    {timeLabel}
-                  </text>
-                </g>
-              ) : null}
-            </svg>
-            <div
-              style={{
-                position: "absolute",
-                left: tabX + 4,
-                top: TABS_Y,
-                width: TAB_W - 8,
-                height: 32,
-                borderRadius: 16,
-                background: c.tabOn,
-                ...enter(headIn[3]),
-              }}
-            />
-            {TABS.map((t, i) => {
-              const on = Math.abs(tabX - (12 + TAB_W * i)) < TAB_W / 2;
-              return (
+                <Glyph d={ICON.back} size={22} color={c.text} sw={2.2} />
                 <div
-                  key={t}
                   style={{
-                    position: "absolute",
-                    left: 12 + TAB_W * i,
-                    top: TABS_Y,
-                    width: TAB_W,
+                    width: 32,
                     height: 32,
+                    borderRadius: 16,
+                    background: accent,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: 5,
-                    fontSize: 14,
-                    fontWeight: 400,
-                    color: on ? c.tabOnText : c.muted,
-                    ...enter(headIn[3]),
                   }}
                 >
-                  {i === 0 ? (
-                    <span
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: 3,
-                        background: c.up,
-                      }}
-                    />
-                  ) : null}
-                  {t}
+                  {logo ?? (
+                    <svg viewBox="0 0 124.06 134.26" height={14} aria-hidden>
+                      <path fill="#fff" d={REMOCN_R_PATH} />
+                    </svg>
+                  )}
                 </div>
-              );
-            })}
-            <div
-              style={{
-                position: "absolute",
-                top: TABS_Y + 60,
-                left: 18,
-                right: 18,
-                color: c.text,
-                ...enter(sp(24, CARD), 20),
-              }}
-            >
-              <div style={{ fontSize: 20, fontWeight: 400, marginBottom: 6 }}>
-                Stats
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", columnGap: 24 }}>
-                {stats.map(([kk, v]) => (
-                  <div
-                    key={kk}
-                    style={{
-                      width: "calc(50% - 12px)",
-                      height: 42,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      borderBottom: `1px solid ${c.hair}`,
-                      fontSize: 15,
-                    }}
-                  >
-                    <span style={{ color: c.muted }}>{kk}</span>
-                    <span
-                      style={{
-                        fontWeight: 400,
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {v}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 112,
-                padding: "14px 18px 0",
-                boxSizing: "border-box",
-                background: `linear-gradient(${c.screen}00, ${c.screen} 24%)`,
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-              }}
-            >
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 13, color: c.muted }}>
-                  Your position
+                <span style={{ fontSize: 16, fontWeight: 400, color: c.text }}>
+                  {ticker}
                 </span>
-                <span
-                  style={{
-                    fontSize: 17,
-                    fontWeight: 400,
-                    color: c.text,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  $1,842.60
-                </span>
+                <div style={{ flex: 1 }} />
+                <div style={circleBtn}>
+                  <Glyph d={ICON.heart} size={18} color={c.text} sw={1.9} />
+                </div>
+                <div style={circleBtn}>
+                  <Glyph d={ICON.more} size={20} color={c.text} sw={3} />
+                </div>
               </div>
               <div
                 style={{
-                  width: 150,
-                  height: 50,
-                  borderRadius: 25,
-                  background: accent,
-                  color: "#fff",
-                  fontSize: 17,
-                  fontWeight: 400,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transform: `scale(${1 - press(BUY_TAP) * 0.04})`,
+                  position: "absolute",
+                  top: 110,
+                  left: 18,
+                  right: 18,
+                  color: c.text,
                 }}
               >
-                Buy
-              </div>
-            </div>
-            {sheet > 0.001 ? (
-              <>
                 <div
                   style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: "rgba(0,0,0,0.5)",
-                    opacity: Math.min(1, sheet),
-                    zIndex: 20,
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    height: 452,
-                    borderRadius: "30px 30px 0 0",
-                    background: c.sheet,
-                    transform: `translateY(${(1 - sheet) * 470}px)`,
-                    padding: "10px 20px 0",
-                    boxSizing: "border-box",
-                    color: c.text,
-                    zIndex: 21,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 26,
+                    fontWeight: 400,
+                    letterSpacing: "-0.02em",
+                    ...enter(headIn[1]),
                   }}
                 >
-                  <div
-                    style={{
-                      width: 40,
-                      height: 5,
-                      borderRadius: 3,
-                      background: c.muted,
-                      opacity: 0.4,
-                      margin: "0 auto 18px",
-                    }}
+                  {name}
+                  <Glyph d={ICON.chev} size={18} color={c.muted} sw={2.4} />
+                </div>
+                <div
+                  style={{
+                    marginTop: 4,
+                    fontSize: 34,
+                    fontWeight: 400,
+                    letterSpacing: "-0.03em",
+                    fontVariantNumeric: "tabular-nums",
+                    ...enter(headIn[2]),
+                  }}
+                >
+                  ${money(price)}
+                </div>
+                <div
+                  style={{
+                    marginTop: 4,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 15,
+                    fontWeight: 400,
+                    color: lineColor,
+                    fontVariantNumeric: "tabular-nums",
+                    ...enter(headIn[3]),
+                  }}
+                >
+                  <svg width={10} height={10} viewBox="0 0 10 10">
+                    <path
+                      d={delta >= 0 ? "M5 1l4.5 7h-9z" : "M5 9L.5 2h9z"}
+                      fill={lineColor}
+                    />
+                  </svg>
+                  <span>
+                    {delta >= 0 ? "+" : "−"}${money(delta)} (
+                    {delta >= 0 ? "+" : "−"}
+                    {Math.abs(pct).toFixed(2)}%)
+                  </span>
+                  <span style={{ color: c.muted, fontWeight: 400 }}>
+                    {changeLabel}
+                  </span>
+                </div>
+              </div>
+              <svg
+                width={SW}
+                height={CH_H + 30}
+                viewBox={`0 -30 ${SW} ${CH_H + 30}`}
+                style={{ position: "absolute", left: 0, top: CH_Y - 30 }}
+              >
+                <defs>
+                  <linearGradient id={`${uid}a`} x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="0"
+                      stopColor={lineColor}
+                      stopOpacity={dark ? 0.2 : 0.28}
+                    />
+                    <stop offset="1" stopColor={lineColor} stopOpacity={0} />
+                  </linearGradient>
+                  <clipPath id={`${uid}l`}>
+                    <rect
+                      x={-4}
+                      y={-30}
+                      width={4 + (cross > 0 ? crossX : SW + 8)}
+                      height={CH_H + 40}
+                    />
+                  </clipPath>
+                  <clipPath id={`${uid}r`}>
+                    <rect
+                      x={cross > 0 ? crossX : SW + 8}
+                      y={-30}
+                      width={SW}
+                      height={CH_H + 40}
+                    />
+                  </clipPath>
+                </defs>
+                <line
+                  x1={0}
+                  x2={SW}
+                  y1={baseY}
+                  y2={baseY}
+                  stroke={c.muted}
+                  strokeWidth={1.2}
+                  strokeDasharray="2 5"
+                  strokeLinecap="round"
+                  opacity={0.35 + cross * 0.45}
+                />
+                <path
+                  d={area}
+                  fill={`url(#${uid}a)`}
+                  opacity={draw}
+                  clipPath={`url(#${uid}l)`}
+                />
+                {(["l", "r"] as const).map((side) => (
+                  <path
+                    key={side}
+                    d={line}
+                    fill="none"
+                    stroke={side === "l" ? lineColor : c.muted}
+                    strokeWidth={2.4}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    pathLength={1}
+                    strokeDasharray={1}
+                    strokeDashoffset={1 - draw}
+                    opacity={side === "l" ? 1 : 0.55}
+                    clipPath={`url(#${uid}${side})`}
                   />
-                  <div style={{ fontSize: 20, fontWeight: 400 }}>
-                    Buy {ticker}
-                  </div>
-                  <div style={{ fontSize: 14, color: c.muted, marginTop: 4 }}>
-                    Market order · ${money(last)} per share
-                  </div>
+                ))}
+                {draw >= 1 && cross < 0.5 ? (
+                  <g>
+                    <circle
+                      cx={lineEnd.x}
+                      cy={lineEnd.y}
+                      r={4 + pulse * 12}
+                      fill={lineColor}
+                      opacity={(1 - pulse) * 0.35}
+                    />
+                    <circle
+                      cx={lineEnd.x}
+                      cy={lineEnd.y}
+                      r={4}
+                      fill={lineColor}
+                    />
+                  </g>
+                ) : null}
+                {cross > 0 ? (
+                  <g opacity={cross}>
+                    <line
+                      x1={crossX}
+                      x2={crossX}
+                      y1={-8}
+                      y2={CH_H}
+                      stroke={c.muted}
+                      strokeWidth={1.2}
+                    />
+                    <circle
+                      cx={crossX}
+                      cy={yDay(scrub.price)}
+                      r={6.5}
+                      fill={c.screen}
+                      stroke={lineColor}
+                      strokeWidth={3}
+                    />
+                    <text
+                      x={Math.min(SW - 36, Math.max(36, crossX))}
+                      y={-14}
+                      textAnchor="middle"
+                      fontSize={13}
+                      fontWeight={400}
+                      fill={c.muted}
+                      fontFamily={fontFamily}
+                      style={{ fontVariantNumeric: "tabular-nums" }}
+                    >
+                      {timeLabel}
+                    </text>
+                  </g>
+                ) : null}
+              </svg>
+              <div
+                style={{
+                  position: "absolute",
+                  // Laid out under the first tab; the slide to the tapped
+                  // one is a transform, because layout rounds a box to whole
+                  // pixels and a pill eased by `left` clicks along.
+                  left: 12 + TAB_W + 4,
+                  top: TABS_Y,
+                  width: TAB_W - 8,
+                  height: 32,
+                  borderRadius: 16,
+                  background: c.tabOn,
+                  opacity: enter(headIn[3]).opacity,
+                  transform: `translateX(${tabX - 12 - TAB_W}px) ${enter(headIn[3]).transform}`,
+                }}
+              />
+              {TABS.map((t, i) => {
+                const on = Math.abs(tabX - (12 + TAB_W * i)) < TAB_W / 2;
+                return (
                   <div
+                    key={t}
                     style={{
-                      textAlign: "center",
-                      fontSize: 52,
-                      fontWeight: 400,
-                      letterSpacing: "-0.03em",
-                      marginTop: 26,
-                      ...enter(sheetRows[0]),
-                    }}
-                  >
-                    $500
-                  </div>
-                  <div
-                    style={{
-                      textAlign: "center",
-                      fontSize: 14,
-                      color: c.muted,
-                      marginTop: 2,
-                      ...enter(sheetRows[0]),
-                    }}
-                  >
-                    ≈ {(500 / last).toFixed(4)} shares
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 8,
-                      marginTop: 22,
-                      ...enter(sheetRows[1]),
-                    }}
-                  >
-                    {["$100", "$250", "$500", "$1,000"].map((v) => (
-                      <div
-                        key={v}
-                        style={{
-                          flex: 1,
-                          height: 38,
-                          borderRadius: 19,
-                          background: v === "$500" ? `${accent}26` : c.field,
-                          color: v === "$500" ? accent : c.text,
-                          boxShadow:
-                            v === "$500"
-                              ? `inset 0 0 0 1.5px ${accent}`
-                              : "none",
-                          fontSize: 15,
-                          fontWeight: 400,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        {v}
-                      </div>
-                    ))}
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: 15,
-                      marginTop: 22,
-                      paddingTop: 14,
-                      borderTop: `1px solid ${c.hair}`,
-                      ...enter(sheetRows[2]),
-                    }}
-                  >
-                    <span style={{ color: c.muted }}>Buying power</span>
-                    <span style={{ fontWeight: 400 }}>$2,140.18</span>
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 22,
-                      height: 54,
-                      borderRadius: 27,
-                      background: accent,
-                      color: "#fff",
-                      fontSize: 17,
-                      fontWeight: 400,
+                      position: "absolute",
+                      left: 12 + TAB_W * i,
+                      top: TABS_Y,
+                      width: TAB_W,
+                      height: 32,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      ...enter(sheetRows[3]),
+                      gap: 5,
+                      fontSize: 14,
+                      fontWeight: 400,
+                      color: on ? c.tabOnText : c.muted,
+                      ...enter(headIn[3]),
                     }}
                   >
-                    Review order
+                    {i === 0 ? (
+                      <span
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: 3,
+                          background: c.up,
+                        }}
+                      />
+                    ) : null}
+                    {t}
                   </div>
+                );
+              })}
+              <div
+                style={{
+                  position: "absolute",
+                  top: TABS_Y + 60,
+                  left: 18,
+                  right: 18,
+                  color: c.text,
+                  ...enter(sp(24, CARD), 20),
+                }}
+              >
+                <div style={{ fontSize: 20, fontWeight: 400, marginBottom: 6 }}>
+                  Stats
                 </div>
-              </>
-            ) : null}
-            <div
-              style={{
-                position: "absolute",
-                left: touch.x - 23,
-                top: touch.y - 23,
-                width: 46,
-                height: 46,
-                borderRadius: 23,
-                background: c.touch,
-                boxShadow: dark
-                  ? "inset 0 0 0 1.5px rgba(255,255,255,0.7)"
-                  : "inset 0 0 0 1.5px rgba(255,255,255,0.9), 0 4px 14px rgba(0,0,0,0.18)",
-                opacity: touchOpacity,
-                transform: `scale(${touchScale})`,
-                zIndex: 35,
-              }}
-            />
-          </Phone>
+                <div
+                  style={{ display: "flex", flexWrap: "wrap", columnGap: 24 }}
+                >
+                  {stats.map(([kk, v]) => (
+                    <div
+                      key={kk}
+                      style={{
+                        width: "calc(50% - 12px)",
+                        height: 42,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        borderBottom: `1px solid ${c.hair}`,
+                        fontSize: 15,
+                      }}
+                    >
+                      <span style={{ color: c.muted }}>{kk}</span>
+                      <span
+                        style={{
+                          fontWeight: 400,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {v}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: 112,
+                  padding: "14px 18px 0",
+                  boxSizing: "border-box",
+                  background: `linear-gradient(${c.screen}00, ${c.screen} 24%)`,
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 2 }}
+                >
+                  <span style={{ fontSize: 13, color: c.muted }}>
+                    Your position
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 400,
+                      color: c.text,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    $1,842.60
+                  </span>
+                </div>
+                <div
+                  style={{
+                    width: 150,
+                    height: 50,
+                    borderRadius: 25,
+                    background: accent,
+                    color: "#fff",
+                    fontSize: 17,
+                    fontWeight: 400,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transform: `scale(${1 - press(BUY_TAP) * 0.04})`,
+                  }}
+                >
+                  {ctaLabel}
+                </div>
+              </div>
+              {sheet > 0.001 ? (
+                <>
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: "rgba(0,0,0,0.5)",
+                      opacity: Math.min(1, sheet),
+                      zIndex: 20,
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: 452,
+                      borderRadius: "30px 30px 0 0",
+                      background: c.sheet,
+                      transform: `translateY(${(1 - sheet) * 470}px)`,
+                      padding: "10px 20px 0",
+                      boxSizing: "border-box",
+                      color: c.text,
+                      zIndex: 21,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 40,
+                        height: 5,
+                        borderRadius: 3,
+                        background: c.muted,
+                        opacity: 0.4,
+                        margin: "0 auto 18px",
+                      }}
+                    />
+                    <div style={{ fontSize: 20, fontWeight: 400 }}>
+                      Buy {ticker}
+                    </div>
+                    <div style={{ fontSize: 14, color: c.muted, marginTop: 4 }}>
+                      Market order · ${money(last)} per share
+                    </div>
+                    <div
+                      style={{
+                        textAlign: "center",
+                        fontSize: 52,
+                        fontWeight: 400,
+                        letterSpacing: "-0.03em",
+                        marginTop: 26,
+                        ...enter(sheetRows[0]),
+                      }}
+                    >
+                      $500
+                    </div>
+                    <div
+                      style={{
+                        textAlign: "center",
+                        fontSize: 14,
+                        color: c.muted,
+                        marginTop: 2,
+                        ...enter(sheetRows[0]),
+                      }}
+                    >
+                      ≈ {(500 / last).toFixed(4)} shares
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 8,
+                        marginTop: 22,
+                        ...enter(sheetRows[1]),
+                      }}
+                    >
+                      {["$100", "$250", "$500", "$1,000"].map((v) => (
+                        <div
+                          key={v}
+                          style={{
+                            flex: 1,
+                            height: 38,
+                            borderRadius: 19,
+                            background: v === "$500" ? `${accent}26` : c.field,
+                            color: v === "$500" ? accent : c.text,
+                            boxShadow:
+                              v === "$500"
+                                ? `inset 0 0 0 1.5px ${accent}`
+                                : "none",
+                            fontSize: 15,
+                            fontWeight: 400,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {v}
+                        </div>
+                      ))}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        fontSize: 15,
+                        marginTop: 22,
+                        paddingTop: 14,
+                        borderTop: `1px solid ${c.hair}`,
+                        ...enter(sheetRows[2]),
+                      }}
+                    >
+                      <span style={{ color: c.muted }}>Buying power</span>
+                      <span style={{ fontWeight: 400 }}>$2,140.18</span>
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 22,
+                        height: 54,
+                        borderRadius: 27,
+                        background: accent,
+                        color: "#fff",
+                        fontSize: 17,
+                        fontWeight: 400,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        ...enter(sheetRows[3]),
+                      }}
+                    >
+                      {orderLabel}
+                    </div>
+                  </div>
+                </>
+              ) : null}
+              <div
+                style={{
+                  position: "absolute",
+                  // Parked on the first stop; the travel between stops is
+                  // a transform, for the same reason as the tab pill.
+                  left: path[0].x - 23,
+                  top: path[0].y - 23,
+                  width: 46,
+                  height: 46,
+                  borderRadius: 23,
+                  background: c.touch,
+                  boxShadow: dark
+                    ? "inset 0 0 0 1.5px rgba(255,255,255,0.7)"
+                    : "inset 0 0 0 1.5px rgba(255,255,255,0.9), 0 4px 14px rgba(0,0,0,0.18)",
+                  opacity: touchOpacity,
+                  transform: `translate(${touch.x - path[0].x}px, ${touch.y - path[0].y}px) scale(${touchScale})`,
+                  zIndex: 35,
+                }}
+              />
+            </Phone>
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

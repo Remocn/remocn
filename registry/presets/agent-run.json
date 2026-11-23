@@ -1,0 +1,109 @@
+{
+  "component": "agent-run",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Dark interface with a soft violet accent for a calm, premium night-mode demo.",
+      "askedAs": [
+        "dark mode agent with purple accent",
+        "night theme AI run",
+        "moody dark violet interface",
+        "тёмная тема с фиолетовым акцентом",
+        "ночной режим агента"
+      ],
+      "props": {
+        "theme": "dark",
+        "accentColor": "#8b5cf6"
+      }
+    },
+    {
+      "id": "quick-cut",
+      "label": "Quick Cut",
+      "description": "Light theme run that moves briskly with heavy time compression for short social clips.",
+      "askedAs": [
+        "fast agent run for a short clip",
+        "speed up the AI demo",
+        "snappy quick tool calls",
+        "быстрый прогон агента",
+        "ускоренная демонстрация ИИ"
+      ],
+      "props": {
+        "speed": 2,
+        "compression": 6,
+        "seed": 17
+      }
+    },
+    {
+      "id": "slow-walkthrough",
+      "label": "Slow Walkthrough",
+      "description": "Unhurried pacing with little compression so every tool call and token burst can be read.",
+      "askedAs": [
+        "slow detailed agent walkthrough",
+        "let viewers read every step",
+        "calm realistic pacing",
+        "медленный пошаговый показ",
+        "спокойный темп агента"
+      ],
+      "props": {
+        "speed": 0.5,
+        "compression": 1.5
+      }
+    },
+    {
+      "id": "forest-terminal",
+      "label": "Forest Terminal",
+      "description": "Dark theme with a muted emerald accent that feels like a focused developer console.",
+      "askedAs": [
+        "green accent dark coding agent",
+        "terminal style AI run",
+        "developer console look",
+        "зелёный акцент в тёмной теме",
+        "как терминал разработчика"
+      ],
+      "props": {
+        "theme": "dark",
+        "accentColor": "#10b981",
+        "speed": 1.25,
+        "seed": 42
+      }
+    },
+    {
+      "id": "warm-paper",
+      "label": "Warm Paper",
+      "description": "Light theme with a burnt amber accent for a warm, editorial product feel.",
+      "askedAs": [
+        "warm orange accent light theme",
+        "friendly editorial agent demo",
+        "soft amber AI interface",
+        "тёплый оранжевый акцент",
+        "светлая тёплая тема"
+      ],
+      "props": {
+        "accentColor": "#d97706",
+        "speed": 0.75,
+        "seed": 8
+      }
+    },
+    {
+      "id": "graphite-rose",
+      "label": "Graphite Rose",
+      "description": "Dark graphite run with a dusty rose accent and moderate brisk pacing.",
+      "askedAs": [
+        "dark theme pink accent",
+        "elegant rose agent run",
+        "stylish dark AI demo",
+        "тёмная тема с розовым",
+        "элегантный тёмный агент"
+      ],
+      "props": {
+        "theme": "dark",
+        "accentColor": "#e11d48",
+        "compression": 4.5,
+        "seed": 63
+      }
+    }
+  ]
+}

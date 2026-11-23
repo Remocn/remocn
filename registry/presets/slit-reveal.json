@@ -1,0 +1,124 @@
+{
+  "component": "slit-reveal",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-keynote",
+      "label": "Midnight Keynote",
+      "description": "A slow, glowing letterbox reveal on deep navy with a soft violet-blue light and an elegant serif title.",
+      "askedAs": [
+        "slow cinematic product reveal with strong glow",
+        "keynote style dark blue opener",
+        "elegant launch intro with light line",
+        "медленное кинематографичное открытие продукта",
+        "тёмно-синяя заставка в стиле презентации"
+      ],
+      "props": {
+        "background": "#0a0f1f",
+        "ink": "#e8ecf8",
+        "accent": "#6c7cff",
+        "glow": 2,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "gallery-white",
+      "label": "Gallery White",
+      "description": "A clean, low-glow reveal on warm off-white with charcoal Instrument Serif type and no grain.",
+      "askedAs": [
+        "light minimal product reveal",
+        "clean white editorial intro",
+        "bright reveal without noise",
+        "светлое минималистичное открытие",
+        "чистая белая заставка без зерна"
+      ],
+      "props": {
+        "background": "#f6f4ef",
+        "ink": "#1c1b19",
+        "accent": "#1c1b19",
+        "fontFamily": "Instrument Serif",
+        "glow": 0.4,
+        "grain": false
+      }
+    },
+    {
+      "id": "swift-sideways",
+      "label": "Swift Sideways",
+      "description": "A fast sideways slit that snaps open in crisp Geist, suited to wide UI screenshots.",
+      "askedAs": [
+        "quick horizontal reveal for a screenshot",
+        "fast side opening intro",
+        "snappy tech product opener",
+        "быстрое открытие вбок",
+        "резкое горизонтальное раскрытие экрана"
+      ],
+      "props": {
+        "opening": "sideways",
+        "speed": 2,
+        "fontFamily": "Geist",
+        "accent": "#2f80ed",
+        "grain": false
+      }
+    },
+    {
+      "id": "amber-film",
+      "label": "Amber Film",
+      "description": "A warm amber line of light on near-black espresso with grainy film texture and Fraunces type.",
+      "askedAs": [
+        "warm golden cinematic reveal",
+        "film look intro with amber light",
+        "luxury warm product opener",
+        "тёплое золотистое раскрытие как в кино",
+        "заставка с янтарным светом и зерном"
+      ],
+      "props": {
+        "background": "#14100c",
+        "ink": "#f3e6d3",
+        "accent": "#e0a458",
+        "fontFamily": "Fraunces",
+        "glow": 1.6,
+        "grain": true
+      }
+    },
+    {
+      "id": "terminal-mint",
+      "label": "Terminal Mint",
+      "description": "A compact, delayed reveal with a muted mint hairline and monospace type on graphite for developer tools.",
+      "askedAs": [
+        "developer tool launch reveal",
+        "monospace code style opener",
+        "subtle green line reveal on dark",
+        "заставка для продукта для разработчиков",
+        "моноширинный шрифт и зелёная линия"
+      ],
+      "props": {
+        "background": "#111614",
+        "ink": "#d6e5de",
+        "accent": "#5fc9a0",
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.85,
+        "delay": 20
+      }
+    },
+    {
+      "id": "grand-stage",
+      "label": "Grand Stage",
+      "description": "An oversized, slow letterbox opening with an intense glow ring and bold Bricolage Grotesque title.",
+      "askedAs": [
+        "big dramatic product reveal",
+        "huge title with bright glow",
+        "bold oversized launch opener",
+        "большое драматичное открытие продукта",
+        "крупный заголовок с ярким свечением"
+      ],
+      "props": {
+        "scale": 1.3,
+        "glow": 2.6,
+        "speed": 0.5,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#8a5cf6"
+      }
+    }
+  ]
+}

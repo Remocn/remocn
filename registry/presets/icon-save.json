@@ -1,0 +1,100 @@
+{
+  "component": "icon-save",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, thin-lined save icon that slowly sketches itself in like an opening title.",
+      "askedAs": [
+        "big slow drawing save icon",
+        "elegant thin outline save animation",
+        "large icon that draws itself slowly",
+        "большая иконка сохранения рисуется медленно",
+        "тонкая элегантная анимация сохранения"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#1e293b"
+      }
+    },
+    {
+      "id": "snappy-confirm",
+      "label": "Snappy Confirm",
+      "description": "A compact, bold blue icon that plays a quick save action like a UI confirmation.",
+      "askedAs": [
+        "quick save click feedback",
+        "fast blue save button animation",
+        "snappy saved confirmation icon",
+        "быстрая анимация кнопки сохранить",
+        "синяя иконка подтверждения сохранения"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 32,
+        "strokeWidth": 2.5,
+        "speed": 2,
+        "color": "#2563eb"
+      }
+    },
+    {
+      "id": "autosave-loop",
+      "label": "Autosave Loop",
+      "description": "A muted green icon that keeps cycling its full animation at a calm pace, like a background autosave indicator.",
+      "askedAs": [
+        "looping autosave indicator",
+        "repeating save icon for saving in progress",
+        "calm green save animation on repeat",
+        "зацикленная иконка автосохранения",
+        "повторяющаяся анимация сохранения"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#15803d",
+        "speed": 0.75,
+        "size": 64
+      }
+    },
+    {
+      "id": "heavy-poster",
+      "label": "Heavy Poster",
+      "description": "An oversized, thick-stroked charcoal icon with a punchy combined animation for poster-style frames.",
+      "askedAs": [
+        "huge bold save icon",
+        "thick heavy save symbol animation",
+        "big chunky save icon for a title card",
+        "огромная жирная иконка сохранения",
+        "крупная толстая иконка дискеты"
+      ],
+      "props": {
+        "size": 200,
+        "strokeWidth": 3,
+        "color": "#111827",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "warm-amber-pulse",
+      "label": "Amber Pulse",
+      "description": "A medium amber icon that repeats its save action briskly to signal unsaved changes.",
+      "askedAs": [
+        "orange save icon reminder",
+        "looping save action warning",
+        "amber unsaved changes animation",
+        "оранжевая иконка несохраненных изменений",
+        "повторяющееся действие сохранения янтарного цвета"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#d97706",
+        "size": 72,
+        "speed": 1.25
+      }
+    }
+  ]
+}

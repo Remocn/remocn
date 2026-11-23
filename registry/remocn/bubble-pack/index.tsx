@@ -1,15 +1,10 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/BricolageGrotesque";
-import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { type ReactNode, useId, useMemo } from "react";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -33,7 +28,23 @@ export interface BubbleItem {
 export interface BubblePackProps {
   items?: BubbleItem[];
   highlight?: number;
+  /** Frames between bubbles as they pop in. */
+  stagger?: number;
+  /** Weight of the hero number. */
+  fontWeight?: number;
   accent?: string;
+  /** Text color of the bubble labels; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the labels and hero number. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Size of the bubble pack, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -168,6 +179,22 @@ function accentRadius(frame: number, seed: number, full: number) {
   return seed + (full - seed) * k;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
@@ -199,14 +226,25 @@ function formatValue(v: number) {
 export function BubblePack({
   items = DEFAULT_ITEMS,
   highlight = 0,
+  stagger = STAGGER,
+  fontWeight = 500,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: BubblePackProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage = background ?? p.bg;
 
   const model = useMemo(() => {
     const src = items.slice(0, 16).map((it, i) => ({
@@ -337,9 +375,9 @@ export function BubblePack({
 
   const { grays, hero, placed, frames, S, seedR, RA, camA, cams, seq } = model;
 
-  const sample = (i: number) => {
-    if (t <= ACC_START) return placed[i];
-    const k = Math.min(t - ACC_START, frames.length - 1);
+  const sampleAt = (i: number, tt: number) => {
+    if (tt <= ACC_START) return placed[i];
+    const k = Math.min(tt - ACC_START, frames.length - 1);
     const f0 = Math.floor(k);
     const f1 = Math.min(f0 + 1, frames.length - 1);
     const w = k - f0;
@@ -349,9 +387,11 @@ export function BubblePack({
     };
   };
 
-  const camAt = (() => {
-    if (t <= ACC_START) return camA;
-    const k = Math.min(t - ACC_START, cams.length - 1);
+  const sample = (i: number) => sampleAt(i, t);
+
+  const camFor = (tt: number) => {
+    if (tt <= ACC_START) return camA;
+    const k = Math.min(tt - ACC_START, cams.length - 1);
     const f0 = Math.floor(k);
     const f1 = Math.min(f0 + 1, cams.length - 1);
     const w = k - f0;
@@ -360,18 +400,56 @@ export function BubblePack({
       cy: cams[f0].cy * (1 - w) + cams[f1].cy * w,
       s: cams[f0].s * (1 - w) + cams[f1].s * w,
     };
-  })();
+  };
+  const driftAt = (tt: number) =>
+    interpolate(tt, [0, ACC_END + 60], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const screenAt = (q: V, tt: number) => {
+    const cam = camFor(tt);
+    const k = cam.s * (0.985 + 0.015 * driftAt(tt));
+    return {
+      x: width / 2 + (q.x - cam.cx) * k,
+      y: height / 2 + (q.y - cam.cy) * k,
+    };
+  };
+  const camAt = camFor(t);
   const ccx = camAt.cx;
   const ccy = camAt.cy;
-  const drift = interpolate(t, [0, ACC_END + 60], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const drift = driftAt(t);
   const cs = camAt.s * (0.985 + 0.015 * drift);
   const toScreen = (q: V) => ({
     x: width / 2 + (q.x - ccx) * cs,
     y: height / 2 + (q.y - ccy) * cs,
   });
+  // Placed by `left`/`top`, the labels clicked along with the camera pixel by
+  // pixel. Layout holds each where it settles for its whole life and the
+  // travel is a transform, 0 once the camera is done: a label handed back to
+  // layout on its last frames would snap to a whole pixel there.
+  const SETTLED = ACC_END + 60;
+  const shift = (
+    at: (tt: number) => V,
+    rest: V,
+    rise: (tt: number) => number,
+  ) => {
+    const q = at(t);
+    const moved = (ta: number, tb: number) => {
+      const a = at(ta);
+      const b = at(tb);
+      return (
+        Math.abs(a.x - b.x) > 1e-5 ||
+        Math.abs(a.y + rise(ta) - b.y - rise(tb)) > 1e-5
+      );
+    };
+    const moving = moved(t + 1, t) || moved(t, t - 1);
+    return {
+      left: rest.x,
+      top: rest.y,
+      move: `translate(${q.x - rest.x}px, ${q.y - rest.y}px) `,
+      tilt: glide(moving),
+    };
+  };
 
   const ra = accentRadius(t, seedR, RA);
   const accOpacity = interpolate(
@@ -410,170 +488,211 @@ export function BubblePack({
   const gid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const sc = toScreen(S);
   const heroR = ra * cs;
+  const heroFontAt = (tt: number) => {
+    const cam = camFor(tt);
+    const k = cam.s * (0.985 + 0.015 * driftAt(tt));
+    return Math.min(136 * u, accentRadius(tt, seedR, RA) * k * 0.68);
+  };
   const heroFont = Math.min(136 * u, heroR * 0.68);
+  // The number's size follows the bubble until it reaches its cap. A size
+  // change moves the baseline inside its own box by layout, which rounds it
+  // to whole pixels, so while the size moves the number is laid out at its
+  // settled size and scaled down from there; at rest it is plain text again.
+  // A change under layout's 1/64px step keeps the plain path too: layout holds
+  // the number still there, and those near-resting frames stay as they were.
+  const heroFontRest = heroFontAt(SETTLED);
+  const heroSizing =
+    Math.abs(heroFontAt(t + 1) - heroFont) > 1 / 64 ||
+    Math.abs(heroFont - heroFontAt(t - 1)) > 1 / 64;
+  const heroK = heroFont / heroFontRest;
+  // The number and its label ride their own small rises inside this box; they
+  // count as its motion so its tilt covers them.
+  const heroPos = shift(
+    (tt) => screenAt(S, tt),
+    screenAt(S, SETTLED),
+    (tt) => interpolate(tt, [ACC_END - 8, ACC_END + 16], [0, 1], CLAMP) * 10,
+  );
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <svg
-        width={width}
-        height={height}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        {grays.map((g, i) => {
-          const start = GROW_IN + seq[i] * STAGGER;
-          const k = spring({
-            frame: t - start,
-            fps,
-            config: { damping: 15, stiffness: 120, mass: 0.7 },
-          });
-          const o = interpolate(t, [start, start + 6], [0, 1], CLAMP);
-          const q = toScreen(sample(i));
-          return (
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={width}
+          height={height}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          {grays.map((g, i) => {
+            const start = GROW_IN + seq[i] * stagger;
+            const k = spring({
+              frame: t - start,
+              fps,
+              config: { damping: 15, stiffness: 120, mass: 0.7 },
+            });
+            const o = interpolate(t, [start, start + 6], [0, 1], CLAMP);
+            const q = toScreen(sample(i));
+            return (
+              <circle
+                key={g.label + g.i}
+                cx={q.x}
+                cy={q.y}
+                r={Math.max(0, g.r * cs * (0.6 + 0.4 * k))}
+                fill={shade(g.rank)}
+                opacity={o}
+              />
+            );
+          })}
+          <defs>
+            <linearGradient
+              id={`${gid}h`}
+              x1={0.15}
+              y1={0}
+              x2={0.85}
+              y2={1}
+              gradientTransform={`rotate(${-10 + 14 * drift} 0.5 0.5)`}
+            >
+              <stop offset={0} stopColor={SWIRL[0]} />
+              <stop offset={0.22} stopColor={SWIRL[1]} />
+              <stop offset={0.58} stopColor={SWIRL[2]} />
+              <stop offset={1} stopColor={mixHex(SWIRL[3], accent, 0.25)} />
+            </linearGradient>
+          </defs>
+          {hero ? (
             <circle
-              key={g.label + g.i}
-              cx={q.x}
-              cy={q.y}
-              r={Math.max(0, g.r * cs * (0.6 + 0.4 * k))}
-              fill={shade(g.rank)}
-              opacity={o}
+              cx={sc.x}
+              cy={sc.y}
+              r={heroR}
+              fill={`url(#${gid}h)`}
+              opacity={accOpacity}
             />
+          ) : null}
+        </svg>
+
+        {grays.map((g, i) => {
+          const rs = g.r * cs;
+          const nameSize = 16 * u;
+          const fits =
+            rs >= 44 * u && g.label.length * nameSize * 0.56 <= rs * 1.6;
+          if (!fits) return null;
+          const start = GROW_IN + seq[i] * stagger + 8;
+          const aAt = (tt: number) =>
+            interpolate(tt, [start, start + 12], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+          const a = aAt(t);
+          const pos = shift(
+            (tt) => screenAt(sampleAt(i, tt), tt),
+            screenAt(sampleAt(i, SETTLED), SETTLED),
+            (tt) => (1 - aAt(tt)) * 5 * u,
+          );
+          return (
+            <div
+              key={g.label + g.i}
+              style={{
+                position: "absolute",
+                left: pos.left,
+                top: pos.top,
+                transform: `${pos.move}translate(-50%, -50%) translateY(${(1 - a) * 5 * u}px)${pos.tilt}`,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 2 * u,
+                opacity: a * (1 - 0.25 * quiet),
+                whiteSpace: "nowrap",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: nameSize,
+                  letterSpacing: "-0.01em",
+                  color: fg,
+                }}
+              >
+                {g.label}
+              </span>
+              <span
+                style={{
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: 15 * u,
+                  color: p.muted,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {formatValue(g.value)}
+              </span>
+            </div>
           );
         })}
-        <defs>
-          <linearGradient
-            id={`${gid}h`}
-            x1={0.15}
-            y1={0}
-            x2={0.85}
-            y2={1}
-            gradientTransform={`rotate(${-10 + 14 * drift} 0.5 0.5)`}
-          >
-            <stop offset={0} stopColor={SWIRL[0]} />
-            <stop offset={0.22} stopColor={SWIRL[1]} />
-            <stop offset={0.58} stopColor={SWIRL[2]} />
-            <stop offset={1} stopColor={mixHex(SWIRL[3], accent, 0.25)} />
-          </linearGradient>
-        </defs>
-        {hero ? (
-          <circle
-            cx={sc.x}
-            cy={sc.y}
-            r={heroR}
-            fill={`url(#${gid}h)`}
-            opacity={accOpacity}
-          />
-        ) : null}
-      </svg>
 
-      {grays.map((g, i) => {
-        const rs = g.r * cs;
-        const nameSize = 16 * u;
-        const fits =
-          rs >= 44 * u && g.label.length * nameSize * 0.56 <= rs * 1.6;
-        if (!fits) return null;
-        const start = GROW_IN + seq[i] * STAGGER + 8;
-        const a = interpolate(t, [start, start + 12], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
-        const q = toScreen(sample(i));
-        return (
+        {hero ? (
           <div
-            key={g.label + g.i}
             style={{
               position: "absolute",
-              left: q.x,
-              top: q.y,
-              transform: `translate(-50%, -50%) translateY(${(1 - a) * 5 * u}px)`,
+              left: heroPos.left,
+              top: heroPos.top,
+              transform: `${heroPos.move}translate(-50%, -50%)${heroPos.tilt}`,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 2 * u,
-              opacity: a * (1 - 0.25 * quiet),
               whiteSpace: "nowrap",
             }}
           >
             <span
               style={{
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: nameSize,
-                letterSpacing: "-0.01em",
-                color: p.fg,
+                fontFamily,
+                fontWeight,
+                fontSize: heroSizing ? heroFontRest : heroFont,
+                lineHeight: 1,
+                letterSpacing: "-0.04em",
+                color: "#FFFFFF",
+                fontVariantNumeric: "tabular-nums",
+                opacity: heroIn,
+                filter:
+                  heroIn < 0.99
+                    ? `blur(${((1 - heroIn) * 8 * u) / (heroSizing ? heroK : 1)}px)`
+                    : undefined,
+                // Scaled from the top, with the box pulled back to the live
+                // size, so the label and the centring see the same height.
+                ...(heroSizing
+                  ? {
+                      transform: `translateY(${(1 - heroIn) * 16 * u}px) scale(${heroK})`,
+                      transformOrigin: "50% 0",
+                      marginBottom: heroFont - heroFontRest,
+                    }
+                  : { transform: `translateY(${(1 - heroIn) * 16 * u}px)` }),
               }}
             >
-              {g.label}
+              {formatValue(hero.value * count)}
             </span>
             <span
               style={{
-                fontFamily: sans,
-                fontWeight: 500,
-                fontSize: 15 * u,
-                color: p.muted,
-                fontVariantNumeric: "tabular-nums",
+                marginTop: 8 * u,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 25 * u,
+                letterSpacing: "-0.01em",
+                color: "rgba(255,255,255,0.92)",
+                opacity: heroLab,
+                transform: `translateY(${(1 - heroLab) * 8 * u}px)`,
               }}
             >
-              {formatValue(g.value)}
+              {hero.label}
             </span>
           </div>
-        );
-      })}
-
-      {hero ? (
-        <div
-          style={{
-            position: "absolute",
-            left: sc.x,
-            top: sc.y,
-            transform: "translate(-50%, -50%)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            whiteSpace: "nowrap",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: sans,
-              fontWeight: 500,
-              fontSize: heroFont,
-              lineHeight: 1,
-              letterSpacing: "-0.04em",
-              color: "#FFFFFF",
-              fontVariantNumeric: "tabular-nums",
-              opacity: heroIn,
-              filter:
-                heroIn < 0.99 ? `blur(${(1 - heroIn) * 8 * u}px)` : undefined,
-              transform: `translateY(${(1 - heroIn) * 16 * u}px)`,
-            }}
-          >
-            {formatValue(hero.value * count)}
-          </span>
-          <span
-            style={{
-              marginTop: 8 * u,
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 25 * u,
-              letterSpacing: "-0.01em",
-              color: "rgba(255,255,255,0.92)",
-              opacity: heroLab,
-              transform: `translateY(${(1 - heroLab) * 8 * u}px)`,
-            }}
-          >
-            {hero.label}
-          </span>
-        </div>
-      ) : null}
+        ) : null}
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 64%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 64%, ${stage} 100%)`,
           opacity: 0.5,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

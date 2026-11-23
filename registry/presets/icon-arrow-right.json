@@ -1,0 +1,100 @@
+{
+  "component": "icon-arrow-right",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "fine-line-draw",
+      "label": "Fine Line",
+      "description": "A slow, delicate hairline arrow that draws itself in with a quiet, editorial feel.",
+      "askedAs": [
+        "thin arrow slowly drawing in",
+        "elegant minimal arrow outline",
+        "delicate line arrow animation",
+        "тонкая стрелка рисуется медленно",
+        "изящная минималистичная стрелка"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#525252",
+        "size": 64
+      }
+    },
+    {
+      "id": "bold-nudge-loop",
+      "label": "Bold Nudge",
+      "description": "A thick, oversized arrow that keeps nudging forward on a loop like a call to action.",
+      "askedAs": [
+        "big arrow that keeps pointing right",
+        "looping call to action arrow",
+        "chunky arrow bouncing forward",
+        "большая стрелка зовёт нажать",
+        "толстая стрелка двигается по кругу"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "size": 120,
+        "strokeWidth": 3,
+        "color": "#1e3a8a"
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A small, fast arrow that draws and snaps forward in a crisp, energetic burst.",
+      "askedAs": [
+        "fast snappy arrow",
+        "quick arrow animation for buttons",
+        "small arrow that zips right",
+        "быстрая резкая стрелка",
+        "маленькая стрелка для кнопки"
+      ],
+      "props": {
+        "speed": 2.5,
+        "size": 32,
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "terracotta-pulse",
+      "label": "Warm Pulse",
+      "description": "A medium terracotta arrow that draws in and moves forward on a relaxed continuous loop.",
+      "askedAs": [
+        "warm colored looping arrow",
+        "soft orange arrow animation",
+        "calm repeating arrow",
+        "тёплая стрелка в цикле",
+        "спокойная оранжевая стрелка"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "loop": true,
+        "speed": 0.75,
+        "size": 80,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "hero-statement",
+      "label": "Hero Arrow",
+      "description": "A huge, confident forest-green arrow drawn at a measured pace for title-card moments.",
+      "askedAs": [
+        "giant arrow for a title screen",
+        "large statement arrow",
+        "huge green arrow drawing",
+        "огромная стрелка на весь экран",
+        "крупная зелёная стрелка"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#166534",
+        "strokeWidth": 2.5,
+        "animation": "draw",
+        "speed": 0.75
+      }
+    }
+  ]
+}

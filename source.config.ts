@@ -57,9 +57,20 @@ export const docs = defineDocs({
     mdxOptions: applyMdxPreset({ rehypePlugins: () => [prettyCode] }),
     schema: pageSchema.safeExtend({
       ...componentMetaSchema.shape,
-      // Shorter label for the sidebar, breadcrumbs and prev/next when the
-      // page title is too long to sit there.
+      // Shorter label for the sidebar, breadcrumbs, prev/next and the docs
+      // menu in the site header when the page title is too long to sit there.
       navTitle: z.string().optional(),
+      // Date of the page's last real content change, for the sitemap's
+      // lastmod and the article's dateModified. Only pages whose facts are
+      // dated carry it: lib/sitemap.ts explains why dates are never guessed.
+      // A "YYYY-MM-DD" string, not a Date: the dynamic collection stores
+      // frontmatter as JSON, so a Date would arrive as a string anyway.
+      lastModified: z
+        .union([z.date(), z.iso.date()])
+        .transform((value) =>
+          typeof value === "string" ? value : value.toISOString().slice(0, 10),
+        )
+        .optional(),
     }),
     postprocess: {
       includeProcessedMarkdown: true,

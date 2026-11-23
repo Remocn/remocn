@@ -1,0 +1,122 @@
+{
+  "component": "channel-reactions",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "after-hours",
+      "label": "After Hours",
+      "description": "Dark channel on a moody night ground with a soft violet accent and an unhurried reaction cascade.",
+      "askedAs": [
+        "dark mode chat with slow reactions",
+        "late night slack style",
+        "moody dark channel",
+        "тёмная тема чата",
+        "ночной канал с реакциями"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "afterhours",
+        "accent": "#8b7cf6",
+        "stagger": 10,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "launch-burst",
+      "label": "Launch Burst",
+      "description": "Fast, punchy pile-on of reactions with a warm coral accent on an energetic ember ground.",
+      "askedAs": [
+        "quick burst of emoji reactions",
+        "fast hype launch moment",
+        "energetic celebration chat",
+        "быстрые реакции на запуск",
+        "энергичный взрыв эмодзи"
+      ],
+      "props": {
+        "stagger": 2,
+        "speed": 1.5,
+        "accent": "#f2643d",
+        "ground": "ember",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm paper backdrop with dark ink, serif type and a deep green accent for a calm, magazine feel.",
+      "askedAs": [
+        "warm paper look with serif font",
+        "elegant editorial chat",
+        "calm cream background",
+        "бумажный стиль с засечками",
+        "спокойный редакционный вид"
+      ],
+      "props": {
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "fontFamily": "Fraunces",
+        "accent": "#2f6b4f",
+        "ground": "paper-crease"
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "Charcoal background, monospace type and a muted teal accent for an engineering-team channel.",
+      "askedAs": [
+        "developer chat look monospace",
+        "engineering channel dark",
+        "terminal style messages",
+        "моноширинный шрифт как у разработчиков",
+        "тёмный канал для инженеров"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#16181d",
+        "ink": "#e6e8eb",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb8a6",
+        "ground": "charcoal-satin"
+      }
+    },
+    {
+      "id": "close-up",
+      "label": "Close Up",
+      "description": "Enlarged chat card on a cool blue ground, entering after a short beat for a focused hero shot.",
+      "askedAs": [
+        "zoomed in big chat message",
+        "larger hero shot of the channel",
+        "bigger card with a pause first",
+        "крупный план сообщения",
+        "увеличенный чат с задержкой"
+      ],
+      "props": {
+        "scale": 1.3,
+        "delay": 15,
+        "ground": "blue-hour",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "slow-glow",
+      "label": "Slow Glow",
+      "description": "Gentle, slow-motion reactions in a smaller card over a soft petal ground with a rose accent.",
+      "askedAs": [
+        "slow soft reactions",
+        "gentle pastel chat",
+        "small card slow motion",
+        "медленные мягкие реакции",
+        "пастельный нежный чат"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 14,
+        "scale": 0.85,
+        "ground": "petal-arc",
+        "accent": "#d9577a",
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

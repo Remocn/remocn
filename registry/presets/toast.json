@@ -1,0 +1,103 @@
+{
+  "component": "toast",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-success",
+      "label": "Quick Success",
+      "description": "A green success toast that snaps in at double speed for brisk confirmations.",
+      "askedAs": [
+        "fast success toast",
+        "quick saved notification",
+        "snappy confirmation popup",
+        "быстрое уведомление об успехе",
+        "резкий тост подтверждения"
+      ],
+      "props": {
+        "variant": "success",
+        "speed": 2
+      }
+    },
+    {
+      "id": "gentle-info",
+      "label": "Gentle Info",
+      "description": "A neutral default toast that glides in slowly for calm, low-key notices.",
+      "askedAs": [
+        "slow neutral notification",
+        "calm info toast",
+        "soft gentle popup message",
+        "спокойное информационное уведомление",
+        "медленный нейтральный тост"
+      ],
+      "props": {
+        "variant": "default",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "urgent-error",
+      "label": "Urgent Error",
+      "description": "A red error toast that pops in sharply at high speed to signal a failure.",
+      "askedAs": [
+        "fast error toast",
+        "urgent failure alert",
+        "quick red error popup",
+        "срочное уведомление об ошибке",
+        "быстрый тост с ошибкой"
+      ],
+      "props": {
+        "variant": "error",
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "slow-error",
+      "label": "Measured Error",
+      "description": "An error toast that eases in deliberately so the failure reads clearly without alarm.",
+      "askedAs": [
+        "slow error message",
+        "calm error notification",
+        "gentle failure toast",
+        "медленное уведомление об ошибке",
+        "спокойный тост ошибки"
+      ],
+      "props": {
+        "variant": "error",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "cinematic-success",
+      "label": "Cinematic Success",
+      "description": "A success toast in slow motion for a lingering, polished final beat.",
+      "askedAs": [
+        "slow motion success toast",
+        "dramatic confirmation ending",
+        "lingering saved message",
+        "замедленное уведомление об успехе",
+        "плавный финальный тост"
+      ],
+      "props": {
+        "variant": "success",
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "hidden-start",
+      "label": "Hidden Start",
+      "description": "A neutral toast that begins hidden, ready to be revealed at standard pace.",
+      "askedAs": [
+        "toast starts hidden",
+        "invisible notification at first",
+        "hidden popup before reveal",
+        "скрытое уведомление в начале",
+        "тост сначала невидим"
+      ],
+      "props": {
+        "variant": "default",
+        "state": "hidden"
+      }
+    }
+  ]
+}

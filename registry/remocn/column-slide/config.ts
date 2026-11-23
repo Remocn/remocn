@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const columnSlideConfig: ComponentConfig = {
   componentName: "ColumnSlide",
@@ -12,11 +18,6 @@ export const columnSlideConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     from: {
       type: "text-content",
@@ -37,6 +38,30 @@ export const columnSlideConfig: ComponentConfig = {
       description: "Columns",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 400,
+      max: 500,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 6,
+      step: 1,
+      description: "Column stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

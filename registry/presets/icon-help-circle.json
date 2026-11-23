@@ -1,0 +1,100 @@
+{
+  "component": "icon-help-circle",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked slate icon that slowly draws itself in like a pen sketch.",
+      "askedAs": [
+        "thin slow drawing question mark",
+        "elegant line art help icon",
+        "delicate outline that draws in",
+        "тонкая медленная отрисовка иконки",
+        "изящный контур знака вопроса"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-nudge",
+      "label": "Bold Nudge",
+      "description": "A chunky blue help icon that loops a quick attention-grabbing action.",
+      "askedAs": [
+        "looping help hint animation",
+        "thick blue question icon that wiggles",
+        "call attention to help button",
+        "зацикленная подсказка помощи",
+        "жирная синяя иконка вопроса"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 2.75,
+        "color": "#1f6feb",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "snappy-small",
+      "label": "Snappy Small",
+      "description": "A compact inline icon that draws and animates in a fast, crisp burst.",
+      "askedAs": [
+        "small fast help icon",
+        "quick inline question mark",
+        "tiny snappy tooltip icon",
+        "маленькая быстрая иконка помощи",
+        "короткая резкая анимация вопроса"
+      ],
+      "props": {
+        "size": 32,
+        "speed": 2.5,
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "calm-hero",
+      "label": "Calm Hero",
+      "description": "An oversized muted teal icon that gently loops its full animation at a relaxed pace.",
+      "askedAs": [
+        "big calm help symbol",
+        "slow looping question mark for intro",
+        "large soft teal FAQ icon",
+        "большая спокойная иконка помощи",
+        "медленный повтор знака вопроса"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#0f766e",
+        "speed": 0.75,
+        "loop": true,
+        "strokeWidth": 1.5
+      }
+    },
+    {
+      "id": "warm-alert",
+      "label": "Warm Alert",
+      "description": "A medium amber-brown icon with a firm stroke that plays its action motion once at brisk speed.",
+      "askedAs": [
+        "warm colored help prompt",
+        "orange question mark that pops",
+        "friendly warning style help icon",
+        "тёплая оранжевая иконка вопроса",
+        "яркая подсказка с вопросом"
+      ],
+      "props": {
+        "animation": "action",
+        "color": "#b45309",
+        "size": 72,
+        "strokeWidth": 2.5,
+        "speed": 1.75
+      }
+    }
+  ]
+}

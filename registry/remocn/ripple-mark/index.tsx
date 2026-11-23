@@ -3,13 +3,9 @@
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { getLength, getPointAtLength, getSubpaths } from "@remotion/paths";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 // Manrope is the remocn.dev brand face: 600 for the logo's "emocn" (the brand
 // asset), 500 for any other name set next to a custom mark.
@@ -22,6 +18,21 @@ export interface RippleMarkProps {
   logo?: string | string[];
   name?: string;
   accent?: string;
+  /** Color of the name; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the name. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Frames between the name's letters as they slide in. */
+  stagger?: number;
+  /** Rows of dots across the frame height; higher is finer. */
+  density?: number;
+  /** Size of the mark and name; the dot field still fills the frame. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -173,14 +184,24 @@ export function RippleMark({
   logo,
   name = "remocn",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = manrope,
+  stagger = 2.5,
+  density = 80,
+  scale: zoom = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: RippleMarkProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];
+  const transparent = background === "transparent";
 
   const paths = useMemo(
     () => (logo ? (Array.isArray(logo) ? logo : [logo]) : DEFAULT_MARK),
@@ -189,8 +210,10 @@ export function RippleMark({
   const shape = useMemo(() => flattenLogo(paths), [paths]);
 
   // Fine pitch so the R's strokes read three to four dots thick.
-  const pitch = H / 80;
-  const markH = H * 0.245;
+  const pitch = H / density;
+  // scale grows the mark inside the dot field, so the field keeps filling
+  // the frame
+  const markH = H * 0.245 * zoom;
   const scale = markH / shape.h;
   const markW = shape.w * scale;
   // Default mark + "remocn" is the real logo: the R stands in for the first
@@ -316,23 +339,39 @@ export function RippleMark({
     neutral[bucket].push(circle(x, y, r));
   }
 
-  const cam = interpolate(t, [0, PAN_AT + PAN_DUR + 40], [1.04, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const camAt = (f: number) =>
+    interpolate(f, [0, PAN_AT + PAN_DUR + 40], [1.04, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const cam = camAt(t);
+  // The ease is flat at both ends, so the test is on the scale itself.
+  const camMoving =
+    Math.abs(camAt(t + speed) - cam) > 2e-6 ||
+    Math.abs(cam - camAt(t - speed)) > 2e-6;
   const wordLeft = markLeft + px + markW + gap;
   const baseline = markTop + markH;
   const letters = word.split("");
 
   return (
-    <AbsoluteFill style={{ background: pal.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background: transparent ? "transparent" : (background ?? pal.bg),
+        overflow: "hidden",
+      }}
+    >
+      {!transparent ? (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse 55% 60% at 50% 46%, ${pal.light}, transparent 75%)`,
+          }}
+        />
+      ) : null}
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 55% 60% at 50% 46%, ${pal.light}, transparent 75%)`,
+          transform: `scale(${cam})${glide(camMoving)}`,
+          transformOrigin: "50% 50%",
         }}
-      />
-      <AbsoluteFill
-        style={{ transform: `scale(${cam})`, transformOrigin: "50% 50%" }}
       >
         <svg
           width={W}
@@ -364,20 +403,25 @@ export function RippleMark({
               left: wordLeft,
               top: baseline - fontSize * BASELINE,
               display: "flex",
-              fontFamily: manrope,
+              fontFamily,
               fontWeight: weight,
               fontSize,
               lineHeight: 1,
               letterSpacing: `${tracking}em`,
-              color: pal.fg,
+              color: ink ?? pal.fg,
               whiteSpace: "pre",
             }}
           >
             {letters.map((ch, i) => {
-              const k = interpolate(t - WORD_AT - i * 2.5, [0, 16], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
+              const k = interpolate(
+                t - WORD_AT - i * stagger,
+                [0, 16],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                },
+              );
               return (
                 <span
                   key={`${uid}-${i}`}
@@ -395,29 +439,31 @@ export function RippleMark({
           </div>
         ) : null}
       </AbsoluteFill>
-      <svg
-        width="100%"
-        height="100%"
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: pal.grain,
-          pointerEvents: "none",
-        }}
-        aria-hidden
-      >
-        <filter id={`${uid}-grain`}>
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.9"
-            numOctaves={2}
-            seed={9}
-            stitchTiles="stitch"
-          />
-          <feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.9 0" />
-        </filter>
-        <rect width="100%" height="100%" filter={`url(#${uid}-grain)`} />
-      </svg>
+      {!transparent && grain ? (
+        <svg
+          width="100%"
+          height="100%"
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: pal.grain,
+            pointerEvents: "none",
+          }}
+          aria-hidden
+        >
+          <filter id={`${uid}-grain`}>
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.9"
+              numOctaves={2}
+              seed={9}
+              stitchTiles="stitch"
+            />
+            <feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.9 0" />
+          </filter>
+          <rect width="100%" height="100%" filter={`url(#${uid}-grain)`} />
+        </svg>
+      ) : null}
     </AbsoluteFill>
   );
 }

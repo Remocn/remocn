@@ -1,0 +1,101 @@
+{
+  "component": "icon-settings",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, thin-lined gear that slowly sketches itself in a calm slate tone.",
+      "askedAs": [
+        "big slow drawing settings icon",
+        "large gear that draws itself",
+        "elegant thin outline gear",
+        "большая шестерёнка медленно рисуется",
+        "крупная иконка настроек тонкими линиями"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#334155"
+      }
+    },
+    {
+      "id": "busy-spinner",
+      "label": "Busy Spinner",
+      "description": "A compact, bold gear that spins continuously as a processing indicator.",
+      "askedAs": [
+        "gear loading spinner",
+        "settings icon spinning forever",
+        "processing gear animation",
+        "крутящаяся шестерёнка загрузки",
+        "бесконечно вращающаяся иконка настроек"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 1.5,
+        "strokeWidth": 2.5,
+        "size": 40
+      }
+    },
+    {
+      "id": "brand-blue-pop",
+      "label": "Brand Blue",
+      "description": "A medium blue gear that draws and turns at a brisk, confident pace.",
+      "askedAs": [
+        "blue settings icon",
+        "colored gear for product video",
+        "quick blue gear animation",
+        "синяя иконка настроек",
+        "быстрая синяя шестерёнка"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "size": 96,
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "heavy-mechanical",
+      "label": "Heavy Machine",
+      "description": "A thick-stroked, oversized gear in warm charcoal that turns slowly and deliberately on loop.",
+      "askedAs": [
+        "heavy industrial gear",
+        "thick slow rotating cog",
+        "bold mechanical settings icon",
+        "тяжёлая толстая шестерёнка",
+        "медленно вращающийся массивный механизм"
+      ],
+      "props": {
+        "strokeWidth": 3,
+        "size": 200,
+        "speed": 0.25,
+        "color": "#3f3a36",
+        "animation": "action",
+        "loop": true
+      }
+    },
+    {
+      "id": "soft-sage-ambient",
+      "label": "Sage Ambient",
+      "description": "A muted sage gear that gently draws and rotates in a relaxed background loop.",
+      "askedAs": [
+        "subtle green gear background",
+        "calm looping settings icon",
+        "soft muted gear animation",
+        "спокойная зелёная шестерёнка",
+        "мягкая фоновая иконка настроек"
+      ],
+      "props": {
+        "color": "#6b8f71",
+        "loop": true,
+        "speed": 0.75,
+        "strokeWidth": 1.5,
+        "size": 72
+      }
+    }
+  ]
+}

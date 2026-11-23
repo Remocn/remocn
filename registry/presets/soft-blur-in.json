@@ -1,0 +1,97 @@
+{
+  "component": "soft-blur-in",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "keynote-hero",
+      "label": "Keynote Hero",
+      "description": "Oversized bold headline that resolves from a deep, dreamy blur at an unhurried pace.",
+      "askedAs": [
+        "big apple keynote title",
+        "huge slow blurry headline reveal",
+        "cinematic launch event text",
+        "большой заголовок как у эппл",
+        "медленное появление крупного текста из размытия"
+      ],
+      "props": {
+        "fontSize": 132,
+        "fontWeight": "700",
+        "blur": 24,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "whisper-light",
+      "label": "Whisper Light",
+      "description": "Thin, soft grey type that drifts in slowly with a faint haze.",
+      "askedAs": [
+        "light elegant thin text fade",
+        "subtle quiet title animation",
+        "soft grey minimal reveal",
+        "тонкий лёгкий текст плавно появляется",
+        "нежная минималистичная анимация заголовка"
+      ],
+      "props": {
+        "fontWeight": "400",
+        "color": "#6b6b6b",
+        "blur": 8,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "crisp-snap",
+      "label": "Crisp Snap",
+      "description": "Medium-sized text that sharpens quickly with only a hint of blur for brisk, energetic cuts.",
+      "askedAs": [
+        "fast sharp text reveal",
+        "quick title with little blur",
+        "snappy headline for short clips",
+        "быстрое чёткое появление текста",
+        "резкий короткий заголовок"
+      ],
+      "props": {
+        "blur": 4,
+        "speed": 2,
+        "fontSize": 56,
+        "fontWeight": "500"
+      }
+    },
+    {
+      "id": "midnight-blue",
+      "label": "Midnight Blue",
+      "description": "Deep navy semibold lettering with a moderate blur for a refined, trustworthy feel.",
+      "askedAs": [
+        "dark blue premium headline",
+        "navy corporate title reveal",
+        "elegant blue text fade in",
+        "тёмно-синий премиальный заголовок",
+        "синий текст с мягким размытием"
+      ],
+      "props": {
+        "color": "#1e3a5f",
+        "blur": 16,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "warm-editorial",
+      "label": "Warm Editorial",
+      "description": "Earthy brown medium-weight type at a smaller size, easing in gently like a magazine caption.",
+      "askedAs": [
+        "warm brown caption text",
+        "editorial magazine style subtitle",
+        "cozy soft text reveal",
+        "тёплый коричневый текст подписи",
+        "журнальный стиль подзаголовка"
+      ],
+      "props": {
+        "color": "#5c4033",
+        "fontSize": 40,
+        "fontWeight": "500",
+        "blur": 10,
+        "speed": 1.25
+      }
+    }
+  ]
+}

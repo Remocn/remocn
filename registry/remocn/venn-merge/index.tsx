@@ -2,14 +2,11 @@
 
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadSerif("normal", {
   weights: ["400"],
@@ -58,6 +55,24 @@ export interface VennMergeProps {
   center?: string;
   caption?: string;
   accent?: string;
+  /** Frames the circles take to slide together. */
+  slide?: number;
+  /** Stroke width of the circles, in px at 720p. */
+  ringWidth?: number;
+  /** Replaces the remocn logo shown when `center` is "remocn". */
+  logo?: React.ReactNode;
+  /** Color of the set labels; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the set labels. Load it yourself; Instrument Serif by default. */
+  fontFamily?: string;
+  /** Size of the diagram and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -116,18 +131,47 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function VennMerge({
   sets = ["Design", "Code"],
   center = "remocn",
   caption = "Motion design, written as code.",
   accent = "#3B5BFD",
+  slide: slideDur = SLIDE[1] - SLIDE[0],
+  ringWidth = 2,
+  logo,
+  ink,
+  background,
+  fontFamily = serif,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: VennMergeProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const list = (sets.length ? sets : ["Design", "Code"]).slice(0, 3);
   const n = list.length;
@@ -138,9 +182,9 @@ export function VennMerge({
   const cy =
     height * (caption ? 0.45 : 0.5) +
     (three ? (R * 0.92) / Math.sqrt(3) / 4 : 0);
-  const ring = Math.max(1.5, 2 * u);
+  const ring = Math.max(1.5, ringWidth * u);
 
-  const slide = interpolate(t, [SLIDE[0], SLIDE[1]], [0, 1], {
+  const slide = interpolate(t, [SLIDE[0], SLIDE[0] + slideDur], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -164,11 +208,11 @@ export function VennMerge({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const scale = 0.965 + 0.035 * push;
+  const pushScale = 0.965 + 0.035 * push;
 
   const finalSep = three ? R * 0.92 : R * 0.52;
   const startSep = three ? R * 1.15 : R * 2.24;
-  const sep = startSep + (finalSep - startSep) * slide;
+  const sepAt = (k: number) => startSep + (finalSep - startSep) * k;
 
   const dirs = three
     ? [
@@ -180,27 +224,33 @@ export function VennMerge({
         { x: -1, y: 0 },
         { x: 1, y: 0 },
       ];
-  const reach = three ? sep / Math.sqrt(3) : sep / 2;
+  const reachAt = (k: number) =>
+    three ? sepAt(k) / Math.sqrt(3) : sepAt(k) / 2;
+  const reach = reachAt(slide);
   const centers = dirs.map((d) => ({
     x: cx + d.x * reach,
     y: cy + d.y * reach,
   }));
 
   const labelSize = (three ? 36 : 42) * u;
+  const labelAt = (d: { x: number; y: number }, k: number) => {
+    const off = three ? R * 0.42 * k : R - Math.min(2 * R, sepAt(k)) / 2;
+    const r = reachAt(k) + off;
+    return { x: cx + d.x * r, y: cy + d.y * r };
+  };
   const labels = list.map((name, i) => {
-    const c = centers[i];
     const d = dirs[i];
-    let off = 0;
-    if (three) {
-      off = R * 0.42 * slide;
-    } else {
-      const crescent = Math.min(2 * R, sep);
-      off = R - crescent / 2;
-    }
+    // Layout rounds a baseline to whole pixels, so a label carried by
+    // `left`/`top` steps as the circles slide. It is laid out where it
+    // settles and the slide is a transform, exactly 0 once settled.
+    const rest = labelAt(d, 1);
+    const now = labelAt(d, slide);
     return {
       name,
-      x: c.x + d.x * off,
-      y: c.y + d.y * off,
+      x: rest.x,
+      y: rest.y,
+      dx: now.x - rest.x,
+      dy: now.y - rest.y,
       a: interpolate(t, [DRAW[0] + 4 + i * 3, DRAW[0] + 20 + i * 3], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
@@ -223,163 +273,171 @@ export function VennMerge({
   const circ = 2 * Math.PI * R;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${scale})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          <defs>
-            {centers.map((c, i) => (
-              <clipPath id={`${uid}c${i}`} key={list[i]}>
-                <circle cx={c.x} cy={c.y} r={R} />
-              </clipPath>
-            ))}
-            <radialGradient
-              id={`${uid}g`}
-              gradientUnits="userSpaceOnUse"
-              cx={cx + glowX}
-              cy={cy + R * 0.95}
-              r={R * 1.75}
-            >
-              <stop offset={0} stopColor={LIMB[0]} />
-              <stop offset={0.2} stopColor={LIMB[1]} />
-              <stop offset={0.5} stopColor={accent} />
-              <stop offset={0.74} stopColor={LIMB[2]} />
-              <stop offset={1} stopColor={LIMB[3]} />
-            </radialGradient>
-            <radialGradient
-              id={`${uid}h`}
-              gradientUnits="userSpaceOnUse"
-              cx={cx - glowX * 1.4}
-              cy={cy - R * 0.55}
-              r={R * 0.75}
-            >
-              <stop offset={0} stopColor={LIMB[1]} stopOpacity={0.55} />
-              <stop offset={1} stopColor={LIMB[1]} stopOpacity={0} />
-            </radialGradient>
-          </defs>
-          {centers.map((c, i) => (
-            <circle
-              key={list[i]}
-              cx={c.x}
-              cy={c.y}
-              r={R}
-              fill="none"
-              stroke={p.ring}
-              strokeWidth={ring}
-              strokeDasharray={`${circ * draw} ${circ}`}
-              transform={`rotate(${i === 0 ? 180 : three && i === 2 ? -90 : 0} ${c.x} ${c.y})`}
-            />
-          ))}
-          {fill > 0 ? (
-            <g clipPath={`url(#${uid}c0)`}>
-              <g clipPath={`url(#${uid}c1)`}>
-                <g clipPath={three ? `url(#${uid}c2)` : undefined}>
-                  <rect
-                    x={cx - R * 2}
-                    y={cy + R - 2 * R * fill}
-                    width={R * 4}
-                    height={2 * R * fill}
-                    fill={`url(#${uid}g)`}
-                  />
-                  <rect
-                    x={cx - R * 2}
-                    y={cy + R - 2 * R * fill}
-                    width={R * 4}
-                    height={2 * R * fill}
-                    fill={`url(#${uid}h)`}
-                  />
-                </g>
-              </g>
-            </g>
-          ) : null}
-        </svg>
-
-        {labels.map((l) => (
-          <div
-            key={l.name}
-            style={{
-              position: "absolute",
-              left: l.x,
-              top: l.y,
-              transform: `translate(-50%, -50%) translateY(${(1 - l.a) * 8 * u}px)`,
-              fontFamily: serif,
-              fontWeight: 400,
-              fontSize: labelSize,
-              letterSpacing: "-0.01em",
-              lineHeight: 1,
-              color: p.fg,
-              opacity: l.a,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {l.name}
-          </div>
-        ))}
-
-        <div
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: cx,
-            top: brandY,
-            transform: `translate(-50%, -50%) translateY(${(1 - brand) * 18 * u}px) scale(${1.06 - 0.06 * brand})`,
-            whiteSpace: "nowrap",
-            opacity: brand,
-            filter: brand < 0.99 ? `blur(${(1 - brand) * 8 * u}px)` : undefined,
+            // The push carries every label, so its tilt covers them all.
+            transform: `scale(${pushScale})${glide(t > 0 && t < CAPTION + 40)}`,
+            transformOrigin: "50% 50%",
           }}
         >
-          {isLogo ? (
-            <RemocnLogo fontSize={brandSize} color="#FFFFFF" />
-          ) : (
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              {centers.map((c, i) => (
+                <clipPath id={`${uid}c${i}`} key={list[i]}>
+                  <circle cx={c.x} cy={c.y} r={R} />
+                </clipPath>
+              ))}
+              <radialGradient
+                id={`${uid}g`}
+                gradientUnits="userSpaceOnUse"
+                cx={cx + glowX}
+                cy={cy + R * 0.95}
+                r={R * 1.75}
+              >
+                <stop offset={0} stopColor={LIMB[0]} />
+                <stop offset={0.2} stopColor={LIMB[1]} />
+                <stop offset={0.5} stopColor={accent} />
+                <stop offset={0.74} stopColor={LIMB[2]} />
+                <stop offset={1} stopColor={LIMB[3]} />
+              </radialGradient>
+              <radialGradient
+                id={`${uid}h`}
+                gradientUnits="userSpaceOnUse"
+                cx={cx - glowX * 1.4}
+                cy={cy - R * 0.55}
+                r={R * 0.75}
+              >
+                <stop offset={0} stopColor={LIMB[1]} stopOpacity={0.55} />
+                <stop offset={1} stopColor={LIMB[1]} stopOpacity={0} />
+              </radialGradient>
+            </defs>
+            {centers.map((c, i) => (
+              <circle
+                key={list[i]}
+                cx={c.x}
+                cy={c.y}
+                r={R}
+                fill="none"
+                stroke={p.ring}
+                strokeWidth={ring}
+                strokeDasharray={`${circ * draw} ${circ}`}
+                transform={`rotate(${i === 0 ? 180 : three && i === 2 ? -90 : 0} ${c.x} ${c.y})`}
+              />
+            ))}
+            {fill > 0 ? (
+              <g clipPath={`url(#${uid}c0)`}>
+                <g clipPath={`url(#${uid}c1)`}>
+                  <g clipPath={three ? `url(#${uid}c2)` : undefined}>
+                    <rect
+                      x={cx - R * 2}
+                      y={cy + R - 2 * R * fill}
+                      width={R * 4}
+                      height={2 * R * fill}
+                      fill={`url(#${uid}g)`}
+                    />
+                    <rect
+                      x={cx - R * 2}
+                      y={cy + R - 2 * R * fill}
+                      width={R * 4}
+                      height={2 * R * fill}
+                      fill={`url(#${uid}h)`}
+                    />
+                  </g>
+                </g>
+              </g>
+            ) : null}
+          </svg>
+
+          {labels.map((l) => (
             <div
+              key={l.name}
               style={{
-                fontFamily: manrope.fontFamily,
-                fontWeight: 500,
-                fontSize: brandSize,
+                position: "absolute",
+                left: l.x,
+                top: l.y,
+                transform: `translate(-50%, -50%) translate(${l.dx}px, ${l.dy + (1 - l.a) * 8 * u}px)`,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: labelSize,
+                letterSpacing: "-0.01em",
                 lineHeight: 1,
-                letterSpacing: "-0.035em",
-                color: "#FFFFFF",
+                color: fg,
+                opacity: l.a,
+                whiteSpace: "nowrap",
               }}
             >
-              {center}
+              {l.name}
             </div>
-          )}
-        </div>
+          ))}
 
-        {caption ? (
           <div
             style={{
               position: "absolute",
-              left: 0,
-              right: 0,
-              top: cy + (three ? finalSep / Math.sqrt(3) / 2 : 0) + R + 34 * u,
-              textAlign: "center",
-              fontFamily: manrope.fontFamily,
-              fontWeight: 400,
-              fontSize: 24 * u,
-              letterSpacing: "-0.01em",
-              color: p.muted,
-              opacity: capIn,
-              transform: `translateY(${(1 - capIn) * 10 * u}px)`,
-              textWrap: "balance",
+              left: cx,
+              top: brandY,
+              transform: `translate(-50%, -50%) translateY(${(1 - brand) * 18 * u}px) scale(${1.06 - 0.06 * brand})`,
+              whiteSpace: "nowrap",
+              opacity: brand,
+              filter:
+                brand < 0.99 ? `blur(${(1 - brand) * 8 * u}px)` : undefined,
             }}
           >
-            {caption}
+            {isLogo ? (
+              (logo ?? <RemocnLogo fontSize={brandSize} color="#FFFFFF" />)
+            ) : (
+              <div
+                style={{
+                  fontFamily: manrope.fontFamily,
+                  fontWeight: 500,
+                  fontSize: brandSize,
+                  lineHeight: 1,
+                  letterSpacing: "-0.035em",
+                  color: "#FFFFFF",
+                }}
+              >
+                {center}
+              </div>
+            )}
           </div>
-        ) : null}
-      </AbsoluteFill>
+
+          {caption ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top:
+                  cy + (three ? finalSep / Math.sqrt(3) / 2 : 0) + R + 34 * u,
+                textAlign: "center",
+                fontFamily: manrope.fontFamily,
+                fontWeight: 400,
+                fontSize: 24 * u,
+                letterSpacing: "-0.01em",
+                color: p.muted,
+                opacity: capIn,
+                transform: `translateY(${(1 - capIn) * 10 * u}px)`,
+                textWrap: "balance",
+              }}
+            >
+              {caption}
+            </div>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 62%, ${bg} 100%)`,
           opacity: 0.55,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

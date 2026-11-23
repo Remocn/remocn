@@ -31,8 +31,9 @@ askedAs:
 `lensZoom()` is a Remotion transition presentation. The transition is a hard
 cut, not a dissolve: the outgoing half owns progress 0–0.5 and the incoming
 half owns 0.5–1, so the splice lands exactly halfway through the transition.
-Use `LENS_ZOOM_DURATION_IN_FRAMES` (28) with `linearTiming` for the tutorial's
-pacing — two equal 14-frame ramps either side of the cut.
+Use `LENS_ZOOM_DURATION_IN_FRAMES` (28 frames at 30 fps, so 56 at 60 fps) with
+`linearTiming` for the tutorial's pacing — two equal 14-frame ramps either side
+of the cut.
 
 ```tsx
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
@@ -43,14 +44,14 @@ import {
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: LENS_ZOOM_DURATION_IN_FRAMES })}
+      timing={linearTiming({ durationInFrames: LENS_ZOOM_DURATION_IN_FRAMES * 2 })}
       presentation={lensZoom()}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

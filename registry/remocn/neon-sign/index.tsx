@@ -2,13 +2,8 @@
 
 import { getBoundingBox, getSubpaths } from "@remotion/paths";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  interpolate,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type NeonSignProps = {
   /** SVG path data for the tube. Each subpath (M command) flickers on its own. */
@@ -97,8 +92,8 @@ export function NeonSign(props: NeonSignProps) {
     speed,
   } = { ...neonSignDefaults, ...props };
   const uid = `neon-sign-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
   const t = frame * Math.max(0, speed);
 
   const segments = useMemo(() => getSubpaths(path), [path]);

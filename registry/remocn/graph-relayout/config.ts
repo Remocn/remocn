@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const graphRelayoutConfig: ComponentConfig = {
   componentName: "GraphRelayout",
@@ -22,6 +29,32 @@ export const graphRelayoutConfig: ComponentConfig = {
       type: "text-content",
       default: "Mia",
       description: "Cursor name",
+    },
+    hold: {
+      type: "number",
+      default: 36,
+      min: 0,
+      max: 72,
+      step: 2,
+      description: "First hold (frames)",
+      hiddenFromList: false,
+    },
+    dots: {
+      type: "boolean",
+      default: true,
+      description: "Dot grid",
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 158,

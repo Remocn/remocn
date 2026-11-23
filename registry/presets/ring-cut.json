@@ -1,0 +1,106 @@
+{
+  "component": "ring-cut",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-slow",
+      "label": "Editorial Slow",
+      "description": "A slow, wide ring sweep on warm paper with a serif voice and a deep oxblood accent.",
+      "askedAs": [
+        "slow elegant circle reveal with serif font",
+        "magazine style light transition",
+        "calm luxury ring wipe on cream",
+        "медленный элегантный круговой переход",
+        "светлый журнальный стиль с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "expand": 48,
+        "stagger": 6,
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1e1a16"
+      }
+    },
+    {
+      "id": "snap-cut",
+      "label": "Snap Cut",
+      "description": "A fast, tight ring burst with almost no stagger for punchy, rhythmic edits.",
+      "askedAs": [
+        "quick punchy circle transition",
+        "fast ring wipe for energetic edit",
+        "snappy cut from a button",
+        "быстрый резкий круговой переход",
+        "динамичная смена сцены кольцом"
+      ],
+      "props": {
+        "expand": 12,
+        "stagger": 1,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk",
+        "grain": false
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Near-black ground with muted gold rings and a refined grotesk for a premium close.",
+      "askedAs": [
+        "dark luxury transition with gold",
+        "black and gold circle reveal",
+        "premium logo reveal dark",
+        "тёмный переход с золотыми кольцами",
+        "премиальное раскрытие логотипа"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0e0d0b",
+        "ink": "#f3ede2",
+        "accent": "#c9a45c",
+        "fontFamily": "Geist",
+        "expand": 32
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A clean dark slate with mint rings and monospace type for product and dev content.",
+      "askedAs": [
+        "code style circle transition",
+        "monospace tech ring reveal",
+        "developer product cut with green",
+        "переход в стиле терминала",
+        "технологичный круговой переход моноширинный"
+      ],
+      "props": {
+        "background": "#11161c",
+        "ink": "#e6edf3",
+        "accent": "#4fd1a5",
+        "fontFamily": "JetBrains Mono",
+        "grain": false,
+        "stagger": 2
+      }
+    },
+    {
+      "id": "soft-studio",
+      "label": "Soft Studio",
+      "description": "A bright, airy light theme with sage rings, larger type and a gentle delayed entrance.",
+      "askedAs": [
+        "light minimal circle reveal",
+        "soft clean white transition",
+        "gentle pastel ring cut",
+        "светлый мягкий круговой переход",
+        "минималистичный белый переход"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f7f8f6",
+        "ink": "#1c2420",
+        "accent": "#6e8b74",
+        "scale": 1.2,
+        "delay": 12
+      }
+    }
+  ]
+}

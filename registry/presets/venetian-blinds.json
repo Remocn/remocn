@@ -1,0 +1,93 @@
+{
+  "component": "venetian-blinds",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "bold-shutters",
+      "label": "Bold Shutters",
+      "description": "A few wide slats flip almost together for a heavy, confident editorial cut.",
+      "askedAs": [
+        "few big wide slats",
+        "chunky blinds transition",
+        "fast bold shutter cut",
+        "крупные широкие жалюзи",
+        "резкий переход крупными полосами"
+      ],
+      "props": {
+        "slats": 4,
+        "stagger": 0.15,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "fine-ripple",
+      "label": "Fine Ripple",
+      "description": "Many thin slats roll open in a long, slow wave from the top.",
+      "askedAs": [
+        "lots of thin slats slow wave",
+        "fine stripes rippling down",
+        "slow elegant blinds reveal",
+        "много тонких полос медленной волной",
+        "плавные тонкие жалюзи"
+      ],
+      "props": {
+        "slats": 28,
+        "stagger": 0.8,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "center-split",
+      "label": "Center Split",
+      "description": "Slats open outward from the middle with a soft navy shade for a symmetrical brand-reel reveal.",
+      "askedAs": [
+        "blinds opening from the middle",
+        "symmetrical center out reveal",
+        "slats spread from center",
+        "жалюзи раскрываются от центра",
+        "симметричный переход из середины"
+      ],
+      "props": {
+        "direction": "center",
+        "slats": 16,
+        "shadeColor": "#14213d"
+      }
+    },
+    {
+      "id": "rising-warm",
+      "label": "Rising Warm",
+      "description": "Medium slats ripple upward with a warm espresso shade for a cozy magazine feel.",
+      "askedAs": [
+        "blinds from bottom up warm",
+        "upward slat ripple brown shade",
+        "warm editorial blinds rising",
+        "жалюзи снизу вверх тёплые",
+        "тёплый переход полосами вверх"
+      ],
+      "props": {
+        "direction": "bottom-up",
+        "shadeColor": "#3b2a20",
+        "slats": 10,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snap-cut",
+      "label": "Snap Cut",
+      "description": "Dense slats flip all at once at high speed for a crisp, punchy hard-cut feel.",
+      "askedAs": [
+        "quick snappy blinds",
+        "instant slat flip no delay",
+        "fast punchy stripe transition",
+        "быстрые жалюзи без задержки",
+        "резкий щелчок полосами"
+      ],
+      "props": {
+        "stagger": 0,
+        "speed": 2.5,
+        "slats": 20
+      }
+    }
+  ]
+}

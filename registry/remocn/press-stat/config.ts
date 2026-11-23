@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const pressStatConfig: ComponentConfig = {
   componentName: "PressStat",
@@ -46,6 +52,26 @@ export const pressStatConfig: ComponentConfig = {
       description: "From",
       hiddenFromList: false,
     },
+    pressAt: {
+      type: "number",
+      default: 30,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Press at (frame)",
+      hiddenFromList: false,
+    },
+    countLength: {
+      type: "number",
+      default: 42,
+      min: 6,
+      max: 120,
+      step: 1,
+      description: "Count length (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "IBM Plex Mono" }),
     speed: {
       type: "number",
       default: 1,

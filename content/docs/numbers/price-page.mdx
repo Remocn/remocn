@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="PricePage"
     component={PricePageScene}
-    durationInFrames={180}
-    fps={30}
+    durationInFrames={360}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -75,14 +75,43 @@ A small label tops a stack of fine-print pricing lines; the lines drop out one b
       description: "Closing line under the price.",
     },
     {
+      name: "hold",
+      type: "number",
+      default: "40",
+      description: "Frames the full list holds before the lines start leaving.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of the price; defaults to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Albert Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

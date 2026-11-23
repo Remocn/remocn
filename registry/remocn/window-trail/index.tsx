@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const familjen = loadFamiljen("normal", {
   weights: ["400", "500"],
@@ -22,8 +22,20 @@ export interface WindowTrailProps {
   from?: string;
   text?: string;
   tagline?: string;
+  /** Frames the incoming line takes to slide up into place. */
+  slide?: number;
+  /** Copies left in the trail behind a moving line. */
+  tail?: number;
   accent?: string;
+  /** Text color on the field; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Familjen Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -55,6 +67,7 @@ const CLAMP = {
 
 interface TrailState {
   front: number;
+  moving: boolean;
   stamps: { y: number; id: number }[];
 }
 
@@ -66,6 +79,7 @@ function trail(
   y1: number,
   gap: number,
   rest: number | null,
+  tail: number,
 ): TrailState {
   const pos = (g: number) =>
     y0 + (y1 - y0) * ease(Math.max(0, Math.min(1, g / len)));
@@ -82,8 +96,12 @@ function trail(
   }
   const clear = all.filter((s) => Math.abs(s.y - front) >= gap);
   const retract = f > len ? Math.floor((f - len) / RETRACT) + 1 : 0;
-  const keep = Math.max(0, Math.min(clear.length, TAIL) - retract);
-  return { front, stamps: clear.slice(clear.length - keep) };
+  const keep = Math.max(0, Math.min(clear.length, tail) - retract);
+  return {
+    front,
+    moving: f > 0 && f < len,
+    stamps: clear.slice(clear.length - keep),
+  };
 }
 
 interface Metrics {
@@ -92,11 +110,16 @@ interface Metrics {
   tag: number;
 }
 
-function measure(from: string, text: string, tag: string): Metrics {
+function measure(
+  from: string,
+  text: string,
+  tag: string,
+  family: string,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("window-trail: no 2d context");
-  const fam = `"${familjen.fontFamily}"`;
+  const fam = `"${family}"`;
   ctx.font = `500 100px ${fam}`;
   const w = (s: string) =>
     s ? ctx.measureText(s).width / 100 + TRACK * Array.from(s).length : 0;
@@ -107,23 +130,23 @@ function measure(from: string, text: string, tag: string): Metrics {
   return { from: fromW, text: textW, tag: tagW };
 }
 
-function useMetrics(from: string, text: string, tag: string) {
-  const key = `${from}\u0001${text}\u0001${tag}`;
+function useMetrics(from: string, text: string, tag: string, family: string) {
+  const key = `${from}\u0001${text}\u0001${tag}\u0001${family}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("window-trail: measuring"));
   const released = useRef(false);
   useEffect(() => {
     let live = true;
-    const [a, b, d] = key.split("\u0001");
+    const [a, b, d, fam] = key.split("\u0001");
     Promise.all([
       familjen.waitUntilDone(),
-      document.fonts.load(`500 100px "${familjen.fontFamily}"`),
-      document.fonts.load(`400 100px "${familjen.fontFamily}"`),
+      document.fonts.load(`500 100px "${fam}"`),
+      document.fonts.load(`400 100px "${fam}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(a, b, d) });
+        setState({ key, m: measure(a, b, d, fam) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -136,6 +159,22 @@ function useMetrics(from: string, text: string, tag: string) {
   return state && state.key === key ? state.m : null;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function mix(a: string, b: string, k: number) {
   const pct = Math.round(Math.max(0, Math.min(1, 1 - k)) * 100);
   return `color-mix(in srgb, ${a} ${pct}%, ${b})`;
@@ -145,16 +184,23 @@ export function WindowTrail({
   from = "Old look.",
   text = "New look, same product.",
   tagline = "Repainted in one render.",
+  slide = IN_LEN,
+  tail = TAIL,
   accent,
+  ink,
   background,
+  fontFamily = familjen.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: WindowTrailProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
-  const c = THEMES[theme];
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
+  const c = { ...THEMES[theme], ink: ink ?? THEMES[theme].ink };
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const m = useMetrics(from, text, tagline);
+  const m = useMetrics(from, text, tagline, fontFamily);
 
   const transparent = background === "transparent";
   const hot = accent ?? ORANGE;
@@ -187,19 +233,29 @@ export function WindowTrail({
 
   const hasFrom = from.length > 0;
   const inAt = hasFrom ? IN_AT : 0;
-  const tagAt = inAt + IN_LEN + TAG_DELAY;
+  const tagAt = inAt + slide + TAG_DELAY;
 
   const inTrail = trail(
     t - inAt,
-    IN_LEN,
+    slide,
     EASE_DRAG,
     H + F * 0.4,
     baseY,
     F * GAP,
     baseY,
+    tail,
   );
   const outTrail = hasFrom
-    ? trail(t - OUT_AT, OUT_LEN, EASE_THROW, baseY0, -F0 * 0.4, F0 * GAP, null)
+    ? trail(
+        t - OUT_AT,
+        OUT_LEN,
+        EASE_THROW,
+        baseY0,
+        -F0 * 0.4,
+        F0 * GAP,
+        null,
+        tail,
+      )
     : null;
 
   const paints = [
@@ -223,7 +279,7 @@ export function WindowTrail({
   ];
 
   const textProps = (size: number) => ({
-    fontFamily: familjen.fontFamily,
+    fontFamily,
     fontWeight: 500,
     fontSize: size,
     letterSpacing: `${TRACK}em`,
@@ -262,6 +318,19 @@ export function WindowTrail({
   const tagTop = baseY + F * 0.62;
   const tagW = Math.min(measureW, m.tag * tagFs * 1.04);
 
+  // The ink flips at the window's edge on screen, so a scaled layer clips in
+  // its own coordinates to keep that edge where the window is.
+  const local = (v: number, size: number) =>
+    scale === 1 ? v : size / 2 + (v - size / 2) / scale;
+
+  // SVG text placed by `y` cannot carry the mark itself, so the drawing does,
+  // while either front line travels. It starts a frame before the line moves
+  // and ends a frame after, so the lean never comes or goes on the frame
+  // where `y` changes.
+  const near = (f: number, len: number) => f > -speed && f < len + speed;
+  const linesMoving =
+    (hasFrom && near(t - OUT_AT, OUT_LEN)) || near(t - inAt, slide);
+
   const nodes: React.ReactNode[] = paints.map((p) => (
     <g key={p.key} clipPath={`url(#${uid}${p.key})`}>
       {outTrail
@@ -290,61 +359,72 @@ export function WindowTrail({
           }}
         />
       )}
-      <svg
-        width={W}
-        height={H}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          {paints.map((p) => (
-            <clipPath key={p.key} id={`${uid}${p.key}`}>
-              <rect x={0} y={p.y} width={W} height={p.h} />
-            </clipPath>
-          ))}
-        </defs>
-        {nodes}
-      </svg>
-
-      {tagline ? (
-        <div
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
           style={{
             position: "absolute",
-            left: marginX,
-            width: tagW,
-            top: tagTop,
-            fontFamily: familjen.fontFamily,
-            fontWeight: 400,
-            fontSize: tagFs,
-            lineHeight: 1.25,
-            letterSpacing: "-0.005em",
-            color: paints[1].ink,
-            whiteSpace: "nowrap",
+            inset: 0,
+            transform: glide(linesMoving),
           }}
+          aria-hidden
         >
-          {tagWords.map((w, k) => {
-            const q = interpolate(
-              t,
-              [tagAt + k * 2, tagAt + k * 2 + 16],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            return (
-              <span
-                key={`${w}-${k}`}
-                style={{
-                  display: "inline-block",
-                  marginRight: k < tagWords.length - 1 ? "0.26em" : 0,
-                  opacity: q,
-                  transform: `translateY(${((1 - q) * tagFs * 0.7).toFixed(2)}px)`,
-                }}
-              >
-                {w}
-              </span>
-            );
-          })}
-        </div>
-      ) : null}
+          <defs>
+            {paints.map((p) => (
+              <clipPath key={p.key} id={`${uid}${p.key}`}>
+                <rect
+                  x={local(0, W)}
+                  y={local(p.y, H)}
+                  width={W / scale}
+                  height={p.h / scale}
+                />
+              </clipPath>
+            ))}
+          </defs>
+          {nodes}
+        </svg>
+
+        {tagline ? (
+          <div
+            style={{
+              position: "absolute",
+              left: marginX,
+              width: tagW,
+              top: tagTop,
+              fontFamily,
+              fontWeight: 400,
+              fontSize: tagFs,
+              lineHeight: 1.25,
+              letterSpacing: "-0.005em",
+              color: paints[1].ink,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {tagWords.map((w, k) => {
+              const q = interpolate(
+                t,
+                [tagAt + k * 2, tagAt + k * 2 + 16],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              return (
+                <span
+                  key={`${w}-${k}`}
+                  style={{
+                    display: "inline-block",
+                    marginRight: k < tagWords.length - 1 ? "0.26em" : 0,
+                    opacity: q,
+                    transform: `translateY(${((1 - q) * tagFs * 0.7).toFixed(2)}px)${glide(q > 0 && (1 - q) * tagFs > 1e-3)}`,
+                  }}
+                >
+                  {w}
+                </span>
+              );
+            })}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

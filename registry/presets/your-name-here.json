@@ -1,0 +1,104 @@
+{
+  "component": "your-name-here",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A calm light page with Instrument Serif type, a slow word cascade and a muted brick accent.",
+      "askedAs": [
+        "make it look like a magazine",
+        "elegant serif light version",
+        "slower classy launch card",
+        "элегантный вариант с засечками",
+        "спокойный светлый журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f6f1e9",
+        "ink": "#1c1a17",
+        "accent": "#b5402f",
+        "stagger": 6
+      }
+    },
+    {
+      "id": "snappy-pop",
+      "label": "Snappy Pop",
+      "description": "Fast, punchy Bricolage Grotesque words that land almost together at a larger size.",
+      "askedAs": [
+        "make it faster and bolder",
+        "quick punchy version",
+        "bigger text that pops in",
+        "быстрее и крупнее",
+        "энергичная подача"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "speed": 2,
+        "stagger": 1,
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "terminal-template",
+      "label": "Terminal Template",
+      "description": "A dev-flavoured dark slate look in JetBrains Mono with a green accent, like a code placeholder.",
+      "askedAs": [
+        "make it look like code",
+        "monospace developer style",
+        "terminal look for the placeholder",
+        "в стиле кода",
+        "моноширинный шрифт как в терминале"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0f1419",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "stagger": 4
+      }
+    },
+    {
+      "id": "soft-pastel",
+      "label": "Soft Pastel",
+      "description": "A gentle lavender backdrop with Fraunces type, a plum accent and a relaxed entrance.",
+      "askedAs": [
+        "softer friendlier colours",
+        "pastel playful version",
+        "warm gentle slow intro",
+        "мягкие пастельные цвета",
+        "нежный и неторопливый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#efeaf7",
+        "ink": "#2a2140",
+        "accent": "#7b4fa8",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-cta",
+      "label": "Midnight CTA",
+      "description": "A deep navy end-card in Space Grotesk with a warm amber accent and a short held beat before it plays.",
+      "askedAs": [
+        "dark blue ending call to action",
+        "navy and gold closing card",
+        "wait a moment then animate",
+        "тёмно-синий финальный экран",
+        "призыв к действию в конце ролика"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "background": "#0e1a2b",
+        "ink": "#f2f4f8",
+        "accent": "#e0a63a",
+        "delay": 20,
+        "scale": 0.9
+      }
+    }
+  ]
+}

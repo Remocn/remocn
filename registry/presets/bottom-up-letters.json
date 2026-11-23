@@ -1,0 +1,100 @@
+{
+  "component": "bottom-up-letters",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-staircase",
+      "label": "Slow Staircase",
+      "description": "A wide, leisurely staircase where each letter climbs a long way at an unhurried pace.",
+      "askedAs": [
+        "slow dramatic letter rise",
+        "make the letters climb one by one slowly",
+        "long staircase reveal",
+        "медленное появление букв снизу",
+        "плавная лесенка из букв"
+      ],
+      "props": {
+        "staggerDelay": 9,
+        "distance": 90,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-punch",
+      "label": "Snappy Punch",
+      "description": "Big bold letters that pop up fast in a tight, energetic ripple.",
+      "askedAs": [
+        "fast punchy title",
+        "quick bold word reveal",
+        "energetic letters popping up",
+        "быстрые жирные буквы",
+        "резкое появление слова"
+      ],
+      "props": {
+        "staggerDelay": 2,
+        "distance": 30,
+        "fontSize": 120,
+        "fontWeight": "700",
+        "speed": 2
+      }
+    },
+    {
+      "id": "quiet-caption",
+      "label": "Quiet Caption",
+      "description": "Small, light slate-grey text that lifts gently with a short travel.",
+      "askedAs": [
+        "subtle small caption animation",
+        "gentle text rise for subtitles",
+        "minimal understated letters",
+        "тихая подпись снизу",
+        "аккуратный мелкий текст"
+      ],
+      "props": {
+        "fontSize": 32,
+        "fontWeight": "400",
+        "color": "#475569",
+        "distance": 16,
+        "staggerDelay": 2
+      }
+    },
+    {
+      "id": "giant-acronym",
+      "label": "Giant Acronym",
+      "description": "Huge deep-navy letters stepping up one at a time for a headline acronym.",
+      "askedAs": [
+        "huge acronym reveal",
+        "giant letters rising one at a time",
+        "big headline word build",
+        "огромная аббревиатура",
+        "крупные буквы по одной"
+      ],
+      "props": {
+        "fontSize": 160,
+        "fontWeight": "700",
+        "color": "#1e3a5f",
+        "distance": 120,
+        "staggerDelay": 6
+      }
+    },
+    {
+      "id": "terracotta-editorial",
+      "label": "Terracotta Editorial",
+      "description": "Medium-weight warm terracotta type with a measured, magazine-like rise.",
+      "askedAs": [
+        "warm editorial title",
+        "earthy colored letter reveal",
+        "magazine style word animation",
+        "тёплый редакционный заголовок",
+        "терракотовый текст снизу"
+      ],
+      "props": {
+        "color": "#b4532a",
+        "fontWeight": "500",
+        "fontSize": 88,
+        "staggerDelay": 4,
+        "speed": 0.75
+      }
+    }
+  ]
+}

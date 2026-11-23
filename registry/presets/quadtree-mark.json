@@ -1,0 +1,113 @@
+{
+  "component": "quadtree-mark",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "crisp-light",
+      "label": "Crisp Light",
+      "description": "A clean white canvas with a deep cobalt mark and no grain, for a bright product-page feel.",
+      "askedAs": [
+        "light version of the pixel logo reveal",
+        "clean white background logo build",
+        "no grain bright tech logo",
+        "светлая версия появления логотипа",
+        "логотип из пикселей на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#1f3fd1",
+        "grain": false
+      }
+    },
+    {
+      "id": "coarse-blocks",
+      "label": "Coarse Blocks",
+      "description": "Shallow subdivision leaves chunky, low-resolution blocks that resolve quickly into a bold oversized mark.",
+      "askedAs": [
+        "chunky pixel logo reveal",
+        "big blocky retro pixels",
+        "fast low-res logo build",
+        "крупные пиксели в логотипе",
+        "быстрое появление логотипа блоками"
+      ],
+      "props": {
+        "depth": 3,
+        "speed": 1.5,
+        "scale": 1.25,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "slow-render",
+      "label": "Slow Render",
+      "description": "A patient, finely subdivided build where pixels refine slowly with a long letter cascade.",
+      "askedAs": [
+        "slow detailed pixel reveal",
+        "cinematic logo render",
+        "logo slowly sharpening from pixels",
+        "медленная прорисовка логотипа",
+        "плавное появление логотипа из пикселей"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 6,
+        "delay": 20
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "A near-black graphite background with a muted phosphor green accent and soft grey type.",
+      "askedAs": [
+        "green on black hacker style logo",
+        "terminal look pixel logo",
+        "dark green codec branding",
+        "логотип в стиле терминала",
+        "зелёный логотип на тёмном фоне"
+      ],
+      "props": {
+        "background": "#0e1110",
+        "ink": "#d6e2da",
+        "accent": "#3fbf7f"
+      }
+    },
+    {
+      "id": "warm-paper",
+      "label": "Warm Paper",
+      "description": "A compact mark on warm off-white paper with a burnt orange accent and charcoal text.",
+      "askedAs": [
+        "warm beige background logo",
+        "orange accent pixel logo",
+        "small editorial logo reveal",
+        "тёплый бежевый фон для логотипа",
+        "оранжевый акцент в логотипе"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3eee5",
+        "ink": "#2a2622",
+        "accent": "#d9622b",
+        "scale": 0.8
+      }
+    },
+    {
+      "id": "snap-cut",
+      "label": "Snap Cut",
+      "description": "An instant, grain-free build with no letter stagger for quick social cuts and bumpers.",
+      "askedAs": [
+        "very fast logo sting",
+        "quick logo for short video",
+        "instant pixel snap logo",
+        "очень быстрое появление логотипа",
+        "короткая заставка с логотипом"
+      ],
+      "props": {
+        "speed": 2.5,
+        "stagger": 0,
+        "grain": false,
+        "depth": 4
+      }
+    }
+  ]
+}

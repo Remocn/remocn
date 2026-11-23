@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const activityRingsConfig: ComponentConfig = {
   componentName: "ActivityRings",
@@ -13,16 +19,31 @@ export const activityRingsConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     title: {
       type: "text-content",
       default: "This month",
       description: "Title",
     },
+    goalLabel: {
+      type: "text-content",
+      default: "of goal",
+      description: "Goal label",
+    },
+    fill: {
+      type: "number",
+      default: 42,
+      min: 12,
+      max: 90,
+      step: 1,
+      description: "Fill (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Sora", grain: true }),
     speed: {
       type: "number",
       default: 1,

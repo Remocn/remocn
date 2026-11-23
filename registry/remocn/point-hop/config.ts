@@ -1,8 +1,17 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const pointHopConfig: ComponentConfig = {
   componentName: "PointHop",
   importPath: "@/components/remocn/point-hop",
+  lists: {
+    prefixes: { default: ["", "m", "µ", "n"], description: "Prefixes" },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -32,6 +41,26 @@ export const pointHopConfig: ComponentConfig = {
       description: "Value",
       hiddenFromList: false,
     },
+    hop: {
+      type: "number",
+      default: 7,
+      min: 2,
+      max: 20,
+      step: 1,
+      description: "Hop (frames)",
+      hiddenFromList: false,
+    },
+    rest: {
+      type: "number",
+      default: 12,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Rest between steps (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

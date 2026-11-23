@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="TheTab"
     component={TheTabScene}
-    durationInFrames={170}
-    fps={30}
+    durationInFrames={340}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -80,9 +80,44 @@ A receipt builds line by line, each item joined to its price by a dotted leader;
       description: "Color of the total; defaults to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Albert Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "5",
+      description: "Frames between words of the total as it lands.",
+    },
+    {
+      name: "leaders",
+      type: "boolean",
+      default: "true",
+      description: "Dotted leader line between each item and its price.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

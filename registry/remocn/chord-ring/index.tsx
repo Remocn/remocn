@@ -4,15 +4,11 @@ import { loadFont as loadSans } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { evolvePath } from "@remotion/paths";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -89,6 +85,24 @@ export interface ChordRingProps {
   brandIndex?: number;
   caption?: string;
   accent?: string;
+  /** Frames between chords as they draw. */
+  stagger?: number;
+  /** Thickness of the ring segments, in px at 720p. */
+  thickness?: number;
+  /** Replaces the remocn mark on the "remocn" segment. */
+  logo?: React.ReactNode;
+  /** Color of the names around the ring; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the names around the ring. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Size of the ring, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -140,6 +154,8 @@ const CHORD_START = 26;
 const CHORD_STAGGER = 2.2;
 const CHORD_LEN = 16;
 const TAU = Math.PI * 2;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 function pt(cx: number, cy: number, r: number, a: number) {
   return { x: cx + r * Math.sin(a), y: cy - r * Math.cos(a) };
@@ -209,18 +225,47 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ChordRing({
   segments = DEFAULT_SEGMENTS,
   brandIndex = 0,
   caption = "Connects to everything",
   accent = "#3B5BFD",
+  stagger = CHORD_STAGGER,
+  thickness = 10,
+  logo,
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: ChordRingProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const list = segments.slice(0, 12);
   const n = list.length;
   const brand = Math.min(Math.max(0, Math.round(brandIndex)), n - 1);
@@ -228,7 +273,7 @@ export function ChordRing({
   const cx = width / 2;
   const cy = height / 2;
   const R = height * 0.32;
-  const sw = 10 * u;
+  const sw = thickness * u;
   const Rin = R - sw / 2 - 9 * u;
   const hole = Rin * 0.64;
   const step = TAU / Math.max(1, n);
@@ -292,7 +337,7 @@ export function ChordRing({
     const rc = 2 * rmin - half;
     const C = pt(cx, cy, rc, m);
     const d = `M${P0.x.toFixed(2)} ${P0.y.toFixed(2)} Q${C.x.toFixed(2)} ${C.y.toFixed(2)} ${P2.x.toFixed(2)} ${P2.y.toFixed(2)}`;
-    const start = CHORD_START + ci * CHORD_STAGGER;
+    const start = CHORD_START + ci * stagger;
     return { ...c, d, start, end: start + CHORD_LEN };
   });
 
@@ -321,10 +366,25 @@ export function ChordRing({
     ...CLAMP,
     easing: EASE_OUT,
   });
+  const pushP = interpolate(t, [0, 160], [0, 1], CLAMP);
   const push = interpolate(t, [0, 160], [0.965, 1.005], {
     ...CLAMP,
     easing: EASE_IO,
   });
+  // The push carries everything, names and caption included, so its tilt
+  // covers them while it runs.
+  const pushMoving = midway(pushP);
+  const landAt = (tt: number) =>
+    spring({
+      frame: tt - capT,
+      fps,
+      config: { damping: 18, stiffness: 150, mass: 0.8 },
+    }) *
+    14 *
+    u;
+  const landMoving =
+    Math.abs(landAt(t + speed) - landAt(t)) > 1e-3 ||
+    Math.abs(landAt(t) - landAt(t - speed)) > 1e-3;
   const stage = interpolate(t, [0, 8], [0.5, 1], CLAMP);
   const hair = Math.max(1, 1.4 * u);
   const disc = hole * 0.9;
@@ -343,173 +403,185 @@ export function ChordRing({
   const lead = words.slice(0, -1).join(" ");
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${push})`,
-          transformOrigin: "50% 50%",
-          opacity: stage,
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${push})${glide(pushMoving)}`,
+            transformOrigin: "50% 50%",
+            opacity: stage,
+          }}
         >
-          {chords.map((c) => {
-            if (t < c.start) return null;
-            const k = interpolate(t, [c.start, c.end], [0, 1], {
-              ...CLAMP,
-              easing: EASE_CHORD,
-            });
-            const evo = evolvePath(k, c.d);
-            return (
-              <path
-                key={`c${c.a}-${c.b}`}
-                d={c.d}
-                fill="none"
-                stroke={p.chord}
-                strokeWidth={hair}
-                strokeLinecap="round"
-                strokeDasharray={evo.strokeDasharray}
-                strokeDashoffset={evo.strokeDashoffset}
-                opacity={c.brand ? 1 - flip : 1 - 0.7 * dim}
-              />
-            );
-          })}
-          {flip > 0.001
-            ? chords
-                .filter((c) => c.brand)
-                .map((c) => (
-                  <path
-                    key={`a${c.a}-${c.b}`}
-                    d={c.d}
-                    fill="none"
-                    stroke={accent}
-                    strokeWidth={hair * (1 + 1.1 * flip)}
-                    strokeLinecap="round"
-                    opacity={Math.min(1, flip)}
-                  />
-                ))
-            : null}
-
-          {segs.map((s) => {
-            const k = interpolate(t, [s.start, s.end], [0, 1], {
-              ...CLAMP,
-              easing: EASE_SEG,
-            });
-            if (k <= 0) return null;
-            const a1 = s.a0 + (s.a1 - s.a0) * k;
-            const isBrand = s.i === brand;
-            return (
-              <g key={s.label}>
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            {chords.map((c) => {
+              if (t < c.start) return null;
+              const k = interpolate(t, [c.start, c.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_CHORD,
+              });
+              const evo = evolvePath(k, c.d);
+              return (
                 <path
-                  d={arc(cx, cy, R, s.a0, a1)}
+                  key={`c${c.a}-${c.b}`}
+                  d={c.d}
                   fill="none"
-                  stroke={p.seg}
-                  strokeWidth={sw}
-                  opacity={isBrand ? 1 - flip : 1 - 0.35 * dim}
+                  stroke={p.chord}
+                  strokeWidth={hair}
+                  strokeLinecap="round"
+                  strokeDasharray={evo.strokeDasharray}
+                  strokeDashoffset={evo.strokeDashoffset}
+                  opacity={c.brand ? 1 - flip : 1 - 0.7 * dim}
                 />
-                {isBrand && flip > 0.001 ? (
+              );
+            })}
+            {flip > 0.001
+              ? chords
+                  .filter((c) => c.brand)
+                  .map((c) => (
+                    <path
+                      key={`a${c.a}-${c.b}`}
+                      d={c.d}
+                      fill="none"
+                      stroke={accent}
+                      strokeWidth={hair * (1 + 1.1 * flip)}
+                      strokeLinecap="round"
+                      opacity={Math.min(1, flip)}
+                    />
+                  ))
+              : null}
+
+            {segs.map((s) => {
+              const k = interpolate(t, [s.start, s.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_SEG,
+              });
+              if (k <= 0) return null;
+              const a1 = s.a0 + (s.a1 - s.a0) * k;
+              const isBrand = s.i === brand;
+              return (
+                <g key={s.label}>
                   <path
                     d={arc(cx, cy, R, s.a0, a1)}
                     fill="none"
-                    stroke={accent}
-                    strokeWidth={sw * (1 + 0.4 * flip)}
-                    opacity={Math.min(1, flip)}
+                    stroke={p.seg}
+                    strokeWidth={sw}
+                    opacity={isBrand ? 1 - flip : 1 - 0.35 * dim}
                   />
-                ) : null}
-              </g>
+                  {isBrand && flip > 0.001 ? (
+                    <path
+                      d={arc(cx, cy, R, s.a0, a1)}
+                      fill="none"
+                      stroke={accent}
+                      strokeWidth={sw * (1 + 0.4 * flip)}
+                      opacity={Math.min(1, flip)}
+                    />
+                  ) : null}
+                </g>
+              );
+            })}
+          </svg>
+
+          {segs.map((s) => {
+            const a = interpolate(t, [s.end - 6, s.end + 10], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            const r = R + sw / 2 + 18 * u + (1 - a) * -6 * u;
+            const q = pt(cx, cy, r, s.mid);
+            // Laid out where the name settles once the ring has stopped
+            // turning; the slide out and the turn are a transform, since
+            // layout rounds a baseline to a whole pixel and the name would
+            // step along it.
+            const mid = s.mid - (spinDeg * Math.PI) / 180;
+            const home = pt(cx, cy, R + sw / 2 + 18 * u, mid);
+            const dx = q.x - home.x;
+            const dy = q.y - home.y;
+            const travel =
+              Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3
+                ? `translate(${dx}px, ${dy}px) `
+                : "";
+            const sx = Math.sin(s.mid);
+            const cyv = -Math.cos(s.mid);
+            const vertical = Math.abs(sx) < 0.3;
+            const tx = vertical ? -50 : sx > 0 ? 0 : -100;
+            const ty = vertical ? (cyv < 0 ? -100 : 0) : -50;
+            const isBrand = s.i === brand;
+            return (
+              <div
+                key={s.label}
+                style={{
+                  position: "absolute",
+                  left: home.x,
+                  top: home.y,
+                  transform: `${travel}translate(${tx}%, ${ty}%)`,
+                  opacity: a * (isBrand ? 1 : 1 - 0.5 * dim),
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 19 * u,
+                  letterSpacing: "-0.005em",
+                  color: fg,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {s.label.trim().toLowerCase() === "remocn"
+                  ? (logo ?? <RemocnLogo fontSize={22 * u} color={fg} />)
+                  : s.label}
+              </div>
             );
           })}
-        </svg>
 
-        {segs.map((s) => {
-          const a = interpolate(t, [s.end - 6, s.end + 10], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          const r = R + sw / 2 + 18 * u + (1 - a) * -6 * u;
-          const q = pt(cx, cy, r, s.mid);
-          const sx = Math.sin(s.mid);
-          const cyv = -Math.cos(s.mid);
-          const vertical = Math.abs(sx) < 0.3;
-          const tx = vertical ? -50 : sx > 0 ? 0 : -100;
-          const ty = vertical ? (cyv < 0 ? -100 : 0) : -50;
-          const isBrand = s.i === brand;
-          return (
+          <AbsoluteFill
+            style={{ alignItems: "center", justifyContent: "center" }}
+          >
             <div
-              key={s.label}
               style={{
                 position: "absolute",
-                left: q.x,
-                top: q.y,
-                transform: `translate(${tx}%, ${ty}%)`,
-                opacity: a * (isBrand ? 1 : 1 - 0.5 * dim),
-                fontFamily: sans,
+                left: cx - disc,
+                top: cy - disc,
+                width: disc * 2,
+                height: disc * 2,
+                borderRadius: "50%",
+                background: meshGround(drift, accent),
+                opacity: discO,
+                transform: `scale(${0.9 + 0.1 * discS})`,
+              }}
+            />
+            <div
+              style={{
+                width: disc * 1.6,
+                textAlign: "center",
+                fontFamily: serif,
                 fontWeight: 400,
-                fontSize: 19 * u,
-                letterSpacing: "-0.005em",
-                color: p.fg,
-                whiteSpace: "nowrap",
+                fontSize: 44 * u,
+                lineHeight: 1.02,
+                letterSpacing: "-0.015em",
+                textWrap: "balance",
+                color: "#FFFFFF",
+                opacity: landO,
+                filter: blur > 0.01 ? `blur(${blur * 8 * u}px)` : undefined,
+                transform: `translateY(${(1 - land) * 14 * u}px)${glide(landMoving && !pushMoving)}`,
               }}
             >
-              {s.label.trim().toLowerCase() === "remocn" ? (
-                <RemocnLogo fontSize={22 * u} color={p.fg} />
-              ) : (
-                s.label
-              )}
+              {lead}
+              {lead ? " " : null}
+              <span style={{ fontStyle: "italic" }}>{tail}</span>
             </div>
-          );
-        })}
-
-        <AbsoluteFill
-          style={{ alignItems: "center", justifyContent: "center" }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              left: cx - disc,
-              top: cy - disc,
-              width: disc * 2,
-              height: disc * 2,
-              borderRadius: "50%",
-              background: meshGround(drift, accent),
-              opacity: discO,
-              transform: `scale(${0.9 + 0.1 * discS})`,
-            }}
-          />
-          <div
-            style={{
-              width: disc * 1.6,
-              textAlign: "center",
-              fontFamily: serif,
-              fontWeight: 400,
-              fontSize: 44 * u,
-              lineHeight: 1.02,
-              letterSpacing: "-0.015em",
-              textWrap: "balance",
-              color: "#FFFFFF",
-              opacity: landO,
-              filter: blur > 0.01 ? `blur(${blur * 8 * u}px)` : undefined,
-              transform: `translateY(${(1 - land) * 14 * u}px)`,
-            }}
-          >
-            {lead}
-            {lead ? " " : null}
-            <span style={{ fontStyle: "italic" }}>{tail}</span>
-          </div>
+          </AbsoluteFill>
         </AbsoluteFill>
-      </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${bg} 100%)`,
           opacity: 0.6,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

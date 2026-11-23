@@ -1,0 +1,100 @@
+{
+  "component": "confetti",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "big-blast",
+      "label": "Big Blast",
+      "description": "A dense, high-powered explosion of confetti that fills the frame in an instant.",
+      "askedAs": [
+        "huge confetti explosion",
+        "lots of confetti everywhere",
+        "massive celebration burst",
+        "мощный взрыв конфетти",
+        "много конфетти на весь экран"
+      ],
+      "props": {
+        "particleCount": 360,
+        "power": 32,
+        "gravity": 0.6,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "gentle-sprinkle",
+      "label": "Gentle Sprinkle",
+      "description": "A light, sparse scatter of small pieces that drifts softly downward.",
+      "askedAs": [
+        "subtle confetti",
+        "just a little confetti",
+        "soft understated celebration",
+        "немного конфетти",
+        "лёгкое конфетти"
+      ],
+      "props": {
+        "particleCount": 50,
+        "power": 9,
+        "gravity": 0.25,
+        "size": 8,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "slow-float",
+      "label": "Slow Float",
+      "description": "Large flakes drift weightlessly in slow motion, lingering on screen.",
+      "askedAs": [
+        "slow motion confetti",
+        "floating confetti",
+        "dreamy drifting confetti",
+        "конфетти в замедленной съёмке",
+        "парящее конфетти"
+      ],
+      "props": {
+        "gravity": 0.1,
+        "size": 20,
+        "speed": 0.5,
+        "power": 12,
+        "seed": 7
+      }
+    },
+    {
+      "id": "quick-pop",
+      "label": "Quick Pop",
+      "description": "A snappy, fast burst that pops and falls away quickly for punchy cuts.",
+      "askedAs": [
+        "fast confetti pop",
+        "quick short confetti burst",
+        "snappy confetti for a success screen",
+        "быстрый взрыв конфетти",
+        "короткая хлопушка"
+      ],
+      "props": {
+        "speed": 2.5,
+        "gravity": 1,
+        "power": 24,
+        "particleCount": 120,
+        "seed": 3
+      }
+    },
+    {
+      "id": "chunky-party",
+      "label": "Chunky Party",
+      "description": "Fewer but oversized pieces tumble across the frame for a bold, graphic look.",
+      "askedAs": [
+        "big confetti pieces",
+        "large chunky confetti",
+        "bold graphic confetti",
+        "крупное конфетти",
+        "большие кусочки конфетти"
+      ],
+      "props": {
+        "size": 28,
+        "particleCount": 70,
+        "power": 20,
+        "seed": 12
+      }
+    }
+  ]
+}

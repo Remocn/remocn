@@ -45,14 +45,14 @@ import { gridWave } from "@/components/remocn/grid-wave";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={60}>
+    <TransitionSeries.Sequence durationInFrames={120}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 36 })}
+      timing={linearTiming({ durationInFrames: 72 })}
       presentation={gridWave()}
     />
-    <TransitionSeries.Sequence durationInFrames={60}>
+    <TransitionSeries.Sequence durationInFrames={120}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

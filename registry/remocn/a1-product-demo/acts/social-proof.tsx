@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   FLOW_BG,
   FLOW_BORDER,
@@ -17,6 +12,8 @@ import {
   FLOW_YELLOW,
   FONT,
   FONT_SERIF,
+  stirring,
+  useGlide,
 } from "../foundation";
 
 type Testimonial = {
@@ -70,17 +67,23 @@ function TestimonialCard({
   index,
   f,
   fps,
+  step,
 }: {
   item: Testimonial;
   index: number;
   f: number;
   fps: number;
+  step: number;
 }) {
-  const enter = spring({
-    frame: f - 28 - index * 9,
-    fps,
-    config: { damping: 18, stiffness: 110 },
-  });
+  const glide = useGlide();
+  const enterAt = (g: number) =>
+    spring({
+      frame: g - 28 - index * 9,
+      fps,
+      config: { damping: 18, stiffness: 110 },
+    });
+  const enter = enterAt(f);
+  const rising = stirring((g) => enterAt(g) * 60, f, step);
   const ty = interpolate(enter, [0, 1], [60, 0]);
   const opacity = interpolate(enter, [0, 1], [0, 1]);
 
@@ -98,7 +101,7 @@ function TestimonialCard({
         gap: 20,
         opacity,
         translate: `0 ${ty}px`,
-        willChange: "transform, opacity",
+        transform: glide(rising),
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -143,14 +146,18 @@ function TestimonialCard({
 }
 
 export function SocialProof({ speed = 1 }: { speed?: number }) {
-  const f = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const f = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
+  const glide = useGlide();
 
-  const headEnter = spring({
-    frame: f,
-    fps,
-    config: { damping: 20, stiffness: 110 },
-  });
+  const headEnterAt = (g: number) =>
+    spring({
+      frame: g,
+      fps,
+      config: { damping: 20, stiffness: 110 },
+    });
+  const headEnter = headEnterAt(f);
+  const headRising = stirring((g) => headEnterAt(g) * 40, f, speed);
   const headTy = interpolate(headEnter, [0, 1], [40, 0]);
   const headOpacity = interpolate(headEnter, [0, 1], [0, 1]);
 
@@ -192,7 +199,7 @@ export function SocialProof({ speed = 1 }: { speed?: number }) {
             alignItems: "center",
             opacity: headOpacity,
             translate: `0 ${headTy}px`,
-            willChange: "transform, opacity",
+            transform: glide(headRising),
           }}
         >
           <span
@@ -244,6 +251,7 @@ export function SocialProof({ speed = 1 }: { speed?: number }) {
               index={i}
               f={f}
               fps={fps}
+              step={speed}
             />
           ))}
         </div>

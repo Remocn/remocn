@@ -1,0 +1,105 @@
+{
+  "component": "pitch-over",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "lab-instrument",
+      "label": "Lab Instrument",
+      "description": "Light paper background with monospace digits and a precise cobalt marker, like a calibrated bench gauge.",
+      "askedAs": [
+        "light technical gauge with monospace numbers",
+        "clean lab measurement look",
+        "engineering readout on white",
+        "светлая шкала с моноширинным шрифтом",
+        "как лабораторный прибор"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "JetBrains Mono",
+        "background": "#f4f3ef",
+        "ink": "#1b1d22",
+        "accent": "#2f5bd3",
+        "ticks": 20
+      }
+    },
+    {
+      "id": "slow-dial",
+      "label": "Slow Dial",
+      "description": "A long, deliberate count across a sparse ruler with an amber marker on deep charcoal.",
+      "askedAs": [
+        "slow dramatic count up",
+        "calm measured number reveal",
+        "unhurried gauge animation",
+        "медленный отсчёт числа",
+        "спокойная шкала с плавным счётом"
+      ],
+      "props": {
+        "countLength": 110,
+        "speed": 0.75,
+        "ticks": 5,
+        "accent": "#e0a23b",
+        "background": "#16171a",
+        "ink": "#edeae3"
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A fast, punchy count that snaps onto the scale in a blink with a crisp mint marker.",
+      "askedAs": [
+        "fast snappy counter",
+        "quick number hit for a reel",
+        "rapid stat count",
+        "быстрый счётчик",
+        "резкий короткий отсчёт"
+      ],
+      "props": {
+        "countLength": 20,
+        "speed": 1.75,
+        "accent": "#3dd6a3",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "editorial-measure",
+      "label": "Editorial Measure",
+      "description": "An oversized serif figure on warm ivory with a terracotta marker for a refined, magazine-like stat.",
+      "askedAs": [
+        "elegant serif big number",
+        "magazine style statistic",
+        "classy warm counter",
+        "элегантная цифра с засечками",
+        "журнальный стиль статистики"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f3ece1",
+        "ink": "#2a211b",
+        "accent": "#c0573a",
+        "scale": 1.25
+      }
+    },
+    {
+      "id": "compact-hud",
+      "label": "Compact Hud",
+      "description": "A small, dense readout on near-black navy with cyan ticks, like a corner HUD element.",
+      "askedAs": [
+        "small hud style counter",
+        "compact dashboard readout",
+        "minimal sci-fi gauge",
+        "маленький индикатор как в интерфейсе",
+        "компактный hud счётчик"
+      ],
+      "props": {
+        "scale": 0.7,
+        "ticks": 16,
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b1220",
+        "ink": "#d6e2f0",
+        "accent": "#4fb3d9"
+      }
+    }
+  ]
+}

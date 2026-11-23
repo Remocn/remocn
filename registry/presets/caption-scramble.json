@@ -1,0 +1,115 @@
+{
+  "component": "caption-scramble",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "Phosphor-green glyphs resolve into soft mint text, like an old CRT console decoding live.",
+      "askedAs": [
+        "green hacker terminal captions",
+        "matrix style decoding subtitles",
+        "retro console text look",
+        "зелёные субтитры как в терминале",
+        "хакерский стиль субтитров"
+      ],
+      "props": {
+        "color": "#d1fae5",
+        "glyphColor": "#22c55e",
+        "fontWeight": 700,
+        "fontSize": 56
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Single words flash in large and bold with no hold, for fast punchy edits.",
+      "askedAs": [
+        "one word at a time fast captions",
+        "punchy quick subtitles",
+        "big bold word by word",
+        "быстрые субтитры по одному слову",
+        "крупные резкие субтитры"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 0,
+        "holdMs": 0,
+        "fontSize": 110,
+        "fontWeight": 900
+      }
+    },
+    {
+      "id": "quiet-readout",
+      "label": "Quiet Readout",
+      "description": "Small, light-weight text in long calm phrases that linger, like a measured system log.",
+      "askedAs": [
+        "subtle small captions",
+        "calm minimal subtitles for long sentences",
+        "understated readable text",
+        "спокойные мелкие субтитры",
+        "минималистичные субтитры длинными фразами"
+      ],
+      "props": {
+        "fontSize": 40,
+        "fontWeight": 400,
+        "combineTokensWithinMilliseconds": 2400,
+        "holdMs": 1200,
+        "glyphColor": "#6b7280"
+      }
+    },
+    {
+      "id": "cyber-blue",
+      "label": "Cyber Blue",
+      "description": "Electric blue glyphs decode into cool ice-white type for an AI and security feel.",
+      "askedAs": [
+        "blue tech captions for AI video",
+        "cybersecurity style subtitles",
+        "cool blue decoding text",
+        "синие субтитры в стиле ИИ",
+        "субтитры про кибербезопасность"
+      ],
+      "props": {
+        "color": "#e0f2fe",
+        "glyphColor": "#3b82f6",
+        "fontSize": 72
+      }
+    },
+    {
+      "id": "amber-alert",
+      "label": "Amber Alert",
+      "description": "Warm amber glyphs settle into cream text, evoking a vintage warning display.",
+      "askedAs": [
+        "orange warning style captions",
+        "retro amber monitor text",
+        "warm glitch subtitles",
+        "оранжевые субтитры как на старом мониторе",
+        "тёплые субтитры с эффектом расшифровки"
+      ],
+      "props": {
+        "color": "#fef3c7",
+        "glyphColor": "#f59e0b",
+        "fontWeight": 600,
+        "holdMs": 900
+      }
+    },
+    {
+      "id": "flat-print",
+      "label": "Flat Print",
+      "description": "Dark ink text with no shadow for clean decoding over light backgrounds.",
+      "askedAs": [
+        "black captions for white background",
+        "clean dark text no shadow",
+        "flat subtitles on light video",
+        "чёрные субтитры на светлом фоне",
+        "субтитры без тени"
+      ],
+      "props": {
+        "color": "#111827",
+        "glyphColor": "#9ca3af",
+        "shadow": false,
+        "fontWeight": 700
+      }
+    }
+  ]
+}

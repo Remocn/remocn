@@ -1,0 +1,119 @@
+{
+  "component": "flock-form",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-swarm",
+      "label": "Midnight Swarm",
+      "description": "A slow, cinematic flock of fine birds drifting into a deep navy sky with a soft cyan accent.",
+      "askedAs": [
+        "slow dark cinematic logo reveal",
+        "calm night sky swarm intro",
+        "moody navy flock animation",
+        "медленное тёмное появление логотипа",
+        "ночная стая птиц собирается в логотип"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0a1220",
+        "accent": "#7cc4e8",
+        "speed": 0.75,
+        "stagger": 26,
+        "birdSize": 0.8
+      }
+    },
+    {
+      "id": "paper-sky",
+      "label": "Paper Sky",
+      "description": "A clean light version on warm off-white paper with an ink-black flock and no grain.",
+      "askedAs": [
+        "light minimal logo reveal",
+        "white background bird flock",
+        "clean editorial swarm intro",
+        "светлая минималистичная заставка",
+        "чёрные птицы на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "accent": "#1c1c1e",
+        "grain": false
+      }
+    },
+    {
+      "id": "rapid-launch",
+      "label": "Rapid Launch",
+      "description": "A fast, punchy assembly where bold birds arrive almost together for a snappy product intro.",
+      "askedAs": [
+        "fast energetic logo intro",
+        "quick snappy swarm reveal",
+        "short punchy tech launch opener",
+        "быстрая энергичная заставка с логотипом",
+        "резкое появление логотипа из стаи"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 4,
+        "birdSize": 1.3,
+        "accent": "#5b7bff"
+      }
+    },
+    {
+      "id": "ember-dusk",
+      "label": "Ember Dusk",
+      "description": "A warm dusk palette with amber birds over charcoal brown, slightly delayed for a breathing opening.",
+      "askedAs": [
+        "warm sunset flock reveal",
+        "orange birds on dark background",
+        "golden hour logo animation",
+        "тёплая закатная стая птиц",
+        "оранжевый логотип на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#1a1412",
+        "accent": "#e8a15a",
+        "delay": 20,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "distant-mark",
+      "label": "Distant Mark",
+      "description": "A small, airy composition with tiny birds and a reduced mark that leaves generous negative space.",
+      "askedAs": [
+        "small logo with lots of space",
+        "tiny birds subtle reveal",
+        "minimal understated swarm intro",
+        "маленький логотип с большим пространством",
+        "едва заметная стая мелких птиц"
+      ],
+      "props": {
+        "scale": 0.65,
+        "birdSize": 0.6,
+        "stagger": 22,
+        "accent": "#9aa6c8"
+      }
+    },
+    {
+      "id": "bold-signal",
+      "label": "Bold Signal",
+      "description": "A large, full-frame mark built from chunky emerald birds on a light mint-grey ground.",
+      "askedAs": [
+        "big bold logo reveal",
+        "large green swarm logo",
+        "full screen brand mark animation",
+        "крупный логотип на весь экран",
+        "зелёная стая собирается в большой знак"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#eef2ef",
+        "accent": "#0f7a5c",
+        "scale": 1.35,
+        "birdSize": 1.6
+      }
+    }
+  ]
+}

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const threadWeaveConfig: ComponentConfig = {
   componentName: "ThreadWeave",
@@ -37,6 +43,21 @@ export const threadWeaveConfig: ComponentConfig = {
       },
       description: "Motif",
     },
+    weave: {
+      type: "number",
+      default: 108,
+      min: 40,
+      max: 180,
+      step: 4,
+      description: "Weave length (frames)",
+      hiddenFromList: false,
+    },
+    stats: {
+      type: "boolean",
+      default: true,
+      description: "Ends × picks counter",
+    },
+    ...sceneControls({ font: "Space Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

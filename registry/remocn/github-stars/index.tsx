@@ -4,15 +4,10 @@ import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadSans } from "@remotion/google-fonts/Manrope";
 import { format, parseISO } from "date-fns";
 import { memo, useMemo, useState } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
 import { Odometer } from "@/components/remocn/number-wheel";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface Stargazer {
   login: string;
@@ -956,8 +951,9 @@ export function GitHubStars({
   theme = "light",
   repoAvatarUrl,
 }: GitHubStarsProps) {
-  const frame = useCurrentFrame();
-  const { durationInFrames, width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const { durationInFrames, width, height } = useSceneConfig();
   const t = THEMES[theme] ?? THEMES.light;
   const isVertical = orientation === "vertical";
 
@@ -978,6 +974,8 @@ export function GitHubStars({
     durationInFrames,
   });
   const pScroll = computeScrollProgress({ frame, speed, durationInFrames });
+  const scrollAt = (f: number) =>
+    computeScrollProgress({ frame: f, speed, durationInFrames });
   const p = Math.max(0, Math.min(1, (frame * speed) / durationInFrames));
 
   const current = counterProgress * totalStars;
@@ -1006,6 +1004,11 @@ export function GitHubStars({
   const visibleRows = Math.floor(viewport.h / rowH);
   const D = Math.max(0, (N - visibleRows + 1) * rowH);
   const scrollY = -pScroll * D;
+  // The elastic ramp has no clean progress to test, so the list counts as
+  // moving while its offset differs from a neighbouring frame.
+  const scrolling =
+    Math.abs(scrollAt(frame + 1) - pScroll) * D > 1e-3 ||
+    Math.abs(pScroll - scrollAt(frame - 1)) * D > 1e-3;
 
   const spacerRows = computeSpacerRows({
     N,
@@ -1044,8 +1047,9 @@ export function GitHubStars({
     >
       <div
         style={{
-          translate: `0 ${scrollY}px`,
-          willChange: "transform",
+          // `transform` rather than `translate`: the mark that leans the rows
+          // while the list scrolls rides on `transform` only.
+          transform: `translateY(${scrollY}px)${glide(scrolling)}`,
         }}
       >
         {formattedRows.map(({ sg, dateLabel }, i) => (

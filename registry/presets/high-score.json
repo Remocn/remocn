@@ -1,0 +1,117 @@
+{
+  "component": "high-score",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "retro-cabinet",
+      "label": "Retro Cabinet",
+      "description": "Classic arcade cabinet look with deep navy glass, warm amber accent and pixel type.",
+      "askedAs": [
+        "old school arcade machine look",
+        "retro amber arcade screen",
+        "classic 80s cabinet leaderboard",
+        "ретро аркадный автомат",
+        "старый игровой автомат в янтарных тонах"
+      ],
+      "props": {
+        "background": "#0e1325",
+        "ink": "#f3e9d2",
+        "accent": "#f5a524",
+        "stagger": 5
+      }
+    },
+    {
+      "id": "turbo-slam",
+      "label": "Turbo Slam",
+      "description": "Fast, punchy entry where rows snap in almost together and the new score hits hard.",
+      "askedAs": [
+        "make the high score slam in fast",
+        "quick energetic leaderboard",
+        "snappy arcade score reveal",
+        "быстрое появление рекорда",
+        "энергичная таблица рекордов"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "scale": 1.15,
+        "accent": "#e5484d"
+      }
+    },
+    {
+      "id": "paper-scoreboard",
+      "label": "Paper Scoreboard",
+      "description": "Light, editorial take with cream paper, ink-dark text and a refined serif.",
+      "askedAs": [
+        "light elegant leaderboard",
+        "high score on cream paper",
+        "editorial serif score table",
+        "светлая элегантная таблица лидеров",
+        "рекорд в журнальном стиле"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1e1b16",
+        "accent": "#c2410c",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "Monospaced console leaderboard in soft phosphor green on near-black.",
+      "askedAs": [
+        "hacker terminal high score",
+        "green console leaderboard",
+        "monospace dev style scoreboard",
+        "таблица рекордов в стиле терминала",
+        "зелёный консольный рекорд"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b110d",
+        "ink": "#c8e6cf",
+        "accent": "#3dd68c",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Calm, dramatic build with a held start, wide row stagger and smaller framing.",
+      "askedAs": [
+        "slow dramatic leaderboard reveal",
+        "build suspense before the new record",
+        "calm cinematic high score",
+        "медленное драматичное появление рекорда",
+        "неспешная таблица с паузой"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 10,
+        "delay": 20,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "clean-product",
+      "label": "Clean Product",
+      "description": "Modern SaaS styling with crisp grotesk type, white ground and a violet accent.",
+      "askedAs": [
+        "clean modern product leaderboard",
+        "minimal startup style high score",
+        "non-pixel sleek ranking",
+        "современная минималистичная таблица лидеров",
+        "чистый продуктовый стиль рекорда"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Space Grotesk",
+        "accent": "#6e56cf",
+        "speed": 1.25
+      }
+    }
+  ]
+}

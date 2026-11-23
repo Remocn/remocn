@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const redHat = loadFont("normal", {
   weights: ["400", "500"],
@@ -23,8 +23,20 @@ export interface LayoverProps {
   word?: string;
   stops?: string[];
   to?: string;
+  /** Frames for each hop of the word between stops. */
+  leg?: number;
+  /** Frames the word holds at each stop. */
+  hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Red Hat Display by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -45,6 +57,10 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
+// Every tween here is a clamped interpolate, exact at both ends; words rise
+// a whole line height, so even its last 1e-4 is a visible step.
+const midway = (p: number) => p > 0 && p < 1;
+
 const A_IN = 0;
 const WORD_STAGGER = 3;
 const LIFT = 26;
@@ -59,11 +75,11 @@ interface Metrics {
   desc: number;
 }
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], fontFamily: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("layover: no 2d context");
-  ctx.font = `${WGHT} ${FONT_PX}px "${redHat.fontFamily}"`;
+  ctx.font = `${WGHT} ${FONT_PX}px "${fontFamily}"`;
   const w: Record<string, number> = {};
   for (const s of texts) {
     w[s] = ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
@@ -76,7 +92,7 @@ function measureAll(texts: string[]): Metrics {
   };
 }
 
-function useMetrics(texts: string[]) {
+function useMetrics(texts: string[], fontFamily: string) {
   const key = texts.join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("layover: measuring"));
@@ -85,12 +101,12 @@ function useMetrics(texts: string[]) {
     let live = true;
     Promise.all([
       redHat.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${redHat.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureAll(key.split("\u0001")) });
+        setState({ key, m: measureAll(key.split("\u0001"), fontFamily) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -99,8 +115,24 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.m : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function Layover({
@@ -108,15 +140,23 @@ export function Layover({
   word = "here.",
   stops = ["w", "every"],
   to = "Plays",
+  leg = LEG,
+  hold = HOLD,
   accent,
+  ink,
   background,
+  fontFamily = redHat.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: LayoverProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -124,15 +164,18 @@ export function Layover({
   const fromWords = from.split(" ").filter(Boolean);
   const lineA = `${from} ${word}`;
   const lineB = `${to} ${finalWord}`;
-  const m = useMetrics([
-    lineA,
-    lineB,
-    word,
-    finalWord,
-    ...stops,
-    ...fromWords.map((_, i) => fromWords.slice(0, i).join(" ")),
-    ...fromWords.map((_, i) => `${fromWords.slice(0, i + 1).join(" ")} `),
-  ]);
+  const m = useMetrics(
+    [
+      lineA,
+      lineB,
+      word,
+      finalWord,
+      ...stops,
+      ...fromWords.map((_, i) => fromWords.slice(0, i).join(" ")),
+      ...fromWords.map((_, i) => `${fromWords.slice(0, i + 1).join(" ")} `),
+    ],
+    fontFamily,
+  );
 
   if (!m) {
     return (
@@ -159,38 +202,44 @@ export function Layover({
   const leftB = rx3 - m.w[lineB] * F;
 
   const n = stops.length;
-  const legStart = (k: number) => LIFT + k * (LEG + HOLD);
-  const arriveAt = (k: number) => legStart(k) + LEG;
+  const legStart = (k: number) => LIFT + k * (leg + hold);
+  const arriveAt = (k: number) => legStart(k) + leg;
   const landAt = arriveAt(n);
   const fracs = Array.from({ length: n + 2 }, (_, k) => k / (n + 1));
 
-  let progress = 0;
-  for (let k = 0; k <= n; k++) {
-    const p = interpolate(t, [legStart(k), arriveAt(k)], [0, 1], {
-      ...CLAMP,
-      easing: EASE_LEG,
-    });
-    progress = p > 0 ? fracs[k] + p * (fracs[k + 1] - fracs[k]) : progress;
-  }
-  const rx = rx0 + (rx3 - rx0) * progress;
-  const base = baseA + (baseB - baseA) * progress;
-  const lift =
-    interpolate(t, [LIFT - 6, LIFT + 4], [0, 1], CLAMP) *
-    (1 - interpolate(t, [landAt - 8, landAt], [0, 1], CLAMP));
-  const touch =
-    t > landAt
-      ? Math.sin(Math.min(1, (t - landAt) / SETTLE) * Math.PI) *
-        F *
-        0.025 *
-        (1 - Math.min(1, (t - landAt) / SETTLE))
-      : 0;
+  // Where the travelling word stands at time `tt`: its right edge and the
+  // top of its box.
+  const carry = (tt: number) => {
+    let progress = 0;
+    for (let k = 0; k <= n; k++) {
+      const p = interpolate(tt, [legStart(k), arriveAt(k)], [0, 1], {
+        ...CLAMP,
+        easing: EASE_LEG,
+      });
+      progress = p > 0 ? fracs[k] + p * (fracs[k + 1] - fracs[k]) : progress;
+    }
+    const lift =
+      interpolate(tt, [LIFT - 6, LIFT + 4], [0, 1], CLAMP) *
+      (1 - interpolate(tt, [landAt - 8, landAt], [0, 1], CLAMP));
+    const touch =
+      tt > landAt
+        ? Math.sin(Math.min(1, (tt - landAt) / SETTLE) * Math.PI) *
+          F *
+          0.025 *
+          (1 - Math.min(1, (tt - landAt) / SETTLE))
+        : 0;
+    return {
+      x: rx0 + (rx3 - rx0) * progress,
+      y: boxTop(baseA + (baseB - baseA) * progress) - lift * F * 0.04 + touch,
+    };
+  };
 
   const textStyle = (size: number): React.CSSProperties => ({
     position: "absolute",
     height: size,
     lineHeight: `${size}px`,
     whiteSpace: "pre",
-    fontFamily: redHat.fontFamily,
+    fontFamily,
     fontWeight: WGHT,
     fontSize: size,
     letterSpacing: `${TRACK}em`,
@@ -226,8 +275,8 @@ export function Layover({
             ...textStyle(F),
             position: "relative",
             top: F * 0.1,
-            color: c.ink,
-            transform: `translateY(${((1 - p) * F * 1.4).toFixed(2)}px)`,
+            color: fg,
+            transform: `translateY(${(1 - p) * F * 1.4}px)${glide(midway(p))}`,
           }}
         >
           {wd}
@@ -253,8 +302,8 @@ export function Layover({
           ...textStyle(F),
           position: "relative",
           top: F * 0.1,
-          color: c.ink,
-          transform: `translateY(${((1 - toIn) * F * 1.4).toFixed(2)}px)`,
+          color: fg,
+          transform: `translateY(${(1 - toIn) * F * 1.4}px)${glide(midway(toIn))}`,
         }}
       >
         {to}
@@ -263,7 +312,18 @@ export function Layover({
   );
 
   if (t >= LIFT - 6) {
-    let xRight = rx - m.w[word] * F;
+    // Layout rounds a box and a baseline to whole pixels, so a word carried
+    // by `left`/`top` clicks along pixel by pixel, and jumps where layout
+    // takes over from a transform. Each part is laid out once, where the
+    // word finally lands, and carried there by a transform all its life.
+    const rest = carry(Number.POSITIVE_INFINITY);
+    const now = carry(t);
+    const dx = Math.abs(now.x - rest.x) >= 1e-3 ? now.x - rest.x : 0;
+    const dy = Math.abs(now.y - rest.y) >= 1e-3 ? now.y - rest.y : 0;
+    const step = (a: { x: number; y: number }) =>
+      Math.abs(a.x - now.x) > 1e-5 || Math.abs(a.y - now.y) > 1e-5;
+    const travel = step(carry(t - speed)) || step(carry(t + speed));
+    let xRight = rest.x - m.w[word] * F;
     const parts: { s: string; x: number; p: number }[] = [
       { s: word, x: xRight, p: 1 },
     ];
@@ -286,10 +346,10 @@ export function Layover({
           style={{
             ...textStyle(F),
             left: part.x,
-            top: boxTop(base) - lift * F * 0.04 + touch,
+            top: rest.y,
             color: hi,
             opacity: part.p,
-            transform: `translateY(${(-(1 - part.p) * F * 0.55).toFixed(2)}px)`,
+            transform: `translate(${dx}px, ${dy - (1 - part.p) * F * 0.55}px)${glide(travel || midway(part.p))}`,
           }}
         >
           {part.s}
@@ -300,7 +360,7 @@ export function Layover({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

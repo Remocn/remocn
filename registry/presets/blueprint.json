@@ -1,0 +1,100 @@
+{
+  "component": "blueprint",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "night-draft",
+      "label": "Night Draft",
+      "description": "A near-black drafting sheet with pale cyan linework and an amber callout, unveiled at a slow, deliberate pace.",
+      "askedAs": [
+        "dark blueprint with light lines",
+        "black technical drawing look",
+        "slow moody engineering reveal",
+        "тёмный чертёж с голубыми линиями",
+        "медленный ночной чертёж"
+      ],
+      "props": {
+        "blueprintColor": "#0e1621",
+        "lineColor": "#9fd8f0",
+        "calloutColor": "#f2a93b",
+        "productColor": "#f2a93b",
+        "background": "#0a0f16",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "paper-print",
+      "label": "Paper Print",
+      "description": "An inverted whiteprint with ink-navy lines on warm paper and a muted brick callout.",
+      "askedAs": [
+        "white paper technical drawing",
+        "dark lines on light background",
+        "printed engineering sheet style",
+        "чертёж на белой бумаге",
+        "тёмные линии на светлом фоне"
+      ],
+      "props": {
+        "blueprintColor": "#f4f1ea",
+        "lineColor": "#1e2a44",
+        "calloutColor": "#b5482f",
+        "productColor": "#1e2a44",
+        "background": "#e9e4d8"
+      }
+    },
+    {
+      "id": "rapid-spec",
+      "label": "Rapid Spec",
+      "description": "The classic blueprint wipe played at double speed for punchy, fast-cut launch edits.",
+      "askedAs": [
+        "fast blueprint transition",
+        "quick product to schematic wipe",
+        "snappy tech drawing reveal",
+        "быстрый переход в чертёж",
+        "резкий чертёж для монтажа"
+      ],
+      "props": {
+        "speed": 2
+      }
+    },
+    {
+      "id": "slate-mono",
+      "label": "Slate Mono",
+      "description": "A calm graphite grid with soft grey linework and a single electric-teal callout accent.",
+      "askedAs": [
+        "grey minimal blueprint",
+        "monochrome tech drawing with one accent",
+        "sleek slate engineering look",
+        "серый минималистичный чертёж",
+        "монохромный чертёж с акцентом"
+      ],
+      "props": {
+        "blueprintColor": "#2b3036",
+        "lineColor": "#d5dae0",
+        "calloutColor": "#2ec4b6",
+        "productColor": "#3a4048",
+        "background": "#1c2025"
+      }
+    },
+    {
+      "id": "forest-cad",
+      "label": "Forest CAD",
+      "description": "A deep green circuit-board grid with cream lines and a coral callout, moving at a measured pace.",
+      "askedAs": [
+        "green blueprint like a circuit board",
+        "pcb style technical drawing",
+        "earthy green engineering schematic",
+        "зелёный чертёж как плата",
+        "схема в стиле печатной платы"
+      ],
+      "props": {
+        "blueprintColor": "#123b2e",
+        "lineColor": "#ede6d3",
+        "calloutColor": "#f07a5a",
+        "productColor": "#f07a5a",
+        "background": "#f5f2ea",
+        "speed": 1.25
+      }
+    }
+  ]
+}

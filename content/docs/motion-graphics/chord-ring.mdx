@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="ChordRing"
     component={ChordRingScene}
-    durationInFrames={165}
-    fps={30}
+    durationInFrames={330}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -75,10 +75,61 @@ Ring segments grow in around a glowing center, then curved chords draw between t
       description: "Line shown in the center at the end.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "2.2",
+      description: "Frames between chords as they draw.",
+    },
+    {
+      name: "thickness",
+      type: "number",
+      default: "10",
+      description: "Thickness of the ring segments, in pixels at 720p.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the brand segment chords.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Sans\"",
+      description: "Typeface for the names around the ring. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

@@ -1,0 +1,96 @@
+{
+  "component": "gooey-morph",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "thick-honey",
+      "label": "Thick Honey",
+      "description": "Warm amber goo with a heavy blur and slow, syrupy bars that ooze into the word.",
+      "askedAs": [
+        "slow syrupy melt",
+        "honey drip title",
+        "warm gooey slow reveal",
+        "медленное тягучее слияние",
+        "медовый эффект текста"
+      ],
+      "props": {
+        "fill": "#e8a33d",
+        "blurRadius": 12,
+        "barTravelFrames": 50,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snappy-mercury",
+      "label": "Snappy Mercury",
+      "description": "Cool silver bars zip in fast and fuse with a tight, crisp liquid-metal edge.",
+      "askedAs": [
+        "fast liquid metal",
+        "quick chrome melt",
+        "snappy mercury title",
+        "быстрый жидкий металл",
+        "резкое появление слова"
+      ],
+      "props": {
+        "fill": "#c9d1d9",
+        "blurRadius": 3,
+        "barTravelFrames": 14,
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "wobbly-jelly",
+      "label": "Wobbly Jelly",
+      "description": "Soft coral blobs with strong displacement for a bouncy, jelly-like wobble.",
+      "askedAs": [
+        "jelly wobble text",
+        "bouncy blob morph",
+        "wiggly gooey title",
+        "желейный эффект",
+        "текст как желе"
+      ],
+      "props": {
+        "fill": "#ff7a6b",
+        "displaceAmount": 55,
+        "blurRadius": 9,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "clean-ink",
+      "label": "Clean Ink",
+      "description": "Deep ink-black shapes with minimal distortion for a calm, precise fusion on light backgrounds.",
+      "askedAs": [
+        "subtle clean melt",
+        "dark ink merge",
+        "minimal gooey reveal",
+        "аккуратное слияние без искажений",
+        "тёмный минималистичный текст"
+      ],
+      "props": {
+        "fill": "#1c1f26",
+        "displaceAmount": 4,
+        "blurRadius": 5
+      }
+    },
+    {
+      "id": "slime-lab",
+      "label": "Slime Lab",
+      "description": "Muted lime goo with heavy blur and wild displacement for a messy, organic splat.",
+      "askedAs": [
+        "green slime text",
+        "messy organic melt",
+        "slimy title reveal",
+        "зелёная слизь",
+        "слизистый эффект текста"
+      ],
+      "props": {
+        "fill": "#a8d46f",
+        "blurRadius": 15,
+        "displaceAmount": 70,
+        "barTravelFrames": 38
+      }
+    }
+  ]
+}

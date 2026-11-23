@@ -1,0 +1,123 @@
+{
+  "component": "ruby-press",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light paper page with an elegant serif and a slow, deliberate press in deep ink blue.",
+      "askedAs": [
+        "make it look like a magazine",
+        "elegant serif on light background",
+        "slow classy word swap",
+        "как в журнале, с засечками",
+        "светлый элегантный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "accent": "#1f3a8a",
+        "press": 34,
+        "hold": 24,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Tight geometric type that snaps through words fast with almost no hold.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick word cycling",
+        "snappy energetic swap",
+        "быстрее и резче",
+        "динамичная смена слов"
+      ],
+      "props": {
+        "press": 8,
+        "hold": 4,
+        "stagger": 1,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospace text on near-black with a soft green accent, like a developer console.",
+      "askedAs": [
+        "code style version",
+        "monospace dark terminal look",
+        "make it feel technical",
+        "как в терминале",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "stagger": 6
+      }
+    },
+    {
+      "id": "warm-sand",
+      "label": "Warm Sand",
+      "description": "A calm cream background with dark brown text and a terracotta accent in a friendly grotesque.",
+      "askedAs": [
+        "warm beige colors",
+        "soft cozy palette",
+        "earthy tones version",
+        "тёплые бежевые цвета",
+        "мягкая уютная палитра"
+      ],
+      "props": {
+        "background": "#f4ede1",
+        "ink": "#2b2118",
+        "accent": "#c2562f",
+        "fontFamily": "Bricolage Grotesque",
+        "hold": 20
+      }
+    },
+    {
+      "id": "big-statement",
+      "label": "Big Statement",
+      "description": "Oversized bold type on dark with a vivid blue accent and a heavy, lingering press.",
+      "askedAs": [
+        "make the text huge",
+        "bold headline version",
+        "big dramatic claim",
+        "крупный жирный текст",
+        "сделай заголовок огромным"
+      ],
+      "props": {
+        "scale": 1.4,
+        "fontFamily": "Manrope",
+        "accent": "#2f81f7",
+        "press": 30,
+        "hold": 30
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Small, light Inter type with a muted slate accent and gentle slow pacing after a short delay.",
+      "askedAs": [
+        "subtle understated look",
+        "minimal and quiet",
+        "smaller calmer text",
+        "минималистично и спокойно",
+        "сдержанный небольшой текст"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#475569",
+        "scale": 0.8,
+        "speed": 0.75,
+        "delay": 12
+      }
+    }
+  ]
+}

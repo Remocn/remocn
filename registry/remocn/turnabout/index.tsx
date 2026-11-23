@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const dmSans = loadFont("normal", {
   weights: ["400", "500"],
@@ -22,8 +22,19 @@ export interface TurnaboutProps {
   before?: string;
   after?: string;
   highlight?: string;
+  /** Frames between words of the first line rising in. */
+  stagger?: number;
+  fontWeight?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines. Load it yourself; DM Sans by default. */
+  fontFamily?: string;
+  /** Size of the lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -92,18 +103,23 @@ function layoutLine(s: string, em: (x: string) => number): Line {
   return { toks, width: em(s) };
 }
 
-function measure(before: string, after: string): Metrics {
+function measure(before: string, after: string, font: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("turnabout: no 2d context");
-  ctx.font = `${WGHT} ${PROBE}px "${dmSans.fontFamily}"`;
+  ctx.font = font;
   const em = (x: string) =>
     ctx.measureText(x).width / PROBE + TRACK * Array.from(x).length;
   const cap = ctx.measureText("H").actualBoundingBoxAscent / PROBE;
   return { a: layoutLine(before, em), b: layoutLine(after, em), cap };
 }
 
-function useMetrics(before: string, after: string) {
+function useMetrics(
+  before: string,
+  after: string,
+  fontFamily: string,
+  weight: number,
+) {
   const key = `${before}\u0001${after}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("turnabout: measuring"));
@@ -114,12 +130,19 @@ function useMetrics(before: string, after: string) {
     let live = true;
     Promise.all([
       dmSans.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${dmSans.fontFamily}"`),
+      document.fonts.load(`${weight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(src.current.before, src.current.after) });
+        setState({
+          key,
+          m: measure(
+            src.current.before,
+            src.current.after,
+            `${weight} ${PROBE}px "${fontFamily}"`,
+          ),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -128,7 +151,7 @@ function useMetrics(before: string, after: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, fontFamily, weight, handle]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -199,24 +222,48 @@ function assignLanes(movers: Mover[], still: number, gap: number) {
   }
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function Turnabout({
   before = "You work for the video.",
   after = "The video works for you.",
   highlight = "you.",
+  stagger = STAGGER,
+  fontWeight = WGHT,
   accent,
+  ink,
   background,
+  fontFamily = dmSans.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: TurnaboutProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const k = Math.min(1, durationInFrames / BASE);
   const t = (frame * speed) / k;
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const m = useMetrics(before, after);
+  const m = useMetrics(before, after, fontFamily, fontWeight);
 
   if (!m) {
     return (
@@ -288,6 +335,11 @@ export function Turnabout({
     easing: EASE_OUT,
   });
 
+  const between = (p: number) => p > 0 && p < 1;
+  const liftMoving =
+    between(interpolate(t, [TURN, TURN + LIFT], [0, 1], CLAMP)) ||
+    between(interpolate(t, [dropAt, landed], [0, 1], CLAMP));
+
   const word = (
     key: string,
     text: string,
@@ -295,6 +347,7 @@ export function Turnabout({
     dy: number,
     opacity: number,
     color: string,
+    rising: boolean,
     suffix?: { text: string; opacity: number },
   ) => (
     <div
@@ -306,14 +359,14 @@ export function Turnabout({
         height: F * 1.2,
         lineHeight: `${F * 1.2}px`,
         whiteSpace: "pre",
-        fontFamily: dmSans.fontFamily,
-        fontWeight: WGHT,
+        fontFamily,
+        fontWeight,
         fontSize: F,
         letterSpacing: `${TRACK}em`,
         fontKerning: "normal",
         color,
         opacity,
-        transform: `translate(${x.toFixed(2)}px, ${dy.toFixed(2)}px)`,
+        transform: `translate(${x.toFixed(2)}px, ${dy.toFixed(2)}px)${glide(rising)}`,
       }}
     >
       {text}
@@ -328,7 +381,7 @@ export function Turnabout({
   m.a.toks.forEach((ta, i) => {
     const enter = interpolate(
       t,
-      [IN + i * STAGGER, IN + i * STAGGER + ENTER],
+      [IN + i * stagger, IN + i * stagger + ENTER],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
@@ -345,7 +398,8 @@ export function Turnabout({
         leftA + ta.x * F,
         F * 0.28 * (1 - enter) + F * 0.4 * out,
         enter * (1 - out),
-        c.ink,
+        fg,
+        between(enter) || between(out),
       ),
     );
   });
@@ -355,35 +409,44 @@ export function Turnabout({
     const tb = m.b.toks[mv.j];
     const enter = interpolate(
       t,
-      [IN + mv.i * STAGGER, IN + mv.i * STAGGER + ENTER],
+      [IN + mv.i * stagger, IN + mv.i * stagger + ENTER],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
     const x = mv.a0 + (mv.b0 - mv.a0) * travel;
     const dy = F * 0.28 * (1 - enter) + mv.lane * laneGap * lift;
+    const rising = between(enter) || (mv.lane !== 0 && liftMoving);
     const color =
       isHi(tb) && lit > 0
-        ? `color-mix(in oklab, ${hi} ${(lit * 100).toFixed(1)}%, ${c.ink})`
-        : c.ink;
+        ? `color-mix(in oklab, ${hi} ${(lit * 100).toFixed(1)}%, ${fg})`
+        : fg;
     if (ta.text === tb.text) {
-      nodes.push(word(`m${mv.j}`, tb.text, x, dy, enter, color));
+      nodes.push(word(`m${mv.j}`, tb.text, x, dy, enter, color, rising));
     } else if (tb.text.startsWith(ta.text)) {
       nodes.push(
-        word(`m${mv.j}`, ta.text, x, dy, enter, color, {
+        word(`m${mv.j}`, ta.text, x, dy, enter, color, rising, {
           text: tb.text.slice(ta.text.length),
           opacity: suffixIn,
         }),
       );
     } else if (ta.text.startsWith(tb.text)) {
       nodes.push(
-        word(`m${mv.j}`, tb.text, x, dy, enter, color, {
+        word(`m${mv.j}`, tb.text, x, dy, enter, color, rising, {
           text: ta.text.slice(tb.text.length),
           opacity: 1 - suffixIn,
         }),
       );
     } else {
       nodes.push(
-        word(`m${mv.j}`, swapped ? tb.text : ta.text, x, dy, enter, color),
+        word(
+          `m${mv.j}`,
+          swapped ? tb.text : ta.text,
+          x,
+          dy,
+          enter,
+          color,
+          rising,
+        ),
       );
     }
   }
@@ -396,16 +459,24 @@ export function Turnabout({
     });
     if (inn <= 0) return;
     const color = isHi(tb)
-      ? `color-mix(in oklab, ${hi} ${(lit * 100).toFixed(1)}%, ${c.ink})`
-      : c.ink;
+      ? `color-mix(in oklab, ${hi} ${(lit * 100).toFixed(1)}%, ${fg})`
+      : fg;
     nodes.push(
-      word(`b${j}`, tb.text, leftB + tb.x * F, F * 0.3 * (1 - inn), inn, color),
+      word(
+        `b${j}`,
+        tb.text,
+        leftB + tb.x * F,
+        F * 0.3 * (1 - inn),
+        inn,
+        color,
+        between(inn),
+      ),
     );
   });
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

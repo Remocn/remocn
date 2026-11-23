@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const shapeCutConfig: ComponentConfig = {
   componentName: "ShapeCut",
@@ -13,11 +19,6 @@ export const shapeCutConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     from: {
       type: "text-content",
       default: "Ideas move fast",
@@ -29,10 +30,30 @@ export const shapeCutConfig: ComponentConfig = {
       description: "To",
     },
     shape: {
-      type: "text-content",
+      type: "enum",
       default: "circle",
+      variants: {
+        circle: {},
+        square: {},
+        pill: {},
+      },
       description: "Shape",
     },
+    travel: {
+      type: "number",
+      default: 50,
+      min: 16,
+      max: 120,
+      step: 1,
+      description: "Shape travel (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

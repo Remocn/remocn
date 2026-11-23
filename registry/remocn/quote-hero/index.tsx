@@ -2,15 +2,11 @@
 
 import { loadFont } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -43,7 +39,22 @@ export interface QuoteHeroProps {
   quotes?: Quote[];
   /** Frames each quote owns, including its exit. */
   quoteDuration?: number;
+  /** Frames between the lines of a quote rising in. */
+  stagger?: number;
+  /** Frames the highlighter takes to sweep across the highlighted phrase. */
+  sweep?: number;
   accent?: string;
+  /** Text color of the quote and author; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the quote. Load it yourself; Instrument Serif by default. */
+  fontFamily?: string;
+  /** Size of the quote, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -289,6 +300,10 @@ function QuoteBlock({
   accent,
   width,
   height,
+  fg,
+  fontFamily,
+  stagger,
+  sweep,
 }: {
   q: Quote;
   t: number;
@@ -299,6 +314,10 @@ function QuoteBlock({
   accent: string;
   width: number;
   height: number;
+  fg: string;
+  fontFamily: string;
+  stagger: number;
+  sweep: number;
 }) {
   const F = 70 * u;
   const LH = 1.1;
@@ -310,7 +329,7 @@ function QuoteBlock({
   const blockH = lines.length * F * LH + authorGap + avatar;
   const top = (height - blockH) / 2 - 6 * u;
 
-  const lineAt = (i: number) => start + i * 5;
+  const lineAt = (i: number) => start + i * stagger;
   const revealEnd = lineAt(lines.length - 1) + 16;
   const authorAt = revealEnd - 6;
   const sweepAt = revealEnd + 4;
@@ -326,7 +345,7 @@ function QuoteBlock({
   for (const line of lines)
     for (const p of line) if (p.hl) hlLengths.push(p.text.length);
   const hlTotal = hlLengths.reduce((a, b) => a + b, 0) || 1;
-  const SWEEP = 18;
+  const SWEEP = sweep;
   let hlIndex = 0;
   let hlOffset = 0;
 
@@ -403,12 +422,12 @@ function QuoteBlock({
               style={{
                 position: "relative",
                 transform: `translateY(${(1 - p) * 112}%)`,
-                fontFamily: serif,
+                fontFamily,
                 fontWeight: 400,
                 fontSize: F,
                 lineHeight: LH,
                 letterSpacing: "-0.012em",
-                color: c.fg,
+                color: fg,
                 whiteSpace: "pre",
               }}
             >
@@ -477,7 +496,7 @@ function QuoteBlock({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: c.fg,
+            color: fg,
             fontWeight: 500,
             fontSize: 18 * u,
             letterSpacing: "-0.01em",
@@ -505,7 +524,7 @@ function QuoteBlock({
         >
           <span
             style={{
-              color: c.fg,
+              color: fg,
               fontWeight: 500,
               fontSize: 21 * u,
               letterSpacing: "-0.015em",
@@ -539,12 +558,12 @@ function QuoteBlock({
             display: "flex",
             alignItems: "center",
             gap: 8 * u,
-            color: c.fg,
+            color: fg,
             opacity: settle(3) * 0.88,
             transform: `translateY(${(1 - settle(3)) * 14 * u}px)`,
           }}
         >
-          <CompanyMark company={q.company} size={22 * u} color={c.fg} />
+          <CompanyMark company={q.company} size={22 * u} color={fg} />
           <span
             style={{
               fontWeight: 500,
@@ -561,55 +580,95 @@ function QuoteBlock({
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function QuoteHero({
   quotes = DEFAULT_QUOTES,
   quoteDuration = 120,
+  stagger = 5,
+  sweep = 18,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = serif,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: QuoteHeroProps) {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width, height } = useSceneConfig();
   const t = frame * speed;
   const u = Math.min(width / 1280, height / 720);
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const transparent = background === "transparent";
+  const stage = transparent ? "transparent" : (background ?? c.bg);
   const n = quotes.length;
   const total = 6 + n * quoteDuration;
   const push = interpolate(t, [0, total], [0, 1], CLAMP);
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 65% 75% at 40% 40%, ${c.key}, transparent 72%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${1 + push * 0.03})`,
-          transformOrigin: "30% 50%",
-        }}
-      >
-        {quotes.map((q, i) => {
-          const start = 6 + i * quoteDuration;
-          const exitAt = i === n - 1 ? 1e9 : start + quoteDuration - 8;
-          return (
-            <QuoteBlock
-              key={i}
-              q={q}
-              t={t}
-              start={start}
-              exitAt={exitAt}
-              u={u}
-              c={c}
-              accent={accent}
-              width={width}
-              height={height}
-            />
-          );
-        })}
-      </AbsoluteFill>
-      <Grain opacity={c.grain} />
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {transparent ? null : (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse 65% 75% at 40% 40%, ${c.key}, transparent 72%)`,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            // The push runs the whole film, so this one tilt also covers
+            // every line, avatar and caption that eases in under it.
+            transform: `scale(${1 + push * 0.03})${glide(midway(push))}`,
+            transformOrigin: "30% 50%",
+          }}
+        >
+          {quotes.map((q, i) => {
+            const start = 6 + i * quoteDuration;
+            const exitAt = i === n - 1 ? 1e9 : start + quoteDuration - 8;
+            return (
+              <QuoteBlock
+                key={i}
+                q={q}
+                t={t}
+                start={start}
+                exitAt={exitAt}
+                u={u}
+                c={c}
+                accent={accent}
+                width={width}
+                height={height}
+                fg={fg}
+                fontFamily={fontFamily}
+                stagger={stagger}
+                sweep={sweep}
+              />
+            );
+          })}
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -1,0 +1,117 @@
+{
+  "component": "raster-paint",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-blit",
+      "label": "Quick Blit",
+      "description": "A fast, snappy paint pass with a short cool-down so the tiles flash into place almost instantly.",
+      "askedAs": [
+        "make it render really fast",
+        "snappy quick pixel reveal",
+        "short punchy paint animation",
+        "быстрая отрисовка пикселей",
+        "сделай рендер побыстрее"
+      ],
+      "props": {
+        "scanLength": 24,
+        "trail": 5,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-render",
+      "label": "Slow Render",
+      "description": "A long, deliberate scan with lingering warm trails that feels like a heavy frame being rendered line by line.",
+      "askedAs": [
+        "slow dramatic render",
+        "let the tiles linger longer",
+        "heavy slow paint reveal",
+        "медленная отрисовка",
+        "плавный долгий рендер"
+      ],
+      "props": {
+        "scanLength": 120,
+        "trail": 30,
+        "speed": 0.75,
+        "delay": 12
+      }
+    },
+    {
+      "id": "paper-print",
+      "label": "Paper Print",
+      "description": "A light, clean version on warm off-white with dark ink and a deep teal accent, grain switched off.",
+      "askedAs": [
+        "light background version",
+        "clean white print look",
+        "bright minimal pixel stat",
+        "светлая версия",
+        "чистый светлый фон"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1b1b1f",
+        "accent": "#0f766e",
+        "grain": false
+      }
+    },
+    {
+      "id": "crt-amber",
+      "label": "CRT Amber",
+      "description": "A retro terminal look with amber accent on a near-black brown background in JetBrains Mono.",
+      "askedAs": [
+        "old monitor amber look",
+        "retro terminal style",
+        "vintage crt screen",
+        "ретро терминал",
+        "как старый монитор"
+      ],
+      "props": {
+        "background": "#14100b",
+        "ink": "#f2e6d0",
+        "accent": "#e8a33d",
+        "fontFamily": "JetBrains Mono",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "bold-poster",
+      "label": "Bold Poster",
+      "description": "An oversized, chunky multiplier set in Bricolage Grotesque with a coral accent for a loud, playful stat.",
+      "askedAs": [
+        "make the 10x huge",
+        "big bold poster style",
+        "loud playful number",
+        "сделай цифру огромной",
+        "крупный яркий постер"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.45,
+        "accent": "#f25c54",
+        "trail": 18
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "A compact, refined variant on deep navy with a soft violet accent and Space Grotesk type.",
+      "askedAs": [
+        "dark purple elegant version",
+        "smaller subtle navy look",
+        "moody violet render",
+        "тёмно-синий с фиолетовым",
+        "сдержанный компактный вариант"
+      ],
+      "props": {
+        "background": "#0e1226",
+        "ink": "#e6e8f5",
+        "accent": "#8b7cf6",
+        "fontFamily": "Space Grotesk",
+        "scale": 0.8
+      }
+    }
+  ]
+}

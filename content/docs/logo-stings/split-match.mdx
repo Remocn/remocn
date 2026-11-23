@@ -43,8 +43,8 @@ export const RemotionRoot = () => (
   <Composition
     id="SplitMatch"
     component={SplitMatchScene}
-    durationInFrames={145}
-    fps={30}
+    durationInFrames={290}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -72,6 +72,52 @@ Two reels slam in and lock on the first word, then step to each next word in tur
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
       description: "Dark or light palette and ground.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "16",
+      description: "Frames each word stays locked before the reels move on.",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "9",
+      description: "Frames for the reels to travel from one word to the next.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Bricolage Grotesque\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

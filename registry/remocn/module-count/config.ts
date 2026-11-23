@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const moduleCountConfig: ComponentConfig = {
   componentName: "ModuleCount",
@@ -55,6 +61,26 @@ export const moduleCountConfig: ComponentConfig = {
       description: "Steps",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 450,
+      min: 100,
+      max: 900,
+      step: 50,
+      description: "Label weight",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Archivo" }),
     speed: {
       type: "number",
       default: 1,

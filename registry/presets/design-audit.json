@@ -1,0 +1,97 @@
+{
+  "component": "design-audit",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-review",
+      "label": "Midnight Review",
+      "description": "A deep charcoal canvas with soft coral redlines and cool blue fixes for a focused, after-hours studio feel.",
+      "askedAs": [
+        "dark mode design audit",
+        "night theme review scene",
+        "make it dark with softer colors",
+        "тёмная тема для аудита",
+        "ночной вариант дизайн-ревью"
+      ],
+      "props": {
+        "background": "#15161a",
+        "auditColor": "#ff6b6b",
+        "fixColor": "#5b8cff",
+        "scanColor": "#a78bfa"
+      }
+    },
+    {
+      "id": "paper-studio",
+      "label": "Paper Studio",
+      "description": "Warm off-white paper with terracotta marks, forest-green fixes and an ochre scan, played a touch slower.",
+      "askedAs": [
+        "warm editorial look",
+        "cream background with earthy colors",
+        "calmer print-style audit",
+        "тёплая бумажная палитра",
+        "спокойный редакционный стиль"
+      ],
+      "props": {
+        "background": "#f5f0e6",
+        "auditColor": "#c2553d",
+        "fixColor": "#2f6b4f",
+        "scanColor": "#c99a2e",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rapid-ship",
+      "label": "Rapid Ship",
+      "description": "The default palette run at double speed for a punchy, social-ready cut of the whole review.",
+      "askedAs": [
+        "faster version",
+        "quick teaser cut",
+        "speed it up for social",
+        "сделай быстрее",
+        "короткая динамичная версия"
+      ],
+      "props": {
+        "speed": 2
+      }
+    },
+    {
+      "id": "mono-slate",
+      "label": "Mono Slate",
+      "description": "A restrained near-monochrome slate palette where only the fix carries color, played slowly and deliberately.",
+      "askedAs": [
+        "minimal grayscale audit",
+        "muted corporate look",
+        "only highlight the fix",
+        "минималистичный серый вариант",
+        "сдержанная монохромная палитра"
+      ],
+      "props": {
+        "background": "#e4e6ea",
+        "auditColor": "#5a6170",
+        "scanColor": "#8a92a3",
+        "fixColor": "#0f766e",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "mint-fresh",
+      "label": "Mint Fresh",
+      "description": "A pale mint backdrop with rose issues, emerald fixes and a teal scan for a light, optimistic launch tone.",
+      "askedAs": [
+        "fresh green theme",
+        "light and friendly audit",
+        "success-focused colors",
+        "свежая мятная палитра",
+        "лёгкий зелёный вариант"
+      ],
+      "props": {
+        "background": "#eaf5f0",
+        "auditColor": "#e0516b",
+        "fixColor": "#12965f",
+        "scanColor": "#1c8fa6",
+        "speed": 1.25
+      }
+    }
+  ]
+}

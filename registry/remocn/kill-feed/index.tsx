@@ -2,13 +2,10 @@
 
 import { loadFont } from "@remotion/google-fonts/ChakraPetch";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: chakra } = loadFont("normal", {
   weights: ["500"],
@@ -62,8 +59,23 @@ export interface KillFeedProps {
   banner?: string;
   /** Small line under the banner, next to the logo. */
   caption?: string;
+  /** Label over each streak callout, followed by the streak count. */
+  streakLabel?: string;
+  /** Replaces the remocn mark in the feed and under the banner. */
+  logo?: React.ReactNode;
+  /** Strength of the camera kick on each hit; 0 holds the frame still. */
+  shake?: number;
   /** Small markers: the streak tick and the caption rule. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Chakra Petch by default. */
+  fontFamily?: string;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -161,6 +173,26 @@ function Crosshair({ size, color }: { size: number; color: string }) {
   );
 }
 
+// Clamped ramps, exactly 0 or 1 at rest; their eased tails still move a few
+// hundredths of a pixel a frame, so any value in between counts.
+const midway = (p: number) => p > 0 && p < 1;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function KillFeed({
   kills = [
     "Manual keyframes",
@@ -172,14 +204,26 @@ export function KillFeed({
   callouts = ["First blood", "Double kill", "Triple kill", "Quadra kill"],
   banner = "Penta ship",
   caption = "5 / 5 eliminated",
+  streakLabel = "Streak",
+  logo,
+  shake = 1,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = chakra,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: KillFeedProps) {
+  const glide = useGlide();
   // Starts three frames in, so frame 0 already has the first line on its way.
-  const t = useCurrentFrame() * speed + 3;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + 3;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
   const killAt: number[] = [];
@@ -198,8 +242,12 @@ export function KillFeed({
   const killKick = killAt.reduce((a, k) => Math.max(a, kick(t - k - 2, 6)), 0);
   const bandKick = kick(t - landAt + 1, 9);
   const shakeX =
-    bandKick * 9 * u * Math.sin(t * 2.7) + killKick * 2 * u * Math.sin(t * 3.1);
-  const shakeY = bandKick * 5 * u * Math.cos(t * 3.3);
+    (bandKick * 9 * u * Math.sin(t * 2.7) +
+      killKick * 2 * u * Math.sin(t * 3.1)) *
+    shake;
+  const shakeY = bandKick * 5 * u * Math.cos(t * 3.3) * shake;
+  // Only the band's kick shakes on y; the kill kicks are sideways.
+  const shaking = bandKick > 0 && shake !== 0;
 
   // ── Feed ──────────────────────────────────────────────────────────────────
   const lineH = 74 * u;
@@ -228,298 +276,305 @@ export function KillFeed({
   const flash = kick(t - landAt + 1, 5);
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `translate(${shakeX}px, ${shakeY}px)`,
-        }}
-      >
-        {/* Kill feed, top right. New lines join at the bottom. */}
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
             inset: 0,
+            transform: `translate(${shakeX}px, ${shakeY}px)${glide(shaking)}`,
           }}
         >
-          {kills.map((victim, i) => {
-            const at = killAt[i];
-            if (t < at) return null;
-            const p = SLAM(ramp(t, at, 6));
-            const sink = OUT(ramp(t, bandAt + 2 + i, 10));
-            const hit = kick(t - at - 4, 7);
-            const next = killAt[i + 1];
-            const op = next === undefined ? 1 : 1 - 0.42 * ramp(t, next, 8);
-            const weapon = WEAPONS[i % WEAPONS.length];
-            const headshot = i === 1 || i === kills.length - 1;
-            return (
-              <div
-                key={`${i}-${victim}`}
-                style={{
-                  position: "absolute",
-                  right: feedRight,
-                  top: feedTop + i * (lineH + lineGap),
-                  height: lineH,
-                  display: "flex",
-                  alignItems: "stretch",
-                  transform: `translateX(${(1 - p) * 115}%)`,
-                  opacity:
-                    op *
-                    (1 -
-                      (feedTop + (i + 1) * (lineH + lineGap) > bandY
-                        ? 1
-                        : 0.62) *
-                        sink),
-                  clipPath: `polygon(${cut}px 0, 100% 0, 100% 100%, 0 100%)`,
-                  background: c.slab,
-                  boxShadow: `inset 0 0 0 ${1 * u}px ${c.slabEdge}`,
-                }}
-              >
+          {/* Kill feed, top right. New lines join at the bottom. */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+            }}
+          >
+            {kills.map((victim, i) => {
+              const at = killAt[i];
+              if (t < at) return null;
+              const p = SLAM(ramp(t, at, 6));
+              const sink = OUT(ramp(t, bandAt + 2 + i, 10));
+              const hit = kick(t - at - 4, 7);
+              const next = killAt[i + 1];
+              const op = next === undefined ? 1 : 1 - 0.42 * ramp(t, next, 8);
+              const weapon = WEAPONS[i % WEAPONS.length];
+              const headshot = i === 1 || i === kills.length - 1;
+              return (
                 <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: `0 ${22 * u}px 0 ${30 * u}px`,
-                    background: CHIP,
-                  }}
-                >
-                  <RemocnLogo fontSize={36 * u} color="#FFFFFF" />
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10 * u,
-                    padding: `0 ${22 * u}px`,
-                  }}
-                >
-                  <svg
-                    width={92 * u}
-                    height={(92 * u * 28) / 80}
-                    viewBox="0 0 80 28"
-                    aria-hidden
-                  >
-                    <path d={weapon} fill={c.ink} />
-                  </svg>
-                  {headshot ? <Crosshair size={26 * u} color={c.ink} /> : null}
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    paddingRight: 26 * u,
-                    fontFamily: chakra,
-                    fontWeight: 500,
-                    fontSize: fs,
-                    letterSpacing: "-0.005em",
-                    color: c.victim,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {victim}
-                </div>
-                <div
+                  key={`${i}-${victim}`}
                   style={{
                     position: "absolute",
-                    inset: 0,
-                    background: "#FFFFFF",
-                    opacity: 0.6 * hit + (1 - p) * 0.5,
-                  }}
-                />
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Streak callout, bottom left: rolls up to the next one on every kill. */}
-        <div
-          style={{
-            position: "absolute",
-            left: calloutLeft,
-            bottom: calloutBottom,
-            width: W - 2 * calloutLeft,
-            height: calloutH,
-            overflow: "hidden",
-          }}
-        >
-          {callouts.map((text, i) => {
-            const at = killAt[i];
-            if (at === undefined || t < at) return null;
-            const exitAt = i + 1 < callouts.length ? killAt[i + 1] : bandAt - 3;
-            const inP = SLAM(ramp(t, at + 1, 7));
-            const outP =
-              exitAt === undefined ? 0 : SLAM(ramp(t, exitAt + 1, 7));
-            if (outP >= 1) return null;
-            return (
-              <div
-                key={`${i}-${text}`}
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  bottom: 0,
-                  height: calloutH,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "flex-end",
-                  transform: `translate(${(1 - inP) * 40 * u}px, ${(1 - inP - outP) * calloutH}px)`,
-                  opacity: 1 - outP,
-                }}
-              >
-                <div
-                  style={{
+                    right: feedRight,
+                    top: feedTop + i * (lineH + lineGap),
+                    height: lineH,
                     display: "flex",
-                    alignItems: "center",
-                    gap: 14 * u,
-                    marginLeft: 8 * u,
-                    fontFamily: chakra,
-                    fontWeight: 500,
-                    fontSize: 22 * u,
-                    letterSpacing: "0.22em",
-                    textTransform: "uppercase",
-                    color: c.dim,
+                    alignItems: "stretch",
+                    transform: `translateX(${(1 - p) * 115}%)`,
+                    opacity:
+                      op *
+                      (1 -
+                        (feedTop + (i + 1) * (lineH + lineGap) > bandY
+                          ? 1
+                          : 0.62) *
+                          sink),
+                    clipPath: `polygon(${cut}px 0, 100% 0, 100% 100%, 0 100%)`,
+                    background: c.slab,
+                    boxShadow: `inset 0 0 0 ${1 * u}px ${c.slabEdge}`,
                   }}
                 >
                   <div
                     style={{
-                      width: 26 * u,
-                      height: 6 * u,
-                      background: accent,
-                      transform: "skewX(-20deg)",
+                      display: "flex",
+                      alignItems: "center",
+                      padding: `0 ${22 * u}px 0 ${30 * u}px`,
+                      background: CHIP,
+                    }}
+                  >
+                    {logo ?? <RemocnLogo fontSize={36 * u} color="#FFFFFF" />}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10 * u,
+                      padding: `0 ${22 * u}px`,
+                    }}
+                  >
+                    <svg
+                      width={92 * u}
+                      height={(92 * u * 28) / 80}
+                      viewBox="0 0 80 28"
+                      aria-hidden
+                    >
+                      <path d={weapon} fill={fg} />
+                    </svg>
+                    {headshot ? <Crosshair size={26 * u} color={fg} /> : null}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      paddingRight: 26 * u,
+                      fontFamily,
+                      fontWeight: 500,
+                      fontSize: fs,
+                      letterSpacing: "-0.005em",
+                      color: c.victim,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {victim}
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: "#FFFFFF",
+                      opacity: 0.6 * hit + (1 - p) * 0.5,
                     }}
                   />
-                  <span>Streak ×{i + 1}</span>
                 </div>
-                <div
-                  style={{
-                    fontFamily: chakraItalic,
-                    fontWeight: 500,
-                    fontStyle: "italic",
-                    fontSize: calloutFs,
-                    lineHeight: 1.08,
-                    letterSpacing: "-0.02em",
-                    textTransform: "uppercase",
-                    color: c.callout,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {text}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
 
-        {/* The multi-kill band. */}
-        {t >= bandAt ? (
+          {/* Streak callout, bottom left: rolls up to the next one on every kill. */}
           <div
             style={{
               position: "absolute",
-              left: bandX - slant,
-              top: bandY,
-              width: W + 2 * slant,
-              height: bandH,
-              clipPath: `polygon(${slant}px 0, 100% 0, calc(100% - ${slant}px) 100%, 0 100%)`,
-              background: BAND,
+              left: calloutLeft,
+              bottom: calloutBottom,
+              width: W - 2 * calloutLeft,
+              height: calloutH,
               overflow: "hidden",
             }}
           >
+            {callouts.map((text, i) => {
+              const at = killAt[i];
+              if (at === undefined || t < at) return null;
+              const exitAt =
+                i + 1 < callouts.length ? killAt[i + 1] : bandAt - 3;
+              const inP = SLAM(ramp(t, at + 1, 7));
+              const outP =
+                exitAt === undefined ? 0 : SLAM(ramp(t, exitAt + 1, 7));
+              if (outP >= 1) return null;
+              return (
+                <div
+                  key={`${i}-${text}`}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    bottom: 0,
+                    height: calloutH,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-end",
+                    transform: `translate(${(1 - inP) * 40 * u}px, ${(1 - inP - outP) * calloutH}px)${glide(midway(inP) || midway(outP))}`,
+                    opacity: 1 - outP,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 14 * u,
+                      marginLeft: 8 * u,
+                      fontFamily,
+                      fontWeight: 500,
+                      fontSize: 22 * u,
+                      letterSpacing: "0.22em",
+                      textTransform: "uppercase",
+                      color: c.dim,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 26 * u,
+                        height: 6 * u,
+                        background: accent,
+                        transform: "skewX(-20deg)",
+                      }}
+                    />
+                    <span>
+                      {`${streakLabel} ×`}
+                      {i + 1}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      fontFamily:
+                        fontFamily === chakra ? chakraItalic : fontFamily,
+                      fontWeight: 500,
+                      fontStyle: "italic",
+                      fontSize: calloutFs,
+                      lineHeight: 1.08,
+                      letterSpacing: "-0.02em",
+                      textTransform: "uppercase",
+                      color: ink ?? c.callout,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {text}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* The multi-kill band. */}
+          {t >= bandAt ? (
+            <div
+              style={{
+                position: "absolute",
+                left: bandX - slant,
+                top: bandY,
+                width: W + 2 * slant,
+                height: bandH,
+                clipPath: `polygon(${slant}px 0, 100% 0, calc(100% - ${slant}px) 100%, 0 100%)`,
+                background: BAND,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: 10 * u,
+                  height: 2 * u,
+                  background: HALO[0],
+                  opacity: 0.55,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 10 * u,
+                  height: 2 * u,
+                  background: HALO[0],
+                  opacity: 0.55,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: HALO[0],
+                  opacity: 0.35 * flash,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: `translateX(${textX}px) scale(${textScale})${glide(midway(textIn) && !shaking)}`,
+                  fontFamily: fontFamily === chakra ? chakraItalic : fontFamily,
+                  fontStyle: "italic",
+                  fontWeight: 500,
+                  fontSize: 214 * u,
+                  lineHeight: 1,
+                  letterSpacing: "-0.025em",
+                  textTransform: "uppercase",
+                  color: "#FFFFFF",
+                  whiteSpace: "nowrap",
+                  paddingTop: 6 * u,
+                }}
+              >
+                {banner}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Logo + caption under the band. */}
+          {capIn > 0 ? (
             <div
               style={{
                 position: "absolute",
                 left: 0,
                 right: 0,
-                top: 10 * u,
-                height: 2 * u,
-                background: HALO[0],
-                opacity: 0.55,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 10 * u,
-                height: 2 * u,
-                background: HALO[0],
-                opacity: 0.55,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: HALO[0],
-                opacity: 0.35 * flash,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
+                top: bandY + bandH + 34 * u,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                transform: `translateX(${textX}px) scale(${textScale})`,
-                fontFamily: chakraItalic,
-                fontStyle: "italic",
-                fontWeight: 500,
-                fontSize: 214 * u,
-                lineHeight: 1,
-                letterSpacing: "-0.025em",
-                textTransform: "uppercase",
-                color: "#FFFFFF",
-                whiteSpace: "nowrap",
-                paddingTop: 6 * u,
+                gap: 22 * u,
+                opacity: capIn,
+                transform: `translateY(${(1 - capIn) * 16 * u}px)${glide(midway(capIn))}`,
               }}
             >
-              {banner}
+              {logo ?? <RemocnLogo fontSize={46 * u} color={fg} />}
+              <div
+                style={{
+                  width: 2 * u,
+                  height: 30 * u,
+                  background: accent,
+                  transform: "skewX(-20deg)",
+                }}
+              />
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: 28 * u,
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  color: c.dim,
+                  paddingTop: 2 * u,
+                }}
+              >
+                {caption}
+              </div>
             </div>
-          </div>
-        ) : null}
-
-        {/* Logo + caption under the band. */}
-        {capIn > 0 ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: bandY + bandH + 34 * u,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 22 * u,
-              opacity: capIn,
-              transform: `translateY(${(1 - capIn) * 16 * u}px)`,
-            }}
-          >
-            <RemocnLogo fontSize={46 * u} color={c.ink} />
-            <div
-              style={{
-                width: 2 * u,
-                height: 30 * u,
-                background: accent,
-                transform: "skewX(-20deg)",
-              }}
-            />
-            <div
-              style={{
-                fontFamily: chakra,
-                fontWeight: 500,
-                fontSize: 28 * u,
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                color: c.dim,
-                paddingTop: 2 * u,
-              }}
-            >
-              {caption}
-            </div>
-          </div>
-        ) : null}
-      </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -2,19 +2,14 @@
 
 import { loadFont } from "@remotion/google-fonts/InstrumentSans";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const instrument = loadFont("normal", {
   weights: ["400"],
   subsets: ["latin"],
 });
@@ -39,8 +34,24 @@ export interface CouponApplyProps {
   payLabel?: string;
   email?: string;
   cardholder?: string;
+  /** Heading of the payment column. */
+  formTitle?: string;
+  /** Placeholder in the empty promo field. */
+  placeholder?: string;
+  /** Message under the field when the first code is rejected. */
+  errorLabel?: string;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Size of the checkout card, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -201,7 +212,15 @@ function pathAt(keys: Key[], f: number): Pt {
   return keys[keys.length - 1];
 }
 
-function Cursor({ x, y, press }: Pt & { press: number }) {
+function Cursor({ x, y, rest, press }: Pt & { rest: Pt; press: number }) {
+  // Laid out where the cursor comes to rest; the travel is a transform so its
+  // box edges don't step pixel by pixel.
+  const dx = x - rest.x;
+  const dy = y - rest.y;
+  const move =
+    Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3
+      ? ""
+      : `translate(${dx}px, ${dy}px) `;
   return (
     <svg
       width={24}
@@ -209,10 +228,10 @@ function Cursor({ x, y, press }: Pt & { press: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: rest.x - 2,
+        top: rest.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.1 * press})`,
+        transform: `${move}scale(${1 - 0.1 * press})`,
         filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.3))",
         overflow: "visible",
       }}
@@ -311,6 +330,26 @@ function RollingAmount({
   );
 }
 
+/** A translate, or nothing once a spring's leftover is under a thousandth. */
+const shiftY = (dy: number) =>
+  Math.abs(dy) < 1e-3 ? undefined : `translateY(${dy}px)`;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CouponApply({
   merchant = "Lumen",
   items = DEFAULT_ITEMS,
@@ -321,19 +360,29 @@ export function CouponApply({
   payLabel = "Subscribe",
   email = "maya@kitebase.com",
   cardholder = "Maya Chen",
+  formTitle = "Pay with card",
+  placeholder = "Add promotion code",
+  errorLabel = "That code isn’t valid.",
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = instrument.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: CouponApplyProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, fps, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps, durationInFrames } = useSceneConfig();
   const tall = height > width;
   const DW = tall ? 720 : 1280;
   const DH = tall ? 1280 : 720;
   const u = Math.min(width / DW, height / DH);
-  const pal = palette(theme);
+  const base = palette(theme);
+  const pal: Pal = { ...base, text: ink ?? base.text };
 
   const subtotal = items.reduce((s, it) => s + it.amount, 0);
   const discount = Math.round(subtotal * percentOff) / 100;
@@ -415,13 +464,20 @@ export function CouponApply({
         spring({ frame: frame - at - 4, fps, config: CHIP }),
     );
 
-  const enter = spring({ frame, fps, config: HEAVY });
+  const enterAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
+  const enter = enterAt(frame);
+  // Whether a value built from the frame moves into or out of this frame.
+  const stirs = (at: (f: number) => number, eps: number) =>
+    Math.abs(at(frame + 1) - at(frame)) > eps ||
+    Math.abs(at(frame) - at(frame - 1)) > eps;
   const sideIn = spring({ frame: frame - 6, fps, config: CARD });
 
-  const errP = hasInvalid
-    ? spring({ frame: frame - t.reject, fps, config: MORPH }) -
-      spring({ frame: frame - t.type2, fps, config: MORPH })
-    : 0;
+  const errAt = (f: number) =>
+    hasInvalid
+      ? spring({ frame: f - t.reject, fps, config: MORPH }) -
+        spring({ frame: f - t.type2, fps, config: MORPH })
+      : 0;
+  const errP = errAt(frame);
   const errO = Math.max(0, errP) * ERR_H;
 
   const fieldPt = {
@@ -491,13 +547,21 @@ export function CouponApply({
   const payP = tween(frame, t.pay, t.pay + 10, MOVE);
   const payGlow = tween(frame, t.pay + 18, t.pay + 26, ENTER2);
 
-  const zoomIn = tween(frame, 8, 40, MOVE);
-  const zoomOut = tween(frame, t.accept - 2, t.accept + 26, CAMERA);
-  const camZ = 1 + (tall ? 0.16 : 0.14) * zoomIn * (1 - zoomOut);
+  const camAt = (f: number) =>
+    (1 +
+      (tall ? 0.16 : 0.14) *
+        tween(f, 8, 40, MOVE) *
+        (1 - tween(f, t.accept - 2, t.accept + 26, CAMERA))) *
+    (1 + 0.02 * tween(f, t.accept + 20, durationInFrames, MOVE));
+  // The camera carries the whole checkout, so its tilt covers everything
+  // under it; the movers below tilt themselves only while it holds still.
+  const camMoving = stirs(camAt, 1e-6);
+  const cardMoving = !camMoving && stirs((f) => (1 - enterAt(f)) * 48, 5e-4);
+  const errMoving =
+    !camMoving && stirs((f) => Math.max(0, errAt(f)) * ERR_H, 5e-4);
   const camO = tall
     ? { x: DW / 2, y: card.y + Y.promo + 20 }
     : { x: card.x + COL_W * 0.6, y: card.y + Y.promo };
-  const drift = 1 + 0.02 * tween(frame, t.accept + 20, durationInFrames, MOVE);
 
   const borderColor =
     errBorder > 0.01
@@ -581,509 +645,536 @@ export function CouponApply({
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <GshGround
-        preset={ground ?? (pal.dark ? "earthshine" : "paper-crease")}
-        params={groundParams}
-        timeOffset={pal.dark ? 3 : 5}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: pal.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - DW * u) / 2,
-          top: (height - DH * u) / 2,
-          width: DW,
-          height: DH,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (pal.dark ? "earthshine" : "paper-crease")}
+            params={groundParams}
+            timeOffset={pal.dark ? 3 : 5}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: pal.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transformOrigin: `${camO.x}px ${camO.y}px`,
-            transform: `scale(${camZ * drift})`,
+            left: (width - DW * u) / 2,
+            top: (height - DH * u) / 2,
+            width: DW,
+            height: DH,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: card.x,
-              top: card.y,
-              width: card.w,
-              height: card.h,
-              borderRadius: 20,
-              overflow: "hidden",
-              background: pal.card,
-              color: pal.text,
-              opacity: tween(frame, 0, 10, ENTER2),
-              transform: `translateY(${(1 - enter) * 48}px) scale(${0.97 + 0.03 * enter})`,
-              boxShadow: pal.cardShadow,
+              inset: 0,
+              transformOrigin: `${camO.x}px ${camO.y}px`,
+              transform: `scale(${camAt(frame)})${glide(camMoving)}`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: 0,
-                top: 0,
-                width: COL_W,
-                height: S_H,
+                left: card.x,
+                top: card.y,
+                width: card.w,
+                height: card.h,
+                borderRadius: 20,
+                overflow: "hidden",
+                background: pal.card,
+                color: pal.text,
+                opacity: tween(frame, 0, 10, ENTER2),
+                transform: `translateY(${(1 - enter) * 48}px) scale(${0.97 + 0.03 * enter})${glide(cardMoving)}`,
+                boxShadow: pal.cardShadow,
               }}
             >
-              {row(
-                Y.merchant,
-                { height: 28, justifyContent: "flex-start", gap: 12 },
-                <>
-                  <Icon name="back" color={pal.faint} size={18} />
-                  <svg width={28} height={28} viewBox="0 0 28 28">
-                    <rect width={28} height={28} rx={8} fill={accent} />
-                    <path
-                      d="M9 8.5v11h10"
-                      fill="none"
-                      stroke="#fff"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span style={{ fontSize: 18, letterSpacing: "-0.01em" }}>
-                    {merchant}
-                  </span>
-                </>,
-              )}
-              {row(
-                Y.lede,
-                { fontSize: 17, color: pal.muted },
-                <span>Subscribe to {items[0]?.name ?? merchant}</span>,
-              )}
-              {row(
-                Y.price,
-                { justifyContent: "flex-start", gap: 14, height: 68 },
-                <>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  width: COL_W,
+                  height: S_H,
+                }}
+              >
+                {row(
+                  Y.merchant,
+                  { height: 28, justifyContent: "flex-start", gap: 12 },
+                  <>
+                    <Icon name="back" color={pal.faint} size={18} />
+                    <svg width={28} height={28} viewBox="0 0 28 28">
+                      <rect width={28} height={28} rx={8} fill={accent} />
+                      <path
+                        d="M9 8.5v11h10"
+                        fill="none"
+                        stroke="#fff"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span style={{ fontSize: 18, letterSpacing: "-0.01em" }}>
+                      {merchant}
+                    </span>
+                  </>,
+                )}
+                {row(
+                  Y.lede,
+                  { fontSize: 17, color: pal.muted },
+                  <span>Subscribe to {items[0]?.name ?? merchant}</span>,
+                )}
+                {row(
+                  Y.price,
+                  { justifyContent: "flex-start", gap: 14, height: 68 },
+                  <>
+                    <span
+                      style={{
+                        fontSize: 60,
+                        fontWeight: 400,
+                        letterSpacing: "-0.04em",
+                        lineHeight: "68px",
+                        display: "inline-flex",
+                      }}
+                    >
+                      <RollingAmount
+                        from={oldStr}
+                        to={frame >= t.roll ? newStr : oldStr}
+                        frame={frame}
+                        start={t.roll}
+                        lh={68}
+                      />
+                    </span>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        fontSize: 16,
+                        lineHeight: 1.3,
+                        color: pal.muted,
+                        paddingTop: 6,
+                      }}
+                    >
+                      <span
+                        style={{
+                          position: "relative",
+                          color: pal.faint,
+                          fontVariantNumeric: "tabular-nums",
+                          opacity: oldIn,
+                          transform: `translateY(${(1 - oldIn) * 6}px)`,
+                          alignSelf: "flex-start",
+                        }}
+                      >
+                        {oldStr}
+                        <span
+                          style={{
+                            position: "absolute",
+                            left: -1,
+                            right: -1,
+                            top: "54%",
+                            height: 1.5,
+                            background: pal.faint,
+                            transformOrigin: "0 50%",
+                            transform: `scaleX(${strike})`,
+                          }}
+                        />
+                      </span>
+                      <span>per year</span>
+                    </div>
+                  </>,
+                )}
+                {items.slice(0, 2).map((it, i) =>
+                  row(
+                    Y.items + i * 56,
+                    { height: 48, alignItems: "flex-start" },
+                    <>
+                      <div key={`n-${it.name}`}>
+                        <div style={{ fontSize: 17 }}>{it.name}</div>
+                        <div
+                          style={{
+                            fontSize: 16,
+                            color: pal.muted,
+                            marginTop: 3,
+                          }}
+                        >
+                          {it.detail}
+                        </div>
+                      </div>
+                      <span
+                        key={`a-${it.name}`}
+                        style={{
+                          fontSize: 17,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {fmt(it.amount, currency)}
+                      </span>
+                    </>,
+                  ),
+                )}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: PAD,
+                    right: PAD,
+                    top: Y.divider1,
+                    height: 1,
+                    background: pal.line,
+                  }}
+                />
+                {row(
+                  Y.subtotal,
+                  { fontSize: 17, height: 26 },
+                  <>
+                    <span style={{ color: pal.muted }}>Subtotal</span>
+                    <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                      {oldStr}
+                    </span>
+                  </>,
+                )}
+                {row(
+                  Y.promo,
+                  {
+                    gap: 8,
+                    height: 48,
+                    opacity: 1 - fieldOut,
+                    transform: `translateX(${shake}px) translateY(${-fieldOut * 8}px)`,
+                  },
+                  <>
+                    <div
+                      style={{
+                        flex: 1,
+                        height: 48,
+                        borderRadius: 10,
+                        background: pal.field,
+                        boxShadow: `inset 0 0 0 1px ${borderColor}, 0 0 0 3px ${ringColor}`,
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "0 14px",
+                        gap: 10,
+                        fontSize: 17,
+                      }}
+                    >
+                      <Icon name="tag" color={pal.faint} size={17} />
+                      <span
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                        }}
+                      >
+                        {typed.length > 0 ? (
+                          <span
+                            style={{ letterSpacing: "0.05em", color: pal.text }}
+                          >
+                            {typed}
+                          </span>
+                        ) : null}
+                        <span
+                          style={{
+                            width: 1.5,
+                            height: 20,
+                            background: accent,
+                            opacity: caretOn ? 1 : 0,
+                          }}
+                        />
+                        {typed.length === 0 ? (
+                          <span style={{ color: pal.faint, marginLeft: -1.5 }}>
+                            {placeholder}
+                          </span>
+                        ) : null}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        width: APPLY_W,
+                        height: 48,
+                        borderRadius: 10,
+                        background: pal.btn2,
+                        boxShadow: `inset 0 0 0 1px ${pal.line}`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 17,
+                        color: typed.length > 0 ? pal.text : pal.faint,
+                        transform: `scale(${1 - 0.04 * pressBtn})`,
+                      }}
+                    >
+                      {loading1 || loading2 ? (
+                        <Spinner color={pal.text} frame={frame} />
+                      ) : (
+                        "Apply"
+                      )}
+                    </div>
+                  </>,
+                )}
+                {hasInvalid
+                  ? row(
+                      Y.error,
+                      {
+                        justifyContent: "flex-start",
+                        gap: 8,
+                        fontSize: 16,
+                        color: pal.red,
+                        opacity:
+                          Math.max(0, errP) *
+                          tween(frame, t.reject + 3, t.reject + 9),
+                        transform: `translateY(${(1 - Math.max(0, errP)) * -5}px)${glide(errMoving)}`,
+                      },
+                      <>
+                        <Icon name="alert" color={pal.red} size={16} />
+                        {errorLabel}
+                      </>,
+                    )
+                  : null}
+                {row(
+                  Y.promo,
+                  {
+                    height: 48,
+                    fontSize: 17,
+                    opacity: Math.min(1, discIn * 1.4),
+                    transform: `translateY(${(1 - discIn) * 10}px)`,
+                  },
+                  <>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 10 }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
+                          height: 32,
+                          padding: "0 8px 0 10px",
+                          borderRadius: 8,
+                          background: pal.chip,
+                          fontSize: 16,
+                          letterSpacing: "0.05em",
+                          transform: `scale(${0.85 + 0.15 * chipIn})`,
+                          transformOrigin: "0 50%",
+                        }}
+                      >
+                        <Icon name="tag" color={pal.muted} size={15} />
+                        {code}
+                        <Icon name="x" color={pal.faint} size={15} />
+                      </span>
+                      <span style={{ color: pal.muted, fontSize: 16 }}>
+                        {percentOff}% off
+                      </span>
+                    </div>
+                    <span
+                      style={{
+                        color: pal.green,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      −{fmt(discount, currency)}
+                    </span>
+                  </>,
+                )}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: PAD,
+                    right: PAD,
+                    // The error line pushes the rows below it open; that
+                    // travel is a transform, since layout rounds a box and a
+                    // baseline to whole pixels.
+                    top: Y.divider2,
+                    transform: shiftY(errO),
+                    height: 1,
+                    background: pal.line,
+                  }}
+                />
+                {row(
+                  Y.total,
+                  {
+                    height: 30,
+                    fontSize: 18,
+                    transform:
+                      errO >= 1e-3
+                        ? `translateY(${errO}px)${glide(errMoving)}`
+                        : undefined,
+                  },
+                  <>
+                    <span>Total due today</span>
+                    <span style={{ display: "inline-flex" }}>
+                      <RollingAmount
+                        from={oldStr}
+                        to={frame >= t.roll ? newStr : oldStr}
+                        frame={frame}
+                        start={t.roll + 2}
+                        lh={30}
+                      />
+                    </span>
+                  </>,
+                )}
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: side.x,
+                  top: side.y,
+                  width: COL_W,
+                  height: P_H,
+                  background: pal.side,
+                  boxShadow: tall
+                    ? `inset 0 1px 0 ${pal.line}`
+                    : `inset 1px 0 0 ${pal.line}`,
+                  opacity: Math.min(1, sideIn * 1.3),
+                  transform: tall
+                    ? `translateY(${(1 - sideIn) * 24}px)`
+                    : `translateX(${(1 - sideIn) * 24}px)`,
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: PAD,
+                    top: PY.title,
+                    fontSize: 20,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {formTitle}
+                </div>
+                {label(PY.emailL, "Email")}
+                {fieldBox(PY.email, 48, email)}
+                {label(PY.cardL, "Card information")}
+                {fieldBox(
+                  PY.cardF,
+                  48,
+                  <>
+                    <span
+                      style={{
+                        flex: 1,
+                        fontVariantNumeric: "tabular-nums",
+                        letterSpacing: "0.02em",
+                      }}
+                    >
+                      4242 4242 4242 4242
+                    </span>
+                    <Icon name="card" color={pal.muted} size={20} />
+                  </>,
+                  "10px 10px 0 0",
+                )}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: PAD,
+                    right: PAD,
+                    top: PY.cardF + 47,
+                    height: 48,
+                    display: "flex",
+                  }}
+                >
+                  {["12 / 28", "318"].map((v, i) => (
+                    <div
+                      key={v}
+                      style={{
+                        flex: 1,
+                        marginLeft: i ? -1 : 0,
+                        borderRadius: i ? "0 0 10px 0" : "0 0 0 10px",
+                        background: pal.field,
+                        boxShadow: `inset 0 0 0 1px ${pal.fieldRing}`,
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "0 14px",
+                        fontSize: 17,
+                        fontVariantNumeric: "tabular-nums",
+                        color: pal.text,
+                      }}
+                    >
+                      {v}
+                    </div>
+                  ))}
+                </div>
+                {label(PY.nameL, "Name on card")}
+                {fieldBox(PY.name, 48, cardholder)}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: PAD,
+                    right: PAD,
+                    top: PY.pay,
+                    height: 54,
+                    borderRadius: 12,
+                    background: accent,
+                    color: "#fff",
+                    fontSize: 18,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    boxShadow: `0 1px 2px ${withAlpha(accent, 0.3)}, 0 8px 20px -10px ${withAlpha(accent, 0.6 * payGlow)}, inset 0 1px 0 rgba(255,255,255,0.16)`,
+                    filter: `brightness(${1 + 0.07 * payGlow})`,
+                  }}
+                >
+                  {payLabel}
+                  <span style={{ opacity: 0.6 }}>·</span>
                   <span
                     style={{
-                      fontSize: 60,
-                      fontWeight: 400,
-                      letterSpacing: "-0.04em",
-                      lineHeight: "68px",
-                      display: "inline-flex",
-                    }}
-                  >
-                    <RollingAmount
-                      from={oldStr}
-                      to={frame >= t.roll ? newStr : oldStr}
-                      frame={frame}
-                      start={t.roll}
-                      lh={68}
-                    />
-                  </span>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      fontSize: 16,
-                      lineHeight: 1.3,
-                      color: pal.muted,
-                      paddingTop: 6,
+                      position: "relative",
+                      display: "inline-grid",
+                      fontVariantNumeric: "tabular-nums",
+                      overflow: "hidden",
+                      height: 26,
+                      lineHeight: "26px",
                     }}
                   >
                     <span
                       style={{
-                        position: "relative",
-                        color: pal.faint,
-                        fontVariantNumeric: "tabular-nums",
-                        opacity: oldIn,
-                        transform: `translateY(${(1 - oldIn) * 6}px)`,
-                        alignSelf: "flex-start",
+                        gridArea: "1/1",
+                        transform: `translateY(${-payP * 26}px)`,
                       }}
                     >
                       {oldStr}
-                      <span
-                        style={{
-                          position: "absolute",
-                          left: -1,
-                          right: -1,
-                          top: "54%",
-                          height: 1.5,
-                          background: pal.faint,
-                          transformOrigin: "0 50%",
-                          transform: `scaleX(${strike})`,
-                        }}
-                      />
                     </span>
-                    <span>per year</span>
-                  </div>
-                </>,
-              )}
-              {items.slice(0, 2).map((it, i) =>
-                row(
-                  Y.items + i * 56,
-                  { height: 48, alignItems: "flex-start" },
-                  <>
-                    <div key={`n-${it.name}`}>
-                      <div style={{ fontSize: 17 }}>{it.name}</div>
-                      <div
-                        style={{
-                          fontSize: 16,
-                          color: pal.muted,
-                          marginTop: 3,
-                        }}
-                      >
-                        {it.detail}
-                      </div>
-                    </div>
-                    <span
-                      key={`a-${it.name}`}
-                      style={{
-                        fontSize: 17,
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {fmt(it.amount, currency)}
-                    </span>
-                  </>,
-                ),
-              )}
-              <div
-                style={{
-                  position: "absolute",
-                  left: PAD,
-                  right: PAD,
-                  top: Y.divider1,
-                  height: 1,
-                  background: pal.line,
-                }}
-              />
-              {row(
-                Y.subtotal,
-                { fontSize: 17, height: 26 },
-                <>
-                  <span style={{ color: pal.muted }}>Subtotal</span>
-                  <span style={{ fontVariantNumeric: "tabular-nums" }}>
-                    {oldStr}
-                  </span>
-                </>,
-              )}
-              {row(
-                Y.promo,
-                {
-                  gap: 8,
-                  height: 48,
-                  opacity: 1 - fieldOut,
-                  transform: `translateX(${shake}px) translateY(${-fieldOut * 8}px)`,
-                },
-                <>
-                  <div
-                    style={{
-                      flex: 1,
-                      height: 48,
-                      borderRadius: 10,
-                      background: pal.field,
-                      boxShadow: `inset 0 0 0 1px ${borderColor}, 0 0 0 3px ${ringColor}`,
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "0 14px",
-                      gap: 10,
-                      fontSize: 17,
-                    }}
-                  >
-                    <Icon name="tag" color={pal.faint} size={17} />
-                    <span
-                      style={{ display: "flex", alignItems: "center", gap: 1 }}
-                    >
-                      {typed.length > 0 ? (
-                        <span
-                          style={{ letterSpacing: "0.05em", color: pal.text }}
-                        >
-                          {typed}
-                        </span>
-                      ) : null}
-                      <span
-                        style={{
-                          width: 1.5,
-                          height: 20,
-                          background: accent,
-                          opacity: caretOn ? 1 : 0,
-                        }}
-                      />
-                      {typed.length === 0 ? (
-                        <span style={{ color: pal.faint, marginLeft: -1.5 }}>
-                          Add promotion code
-                        </span>
-                      ) : null}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      width: APPLY_W,
-                      height: 48,
-                      borderRadius: 10,
-                      background: pal.btn2,
-                      boxShadow: `inset 0 0 0 1px ${pal.line}`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 17,
-                      color: typed.length > 0 ? pal.text : pal.faint,
-                      transform: `scale(${1 - 0.04 * pressBtn})`,
-                    }}
-                  >
-                    {loading1 || loading2 ? (
-                      <Spinner color={pal.text} frame={frame} />
-                    ) : (
-                      "Apply"
-                    )}
-                  </div>
-                </>,
-              )}
-              {hasInvalid
-                ? row(
-                    Y.error,
-                    {
-                      justifyContent: "flex-start",
-                      gap: 8,
-                      fontSize: 16,
-                      color: pal.red,
-                      opacity:
-                        Math.max(0, errP) *
-                        tween(frame, t.reject + 3, t.reject + 9),
-                      transform: `translateY(${(1 - Math.max(0, errP)) * -5}px)`,
-                    },
-                    <>
-                      <Icon name="alert" color={pal.red} size={16} />
-                      That code isn’t valid.
-                    </>,
-                  )
-                : null}
-              {row(
-                Y.promo,
-                {
-                  height: 48,
-                  fontSize: 17,
-                  opacity: Math.min(1, discIn * 1.4),
-                  transform: `translateY(${(1 - discIn) * 10}px)`,
-                },
-                <>
-                  <div
-                    style={{ display: "flex", alignItems: "center", gap: 10 }}
-                  >
                     <span
                       style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 8,
-                        height: 32,
-                        padding: "0 8px 0 10px",
-                        borderRadius: 8,
-                        background: pal.chip,
-                        fontSize: 16,
-                        letterSpacing: "0.05em",
-                        transform: `scale(${0.85 + 0.15 * chipIn})`,
-                        transformOrigin: "0 50%",
+                        gridArea: "1/1",
+                        transform: `translateY(${(1 - payP) * 26}px)`,
                       }}
                     >
-                      <Icon name="tag" color={pal.muted} size={15} />
-                      {code}
-                      <Icon name="x" color={pal.faint} size={15} />
+                      {newStr}
                     </span>
-                    <span style={{ color: pal.muted, fontSize: 16 }}>
-                      {percentOff}% off
-                    </span>
-                  </div>
-                  <span
-                    style={{
-                      color: pal.green,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    −{fmt(discount, currency)}
                   </span>
-                </>,
-              )}
-              <div
-                style={{
-                  position: "absolute",
-                  left: PAD,
-                  right: PAD,
-                  top: Y.divider2 + errO,
-                  height: 1,
-                  background: pal.line,
-                }}
-              />
-              {row(
-                Y.total + errO,
-                { height: 30, fontSize: 18 },
-                <>
-                  <span>Total due today</span>
-                  <span style={{ display: "inline-flex" }}>
-                    <RollingAmount
-                      from={oldStr}
-                      to={frame >= t.roll ? newStr : oldStr}
-                      frame={frame}
-                      start={t.roll + 2}
-                      lh={30}
-                    />
-                  </span>
-                </>,
-              )}
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: side.x,
-                top: side.y,
-                width: COL_W,
-                height: P_H,
-                background: pal.side,
-                boxShadow: tall
-                  ? `inset 0 1px 0 ${pal.line}`
-                  : `inset 1px 0 0 ${pal.line}`,
-                opacity: Math.min(1, sideIn * 1.3),
-                transform: tall
-                  ? `translateY(${(1 - sideIn) * 24}px)`
-                  : `translateX(${(1 - sideIn) * 24}px)`,
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: PAD,
-                  top: PY.title,
-                  fontSize: 20,
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                Pay with card
-              </div>
-              {label(PY.emailL, "Email")}
-              {fieldBox(PY.email, 48, email)}
-              {label(PY.cardL, "Card information")}
-              {fieldBox(
-                PY.cardF,
-                48,
-                <>
-                  <span
-                    style={{
-                      flex: 1,
-                      fontVariantNumeric: "tabular-nums",
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    4242 4242 4242 4242
-                  </span>
-                  <Icon name="card" color={pal.muted} size={20} />
-                </>,
-                "10px 10px 0 0",
-              )}
-              <div
-                style={{
-                  position: "absolute",
-                  left: PAD,
-                  right: PAD,
-                  top: PY.cardF + 47,
-                  height: 48,
-                  display: "flex",
-                }}
-              >
-                {["12 / 28", "318"].map((v, i) => (
-                  <div
-                    key={v}
-                    style={{
-                      flex: 1,
-                      marginLeft: i ? -1 : 0,
-                      borderRadius: i ? "0 0 10px 0" : "0 0 0 10px",
-                      background: pal.field,
-                      boxShadow: `inset 0 0 0 1px ${pal.fieldRing}`,
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "0 14px",
-                      fontSize: 17,
-                      fontVariantNumeric: "tabular-nums",
-                      color: pal.text,
-                    }}
-                  >
-                    {v}
-                  </div>
-                ))}
-              </div>
-              {label(PY.nameL, "Name on card")}
-              {fieldBox(PY.name, 48, cardholder)}
-              <div
-                style={{
-                  position: "absolute",
-                  left: PAD,
-                  right: PAD,
-                  top: PY.pay,
-                  height: 54,
-                  borderRadius: 12,
-                  background: accent,
-                  color: "#fff",
-                  fontSize: 18,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  boxShadow: `0 1px 2px ${withAlpha(accent, 0.3)}, 0 8px 20px -10px ${withAlpha(accent, 0.6 * payGlow)}, inset 0 1px 0 rgba(255,255,255,0.16)`,
-                  filter: `brightness(${1 + 0.07 * payGlow})`,
-                }}
-              >
-                {payLabel}
-                <span style={{ opacity: 0.6 }}>·</span>
-                <span
+                </div>
+                <div
                   style={{
-                    position: "relative",
-                    display: "inline-grid",
-                    fontVariantNumeric: "tabular-nums",
-                    overflow: "hidden",
-                    height: 26,
-                    lineHeight: "26px",
+                    position: "absolute",
+                    left: PAD,
+                    right: PAD,
+                    top: PY.foot,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 16,
+                    color: pal.faint,
                   }}
                 >
-                  <span
-                    style={{
-                      gridArea: "1/1",
-                      transform: `translateY(${-payP * 26}px)`,
-                    }}
-                  >
-                    {oldStr}
-                  </span>
-                  <span
-                    style={{
-                      gridArea: "1/1",
-                      transform: `translateY(${(1 - payP) * 26}px)`,
-                    }}
-                  >
-                    {newStr}
-                  </span>
-                </span>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: PAD,
-                  right: PAD,
-                  top: PY.foot,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: 8,
-                  fontSize: 16,
-                  color: pal.faint,
-                }}
-              >
-                <Icon name="lock" color={pal.faint} size={15} />
-                Encrypted payment. Cancel anytime.
+                  <Icon name="lock" color={pal.faint} size={15} />
+                  Encrypted payment. Cancel anytime.
+                </div>
               </div>
             </div>
-          </div>
-          <div style={{ opacity: cursorIn }}>
-            <Cursor x={cur.x} y={cur.y} press={press} />
+            <div style={{ opacity: cursorIn }}>
+              <Cursor x={cur.x} y={cur.y} rest={payPt} press={press} />
+            </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

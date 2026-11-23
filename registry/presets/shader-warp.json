@@ -1,0 +1,115 @@
+{
+  "component": "shader-warp",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-silk",
+      "label": "Slow Silk",
+      "description": "A barely moving, gently folded field that drifts like heavy silk in still air.",
+      "askedAs": [
+        "very slow calm liquid background",
+        "subtle flowing silk backdrop",
+        "gentle barely moving gradient",
+        "медленный шелковый фон",
+        "спокойная плавная текстура"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.1,
+        "swirl": 0.15,
+        "softness": 1
+      }
+    },
+    {
+      "id": "molten-swirl",
+      "label": "Molten Swirl",
+      "description": "Deep, tightly curled folds that churn like molten metal in slow rotation.",
+      "askedAs": [
+        "swirly molten liquid look",
+        "heavy twisting fluid motion",
+        "marble swirl background",
+        "закрученная жидкая лава",
+        "расплавленный металл вихрь"
+      ],
+      "props": {
+        "speed": 0.75,
+        "distortion": 0.6,
+        "swirl": 0.9,
+        "softness": 0.7
+      }
+    },
+    {
+      "id": "crisp-bands",
+      "label": "Crisp Bands",
+      "description": "Sharp-edged color bands that stretch and bend with clear graphic contrast.",
+      "askedAs": [
+        "sharp edged warped stripes",
+        "graphic hard contour liquid",
+        "crisp bands instead of blur",
+        "четкие волнистые полосы",
+        "резкие границы цветов"
+      ],
+      "props": {
+        "softness": 0.1,
+        "distortion": 0.35,
+        "swirl": 0.25,
+        "proportion": 0.5
+      }
+    },
+    {
+      "id": "energetic-flow",
+      "label": "Energetic Flow",
+      "description": "Fast, restless warping that keeps the frame lively for upbeat openers.",
+      "askedAs": [
+        "fast moving liquid background",
+        "energetic flowing shader",
+        "quick dynamic warp for intro",
+        "быстрый динамичный фон",
+        "энергичная жидкая анимация"
+      ],
+      "props": {
+        "speed": 2.5,
+        "distortion": 0.45,
+        "swirl": 0.55,
+        "softness": 0.85
+      }
+    },
+    {
+      "id": "accent-veins",
+      "label": "Accent Veins",
+      "description": "Mostly dark field where thin veins of the accent color fold through for quiet depth.",
+      "askedAs": [
+        "dark background with thin accent streaks",
+        "mostly dark with a little color",
+        "subtle accent folds on dark",
+        "темный фон с тонкими прожилками",
+        "немного акцентного цвета на темном"
+      ],
+      "props": {
+        "proportion": 0.15,
+        "speed": 0.5,
+        "distortion": 0.3,
+        "softness": 0.6
+      }
+    },
+    {
+      "id": "wide-drift",
+      "label": "Wide Drift",
+      "description": "Broad, accent-dominant sweeps that stretch directionally with almost no curl.",
+      "askedAs": [
+        "broad stretched color sweep",
+        "directional flowing gradient no swirl",
+        "big soft color waves",
+        "широкие плавные волны цвета",
+        "растянутый градиент без завихрений"
+      ],
+      "props": {
+        "swirl": 0,
+        "distortion": 0.7,
+        "proportion": 0.75,
+        "speed": 1.25
+      }
+    }
+  ]
+}

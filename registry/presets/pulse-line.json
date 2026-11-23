@@ -1,0 +1,126 @@
+{
+  "component": "pulse-line",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "clinical-light",
+      "label": "Clinical Light",
+      "description": "A clean white monitor look with a calm teal pulse, crisp sans type and no grain.",
+      "askedAs": [
+        "clean white heartbeat headline",
+        "light medical style pulse",
+        "minimal bright version without grain",
+        "светлый чистый вариант с пульсом",
+        "белый фон как медицинский монитор"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#0f9d8a",
+        "fontFamily": "Inter",
+        "grain": false,
+        "beats": 3
+      }
+    },
+    {
+      "id": "racing-pulse",
+      "label": "Racing Pulse",
+      "description": "A fast, tall, frequent heartbeat in hot coral with heavy grotesk type for urgency and speed.",
+      "askedAs": [
+        "fast intense heartbeat",
+        "energetic pulse for a speed claim",
+        "make the pulse race",
+        "быстрый резкий пульс",
+        "энергичный вариант про скорость"
+      ],
+      "props": {
+        "speed": 2,
+        "beats": 6,
+        "amplitude": 1.6,
+        "accent": "#ff5a4e",
+        "fontWeight": 700,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "resting-serif",
+      "label": "Resting Serif",
+      "description": "A slow, gentle single beat under an elegant light serif on warm charcoal for an editorial calm.",
+      "askedAs": [
+        "slow calm elegant pulse",
+        "serif editorial heartbeat",
+        "soft luxurious tagline",
+        "медленный спокойный пульс",
+        "элегантный вариант с засечками"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "speed": 0.5,
+        "beats": 1,
+        "amplitude": 0.6,
+        "accent": "#d9a86c"
+      }
+    },
+    {
+      "id": "terminal-monitor",
+      "label": "Terminal Monitor",
+      "description": "A green-on-black monospace readout like a vital-signs screen, scaled slightly down.",
+      "askedAs": [
+        "hacker terminal heartbeat",
+        "monospace green monitor look",
+        "dev tool style pulse",
+        "моноширинный шрифт как терминал",
+        "зелёный пульс на чёрном экране"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0a0f0c",
+        "ink": "#d6e8dc",
+        "accent": "#3ddc84",
+        "scale": 0.85,
+        "beats": 4
+      }
+    },
+    {
+      "id": "midnight-statement",
+      "label": "Midnight Statement",
+      "description": "An oversized bold headline on deep navy with a violet pulse that enters after a short pause.",
+      "askedAs": [
+        "big bold dramatic headline",
+        "dark blue premium statement",
+        "delayed hero tagline",
+        "крупный жирный заголовок на тёмно-синем",
+        "драматичная подача с задержкой"
+      ],
+      "props": {
+        "background": "#0b1026",
+        "ink": "#eef0fa",
+        "accent": "#8b7cff",
+        "scale": 1.3,
+        "fontWeight": 800,
+        "delay": 20
+      }
+    },
+    {
+      "id": "flatline-quiet",
+      "label": "Flatline Quiet",
+      "description": "A still, near-flat line on soft stone paper with light Fraunces type for a quiet, understated beat.",
+      "askedAs": [
+        "almost no pulse just the line",
+        "quiet minimal paper look",
+        "subtle understated version",
+        "почти ровная линия без пульса",
+        "тихий минималистичный вариант"
+      ],
+      "props": {
+        "background": "#f2efe9",
+        "ink": "#1e1c19",
+        "accent": "#5b6b5e",
+        "amplitude": 0.2,
+        "fontFamily": "Fraunces",
+        "fontWeight": 300
+      }
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "component": "extrude-pop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ink-stamp",
+      "label": "Ink Stamp",
+      "description": "A short, fast navy extrusion that lands like a rubber stamp on cream paper.",
+      "askedAs": [
+        "quick stamp effect",
+        "short sharp 3D pop",
+        "navy stamped word",
+        "быстрый штамп",
+        "короткое резкое выдавливание"
+      ],
+      "props": {
+        "bodyColor": "#1d2b4f",
+        "faceColor": "#f4ecd8",
+        "minimaxRadius": 35,
+        "extrudeEndFrame": 18,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "deep-monolith",
+      "label": "Deep Monolith",
+      "description": "A tall, slow-rising charcoal body casting straight down beneath a bright white face.",
+      "askedAs": [
+        "deep heavy extrusion",
+        "slow dramatic 3D rise",
+        "tall black block text",
+        "глубокое медленное выдавливание",
+        "тяжёлый объёмный текст"
+      ],
+      "props": {
+        "bodyColor": "#1a1a1a",
+        "faceColor": "#ffffff",
+        "minimaxRadius": 180,
+        "extrudeAngleDeg": -90,
+        "extrudeEndFrame": 80,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "mint-pop",
+      "label": "Mint Pop",
+      "description": "A playful teal body extruding up and to the right under a soft butter-yellow face.",
+      "askedAs": [
+        "pastel retro pop",
+        "teal and yellow 3D word",
+        "fun candy extrusion",
+        "пастельный ретро текст",
+        "мятный объёмный текст"
+      ],
+      "props": {
+        "bodyColor": "#1f7a6d",
+        "faceColor": "#ffe8a3",
+        "extrudeAngleDeg": -30,
+        "minimaxRadius": 100
+      }
+    },
+    {
+      "id": "tangerine-slam",
+      "label": "Tangerine Slam",
+      "description": "A hyper-quick orange extrusion shooting to the lower left for an energetic, punchy hit.",
+      "askedAs": [
+        "fast orange pop",
+        "energetic punchy word",
+        "snappy extrude left",
+        "быстрый оранжевый текст",
+        "энергичный резкий поп"
+      ],
+      "props": {
+        "bodyColor": "#f26b1d",
+        "faceColor": "#2b1a12",
+        "extrudeAngleDeg": 135,
+        "minimaxRadius": 120,
+        "extrudeEndFrame": 24,
+        "speed": 2
+      }
+    },
+    {
+      "id": "subtle-emboss",
+      "label": "Subtle Emboss",
+      "description": "A shallow, gentle lift in muted lavender for a quiet, refined raised-letter feel.",
+      "askedAs": [
+        "subtle raised text",
+        "soft gentle emboss",
+        "minimal shallow 3D",
+        "лёгкое тиснение текста",
+        "мягкий едва заметный объём"
+      ],
+      "props": {
+        "bodyColor": "#6b5b95",
+        "faceColor": "#f3f0fa",
+        "minimaxRadius": 20,
+        "extrudeEndFrame": 60,
+        "speed": 0.5
+      }
+    }
+  ]
+}

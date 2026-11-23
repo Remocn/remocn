@@ -39,8 +39,8 @@ export const RemotionRoot = () => (
   <Composition
     id="PhotoFillType"
     component={PhotoFillTypeScene}
-    durationInFrames={165}
-    fps={30}
+    durationInFrames={330}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -76,6 +76,52 @@ The word sits as a cutout with the image visible through its letters, then expan
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Caption color; white over the image by default.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Barlow Condensed\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "expandAt",
+      type: "number",
+      default: "72",
+      description: "Frame the letters start filling with the image and the word opens to full bleed.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between letters filling, center letters first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

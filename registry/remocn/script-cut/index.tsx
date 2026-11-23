@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const epilogue = loadFont("normal", {
   weights: ["400", "500"],
@@ -21,8 +21,21 @@ const epilogue = loadFont("normal", {
 
 export interface ScriptCutProps {
   shots?: string[];
+  /** Frames the last shot holds at the end. */
+  hold?: number;
+  /** Frames between words as a shot flies up from the script. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Epilogue by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Size of the script and shots, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -64,13 +77,15 @@ const EXIT = 10;
 const HANDOFF = 8;
 const HOLD = 32;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 type Metrics = Record<string, number>;
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], font: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("script-cut: no 2d context");
-  ctx.font = `${WGHT} ${FONT_PX}px "${epilogue.fontFamily}"`;
+  ctx.font = font;
   const w: Metrics = {};
   for (const s of texts) {
     w[s] = ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
@@ -78,7 +93,7 @@ function measureAll(texts: string[]): Metrics {
   return w;
 }
 
-function useMetrics(texts: string[]) {
+function useMetrics(texts: string[], fontFamily: string, fontWeight: number) {
   const key = texts.join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("script-cut: measuring"));
@@ -87,12 +102,18 @@ function useMetrics(texts: string[]) {
     let live = true;
     Promise.all([
       epilogue.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${epilogue.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureAll(key.split("\u0001")) });
+        setState({
+          key,
+          m: measureAll(
+            key.split("\u0001"),
+            `${fontWeight} ${FONT_PX}px "${fontFamily}"`,
+          ),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -101,7 +122,7 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -141,23 +162,48 @@ interface Token {
   index: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ScriptCut({
   shots = DEFAULT_SHOTS,
+  hold = HOLD,
+  stagger = FLY_STAGGER,
   accent,
+  ink,
   background,
+  fontFamily = epilogue.fontFamily,
+  fontWeight = WGHT,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ScriptCutProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const list = shots.length > 0 ? shots : DEFAULT_SHOTS;
   const shotWords = list.map(splitWords);
-  const m = useMetrics([" ", ...shotWords.flat()]);
+  const m = useMetrics([" ", ...shotWords.flat()], fontFamily, fontWeight);
 
   if (!m) {
     return (
@@ -200,12 +246,12 @@ export function ScriptCut({
 
   const span = durationInFrames * speed;
   const lastLen = (k: number) =>
-    FLY + FLY_STAGGER * Math.max(0, shotWords[k].length - 1);
+    FLY + stagger * Math.max(0, shotWords[k].length - 1);
   const period =
     n > 1
       ? Math.min(
           84,
-          Math.max(34, (span - FIRST_SHOT - lastLen(n - 1) - HOLD) / (n - 1)),
+          Math.max(34, (span - FIRST_SHOT - lastLen(n - 1) - hold) / (n - 1)),
         )
       : 0;
   const shotAt = (k: number) => FIRST_SHOT + k * period;
@@ -222,36 +268,46 @@ export function ScriptCut({
     x: number;
     y: number;
   }
-  const rowPos: RowPos[] = [];
-  const bars: { x: number; y: number; b: number }[] = [];
-  rowLines.forEach((line, j) => {
-    let x = marginX;
-    const y = rowTop + j * ROW_LH * rowF + (ROW_LH - 1) * 0.5 * rowF;
-    line.forEach((tk, i) => {
-      if (i > 0) {
-        const prev = line[i - 1];
-        if (prev.shot !== tk.shot) {
-          const p = cutP(prev.shot);
-          const gap = m[" "] + (GAP_EM - m[" "]) * p;
-          bars.push({ x: x + (gap * rowF) / 2, y, b: prev.shot });
-          x += gap * rowF;
-        } else {
-          x += m[" "] * rowF;
+  // The row as laid out with each cut opened to `cut(b)`: where every word
+  // sits and where each cut bar stands.
+  const layRow = (cut: (b: number) => number) => {
+    const rowPos: RowPos[] = [];
+    const bars: { x: number; y: number; b: number }[] = [];
+    rowLines.forEach((line, j) => {
+      let x = marginX;
+      const y = rowTop + j * ROW_LH * rowF + (ROW_LH - 1) * 0.5 * rowF;
+      line.forEach((tk, i) => {
+        if (i > 0) {
+          const prev = line[i - 1];
+          if (prev.shot !== tk.shot) {
+            const p = cut(prev.shot);
+            const gap = m[" "] + (GAP_EM - m[" "]) * p;
+            bars.push({ x: x + (gap * rowF) / 2, y, b: prev.shot });
+            x += gap * rowF;
+          } else {
+            x += m[" "] * rowF;
+          }
         }
-      }
-      rowPos[tk.index] = { x, y };
-      x += m[tk.word] * rowF;
-    });
-    const lastTk = line[line.length - 1];
-    const nextTk = tokens[lastTk.index + 1];
-    if (nextTk && nextTk.shot !== lastTk.shot) {
-      bars.push({
-        x: x + (GAP_EM * rowF * cutP(lastTk.shot)) / 2,
-        y,
-        b: lastTk.shot,
+        rowPos[tk.index] = { x, y };
+        x += m[tk.word] * rowF;
       });
-    }
-  });
+      const lastTk = line[line.length - 1];
+      const nextTk = tokens[lastTk.index + 1];
+      if (nextTk && nextTk.shot !== lastTk.shot) {
+        bars.push({
+          x: x + (GAP_EM * rowF * cut(lastTk.shot)) / 2,
+          y,
+          b: lastTk.shot,
+        });
+      }
+    });
+    return { rowPos, bars };
+  };
+  const { rowPos, bars } = layRow(cutP);
+  // Layout rounds a box edge to whole pixels, so a bar carried sideways by
+  // `left` as its cut opens steps unevenly; it stands where the open cut puts
+  // it and travels there by a transform.
+  const barsOpen = layRow(() => 1).bars;
 
   const areaTop = marginY;
   const areaBottom = rowTop - H * (portrait ? 0.06 : 0.08);
@@ -293,28 +349,30 @@ export function ScriptCut({
     height: rowF,
     lineHeight: `${rowF}px`,
     whiteSpace: "pre",
-    fontFamily: epilogue.fontFamily,
-    fontWeight: WGHT,
+    fontFamily,
+    fontWeight,
     fontSize: rowF,
     letterSpacing: `${TRACK}em`,
   };
 
   const nodes: React.ReactNode[] = [];
 
-  for (const bar of bars) {
+  bars.forEach((bar, i) => {
     const p = cutP(bar.b);
-    if (p <= 0) continue;
+    if (p <= 0) return;
     const h = rowF * 1.15;
+    const dx = bar.x - barsOpen[i].x;
     nodes.push(
       <div
         key={`bar${bar.b}-${bar.y.toFixed(0)}`}
         style={{
           position: "absolute",
-          left: bar.x - rowF * 0.05,
+          left: barsOpen[i].x - rowF * 0.05,
           top: bar.y - (h - rowF) / 2,
           width: rowF * 0.1,
           height: h,
           overflow: "hidden",
+          transform: Math.abs(dx) < 1e-3 ? undefined : `translateX(${dx}px)`,
         }}
       >
         <div
@@ -328,7 +386,7 @@ export function ScriptCut({
         />
       </div>,
     );
-  }
+  });
 
   for (const tk of tokens) {
     const pos = rowPos[tk.index];
@@ -346,8 +404,8 @@ export function ScriptCut({
     const spent = interpolate(t, [live + 22, live + 40], [0, 1], CLAMP);
     const color =
       lit < 1
-        ? interpolateColors(lit, [0, 1], [c.ink, hi])
-        : interpolateColors(spent, [0, 1], [hi, c.ink]);
+        ? interpolateColors(lit, [0, 1], [fg, hi])
+        : interpolateColors(spent, [0, 1], [hi, fg]);
     const opacity = inP * (0.88 - 0.56 * spent);
     nodes.push(
       <div
@@ -358,7 +416,7 @@ export function ScriptCut({
           top: pos.y,
           color,
           opacity,
-          transform: `translateY(${((1 - inP) * rowF * 0.6).toFixed(2)}px)`,
+          transform: `translateY(${((1 - inP) * rowF * 0.6).toFixed(2)}px)${glide(midway(inP))}`,
         }}
       >
         {tk.word}
@@ -375,23 +433,39 @@ export function ScriptCut({
     ws.forEach((w, i) => {
       const from = rowPos[first + i];
       const to = pos[i];
-      const d = start + (k > 0 ? HANDOFF : 0) + i * FLY_STAGGER;
-      const p = interpolate(t, [d, d + FLY], [0, 1], {
-        ...CLAMP,
-        easing: EASE_MOVE,
-      });
-      const out = Number.isFinite(nextAt)
-        ? interpolate(t, [nextAt + i * 0.5, nextAt + i * 0.5 + EXIT], [0, 1], {
-            ...CLAMP,
-            easing: EASE_IN,
-          })
-        : 0;
-      if (out >= 1) return;
+      const d = start + (k > 0 ? HANDOFF : 0) + i * stagger;
       const s0 = rowF / F;
-      const s = s0 + (1 - s0) * p;
-      const x = from.x + (to.x - from.x) * p;
-      const y = from.y + (to.y - from.y) * p - out * F * 0.5;
-      const color = interpolateColors(p, [0, 0.7], [hi, c.ink]);
+      const at = (tt: number) => {
+        const p = interpolate(tt, [d, d + FLY], [0, 1], {
+          ...CLAMP,
+          easing: EASE_MOVE,
+        });
+        const out = Number.isFinite(nextAt)
+          ? interpolate(
+              tt,
+              [nextAt + i * 0.5, nextAt + i * 0.5 + EXIT],
+              [0, 1],
+              { ...CLAMP, easing: EASE_IN },
+            )
+          : 0;
+        return {
+          p,
+          out,
+          s: s0 + (1 - s0) * p,
+          x: from.x + (to.x - from.x) * p,
+          y: from.y + (to.y - from.y) * p - out * F * 0.5,
+        };
+      };
+      const { p, out, s, x, y } = at(t);
+      if (out >= 1) return;
+      // The flight is a long in-out ease, so its tail still crosses pixels
+      // after the progress looks settled: compare the drawn values with the
+      // neighbouring frames instead.
+      const step = (o: { s: number; y: number }, q: { s: number; y: number }) =>
+        Math.abs(o.y - q.y) > 1e-3 || Math.abs(o.s - q.s) * F > 1e-3;
+      const moving =
+        step(at(t + speed), { s, y }) || step({ s, y }, at(t - speed));
+      const color = interpolateColors(p, [0, 0.7], [hi, fg]);
       nodes.push(
         <div
           key={`h${k}-${i}`}
@@ -402,14 +476,14 @@ export function ScriptCut({
             height: F,
             lineHeight: `${F}px`,
             whiteSpace: "pre",
-            fontFamily: epilogue.fontFamily,
-            fontWeight: WGHT,
+            fontFamily,
+            fontWeight,
             fontSize: F,
             letterSpacing: `${TRACK}em`,
             color,
             opacity: 1 - out,
             transformOrigin: "0 0",
-            transform: `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${s.toFixed(4)})`,
+            transform: `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${s.toFixed(4)})${glide(moving)}`,
           }}
         >
           {w}
@@ -420,7 +494,7 @@ export function ScriptCut({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -12,9 +12,10 @@ import {
   useState,
 } from "react";
 import { Button } from "@/components/ui/button";
-import type {
-  ControlConfig,
-  ResolvedComponentConfig,
+import {
+  type ControlConfig,
+  type ResolvedComponentConfig,
+  toProps,
 } from "@/lib/customizer-config";
 import registry from "@/lib/previews";
 import { useComponentConfig } from "@/lib/previews/use-component-config";
@@ -28,6 +29,7 @@ import {
 } from "./blocks/player/player-stage";
 import { BLOCK_SPACING } from "./blocks/spacing";
 import { useCustomizer } from "./blocks/use-customizer";
+import { usePreviewProps } from "./blocks/use-preview-props";
 import { ComponentCustomizer } from "./component-customizer";
 import { StudioActions } from "./studio-actions";
 
@@ -104,11 +106,13 @@ function Preview({
   // Suspends until this component's config chunk resolves, then returns
   // synchronously from the cached promise. No other config is fetched.
   const config = useComponentConfig(name);
-  const { values, isDefault, change, reset } = useCustomizer(
-    name,
-    config.controls,
+  const { values, isDefault, change, reset, apply, batch, ...history } =
+    useCustomizer(name, config.controls);
+  const code = useMemo(
+    () => generateCode(config, toProps(config.controls, values)),
+    [config, values],
   );
-  const code = useMemo(() => generateCode(config, values), [config, values]);
+  const inputProps = usePreviewProps(config.controls, values);
   const installPayload = useMemo(() => {
     if (!studioElement?.element.isCaptionStyle) return studioElement;
     // The generated transcript comes from Studio, never from the demo fixture.
@@ -121,10 +125,11 @@ function Preview({
 
   const composition: StageComposition = {
     load,
-    inputProps: values,
+    inputProps,
     durationInFrames:
       config.getDurationInFrames?.(values) ?? config.durationInFrames,
     fps: config.fps,
+    previewFps: config.previewFps,
     compositionWidth: config.compositionWidth,
     compositionHeight: config.compositionHeight,
     previewBackdrop: config.previewBackdrop,
@@ -168,6 +173,9 @@ function Preview({
           isDefault={isDefault}
           onChange={change}
           onReset={reset}
+          onApply={apply}
+          batch={batch}
+          history={history}
         />
       ) : null}
     </DocsPlayer>

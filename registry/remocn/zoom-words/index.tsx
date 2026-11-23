@@ -1,6 +1,8 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface ZoomWordsProps {
   text: string;
@@ -30,6 +32,8 @@ function smoothstep(t: number): number {
 const WORD_SHIFT_X_EM = 0.16;
 const WORD_SHIFT_Y_EM = 0.12;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function wordWidthEm(word: string): number {
   return Array.from(word).length * CHAR_WIDTH_EM + SPACE_WIDTH_EM;
 }
@@ -52,7 +56,8 @@ export function ZoomWords({
   speed = 1,
   className,
 }: ZoomWordsProps) {
-  const frame = useCurrentFrame() * speed;
+  const glide = useGlide();
+  const frame = useSceneFrame() * speed;
 
   const words = text.trim().split(/\s+/).filter(Boolean);
 
@@ -138,6 +143,13 @@ export function ZoomWords({
               const opacity = smoothstep(p * 1.2);
               const wordBlur = WORD_BLUR_EM * fontSize * (1 - p);
               const arrive = 1 - smoothstep(p * 1.6);
+              const moving = midway(arrive);
+              // Rounding the shift to 0.1px steps it under the zoom, so it
+              // is only rounded at rest.
+              const shift = (em: number) => {
+                const px = em * fontSize * arrive;
+                return moving ? `${px}px` : `${px.toFixed(1)}px`;
+              };
               return (
                 <span
                   key={i}
@@ -146,7 +158,7 @@ export function ZoomWords({
                     whiteSpace: "pre",
                     opacity,
                     filter: wordBlur > 0.05 ? `blur(${wordBlur}px)` : undefined,
-                    translate: `${(WORD_SHIFT_X_EM * fontSize * arrive).toFixed(1)}px ${(WORD_SHIFT_Y_EM * fontSize * arrive).toFixed(1)}px`,
+                    transform: `translate(${shift(WORD_SHIFT_X_EM)}, ${shift(WORD_SHIFT_Y_EM)})${glide(moving)}`,
                   }}
                 >
                   {word}

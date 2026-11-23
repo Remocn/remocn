@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/HubotSans";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -8,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const hubot = loadFont("normal", {
   weights: ["400", "500"],
@@ -24,8 +25,20 @@ export interface NoButsExchange {
 
 export interface NoButsProps {
   exchanges?: NoButsExchange[];
+  /** Frames between words of a reply rising in. */
+  stagger?: number;
+  /** Frames between one reply landing and the next objection. */
+  pause?: number;
   accent?: string;
+  /** Text color of the replies; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the exchanges. Load it yourself; Hubot Sans by default. */
+  fontFamily?: string;
+  /** Size of the exchanges, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -124,8 +137,8 @@ function breakLines(ws: number[], space: number, maxEm: number) {
   });
 }
 
-function useWidths(specs: string[]) {
-  const key = specs.join("\u0001");
+function useWidths(specs: string[], family: string) {
+  const key = `${family}\u0002${specs.join("\u0001")}`;
   const [state, setState] = useState<{
     key: string;
     w: Record<string, number>;
@@ -138,8 +151,8 @@ function useWidths(specs: string[]) {
     let live = true;
     Promise.all([
       hubot.waitUntilDone(),
-      document.fonts.load(`400 100px "${hubot.fontFamily}"`),
-      document.fonts.load(`500 100px "${hubot.fontFamily}"`),
+      document.fonts.load(`400 100px "${family}"`),
+      document.fonts.load(`500 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -150,7 +163,7 @@ function useWidths(specs: string[]) {
           const cut = spec.indexOf("|");
           const weight = spec.slice(0, cut);
           const text = spec.slice(cut + 1);
-          if (ctx) ctx.font = `${weight} 100px "${hubot.fontFamily}"`;
+          if (ctx) ctx.font = `${weight} 100px "${family}"`;
           w[spec] = ctx ? ctx.measureText(text).width / 100 : text.length * 0.5;
         }
         setState({ key, w });
@@ -162,7 +175,7 @@ function useWidths(specs: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, family, handle]);
   return state && state.key === key ? state.w : null;
 }
 
@@ -199,15 +212,40 @@ function layout(
   return { placed, lines: lines.length, widest };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function NoButs({
   exchanges = DEFAULT_EXCHANGES,
+  stagger = REPLY_WORD,
+  pause = 26,
   accent,
+  ink,
   background,
+  fontFamily = hubot.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: NoButsProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames: T } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const stage =
@@ -224,7 +262,7 @@ export function NoButs({
       ...replyWords.flat().map((s) => `500|${s}`),
     ]),
   );
-  const w = useWidths(specs);
+  const w = useWidths(specs, fontFamily);
 
   if (!w) {
     return (
@@ -281,9 +319,9 @@ export function NoButs({
     clock += nO * OBJ_WORD + RISE;
     clock += nO <= 1 ? 22 : 4;
     replyStart.push(clock);
-    clock += replyWords[i].length * REPLY_WORD + RISE;
+    clock += replyWords[i].length * stagger + RISE;
     replyDone.push(clock);
-    clock += i < list.length - 1 ? 26 : 0;
+    clock += i < list.length - 1 ? pause : 0;
   });
   const room = Math.max(1, T - Math.max(30, T * 0.18));
   const k = clock > room ? room / clock : 1;
@@ -296,88 +334,90 @@ export function NoButs({
       style={{
         background: stage,
         overflow: "hidden",
-        fontFamily: hubot.fontFamily,
+        fontFamily,
       }}
     >
-      {list.map((_, i) => {
-        const last = i === list.length - 1;
-        const leaveAt = last ? 1e9 : (objStart[i + 1] - EXIT - 2) * k;
-        const leave = interpolate(t, [leaveAt, leaveAt + EXIT * k], [0, 1], {
-          ...CLAMP,
-          easing: EASE_IN,
-        });
-        if (t < objStart[i] * k - 1 || leave >= 1) return null;
-        const oLay = objLays[i];
-        const rLay = replyLays[i];
-        const rTop = H - my - rLay.lines * lineR;
-        const replyColor = last ? hi : c.ink;
-        return (
-          <div
-            key={`x${i}`}
-            style={{
-              position: "absolute",
-              inset: 0,
-              opacity: 1 - leave,
-              transform: `translate(${(-leave * W * 0.025).toFixed(2)}px, ${(-leave * H * 0.05).toFixed(2)}px)`,
-            }}
-          >
-            {oLay.placed.map((p, j) => {
-              const at = (objStart[i] + j * OBJ_WORD) * k;
-              const e = interpolate(t, [at, at + RISE], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
-              return (
-                <div
-                  key={`o${j}`}
-                  style={{
-                    position: "absolute",
-                    left: W - mx + p.x * Fo,
-                    top: my + p.line * lineO,
-                    fontSize: Fo,
-                    lineHeight: `${lineO}px`,
-                    fontWeight: 400,
-                    letterSpacing: `${TRACK}em`,
-                    whiteSpace: "pre",
-                    color: c.muted,
-                    opacity: e,
-                    transform: `translateY(${((1 - e) * Fo * 0.3).toFixed(2)}px)`,
-                  }}
-                >
-                  {p.text}
-                </div>
-              );
-            })}
-            {rLay.placed.map((p, j) => {
-              const at = (replyStart[i] + j * REPLY_WORD) * k;
-              const e = interpolate(t, [at, at + RISE], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
-              return (
-                <div
-                  key={`r${j}`}
-                  style={{
-                    position: "absolute",
-                    left: mx + p.x * Fr,
-                    top: rTop + p.line * lineR,
-                    fontSize: Fr,
-                    lineHeight: `${lineR}px`,
-                    fontWeight: 500,
-                    letterSpacing: `${TRACK}em`,
-                    whiteSpace: "pre",
-                    color: replyColor,
-                    opacity: e,
-                    transform: `translateY(${((1 - e) * Fr * 0.22).toFixed(2)}px)`,
-                  }}
-                >
-                  {p.text}
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
+      <ScaleLayer scale={scale}>
+        {list.map((_, i) => {
+          const last = i === list.length - 1;
+          const leaveAt = last ? 1e9 : (objStart[i + 1] - EXIT - 2) * k;
+          const leave = interpolate(t, [leaveAt, leaveAt + EXIT * k], [0, 1], {
+            ...CLAMP,
+            easing: EASE_IN,
+          });
+          if (t < objStart[i] * k - 1 || leave >= 1) return null;
+          const oLay = objLays[i];
+          const rLay = replyLays[i];
+          const rTop = H - my - rLay.lines * lineR;
+          const replyColor = last ? hi : (ink ?? c.ink);
+          return (
+            <div
+              key={`x${i}`}
+              style={{
+                position: "absolute",
+                inset: 0,
+                opacity: 1 - leave,
+                transform: `translate(${(-leave * W * 0.025).toFixed(2)}px, ${(-leave * H * 0.05).toFixed(2)}px)${glide(midway(leave))}`,
+              }}
+            >
+              {oLay.placed.map((p, j) => {
+                const at = (objStart[i] + j * OBJ_WORD) * k;
+                const e = interpolate(t, [at, at + RISE], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                });
+                return (
+                  <div
+                    key={`o${j}`}
+                    style={{
+                      position: "absolute",
+                      left: W - mx + p.x * Fo,
+                      top: my + p.line * lineO,
+                      fontSize: Fo,
+                      lineHeight: `${lineO}px`,
+                      fontWeight: 400,
+                      letterSpacing: `${TRACK}em`,
+                      whiteSpace: "pre",
+                      color: c.muted,
+                      opacity: e,
+                      transform: `translateY(${((1 - e) * Fo * 0.3).toFixed(2)}px)${glide(midway(e) && !midway(leave))}`,
+                    }}
+                  >
+                    {p.text}
+                  </div>
+                );
+              })}
+              {rLay.placed.map((p, j) => {
+                const at = (replyStart[i] + j * stagger) * k;
+                const e = interpolate(t, [at, at + RISE], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                });
+                return (
+                  <div
+                    key={`r${j}`}
+                    style={{
+                      position: "absolute",
+                      left: mx + p.x * Fr,
+                      top: rTop + p.line * lineR,
+                      fontSize: Fr,
+                      lineHeight: `${lineR}px`,
+                      fontWeight: 500,
+                      letterSpacing: `${TRACK}em`,
+                      whiteSpace: "pre",
+                      color: replyColor,
+                      opacity: e,
+                      transform: `translateY(${((1 - e) * Fr * 0.22).toFixed(2)}px)${glide(midway(e) && !midway(leave))}`,
+                    }}
+                  >
+                    {p.text}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
-import { interpolate, Sequence, useCurrentFrame } from "remotion";
+import { interpolate, Sequence } from "remotion";
+import { useCompositionFrames, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface GlassCodeBlockProps {
   code?: string;
@@ -108,6 +110,8 @@ export function GlassCodeBlock({
   className,
 }: GlassCodeBlockProps) {
   const lines = code.split("\n");
+  // A `<Sequence>` starts on one of the composition's own frames.
+  const toFrames = useCompositionFrames();
 
   return (
     <div
@@ -196,7 +200,7 @@ export function GlassCodeBlock({
             {lines.map((line, i) => (
               <Sequence
                 key={i}
-                from={Math.round((i * staggerFrames) / speed)}
+                from={toFrames((i * staggerFrames) / speed)}
                 layout="none"
               >
                 <CodeLine line={line} index={i} fontSize={fontSize} />
@@ -232,7 +236,8 @@ function CodeLine({
   index: number;
   fontSize: number;
 }) {
-  const frame = useCurrentFrame();
+  const glide = useGlide();
+  const frame = useSceneFrame();
   const opacity = interpolate(frame, [0, 8], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -252,7 +257,7 @@ function CodeLine({
     <div
       style={{
         opacity,
-        translate: `0 ${ty}px`,
+        transform: `translateY(${ty}px)${glide(ty > 0)}`,
         whiteSpace: "pre",
         display: "flex",
         gap: 0,
@@ -275,7 +280,7 @@ function CodeLine({
 function BackdropAura() {
   // Slow, low-amplitude blob behind the glass so the backdrop blur has
   // perceptible content to refract.
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const t = frame / 60;
   const x = 50 + Math.sin(t) * 20;
   const y = 50 + Math.cos(t * 0.7) * 15;

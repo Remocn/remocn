@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const flashCountConfig: ComponentConfig = {
   componentName: "FlashCount",
@@ -69,6 +75,22 @@ export const flashCountConfig: ComponentConfig = {
       description: "Flash at",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 300,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    shadow: {
+      type: "boolean",
+      default: true,
+      description: "Shadow",
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Hanken Grotesk" }),
     speed: {
       type: "number",
       default: 1,

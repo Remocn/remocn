@@ -5,20 +5,14 @@ import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const figtree = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -53,7 +47,23 @@ export interface SwipeDeckProps {
   initials?: string;
   /** Three lines beside the phone, one per beat. */
   lines?: [string, string, string];
+  /** Heading at the top of the app screen. */
+  deckTitle?: string;
+  /** Headline of the match screen. */
+  matchTitle?: string;
+  /** Label of the button next to the install command. */
+  ctaLabel?: string;
   accent?: string;
+  /** Color of the lines beside the phone; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Size of the scene, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -114,6 +124,12 @@ const MATCH = 114;
 const END = 180;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+/** Whether `at` changes between this frame and either neighbour. */
+const moves = (at: (f: number) => number, f: number, step: number) =>
+  Math.abs(at(f + step) - at(f)) > 1e-3 ||
+  Math.abs(at(f) - at(f - step)) > 1e-3;
 
 const P = {
   x: "M6 6l12 12M18 6L6 18",
@@ -448,6 +464,7 @@ function Preview({
   accent: string;
   t: number;
 }) {
+  const glide = useGlide();
   const fill: React.CSSProperties = { position: "absolute", inset: 0 };
   if (scene === "captions") {
     const words = ["SHIP", "YOUR", "LAUNCH", "TODAY"];
@@ -547,7 +564,8 @@ function Preview({
                 fontWeight: 400,
                 color: "#141821",
                 letterSpacing: "-0.02em",
-                transform: `translateY(${Math.sin(t / 12 + i) * 2}px)`,
+                // The bob never rests, so neither does its tilt.
+                transform: `translateY(${Math.sin(t / 12 + i) * 2}px)${glide(true)}`,
               }}
             >
               <Icon
@@ -1030,22 +1048,48 @@ function along(keys: Key[], f: number) {
   return { x: last.x, y: last.y };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SwipeDeck({
   cards = DEFAULT_CARDS,
   matchWith = "remocn",
   initials = "MC",
   lines = ["Swipe right on what fits.", "Skip the rest.", "Install the match."],
+  deckTitle = "Discover",
+  matchTitle = "It’s a match",
+  ctaLabel = "Install",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = figtree.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: SwipeDeckProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { fps, width, height } = useSceneConfig();
   const f = frame * speed;
   const dark = theme !== "light";
-  const c = dark ? DARK : LIGHT;
+  const pal = dark ? DARK : LIGHT;
+  const c = { ...pal, copy: ink ?? pal.copy };
   const tall = height > width;
   const W = tall ? 720 : 1280;
   const H = tall ? 1280 : 720;
@@ -1059,36 +1103,58 @@ export function SwipeDeck({
   const ease = (a: number, b: number, e = ENTER) =>
     interpolate(f, [a, b], [0, 1], { ...clamp, easing: e });
 
-  const rise = sp(0, HEAVY);
-  const cam = interpolate(f, [MATCH, END], [1, 1.035], {
-    ...clamp,
-    easing: CAMERA,
-  });
+  const riseAt = (ff: number) => spring({ frame: ff, fps, config: HEAVY });
+  const camAt = (ff: number) =>
+    interpolate(ff, [MATCH, END], [1, 1.035], {
+      ...clamp,
+      easing: CAMERA,
+    });
+  const rise = riseAt(f);
+  const cam = camAt(f);
+  // The phone carries every card, so its tilt covers them; the movers inside
+  // skip theirs while it is on. The rise spring never lands exactly, hence
+  // the test on its px.
+  const phoneMoving =
+    moves((ff) => (1 - riseAt(ff)) * H * 0.9, f, speed) ||
+    moves((ff) => camAt(ff) * k * BH, f, speed);
 
-  const motion = ACTS.map((a) => {
-    const dir = a.kind === "like" ? 1 : a.kind === "nope" ? -1 : 0;
-    const drag = dir
-      ? spring({
-          frame: Math.min(f, a.release) - a.down,
-          fps,
-          config: { damping: 20, stiffness: 140 },
-        })
-      : 0;
-    const fly = interpolate(
-      f,
-      [a.release, a.release + (dir ? 12 : 14)],
-      [0, 1],
-      { ...clamp, easing: EXIT },
-    );
-    const dragX = dir * 150 * Math.min(1, drag);
-    const dx = dragX + dir * 560 * fly;
-    const dy = dir ? -12 * drag + 70 * fly : -1000 * fly;
-    const stamp = dir
-      ? Math.min(1, drag * 1.6)
-      : interpolate(f, [a.release - 4, a.release + 2], [0, 1], clamp);
-    const gone = dir ? Math.max(drag * 0.3, fly) : fly;
-    return { ...a, dir, drag, fly, dx, dy, dragX, rot: dx * 0.07, stamp, gone };
-  });
+  const motionAt = (f: number) =>
+    ACTS.map((a) => {
+      const dir = a.kind === "like" ? 1 : a.kind === "nope" ? -1 : 0;
+      const drag = dir
+        ? spring({
+            frame: Math.min(f, a.release) - a.down,
+            fps,
+            config: { damping: 20, stiffness: 140 },
+          })
+        : 0;
+      const fly = interpolate(
+        f,
+        [a.release, a.release + (dir ? 12 : 14)],
+        [0, 1],
+        { ...clamp, easing: EXIT },
+      );
+      const dragX = dir * 150 * Math.min(1, drag);
+      const dx = dragX + dir * 560 * fly;
+      const dy = dir ? -12 * drag + 70 * fly : -1000 * fly;
+      const stamp = dir
+        ? Math.min(1, drag * 1.6)
+        : interpolate(f, [a.release - 4, a.release + 2], [0, 1], clamp);
+      const gone = dir ? Math.max(drag * 0.3, fly) : fly;
+      return {
+        ...a,
+        dir,
+        drag,
+        fly,
+        dx,
+        dy,
+        dragX,
+        rot: dx * 0.07,
+        stamp,
+        gone,
+      };
+    });
+  const motion = motionAt(f);
   const top = motion.findIndex((m) => m.fly < 1);
   const topIdx = top === -1 ? ACTS.length : top;
   const cur = motion[topIdx];
@@ -1161,6 +1227,7 @@ export function SwipeDeck({
     const pin = ease(inAt, inAt + 16);
     const pout = outAt === undefined ? 0 : ease(outAt - 8, outAt, EXIT);
     if (pin <= 0 || pout >= 1) return null;
+    const moving = midway(pin) || midway(pout);
     return (
       <div
         key={i}
@@ -1169,7 +1236,7 @@ export function SwipeDeck({
           left: 0,
           right: 0,
           top: 0,
-          transform: `translateY(${(1 - pin) * 60 - pout * 40}%)`,
+          transform: `translateY(${(1 - pin) * 60 - pout * 40}%)${glide(moving)}`,
           opacity: pin * (1 - pout),
           filter: `blur(${(1 - pin) * 6 + pout * 4}px)`,
         }}
@@ -1190,401 +1257,424 @@ export function SwipeDeck({
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? "garnet"}
-        params={
-          groundParams ??
-          (dark
-            ? undefined
-            : {
-                background: "#f6eeeb",
-                colors: ["#f0a8a6", "#fff7f2", "#f6c3cb"],
-                grain: 0.05,
-              })
-        }
-        timeOffset={5}
-        timeScale={0.4}
-      />
-      <AbsoluteFill style={{ background: c.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - W * u) / 2,
-          top: (height - H * u) / 2,
-          width: W,
-          height: H,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? "garnet"}
+            params={
+              groundParams ??
+              (dark
+                ? undefined
+                : {
+                    background: "#f6eeeb",
+                    colors: ["#f0a8a6", "#fff7f2", "#f6c3cb"],
+                    grain: 0.05,
+                  })
+            }
+            timeOffset={5}
+            timeScale={0.4}
+          />
+          <AbsoluteFill style={{ background: c.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: tall ? 64 : 96,
-            top: tall ? 96 : H / 2 - 84,
-            width: tall ? W - 128 : 500,
-            height: 170,
-            fontSize: tall ? 68 : 76,
-            fontWeight: 300,
-            lineHeight: 1.04,
-            letterSpacing: "-0.04em",
-            color: c.copy,
-            overflow: "hidden",
-            textWrap: "balance",
+            left: (width - W * u) / 2,
+            top: (height - H * u) / 2,
+            width: W,
+            height: H,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
-          {[0, 1, 2].map((i) => copyLine(i))}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: phoneCx - BW / 2,
-            top: phoneCy - BH / 2,
-            width: BW,
-            height: BH,
-            transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * cam})`,
-          }}
-        >
-          <Phone c={c}>
-            <div
-              style={{
-                position: "absolute",
-                top: 58,
-                left: 24,
-                right: 22,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                color: c.text,
-                zIndex: 10,
-              }}
-            >
-              <span
+          <div
+            style={{
+              position: "absolute",
+              left: tall ? 64 : 96,
+              top: tall ? 96 : H / 2 - 84,
+              width: tall ? W - 128 : 500,
+              height: 170,
+              fontSize: tall ? 68 : 76,
+              fontWeight: 300,
+              lineHeight: 1.04,
+              letterSpacing: "-0.04em",
+              color: c.copy,
+              overflow: "hidden",
+              textWrap: "balance",
+            }}
+          >
+            {[0, 1, 2].map((i) => copyLine(i))}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: phoneCx - BW / 2,
+              top: phoneCy - BH / 2,
+              width: BW,
+              height: BH,
+              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * cam})${glide(phoneMoving)}`,
+            }}
+          >
+            <Phone c={c}>
+              <div
                 style={{
-                  fontFamily: serif,
-                  fontSize: 32,
-                  fontWeight: 400,
-                  letterSpacing: "-0.01em",
+                  position: "absolute",
+                  top: 58,
+                  left: 24,
+                  right: 22,
+                  height: 40,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  color: c.text,
+                  zIndex: 10,
                 }}
               >
-                Discover
-              </span>
-              <Icon d={P.sliders} size={24} color={c.text} />
-            </div>
-            {cards
-              .slice(0, 4)
-              .map((card, i) => ({ card, i }))
-              .reverse()
-              .map(({ card, i }) => {
-                if (i < topIdx || i > topIdx + 1) return null;
-                const mo = motion[i];
-                const behind = i > topIdx;
-                const prevGone = i > 0 ? motion[i - 1].gone : 1;
-                const sc = behind ? 0.94 + 0.06 * Math.min(1, prevGone) : 1;
-                return (
-                  <div
-                    key={card.title}
-                    style={{
-                      position: "absolute",
-                      left: CARD_BOX.left,
-                      top: CARD_BOX.top,
-                      width: CARD_BOX.w,
-                      height: CARD_BOX.h,
-                      transform:
-                        mo && !behind
-                          ? `translate(${mo.dx}px, ${mo.dy}px) rotate(${mo.rot}deg)`
-                          : `translateY(${(1 - Math.min(1, prevGone)) * 10}px) scale(${sc})`,
-                      transformOrigin: "50% 110%",
-                      borderRadius: 28,
-                      boxShadow: behind
-                        ? "none"
-                        : "0 24px 50px -18px rgba(0,0,0,0.55), 0 6px 14px -6px rgba(0,0,0,0.35)",
-                      opacity: behind ? 0.6 + 0.4 * Math.min(1, prevGone) : 1,
-                    }}
-                  >
-                    <DeckCard card={card} accent={accent} t={f}>
-                      {mo && !behind && mo.kind === "like" && (
-                        <Stamp
-                          text="Ship it"
-                          color="#5fe39b"
-                          opacity={mo.stamp}
-                          rot={-12}
-                          style={{ left: 22, top: 30 }}
-                        />
-                      )}
-                      {mo && !behind && mo.kind === "nope" && (
-                        <Stamp
-                          text="Skip"
-                          color="#ff7a7e"
-                          opacity={mo.stamp}
-                          rot={12}
-                          style={{ right: 22, top: 30 }}
-                        />
-                      )}
-                      {mo && !behind && mo.kind === "super" && (
-                        <Stamp
-                          text="Super like"
-                          color="#ffffff"
-                          opacity={mo.stamp}
-                          rot={-6}
-                          style={{ left: 70, top: 200 }}
-                        />
-                      )}
-                    </DeckCard>
-                  </div>
-                );
-              })}
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: BTN_Y - 30,
-                height: 60,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 26,
-                zIndex: 10,
-              }}
-            >
-              {buttons.map((b) => {
-                const g = Math.min(1, b.glow);
-                return (
-                  <div
-                    key={b.d}
-                    style={{
-                      width: b.s,
-                      height: b.s,
-                      borderRadius: b.s / 2,
-                      background:
-                        g > 0.02
-                          ? `color-mix(in oklab, ${b.color} ${Math.round(g * 100)}%, ${c.btn})`
-                          : c.btn,
-                      boxShadow: c.btnRing,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      transform: `scale(${1 + 0.06 * g})`,
-                    }}
-                  >
-                    <Icon
-                      d={b.d}
-                      size={b.s * 0.44}
-                      color={g > 0.5 ? "#fff" : b.color}
-                      sw={b.sw}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            {f >= MATCH && (
-              <AbsoluteFill
-                style={{
-                  zIndex: 20,
-                  background: `color-mix(in oklab, ${c.overlay} ${Math.round(m * 100)}%, transparent)`,
-                  backdropFilter: `blur(${18 * m}px)`,
-                }}
-              >
-                <div
+                <span
                   style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    top: 196,
-                    textAlign: "center",
-                    color: c.text,
                     fontFamily: serif,
-                    fontStyle: "italic",
-                    fontSize: 58,
+                    fontSize: 32,
                     fontWeight: 400,
                     letterSpacing: "-0.01em",
-                    lineHeight: 1,
-                    transform: `translateY(${(1 - mTitle) * 18}px)`,
-                    opacity: mTitle,
-                    filter: `blur(${(1 - mTitle) * 6}px)`,
                   }}
                 >
-                  It’s a match
-                </div>
-                <div
+                  {deckTitle}
+                </span>
+                <Icon d={P.sliders} size={24} color={c.text} />
+              </div>
+              {cards
+                .slice(0, 4)
+                .map((card, i) => ({ card, i }))
+                .reverse()
+                .map(({ card, i }) => {
+                  if (i < topIdx || i > topIdx + 1) return null;
+                  const mo = motion[i];
+                  const behind = i > topIdx;
+                  const prevGone = i > 0 ? motion[i - 1].gone : 1;
+                  const sc = behind ? 0.94 + 0.06 * Math.min(1, prevGone) : 1;
+                  const risingUp =
+                    behind &&
+                    !phoneMoving &&
+                    moves(
+                      (ff) =>
+                        Math.min(1, motionAt(ff)[i - 1].gone) * CARD_BOX.h,
+                      f,
+                      speed,
+                    );
+                  return (
+                    <div
+                      key={card.title}
+                      style={{
+                        position: "absolute",
+                        left: CARD_BOX.left,
+                        top: CARD_BOX.top,
+                        width: CARD_BOX.w,
+                        height: CARD_BOX.h,
+                        transform:
+                          mo && !behind
+                            ? `translate(${mo.dx}px, ${mo.dy}px) rotate(${mo.rot}deg)`
+                            : `translateY(${(1 - Math.min(1, prevGone)) * 10}px) scale(${sc})${glide(risingUp)}`,
+                        transformOrigin: "50% 110%",
+                        borderRadius: 28,
+                        boxShadow: behind
+                          ? "none"
+                          : "0 24px 50px -18px rgba(0,0,0,0.55), 0 6px 14px -6px rgba(0,0,0,0.35)",
+                        opacity: behind ? 0.6 + 0.4 * Math.min(1, prevGone) : 1,
+                      }}
+                    >
+                      <DeckCard card={card} accent={accent} t={f}>
+                        {mo && !behind && mo.kind === "like" && (
+                          <Stamp
+                            text="Ship it"
+                            color="#5fe39b"
+                            opacity={mo.stamp}
+                            rot={-12}
+                            style={{ left: 22, top: 30 }}
+                          />
+                        )}
+                        {mo && !behind && mo.kind === "nope" && (
+                          <Stamp
+                            text="Skip"
+                            color="#ff7a7e"
+                            opacity={mo.stamp}
+                            rot={12}
+                            style={{ right: 22, top: 30 }}
+                          />
+                        )}
+                        {mo && !behind && mo.kind === "super" && (
+                          <Stamp
+                            text="Super like"
+                            color="#ffffff"
+                            opacity={mo.stamp}
+                            rot={-6}
+                            style={{ left: 70, top: 200 }}
+                          />
+                        )}
+                      </DeckCard>
+                    </div>
+                  );
+                })}
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: BTN_Y - 30,
+                  height: 60,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: 26,
+                  zIndex: 10,
+                }}
+              >
+                {buttons.map((b) => {
+                  const g = Math.min(1, b.glow);
+                  return (
+                    <div
+                      key={b.d}
+                      style={{
+                        width: b.s,
+                        height: b.s,
+                        borderRadius: b.s / 2,
+                        background:
+                          g > 0.02
+                            ? `color-mix(in oklab, ${b.color} ${Math.round(g * 100)}%, ${c.btn})`
+                            : c.btn,
+                        boxShadow: c.btnRing,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transform: `scale(${1 + 0.06 * g})`,
+                      }}
+                    >
+                      <Icon
+                        d={b.d}
+                        size={b.s * 0.44}
+                        color={g > 0.5 ? "#fff" : b.color}
+                        sw={b.sw}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              {f >= MATCH && (
+                <AbsoluteFill
                   style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    top: 300,
-                    height: 150,
-                    display: "flex",
-                    justifyContent: "center",
+                    zIndex: 20,
+                    background: `color-mix(in oklab, ${c.overlay} ${Math.round(m * 100)}%, transparent)`,
+                    backdropFilter: `blur(${18 * m}px)`,
                   }}
                 >
                   <div
                     style={{
-                      width: 136,
-                      height: 136,
-                      borderRadius: 68,
-                      position: "relative",
-                      overflow: "hidden",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#fff",
-                      fontSize: 36,
-                      fontWeight: 300,
-                      boxShadow: `0 0 0 4px ${c.screen}, 0 18px 40px -12px rgba(0,0,0,0.5)`,
-                      transform: `translateX(${16 - (1 - mAv[0]) * 80}px) rotate(${-6 * mAv[0]}deg) scale(${0.8 + 0.2 * mAv[0]})`,
-                      opacity: Math.min(1, mAv[0] * 2),
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: 196,
+                      textAlign: "center",
+                      color: c.text,
+                      fontFamily: serif,
+                      fontStyle: "italic",
+                      fontSize: 58,
+                      fontWeight: 400,
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1,
+                      transform: `translateY(${(1 - mTitle) * 18}px)`,
+                      opacity: mTitle,
+                      filter: `blur(${(1 - mTitle) * 6}px)`,
                     }}
                   >
-                    <Photo mood="golden" seed={3} />
-                    <span style={{ position: "relative" }}>{initials}</span>
-                  </div>
-                  <div
-                    style={{
-                      width: 136,
-                      height: 136,
-                      borderRadius: 68,
-                      background: accent,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: `0 0 0 4px ${c.screen}, 0 18px 40px -12px rgba(0,0,0,0.5)`,
-                      transform: `translateX(${-16 + (1 - mAv[1]) * 80}px) rotate(${6 * mAv[1]}deg) scale(${0.8 + 0.2 * mAv[1]})`,
-                      opacity: Math.min(1, mAv[1] * 2),
-                    }}
-                  >
-                    <Icon d={P.play} size={46} color="#fff" fill="#fff" />
+                    {matchTitle}
                   </div>
                   <div
                     style={{
                       position: "absolute",
-                      top: 104,
-                      left: SW / 2 - 22,
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
-                      background: c.btn,
-                      boxShadow: c.btnRing,
+                      left: 0,
+                      right: 0,
+                      top: 300,
+                      height: 150,
                       display: "flex",
-                      alignItems: "center",
                       justifyContent: "center",
-                      transform: `scale(${Math.max(0, mHeart)})`,
                     }}
                   >
-                    <Icon
-                      d={P.heart}
-                      size={22}
-                      color="#ff5a5f"
-                      fill="#ff5a5f"
-                    />
-                  </div>
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 30,
-                    right: 30,
-                    top: 476,
-                    textAlign: "center",
-                    color: c.muted,
-                    fontSize: 18,
-                    lineHeight: 1.4,
-                    opacity: mText,
-                    transform: `translateY(${(1 - mText) * 12}px)`,
-                    textWrap: "balance",
-                  }}
-                >
-                  You and {matchWith} liked the same 4 components.
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 24,
-                    right: 24,
-                    top: 580,
-                    opacity: Math.min(1, mCta * 1.6),
-                    transform: `translateY(${(1 - mCta) * 24}px)`,
-                  }}
-                >
-                  <div
-                    style={{
-                      height: 56,
-                      borderRadius: 28,
-                      background: c.field,
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "0 6px 0 20px",
-                      color: c.muted,
-                      fontSize: 15,
-                      fontFamily: mono,
-                    }}
-                  >
-                    <span style={{ flex: 1, whiteSpace: "nowrap" }}>
-                      npx shadcn add @{matchWith}/…
-                    </span>
                     <div
                       style={{
-                        height: 44,
-                        padding: "0 20px",
-                        borderRadius: 22,
-                        background: accent,
-                        color: "#fff",
-                        fontFamily,
-                        fontSize: 17,
-                        fontWeight: 400,
+                        width: 136,
+                        height: 136,
+                        borderRadius: 68,
+                        position: "relative",
+                        overflow: "hidden",
                         display: "flex",
                         alignItems: "center",
+                        justifyContent: "center",
+                        color: "#fff",
+                        fontSize: 36,
+                        fontWeight: 300,
+                        boxShadow: `0 0 0 4px ${c.screen}, 0 18px 40px -12px rgba(0,0,0,0.5)`,
+                        transform: `translateX(${16 - (1 - mAv[0]) * 80}px) rotate(${-6 * mAv[0]}deg) scale(${0.8 + 0.2 * mAv[0]})`,
+                        opacity: Math.min(1, mAv[0] * 2),
                       }}
                     >
-                      Install
+                      <Photo mood="golden" seed={3} />
+                      <span style={{ position: "relative" }}>{initials}</span>
+                    </div>
+                    <div
+                      style={{
+                        width: 136,
+                        height: 136,
+                        borderRadius: 68,
+                        background: accent,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: `0 0 0 4px ${c.screen}, 0 18px 40px -12px rgba(0,0,0,0.5)`,
+                        transform: `translateX(${-16 + (1 - mAv[1]) * 80}px) rotate(${6 * mAv[1]}deg) scale(${0.8 + 0.2 * mAv[1]})`,
+                        opacity: Math.min(1, mAv[1] * 2),
+                      }}
+                    >
+                      <Icon d={P.play} size={46} color="#fff" fill="#fff" />
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 104,
+                        left: SW / 2 - 22,
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
+                        background: c.btn,
+                        boxShadow: c.btnRing,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transform: `scale(${Math.max(0, mHeart)})`,
+                      }}
+                    >
+                      <Icon
+                        d={P.heart}
+                        size={22}
+                        color="#ff5a5f"
+                        fill="#ff5a5f"
+                      />
                     </div>
                   </div>
                   <div
                     style={{
+                      position: "absolute",
+                      left: 30,
+                      right: 30,
+                      top: 476,
                       textAlign: "center",
-                      color: c.text,
-                      fontSize: 17,
-                      marginTop: 22,
+                      color: c.muted,
+                      fontSize: 18,
+                      lineHeight: 1.4,
+                      opacity: mText,
+                      transform: `translateY(${(1 - mText) * 12}px)`,
+                      textWrap: "balance",
                     }}
                   >
-                    Keep swiping
+                    You and {matchWith} liked the same 4 components.
                   </div>
-                </div>
-              </AbsoluteFill>
-            )}
-            <StatusBar color={c.text} />
-            <div
-              style={{
-                position: "absolute",
-                left: tap.x - 22,
-                top: tap.y - 22,
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                background: "rgba(255,255,255,0.26)",
-                boxShadow:
-                  "0 0 0 1.5px rgba(255,255,255,0.85), 0 4px 14px rgba(0,0,0,0.3)",
-                opacity: tapOpacity,
-                transform: `scale(${tapScale})`,
-                zIndex: 35,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                bottom: 8,
-                left: (SW - 136) / 2,
-                width: 136,
-                height: 5,
-                borderRadius: 3,
-                background: c.text,
-                zIndex: 36,
-              }}
-            />
-          </Phone>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 24,
+                      right: 24,
+                      top: 580,
+                      opacity: Math.min(1, mCta * 1.6),
+                      transform: `translateY(${(1 - mCta) * 24}px)`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: 56,
+                        borderRadius: 28,
+                        background: c.field,
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "0 6px 0 20px",
+                        color: c.muted,
+                        fontSize: 15,
+                        fontFamily: mono,
+                      }}
+                    >
+                      <span style={{ flex: 1, whiteSpace: "nowrap" }}>
+                        npx shadcn add @{matchWith}/…
+                      </span>
+                      <div
+                        style={{
+                          height: 44,
+                          padding: "0 20px",
+                          borderRadius: 22,
+                          background: accent,
+                          color: "#fff",
+                          fontFamily,
+                          fontSize: 17,
+                          fontWeight: 400,
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        {ctaLabel}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        textAlign: "center",
+                        color: c.text,
+                        fontSize: 17,
+                        marginTop: 22,
+                      }}
+                    >
+                      Keep swiping
+                    </div>
+                  </div>
+                </AbsoluteFill>
+              )}
+              <StatusBar color={c.text} />
+              <div
+                style={{
+                  position: "absolute",
+                  // The finger travels by transform: layout rounds a box edge to
+                  // a whole pixel, so a dot moved by left/top steps along.
+                  left: 0,
+                  top: 0,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  background: "rgba(255,255,255,0.26)",
+                  boxShadow:
+                    "0 0 0 1.5px rgba(255,255,255,0.85), 0 4px 14px rgba(0,0,0,0.3)",
+                  opacity: tapOpacity,
+                  transform: `translate(${tap.x - 22}px, ${tap.y - 22}px) scale(${tapScale})`,
+                  zIndex: 35,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 8,
+                  left: (SW - 136) / 2,
+                  width: 136,
+                  height: 5,
+                  borderRadius: 3,
+                  background: c.text,
+                  zIndex: 36,
+                }}
+              />
+            </Phone>
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

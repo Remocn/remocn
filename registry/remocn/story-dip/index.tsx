@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Afacad";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -9,9 +10,9 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const afacad = loadFont("normal", {
   weights: ["400", "500"],
@@ -27,8 +28,20 @@ export interface StoryDipProps {
   setup?: StoryBeat;
   snag?: StoryBeat;
   resolution?: StoryBeat;
+  /** Weight of the story lines. */
+  fontWeight?: number;
+  /** Opacity the snag beat dims to as it falls. */
+  dim?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Afacad by default. */
+  fontFamily?: string;
+  /** Size of the beats, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -64,7 +77,7 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-function useWidths(strings: string[]) {
+function useWidths(strings: string[], font: string) {
   const key = strings.join("\u0001");
   const [state, setState] = useState<{
     key: string;
@@ -76,16 +89,13 @@ function useWidths(strings: string[]) {
   ref.current = strings;
   useEffect(() => {
     let live = true;
-    Promise.all([
-      afacad.waitUntilDone(),
-      document.fonts.load(`400 ${PX}px "${afacad.fontFamily}"`),
-    ])
+    Promise.all([afacad.waitUntilDone(), document.fonts.load(font)])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const ctx = document.createElement("canvas").getContext("2d");
         const w: Record<string, number> = {};
-        if (ctx) ctx.font = `400 ${PX}px "${afacad.fontFamily}"`;
+        if (ctx) ctx.font = font;
         for (const s of ref.current) {
           w[s] = ctx ? ctx.measureText(s).width / PX : s.length * 0.45;
         }
@@ -98,7 +108,7 @@ function useWidths(strings: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, font, handle]);
   return state && state.key === key ? state.w : null;
 }
 
@@ -133,27 +143,53 @@ function balancedLines(ws: string[], adv: (s: string) => number, max: number) {
   return wrapLines(ws, adv, hi);
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function StoryDip({
   setup = DEFAULT_SETUP,
   snag = DEFAULT_SNAG,
   resolution = DEFAULT_RESOLUTION,
+  fontWeight = 400,
+  dim = 0.62,
   accent,
+  ink: inkColor,
   background,
+  fontFamily = afacad.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: StoryDipProps) {
-  const frame = useCurrentFrame();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
-  const { width: W, height: H, durationInFrames: T } = useVideoConfig();
+  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = inkColor ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const beats = [setup, snag, resolution];
   const tokens = beats.map((b) => b.line.split(/\s+/).filter(Boolean));
   const strings = Array.from(new Set([" ", ...tokens.flat()]));
-  const w = useWidths(strings);
+  const w = useWidths(strings, `${fontWeight} ${PX}px "${fontFamily}"`);
 
   if (!w) {
     return (
@@ -199,28 +235,38 @@ export function StoryDip({
   const climbA = at(108);
   const climbB = at(132);
 
-  const fall = interpolate(t, [fallA, fallB], [0, 1], {
-    ...CLAMP,
-    easing: EASE_FALL,
-  });
-  const settle = interpolate(t, [fallB, fallB + 5, fallB + 12], [0, 1, 0], {
-    ...CLAMP,
-    easing: Easing.bezier(0.45, 0, 0.55, 1),
-  });
-  const climb = interpolate(t, [climbA, climbB], [0, 1], {
-    ...CLAMP,
-    easing: EASE_CLIMB,
-  });
-
   const snagStart = portrait
     ? Math.min(lowTop, startTop + heights[0] + gapY)
     : startTop;
-  const snagTop =
-    snagStart + (lowTop - snagStart) * fall + unit * 0.012 * settle;
-  const resTop = lowTop + (highTop - lowTop) * climb;
-  const tops = [startTop, snagTop, resTop];
+  // Each beat is laid out where it ends up; the fall and the climb there are
+  // a transform, since layout rounds a box and a baseline to whole pixels and
+  // a block eased by `top` clicks down pixel by pixel.
+  const tops = [startTop, lowTop, highTop];
+  const travel = [
+    () => 0,
+    (tt: number) => {
+      const fall = interpolate(tt, [fallA, fallB], [0, 1], {
+        ...CLAMP,
+        easing: EASE_FALL,
+      });
+      const settle = interpolate(
+        tt,
+        [fallB, fallB + 5, fallB + 12],
+        [0, 1, 0],
+        { ...CLAMP, easing: Easing.bezier(0.45, 0, 0.55, 1) },
+      );
+      return (snagStart - lowTop) * (1 - fall) + unit * 0.012 * settle;
+    },
+    (tt: number) => {
+      const climb = interpolate(tt, [climbA, climbB], [0, 1], {
+        ...CLAMP,
+        easing: EASE_CLIMB,
+      });
+      return (lowTop - highTop) * (1 - climb);
+    },
+  ];
 
-  const lowDim = interpolate(t, [fallA, fallB], [1, 0.62], CLAMP);
+  const lowDim = interpolate(t, [fallA, fallB], [1, dim], CLAMP);
   const lift = interpolate(t, [climbA + 8, climbB], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.45, 0, 0.55, 1),
@@ -231,88 +277,100 @@ export function StoryDip({
       style={{
         background: stage,
         overflow: "hidden",
-        fontFamily: afacad.fontFamily,
+        fontFamily,
       }}
     >
-      {beats.map((b, i) => {
-        const x = marginX + colOf[i] * (colW + gutter);
-        const slugE = interpolate(t, [inAt[i], inAt[i] + 14], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
-        if (slugE <= 0.001) return null;
-        const lines = laid[i];
-        const count = lines.reduce((n, l) => n + l.length, 0);
-        const step = Math.min(2.4, 14 / Math.max(1, count));
-        let idx = 0;
-        const ink =
-          i === 2 ? interpolateColors(lift, [0, 1], [c.ink, hi]) : c.ink;
-        const inkOpacity = i === 1 ? lowDim : 1;
-        return (
-          <div
-            key={`${b.slug}${String(i)}`}
-            style={{
-              position: "absolute",
-              left: x,
-              top: tops[i],
-              width: colW,
-            }}
-          >
+      <ScaleLayer scale={scale}>
+        {beats.map((b, i) => {
+          const x = marginX + colOf[i] * (colW + gutter);
+          const slugE = interpolate(t, [inAt[i], inAt[i] + 14], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
+          if (slugE <= 0.001) return null;
+          const lines = laid[i];
+          const count = lines.reduce((n, l) => n + l.length, 0);
+          const step = Math.min(2.4, 14 / Math.max(1, count));
+          let idx = 0;
+          const ink = i === 2 ? interpolateColors(lift, [0, 1], [fg, hi]) : fg;
+          const inkOpacity = i === 1 ? lowDim : 1;
+          const dy = travel[i](t);
+          const travelling =
+            Math.abs(travel[i](t + speed) - dy) > 1e-3 ||
+            Math.abs(dy - travel[i](t - speed)) > 1e-3;
+          return (
             <div
+              key={`${b.slug}${String(i)}`}
               style={{
-                fontSize: S,
-                fontWeight: 500,
-                letterSpacing: `${SLUG_TRACK}em`,
-                textTransform: "uppercase",
-                color: hi,
-                lineHeight: 1.2,
-                marginBottom: S * 0.9,
-                whiteSpace: "nowrap",
-                opacity: slugE,
-                transform: `translateY(${((1 - slugE) * S).toFixed(2)}px)`,
+                position: "absolute",
+                left: x,
+                top: tops[i],
+                width: colW,
+                transform:
+                  Math.abs(dy) > 1e-3 || travelling
+                    ? `translateY(${dy}px)${glide(travelling)}`
+                    : undefined,
               }}
             >
-              {b.slug}
-            </div>
-            {lines.map((line, li) => (
               <div
-                key={`${line.join(" ")}${String(li)}`}
                 style={{
-                  height: F * LH,
-                  lineHeight: `${F * LH}px`,
-                  fontSize: F,
-                  whiteSpace: "pre",
-                  letterSpacing: `${LINE_TRACK}em`,
+                  fontSize: S,
+                  fontWeight: 500,
+                  letterSpacing: `${SLUG_TRACK}em`,
+                  textTransform: "uppercase",
+                  color: hi,
+                  lineHeight: 1.2,
+                  marginBottom: S * 0.9,
+                  whiteSpace: "nowrap",
+                  opacity: slugE,
+                  transform: `translateY(${((1 - slugE) * S).toFixed(2)}px)${glide(midway(slugE) && !travelling)}`,
                 }}
               >
-                {line.map((word, wi) => {
-                  const s0 = inAt[i] + 4 + idx * step;
-                  idx++;
-                  const e = interpolate(t, [s0, s0 + 14], [0, 1], {
-                    ...CLAMP,
-                    easing: EASE_OUT,
-                  });
-                  return (
-                    <span
-                      key={`${word}${String(wi)}`}
-                      style={{
-                        display: "inline-block",
-                        color: ink,
-                        opacity: e * inkOpacity,
-                        transform: `translateY(${((1 - e) * F * 0.4).toFixed(2)}px)`,
-                        marginRight:
-                          wi < line.length - 1 ? `${adv(" ").toFixed(3)}em` : 0,
-                      }}
-                    >
-                      {word}
-                    </span>
-                  );
-                })}
+                {b.slug}
               </div>
-            ))}
-          </div>
-        );
-      })}
+              {lines.map((line, li) => (
+                <div
+                  key={`${line.join(" ")}${String(li)}`}
+                  style={{
+                    height: F * LH,
+                    lineHeight: `${F * LH}px`,
+                    fontSize: F,
+                    fontWeight,
+                    whiteSpace: "pre",
+                    letterSpacing: `${LINE_TRACK}em`,
+                  }}
+                >
+                  {line.map((word, wi) => {
+                    const s0 = inAt[i] + 4 + idx * step;
+                    idx++;
+                    const e = interpolate(t, [s0, s0 + 14], [0, 1], {
+                      ...CLAMP,
+                      easing: EASE_OUT,
+                    });
+                    return (
+                      <span
+                        key={`${word}${String(wi)}`}
+                        style={{
+                          display: "inline-block",
+                          color: ink,
+                          opacity: e * inkOpacity,
+                          transform: `translateY(${((1 - e) * F * 0.4).toFixed(2)}px)${glide(midway(e) && !travelling)}`,
+                          marginRight:
+                            wi < line.length - 1
+                              ? `${adv(" ").toFixed(3)}em`
+                              : 0,
+                        }}
+                      >
+                        {word}
+                      </span>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

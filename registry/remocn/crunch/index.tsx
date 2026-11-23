@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Afacad";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -8,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const afacad = loadFont("normal", {
   weights: ["400", "500"],
@@ -27,7 +28,19 @@ export interface CrunchProps {
   snag?: StoryBeat;
   resolution?: StoryBeat;
   accent?: string;
+  /** Text color of the first two lines; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Color of the walls that close in; overrides the theme. */
+  wall?: string;
+  /** Typeface for the copy. Load it yourself; Afacad by default. */
+  fontFamily?: string;
+  /** Weight of the story lines; the slugs keep 500. */
+  fontWeight?: number;
+  /** Size of the copy, around the frame's center; the walls stay put. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -80,7 +93,7 @@ function words(s: string) {
   return s.split(/\s+/).filter(Boolean);
 }
 
-function useWidths(strings: string[]) {
+function useWidths(strings: string[], family: string) {
   const key = strings.join("\u0001");
   const [state, setState] = useState<{
     key: string;
@@ -94,14 +107,14 @@ function useWidths(strings: string[]) {
     let live = true;
     Promise.all([
       afacad.waitUntilDone(),
-      document.fonts.load(`500 ${PX}px "${afacad.fontFamily}"`),
+      document.fonts.load(`500 ${PX}px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const ctx = document.createElement("canvas").getContext("2d");
         const w: Record<string, number> = {};
-        if (ctx) ctx.font = `500 ${PX}px "${afacad.fontFamily}"`;
+        if (ctx) ctx.font = `500 ${PX}px "${family}"`;
         for (const s of ref.current) {
           w[s] = ctx ? ctx.measureText(s).width / PX : s.length * 0.45;
         }
@@ -114,7 +127,7 @@ function useWidths(strings: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, family]);
   return state && state.key === key ? state.w : null;
 }
 
@@ -165,20 +178,46 @@ interface Block {
   slugWords: string[];
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function Crunch({
   setup = DEFAULT_SETUP,
   snag = DEFAULT_SNAG,
   resolution = DEFAULT_RESOLUTION,
   accent,
+  ink,
   background,
+  wall,
+  fontFamily = afacad.fontFamily,
+  fontWeight = 400,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: CrunchProps) {
-  const frame = useCurrentFrame();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
-  const { width: W, height: H, durationInFrames: T } = useVideoConfig();
+  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -189,7 +228,7 @@ export function Crunch({
   const strings = Array.from(
     new Set([" ", ...blocks.flatMap((b) => [...b.lineWords, ...b.slugWords])]),
   );
-  const w = useWidths(strings);
+  const w = useWidths(strings, fontFamily);
 
   if (!w) {
     return (
@@ -308,11 +347,11 @@ export function Crunch({
 
   const wideFor = (b: Block) => layout(b, wideCol);
 
-  const snagPts = (() => {
-    const start = Math.floor(squeezeA);
-    const end = Math.min(Math.floor(t), Math.floor(release));
-    let pos = layout(blocks[1], colAt(start));
-    for (let f = start + 1; f <= end; f++) {
+  const snagStart = Math.floor(squeezeA);
+  const snagAt = (tt: number) => {
+    const end = Math.min(Math.floor(tt), Math.floor(release));
+    let pos = layout(blocks[1], colAt(snagStart));
+    for (let f = snagStart + 1; f <= end; f++) {
       const target = layout(blocks[1], colAt(f));
       pos = pos.map((p, i) => ({
         x: p.x + (target[i].x - p.x) * 0.75,
@@ -320,7 +359,20 @@ export function Crunch({
       }));
     }
     return pos;
-  })();
+  };
+  const snagPts = snagAt(t);
+  // The snag words are laid out where the squeeze starts and ride to their
+  // live place by transform for as long as they are up: layout rounds a
+  // baseline to whole pixels, so words eased by `left`/`top` click along pixel
+  // by pixel, and a word handed back to layout between moves jumps by the
+  // rounding.
+  const snagHome = snagAt(snagStart);
+  const snagPrev = snagAt(t - speed);
+  const snagMoving = snagPts.map(
+    (p, i) =>
+      Math.abs(p.x - snagPrev[i].x) > 1e-3 ||
+      Math.abs(p.y - snagPrev[i].y) > 1e-3,
+  );
 
   const renderBlock = (
     b: Block,
@@ -330,6 +382,8 @@ export function Crunch({
     outAt: number | null,
     lineColor: string,
     slugColor: string,
+    home?: { x: number; y: number }[],
+    riding?: boolean[],
   ) => {
     const n = b.slugWords.length;
     const all = [...b.slugWords, ...b.lineWords];
@@ -342,6 +396,7 @@ export function Crunch({
       });
       let o = e;
       let dy = (1 - e) * (isSlug ? S : F) * 0.45;
+      let moving = midway(e);
       if (outAt !== null) {
         const x0 = outAt + i * 0.8;
         const x = interpolate(t, [x0, x0 + 9], [0, 1], {
@@ -350,24 +405,29 @@ export function Crunch({
         });
         o *= 1 - x;
         dy -= x * F * 0.35;
+        moving ||= midway(x);
       }
       if (o <= 0.001) return null;
       const size = isSlug ? S : F;
+      const ride = home ? home[i] : null;
+      const pos = ride ?? pts[i];
+      const rideX = ride ? `translateX(${pts[i].x - ride.x}px) ` : "";
+      const rideY = ride ? pts[i].y - ride.y : 0;
       return (
         <div
           key={`${key}${i}`}
           style={{
             position: "absolute",
-            left: pts[i].x,
-            top: pts[i].y,
+            left: pos.x,
+            top: pos.y,
             fontSize: size,
             lineHeight: `${isSlug ? size * 1.25 : size * LH}px`,
             whiteSpace: "pre",
-            fontWeight: isSlug ? 500 : 400,
+            fontWeight: isSlug ? 500 : fontWeight,
             letterSpacing: `${isSlug ? SLUG_TRACK : LINE_TRACK}em`,
             color: isSlug ? slugColor : lineColor,
             opacity: o,
-            transform: `translateY(${dy.toFixed(2)}px)`,
+            transform: `${rideX}translateY(${(Number(dy.toFixed(2)) + rideY).toString()}px)${glide(moving || !!riding?.[i])}`,
           }}
         >
           {word}
@@ -383,7 +443,7 @@ export function Crunch({
     bottom: 0,
     [side]: 0,
     width: Math.max(0, wallW),
-    background: c.wall,
+    background: wall ?? c.wall,
     boxShadow:
       wallW > 1
         ? `inset ${side === "left" ? -1 : 1}px 0 0 ${c.edge}`
@@ -395,22 +455,36 @@ export function Crunch({
       style={{
         background: stage,
         overflow: "hidden",
-        fontFamily: afacad.fontFamily,
+        fontFamily,
       }}
     >
-      {renderBlock(
-        blocks[0],
-        wideFor(blocks[0]),
-        "a",
-        setupIn,
-        setupOut,
-        c.ink,
-        hi,
-      )}
-      {renderBlock(blocks[1], snagPts, "b", snagIn, release - 4, c.ink, hi)}
+      <ScaleLayer scale={scale}>
+        {renderBlock(
+          blocks[0],
+          wideFor(blocks[0]),
+          "a",
+          setupIn,
+          setupOut,
+          fg,
+          hi,
+        )}
+        {renderBlock(
+          blocks[1],
+          snagPts,
+          "b",
+          snagIn,
+          release - 4,
+          fg,
+          hi,
+          snagHome,
+          snagMoving,
+        )}
+      </ScaleLayer>
       <div style={wallStyle("left")} />
       <div style={wallStyle("right")} />
-      {renderBlock(blocks[2], wideFor(blocks[2]), "c", resIn, null, hi, hi)}
+      <ScaleLayer scale={scale}>
+        {renderBlock(blocks[2], wideFor(blocks[2]), "c", resIn, null, hi, hi)}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

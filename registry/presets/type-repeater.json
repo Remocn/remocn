@@ -1,0 +1,105 @@
+{
+  "component": "type-repeater",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hypno-spiral",
+      "label": "Hypno Spiral",
+      "description": "A dense spiral of outlined copies stepping from deep ink to warm coral, turning at a brisk pace.",
+      "askedAs": [
+        "spinning spiral of the word",
+        "hypnotic swirling text",
+        "word twisting into a vortex",
+        "спираль из слова",
+        "гипнотический вихрь текста"
+      ],
+      "props": {
+        "mode": "spiral",
+        "copies": 20,
+        "color": "#1b1b2f",
+        "accent": "#ff7a59",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-fan",
+      "label": "Slow Fan",
+      "description": "A few heavy solid copies fanning out slowly in navy fading to soft sky blue.",
+      "askedAs": [
+        "word fanning out like cards",
+        "slow calm fan of text",
+        "gentle spread of solid copies",
+        "веер из слова",
+        "медленный веер текста"
+      ],
+      "props": {
+        "mode": "fan",
+        "copies": 6,
+        "outline": false,
+        "color": "#1f3a5f",
+        "accent": "#a8c8e8",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "deep-tunnel",
+      "label": "Deep Tunnel",
+      "description": "A big, maximal tunnel of thin outlined copies receding from forest green to pale mint.",
+      "askedAs": [
+        "endless tunnel of text",
+        "word going deep into the screen",
+        "infinite zoom tunnel title",
+        "бесконечный туннель из слова",
+        "текст уходит вглубь"
+      ],
+      "props": {
+        "copies": 24,
+        "fontSize": 160,
+        "fontWeight": 300,
+        "color": "#1e4d3a",
+        "accent": "#d4efe2"
+      }
+    },
+    {
+      "id": "punchy-pop",
+      "label": "Punchy Pop",
+      "description": "A fast, chunky solid burst in tomato red stepping to butter yellow for a loud beat.",
+      "askedAs": [
+        "fast energetic word burst",
+        "bold punchy repeating title",
+        "quick hit of repeated text",
+        "быстрый яркий повтор слова",
+        "энергичный заголовок с повтором"
+      ],
+      "props": {
+        "outline": false,
+        "fontWeight": 900,
+        "color": "#e63946",
+        "accent": "#ffd166",
+        "speed": 2.5,
+        "copies": 8
+      }
+    },
+    {
+      "id": "quiet-echo",
+      "label": "Quiet Echo",
+      "description": "A small, light-weight word with a short monochrome echo of grey copies drifting slowly.",
+      "askedAs": [
+        "subtle minimal text echo",
+        "understated repeating word",
+        "soft grey trailing copies",
+        "тонкое эхо слова",
+        "минималистичный повтор текста"
+      ],
+      "props": {
+        "copies": 4,
+        "fontSize": 72,
+        "fontWeight": 200,
+        "color": "#3a3a3a",
+        "accent": "#c8c8c8",
+        "speed": 0.75
+      }
+    }
+  ]
+}

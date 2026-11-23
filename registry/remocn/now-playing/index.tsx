@@ -3,20 +3,14 @@
 import { loadFont } from "@remotion/google-fonts/Figtree";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const figtree = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -30,7 +24,23 @@ export interface NowPlayingProps {
   lyrics?: string[];
   duration?: number;
   variant?: "full" | "mini";
+  /** Status beside the copy once the track plays. */
+  nowPlayingLabel?: string;
+  /** Status beside the copy before the play tap. */
+  pausedLabel?: string;
+  /** Frames each lyric line stays current. */
+  lineHold?: number;
   accent?: string;
+  /** Text color of the copy beside the phone; overrides the default white. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Size of the phone and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -332,7 +342,7 @@ function Artwork({
           x="7"
           y="11"
           fill="#FFF7EC"
-          fontFamily={fontFamily}
+          fontFamily={figtree.fontFamily}
           fontSize="4.4"
           fontWeight={400}
           letterSpacing="0.05"
@@ -346,7 +356,7 @@ function Artwork({
           y="94"
           fill="#FFF7EC"
           fillOpacity={0.82}
-          fontFamily={fontFamily}
+          fontFamily={figtree.fontFamily}
           fontSize="3.6"
           fontWeight={400}
           letterSpacing="0.6"
@@ -751,6 +761,24 @@ const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH = { damping: 200 };
 const GLIDE = { mass: 0.9, damping: 24, stiffness: 140 };
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function NowPlaying({
   title = "Launch Day",
   artist = "remocn",
@@ -760,13 +788,22 @@ export function NowPlaying({
   lyrics = DEFAULT_LYRICS,
   duration = 165,
   variant = "full",
+  nowPlayingLabel = "Now playing",
+  pausedLabel = "Paused",
+  lineHold = LINE_LEN,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = figtree.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: NowPlayingProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { fps, width, height } = useSceneConfig();
   const f = frame * speed;
   const mini = variant === "mini";
   const t = f - (mini ? MINI_OFFSET : 0);
@@ -795,12 +832,12 @@ export function NowPlaying({
           Math.min(1, (t - TAP_HEART) / 2);
 
   const scroll = 430 * sp(LYRICS, { mass: 1, damping: 24, stiffness: 90 });
-  const lineT = (t - LINE0) / LINE_LEN;
+  const lineT = (t - LINE0) / lineHold;
   const maxShift = Math.max(0, lyrics.length * 42 - 340);
   let listShift = 0;
   for (let i = 4; i < lyrics.length; i++) {
     listShift +=
-      42 * spring({ frame: t - (LINE0 + i * LINE_LEN), fps, config: MORPH });
+      42 * spring({ frame: t - (LINE0 + i * lineHold), fps, config: MORPH });
   }
   listShift = Math.min(maxShift, listShift);
 
@@ -872,7 +909,7 @@ export function NowPlaying({
 
   const items = [
     { at: -999, text: title, sub: artist },
-    ...lyrics.map((l, i) => ({ at: LINE0 + i * LINE_LEN, text: l, sub: "" })),
+    ...lyrics.map((l, i) => ({ at: LINE0 + i * lineHold, text: l, sub: "" })),
   ];
   let cur = 0;
   for (let i = 0; i < items.length; i++) if (t >= items[i].at) cur = i;
@@ -974,7 +1011,11 @@ export function NowPlaying({
             <div
               style={{
                 position: "absolute",
-                left: `${progress * 100}%`,
+                // The knob rides the bar as a transform (the bar spans the
+                // player less its 24px insets): layout rounds a box to whole
+                // pixels, so a knob moved by `left` clicks along.
+                left: 0,
+                transform: `translateX(${progress * (SW - 48)}px)`,
                 top: -4,
                 width: 12,
                 height: 12,
@@ -1202,225 +1243,240 @@ export function NowPlaying({
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={groundParams}
-        timeOffset={3}
-        timeScale={0.35}
-      />
-      <AbsoluteFill
-        style={{
-          background: portrait
-            ? "linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 100%)"
-            : "linear-gradient(90deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%)",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - stageW * u) / 2,
-          top: (height - stageH * u) / 2,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${u})`,
-          transformOrigin: "0 0",
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={resolvedGround}
+            params={groundParams}
+            timeOffset={3}
+            timeScale={0.35}
+          />
+          <AbsoluteFill
+            style={{
+              background: portrait
+                ? "linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 100%)"
+                : "linear-gradient(90deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%)",
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: phoneC.x - BW / 2,
-            top: phoneC.y - BH / 2,
-            width: BW,
-            height: BH,
-            transform: `translateY(${(1 - rise) * stageH * 0.7}px) scale(${k * (1 + 0.015 * (f / 300))})`,
+            left: (width - stageW * u) / 2,
+            top: (height - stageH * u) / 2,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${u})`,
+            transformOrigin: "0 0",
           }}
         >
-          <Phone>
-            {mini ? <MiniHome tint={tint} artist={artist} /> : null}
-            <div
-              style={{
-                position: "absolute",
-                left: sheet.left,
-                top: sheet.top,
-                width: sheet.w,
-                height: sheet.h,
-                borderRadius: sheet.r,
-                overflow: "hidden",
-                background: bg,
-              }}
-            >
+          <div
+            style={{
+              position: "absolute",
+              left: phoneC.x - BW / 2,
+              top: phoneC.y - BH / 2,
+              width: BW,
+              height: BH,
+              // The phone never stops drifting, so its text always leans.
+              transform: `translateY(${(1 - rise) * stageH * 0.7}px) scale(${k * (1 + 0.015 * (f / 300))})${glide(true)}`,
+            }}
+          >
+            <Phone>
+              {mini ? <MiniHome tint={tint} artist={artist} /> : null}
               <div
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  transform: `translateY(${-scroll}px)`,
+                  left: sheet.left,
+                  top: sheet.top,
+                  width: sheet.w,
+                  height: sheet.h,
+                  borderRadius: sheet.r,
+                  overflow: "hidden",
+                  background: bg,
                 }}
               >
-                {player}
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  height: 96,
-                  background: `linear-gradient(${mix(tint, "#121212", 0.72)} 58%, transparent)`,
-                  opacity: interpolate(scroll, [200, 380], [0, 1], clamp),
-                }}
-              />
-            </div>
-            <StatusBar />
-            <div
-              style={{
-                position: "absolute",
-                left: tap.x - 22,
-                top: tap.y - 22,
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                background: "rgba(255,255,255,0.3)",
-                boxShadow: "inset 0 0 0 1.5px rgba(255,255,255,0.7)",
-                opacity: tapOpacity,
-                transform: `scale(${1 - 0.2 * tapPress})`,
-                zIndex: 35,
-              }}
-            />
-          </Phone>
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            left: textX,
-            top: textTop,
-            width: textW,
-            color: "#fff",
-            opacity: interpolate(f, [10, 24], [0, 1], {
-              ...clamp,
-              easing: ENTER,
-            }),
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              fontSize: 18,
-              color: "rgba(255,255,255,0.62)",
-            }}
-          >
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                background: accent,
-                transform: `scale(${Math.min(1, playing)})`,
-              }}
-            />
-            {t < TAP_PLAY ? "Paused" : "Now playing"} · {playlist}
-          </div>
-          <div
-            style={{
-              position: "relative",
-              height: bigSize * 1.08 * 2 + 60,
-              marginTop: 22,
-              overflow: "hidden",
-            }}
-          >
-            {[cur - 1, cur].map((idx) => {
-              if (idx < 0) return null;
-              const it = items[idx];
-              const isCur = idx === cur;
-              const inP = isCur
-                ? idx === 0
-                  ? 1
-                  : interpolate(t, [it.at + 4, it.at + 15], [0, 1], {
-                      ...clamp,
-                      easing: ENTER,
-                    })
-                : 1;
-              const outP = isCur
-                ? 0
-                : interpolate(t, [items[cur].at, items[cur].at + 6], [0, 1], {
-                    ...clamp,
-                    easing: EXIT,
-                  });
-              if (outP >= 1) return null;
-              return (
                 <div
-                  key={idx}
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    transform: `translateY(${-scroll}px)`,
+                  }}
+                >
+                  {player}
+                </div>
+                <div
                   style={{
                     position: "absolute",
                     left: 0,
+                    right: 0,
                     top: 0,
-                    width: textW,
-                    opacity: inP * (1 - outP),
-                    transform: `translateY(${(1 - inP) * bigSize * 1.6 - outP * bigSize * 1.2}px)`,
+                    height: 96,
+                    background: `linear-gradient(${mix(tint, "#121212", 0.72)} 58%, transparent)`,
+                    opacity: interpolate(scroll, [200, 380], [0, 1], clamp),
                   }}
-                >
-                  <div
-                    style={{
-                      fontSize: bigSize,
-                      fontWeight: 300,
-                      lineHeight: 1.08,
-                      letterSpacing: "-0.035em",
-                      textWrap: "balance",
-                    }}
-                  >
-                    {it.text}
-                  </div>
-                  {it.sub ? (
-                    <div
-                      style={{
-                        fontSize: 26,
-                        fontWeight: 300,
-                        marginTop: 14,
-                        color: "rgba(255,255,255,0.62)",
-                      }}
-                    >
-                      {it.sub}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              fontSize: 18,
-              color: "rgba(255,255,255,0.62)",
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            <span>{fmt(elapsed)}</span>
-            <div
-              style={{
-                flex: 1,
-                height: 2,
-                borderRadius: 1,
-                background: "rgba(255,255,255,0.18)",
-              }}
-            >
+                />
+              </div>
+              <StatusBar />
               <div
                 style={{
-                  width: `${progress * 100}%`,
-                  height: 2,
-                  borderRadius: 1,
-                  background: "#fff",
+                  position: "absolute",
+                  // Laid out at the first key; the travel between taps is a
+                  // transform, for the same reason as the progress knob.
+                  left: keys[0].x - 22,
+                  top: keys[0].y - 22,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  background: "rgba(255,255,255,0.3)",
+                  boxShadow: "inset 0 0 0 1.5px rgba(255,255,255,0.7)",
+                  opacity: tapOpacity,
+                  transform: `translate(${tap.x - keys[0].x}px, ${tap.y - keys[0].y}px) scale(${1 - 0.2 * tapPress})`,
+                  zIndex: 35,
                 }}
               />
+            </Phone>
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              left: textX,
+              top: textTop,
+              width: textW,
+              color: ink ?? "#fff",
+              opacity: interpolate(f, [10, 24], [0, 1], {
+                ...clamp,
+                easing: ENTER,
+              }),
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                fontSize: 18,
+                color: "rgba(255,255,255,0.62)",
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  background: accent,
+                  transform: `scale(${Math.min(1, playing)})`,
+                }}
+              />
+              {t < TAP_PLAY ? pausedLabel : nowPlayingLabel} · {playlist}
             </div>
-            <span>{fmt(duration)}</span>
+            <div
+              style={{
+                position: "relative",
+                height: bigSize * 1.08 * 2 + 60,
+                marginTop: 22,
+                overflow: "hidden",
+              }}
+            >
+              {[cur - 1, cur].map((idx) => {
+                if (idx < 0) return null;
+                const it = items[idx];
+                const isCur = idx === cur;
+                const inP = isCur
+                  ? idx === 0
+                    ? 1
+                    : interpolate(t, [it.at + 4, it.at + 15], [0, 1], {
+                        ...clamp,
+                        easing: ENTER,
+                      })
+                  : 1;
+                const outP = isCur
+                  ? 0
+                  : interpolate(t, [items[cur].at, items[cur].at + 6], [0, 1], {
+                      ...clamp,
+                      easing: EXIT,
+                    });
+                if (outP >= 1) return null;
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      width: textW,
+                      opacity: inP * (1 - outP),
+                      transform: `translateY(${(1 - inP) * bigSize * 1.6 - outP * bigSize * 1.2}px)${glide(midway(inP) || midway(outP))}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: bigSize,
+                        fontWeight: 300,
+                        lineHeight: 1.08,
+                        letterSpacing: "-0.035em",
+                        textWrap: "balance",
+                      }}
+                    >
+                      {it.text}
+                    </div>
+                    {it.sub ? (
+                      <div
+                        style={{
+                          fontSize: 26,
+                          fontWeight: 300,
+                          marginTop: 14,
+                          color: "rgba(255,255,255,0.62)",
+                        }}
+                      >
+                        {it.sub}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                fontSize: 18,
+                color: "rgba(255,255,255,0.62)",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              <span>{fmt(elapsed)}</span>
+              <div
+                style={{
+                  flex: 1,
+                  height: 2,
+                  borderRadius: 1,
+                  background: "rgba(255,255,255,0.18)",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${progress * 100}%`,
+                    height: 2,
+                    borderRadius: 1,
+                    background: "#fff",
+                  }}
+                />
+              </div>
+              <span>{fmt(duration)}</span>
+            </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

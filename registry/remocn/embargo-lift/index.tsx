@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const shoulders = loadFont("normal", {
   weights: ["400", "500"],
@@ -24,7 +24,18 @@ export interface EmbargoLiftProps {
   liftedSlug?: string;
   highlight?: number;
   accent?: string;
+  /** Text and bar color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Big Shoulders by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between one bar lifting and the next. */
+  stagger?: number;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -82,11 +93,11 @@ interface Metrics {
   dsc: number;
 }
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], font: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("embargo-lift: no 2d context");
-  ctx.font = `${WGHT} ${PX}px "${shoulders.fontFamily}"`;
+  ctx.font = font;
   const w: Record<string, number> = {};
   for (const s of texts) w[s] = ctx.measureText(s).width / PX;
   const fm = ctx.measureText("Hgp");
@@ -101,8 +112,9 @@ function measureAll(texts: string[]): Metrics {
   };
 }
 
-function useMetrics(texts: string[]) {
-  const key = texts.join("\u0001");
+function useMetrics(texts: string[], fontFamily: string, fontWeight: number) {
+  const font = `${fontWeight} ${PX}px "${fontFamily}"`;
+  const key = `${font}\u0002${texts.join("\u0001")}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("embargo-lift: measuring"));
   const released = useRef(false);
@@ -110,12 +122,15 @@ function useMetrics(texts: string[]) {
     let live = true;
     Promise.all([
       shoulders.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${shoulders.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureAll(key.split("\u0001")) });
+        setState({
+          key,
+          m: measureAll(key.split("\u0002")[1].split("\u0001"), font),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -124,8 +139,26 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, font, fontFamily, fontWeight]);
   return state && state.key === key ? state.m : null;
+}
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function EmbargoLift({
@@ -134,14 +167,22 @@ export function EmbargoLift({
   liftedSlug = "Embargo lifted, 9:00 a.m.",
   highlight,
   accent,
+  ink,
   background,
+  fontFamily = shoulders.fontFamily,
+  fontWeight = WGHT,
+  stagger = LIFT_STEP,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: EmbargoLiftProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -155,7 +196,7 @@ export function EmbargoLift({
   const hiBar = highlight ?? barCount - 1;
 
   const naturalEnd =
-    T_LIFT + Math.max(0, barCount - 1) * LIFT_STEP + LIFT_DUR + HOLD;
+    T_LIFT + Math.max(0, barCount - 1) * stagger + LIFT_DUR + HOLD;
   const pace = Math.max(1, naturalEnd / Math.max(1, durationInFrames));
   const t = frame * speed * pace;
 
@@ -169,7 +210,7 @@ export function EmbargoLift({
     texts.push(prefix);
   }
   texts.push(slug, liftedSlug);
-  const m = useMetrics(texts);
+  const m = useMetrics(texts, fontFamily, fontWeight);
 
   if (!m) {
     return (
@@ -200,8 +241,8 @@ export function EmbargoLift({
     height: s,
     lineHeight: `${s}px`,
     whiteSpace: "pre",
-    fontFamily: shoulders.fontFamily,
-    fontWeight: WGHT,
+    fontFamily,
+    fontWeight,
     fontSize: s,
   });
 
@@ -224,14 +265,14 @@ export function EmbargoLift({
           left,
           top: boxTop(base, size),
           opacity: p,
-          transform: `translateY(${dy.toFixed(2)}px)`,
-          color: c.ink,
+          transform: `translateY(${dy.toFixed(2)}px)${glide(midway(p))}`,
+          color: fg,
         }}
       >
         {segs.map((s, i) => (
           <span
             key={`${r}-${i}`}
-            style={{ color: s.hidden && s.bar === hiBar ? hi : c.ink }}
+            style={{ color: s.hidden && s.bar === hiBar ? hi : fg }}
           >
             {s.text}
           </span>
@@ -248,7 +289,7 @@ export function EmbargoLift({
       const barTop = base - (m.cap + 0.05) * size;
       const barBottom =
         base + (Math.min(Math.max(m.dsc, 0.1), 0.24) + 0.02) * size;
-      const startAt = T_LIFT + s.bar * LIFT_STEP;
+      const startAt = T_LIFT + s.bar * stagger;
       const g = interpolate(t, [startAt, startAt + LIFT_DUR], [1, 0], {
         ...CLAMP,
         easing: EASE_LIFT,
@@ -263,7 +304,7 @@ export function EmbargoLift({
             top: barTop,
             width: tw + padX * 2,
             height: barBottom - barTop,
-            background: c.ink,
+            background: fg,
             opacity: p,
             transform: `translateY(${dy.toFixed(2)}px) scaleX(${g.toFixed(4)})`,
             transformOrigin: "100% 50%",
@@ -291,9 +332,9 @@ export function EmbargoLift({
         ...textStyle(slugSize),
         left: (W - m.w[text] * slugSize) / 2,
         top: boxTop(slugBase, slugSize) - slugClipTop,
-        color: c.ink,
+        color: fg,
         opacity: o,
-        transform: `translateY(${y.toFixed(2)}px)`,
+        transform: `translateY(${y.toFixed(2)}px)${glide(midway(flip))}`,
       }}
     >
       {text}
@@ -324,7 +365,7 @@ export function EmbargoLift({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,0 +1,116 @@
+{
+  "component": "sankey-flow",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "light-editorial",
+      "label": "Light Editorial",
+      "description": "A clean paper-white chart set in Instrument Serif with an ink-blue accent and no grain.",
+      "askedAs": [
+        "light version with serif font",
+        "clean white editorial sankey",
+        "magazine style data chart",
+        "светлая версия с засечками",
+        "журнальный стиль диаграммы"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "accent": "#1f3a8a",
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-pour",
+      "label": "Slow Pour",
+      "description": "Long, unhurried flows with wide staggering that let each channel land before the total.",
+      "askedAs": [
+        "make the flows slower and calmer",
+        "gentle slow merge animation",
+        "cinematic slow data reveal",
+        "медленные плавные потоки",
+        "спокойная неторопливая анимация"
+      ],
+      "props": {
+        "flowLength": 72,
+        "stagger": 14,
+        "speed": 0.75,
+        "delay": 12
+      }
+    },
+    {
+      "id": "snap-merge",
+      "label": "Snap Merge",
+      "description": "All sources fire almost together in short, punchy flows for a fast, energetic beat.",
+      "askedAs": [
+        "fast punchy sankey",
+        "quick snappy merge",
+        "all flows at once",
+        "быстрое резкое слияние",
+        "динамичная короткая анимация"
+      ],
+      "props": {
+        "flowLength": 14,
+        "stagger": 1,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A near-black console look in JetBrains Mono with a muted green accent and pale mint text.",
+      "askedAs": [
+        "developer terminal style",
+        "monospace code look chart",
+        "hacker green data flow",
+        "стиль терминала моноширинный",
+        "зелёный как в консоли"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d7f5e3",
+        "accent": "#3fb97a",
+        "grain": false
+      }
+    },
+    {
+      "id": "warm-clay",
+      "label": "Warm Clay",
+      "description": "Soft cream background, dark cocoa text and a terracotta accent in Fraunces for a warm, human feel.",
+      "askedAs": [
+        "warm earthy colors",
+        "cream and terracotta palette",
+        "cozy friendly data chart",
+        "тёплые земляные цвета",
+        "кремовый фон с терракотой"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4ede3",
+        "ink": "#2e211a",
+        "accent": "#c2593a",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "big-total",
+      "label": "Big Total",
+      "description": "An oversized, bold layout in Space Grotesk with a violet accent so the total dominates the frame.",
+      "askedAs": [
+        "make it bigger and bolder",
+        "huge headline number",
+        "zoomed in large chart",
+        "сделать крупнее и жирнее",
+        "большая итоговая цифра"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontFamily": "Space Grotesk",
+        "accent": "#7c5cff",
+        "stagger": 8
+      }
+    }
+  ]
+}

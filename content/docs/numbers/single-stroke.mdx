@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="SingleStroke"
     component={SingleStrokeScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -75,14 +75,49 @@ A coloured panel slides in and the number is drawn as one continuous stroke with
       description: "Caption under the unit; words fade in one by one.",
     },
     {
+      name: "drawDuration",
+      type: "number",
+      default: "46",
+      description: "Frames the stroke takes to write the number.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between label words.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Overrides the panel colour in dark, or the stroke colour in light.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Overrides the background colour of the stage.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Archivo\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the number and of the panel copy, each around its own center; the background and panel stay put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

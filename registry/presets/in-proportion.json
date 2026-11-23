@@ -1,0 +1,122 @@
+{
+  "component": "in-proportion",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-retort",
+      "label": "Snappy Retort",
+      "description": "Fast, punchy replies that snap in word by word with a quick shrink on a dark ground.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick snappy answers",
+        "energetic fast comeback",
+        "быстрее и резче",
+        "динамичный ответ"
+      ],
+      "props": {
+        "speed": 1.75,
+        "stagger": 1,
+        "shrink": 10,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "editorial-calm",
+      "label": "Editorial Calm",
+      "description": "A slow, elegant serif on warm paper with a deep terracotta accent for the answer.",
+      "askedAs": [
+        "elegant serif magazine look",
+        "slow and calm light version",
+        "classy editorial style",
+        "спокойный журнальный стиль",
+        "элегантный шрифт с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#b5532c",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-mint",
+      "label": "Midnight Mint",
+      "description": "Deep navy background with soft mint replies and a relaxed word cadence.",
+      "askedAs": [
+        "dark blue with green highlight",
+        "cool calm night palette",
+        "navy and mint colors",
+        "тёмно-синий с мятным",
+        "холодная ночная палитра"
+      ],
+      "props": {
+        "background": "#0f1b2d",
+        "ink": "#e6edf5",
+        "accent": "#7ee0b8",
+        "stagger": 5,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "terminal-reply",
+      "label": "Terminal Reply",
+      "description": "Monospace type on near-black with an amber accent and a typed, deliberate stagger.",
+      "askedAs": [
+        "developer code style",
+        "monospace terminal look",
+        "hacker console vibe",
+        "как в терминале",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#111111",
+        "ink": "#d8d8d8",
+        "accent": "#f5a623",
+        "stagger": 8,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "big-bold-pop",
+      "label": "Big Bold Pop",
+      "description": "Oversized chunky grotesque on clean white with a coral answer that lands with a long shrink.",
+      "askedAs": [
+        "make the text huge",
+        "bold playful big type",
+        "loud bright light version",
+        "крупный жирный текст",
+        "яркий игривый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.35,
+        "accent": "#ff5a4e",
+        "shrink": 44
+      }
+    },
+    {
+      "id": "slow-burn",
+      "label": "Slow Burn",
+      "description": "A delayed, unhurried build in Fraunces with a muted gold accent for dramatic tension.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "wait before it starts",
+        "cinematic slow pacing",
+        "медленное драматичное появление",
+        "с паузой в начале"
+      ],
+      "props": {
+        "speed": 0.5,
+        "delay": 30,
+        "stagger": 7,
+        "fontFamily": "Fraunces",
+        "accent": "#d4a84b"
+      }
+    }
+  ]
+}

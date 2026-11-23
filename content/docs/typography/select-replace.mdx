@@ -40,8 +40,8 @@ export const RemotionRoot = () => (
   <Composition
     id="SelectReplace"
     component={SelectReplaceScene}
-    durationInFrames={170}
-    fps={30}
+    durationInFrames={340}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -64,10 +64,50 @@ The `text` shows, then each `edits` item selects a `from` phrase and swaps in it
       description: "List of `{ from, to }` replacements applied in order.",
     },
     {
+      name: "hold",
+      type: "number",
+      default: "9",
+      description: "Frames the selection holds before it is typed over.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "Weight of the line; typed words stay in the italic serif.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the line; typed words keep the italic serif. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

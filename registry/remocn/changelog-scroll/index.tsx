@@ -6,13 +6,9 @@ import { loadFont as loadSerif } from "@remotion/google-fonts/Newsreader";
 import { loadFont as loadOnest } from "@remotion/google-fonts/Onest";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadOnest("normal", {
   weights: ["400", "500"],
@@ -44,6 +40,22 @@ export interface ChangelogScrollProps {
   url?: string;
   logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the focused entry and logo; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the entries and labels. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Frames the list scrolls before it lands on the focus entry; later beats follow. */
+  scrollLength?: number;
+  /** Rows the list scrolls past before it lands. */
+  scrollRows?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the list and labels, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -113,6 +125,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const THEMES = {
   dark: {
@@ -201,9 +215,9 @@ function split(text: string) {
   return { tag: text.slice(0, i), body: text.slice(i + 3) };
 }
 
-function scrollOffset(t: number) {
-  const p = interpolate(t, [0, LAND], [0, 1], CLAMP);
-  return -SCROLL_ROWS * (1 - Easing.bezier(0.22, 1, 0.36, 1)(p));
+function scrollOffset(t: number, land: number, rows: number) {
+  const p = interpolate(t, [0, land], [0, 1], CLAMP);
+  return -rows * (1 - Easing.bezier(0.22, 1, 0.36, 1)(p));
 }
 
 function Grain({ opacity }: { opacity: number }) {
@@ -263,6 +277,8 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
 function Row({
   entry,
   y,
+  shift,
+  moving,
   left,
   right,
   textLeft,
@@ -271,9 +287,14 @@ function Row({
   rowH,
   opacity,
   c,
+  fontFamily,
 }: {
   entry: ChangelogEntry;
+  /** Where the row is laid out: its place once the list has settled. */
   y: number;
+  /** How far it is from there right now. */
+  shift: number;
+  moving: boolean;
   left: number;
   right: number;
   textLeft: number;
@@ -282,7 +303,9 @@ function Row({
   rowH: number;
   opacity: number;
   c: (typeof THEMES)[keyof typeof THEMES];
+  fontFamily: string;
 }) {
+  const glide = useGlide();
   return (
     <div
       style={{
@@ -292,6 +315,10 @@ function Row({
         top: y - rowH / 2,
         height: rowH,
         opacity,
+        // The scroll is a transform, not `top`: layout rounds a baseline to
+        // whole pixels, so the last rows of an eased scroll click into place
+        // pixel by pixel.
+        transform: `translateY(${shift}px)${glide(moving)}`,
       }}
     >
       <div
@@ -336,7 +363,7 @@ function Row({
           height: rowH,
           display: "flex",
           alignItems: "center",
-          fontFamily: sans,
+          fontFamily,
           fontWeight: 500,
           fontSize: rowFont,
           letterSpacing: `${ROW_TRACK}em`,
@@ -350,6 +377,22 @@ function Row({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ChangelogScroll({
   entries = DEFAULT_ENTRIES,
   focus = 9,
@@ -357,13 +400,28 @@ export function ChangelogScroll({
   url = "remocn.dev/changelog",
   logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scrollLength = LAND,
+  scrollRows = SCROLL_ROWS,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: ChangelogScrollProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
+  const landAt = scrollLength;
+  const expandAt = EXPAND + (scrollLength - LAND);
+  const expandEnd = EXPAND_END + (scrollLength - LAND);
   const n = Math.max(1, entries.length);
   const fi = Math.min(Math.max(0, Math.round(focus)), n - 1);
   const hero = entries[fi] ?? { date: "", text: "" };
@@ -381,30 +439,38 @@ export function ChangelogScroll({
   const kickerGap = 18 * u;
   const bandBig = heroF * 1.12 + dateFont + kickerGap + 64 * u;
 
-  const off = scrollOffset(t);
-  const v = (off - scrollOffset(t - 1)) * rowH;
+  const off = scrollOffset(t, landAt, scrollRows);
+  const v = (off - scrollOffset(t - 1, landAt, scrollRows)) * rowH;
   const fast = interpolate(Math.abs(v), [10 * u, 70 * u], [0, 1], CLAMP);
   const intro = interpolate(t, [0, 8], [0, 1], CLAMP);
 
-  const land = interpolate(t, [LAND, LAND + 14], [0, 1], {
+  const land = interpolate(t, [landAt, landAt + 14], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const ex = interpolate(t, [EXPAND, EXPAND_END], [0, 1], {
+  const ex = interpolate(t, [expandAt, expandEnd], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const accentIn = interpolate(t, [EXPAND_END - 8, EXPAND_END + 8], [0, 1], {
+  const accentIn = interpolate(t, [expandEnd - 8, expandEnd + 8], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const chrome = interpolate(t, [EXPAND_END - 4, EXPAND_END + 16], [0, 1], {
+  const chrome = interpolate(t, [expandEnd - 4, expandEnd + 16], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
-  const bandH = rowH + (bandBig - rowH) * ex;
+  const bandAt = (e: number) => rowH + (bandBig - rowH) * e;
+  const bandH = bandAt(ex);
+  const bandEnd = bandAt(1);
   const push = (bandH - rowH) / 2;
+  const rowY = (rel: number, apart: number) =>
+    cy + rel * rowH + Math.sign(rel) * apart * Math.min(1, Math.abs(rel));
+  // Not `midway(ex)`: the hero's tracking keeps changing its layout until the
+  // last frame of the expansion, and the lean must not go in such a frame.
+  const expanding = t > expandAt - speed && t < expandEnd + speed;
+  const rowsMoving = (t > 0 && t < landAt) || expanding;
 
   const visible = Math.ceil(H / rowH / 2) + 3;
   const base = Math.round(off);
@@ -413,8 +479,8 @@ export function ChangelogScroll({
     const i = fi + base + k;
     const rel = i - fi - off;
     const entry = entries[((i % n) + n) % n];
-    const y =
-      cy + rel * rowH + Math.sign(rel) * push * Math.min(1, Math.abs(rel));
+    const y = rowY(rel, push);
+    const home = rowY(i - fi, (bandEnd - rowH) / 2);
     const isFocus = i === fi;
     const dim = 1 - land * 0.45;
     const op = intro * (isFocus ? 1 : dim);
@@ -424,7 +490,9 @@ export function ChangelogScroll({
         <Row
           key={`g${i}-${g}`}
           entry={entry}
-          y={y + v * g * 0.05}
+          y={home}
+          shift={y + v * g * 0.05 - home}
+          moving={rowsMoving}
           left={margin}
           right={margin}
           textLeft={textLeft}
@@ -433,15 +501,18 @@ export function ChangelogScroll({
           rowH={rowH}
           opacity={op * fast * 0.16 * (1 - g / 6)}
           c={c}
+          fontFamily={fontFamily}
         />,
       );
     }
-    if (isFocus && t >= LAND) continue;
+    if (isFocus && t >= landAt) continue;
     rows.push(
       <Row
         key={`r${i}`}
         entry={entry}
-        y={y}
+        y={home}
+        shift={y - home}
+        moving={rowsMoving}
         left={margin}
         right={margin}
         textLeft={textLeft}
@@ -450,6 +521,7 @@ export function ChangelogScroll({
         rowH={rowH}
         opacity={op}
         c={c}
+        fontFamily={fontFamily}
       />,
     );
   }
@@ -458,18 +530,20 @@ export function ChangelogScroll({
   const heroLeft = textLeft + (margin - textLeft) * ex;
   const track = ROW_TRACK + (HERO_TRACK - ROW_TRACK) * ex;
   const heroBlockH = heroF * 1.12;
-  const heroCenter = cy + ((dateFont + kickerGap) / 2) * ex;
-  const dateY =
-    cy + (heroCenter - heroBlockH / 2 - kickerGap - dateFont / 2 - cy) * ex;
+  const heroCenterAt = (e: number) => cy + ((dateFont + kickerGap) / 2) * e;
+  const dateYAt = (e: number) =>
+    cy + (heroCenterAt(e) - heroBlockH / 2 - kickerGap - dateFont / 2 - cy) * e;
+  const heroCenter = heroCenterAt(ex);
+  const dateY = dateYAt(ex);
   const bright = land;
   const mixColor = (a: string, b: string, p: number) =>
     `color-mix(in srgb, ${b} ${Math.round(p * 100)}%, ${a})`;
 
   const hair = Math.max(1, u);
   const bandIn = interpolate(t, [4, 24], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const bandHair = interpolate(t, [LAND - 4, LAND + 12], [0.55, 1], CLAMP);
+  const bandHair = interpolate(t, [landAt - 4, landAt + 12], [0.55, 1], CLAMP);
 
-  const panel = interpolate(t, [EXPAND - 2, EXPAND + 22], [0, 1], {
+  const panel = interpolate(t, [expandAt - 2, expandAt + 22], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -480,16 +554,20 @@ export function ChangelogScroll({
     const kicker = onPanel
       ? `color-mix(in oklab, ${PANEL_INK} 62%, transparent)`
       : mixColor(c.date, c.muted, bright);
-    const ink = onPanel ? PANEL_INK : mixColor(c.row, c.fg, bright);
+    const ink = onPanel ? PANEL_INK : mixColor(c.row, fg, bright);
     const tagInk = onPanel
       ? MIST[0]
-      : mixColor(mixColor(c.row, c.fg, bright), accent, accentIn);
+      : mixColor(mixColor(c.row, fg, bright), accent, accentIn);
     const dotInk = onPanel
       ? `color-mix(in oklab, ${PANEL_INK} 45%, transparent)`
       : mixColor(c.row, c.muted, bright);
+    // The hero block is laid out where the expansion leaves it and rides
+    // there by transform, for the same reason as the rows.
+    const metaShift = dateY - dateYAt(1);
     const meta: React.CSSProperties = {
       position: "absolute",
-      top: dateY - rowH / 2,
+      top: dateYAt(1) - rowH / 2,
+      transform: `translateY(${metaShift}px)${glide(expanding)}`,
       height: rowH,
       display: "flex",
       alignItems: "center",
@@ -508,18 +586,18 @@ export function ChangelogScroll({
         <div
           style={{
             position: "absolute",
-            left: heroLeft,
-            top: heroCenter - heroBlockH / 2,
+            left: margin,
+            top: heroCenterAt(1) - heroBlockH / 2,
             height: heroBlockH,
             display: "flex",
             alignItems: "center",
-            fontFamily: sans,
+            fontFamily,
             fontWeight: 500,
             fontSize: heroF,
             letterSpacing: `${track}em`,
             whiteSpace: "nowrap",
             transformOrigin: "0% 50%",
-            transform: `scale(${heroScale})`,
+            transform: `translate(${heroLeft - margin}px, ${heroCenter - heroCenterAt(1)}px) scale(${heroScale})${glide(expanding)}`,
             color: ink,
           }}
         >
@@ -532,7 +610,7 @@ export function ChangelogScroll({
   const label: React.CSSProperties = {
     position: "absolute",
     top: 0.075 * H,
-    fontFamily: sans,
+    fontFamily,
     fontWeight: 400,
     fontSize: 17 * u,
     lineHeight: 1,
@@ -542,110 +620,118 @@ export function ChangelogScroll({
     alignItems: "center",
     gap: 10 * u,
     opacity: chrome,
-    transform: `translateY(${(1 - chrome) * 8 * u}px)`,
+    transform: `translateY(${(1 - chrome) * 8 * u}px)${glide(midway(chrome))}`,
   };
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 70% 60% at 50% 50%, ${c.key}, transparent 72%)`,
-        }}
-      />
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {background === undefined ? (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse 70% 60% at 50% 50%, ${c.key}, transparent 72%)`,
+          }}
+        />
+      ) : null}
 
-      <AbsoluteFill
-        style={{
-          maskImage:
-            "linear-gradient(180deg, transparent 12%, #000 34%, #000 66%, transparent 88%)",
-          WebkitMaskImage:
-            "linear-gradient(180deg, transparent 12%, #000 34%, #000 66%, transparent 88%)",
-        }}
-      >
-        {rows}
-      </AbsoluteFill>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            maskImage:
+              "linear-gradient(180deg, transparent 12%, #000 34%, #000 66%, transparent 88%)",
+            WebkitMaskImage:
+              "linear-gradient(180deg, transparent 12%, #000 34%, #000 66%, transparent 88%)",
+          }}
+        >
+          {rows}
+        </AbsoluteFill>
 
-      <div
-        style={{
-          position: "absolute",
-          left: W * 0.06,
-          right: W * 0.06,
-          top: cy - bandH / 2,
-          height: bandH,
-          background: c.band,
-          opacity: bandIn,
-        }}
-      />
-      {[-1, 1].map((s) => (
         <div
-          key={s}
           style={{
             position: "absolute",
             left: W * 0.06,
-            width: W * 0.88 * bandIn,
-            top: cy + (s * bandH) / 2 - hair / 2,
-            height: hair,
-            background: c.hair,
-            opacity: bandHair,
+            right: W * 0.06,
+            top: cy - bandH / 2,
+            height: bandH,
+            background: c.band,
+            opacity: bandIn,
           }}
         />
-      ))}
+        {[-1, 1].map((s) => (
+          <div
+            key={s}
+            style={{
+              position: "absolute",
+              left: W * 0.06,
+              width: W * 0.88 * bandIn,
+              top: cy + (s * bandEnd) / 2 - hair / 2,
+              transform:
+                bandH === bandEnd
+                  ? undefined
+                  : `translateY(${(s * (bandH - bandEnd)) / 2}px)`,
+              height: hair,
+              background: c.hair,
+              opacity: bandHair,
+            }}
+          />
+        ))}
 
-      {t >= LAND ? heroGroup(false) : null}
+        {t >= landAt ? heroGroup(false) : null}
 
-      {panel > 0 ? (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            clipPath: `inset(${cy - bandH / 2}px ${W - panelRight}px ${H - cy - bandH / 2}px ${panelLeft}px)`,
-          }}
-        >
+        {panel > 0 ? (
           <div
             style={{
               position: "absolute",
-              left: panelLeft,
-              width: W * 0.88,
-              top: cy - bandH / 2,
-              height: bandH,
-              backgroundImage: mistPanel(t),
+              inset: 0,
+              clipPath: `inset(${cy - bandH / 2}px ${W - panelRight}px ${H - cy - bandH / 2}px ${panelLeft}px)`,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                left: panelLeft,
+                width: W * 0.88,
+                top: cy - bandH / 2,
+                height: bandH,
+                backgroundImage: mistPanel(t),
+              }}
+            />
+            {heroGroup(true)}
+          </div>
+        ) : null}
+
+        <div
+          style={{
+            ...label,
+            left: margin,
+            color: c.muted,
+            alignItems: "baseline",
+            gap: 14 * u,
+          }}
+        >
+          {logo ?? <RemocnLogo fontSize={22 * u} color={fg} />}
+          <span
+            style={{
+              width: hair,
+              height: 16 * u,
+              background: c.hair,
+              alignSelf: "center",
             }}
           />
-          {heroGroup(true)}
+          <span>{title}</span>
         </div>
-      ) : null}
-
-      <div
-        style={{
-          ...label,
-          left: margin,
-          color: c.muted,
-          alignItems: "baseline",
-          gap: 14 * u,
-        }}
-      >
-        {logo ?? <RemocnLogo fontSize={22 * u} color={c.fg} />}
-        <span
+        <div
           style={{
-            width: hair,
-            height: 16 * u,
-            background: c.hair,
-            alignSelf: "center",
+            ...label,
+            right: margin,
+            color: c.muted,
+            fontVariantNumeric: "tabular-nums",
           }}
-        />
-        <span>{title}</span>
-      </div>
-      <div
-        style={{
-          ...label,
-          right: margin,
-          color: c.muted,
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {url}
-      </div>
+        >
+          {url}
+        </div>
+      </ScaleLayer>
 
-      <Grain opacity={c.grain} />
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

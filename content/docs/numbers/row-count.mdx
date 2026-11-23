@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="RowCount"
     component={RowCountScene}
-    durationInFrames={130}
-    fps={30}
+    durationInFrames={260}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -75,14 +75,43 @@ The number counts up on a log curve beside a stack of ruled rows; each thousands
       description: "Small label beside the stack.",
     },
     {
+      name: "countLength",
+      type: "number",
+      default: "78",
+      description: "Frames the count takes to reach the value.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Tint for the newest row; defaults to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"IBM Plex Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

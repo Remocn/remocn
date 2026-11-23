@@ -1,0 +1,101 @@
+{
+  "component": "echo-stack",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-monolith",
+      "label": "Slow Monolith",
+      "description": "A huge word with a single faint echo on each side, drifting almost imperceptibly for a calm, heavy presence.",
+      "askedAs": [
+        "big slow word with few echoes",
+        "minimal calm repeating title",
+        "heavy statement barely moving",
+        "огромное слово медленно",
+        "спокойный минималистичный заголовок"
+      ],
+      "props": {
+        "fontSize": 260,
+        "echoes": 1,
+        "echoOpacity": 0.2,
+        "cycle": 180,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "gold-drum",
+      "label": "Gold Drum",
+      "description": "Warm champagne-gold type with muted bronze echoes rolling downward like a luxury reel.",
+      "askedAs": [
+        "gold luxury word repeat",
+        "premium golden text echo",
+        "champagne colored spinning word",
+        "золотой текст с повторами",
+        "люксовый золотой заголовок"
+      ],
+      "props": {
+        "color": "#e8d5a8",
+        "echoColor": "#a8875a",
+        "direction": "down",
+        "echoOpacity": 0.4,
+        "cycle": 90
+      }
+    },
+    {
+      "id": "rapid-tape",
+      "label": "Rapid Tape",
+      "description": "Small, dense stack of six echoes per side racing past quickly for an energetic, ticker-like rhythm.",
+      "askedAs": [
+        "fast scrolling repeated word",
+        "energetic many echoes",
+        "quick ticker style text",
+        "быстрая прокрутка слова",
+        "много повторов быстро"
+      ],
+      "props": {
+        "fontSize": 110,
+        "echoes": 6,
+        "cycle": 25,
+        "speed": 2
+      }
+    },
+    {
+      "id": "ice-cascade",
+      "label": "Ice Cascade",
+      "description": "Crisp white word with cool pale-blue echoes falling downward at a measured pace.",
+      "askedAs": [
+        "cool blue echo text",
+        "icy word falling down",
+        "blue outline copies descending",
+        "холодный синий текст",
+        "слово с голубыми повторами вниз"
+      ],
+      "props": {
+        "color": "#f4f8fb",
+        "echoColor": "#7fa8c9",
+        "direction": "down",
+        "echoes": 4,
+        "echoOpacity": 0.5
+      }
+    },
+    {
+      "id": "bold-chorus",
+      "label": "Bold Chorus",
+      "description": "Strong, near-solid echoes in a soft coral tint make the repetition as loud as the word itself.",
+      "askedAs": [
+        "strong visible echoes",
+        "loud repeated word",
+        "coral echo copies bright",
+        "яркие повторы слова",
+        "громкий повторяющийся текст"
+      ],
+      "props": {
+        "echoColor": "#e8836b",
+        "echoOpacity": 0.8,
+        "echoes": 2,
+        "fontSize": 200,
+        "speed": 1.5
+      }
+    }
+  ]
+}

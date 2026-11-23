@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const scanRevealConfig: ComponentConfig = {
   componentName: "ScanReveal",
@@ -13,11 +19,6 @@ export const scanRevealConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     title: {
       type: "text-content",
       default: "Built frame by frame",
@@ -28,6 +29,26 @@ export const scanRevealConfig: ComponentConfig = {
       default: "Launch films from components you own.",
       description: "Subtitle",
     },
+    scan: {
+      type: "number",
+      default: 56,
+      min: 20,
+      max: 120,
+      step: 2,
+      description: "Scan (frames)",
+      hiddenFromList: false,
+    },
+    guides: {
+      type: "boolean",
+      default: true,
+      description: "Guides",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Space Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/AlbertSans";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -8,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const albert = loadFont("normal", {
   weights: ["400", "500"],
@@ -23,7 +24,17 @@ export interface PricePageProps {
   price?: string;
   note?: string;
   accent?: string;
+  /** Color of the label, lines and note; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Albert Sans by default. */
+  fontFamily?: string;
+  /** Frames the full list holds before the lines start leaving. */
+  hold?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -55,8 +66,11 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-function useWidths(keys: string[]) {
-  const key = keys.join("\u0001");
+const shifts = (at: (df: number) => number) =>
+  Math.abs(at(1) - at(0)) > 1e-3 || Math.abs(at(0) - at(-1)) > 1e-3;
+
+function useWidths(keys: string[], fontFamily: string) {
+  const key = [fontFamily, ...keys].join("\u0001");
   const [state, setState] = useState<{
     key: string;
     w: Record<string, number>;
@@ -69,8 +83,8 @@ function useWidths(keys: string[]) {
     let live = true;
     Promise.all([
       albert.waitUntilDone(),
-      document.fonts.load(`400 100px "${albert.fontFamily}"`),
-      document.fonts.load(`500 100px "${albert.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -81,7 +95,7 @@ function useWidths(keys: string[]) {
           const cut = k.indexOf("|");
           const wt = k.slice(0, cut);
           const s = k.slice(cut + 1);
-          if (ctx) ctx.font = `${wt} 100px "${albert.fontFamily}"`;
+          if (ctx) ctx.font = `${wt} 100px "${fontFamily}"`;
           w[k] = ctx ? ctx.measureText(s).width / 100 : s.length * 0.5;
         }
         setState({ key, w });
@@ -93,8 +107,24 @@ function useWidths(keys: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.w : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function PricePage({
@@ -103,15 +133,24 @@ export function PricePage({
   price = "Free.",
   note = "That’s the whole pricing page.",
   accent,
+  ink,
   background,
+  fontFamily = albert.fontFamily,
+  hold = 40,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PricePageProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame();
+  const glide = useGlide();
+  const tAt = (df: number) => Math.max(0, frame + df - delay) * speed;
+  const t = tAt(0);
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const T = durationInFrames * speed;
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -122,7 +161,7 @@ export function PricePage({
     `400|${note}`,
     `400|${label}`,
   ];
-  const w = useWidths(keys);
+  const w = useWidths(keys, fontFamily);
 
   if (!w) {
     return (
@@ -165,7 +204,7 @@ export function PricePage({
   const labelH = Fs * 2.1;
   const noteH = note ? Fn * 1.9 : 0;
 
-  const intro = 40;
+  const intro = hold;
   const tail = 44;
   const land = 22;
   const gap =
@@ -183,42 +222,86 @@ export function PricePage({
   const lastExit = n > 0 ? intro + (n - 1) * gap : intro;
   const landAt = lastExit + 8;
 
-  const presence = rows.map((_, i) =>
-    interpolate(t, [exitAt[i] + 7, exitAt[i] + 18], [1, 0], {
+  // The vertical layout at time `tt`, so each line can tell motion from
+  // rest by its neighbouring frames.
+  const geo = (tt: number) => {
+    const presence = rows.map((_, i) =>
+      interpolate(tt, [exitAt[i] + 7, exitAt[i] + 18], [1, 0], {
+        ...CLAMP,
+        easing: EASE_IO,
+      }),
+    );
+    const listH = presence.reduce((a, p) => a + p * lineH, 0);
+    const grow = interpolate(tt, [landAt - 6, landAt + 14], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
-    }),
-  );
-  const listH = presence.reduce((a, p) => a + p * lineH, 0);
-  const grow = interpolate(t, [landAt - 6, landAt + 14], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const contentH = labelH + listH + grow * (priceH + noteH);
-  const top = H / 2 - contentH / 2;
-  const listTop = top + labelH;
-
-  const labelIn = interpolate(t, [0, 16], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-
-  const lineNodes = rows.map((s, i) => {
-    let rank = 0;
-    for (let j = 0; j < i; j++) rank += presence[j];
-    const base = listTop + rank * lineH + F * 0.93;
-    const enter = interpolate(t, [3 + i * 3, 19 + i * 3], [0, 1], {
+    });
+    const contentH = labelH + listH + grow * (priceH + noteH);
+    const top = H / 2 - contentH / 2;
+    const listTop = top + labelH;
+    const labelIn = interpolate(tt, [0, 16], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
+    });
+    const lineY = rows.map((_, i) => {
+      let rank = 0;
+      for (let j = 0; j < i; j++) rank += presence[j];
+      const enter = interpolate(tt, [3 + i * 3, 19 + i * 3], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      });
+      return {
+        base: listTop + rank * lineH + F * 0.93,
+        enter,
+        dy: (1 - enter) * F * 0.45,
+      };
+    });
+    const priceIn = interpolate(tt, [landAt, landAt + 20], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    const noteIn = interpolate(tt, [landAt + 12, landAt + 30], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    return {
+      top,
+      listH,
+      labelIn,
+      lineY,
+      priceIn,
+      noteIn,
+      priceBase: listTop + listH + Fp * 0.82,
+      noteBase: listTop + listH + priceH + Fn * 1.35,
+    };
+  };
+  const g = geo(t);
+  const near = (df: number) => (df === 0 ? g : geo(tAt(df)));
+  const { top, labelIn, priceIn, noteIn, priceBase, noteBase } = g;
+  const labelY = (o: ReturnType<typeof geo>) =>
+    o.top + Fs + (1 - o.labelIn) * Fs * 0.4;
+  const priceY = (o: ReturnType<typeof geo>) =>
+    o.priceBase + (1 - o.priceIn) * Fp * 0.22;
+  const noteY = (o: ReturnType<typeof geo>) =>
+    o.noteBase + (1 - o.noteIn) * Fn * 0.5;
+
+  // SVG text is placed by attributes, which cannot carry the glide mark, so
+  // the drawing as a whole carries it while any of its lines moves.
+  let moving = false;
+  const lineNodes = rows.map((s, i) => {
+    const { base, enter, dy } = g.lineY[i];
+    const lineMoving = shifts((df) => {
+      const l = near(df).lineY[i];
+      return l.base + l.dy;
     });
     const out = interpolate(t, [exitAt[i], exitAt[i] + EXIT_LEN], [0, 1], {
       ...CLAMP,
       easing: EASE_EXIT,
     });
     if (out >= 1) return null;
+    moving ||= lineMoving;
     const lw = adv(400, s, TRACK_LINE) * F;
     const dx = out * (W - right + lw + F);
-    const dy = (1 - enter) * F * 0.45;
     return (
       <text
         key={`l${i}`}
@@ -228,7 +311,7 @@ export function PricePage({
         fontSize={F}
         fontWeight={400}
         letterSpacing={`${TRACK_LINE}em`}
-        fill={c.ink}
+        fill={fg}
         opacity={enter * interpolate(out, [0.55, 1], [1, 0], CLAMP)}
         transform={`translate(${dx.toFixed(2)} ${dy.toFixed(2)})`}
       >
@@ -237,71 +320,67 @@ export function PricePage({
     );
   });
 
-  const priceIn = interpolate(t, [landAt, landAt + 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const noteIn = interpolate(t, [landAt + 12, landAt + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const priceBase = listTop + listH + Fp * 0.82;
-  const noteBase = listTop + listH + priceH + Fn * 1.35;
+  moving ||=
+    shifts((df) => labelY(near(df))) ||
+    (priceIn > 0 && shifts((df) => priceY(near(df)))) ||
+    (Boolean(note) && noteIn > 0 && shifts((df) => noteY(near(df))));
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        fontFamily={albert.fontFamily}
-        aria-hidden
-      >
-        <text
-          x={right}
-          y={top + Fs}
-          textAnchor="end"
-          fontSize={Fs}
-          fontWeight={400}
-          fill={c.ink}
-          opacity={labelIn * 0.55}
-          transform={`translate(0 ${((1 - labelIn) * Fs * 0.4).toFixed(2)})`}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0, transform: glide(moving) }}
+          fontFamily={fontFamily}
+          aria-hidden
         >
-          {label}
-        </text>
-        {lineNodes}
-        {priceIn > 0 ? (
           <text
             x={right}
-            y={priceBase}
+            y={top + Fs}
             textAnchor="end"
-            fontSize={Fp}
-            fontWeight={500}
-            letterSpacing={`${TRACK_PRICE}em`}
-            fill={hi}
-            opacity={priceIn}
-            transform={`translate(0 ${((1 - priceIn) * Fp * 0.22).toFixed(2)})`}
-          >
-            {price}
-          </text>
-        ) : null}
-        {note && noteIn > 0 ? (
-          <text
-            x={right}
-            y={noteBase}
-            textAnchor="end"
-            fontSize={Fn}
+            fontSize={Fs}
             fontWeight={400}
-            letterSpacing="-0.005em"
-            fill={c.ink}
-            opacity={noteIn}
-            transform={`translate(0 ${((1 - noteIn) * Fn * 0.5).toFixed(2)})`}
+            fill={fg}
+            opacity={labelIn * 0.55}
+            transform={`translate(0 ${((1 - labelIn) * Fs * 0.4).toFixed(2)})`}
           >
-            {note}
+            {label}
           </text>
-        ) : null}
-      </svg>
+          {lineNodes}
+          {priceIn > 0 ? (
+            <text
+              x={right}
+              y={priceBase}
+              textAnchor="end"
+              fontSize={Fp}
+              fontWeight={500}
+              letterSpacing={`${TRACK_PRICE}em`}
+              fill={hi}
+              opacity={priceIn}
+              transform={`translate(0 ${((1 - priceIn) * Fp * 0.22).toFixed(2)})`}
+            >
+              {price}
+            </text>
+          ) : null}
+          {note && noteIn > 0 ? (
+            <text
+              x={right}
+              y={noteBase}
+              textAnchor="end"
+              fontSize={Fn}
+              fontWeight={400}
+              letterSpacing="-0.005em"
+              fill={fg}
+              opacity={noteIn}
+              transform={`translate(0 ${((1 - noteIn) * Fn * 0.5).toFixed(2)})`}
+            >
+              {note}
+            </text>
+          ) : null}
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

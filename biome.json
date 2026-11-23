@@ -14,7 +14,7 @@
       "!dist",
       "!build",
       "!.claude/skills",
-      "!plugins/remocn/skills/studio/assets"
+      "!drizzle/meta"
     ]
   },
   "formatter": {

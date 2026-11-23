@@ -2,6 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -9,9 +10,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const face = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 const mono = loadMono("normal", { weights: ["500"], subsets: ["latin"] });
@@ -21,6 +22,18 @@ export interface CursorFrameProps {
   title?: string;
   /** Selection colour: frame, handles and the size badge. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the title. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Draw the mouse cursor that drags the frame. */
+  showCursor?: boolean;
+  /** Size of the title and frame, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -53,6 +66,10 @@ const LINE_HEIGHT = 1.1;
 const WRAP_IN = 11;
 /** How far a wrapping word drifts out and slides in, in em. */
 const WRAP_SLIDE = 0.3;
+
+/** Moved more than a thousandth of a pixel to or from a neighbouring frame. */
+const stepping = (prev: number, now: number, next: number) =>
+  Math.abs(next - now) > 1e-3 || Math.abs(now - prev) > 1e-3;
 
 interface Metrics {
   words: number[];
@@ -140,15 +157,42 @@ function ResizeCursor({ size }: { size: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CursorFrame({
   title = "Launch videos, in code.",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = face.fontFamily,
+  fontWeight = 400,
+  showCursor = true,
+  scale = 1,
+  delay = 0,
   theme = "light",
   speed = 1,
 }: CursorFrameProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
+  const fg = ink ?? t.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? t.bg);
   const words = title.split(/\s+/).filter(Boolean);
   const u = width / 1280;
 
@@ -167,6 +211,11 @@ export function CursorFrame({
     face
       .waitUntilDone()
       .catch(() => undefined)
+      .then(() =>
+        document.fonts
+          .load(`${fontWeight} 100px "${fontFamily}"`)
+          .catch(() => undefined),
+      )
       .then(() => document.fonts.ready)
       .then(() => {
         if (!live) return;
@@ -194,7 +243,7 @@ export function CursorFrame({
     return () => {
       live = false;
     };
-  }, [title, fontSize, handle]);
+  }, [title, fontSize, handle, fontFamily, fontWeight]);
 
   const m = metrics ?? { words: words.map(() => 0), space: 0 };
   const wide = breakLines(m, Number.POSITIVE_INFINITY, lineH);
@@ -268,6 +317,27 @@ export function CursorFrame({
   const fw = boxW(frame);
   const fh = frame < RESIZE ? H1 * dragY(frame) : settledH;
 
+  // The chrome rides the corner. While the corner moves, the chrome is laid
+  // out where this drag lets go and the way there is a transform: layout
+  // rounds a box and a baseline to whole pixels, so chrome eased by
+  // `left`/`top` clicks along pixel by pixel. At rest it keeps plain layout.
+  const fhAt = (f: number) => {
+    if (f < RESIZE) return H1 * dragY(f);
+    const lo = Math.floor(f);
+    const hA = settleAt(lo).h;
+    return hA + (settleAt(lo + 1).h - hA) * (f - lo);
+  };
+  const cornerMoving =
+    stepping(boxW(frame - speed), fw, boxW(frame + speed)) ||
+    stepping(fhAt(frame - speed), fh, fhAt(frame + speed));
+  const anchorW = frame < RESIZE ? boxW(DRAG_END) : boxW(RESIZE_END);
+  const anchorH =
+    frame < RESIZE ? H1 * dragY(DRAG_END) : settleAt(RESIZE_END + 60).h;
+  const chromeAt = (x: number, y: number, ax: number, ay: number) =>
+    cornerMoving
+      ? { left: ax, top: ay, shift: `translate(${x - ax}px, ${y - ay}px) ` }
+      : { left: x, top: y, shift: "" };
+
   // When does the growing frame first pass each word's centre?
   const wordIn = wide.pos.map((p, i) => {
     const centre = p.x + (m.words[i] ?? 0) * 0.5;
@@ -330,6 +400,22 @@ export function CursorFrame({
   const finalH = breakLines(m, W2, lineH).lines * lineH;
   const shiftX = re * (W1 - W2) * 0.5;
   const shiftY = re * (H1 - finalH) * 0.5;
+  const reAt = (f: number) =>
+    interpolate(f, [RECENTRE, RECENTRE + RECENTRE_LEN], [0, 1], {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    });
+  // The block is laid out where it lands and the glide is a transform, for
+  // the same reason as the chrome above. The transform stays on before and
+  // after the glide: handed to layout at rest, the text would jump to the
+  // nearest pixel.
+  const recentring = stepping(
+    reAt(frame - speed) * Math.max(W1, H1),
+    re * Math.max(W1, H1),
+    reAt(frame + speed) * Math.max(W1, H1),
+  );
+  const endX = (W1 - W2) * 0.5;
+  const endY = (H1 - finalH) * 0.5;
 
   const stroke = Math.max(1, 1.5 * u);
   const hs = 9 * u;
@@ -340,18 +426,49 @@ export function CursorFrame({
     [fw, fh],
   ];
   const badgeSize = 13 * u;
+  const badge = chromeAt(fw / 2, fh + 10 * u, anchorW / 2, anchorH + 10 * u);
+  const cursorAt = (f: number) => {
+    const en = interpolate(f, [ENTER, ENTER + ENTER_LEN], [0, 1], {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    });
+    const lv = interpolate(f, [RELEASE + 6, RELEASE + 34], [0, 1], {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    });
+    const r = reAt(f);
+    const x =
+      f < DRAG
+        ? interpolate(en, [0, 1], [x0 + width * 0.16, x0])
+        : x0 + boxW(f);
+    const y =
+      f < DRAG
+        ? interpolate(en, [0, 1], [y0 + height * 0.2, y0])
+        : y0 + fhAt(f);
+    return {
+      x: x + lv * width * 0.1 + r * endX,
+      y: y + lv * height * 0.12 + r * endY,
+    };
+  };
+  const cursorX = cx + shiftX;
+  const cursorY = cy + shiftY;
+  // The cursor travels by transform too: layout would step it pixel by pixel.
+  const cPrev = cursorAt(frame - speed);
+  const cNext = cursorAt(frame + speed);
+  const cursorMoving =
+    stepping(cPrev.x, cursorX, cNext.x) || stepping(cPrev.y, cursorY, cNext.y);
 
   return (
-    <AbsoluteFill style={{ background: t.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       {/* measuring row: never shown */}
       <div
         style={{
           position: "absolute",
           visibility: "hidden",
           whiteSpace: "pre",
-          fontFamily: face.fontFamily,
+          fontFamily,
           fontSize,
-          fontWeight: 400,
+          fontWeight,
           letterSpacing: "-0.035em",
         }}
       >
@@ -371,173 +488,212 @@ export function CursorFrame({
         </span>
       </div>
 
-      <div
-        style={{
-          position: "absolute",
-          left: x0 + shiftX,
-          top: y0 + shiftY,
-          width: 0,
-          height: 0,
-          opacity: metrics ? 1 : 0,
-        }}
-      >
-        {words.map((w, i) => {
-          const p = interpolate(
-            frame,
-            [wordIn[i] ?? DRAG, (wordIn[i] ?? DRAG) + WORD_IN],
-            [0, 1],
-            { ...clamp, easing: EASE_OUT },
-          );
-          const pos = wordPos[i] ?? {
-            x: 0,
-            y: 0,
-            wrap: -1e4,
-            fromX: 0,
-            fromY: 0,
-          };
-          const wrapP = interpolate(
-            frame,
-            [pos.wrap + 4, pos.wrap + 4 + WRAP_IN],
-            [0, 1],
-            {
-              ...clamp,
-              easing: EASE_OUT,
-            },
-          );
-          const ghostP = interpolate(
-            frame,
-            [pos.wrap, pos.wrap + WRAP_IN],
-            [0, 1],
-            {
-              ...clamp,
-              easing: EASE_OUT,
-            },
-          );
-          const style = {
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
             position: "absolute",
-            whiteSpace: "pre",
-            fontFamily: face.fontFamily,
-            fontSize,
-            fontWeight: 400,
-            letterSpacing: "-0.035em",
-            lineHeight: LINE_HEIGHT,
-            color: t.fg,
-          } as const;
-          const inP = p * wrapP;
-          return (
-            <span key={i}>
-              {ghostP < 1 ? (
+            left: x0 + endX,
+            top: y0 + endY,
+            width: 0,
+            height: 0,
+            opacity: metrics ? 1 : 0,
+            transform: `translate(${(1 - re) * -endX}px, ${(1 - re) * -endY}px)${glide(recentring)}`,
+          }}
+        >
+          {words.map((w, i) => {
+            const p = interpolate(
+              frame,
+              [wordIn[i] ?? DRAG, (wordIn[i] ?? DRAG) + WORD_IN],
+              [0, 1],
+              { ...clamp, easing: EASE_OUT },
+            );
+            const pos = wordPos[i] ?? {
+              x: 0,
+              y: 0,
+              wrap: -1e4,
+              fromX: 0,
+              fromY: 0,
+            };
+            const wrapP = interpolate(
+              frame,
+              [pos.wrap + 4, pos.wrap + 4 + WRAP_IN],
+              [0, 1],
+              {
+                ...clamp,
+                easing: EASE_OUT,
+              },
+            );
+            const ghostP = interpolate(
+              frame,
+              [pos.wrap, pos.wrap + WRAP_IN],
+              [0, 1],
+              {
+                ...clamp,
+                easing: EASE_OUT,
+              },
+            );
+            const style = {
+              position: "absolute",
+              whiteSpace: "pre",
+              fontFamily,
+              fontSize,
+              fontWeight,
+              letterSpacing: "-0.035em",
+              lineHeight: LINE_HEIGHT,
+              color: fg,
+            } as const;
+            const inP = p * wrapP;
+            const dropAt = (f: number) =>
+              (1 -
+                interpolate(
+                  f,
+                  [wordIn[i] ?? DRAG, (wordIn[i] ?? DRAG) + WORD_IN],
+                  [0, 1],
+                  { ...clamp, easing: EASE_OUT },
+                )) *
+                fontSize *
+                0.12 -
+              (1 -
+                interpolate(f, [pos.wrap + 4, pos.wrap + 4 + WRAP_IN], [0, 1], {
+                  ...clamp,
+                  easing: EASE_OUT,
+                })) *
+                fontSize *
+                0.22;
+            const drop = dropAt(frame);
+            const dropping = stepping(
+              dropAt(frame - speed),
+              drop,
+              dropAt(frame + speed),
+            );
+            return (
+              <span key={i}>
+                {ghostP < 1 ? (
+                  <span
+                    style={{
+                      ...style,
+                      left: pos.fromX + ghostP * fontSize * WRAP_SLIDE,
+                      top: pos.fromY,
+                      opacity: 1 - ghostP,
+                      filter: `blur(${ghostP * 6}px)`,
+                    }}
+                  >
+                    {w}
+                  </span>
+                ) : null}
                 <span
                   style={{
                     ...style,
-                    left: pos.fromX + ghostP * fontSize * WRAP_SLIDE,
-                    top: pos.fromY,
-                    opacity: 1 - ghostP,
-                    filter: `blur(${ghostP * 6}px)`,
+                    left: pos.x,
+                    top: pos.y,
+                    opacity: inP,
+                    filter: inP < 1 ? `blur(${(1 - inP) * 8}px)` : undefined,
+                    transform: `translateY(${drop}px)${glide(dropping && !recentring)}`,
                   }}
                 >
                   {w}
                 </span>
-              ) : null}
-              <span
-                style={{
-                  ...style,
-                  left: pos.x,
-                  top: pos.y,
-                  opacity: inP,
-                  filter: inP < 1 ? `blur(${(1 - inP) * 8}px)` : undefined,
-                  transform: `translateY(${(1 - p) * fontSize * 0.12 - (1 - wrapP) * fontSize * 0.22}px)`,
-                }}
-              >
-                {w}
               </span>
-            </span>
-          );
-        })}
+            );
+          })}
 
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            width: fw,
-            height: fh,
-            boxShadow: `inset 0 0 0 ${stroke}px ${accent}`,
-            opacity: chrome,
-          }}
-        />
-        {corners.map(([hx, hy]) => (
           <div
-            key={`${hx === 0 ? "l" : "r"}${hy === 0 ? "t" : "b"}`}
             style={{
               position: "absolute",
-              left: hx - hs / 2,
-              top: hy - hs / 2,
-              width: hs,
-              height: hs,
-              boxSizing: "border-box",
-              background: t.handle,
-              border: `${stroke}px solid ${accent}`,
-              borderRadius: 1.5 * u,
-              opacity: chrome * handlesIn,
-              transform: `scale(${handleScale})`,
+              left: 0,
+              top: 0,
+              width: fw,
+              height: fh,
+              boxShadow: `inset 0 0 0 ${stroke}px ${accent}`,
+              opacity: chrome,
             }}
           />
-        ))}
-        <div
-          style={{
-            position: "absolute",
-            left: fw / 2,
-            top: fh + 10 * u,
-            transform: "translateX(-50%)",
-            padding: `${3 * u}px ${6 * u}px`,
-            borderRadius: 4 * u,
-            background: accent,
-            color: "#FFFFFF",
-            fontFamily: mono.fontFamily,
-            fontWeight: 500,
-            fontSize: badgeSize,
-            lineHeight: 1.2,
-            letterSpacing: "0.01em",
-            fontVariantNumeric: "tabular-nums",
-            whiteSpace: "pre",
-            opacity: chrome * handlesIn,
-          }}
-        >
-          {`${Math.round(fw)} × ${Math.round(fh)}`}
+          {corners.map(([hx, hy]) => {
+            const at = chromeAt(
+              hx - hs / 2,
+              hy - hs / 2,
+              (hx === 0 ? 0 : anchorW) - hs / 2,
+              (hy === 0 ? 0 : anchorH) - hs / 2,
+            );
+            return (
+              <div
+                key={`${hx === 0 ? "l" : "r"}${hy === 0 ? "t" : "b"}`}
+                style={{
+                  position: "absolute",
+                  left: at.left,
+                  top: at.top,
+                  width: hs,
+                  height: hs,
+                  boxSizing: "border-box",
+                  background: t.handle,
+                  border: `${stroke}px solid ${accent}`,
+                  borderRadius: 1.5 * u,
+                  opacity: chrome * handlesIn,
+                  transform: `${at.shift}scale(${handleScale})`,
+                }}
+              />
+            );
+          })}
+          <div
+            style={{
+              position: "absolute",
+              left: badge.left,
+              top: badge.top,
+              transform: `${badge.shift}translateX(-50%)${glide(cornerMoving && !recentring)}`,
+              padding: `${3 * u}px ${6 * u}px`,
+              borderRadius: 4 * u,
+              background: accent,
+              color: "#FFFFFF",
+              fontFamily: mono.fontFamily,
+              fontWeight: 500,
+              fontSize: badgeSize,
+              lineHeight: 1.2,
+              letterSpacing: "0.01em",
+              fontVariantNumeric: "tabular-nums",
+              whiteSpace: "pre",
+              opacity: chrome * handlesIn,
+            }}
+          >
+            {`${Math.round(fw)} × ${Math.round(fh)}`}
+          </div>
         </div>
-      </div>
 
-      <div
-        style={{
-          position: "absolute",
-          left: cx + shiftX,
-          top: cy + shiftY,
-          opacity: metrics ? cursorOpacity : 0,
-          filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.28))",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            opacity: 1 - resizeIcon,
-          }}
-        >
-          <ArrowCursor size={cursorSize} />
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: -cursorSize * 0.5,
-            top: -cursorSize * 0.5,
-            opacity: resizeIcon,
-          }}
-        >
-          <ResizeCursor size={cursorSize} />
-        </div>
-      </div>
+        {showCursor ? (
+          <div
+            style={{
+              position: "absolute",
+              left: cursorMoving ? x0 : cursorX,
+              top: cursorMoving ? y0 : cursorY,
+              transform: cursorMoving
+                ? `translate(${cursorX - x0}px, ${cursorY - y0}px)`
+                : undefined,
+              opacity: metrics ? cursorOpacity : 0,
+              filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.28))",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                opacity: 1 - resizeIcon,
+              }}
+            >
+              <ArrowCursor size={cursorSize} />
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: -cursorSize * 0.5,
+                top: -cursorSize * 0.5,
+                opacity: resizeIcon,
+              }}
+            >
+              <ResizeCursor size={cursorSize} />
+            </div>
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -5,15 +5,9 @@ import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -36,6 +30,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 type Tone = "dark" | "graphite" | "light" | "accent";
 type Kind =
@@ -143,6 +139,8 @@ interface Ctx {
   c: Colors;
   accent: string;
   slot?: Rect;
+  font: string;
+  logo?: React.ReactNode;
 }
 
 const LIGHT_AT: Record<Kind, string> = {
@@ -208,8 +206,8 @@ const abs = (r: Rect): React.CSSProperties => ({
   height: r.h,
 });
 
-const displayType = (size: number): React.CSSProperties => ({
-  fontFamily: display,
+const displayType = (size: number, font = display): React.CSSProperties => ({
+  fontFamily: font,
   fontWeight: 400,
   fontSize: size,
   letterSpacing: "-0.035em",
@@ -238,7 +236,7 @@ function TitleBody({ x }: { x: Ctx }) {
       <div style={{ fontSize: 22 * u, fontWeight: 400, color: c.muted }}>
         Introducing
       </div>
-      <RemocnLogo fontSize={132 * u} color={c.fg} />
+      {x.logo ?? <RemocnLogo fontSize={132 * u} color={c.fg} />}
       <div
         style={{
           fontSize: 24 * u,
@@ -318,7 +316,7 @@ function PaneBody({ x }: { x: Ctx }) {
           gap: 9 * u,
         }}
       >
-        <RemocnLogo fontSize={18 * u} color={c.fg} />
+        {x.logo ?? <RemocnLogo fontSize={18 * u} color={c.fg} />}
         <div style={{ fontSize: 15 * u, color: c.muted, marginLeft: 6 * u }}>
           / Launch film
         </div>
@@ -503,7 +501,12 @@ function PaneBody({ x }: { x: Ctx }) {
               background: `radial-gradient(ellipse 80% 90% at 30% 0%, ${lightPane ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.9)"}, transparent 70%)`,
             }}
           />
-          <RemocnR height={58 * u} color={lightPane ? "#F3F2EF" : "#121214"} />
+          {x.logo ?? (
+            <RemocnR
+              height={58 * u}
+              color={lightPane ? "#F3F2EF" : "#121214"}
+            />
+          )}
         </div>
       )}
     </>
@@ -543,7 +546,7 @@ function NumberBody({ x }: { x: Ctx }) {
           position: "absolute",
           left: left - 10 * u,
           top: 0.27 * H,
-          ...displayType(250 * u),
+          ...displayType(250 * u, x.font),
           letterSpacing: "-0.05em",
         }}
       >
@@ -619,14 +622,14 @@ function StatementBody({ x }: { x: Ctx }) {
           gap: 10 * u,
         }}
       >
-        <RemocnLogo fontSize={30 * u} color={c.fg} />
+        {x.logo ?? <RemocnLogo fontSize={30 * u} color={c.fg} />}
       </div>
       <div
         style={{
           position: "absolute",
           left: 0.08 * W - 6 * u,
           bottom: 0.13 * H,
-          ...displayType(140 * u),
+          ...displayType(140 * u, x.font),
           lineHeight: 0.94,
         }}
       >
@@ -671,7 +674,7 @@ function MarkBody({ x }: { x: Ctx }) {
         gap: 26 * u,
       }}
     >
-      <RemocnLogo fontSize={170 * u} color={c.fg} />
+      {x.logo ?? <RemocnLogo fontSize={170 * u} color={c.fg} />}
     </AbsoluteFill>
   );
 }
@@ -694,7 +697,7 @@ function ClockBody({ x }: { x: Ctx }) {
     <>
       <div style={{ position: "absolute", left, top: 0.16 * H }}>
         <div style={{ fontSize: 22 * u, color: c.muted }}>Playhead</div>
-        <div style={{ ...displayType(150 * u), marginTop: 14 * u }}>
+        <div style={{ ...displayType(150 * u, x.font), marginTop: 14 * u }}>
           00:12:04
         </div>
         <div
@@ -784,7 +787,9 @@ function ChartBody({ x }: { x: Ctx }) {
         <div style={{ fontSize: 20 * u, color: c.muted, fontWeight: 400 }}>
           Videos shipped per week
         </div>
-        <div style={{ ...displayType(110 * u), marginTop: 22 * u }}>+212%</div>
+        <div style={{ ...displayType(110 * u, x.font), marginTop: 22 * u }}>
+          +212%
+        </div>
       </div>
       <div
         style={{
@@ -842,7 +847,7 @@ function WordBody({ x }: { x: Ctx }) {
           position: "absolute",
           left: 0.08 * W - 12 * u,
           bottom: 0.1 * H,
-          ...displayType(250 * u),
+          ...displayType(250 * u, x.font),
           letterSpacing: "-0.055em",
         }}
       >
@@ -869,8 +874,16 @@ function PlaceholderScene({
   accent,
   slot,
   lightStage,
-}: SceneSpec & { accent: string; slot?: Rect; lightStage: boolean }) {
-  const { width: W, height: H } = useVideoConfig();
+  font,
+  logo,
+}: SceneSpec & {
+  accent: string;
+  slot?: Rect;
+  lightStage: boolean;
+  font: string;
+  logo?: React.ReactNode;
+}) {
+  const { width: W, height: H } = useSceneConfig();
   const u = Math.min(H / 720, W / 1280);
   const c = palette(tone, accent, lightStage);
   const Body = BODIES[kind];
@@ -880,7 +893,7 @@ function PlaceholderScene({
       style={{
         background: c.bg,
         color: c.fg,
-        fontFamily: sans,
+        fontFamily: font,
         overflow: "hidden",
       }}
     >
@@ -891,7 +904,7 @@ function PlaceholderScene({
           }}
         />
       )}
-      <Body x={{ W, H, u, c, accent, slot }} />
+      <Body x={{ W, H, u, c, accent, slot, font, logo }} />
     </AbsoluteFill>
   );
 }
@@ -940,9 +953,22 @@ export interface GridMontageProps {
   scenes?: React.ReactNode[];
   images?: string[];
   beat?: number;
+  /** Corner radius of the tiles, in px at 720 tall. */
+  radius?: number;
   accent?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the built-in placeholder scenes. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark in the built-in placeholder scenes. */
+  logo?: React.ReactNode;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Size of the montage, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -1022,18 +1048,42 @@ type Fill =
   | { type: "own"; shot: number; push: number; focus: number[]; nominal: Rect }
   | { type: "piece"; shot: number; push: number; source: Rect };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GridMontage({
   scenes,
   images,
   beat = 14,
+  radius = 14,
   accent = "#3B5BFD",
+  background,
+  fontFamily = sans,
+  logo,
   ground,
   groundParams,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: GridMontageProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const u = H / 720;
   const b = Math.max(8, beat);
   const lightStage = theme === "light";
@@ -1048,15 +1098,21 @@ export function GridMontage({
 
   const M = 0.042 * H;
   const G = 0.022 * H;
-  const R = 14 * u;
+  const R = radius * u;
 
   const tOpen = 2 * b;
   const tSwap1 = 3 * b;
   const tGrow = 5 * b;
   const tSwap2 = 7 * b;
   const tMerge = 9 * b;
-  const p = (start: number, dur: number) =>
-    interpolate(frame, [start, start + dur], [0, 1], CLAMP);
+  const pAt = (f: number, start: number, dur: number) =>
+    interpolate(f, [start, start + dur], [0, 1], CLAMP);
+  const p = (start: number, dur: number) => pAt(frame, start, dur);
+  // Springs overshoot and the pushes come in beats, so "is it moving" is read
+  // off the neighbouring frames rather than off a 0..1 progress.
+  const moves = (at: (f: number) => number) =>
+    Math.abs(at(frame + 1) - at(frame)) > 1e-5 ||
+    Math.abs(at(frame) - at(frame - 1)) > 1e-5;
 
   const beats = (since: number) => {
     let s = 0;
@@ -1065,12 +1121,21 @@ export function GridMontage({
     }
     return s;
   };
-  const ownPush = (start: number) => 1.02 + 0.012 * beats(frame - start);
+  const ownPushAt = (start: number, f: number) =>
+    1.02 + 0.012 * beats(f - start);
+  const ownPush = (start: number) => ownPushAt(start, frame);
   const openerPush = 1 + 0.03 * (frame / Math.max(1, tGrow));
-  const closerPush =
+  const closerPushAt = (f: number) =>
     1 +
     0.035 *
-      Easing.bezier(0.22, 1, 0.36, 1)(p(tSwap2, tMerge + MERGE + 40 - tSwap2));
+      Easing.bezier(
+        0.22,
+        1,
+        0.36,
+        1,
+      )(pAt(f, tSwap2, tMerge + MERGE + 40 - tSwap2));
+  const closerPush = closerPushAt(frame);
+  const closerTilt = glide(moves(closerPushAt));
 
   const list = scenes ?? images;
   const pickShot = (slot: number) => {
@@ -1086,7 +1151,13 @@ export function GridMontage({
     if (scenes) return <AbsoluteFill>{scenes[i]}</AbsoluteFill>;
     if (images) return <ImageScene src={images[i]} />;
     return (
-      <PlaceholderScene {...specs[i]} accent={accent} lightStage={lightStage} />
+      <PlaceholderScene
+        {...specs[i]}
+        accent={accent}
+        lightStage={lightStage}
+        font={fontFamily}
+        logo={logo}
+      />
     );
   };
 
@@ -1133,21 +1204,28 @@ export function GridMontage({
     );
   };
 
+  // A tile is laid out at `rest`, the cell it holds between moves, and rides
+  // to `rect` on a transform: layout rounds a box and a baseline to whole
+  // pixels, so a tile eased by `left`/`top` drags its whole shot along pixel
+  // by pixel. The mark on the same transform covers both shots inside.
   const panel = (
     key: string,
     rect: Rect,
+    rest: Rect,
     radius: number,
     edge: number,
     from: Fill,
     to: Fill,
     swap: number,
+    moving: boolean,
   ) => (
     <div
       key={key}
       style={{
         position: "absolute",
-        left: rect.x,
-        top: rect.y,
+        left: rest.x,
+        top: rest.y,
+        transform: `translate(${rect.x - rest.x}px, ${rect.y - rest.y}px)${glide(moving)}`,
         width: rect.w,
         height: rect.h,
         borderRadius: Math.min(radius, rect.w / 2, rect.h / 2),
@@ -1191,18 +1269,28 @@ export function GridMontage({
   let body: React.ReactNode;
   if (frame < tOpen) {
     body = (
-      <AbsoluteFill style={{ transform: `scale(${openerPush})` }}>
+      <AbsoluteFill
+        style={{
+          transform: `scale(${openerPush})${glide(true)}`,
+        }}
+      >
         {shot(0)}
       </AbsoluteFill>
     );
   } else if (frame < tGrow) {
-    const q = spring({ frame: frame - tOpen, fps, config: CARD });
+    const qAt = (f: number) => spring({ frame: f - tOpen, fps, config: CARD });
+    const q = qAt(frame);
     const rects = grid(2, 2, W, H, M * q, G * q);
+    const rests = grid(2, 2, W, H, M, G);
     const quads = grid(2, 2, W, H, 0, 0);
-    body = rects.map((rect, i) =>
-      panel(
+    const parting = moves(qAt);
+    const pushing = moves((f) => ownPushAt(tSwap1, f));
+    body = rects.map((rect, i) => {
+      const swap = p(tSwap1 + i * 2, SWAP);
+      return panel(
         `a${i}`,
         rect,
+        rests[i],
         R * q,
         q,
         { type: "piece", shot: 0, push: openerPush, source: quads[i] },
@@ -1213,23 +1301,30 @@ export function GridMontage({
           focus: FOCI[i],
           nominal: rect,
         },
-        EASE_SWAP(p(tSwap1 + i * 2, SWAP)),
-      ),
-    );
+        EASE_SWAP(swap),
+        // Until its swap is through, a tile shows the opener, and the
+        // opener's push never stops.
+        swap < 1 || parting || pushing,
+      );
+    });
   } else {
-    const qg = spring({ frame: frame - tGrow, fps, config: CARD });
-    const qm =
-      frame >= tMerge + MERGE
+    const qgAt = (f: number) => spring({ frame: f - tGrow, fps, config: CARD });
+    const qg = qgAt(frame);
+    const qmAt = (f: number) =>
+      f >= tMerge + MERGE
         ? 1
         : Math.min(
             1,
             spring({
-              frame: frame - tMerge,
+              frame: f - tMerge,
               fps,
               config: MORPH_SPRING,
               durationInFrames: MERGE,
             }),
           );
+    const qm = qmAt(frame);
+    const reshaping = moves(qgAt) || moves(qmAt);
+    const closing = moves(closerPushAt);
     const m = M * (1 - qm);
     const g = G * (1 - qm);
     const cells = grid(3, 3, W, H, m, g);
@@ -1256,10 +1351,12 @@ export function GridMontage({
           ? lerpRect(two[corner], cells[idx], qg)
           : lerpRect(seed(r, c), cells[idx], qg);
         const ownShot = isCorner ? 1 + corner : 5 + fresh++;
+        const ownStart = isCorner ? tSwap1 : tGrow;
+        const swap = p(tSwap2 + (r + c) * 2, SWAP);
         const own: Fill = {
           type: "own",
           shot: ownShot,
-          push: ownPush(isCorner ? tSwap1 : tGrow),
+          push: ownPush(ownStart),
           focus: FOCI[isCorner ? corner : 4 + fresh - 1],
           nominal: isCorner ? rect : full3[idx],
         };
@@ -1268,6 +1365,7 @@ export function GridMontage({
           panel(
             `b${idx}`,
             rect,
+            full3[idx],
             R * (1 - qm),
             1 - qm,
             own,
@@ -1277,20 +1375,28 @@ export function GridMontage({
               push: closerPush,
               source: thirds[idx],
             },
-            EASE_SWAP(p(tSwap2 + (r + c) * 2, SWAP)),
+            EASE_SWAP(swap),
+            reshaping ||
+              midway(swap) ||
+              (swap < 1 && moves((f) => ownPushAt(ownStart, f))) ||
+              (swap > 0 && closing),
           ),
         );
       }
     }
     body =
       qm >= 1 ? (
-        <AbsoluteFill style={{ transform: `scale(${closerPush})` }}>
+        <AbsoluteFill
+          style={{ transform: `scale(${closerPush})${closerTilt}` }}
+        >
           {shot(10)}
         </AbsoluteFill>
       ) : (
         <>
           {qm > 0.9 ? (
-            <AbsoluteFill style={{ transform: `scale(${closerPush})` }}>
+            <AbsoluteFill
+              style={{ transform: `scale(${closerPush})${closerTilt}` }}
+            >
               {shot(10)}
             </AbsoluteFill>
           ) : null}
@@ -1300,15 +1406,28 @@ export function GridMontage({
   }
 
   return (
-    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? (lightStage ? "glasswork" : "velvet-hour")}
-        params={groundParams}
-        timeOffset={4}
-        timeScale={0.5}
-      />
-      {body}
-      <Grain opacity={theme === "light" ? 0.04 : 0.055} />
+    <AbsoluteFill
+      style={{
+        background: background === undefined ? stage : undefined,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? (lightStage ? "glasswork" : "velvet-hour")}
+          params={groundParams}
+          timeOffset={4}
+          timeScale={0.5}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>{body}</ScaleLayer>
+      {grain ? <Grain opacity={theme === "light" ? 0.04 : 0.055} /> : null}
     </AbsoluteFill>
   );
 }

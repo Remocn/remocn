@@ -1,0 +1,99 @@
+{
+  "component": "mask-reveal-up",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-slow",
+      "label": "Editorial Slow",
+      "description": "Large, light-weight serif-feel lines rising slowly over a long distance in warm charcoal.",
+      "askedAs": [
+        "slow elegant headline reveal",
+        "magazine style text rising up",
+        "calm luxurious title entrance",
+        "медленное элегантное появление заголовка",
+        "текст плавно выезжает снизу как в журнале"
+      ],
+      "props": {
+        "fontSize": 110,
+        "fontWeight": "400",
+        "speed": 0.5,
+        "distance": 60,
+        "color": "#2b2622"
+      }
+    },
+    {
+      "id": "snappy-product",
+      "label": "Snappy Product",
+      "description": "Bold, tight lines that pop up quickly over a short distance in deep ink blue.",
+      "askedAs": [
+        "fast punchy product headline",
+        "quick bold text reveal",
+        "snappy launch title animation",
+        "быстрое резкое появление текста",
+        "жирный заголовок для продукта быстро"
+      ],
+      "props": {
+        "fontWeight": "700",
+        "speed": 2,
+        "distance": 16,
+        "color": "#1e3a8a"
+      }
+    },
+    {
+      "id": "subtle-caption",
+      "label": "Subtle Caption",
+      "description": "Small, medium-weight slate text that barely lifts into place for understated captions.",
+      "askedAs": [
+        "small subtle text reveal",
+        "quiet caption animation",
+        "minimal lower text fade up",
+        "маленький аккуратный текст снизу",
+        "едва заметное появление подписи"
+      ],
+      "props": {
+        "fontSize": 32,
+        "fontWeight": "500",
+        "distance": 10,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "statement-poster",
+      "label": "Statement Poster",
+      "description": "Huge heavy black lines surging up from far below at a steady, confident pace.",
+      "askedAs": [
+        "huge bold poster headline",
+        "big statement text rising",
+        "massive title reveal",
+        "огромный жирный заголовок",
+        "крупный текст как на постере"
+      ],
+      "props": {
+        "fontSize": 150,
+        "fontWeight": "700",
+        "distance": 110,
+        "speed": 1.25,
+        "color": "#0a0a0a"
+      }
+    },
+    {
+      "id": "forest-corporate",
+      "label": "Forest Corporate",
+      "description": "Mid-size semibold lines in muted forest green with a measured, slightly slower rise.",
+      "askedAs": [
+        "calm corporate text reveal",
+        "green professional headline",
+        "trustworthy brand title animation",
+        "спокойный корпоративный заголовок",
+        "зелёный деловой текст появляется"
+      ],
+      "props": {
+        "fontSize": 60,
+        "color": "#14532d",
+        "speed": 0.75,
+        "distance": 40
+      }
+    }
+  ]
+}

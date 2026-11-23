@@ -1,0 +1,119 @@
+{
+  "component": "sheet-formula",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "spreadsheet-green",
+      "label": "Spreadsheet Green",
+      "description": "A classic light sheet with a deep green accent and Inter type, like a familiar office grid.",
+      "askedAs": [
+        "classic excel look",
+        "green spreadsheet style",
+        "office sheet feel",
+        "как в экселе",
+        "зелёная таблица"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#1e7b4a",
+        "fontFamily": "Inter",
+        "ground": "greenhouse"
+      }
+    },
+    {
+      "id": "terminal-night",
+      "label": "Terminal Night",
+      "description": "A dark monospace sheet with slow deliberate typing and a cool cyan accent on near-black.",
+      "askedAs": [
+        "dark mode code style formula",
+        "monospace dark spreadsheet",
+        "slow typing hacker look",
+        "тёмная тема моноширинный шрифт",
+        "медленный набор формулы"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#4fb3bf",
+        "charFrames": 5,
+        "ground": "nightfold"
+      }
+    },
+    {
+      "id": "quick-fill",
+      "label": "Quick Fill",
+      "description": "A fast, punchy run with rapid typing and a larger scale for short social cuts.",
+      "askedAs": [
+        "make it faster",
+        "snappy quick version",
+        "big and fast for reels",
+        "быстрее и крупнее",
+        "динамичная версия"
+      ],
+      "props": {
+        "speed": 2,
+        "charFrames": 1,
+        "scale": 1.2,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "editorial-report",
+      "label": "Editorial Report",
+      "description": "A warm paper background with dark ink, serif type and a muted terracotta accent like a printed annual report.",
+      "askedAs": [
+        "annual report style",
+        "serif print look",
+        "warm paper finance chart",
+        "как печатный отчёт",
+        "тёплый бумажный стиль"
+      ],
+      "props": {
+        "background": "#f4efe6",
+        "ink": "#2a2622",
+        "fontFamily": "Fraunces",
+        "accent": "#b5562f",
+        "valueFormat": "number"
+      }
+    },
+    {
+      "id": "growth-metrics",
+      "label": "Growth Metrics",
+      "description": "A dark violet analytics dashboard look showing percentages with a soft lavender accent.",
+      "askedAs": [
+        "analytics dashboard percent",
+        "dark purple metrics",
+        "growth rate chart look",
+        "проценты на тёмном фоне",
+        "аналитика фиолетовая"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "velvet-hour",
+        "accent": "#a78bfa",
+        "valueFormat": "percent",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "calm-intro",
+      "label": "Calm Intro",
+      "description": "A smaller, unhurried composition that waits a beat before typing, on a pale cool ground.",
+      "askedAs": [
+        "slower calm version",
+        "smaller with a pause first",
+        "gentle minimal look",
+        "спокойно и медленно",
+        "с паузой в начале"
+      ],
+      "props": {
+        "speed": 0.75,
+        "delay": 30,
+        "scale": 0.85,
+        "ground": "polar",
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

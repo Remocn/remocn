@@ -1,0 +1,124 @@
+{
+  "component": "loop-break",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "grind-loop",
+      "label": "Endless Grind",
+      "description": "Many fast repeats on a dark monospace screen that make the chore feel relentless before the fix lands.",
+      "askedAs": [
+        "make the loop repeat a lot faster",
+        "tedious repetitive coding look",
+        "monospace terminal grind",
+        "много повторов быстро",
+        "как в терминале, однообразно"
+      ],
+      "props": {
+        "passes": 7,
+        "speed": 1.75,
+        "stagger": 1,
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb950",
+        "hold": 8
+      }
+    },
+    {
+      "id": "editorial-calm",
+      "label": "Editorial Calm",
+      "description": "A slow serif reading on warm paper with long holds and gentle word stagger.",
+      "askedAs": [
+        "elegant serif version on cream",
+        "slow and calm editorial look",
+        "magazine style light background",
+        "спокойно, с засечками",
+        "светлый тёплый фон, медленно"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "speed": 0.75,
+        "hold": 30
+      }
+    },
+    {
+      "id": "quick-punch",
+      "label": "Quick Punch",
+      "description": "One short pass and a big, snappy reveal that gets straight to the answer.",
+      "askedAs": [
+        "short and punchy",
+        "skip to the fix quickly",
+        "bigger text, fast payoff",
+        "коротко и резко",
+        "крупно и быстро к ответу"
+      ],
+      "props": {
+        "passes": 1,
+        "speed": 1.5,
+        "scale": 1.25,
+        "fontFamily": "Space Grotesk",
+        "stagger": 2
+      }
+    },
+    {
+      "id": "midnight-indigo",
+      "label": "Midnight Indigo",
+      "description": "Deep navy background with soft lavender text and a cool blue accent at a measured pace.",
+      "askedAs": [
+        "dark blue moody look",
+        "navy background with blue accent",
+        "calm night palette",
+        "тёмно-синий фон",
+        "спокойная ночная палитра"
+      ],
+      "props": {
+        "background": "#0f1626",
+        "ink": "#dfe3f5",
+        "accent": "#7c9cff",
+        "fontFamily": "Manrope",
+        "stagger": 5
+      }
+    },
+    {
+      "id": "clean-product",
+      "label": "Clean Product",
+      "description": "Crisp white product-page style with Inter, a confident blue accent and slightly smaller text.",
+      "askedAs": [
+        "clean white saas style",
+        "minimal light product look",
+        "apple-like simple white",
+        "белый минимализм",
+        "как на сайте продукта"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#1f6feb",
+        "scale": 0.9,
+        "delay": 10
+      }
+    },
+    {
+      "id": "warm-fraunces",
+      "label": "Warm Story",
+      "description": "A soft dark brown backdrop with a rounded serif and amber accent, unfolding slowly across several passes.",
+      "askedAs": [
+        "warm cozy storytelling look",
+        "brown and amber palette",
+        "slow serif on dark",
+        "тёплые тона, янтарный",
+        "уютно и медленно"
+      ],
+      "props": {
+        "background": "#1e1915",
+        "ink": "#f1e7da",
+        "accent": "#e0a458",
+        "fontFamily": "Fraunces",
+        "passes": 4,
+        "speed": 0.75
+      }
+    }
+  ]
+}

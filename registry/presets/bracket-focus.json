@@ -1,0 +1,102 @@
+{
+  "component": "bracket-focus",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced readout in a phosphor-green accent on near-black, snapping in quickly like a diagnostic tool.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace green code style",
+        "hacker console readout",
+        "как в терминале",
+        "моноширинный зелёный шрифт"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb950",
+        "background": "#0b0f0c",
+        "fly": 12,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paper-lab",
+      "label": "Paper Lab",
+      "description": "Light, clean lab-report look with a warm off-white ground and a deep ink-blue accent.",
+      "askedAs": [
+        "light clean version",
+        "white background technical look",
+        "like a printed spec sheet",
+        "светлая версия",
+        "белый фон как в документации"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f4ef",
+        "accent": "#1f3a93",
+        "grain": false,
+        "fontWeight": 600
+      }
+    },
+    {
+      "id": "slow-focus",
+      "label": "Slow Focus",
+      "description": "Unhurried, cinematic lock-on with a long fly-in and a short pause before the brackets close.",
+      "askedAs": [
+        "slower dramatic focus",
+        "cinematic slow zoom in",
+        "make the brackets take their time",
+        "медленная фокусировка",
+        "плавно и кинематографично"
+      ],
+      "props": {
+        "speed": 0.5,
+        "fly": 48,
+        "delay": 18,
+        "fontWeight": 300
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Elegant serif figure in a muted amber accent on charcoal, framed large like a magazine stat.",
+      "askedAs": [
+        "elegant serif number",
+        "magazine style stat",
+        "classy big figure",
+        "элегантный шрифт с засечками",
+        "как в журнале"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "accent": "#d9a441",
+        "background": "#1a1816",
+        "scale": 1.25
+      }
+    },
+    {
+      "id": "quick-capture",
+      "label": "Quick Capture",
+      "description": "Punchy, compact shutter-snap with heavy grotesque type and a crimson accent.",
+      "askedAs": [
+        "fast snappy capture",
+        "quick punchy stat",
+        "like a camera shutter click",
+        "быстро и резко",
+        "короткая энергичная анимация"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "accent": "#e5484d",
+        "fly": 8,
+        "speed": 2,
+        "scale": 0.85
+      }
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "component": "shape-cut",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-square",
+      "label": "Snap Square",
+      "description": "A fast, hard-edged square that slams the cut on a crisp light canvas with tight grotesk type.",
+      "askedAs": [
+        "fast square cut on white",
+        "quick punchy shape transition",
+        "sharp snappy logo reveal",
+        "быстрый переход квадратом",
+        "резкая смена на логотип"
+      ],
+      "props": {
+        "theme": "light",
+        "shape": "square",
+        "travel": 22,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk",
+        "grain": false
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, unhurried circle in warm terracotta over cream paper with elegant serif lettering.",
+      "askedAs": [
+        "elegant slow serif reveal",
+        "magazine style logo transition",
+        "warm cream and terracotta cut",
+        "элегантный переход с засечками",
+        "медленное плавное появление логотипа"
+      ],
+      "props": {
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#c2562f",
+        "fontFamily": "Instrument Serif",
+        "travel": 90,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "tech-pill",
+      "label": "Tech Pill",
+      "description": "A mint pill glides out of monospace text on a near-black slate for a product-launch feel.",
+      "askedAs": [
+        "developer product launch cut",
+        "monospace dark tech transition",
+        "pill shape logo reveal",
+        "технологичный переход капсулой",
+        "тёмная заставка для запуска продукта"
+      ],
+      "props": {
+        "shape": "pill",
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1116",
+        "ink": "#e6edf3",
+        "accent": "#3fb68b",
+        "grain": false
+      }
+    },
+    {
+      "id": "bold-oversize",
+      "label": "Bold Oversize",
+      "description": "Oversized type and a big coral circle that bursts quickly for a loud, confident closer.",
+      "askedAs": [
+        "big bold closing shot",
+        "large text with fast circle",
+        "loud confident ending",
+        "крупный текст и быстрый круг",
+        "яркая смелая концовка"
+      ],
+      "props": {
+        "scale": 1.35,
+        "accent": "#ff5a4e",
+        "travel": 34,
+        "speed": 1.25,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "quiet-mono",
+      "label": "Quiet Mono",
+      "description": "A muted graphite square on soft grey with small Inter type and a delayed, gentle cut.",
+      "askedAs": [
+        "minimal grey transition",
+        "subtle understated logo cut",
+        "calm monochrome reveal",
+        "минималистичный серый переход",
+        "спокойная сдержанная смена кадра"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#e9e9e6",
+        "ink": "#1c1c1c",
+        "accent": "#3a3a3a",
+        "scale": 0.8,
+        "delay": 20
+      }
+    }
+  ]
+}

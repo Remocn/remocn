@@ -1,0 +1,124 @@
+{
+  "component": "crumple-toss",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-flick",
+      "label": "Quick Flick",
+      "description": "A snappy, smooth crush and a fast flat throw that clears the frame almost instantly.",
+      "askedAs": [
+        "fast crumple and throw",
+        "quick paper toss away",
+        "snappy discard animation",
+        "быстро скомкать и выбросить",
+        "резкий бросок бумажки"
+      ],
+      "props": {
+        "step": 1,
+        "crumpleSteps": 6,
+        "tossSteps": 8,
+        "speed": 1.5,
+        "distance": 900,
+        "direction": -15
+      }
+    },
+    {
+      "id": "stop-motion",
+      "label": "Stop Motion",
+      "description": "Choppy, held poses with irregular folds that feel like hand-animated cutout paper.",
+      "askedAs": [
+        "stop motion paper crumple",
+        "choppy handmade toss",
+        "cutout animation style crush",
+        "бумага в стиле стоп-моушн",
+        "дерганая покадровая анимация бумаги"
+      ],
+      "props": {
+        "step": 5,
+        "crumpleSteps": 3,
+        "tossSteps": 3,
+        "randomness": 0.9,
+        "layers": 1
+      }
+    },
+    {
+      "id": "slow-regret",
+      "label": "Slow Regret",
+      "description": "A lingering, deliberate crush into a tight wad followed by a gentle, low-spin lob.",
+      "askedAs": [
+        "slow dramatic crumple",
+        "reluctant paper throw",
+        "gentle slow discard",
+        "медленно смять лист",
+        "неспешно выбросить бумагу"
+      ],
+      "props": {
+        "at": 15,
+        "crumpleSteps": 8,
+        "crushTo": 0.2,
+        "speed": 0.5,
+        "spin": 90,
+        "distance": 320
+      }
+    },
+    {
+      "id": "wild-tumble",
+      "label": "Wild Tumble",
+      "description": "A dense, heavily folded wad that spins hard and flies on a big high arc.",
+      "askedAs": [
+        "angry crumple and throw",
+        "spinning paper ball toss",
+        "throw it far away",
+        "яростно скомкать и швырнуть",
+        "бумажный шарик с вращением"
+      ],
+      "props": {
+        "spin": 680,
+        "distance": 1400,
+        "direction": -70,
+        "segments": 14,
+        "layers": 3,
+        "randomness": 1
+      }
+    },
+    {
+      "id": "over-shoulder",
+      "label": "Over Shoulder",
+      "description": "A loose, lightly crushed sheet tossed backward to the left on a lazy arc.",
+      "askedAs": [
+        "toss paper to the left",
+        "throw it behind",
+        "loose crumple backward throw",
+        "выбросить бумагу через плечо",
+        "бросок влево"
+      ],
+      "props": {
+        "direction": -145,
+        "crushTo": 0.55,
+        "segments": 6,
+        "randomness": 0.3,
+        "spin": 140
+      }
+    },
+    {
+      "id": "neat-fold",
+      "label": "Neat Fold",
+      "description": "Clean, orderly creases and a smooth fluid motion straight up out of frame.",
+      "askedAs": [
+        "clean smooth crumple",
+        "tidy paper fold animation",
+        "smooth toss upward",
+        "аккуратно смять бумагу",
+        "плавный бросок вверх"
+      ],
+      "props": {
+        "randomness": 0.1,
+        "step": 2,
+        "tossSteps": 10,
+        "direction": -90,
+        "spin": 360
+      }
+    }
+  ]
+}

@@ -39,14 +39,14 @@ import { grainDissolve } from "@/components/remocn/grain-dissolve";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={96}>
+    <TransitionSeries.Sequence durationInFrames={192}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 76 })}
+      timing={linearTiming({ durationInFrames: 152 })}
       presentation={grainDissolve()}
     />
-    <TransitionSeries.Sequence durationInFrames={96}>
+    <TransitionSeries.Sequence durationInFrames={192}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

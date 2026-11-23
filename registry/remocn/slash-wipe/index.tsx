@@ -4,13 +4,9 @@ import { loadFont as loadBricolage } from "@remotion/google-fonts/BricolageGrote
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const bricolage = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -30,8 +26,18 @@ export interface SlashWipeProps {
   sections?: SlashSection[];
   every?: number;
   logo?: React.ReactNode;
+  /** Weight of the section titles. */
+  fontWeight?: number;
   accent?: string;
+  /** Text color of the titles; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the titles and subtitles. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Size of the sections, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -106,18 +112,40 @@ const SLASH = {
   gap: 0.07,
 };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SlashWipe({
   sections = DEFAULT_SECTIONS,
   every = 56,
   logo,
+  fontWeight = 500,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = bricolage.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: SlashWipeProps) {
-  const raw = useCurrentFrame();
+  const raw = Math.max(0, useSceneFrame() - delay);
+  const glide = useGlide();
   const frame = raw * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const p = PALETTES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
@@ -261,7 +289,14 @@ export function SlashWipe({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            overflow: "visible",
+            // SVG text can't carry the mark itself; the drawing carries it
+            // while the title rises.
+            transform: glide(rise < 1),
+          }}
           aria-hidden
         >
           <defs>
@@ -295,10 +330,10 @@ export function SlashWipe({
             <text
               x={xText}
               y={yb}
-              fill={p.fg}
+              fill={ink ?? p.fg}
               style={{
-                fontFamily: bricolage.fontFamily,
-                fontWeight: 500,
+                fontFamily,
+                fontWeight,
                 fontSize: fs,
                 letterSpacing: "-0.04em",
                 transform: `translate(${(1 - slide) * -fs * 1.6}px, ${(1 - rise) * fs * 1.1}px)`,
@@ -315,7 +350,7 @@ export function SlashWipe({
               left: xText + fs * 0.03,
               top: yb + fs * 0.34,
               maxWidth: W - xText - margin,
-              fontFamily: bricolage.fontFamily,
+              fontFamily,
               fontWeight: 400,
               fontSize: (portrait ? 42 : 32) * u,
               lineHeight: 1.3,
@@ -386,22 +421,24 @@ export function SlashWipe({
         overflow: "hidden",
       }}
     >
-      {list.map(renderSection)}
-      {band}
-      {logo === null ? null : (
-        <div
-          style={{
-            position: "absolute",
-            left: margin,
-            top: margin * 0.75,
-            opacity: logoT,
-          }}
-        >
-          {logo ?? (
-            <RemocnLogo fontSize={(portrait ? 34 : 26) * u} color={p.fg} />
-          )}
-        </div>
-      )}
+      <ScaleLayer scale={scale}>
+        {list.map(renderSection)}
+        {band}
+        {logo === null ? null : (
+          <div
+            style={{
+              position: "absolute",
+              left: margin,
+              top: margin * 0.75,
+              opacity: logoT,
+            }}
+          >
+            {logo ?? (
+              <RemocnLogo fontSize={(portrait ? 34 : 26) * u} color={p.fg} />
+            )}
+          </div>
+        )}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

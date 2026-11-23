@@ -48,8 +48,8 @@ export const RemotionRoot = () => (
   <Composition
     id="SankeyFlow"
     component={SankeyFlowScene}
-    durationInFrames={140}
-    fps={30}
+    durationInFrames={280}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -84,10 +84,61 @@ Source nodes appear on the left, then flows of different widths draw one by one 
       description: "Caption under the total.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "6",
+      description: "Frames between flows starting.",
+    },
+    {
+      name: "flowLength",
+      type: "number",
+      default: "34",
+      description: "Frames for one flow to reach the target.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for the hero element.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

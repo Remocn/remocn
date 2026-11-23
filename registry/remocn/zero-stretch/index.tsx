@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const outfit = loadOutfit("normal", {
   weights: ["300", "400", "500"],
@@ -24,6 +24,21 @@ export interface ZeroStretchProps {
   label?: string;
   caption?: string;
   accent?: string;
+  /** Text color of the figure; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Outfit by default. */
+  fontFamily?: string;
+  /** Weight of the figure. */
+  fontWeight?: number;
+  /** Frames between digits as they rise. */
+  stagger?: number;
+  grain?: boolean;
+  /** Size of the figure and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -141,14 +156,16 @@ function measure(
   zeroGlyph: string,
   label: string,
   caption: string,
+  fontFamily: string,
+  fontWeight: number,
 ): Metrics {
   const canvas = document.createElement("canvas");
   canvas.width = 1600;
   canvas.height = 1600;
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("zero-stretch: no 2d context");
-  const fam = `"${outfit.fontFamily}"`;
-  ctx.font = `500 ${FONT_PX}px ${fam}`;
+  const fam = `"${fontFamily}"`;
+  ctx.font = `${fontWeight} ${FONT_PX}px ${fam}`;
   ctx.textBaseline = "alphabetic";
   const zero = scanZero(ctx, zeroGlyph);
   const fm = ctx.measureText("0");
@@ -174,6 +191,8 @@ function useMetrics(
   zeroGlyph: string,
   label: string,
   caption: string,
+  fontFamily: string,
+  fontWeight: number,
 ) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("zero-stretch: measuring"));
@@ -182,13 +201,15 @@ function useMetrics(
     let live = true;
     Promise.all([
       outfit.waitUntilDone(),
-      document.fonts.load(`500 100px "${outfit.fontFamily}"`),
-      document.fonts.load(`400 100px "${outfit.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(chars, zeroGlyph, label, caption));
+        setMetrics(
+          measure(chars, zeroGlyph, label, caption, fontFamily, fontWeight),
+        );
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -197,7 +218,7 @@ function useMetrics(
     return () => {
       live = false;
     };
-  }, [chars, zeroGlyph, label, caption, handle]);
+  }, [chars, zeroGlyph, label, caption, handle, fontFamily, fontWeight]);
   return metrics;
 }
 
@@ -229,17 +250,45 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ZeroStretch({
   value = "200",
   label = "components",
   caption = "Ready to ship. Copy one in, own every frame.",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = outfit.fontFamily,
+  fontWeight = 500,
+  stagger = RISE_GAP,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ZeroStretchProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const chars = useMemo(() => Array.from(value), [value]);
   const zi = useMemo(() => {
@@ -248,10 +297,19 @@ export function ZeroStretch({
     return -1;
   }, [chars]);
   const zeroGlyph = zi >= 0 ? chars[zi] : "0";
-  const m = useMetrics(chars, zeroGlyph, label, caption);
+  const m = useMetrics(
+    chars,
+    zeroGlyph,
+    label,
+    caption,
+    fontFamily,
+    fontWeight,
+  );
 
   if (!m) {
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return (
+      <div style={{ position: "absolute", inset: 0, background: stage }} />
+    );
   }
 
   const z = m.zero;
@@ -320,21 +378,25 @@ export function ZeroStretch({
   const pieces = glyphs.map((g, i) => {
     const gx = x + g.lead * F;
     x = gx + g.adv * F + (g.zero ? gap : 0);
-    const riseAt = g.lead > 0 ? STRETCH_AT - 6 : RISE_AT + i * RISE_GAP;
+    const riseAt = g.lead > 0 ? STRETCH_AT - 6 : RISE_AT + i * stagger;
     const p = interpolate(t, [riseAt, riseAt + RISE_LEN], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
     const dy = (1 - p) * (maskBot - maskTop) * 1.05;
+    // Layout rounds a baseline to whole pixels, so a glyph risen by `top`
+    // clicks up pixel by pixel; the rise is a transform instead, kept at rest
+    // so the glyph is never handed back to layout.
     const glyphStyle: React.CSSProperties = {
       position: "absolute",
-      top: lineTop - maskTop + dy,
-      fontFamily: outfit.fontFamily,
-      fontWeight: 500,
+      top: lineTop - maskTop,
+      transform: `translateY(${dy > 1e-3 ? dy : 0}px)${glide(p > 0 && p < 1)}`,
+      fontFamily,
+      fontWeight,
       fontSize: F,
       lineHeight: `${F}px`,
       letterSpacing: `${TRACK}em`,
-      color: c.ink,
+      color: fg,
       whiteSpace: "pre",
     };
     if (!g.zero) {
@@ -354,7 +416,7 @@ export function ZeroStretch({
           width: gap + 2,
           top: baseY + y0 * F - maskTop + dy,
           height: (y1 - y0) * F,
-          background: c.ink,
+          background: fg,
         }}
       />
     );
@@ -392,7 +454,7 @@ export function ZeroStretch({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontFamily: outfit.fontFamily,
+            fontFamily,
             fontWeight: 400,
             fontSize: labelSize,
             letterSpacing: `${LABEL_TRACK}em`,
@@ -417,7 +479,7 @@ export function ZeroStretch({
                 style={{
                   display: "inline-block",
                   opacity: lp,
-                  transform: `translateY(${((1 - lp) * labelSize * 0.7).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - lp) * labelSize * 0.7).toFixed(2)}px)${glide(lp > 0 && (1 - lp) * labelSize > 1e-3)}`,
                 }}
               >
                 {w}
@@ -467,40 +529,42 @@ export function ZeroStretch({
   });
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: maskTop,
-          height: maskBot - maskTop,
-          overflow: "hidden",
-        }}
-      >
-        {pieces}
-      </div>
-      {caption ? (
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
             left: 0,
             width: W,
-            top: maskBot + Math.max(F * 0.16, H * 0.05),
-            textAlign: "center",
-            fontFamily: outfit.fontFamily,
-            fontWeight: 300,
-            fontSize: capSize,
-            letterSpacing: "-0.005em",
-            color: c.muted,
-            opacity: capP,
-            transform: `translateY(${((1 - capP) * capSize * 0.6).toFixed(2)}px)`,
+            top: maskTop,
+            height: maskBot - maskTop,
+            overflow: "hidden",
           }}
         >
-          {caption}
+          {pieces}
         </div>
-      ) : null}
-      <Grain opacity={c.grain} />
+        {caption ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: maskBot + Math.max(F * 0.16, H * 0.05),
+              textAlign: "center",
+              fontFamily,
+              fontWeight: 300,
+              fontSize: capSize,
+              letterSpacing: "-0.005em",
+              color: c.muted,
+              opacity: capP,
+              transform: `translateY(${((1 - capP) * capSize * 0.6).toFixed(2)}px)${glide(capP > 0 && (1 - capP) * capSize > 1e-3)}`,
+            }}
+          >
+            {caption}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

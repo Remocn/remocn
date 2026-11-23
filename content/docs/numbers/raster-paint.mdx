@@ -40,8 +40,8 @@ export const RemotionRoot = () => (
   <Composition
     id="RasterPaint"
     component={RasterPaintScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -65,10 +65,56 @@ A scan line sweeps down the frame, painting the pixelated figure tile by tile, w
       description: "Small line that fades in under the figure.",
     },
     {
+      name: "scanLength",
+      type: "number",
+      default: "58",
+      description: "Frames for the scan line to paint the whole figure.",
+    },
+    {
+      name: "trail",
+      type: "number",
+      default: "12",
+      description: "Frames a pixel takes to cool from the hot accent to its final color.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist Mono\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

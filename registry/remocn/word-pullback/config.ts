@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const wordPullbackConfig: ComponentConfig = {
   componentName: "WordPullback",
@@ -28,6 +35,27 @@ export const wordPullbackConfig: ComponentConfig = {
       default: "toolkit for every launch",
       description: "After",
     },
+    fontWeight: {
+      type: "number",
+      default: 300,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Inter Tight" }),
   },
   durationInFrames: 132,
   fps: FPS,

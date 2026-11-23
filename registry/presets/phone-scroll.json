@@ -1,0 +1,121 @@
+{
+  "component": "phone-scroll",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-feed",
+      "label": "Midnight Feed",
+      "description": "Dark theme on a deep blue-hour ground with a soft violet accent and unhurried flicks.",
+      "askedAs": [
+        "dark mode phone scroll",
+        "night version of the app scroll",
+        "moody dark feed scrolling",
+        "тёмная тема прокрутки телефона",
+        "ночной вариант с телефоном"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#8b7cf6",
+        "flickGap": 60,
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "rapid-swipe",
+      "label": "Rapid Swipe",
+      "description": "Fast, punchy flicks with tight gaps and a bold grotesk headline for energetic cuts.",
+      "askedAs": [
+        "fast scrolling phone",
+        "quick snappy feed swipe",
+        "energetic app scroll for reels",
+        "быстрая прокрутка ленты",
+        "резкий свайп в телефоне"
+      ],
+      "props": {
+        "flickGap": 26,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk",
+        "accent": "#f25c3a"
+      }
+    },
+    {
+      "id": "editorial-calm",
+      "label": "Editorial Calm",
+      "description": "Warm paper background, serif headline and slow, blur-free scrolling for a magazine feel.",
+      "askedAs": [
+        "slow elegant phone scroll",
+        "serif editorial app showcase",
+        "calm magazine style scrolling",
+        "спокойная элегантная прокрутка",
+        "журнальный стиль с телефоном"
+      ],
+      "props": {
+        "background": "#f4efe6",
+        "ink": "#2a2622",
+        "fontFamily": "Instrument Serif",
+        "accent": "#b5543a",
+        "flickGap": 90,
+        "motionBlur": false
+      }
+    },
+    {
+      "id": "warm-glow",
+      "label": "Warm Glow",
+      "description": "Dark copper ground with an amber accent and a slightly larger phone for cozy product beats.",
+      "askedAs": [
+        "warm cozy app promo",
+        "orange glow phone scroll",
+        "copper toned dark background",
+        "тёплый фон для приложения",
+        "оранжевое свечение за телефоном"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "copper",
+        "accent": "#e8a14b",
+        "scale": 1.15,
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "dev-tool",
+      "label": "Dev Tool",
+      "description": "Charcoal satin ground with mono type and a mint accent for technical products.",
+      "askedAs": [
+        "developer app scroll",
+        "monospace tech product demo",
+        "terminal style phone showcase",
+        "прокрутка для приложения разработчиков",
+        "техничный стиль с моноширинным шрифтом"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#4fd1a5",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "fresh-minimal",
+      "label": "Fresh Minimal",
+      "description": "Airy polar ground, green accent and a smaller phone with a gentle delayed entrance.",
+      "askedAs": [
+        "light minimal app scroll",
+        "clean airy phone demo",
+        "soft pastel scrolling screen",
+        "светлая минималистичная прокрутка",
+        "лёгкий чистый стиль с телефоном"
+      ],
+      "props": {
+        "ground": "polar",
+        "accent": "#1f9d6b",
+        "fontFamily": "Manrope",
+        "scale": 0.85,
+        "delay": 12
+      }
+    }
+  ]
+}

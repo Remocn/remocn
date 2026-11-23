@@ -48,8 +48,8 @@ export const RemotionRoot = () => (
   <Composition
     id="SpeedrunTimer"
     component={SpeedrunTimerScene}
-    durationInFrames={175}
-    fps={30}
+    durationInFrames={350}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -81,10 +81,43 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "The banner that lands when the run finishes.",
     },
     {
+      name: "pbLabel",
+      type: "string",
+      default: "\"Personal best\"",
+      description: "Label above the personal-best time.",
+    },
+    {
+      name: "radius",
+      type: "number",
+      default: "18",
+      description: "Corner radius of the splits panel, in px at 1280×720.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the current-split marker.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
     },
     {
       name: "theme",
@@ -101,6 +134,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Overrides for the ground shader parameters.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

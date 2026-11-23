@@ -45,8 +45,8 @@ export const RemotionRoot = () => (
   <Composition
     id="PhoneTrio"
     component={PhoneTrioScene}
-    durationInFrames={132}
-    fps={30}
+    durationInFrames={264}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -70,6 +70,40 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "string",
       default: "\"#ff5a36\"",
       description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Manrope\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
     {
       name: "name",
@@ -117,6 +151,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "string",
       default: "\"Portfolio is live\"",
       description: "Text of the banner that drops in near the end",
+    },
+    {
+      name: "workTitle",
+      type: "string",
+      default: "\"Selected work\"",
+      description: "Large heading on the middle phone's work screen.",
+    },
+    {
+      name: "ctaLabel",
+      type: "string",
+      default: "\"Open for projects\"",
+      description: "Call to action at the bottom of the about screen.",
+    },
+    {
+      name: "followLabel",
+      type: "string",
+      default: "\"Follow\"",
+      description: "Primary button on the profile screen.",
     },
     {
       name: "ground",

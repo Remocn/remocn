@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface SharedAxisYProps {
   fromText: string;
@@ -21,7 +22,7 @@ export function SharedAxisY({
   speed = 1,
   className,
 }: SharedAxisYProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
 
   const fromWords = fromText.split(" ");
   const toWords = toText.split(" ");

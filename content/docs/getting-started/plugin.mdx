@@ -1,10 +1,10 @@
 ---
-title: "Make Remotion videos with Claude Code: the Remocn plugin and agent skill"
+title: "Remotion Claude Code plugin: make videos from a brief"
 navTitle: Plugin
-description: "A Claude Code plugin and agent skill for creating Remotion videos. Install the Remocn plugin, run /remocn:video with a brief, and Claude Code plans a storyboard, installs MIT-licensed Remotion components and writes the video in your project. Works alongside Remotion's official skills; also runs in Codex."
+description: "Install the Remocn plugin in Claude Code or Codex, run /remocn:video with a brief, and get a Remotion video built from MIT-licensed components in your repo."
 ---
 
-_Last updated: November 10, 2026_
+_Last updated: November 18, 2026_
 
 To make Remotion videos with Claude Code, install the Remocn plugin
 (`/plugin install remocn --marketplace Remocn/remocn`) and run `/remocn:video <brief>`: Claude Code
@@ -88,7 +88,7 @@ npx shadcn@latest add @remocn/blur-reveal
 | `/remocn:video <brief>` | The main workflow: brief → archetype → storyboard → install → compose → visual check → hand-off. Stops after the storyboard so you can change direction before any code is written |
 | `/remocn:changelog [range]` | Collects a release from git tags, commits or merged pull requests, writes it as short on-screen lines, and builds a changelog video |
 | `/remocn:add <name>` | Installs one component, reads its docs page, and places it in a `Sequence` with the right length |
-| `/remocn:studio` | Prepares the project for Remocn Studio and opens it there |
+| `/remocn:setup` | Makes a Remotion project ready for `npx shadcn add @remocn/<name>`. The other workflows run it on their own |
 | `remocn` skill | The [agent skill](/docs/getting-started/agent-skill): component tiers, timing rules, composition recipes. Loads on its own for any video work |
 | `video-director` agent | Plans the storyboard: one beat per row, a component per beat, frame budgets that hit the target length |
 | `scene-reviewer` agent | Renders stills at key frames of every beat and checks them for clipped text, empty frames, low contrast and jumps between beats |
@@ -113,12 +113,28 @@ first two are made to be used together.
 | Needs | Node.js, a Remotion project | Node.js, React, a Remotion project | Often ffmpeg, sometimes paid model APIs |
 | Cost | Free; Remotion itself may need a company license | Free, MIT; Remotion's license still applies | Varies |
 
-Remotion's own plugin is installed with
-`claude plugin marketplace add remotion-dev/claude-code-plugin` and
-`claude plugin install remotion@remotion`; see
-[Remotion's Claude Code plugin docs](https://www.remotion.dev/docs/ai/claude-code-plugin) and
+### Install Remotion's official Claude Code plugin
+
+Remotion's own plugin lives in
+[remotion-dev/claude-code-plugin](https://github.com/remotion-dev/claude-code-plugin). Install it
+from a terminal, then restart Claude Code:
+
+```bash
+claude plugin marketplace add remotion-dev/claude-code-plugin
+claude plugin install remotion@remotion
+```
+
+In the Claude desktop app, open Customize, then Plugins → Discover, search for "remotion" and
+click Add. The plugin brings Remotion's Agent Skills and a `/remotion:remotion-create` command:
+
+```text
+/remotion:remotion-create Make a promo video for a record store
+```
+
+See [Remotion's Claude Code plugin docs](https://www.remotion.dev/docs/ai/claude-code-plugin) and
 [Agent Skills](https://www.remotion.dev/docs/ai/skills). Install it next to Remocn if you like:
-Remocn doesn't replace it.
+Remocn doesn't replace it, and the two don't conflict. Remotion's plugin teaches the agent
+Remotion's API; Remocn gives it finished components to build the video from.
 
 ## Test: the same 15-second promo with and without Remocn
 
@@ -252,23 +268,19 @@ install and render:
   paths
 
 Videos are written to `src/videos/<slug>/index.tsx` and export a `meta` object with the
-dimensions, frame rate and duration. That layout is what Remocn Studio opens, and it registers each
-video as a composition with id `<slug>` in Remotion Studio too. In a project you already have, the
-agent says which files it will touch and asks first.
+dimensions, frame rate and duration. The agent registers each one as a composition with id `<slug>`
+in the project's root component, next to the compositions already there. In a project you already
+have, the agent says which files it will touch and asks first.
 
 ## Open in Remocn Studio
 
 Remocn Studio is a desktop app for macOS and Linux that previews a Remotion project live, lets you
-tune elements by hand, and exports mp4. After a video is built, the plugin asks whether to open it
-there:
+tune elements by hand, and exports mp4. After a video is built, the plugin points you to it:
+install Studio from [remocn.studio](https://remocn.studio), choose **Open Folder** (⌘O) and pick the
+project root.
 
-- **Studio installed:** the plugin starts it and tells you which folder to pick with **Open Folder**
-  (⌘O).
-- **Not installed:** you get the download link and the same steps for afterwards.
-- **Windows:** Studio isn't available, so the plugin skips the offer. Preview with
-  `npx remotion studio` and render with `npx remotion render <slug>`.
-
-The project already carries Studio's manifest (`.remocn/project.json`), so it opens as-is.
+On Windows Studio isn't available, so the plugin skips it. Preview with `npx remotion studio` and
+render with `npx remotion render <slug>`.
 
 ## In claude.ai and ChatGPT
 
@@ -287,6 +299,14 @@ Remotion code. The Remocn plugin (`/plugin install remocn --marketplace Remocn/r
 video workflow and a catalog of more than 430 ready-made Remotion components, and the Remocn agent
 skill (`npx skills add Remocn/remocn`) adds the catalog alone.
 
+### How do I install Remotion's official Claude Code plugin?
+
+Run `claude plugin marketplace add remotion-dev/claude-code-plugin`, then
+`claude plugin install remotion@remotion`, and restart Claude Code. Start a video with
+`/remotion:remotion-create <brief>`. It is a separate plugin from Remocn, made by Remotion, and the
+two can be installed together. [Install Remotion's official Claude Code plugin](#install-remotions-official-claude-code-plugin)
+has the desktop-app steps.
+
 ### Do I need Remotion's official skills if I install Remocn?
 
 No, but they work well together. Remocn's skill covers its own components and the timing rules
@@ -298,7 +318,7 @@ scenes that aren't built from Remocn components.
 Install the plugin, open Claude Code in a Remotion project or an empty folder, and run
 `/remocn:video` followed by a one-line brief. Claude Code reads your repo, proposes a storyboard
 and waits for your go-ahead, then installs the components, writes the video, checks stills and
-offers to open it in Remocn Studio. Render with `npx remotion render <slug>`.
+points you to Remocn Studio. Render with `npx remotion render <slug>`.
 
 ### Can Claude Code make a feature announcement video without a video editor?
 

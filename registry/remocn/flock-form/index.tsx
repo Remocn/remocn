@@ -1,18 +1,26 @@
 "use client";
 
+import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface FlockFormProps {
   /** Number of birds. Formations resample to match. */
   count?: number;
   accent?: string;
+  /** Spread, in frames, of the birds' arrival into the arrow. */
+  stagger?: number;
+  /** Size of each bird; 1 is the default. */
+  birdSize?: number;
+  /** Solid fill in place of the sky; "transparent" drops it. */
+  background?: string;
+  /** Size of the flock, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -356,14 +364,36 @@ function tri(x: number, y: number, a: number, len: number, wid: number) {
   return `M${tx.toFixed(1)} ${ty.toFixed(1)}L${(bx + ox).toFixed(1)} ${(by + oy).toFixed(1)}L${(bx - ox).toFixed(1)} ${(by - oy).toFixed(1)}Z`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FlockForm({
   count = 340,
   accent = "#3B5BFD",
+  stagger = STAGGER,
+  birdSize = 1,
+  background,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: FlockFormProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const isLight = theme === "light";
   const bg = isLight ? "#F5F4F0" : "#0A0A0B";
   const ink = isLight ? "#141416" : "#EEEEF0";
@@ -502,7 +532,7 @@ export function FlockForm({
     });
 
     const delay1 = arrowOf.map(
-      (ti, i) => (1 - arrowPts[ti].t) * STAGGER * 0.85 + hash(i * 5.3) * 3,
+      (ti, i) => (1 - arrowPts[ti].t) * stagger * 0.85 + hash(i * 5.3) * 3,
     );
     const delay2 = release.map((r) => r + CRUISE);
 
@@ -520,7 +550,7 @@ export function FlockForm({
       nDot,
       spacing,
     };
-  }, [W, H, n, u]);
+  }, [W, H, n, u, stagger]);
 
   const posAt = (i: number, f: number): Pt => {
     const m = model;
@@ -582,8 +612,8 @@ export function FlockForm({
       ? 0
       : Math.max(0, Math.min(1, (f - LAUNCH - model.delay2[i]) / FLY_IN2));
 
-  const len = model.spacing * 0.92;
-  const wid = model.spacing * 0.58;
+  const len = model.spacing * 0.92 * birdSize;
+  const wid = model.spacing * 0.58 * birdSize;
   const FADES = 5;
   const inkD: string[] = [];
   const accD: string[][] = Array.from({ length: FADES }, () => []);
@@ -612,49 +642,57 @@ export function FlockForm({
   return (
     <AbsoluteFill
       style={{
-        background: isLight
-          ? `radial-gradient(80% 75% at 50% 45%, #FBFAF7 0%, ${bg} 72%)`
-          : skyGround(drift),
+        background:
+          background === "transparent"
+            ? undefined
+            : (background ??
+              (isLight
+                ? `radial-gradient(80% 75% at 50% 45%, #FBFAF7 0%, ${bg} 72%)`
+                : skyGround(drift))),
         overflow: "hidden",
       }}
     >
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={gid}
-            gradientUnits="userSpaceOnUse"
-            x1={W * (0.46 + 0.04 * drift)}
-            y1={H * 0.1}
-            x2={W * (0.54 - 0.04 * drift)}
-            y2={H * 0.92}
-          >
-            <stop offset="0" stopColor={WAVES.colors[3]} />
-            <stop offset="0.45" stopColor={WAVES.colors[2]} />
-            <stop offset="1" stopColor={WAVES.colors[1]} />
-          </linearGradient>
-        </defs>
-        <path d={inkD.join("")} fill={birdFill} />
-        {accD.map((segs, k) =>
-          segs.length ? (
-            <path
-              key={`a${k.toString()}`}
-              d={segs.join("")}
-              fill={interpolateColors(
-                k / (FADES - 1),
-                [0, 1],
-                [accent, isLight ? WAVES.colors[2] : ink],
-              )}
-            />
-          ) : null,
-        )}
-      </svg>
-      <Grain opacity={isLight ? 0.045 : 0.06} light={isLight} />
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={gid}
+              gradientUnits="userSpaceOnUse"
+              x1={W * (0.46 + 0.04 * drift)}
+              y1={H * 0.1}
+              x2={W * (0.54 - 0.04 * drift)}
+              y2={H * 0.92}
+            >
+              <stop offset="0" stopColor={WAVES.colors[3]} />
+              <stop offset="0.45" stopColor={WAVES.colors[2]} />
+              <stop offset="1" stopColor={WAVES.colors[1]} />
+            </linearGradient>
+          </defs>
+          <path d={inkD.join("")} fill={birdFill} />
+          {accD.map((segs, k) =>
+            segs.length ? (
+              <path
+                key={`a${k.toString()}`}
+                d={segs.join("")}
+                fill={interpolateColors(
+                  k / (FADES - 1),
+                  [0, 1],
+                  [accent, isLight ? WAVES.colors[2] : ink],
+                )}
+              />
+            ) : null,
+          )}
+        </svg>
+      </ScaleLayer>
+      {grain ? (
+        <Grain opacity={isLight ? 0.045 : 0.06} light={isLight} />
+      ) : null}
     </AbsoluteFill>
   );
 }

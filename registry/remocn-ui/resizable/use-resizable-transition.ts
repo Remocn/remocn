@@ -1,11 +1,10 @@
 "use client";
-
-import { useCurrentFrame } from "remotion";
 import {
   type ResizableHandleState,
   type ResizableStyle,
   resizableHandleStyle,
 } from "@/components/remocn/resizable";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 
 export interface ResizableStep {
@@ -41,7 +40,7 @@ export function useResizableTransition(
   opts: ResizableTransitionOptions = {},
 ): ResizableStyle {
   const { speed = 1 } = opts;
-  const raw = useCurrentFrame() * speed;
+  const raw = useSceneFrame() * speed;
   return resizableStyleAt(steps, raw, opts);
 }
 

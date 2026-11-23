@@ -1,0 +1,99 @@
+{
+  "component": "icon-info",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined info icon that slowly sketches itself in a deep slate tone.",
+      "askedAs": [
+        "big info icon drawn slowly",
+        "large thin outline info sign",
+        "elegant slow drawing icon",
+        "большая иконка инфо медленно рисуется",
+        "тонкая крупная иконка информации"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#334155"
+      }
+    },
+    {
+      "id": "brand-blue-pulse",
+      "label": "Blue Pulse",
+      "description": "A medium blue info icon with a bold stroke that keeps nudging for attention on a loop.",
+      "askedAs": [
+        "looping blue info icon",
+        "info icon that keeps animating",
+        "attention grabbing info hint",
+        "синяя иконка инфо в цикле",
+        "повторяющаяся анимация значка информации"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#1f6feb",
+        "strokeWidth": 2.5,
+        "size": 72
+      }
+    },
+    {
+      "id": "snappy-inline",
+      "label": "Snappy Inline",
+      "description": "A small, quick info glyph that pops in fast to sit beside text.",
+      "askedAs": [
+        "small fast info icon",
+        "quick tiny info glyph for text",
+        "inline info mark animation",
+        "маленькая быстрая иконка инфо",
+        "значок инфо рядом с текстом"
+      ],
+      "props": {
+        "size": 28,
+        "speed": 2.5,
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "teal-calm",
+      "label": "Calm Teal",
+      "description": "A soft teal icon drawn and animated at a relaxed pace with a gentle medium stroke.",
+      "askedAs": [
+        "calm teal info icon",
+        "gentle soft info animation",
+        "relaxed green-blue info sign",
+        "спокойная бирюзовая иконка",
+        "мягкая анимация значка информации"
+      ],
+      "props": {
+        "color": "#0f766e",
+        "speed": 0.75,
+        "size": 96,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "amber-notice",
+      "label": "Amber Notice",
+      "description": "A heavy-stroked amber info icon that loops its full draw-and-action cycle like a caution notice.",
+      "askedAs": [
+        "orange warning style info icon",
+        "bold amber looping notice",
+        "heads up info icon animation",
+        "оранжевая иконка предупреждения",
+        "жирный значок инфо янтарного цвета"
+      ],
+      "props": {
+        "color": "#b45309",
+        "strokeWidth": 3,
+        "loop": true,
+        "size": 120,
+        "speed": 1.5
+      }
+    }
+  ]
+}

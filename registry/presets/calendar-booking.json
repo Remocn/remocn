@@ -1,0 +1,118 @@
+{
+  "component": "calendar-booking",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-focus",
+      "label": "Midnight Focus",
+      "description": "Dark theme on a deep blue-hour ground with a cool cyan accent and Geist type.",
+      "askedAs": [
+        "dark mode booking calendar",
+        "night blue scheduling look",
+        "calendar on dark background",
+        "тёмная тема календаря",
+        "ночной стиль записи на встречу"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#5ec8e5",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Warm cream paper with dark ink, a terracotta accent and serif type at a calm, slower pace.",
+      "askedAs": [
+        "warm paper calendar with serif font",
+        "editorial style booking",
+        "cream background elegant scheduling",
+        "календарь в стиле журнала",
+        "тёплый бумажный фон с засечками"
+      ],
+      "props": {
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#c2562f",
+        "fontFamily": "Fraunces",
+        "ground": "paper-crease",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A brisk double-speed run in Inter with a green accent for a punchy confirmation beat.",
+      "askedAs": [
+        "fast booking animation",
+        "quick scheduling demo",
+        "speed up the calendar",
+        "быстрая анимация бронирования",
+        "ускоренный выбор времени"
+      ],
+      "props": {
+        "speed": 2,
+        "accent": "#16a34a",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "hero-closeup",
+      "label": "Hero Closeup",
+      "description": "Enlarged card on a glassy ground with a violet accent and a short lead-in delay.",
+      "askedAs": [
+        "bigger calendar card",
+        "zoomed in booking hero",
+        "large scheduling widget",
+        "крупный календарь на весь экран",
+        "увеличенная карточка записи"
+      ],
+      "props": {
+        "scale": 1.3,
+        "ground": "glasswork",
+        "accent": "#7c5cfa",
+        "delay": 12,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "terminal-slot",
+      "label": "Terminal Slot",
+      "description": "Dark charcoal ground with monospace type and an amber accent for a developer-tool feel.",
+      "askedAs": [
+        "developer style calendar",
+        "monospace booking look",
+        "techy dark scheduling",
+        "календарь в стиле терминала",
+        "моноширинный шрифт тёмная тема"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#f5a524"
+      }
+    },
+    {
+      "id": "slow-ember",
+      "label": "Slow Ember",
+      "description": "An unhurried half-speed take on a warm ember ground with a coral accent and compact scale.",
+      "askedAs": [
+        "slow relaxed booking animation",
+        "warm sunset calendar",
+        "calm scheduling moment",
+        "медленная тёплая анимация",
+        "спокойный календарь в тёплых тонах"
+      ],
+      "props": {
+        "speed": 0.5,
+        "ground": "ember",
+        "accent": "#e8664a",
+        "scale": 0.85,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    }
+  ]
+}

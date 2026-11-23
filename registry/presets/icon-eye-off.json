@@ -1,0 +1,100 @@
+{
+  "component": "icon-eye-off",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-reveal",
+      "label": "Hairline Reveal",
+      "description": "A large, thin-stroked slate icon that slowly draws itself in like a fine sketch.",
+      "askedAs": [
+        "thin slow drawing eye icon",
+        "elegant line hide icon",
+        "big delicate eye off",
+        "тонкая медленная иконка скрытия",
+        "изящная линия глаз перечёркнут"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "color": "#475569",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-toggle",
+      "label": "Bold Toggle",
+      "description": "A heavy, quick-snapping eye-off gesture in deep crimson that reads as a firm hide action.",
+      "askedAs": [
+        "thick fast hide password icon",
+        "bold red eye off",
+        "snappy visibility toggle",
+        "жирная быстрая иконка скрыть пароль",
+        "красный перечёркнутый глаз"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "color": "#b42318",
+        "speed": 2,
+        "size": 64
+      }
+    },
+    {
+      "id": "privacy-pulse",
+      "label": "Privacy Pulse",
+      "description": "A calm indigo icon that loops its draw and hide motion at an unhurried pace, suited to background privacy cues.",
+      "askedAs": [
+        "looping privacy icon",
+        "slow repeating eye off",
+        "calm blue hidden indicator",
+        "зацикленная иконка приватности",
+        "медленно повторяющийся скрытый глаз"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#4338ca",
+        "speed": 0.75,
+        "size": 80
+      }
+    },
+    {
+      "id": "micro-ui",
+      "label": "Micro UI",
+      "description": "A small, crisp muted-gray icon that plays its action quickly, like an inline form control.",
+      "askedAs": [
+        "tiny eye off for input field",
+        "small quick hide icon",
+        "subtle gray password toggle",
+        "маленькая иконка для поля пароля",
+        "мелкий серый глаз скрыть"
+      ],
+      "props": {
+        "size": 24,
+        "color": "#6b7280",
+        "strokeWidth": 1.75,
+        "speed": 1.5,
+        "animation": "action"
+      }
+    },
+    {
+      "id": "hero-statement",
+      "label": "Hero Statement",
+      "description": "An oversized forest-green icon with medium-heavy strokes that draws and acts at a steady, cinematic tempo.",
+      "askedAs": [
+        "huge eye off for title screen",
+        "big green hidden icon",
+        "large cinematic hide symbol",
+        "огромная иконка скрытия для заставки",
+        "большой зелёный перечёркнутый глаз"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#166534",
+        "strokeWidth": 2.5,
+        "speed": 0.75
+      }
+    }
+  ]
+}

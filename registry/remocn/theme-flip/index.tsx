@@ -3,20 +3,14 @@
 import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -45,7 +39,23 @@ export interface ThemeFlipProps {
   reverse?: boolean;
   screenshotWidth?: number;
   screenshotHeight?: number;
+  /** Frame the cursor clicks the toggle. */
+  clickAt?: number;
+  /** Workspace name in the built-in mock's sidebar. */
+  brand?: string;
+  /** Replaces the remocn mark in the built-in mock's sidebar. */
+  logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the theme label in tall frames; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the scene. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the window and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   /** Camera zoom on the toggle around the click (1 = no push-in). */
   zoom?: number;
@@ -74,14 +84,24 @@ const clamp = (v: number, lo: number, hi: number) =>
 const ramp = (frame: number, from: number, len: number, curve = MOVE) =>
   curve(clamp((frame - from) / len, 0, 1));
 
+// Chrome parks a glyph raster on a whole pixel vertically for as long as the
+// matrix is axis-aligned, so text under a slow transform clicks along pixel by
+// pixel. The transforms that carry text are marked, so it leans off that grid
+// while they move.
+/** A spring leaves a sub-pixel tail behind; none of it once it's invisible. */
+const px = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
+
 function ThemeToggle({
   theme,
   k,
+  kRest,
   hover,
   press,
 }: {
   theme: MockTheme;
   k: number;
+  /** Where the knob comes to rest; its slide there is a transform. */
+  kRest: number;
   hover: number;
   press: number;
 }) {
@@ -113,8 +133,11 @@ function ThemeToggle({
       <div
         style={{
           position: "absolute",
-          left: 2 + k * SEG,
+          left: 2 + kRest * SEG,
           top: 2,
+          transform: px((k - kRest) * SEG)
+            ? `translateX(${(k - kRest) * SEG}px)`
+            : undefined,
           width: SEG,
           height: 28,
           borderRadius: 7,
@@ -177,6 +200,22 @@ function Cursor({ size, press }: { size: number; press: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ThemeFlip({
   from,
   to,
@@ -189,14 +228,23 @@ export function ThemeFlip({
   reverse = false,
   screenshotWidth = MOCK_W,
   screenshotHeight = MOCK_H,
+  clickAt = CLICK,
+  brand = "remocn",
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
   speed = 1,
   zoom = ZOOM,
   ground,
   groundParams,
 }: ThemeFlipProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const tall = H > W * 1.2;
   const u = Math.min(W / 1280, H / 720);
   const sw = screenshotWidth;
@@ -209,8 +257,11 @@ export function ThemeFlip({
 
   const s = tall ? (W * 0.9) / sw : (W * 0.76) / sw;
   const left = (W - sw * s) / 2;
-  const enter = spring({ frame: frame + 2, fps, config: HEAVY });
-  const top = (tall ? H * 0.47 : H * 0.13) + (1 - enter) * 0.06 * H;
+  const enterAt = (f: number) => spring({ frame: f + 2, fps, config: HEAVY });
+  const enter = enterAt(frame);
+  const topRest = tall ? H * 0.47 : H * 0.13;
+  const rise = (1 - enter) * 0.06 * H;
+  const top = topRest + rise;
   const toStage = (x: number, y: number) => ({
     x: left + x * s,
     y: top + y * s,
@@ -220,14 +271,16 @@ export function ThemeFlip({
   const focus = toStage(o.x + (back * SEG) / 2, o.y);
 
   const REV_CLICK = REV + 24;
-  const fwd = spring({ frame: frame - CLICK - 1, fps, config: CARD });
+  const fwd = spring({ frame: frame - clickAt - 1, fps, config: CARD });
   const bwd = reverse
     ? spring({ frame: frame - REV_CLICK - 1, fps, config: CARD })
     : 0;
   const knob = fwd - bwd;
   const k = startTheme === "dark" ? 1 - knob : knob;
+  const knobRest = reverse ? 0 : 1;
+  const kRest = startTheme === "dark" ? 1 - knobRest : knobRest;
   const hover =
-    ramp(frame, CLICK - 6, 4, ENTER) * (1 - ramp(frame, CLICK + 2, 3)) +
+    ramp(frame, clickAt - 6, 4, ENTER) * (1 - ramp(frame, clickAt + 2, 3)) +
     (reverse
       ? ramp(frame, REV_CLICK - 6, 4, ENTER) *
         (1 - ramp(frame, REV_CLICK + 2, 3))
@@ -235,7 +288,7 @@ export function ThemeFlip({
   const pressAt = (at: number) =>
     spring({ frame: frame - (at - 2), fps, config: CHIP }) -
     spring({ frame: frame - (at + 2), fps, config: CHIP });
-  const press = pressAt(CLICK) + (reverse ? pressAt(REV_CLICK) : 0);
+  const press = pressAt(clickAt) + (reverse ? pressAt(REV_CLICK) : 0);
 
   const winR = { x0: left, y0: top, x1: left + sw * s, y1: top + sh * s };
   const maxR =
@@ -247,32 +300,38 @@ export function ThemeFlip({
         [winR.x1, winR.y1],
       ].map(([x, y]) => Math.hypot(x - flipPt.x, y - flipPt.y)),
     ) * 1.02;
-  const p1 = WIPE(clamp((frame - CLICK - 2) / FLOOD, 0, 1));
+  const p1 = WIPE(clamp((frame - clickAt - 2) / FLOOD, 0, 1));
   const p2 = reverse ? WIPE(clamp((frame - REV_CLICK - 2) / FLOOD, 0, 1)) : 0;
 
-  const z =
-    ramp(frame, 2, 28, CAMERA) -
-    ramp(frame, CLICK + 6, 32, CAMERA) +
+  const zAt = (f: number) =>
+    ramp(f, 2, 28, CAMERA) -
+    ramp(f, clickAt + 6, 32, CAMERA) +
     (reverse
-      ? ramp(frame, REV, 22, CAMERA) - ramp(frame, REV_CLICK + 6, 32, CAMERA)
+      ? ramp(f, REV, 22, CAMERA) - ramp(f, REV_CLICK + 6, 32, CAMERA)
       : 0);
+  const z = zAt(frame);
+  const shifts = (at: (f: number) => number, eps: number) =>
+    Math.abs(at(frame + speed) - at(frame)) > eps ||
+    Math.abs(at(frame) - at(frame - speed)) > eps;
+  const cameraMoving = shifts(zAt, 1e-6);
+  const riseMoving = shifts(enterAt, 1e-6);
   const Z = 1 + (zoom - 1) * z;
   const aim = tall ? { x: W * 0.62, y: H * 0.5 } : { x: W * 0.6, y: H * 0.32 };
   const shot = {
     x: focus.x + (aim.x - focus.x) * z,
     y: focus.y + (aim.y - focus.y) * z,
   };
-  const camera = `translate(${shot.x - focus.x * Z}px, ${shot.y - focus.y * Z}px) scale(${Z})`;
+  const camera = `translate(${shot.x - focus.x * Z}px, ${shot.y - focus.y * Z}px) scale(${Z})${glide(cameraMoving)}`;
 
   const startPt = { x: W * 0.74, y: tall ? H * 0.82 : H * 0.92 };
   const park = { x: flipPt.x + 70 * u, y: flipPt.y + 90 * u };
-  const m1 = ramp(frame, 6, CLICK - 10, ENTER);
+  const m1 = ramp(frame, 6, clickAt - 10, ENTER);
   const arc = Math.sin(Math.PI * m1) * 46 * u;
   let cur = {
     x: startPt.x + (flipPt.x - startPt.x) * m1 + arc,
     y: startPt.y + (flipPt.y - startPt.y) * m1 + arc * 0.3,
   };
-  const away = ramp(frame, CLICK + 8, 22);
+  const away = ramp(frame, clickAt + 8, 22);
   cur = {
     x: cur.x + (park.x - flipPt.x) * away,
     y: cur.y + (park.y - flipPt.y) * away,
@@ -288,6 +347,13 @@ export function ThemeFlip({
     cur = { x: cur.x - away2 * 30 * u, y: cur.y + away2 * 70 * u };
   }
 
+  // Where the cursor parks at the end: its layout home, so the glide there
+  // is a transform. Taken with the window landed, like the rest frames.
+  const flipRest = { x: flipPt.x, y: flipPt.y - rise };
+  const curRest = reverse
+    ? { x: backPt.x - 30 * u, y: backPt.y - rise + 70 * u }
+    : { x: flipRest.x + 70 * u, y: flipRest.y + 90 * u };
+
   const shown = clamp(p1 - p2, 0, 1);
   const word = (idx: 0 | 1) =>
     themes[idx] === "dark" ? "Dark mode" : "Light mode";
@@ -296,7 +362,13 @@ export function ThemeFlip({
     const src = idx === 0 ? fromSrc : toSrc;
     const node = idx === 0 ? from : to;
     const toggle = (
-      <ThemeToggle theme={theme} k={k} hover={hover} press={press} />
+      <ThemeToggle
+        theme={theme}
+        k={k}
+        kRest={kRest}
+        hover={hover}
+        press={press}
+      />
     );
     return (
       <div
@@ -327,6 +399,8 @@ export function ThemeFlip({
             width={sw}
             height={sh}
             headerExtra={toggle}
+            brand={brand}
+            logo={logo}
           />
         )}
         {custom && showToggle && (
@@ -357,132 +431,150 @@ export function ThemeFlip({
       style={{
         fontFamily,
         overflow: "hidden",
-        background: "#050506",
+        background: background === undefined ? "#050506" : undefined,
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <AbsoluteFill style={{ transform: `scale(${1.04 + 0.04 * z})` }}>
-        <GshGround
-          preset={ground ?? "charcoal-satin"}
-          params={groundParams}
-          timeOffset={6}
-          timeScale={0.45}
-        />
-      </AbsoluteFill>
-      <AbsoluteFill style={{ background: "rgba(5,5,6,0.38)" }} />
-      <AbsoluteFill style={{ transformOrigin: "0 0", transform: camera }}>
-        <div
+      {background === undefined ? (
+        <>
+          <AbsoluteFill style={{ transform: `scale(${1.04 + 0.04 * z})` }}>
+            <GshGround
+              preset={ground ?? "charcoal-satin"}
+              params={groundParams}
+              timeOffset={6}
+              timeScale={0.45}
+            />
+          </AbsoluteFill>
+          <AbsoluteFill style={{ background: "rgba(5,5,6,0.38)" }} />
+        </>
+      ) : (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left,
-            top,
-            width: sw,
-            height: sh,
-            transformOrigin: "0 0",
-            transform: `scale(${s})`,
-            borderRadius: 14,
-            overflow: "hidden",
-            opacity: interpolate(enter, [0, 0.3], [0, 1], {
-              extrapolateRight: "clamp",
-            }),
-            boxShadow: darkNow
-              ? "0 0 0 1px rgba(255,255,255,0.12), 0 40px 90px -20px rgba(0,0,0,0.85)"
-              : "0 0 0 1px rgba(255,255,255,0.3), 0 40px 90px -20px rgba(0,0,0,0.7)",
+            background: background === "transparent" ? undefined : background,
           }}
-        >
-          {windowLayer(themes[0], 0)}
-          {p1 > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                clipPath: `circle(${(p1 * maxR) / s}px at ${fp.x}px ${fp.y}px)`,
-              }}
-            >
-              {windowLayer(themes[1], 1)}
-            </div>
-          )}
-          {p2 > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                clipPath: `circle(${(p2 * maxR) / s}px at ${bp.x}px ${bp.y}px)`,
-              }}
-            >
-              {windowLayer(themes[0], 0)}
-            </div>
-          )}
-        </div>
-        {showCursor && (
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill style={{ transformOrigin: "0 0", transform: camera }}>
           <div
             style={{
               position: "absolute",
-              left: cur.x - 2 * u,
-              top: cur.y - 2 * u,
-              opacity: interpolate(frame, [6, 12], [0, 1], {
-                extrapolateLeft: "clamp",
+              left,
+              // Layout holds the window where it lands; the rise in is a
+              // transform, since layout rounds it to whole pixels.
+              top: topRest,
+              width: sw,
+              height: sh,
+              transformOrigin: "0 0",
+              transform: `${px(rise) ? `translateY(${rise}px) ` : ""}scale(${s})${glide(riseMoving)}`,
+              borderRadius: 14,
+              overflow: "hidden",
+              opacity: interpolate(enter, [0, 0.3], [0, 1], {
                 extrapolateRight: "clamp",
               }),
+              boxShadow: darkNow
+                ? "0 0 0 1px rgba(255,255,255,0.12), 0 40px 90px -20px rgba(0,0,0,0.85)"
+                : "0 0 0 1px rgba(255,255,255,0.3), 0 40px 90px -20px rgba(0,0,0,0.7)",
             }}
           >
-            <Cursor size={17 * u} press={press} />
+            {windowLayer(themes[0], 0)}
+            {p1 > 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  clipPath: `circle(${(p1 * maxR) / s}px at ${fp.x}px ${fp.y}px)`,
+                }}
+              >
+                {windowLayer(themes[1], 1)}
+              </div>
+            )}
+            {p2 > 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  clipPath: `circle(${(p2 * maxR) / s}px at ${bp.x}px ${bp.y}px)`,
+                }}
+              >
+                {windowLayer(themes[0], 0)}
+              </div>
+            )}
           </div>
-        )}
-      </AbsoluteFill>
-      {tall ? (
-        <div
-          style={{
-            position: "absolute",
-            left: W * 0.08,
-            top: H * 0.2,
-            right: W * 0.08,
-          }}
-        >
+          {showCursor && (
+            <div
+              style={{
+                position: "absolute",
+                left: curRest.x - 2 * u,
+                top: curRest.y - 2 * u,
+                transform:
+                  px(cur.x - curRest.x) || px(cur.y - curRest.y)
+                    ? `translate(${cur.x - curRest.x}px, ${cur.y - curRest.y}px)`
+                    : undefined,
+                opacity: interpolate(frame, [6, 12], [0, 1], {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp",
+                }),
+              }}
+            >
+              <Cursor size={17 * u} press={press} />
+            </div>
+          )}
+        </AbsoluteFill>
+        {tall ? (
           <div
             style={{
-              fontFamily: mono,
-              fontSize: 0.022 * H,
-              letterSpacing: "0.04em",
-              color: "rgba(244,244,245,0.55)",
+              position: "absolute",
+              left: W * 0.08,
+              top: H * 0.2,
+              right: W * 0.08,
             }}
           >
-            Appearance
+            <div
+              style={{
+                fontFamily: mono,
+                fontSize: 0.022 * H,
+                letterSpacing: "0.04em",
+                color: "rgba(244,244,245,0.55)",
+              }}
+            >
+              Appearance
+            </div>
+            <div
+              style={{
+                position: "relative",
+                marginTop: 0.02 * H,
+                height: 0.08 * H,
+                fontSize: 0.07 * H,
+                fontWeight: 300,
+                lineHeight: 1,
+                letterSpacing: "-0.04em",
+                color: ink ?? "#F4F4F5",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {[0, 1].map((idx) => {
+                const vis = idx === 0 ? 1 - shown : shown;
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      opacity: vis,
+                      transform: `translateY(${(1 - vis) * (idx === 1 ? 1 : -1) * (shown > 0.5 === (idx === 1) ? 1 : 0.6) * 0.03 * H}px)${glide(vis > 0 && vis < 1)}`,
+                      filter: `blur(${(1 - vis) * 8}px)`,
+                    }}
+                  >
+                    {word(idx as 0 | 1)}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div
-            style={{
-              position: "relative",
-              marginTop: 0.02 * H,
-              height: 0.08 * H,
-              fontSize: 0.07 * H,
-              fontWeight: 300,
-              lineHeight: 1,
-              letterSpacing: "-0.04em",
-              color: "#F4F4F5",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {[0, 1].map((idx) => {
-              const vis = idx === 0 ? 1 - shown : shown;
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    opacity: vis,
-                    transform: `translateY(${(1 - vis) * (idx === 1 ? 1 : -1) * (shown > 0.5 === (idx === 1) ? 1 : 0.6) * 0.03 * H}px)`,
-                    filter: `blur(${(1 - vis) * 8}px)`,
-                  }}
-                >
-                  {word(idx as 0 | 1)}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -887,6 +979,8 @@ interface IssuesMockProps {
   width?: number;
   height?: number;
   headerExtra?: React.ReactNode;
+  brand?: string;
+  logo?: React.ReactNode;
 }
 
 function IssuesMock({
@@ -895,6 +989,8 @@ function IssuesMock({
   width = MOCK_W,
   height = MOCK_H,
   headerExtra,
+  brand = "remocn",
+  logo,
 }: IssuesMockProps) {
   const c = MOCK_COLORS[theme];
   const box = (size: number) => ({
@@ -911,7 +1007,7 @@ function IssuesMock({
         height,
         background: c.app,
         display: "flex",
-        fontFamily,
+        fontFamily: sans,
         color: c.text,
         position: "relative",
         overflow: "hidden",
@@ -944,11 +1040,13 @@ function IssuesMock({
               background: accent,
             }}
           >
-            <svg viewBox="0 0 124.06 134.26" height={11} aria-hidden>
-              <path fill="#fff" d={REMOCN_R_PATH} />
-            </svg>
+            {logo ?? (
+              <svg viewBox="0 0 124.06 134.26" height={11} aria-hidden>
+                <path fill="#fff" d={REMOCN_R_PATH} />
+              </svg>
+            )}
           </div>
-          <span style={{ fontSize: 13.5, fontWeight: 400 }}>remocn</span>
+          <span style={{ fontSize: 13.5, fontWeight: 400 }}>{brand}</span>
           <Glyph name="chevron" size={12} color={c.sub} />
           <div style={{ flex: 1 }} />
           <Glyph name="search" size={15} color={c.sub} />

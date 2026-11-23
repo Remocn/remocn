@@ -1,7 +1,8 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
-import { useCurrentFrame, useDelayRender, useVideoConfig } from "remotion";
+import { useDelayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type ShaderTextRevealProps = {
   /** Words appear one at a time. Separate phrases with newlines to keep them together. */
@@ -489,8 +490,8 @@ export function ShaderTextReveal({
   wordDuration = 30,
   intensity = 1,
 }: ShaderTextRevealProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const canvas = useRef<HTMLCanvasElement>(null);
   const resources = useRef<{

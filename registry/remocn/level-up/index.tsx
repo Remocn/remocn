@@ -2,14 +2,11 @@
 
 import { loadFont } from "@remotion/google-fonts/ChakraPetch";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: hud } = loadFont("normal", {
   weights: ["400", "500"],
@@ -63,8 +60,26 @@ export interface LevelUpProps {
   title?: string;
   /** Stat line that ticks up on the poster. */
   stat?: { label: string; value: number; suffix?: string };
+  /** Caption under the bar. */
+  barLabel?: string;
+  /** Shown under the bar once it is full. */
+  maxLabel?: string;
+  /** Unit after the XP counter and on the chips. */
+  unit?: string;
   /** Small accent: the stat arrow and the level label marker. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Chakra Petch by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark under the stat line. */
+  logo?: React.ReactNode;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -166,6 +181,24 @@ const LAUNCH = [
   { x: 0.34, y: 0.34 },
 ];
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LevelUp({
   level = 41,
   startXp = 2800,
@@ -173,13 +206,29 @@ export function LevelUp({
   chips = [120, 240, 180, 300, 360],
   title = "LEVEL UP",
   stat = { label: "Render speed", value: 40, suffix: "%" },
+  barLabel = "EXPERIENCE",
+  maxLabel = "MAX",
+  unit = "XP",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hud,
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: LevelUpProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  // The burst fades into the stage colour, so a custom fill takes its place.
+  const knock =
+    background === undefined || background === "transparent"
+      ? c.stage
+      : background;
   const u = Math.min(W / 1280, H / 720);
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
@@ -223,7 +272,11 @@ export function LevelUp({
   const titleScale =
     interpolate(titleIn, [0, 1], [1.7, 1]) *
     interpolate(duck, [0, 1], [1, 0.36]);
-  const titleY = interpolate(duck, [0, 1], [cy, 0.2 * H]);
+  // The duck to the top is a transform on the title, not `top`: layout
+  // rounds a baseline to whole pixels, so a title eased by `top` clicks up
+  // pixel by pixel. Laid out where it parks.
+  const titleRise = (cy - 0.2 * H) * (1 - duck);
+  const titleMoving = midway(titleIn) || midway(duck);
 
   // ── Big level number ──────────────────────────────────────────────────────
   const numFs = 360 * u;
@@ -235,10 +288,17 @@ export function LevelUp({
   const fromP = from.padStart(len, " ");
   const toP = to.padStart(len, " ");
   const numKick = 1 + 0.045 * kick(t - rollHit);
+  const numMoving = midway(numIn) || (t > rollHit && t < rollHit + 10);
 
   // ── Stat line ─────────────────────────────────────────────────────────────
   const statP = OUT(ramp(t, STAT_AT, 10));
-  const statN = stat.value * OUT(ramp(t, STAT_AT + 2, STAT_LEN));
+  const statAt = (f: number) =>
+    Math.round(stat.value * OUT(ramp(f, STAT_AT + 2, STAT_LEN)));
+  const statN = statAt(t);
+  // The count reflows the centred line sideways in layout; the lean stays on
+  // until the number has stopped, so it never goes in a frame that reflows.
+  const statMoving =
+    midway(statP) || statAt(t + speed) !== statN || statAt(t - speed) !== statN;
   const logoP = OUT(ramp(t, STAT_AT + 6, 10));
 
   // Rays: wedges from an inner radius out, alternating widths and lengths.
@@ -258,406 +318,423 @@ export function LevelUp({
   const chipFs = 30 * u;
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      {/* Burst rays and the shockwave ring. */}
-      {t >= BURST_AT ? (
-        <svg
-          width={W}
-          height={H}
-          style={{
-            position: "absolute",
-            inset: 0,
-            opacity:
-              burstOp *
-              c.rayAlpha *
-              (0.5 + 0.5 * (1 - ramp(t, BURST_AT + 8, 14)) + 0.3 * rayPulse),
-          }}
-          aria-hidden
-        >
-          <defs>
-            <radialGradient
-              id={`${id}-ray`}
-              cx={cx}
-              cy={cy}
-              r={0.8 * W}
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop offset="0.12" stopColor={c.rays[0]} stopOpacity={0.95} />
-              <stop offset="0.3" stopColor={c.rays[1]} stopOpacity={0.75} />
-              <stop offset="0.6" stopColor={c.rays[2]} stopOpacity={0.45} />
-              <stop offset="1" stopColor={c.rays[3]} stopOpacity={0} />
-            </radialGradient>
-          </defs>
-          {rays.map((d, i) => (
-            <path key={i} d={d} fill={`url(#${id}-ray)`} />
-          ))}
-          {ring < 1 ? (
-            <circle
-              cx={cx}
-              cy={cy}
-              r={interpolate(OUT(ring), [0, 1], [0.04 * W, 0.5 * W])}
-              fill="none"
-              stroke={BEAM[1]}
-              strokeWidth={interpolate(ring, [0, 1], [5 * u, 0.5 * u])}
-              opacity={1 - ring}
-            />
-          ) : null}
-        </svg>
-      ) : null}
-
-      {t >= BURST_AT ? (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            opacity: ramp(t, BURST_AT + 4, 10),
-            background: [
-              `radial-gradient(30% 34% at 50% ${(cy / H) * 100}%, ${c.stage} 45%, transparent 100%)`,
-              `linear-gradient(0deg, ${c.stage} 0%, ${c.stage} 12%, transparent 34%)`,
-            ].join(", "),
-          }}
-        />
-      ) : null}
-
-      {/* XP bar. */}
-      {!barGone ? (
-        <div
-          style={{
-            position: "absolute",
-            left: cx - barW / 2,
-            top: cy - barH / 2,
-            width: barW,
-            height: barH,
-            transform: `scaleX(${1 - collapse}) scaleY(${1 - 0.6 * collapse})`,
-            transformOrigin: "50% 50%",
-          }}
-        >
-          {Array.from({ length: SEGMENTS }, (_, i) => {
-            const x = i * (segW + gap);
-            const appear = OUT(ramp(t, BAR_AT + i * 0.8, 6));
-            const f = Math.max(0, Math.min(1, fill * SEGMENTS - i));
-            const justFilled =
-              f > 0 && fill * SEGMENTS - i < 1.6 && hitKick > 0 ? hitKick : 0;
-            return (
-              <div
-                key={i}
-                style={{
-                  position: "absolute",
-                  left: x,
-                  top: 0,
-                  width: segW,
-                  height: barH,
-                  background: c.track,
-                  transform: `skewX(-20deg) scaleY(${0.3 + 0.7 * appear})`,
-                  opacity: appear,
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: `${f * 100}%`,
-                    backgroundImage: c.fill,
-                    backgroundSize: `${barW}px ${barH}px`,
-                    backgroundPosition: `${-x}px 0`,
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: `${f * 100}%`,
-                    background: BEAM[0],
-                    opacity: Math.max(0.85 * justFilled, maxFlash),
-                  }}
-                />
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
-
-      {/* Labels above the bar. */}
-      {labelsOut < 1 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: cx - barW / 2,
-            width: barW,
-            top: cy - barH / 2 - 128 * u,
-            height: 110 * u,
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            opacity: labelsIn * (1 - labelsOut),
-            transform: `translateY(${(1 - labelsIn) * 16 * u}px)`,
-            fontFamily: hud,
-            fontWeight: 500,
-            color: c.ink,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "baseline", gap: 14 * u }}>
-            <span
-              style={{
-                fontSize: 30 * u,
-                letterSpacing: "0.14em",
-                color: c.dim,
-              }}
-            >
-              LV
-            </span>
-            <span
-              style={{
-                fontSize: 112 * u,
-                lineHeight: 0.8,
-                letterSpacing: "-0.02em",
-              }}
-            >
-              {level}
-            </span>
-          </div>
-          <div
-            style={{
-              fontSize: 32 * u,
-              letterSpacing: "0.04em",
-              fontVariantNumeric: "tabular-nums",
-              marginBottom: 2 * u,
-            }}
-          >
-            {fmt(xp)}
-            <span style={{ color: c.dim }}> / {fmt(maxXp)} XP</span>
-          </div>
-        </div>
-      ) : null}
-      {labelsOut < 1 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: cx - barW / 2,
-            width: barW,
-            top: cy + barH / 2 + 18 * u,
-            display: "flex",
-            justifyContent: "space-between",
-            opacity: labelsIn * (1 - labelsOut),
-            fontFamily: hud,
-            fontWeight: 400,
-            fontSize: 20 * u,
-            letterSpacing: "0.16em",
-            color: c.dim,
-          }}
-        >
-          <span>EXPERIENCE</span>
-          <span style={{ color: fill >= 1 ? c.ink : c.dim }}>
-            {fill >= 1 ? "MAX" : `NEXT  LV ${level + 1}`}
-          </span>
-        </div>
-      ) : null}
-
-      {/* XP chips flying into the fill head. */}
-      {chips.map((v, i) => {
-        const at = arrivals[i];
-        const launch = at - CHIP_FLY;
-        if (t < launch || t >= at + 1) return null;
-        const p = ramp(t, launch, CHIP_FLY);
-        const e = IN(p);
-        const L = LAUNCH[i % LAUNCH.length];
-        const sx = cx + L.x * W;
-        const sy = cy + L.y * H;
-        const headX = cx - barW / 2 + barW * Math.min(1, (xp + 0) / maxXp);
-        const tx = headX;
-        const ty = cy;
-        const mx = (sx + tx) / 2 + (L.y < 0 ? -1 : 1) * 0.06 * W;
-        const my = (sy + ty) / 2 + (L.y < 0 ? -0.12 : 0.12) * H;
-        const x = (1 - e) * (1 - e) * sx + 2 * (1 - e) * e * mx + e * e * tx;
-        const y = (1 - e) * (1 - e) * sy + 2 * (1 - e) * e * my + e * e * ty;
-        const appear = OUT(ramp(t, launch, 4));
-        const k = interpolate(e, [0, 1], [1, 0.5]) * (0.85 + 0.15 * appear);
-        const op = appear * (1 - ramp(t, at - 2, 3));
-        return (
-          <div
-            key={`${i}-${v}`}
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.stage),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        {/* Burst rays and the shockwave ring. */}
+        {t >= BURST_AT ? (
+          <svg
+            width={W}
+            height={H}
             style={{
               position: "absolute",
-              left: x,
-              top: y,
-              transform: `translate(-50%, -50%) scale(${k})`,
-              opacity: op,
-              padding: `${9 * u}px ${18 * u}px ${8 * u}px`,
-              borderRadius: 999,
-              background: c.chip,
-              border: `${1.5 * u}px solid ${c.chipEdge}`,
-              fontFamily: hud,
+              inset: 0,
+              opacity:
+                burstOp *
+                c.rayAlpha *
+                (0.5 + 0.5 * (1 - ramp(t, BURST_AT + 8, 14)) + 0.3 * rayPulse),
+            }}
+            aria-hidden
+          >
+            <defs>
+              <radialGradient
+                id={`${id}-ray`}
+                cx={cx}
+                cy={cy}
+                r={0.8 * W}
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop offset="0.12" stopColor={c.rays[0]} stopOpacity={0.95} />
+                <stop offset="0.3" stopColor={c.rays[1]} stopOpacity={0.75} />
+                <stop offset="0.6" stopColor={c.rays[2]} stopOpacity={0.45} />
+                <stop offset="1" stopColor={c.rays[3]} stopOpacity={0} />
+              </radialGradient>
+            </defs>
+            {rays.map((d, i) => (
+              <path key={i} d={d} fill={`url(#${id}-ray)`} />
+            ))}
+            {ring < 1 ? (
+              <circle
+                cx={cx}
+                cy={cy}
+                r={interpolate(OUT(ring), [0, 1], [0.04 * W, 0.5 * W])}
+                fill="none"
+                stroke={BEAM[1]}
+                strokeWidth={interpolate(ring, [0, 1], [5 * u, 0.5 * u])}
+                opacity={1 - ring}
+              />
+            ) : null}
+          </svg>
+        ) : null}
+
+        {t >= BURST_AT ? (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: ramp(t, BURST_AT + 4, 10),
+              background: [
+                `radial-gradient(30% 34% at 50% ${(cy / H) * 100}%, ${knock} 45%, transparent 100%)`,
+                `linear-gradient(0deg, ${knock} 0%, ${knock} 12%, transparent 34%)`,
+              ].join(", "),
+            }}
+          />
+        ) : null}
+
+        {/* XP bar. */}
+        {!barGone ? (
+          <div
+            style={{
+              position: "absolute",
+              left: cx - barW / 2,
+              top: cy - barH / 2,
+              width: barW,
+              height: barH,
+              transform: `scaleX(${1 - collapse}) scaleY(${1 - 0.6 * collapse})`,
+              transformOrigin: "50% 50%",
+            }}
+          >
+            {Array.from({ length: SEGMENTS }, (_, i) => {
+              const x = i * (segW + gap);
+              const appear = OUT(ramp(t, BAR_AT + i * 0.8, 6));
+              const f = Math.max(0, Math.min(1, fill * SEGMENTS - i));
+              const justFilled =
+                f > 0 && fill * SEGMENTS - i < 1.6 && hitKick > 0 ? hitKick : 0;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    position: "absolute",
+                    left: x,
+                    top: 0,
+                    width: segW,
+                    height: barH,
+                    background: c.track,
+                    transform: `skewX(-20deg) scaleY(${0.3 + 0.7 * appear})`,
+                    opacity: appear,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: `${f * 100}%`,
+                      backgroundImage: c.fill,
+                      backgroundSize: `${barW}px ${barH}px`,
+                      backgroundPosition: `${-x}px 0`,
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: `${f * 100}%`,
+                      background: BEAM[0],
+                      opacity: Math.max(0.85 * justFilled, maxFlash),
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
+
+        {/* Labels above the bar. */}
+        {labelsOut < 1 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: cx - barW / 2,
+              width: barW,
+              top: cy - barH / 2 - 128 * u,
+              height: 110 * u,
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              opacity: labelsIn * (1 - labelsOut),
+              transform: `translateY(${(1 - labelsIn) * 16 * u}px)${glide(midway(labelsIn))}`,
+              fontFamily,
               fontWeight: 500,
-              fontSize: chipFs,
+              color: fg,
+            }}
+          >
+            <div
+              style={{ display: "flex", alignItems: "baseline", gap: 14 * u }}
+            >
+              <span
+                style={{
+                  fontSize: 30 * u,
+                  letterSpacing: "0.14em",
+                  color: c.dim,
+                }}
+              >
+                LV
+              </span>
+              <span
+                style={{
+                  fontSize: 112 * u,
+                  lineHeight: 0.8,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {level}
+              </span>
+            </div>
+            <div
+              style={{
+                fontSize: 32 * u,
+                letterSpacing: "0.04em",
+                fontVariantNumeric: "tabular-nums",
+                marginBottom: 2 * u,
+              }}
+            >
+              {fmt(xp)}
+              <span style={{ color: c.dim }}>
+                {" "}
+                / {fmt(maxXp)} {unit}
+              </span>
+            </div>
+          </div>
+        ) : null}
+        {labelsOut < 1 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: cx - barW / 2,
+              width: barW,
+              top: cy + barH / 2 + 18 * u,
+              display: "flex",
+              justifyContent: "space-between",
+              opacity: labelsIn * (1 - labelsOut),
+              fontFamily,
+              fontWeight: 400,
+              fontSize: 20 * u,
+              letterSpacing: "0.16em",
+              color: c.dim,
+            }}
+          >
+            <span>{barLabel}</span>
+            <span style={{ color: fill >= 1 ? fg : c.dim }}>
+              {fill >= 1 ? maxLabel : `NEXT  LV ${level + 1}`}
+            </span>
+          </div>
+        ) : null}
+
+        {/* XP chips flying into the fill head. */}
+        {chips.map((v, i) => {
+          const at = arrivals[i];
+          const launch = at - CHIP_FLY;
+          if (t < launch || t >= at + 1) return null;
+          const p = ramp(t, launch, CHIP_FLY);
+          const e = IN(p);
+          const L = LAUNCH[i % LAUNCH.length];
+          const sx = cx + L.x * W;
+          const sy = cy + L.y * H;
+          const headX = cx - barW / 2 + barW * Math.min(1, (xp + 0) / maxXp);
+          const tx = headX;
+          const ty = cy;
+          const mx = (sx + tx) / 2 + (L.y < 0 ? -1 : 1) * 0.06 * W;
+          const my = (sy + ty) / 2 + (L.y < 0 ? -0.12 : 0.12) * H;
+          const x = (1 - e) * (1 - e) * sx + 2 * (1 - e) * e * mx + e * e * tx;
+          const y = (1 - e) * (1 - e) * sy + 2 * (1 - e) * e * my + e * e * ty;
+          const appear = OUT(ramp(t, launch, 4));
+          const k = interpolate(e, [0, 1], [1, 0.5]) * (0.85 + 0.15 * appear);
+          const op = appear * (1 - ramp(t, at - 2, 3));
+          return (
+            <div
+              key={`${i}-${v}`}
+              style={{
+                // Layout rounds a box and a baseline to whole pixels, so a
+                // chip flown by `left`/`top` lands on whole pixels and its
+                // steps come out uneven. It is laid out at the bar's centre
+                // and the flight is a transform; a chip is never at rest.
+                position: "absolute",
+                left: cx,
+                top: cy,
+                transform: `translate(${x - cx}px, ${y - cy}px) translate(-50%, -50%) scale(${k})${glide(true)}`,
+                opacity: op,
+                padding: `${9 * u}px ${18 * u}px ${8 * u}px`,
+                borderRadius: 999,
+                background: c.chip,
+                border: `${1.5 * u}px solid ${c.chipEdge}`,
+                fontFamily,
+                fontWeight: 500,
+                fontSize: chipFs,
+                lineHeight: 1,
+                letterSpacing: "0.02em",
+                color: fg,
+                whiteSpace: "nowrap",
+              }}
+            >
+              +{v} <span style={{ color: c.chipEdge }}>{unit}</span>
+            </div>
+          );
+        })}
+
+        {/* LEVEL UP call. */}
+        {t >= BURST_AT ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: 0.2 * H - titleFs * 0.6,
+              height: titleFs * 1.2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transform: `translateY(${titleRise}px) scale(${titleScale})${glide(titleMoving)}`,
+              opacity: ramp(t, BURST_AT, 2),
+              fontFamily,
+              fontWeight: 500,
+              fontSize: titleFs,
               lineHeight: 1,
-              letterSpacing: "0.02em",
-              color: c.ink,
+              letterSpacing: "0.04em",
+              color: ink ?? (theme === "dark" ? "#FFFFFF" : c.ink),
               whiteSpace: "nowrap",
             }}
           >
-            +{v} <span style={{ color: c.chipEdge }}>XP</span>
+            {title}
           </div>
-        );
-      })}
+        ) : null}
 
-      {/* LEVEL UP call. */}
-      {t >= BURST_AT ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: titleY - titleFs * 0.6,
-            height: titleFs * 1.2,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transform: `scale(${titleScale})`,
-            opacity: ramp(t, BURST_AT, 2),
-            fontFamily: hud,
-            fontWeight: 500,
-            fontSize: titleFs,
-            lineHeight: 1,
-            letterSpacing: "0.04em",
-            color: theme === "dark" ? "#FFFFFF" : c.ink,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {title}
-        </div>
-      ) : null}
-
-      {/* Big level number: the changed digits roll. */}
-      {t >= DUCK_AT + 5 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: cy - numFs * 0.5,
-            height: numFs,
-            display: "flex",
-            justifyContent: "center",
-            opacity: numIn,
-            transform: `translateY(${(1 - numIn) * 50 * u}px) scale(${numKick})`,
-            fontFamily: hud,
-            fontWeight: 500,
-            fontSize: numFs,
-            lineHeight: 1,
-            letterSpacing: "-0.03em",
-          }}
-        >
-          {Array.from({ length: len }, (_, i) => {
-            const a = fromP[i];
-            const b = toP[i];
-            const same = a === b;
-            const glyph = (ch: string) => (
-              <div
-                style={{
-                  height: numFs,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundImage: c.number,
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  color: "transparent",
-                }}
-              >
-                {ch.trim() === "" ? " " : ch}
-              </div>
-            );
-            return (
-              <div
-                key={i}
-                style={{
-                  width: "0.6em",
-                  height: numFs,
-                  overflow: "hidden",
-                  position: "relative",
-                }}
-              >
-                <div
-                  style={{
-                    transform: same
-                      ? undefined
-                      : `translateY(${-roll * numFs}px)`,
-                  }}
-                >
-                  {glyph(a)}
-                  {same ? null : glyph(b)}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
-
-      {/* Stat line. */}
-      {t >= STAT_AT ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: 0.8 * H,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "baseline",
-            gap: 18 * u,
-            opacity: statP,
-            transform: `translateY(${(1 - statP) * 22 * u}px)`,
-            fontFamily: hud,
-            fontWeight: 500,
-            fontSize: 34 * u,
-            lineHeight: 1,
-            letterSpacing: "0.02em",
-            color: c.ink,
-          }}
-        >
-          <span style={{ color: c.dim }}>{stat.label}</span>
-          <span
+        {/* Big level number: the changed digits roll. */}
+        {t >= DUCK_AT + 5 ? (
+          <div
             style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: cy - numFs * 0.5,
+              height: numFs,
               display: "flex",
-              alignItems: "baseline",
-              gap: 8 * u,
-              fontVariantNumeric: "tabular-nums",
+              justifyContent: "center",
+              opacity: numIn,
+              transform: `translateY(${(1 - numIn) * 50 * u}px) scale(${numKick})${glide(numMoving)}`,
+              fontFamily,
+              fontWeight: 500,
+              fontSize: numFs,
+              lineHeight: 1,
+              letterSpacing: "-0.03em",
             }}
           >
-            <svg
-              width={18 * u}
-              height={15 * u}
-              viewBox="0 0 18 15"
-              aria-hidden
-              style={{ alignSelf: "center" }}
-            >
-              <path d="M9 0 L18 15 L0 15 Z" fill={accent} />
-            </svg>
-            +{Math.round(statN)}
-            {stat.suffix ?? ""}
-          </span>
-        </div>
-      ) : null}
+            {Array.from({ length: len }, (_, i) => {
+              const a = fromP[i];
+              const b = toP[i];
+              const same = a === b;
+              const glyph = (ch: string) => (
+                <div
+                  style={{
+                    height: numFs,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundImage: c.number,
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    color: "transparent",
+                  }}
+                >
+                  {ch.trim() === "" ? " " : ch}
+                </div>
+              );
+              return (
+                <div
+                  key={i}
+                  style={{
+                    width: "0.6em",
+                    height: numFs,
+                    overflow: "hidden",
+                    position: "relative",
+                  }}
+                >
+                  <div
+                    style={{
+                      transform: same
+                        ? undefined
+                        : `translateY(${-roll * numFs}px)${glide(midway(roll))}`,
+                    }}
+                  >
+                    {glyph(a)}
+                    {same ? null : glyph(b)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
 
-      {/* Logo. */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: 0.9 * H,
-          display: "flex",
-          justifyContent: "center",
-          opacity: logoP,
-        }}
-      >
-        <RemocnLogo fontSize={26 * u} color={c.ink} />
-      </div>
+        {/* Stat line. */}
+        {t >= STAT_AT ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: 0.8 * H,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "baseline",
+              gap: 18 * u,
+              opacity: statP,
+              transform: `translateY(${(1 - statP) * 22 * u}px)${glide(statMoving)}`,
+              fontFamily,
+              fontWeight: 500,
+              fontSize: 34 * u,
+              lineHeight: 1,
+              letterSpacing: "0.02em",
+              color: fg,
+            }}
+          >
+            <span style={{ color: c.dim }}>{stat.label}</span>
+            <span
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                gap: 8 * u,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              <svg
+                width={18 * u}
+                height={15 * u}
+                viewBox="0 0 18 15"
+                aria-hidden
+                style={{ alignSelf: "center" }}
+              >
+                <path d="M9 0 L18 15 L0 15 Z" fill={accent} />
+              </svg>
+              +{statN}
+              {stat.suffix ?? ""}
+            </span>
+          </div>
+        ) : null}
+
+        {/* Logo. */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            width: W,
+            top: 0.9 * H,
+            display: "flex",
+            justifyContent: "center",
+            opacity: logoP,
+          }}
+        >
+          {logo ?? <RemocnLogo fontSize={26 * u} color={fg} />}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

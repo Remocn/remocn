@@ -10,9 +10,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const sans = loadPlexSans("normal", {
   weights: ["500"],
@@ -31,8 +31,18 @@ export interface IdeaSetProps {
   lines?: string[];
   highlight?: string;
   hold?: number;
+  /** Frames each change of style takes to sweep across the text. */
+  wave?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the sketch and final styles. Load it yourself; IBM Plex Sans by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -62,6 +72,11 @@ const FACES: Face[] = [
   { family: mono.fontFamily, style: "normal", weight: 400 },
   { family: sans.fontFamily, style: "normal", weight: 500 },
 ];
+const facesOf = (fontFamily: string): Face[] => [
+  { ...FACES[0], family: fontFamily },
+  FACES[1],
+  { ...FACES[2], family: fontFamily },
+];
 const TRACK = [0.012, 0, -0.03];
 const LINE = 1.34;
 
@@ -79,11 +94,11 @@ interface Metrics {
   desc: [number, number, number];
 }
 
-function measure(chars: string[]): Metrics {
+function measure(chars: string[], faces: Face[]): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("idea-set: no 2d context");
-  const fonts = FACES.map((f) => `${f.style} ${f.weight} 100px "${f.family}"`);
+  const fonts = faces.map((f) => `${f.style} ${f.weight} 100px "${f.family}"`);
   const adv: Advances = {};
   for (const ch of chars) {
     adv[ch] = fonts.map((font) => {
@@ -102,25 +117,26 @@ function measure(chars: string[]): Metrics {
   return { adv, asc, desc };
 }
 
-function useMetrics(chars: string[]) {
+function useMetrics(chars: string[], fontFamily: string) {
   const key = chars.join("");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("idea-set: measuring"));
   const released = useRef(false);
   useEffect(() => {
     let live = true;
+    const faces = facesOf(fontFamily);
     Promise.all([
       sans.waitUntilDone(),
       sansItalic.waitUntilDone(),
       mono.waitUntilDone(),
-      ...FACES.map((f) =>
+      ...faces.map((f) =>
         document.fonts.load(`${f.style} ${f.weight} 100px "${f.family}"`),
       ),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(Array.from(key)) });
+        setState({ key, m: measure(Array.from(key), faces) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -129,22 +145,48 @@ function useMetrics(chars: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.m : null;
+}
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function IdeaSet({
   lines = ["Napkin sketch.", "Keynote opener."],
   highlight = "Keynote opener.",
   hold = 18,
+  wave = 26,
   accent,
+  ink,
   background,
+  fontFamily = sans.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: IdeaSetProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const faces = facesOf(fontFamily);
   const portrait = H > W * 1.1;
   const rows = useMemo(() => {
     const r = lines.map((l) => l.trim()).filter((l) => l.length > 0);
@@ -155,7 +197,7 @@ export function IdeaSet({
     () => Array.from(new Set(Array.from(rows.join("")))).sort(),
     [rows],
   );
-  const m = useMetrics(chars);
+  const m = useMetrics(chars, fontFamily);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -168,7 +210,7 @@ export function IdeaSet({
 
   const ENTER = 18;
   const W1 = ENTER + hold;
-  const WAVE = 26;
+  const WAVE = wave;
   const W2 = W1 + WAVE + hold;
   const TURN = 10;
 
@@ -199,15 +241,15 @@ export function IdeaSet({
   const visH = (rows.length - 1) * lineH + F * 1.02;
   const top = (H - visH) / 2 - (baseIn - F * 0.72);
 
-  const stateOf = (i: number) => {
+  const stateOf = (i: number, tt = t) => {
     const a = interpolate(
-      t,
+      tt,
       [W1 + i * stagger, W1 + i * stagger + TURN],
       [0, 1],
       { ...CLAMP, easing: EASE_IO },
     );
     const b = interpolate(
-      t,
+      tt,
       [W2 + i * stagger, W2 + i * stagger + TURN],
       [0, 1],
       { ...CLAMP, easing: EASE_IO },
@@ -239,15 +281,39 @@ export function IdeaSet({
       easing: EASE_OUT,
     });
     const baseY = top + r * lineH + baseIn;
-    let x = 0;
+    // Where each glyph of the row is laid out at a time: a neighbour that
+    // changes face pushes it along by layout.
+    const lefts = (tt: number) => {
+      let at = 0;
+      return g.map((ch, k) => {
+        const { a, b } = stateOf(gi + k, tt);
+        const left = at;
+        at += advOf(ch, a, b) + trackOf(a, b);
+        return left;
+      });
+    };
+    const xs = lefts(t);
+    const xsNext = lefts(t + speed);
+    const xsPrev = lefts(t - speed);
     const rowGlyphs: React.ReactNode[] = [];
     g.forEach((ch, k) => {
+      const x = xs[k];
       const { a, b } = stateOf(gi + k);
       const fi = faceOf(a, b);
-      const face = FACES[fi];
+      const face = faces[fi];
       const lift = Math.sin(Math.PI * a) + Math.sin(Math.PI * b);
+      const hopping = midway(a) || midway(b);
+      // The lean comes and goes with any move of the glyph, its own hop or
+      // the push of a neighbour, so it never switches while layout carries it.
+      const moving =
+        hopping ||
+        Math.abs(xsNext[k] - x) * F > 1e-3 ||
+        Math.abs(x - xsPrev[k]) * F > 1e-3;
+      // Rounding the hop to 0.01px is fine at rest but steps it while it
+      // moves, so the raw value rides there.
+      const hop = -lift * F * 0.08;
       const inHl = hlStart >= 0 && ci >= hlStart && ci < hlEnd;
-      const color = inHl && fi === 2 ? (accent ?? c.accent) : c.ink;
+      const color = inHl && fi === 2 ? (accent ?? c.accent) : fg;
       rowGlyphs.push(
         <span
           key={`g${r}-${k}`}
@@ -263,13 +329,12 @@ export function IdeaSet({
             fontWeight: face.weight,
             fontSize: F,
             color,
-            transform: `translateY(${(-lift * F * 0.08).toFixed(2)}px)`,
+            transform: `translateY(${hopping ? hop : hop.toFixed(2)}px)${glide(moving)}`,
           }}
         >
           {ch}
         </span>,
       );
-      x += advOf(ch, a, b) + trackOf(a, b);
       ci++;
     });
     gi += g.length;
@@ -303,9 +368,13 @@ export function IdeaSet({
           style={{
             position: "absolute",
             left: 0,
-            top: (1 - enter) * lineH,
+            // The row slides up by transform, not `top`: layout rounds a
+            // baseline to whole pixels, so text eased by `top` clicks.
+            top: 0,
             width: W,
             height: lineH,
+            // Kept at 0 once the row is in: the lean rides on it.
+            transform: `translateY(${(1 - enter) * lineH > 1e-3 ? (1 - enter) * lineH : 0}px)${glide(midway(enter))}`,
           }}
         >
           {rowGlyphs}
@@ -316,7 +385,7 @@ export function IdeaSet({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {els}
+      <ScaleLayer scale={scale}>{els}</ScaleLayer>
     </AbsoluteFill>
   );
 }

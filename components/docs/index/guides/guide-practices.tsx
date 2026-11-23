@@ -5,15 +5,20 @@ import { getSeparatedGroups, loadDocsSource } from "../data";
 import { IndexSection, indexCard } from "../index-section";
 
 /**
- * "The practices": the guides section's "Practices" group as one list card,
- * title column + description, in sidebar order.
+ * One separator group of the guides sidebar ("Practices" by default) as one
+ * list card, title column + description, in sidebar order.
  */
-export async function GuidePractices({ children }: { children: ReactNode }) {
+export async function GuidePractices({
+  children,
+  group = "Practices",
+}: {
+  children: ReactNode;
+  group?: string;
+}) {
   await loadDocsSource();
   const practices =
-    getSeparatedGroups("/docs/guides").find(
-      (group) => group.title === "Practices",
-    )?.entries ?? [];
+    getSeparatedGroups("/docs/guides").find((g) => g.title === group)
+      ?.entries ?? [];
 
   return (
     <IndexSection

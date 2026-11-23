@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="HeatDrainReveal"
     component={HeatDrainRevealScene}
-    durationInFrames={126}
-    fps={30}
+    durationInFrames={252}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -76,10 +76,27 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Accent color for highlights, buttons and progress",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "headline",
       type: "string",
       default: "\"Plan the whole launch week.\"",
       description: "Headline text beside the calendar",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "2",
+      description: "Frames between headline words as they rise.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Onest\"",
+      description: "Typeface for the copy. Load the font in your project first.",
     },
     {
       name: "monthLabel",
@@ -116,6 +133,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Upcoming list rows: when, title, time",
     },
     {
+      name: "todayLabel",
+      type: "string",
+      default: "\"Today\"",
+      description: "Pill in the calendar header.",
+    },
+    {
+      name: "upcomingTitle",
+      type: "string",
+      default: "\"Upcoming\"",
+      description: "Heading above the upcoming list in portrait.",
+    },
+    {
       name: "ground",
       type: "GshPresetId",
       description: "gradients.sh preset id for the backdrop shader",
@@ -124,6 +153,29 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Overrides for the backdrop shader parameters",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

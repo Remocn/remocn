@@ -1,0 +1,122 @@
+{
+  "component": "pixel-bars",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "arcade-blitz",
+      "label": "Arcade Blitz",
+      "description": "Chunky low-resolution bars snap up fast in a mono typeface on deep navy, like an old arcade cabinet.",
+      "askedAs": [
+        "fast retro arcade bar chart",
+        "chunky 8-bit growth bars",
+        "quick pixel chart with mono font",
+        "быстрый ретро график в стиле аркады",
+        "пиксельные столбики как в старой игре"
+      ],
+      "props": {
+        "rows": 8,
+        "stagger": 2,
+        "speed": 2,
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b1026",
+        "ink": "#e8ecff"
+      }
+    },
+    {
+      "id": "fine-matrix",
+      "label": "Fine Matrix",
+      "description": "A dense high-resolution LED grid rises slowly with a wide cascade between columns.",
+      "askedAs": [
+        "dense LED matrix chart",
+        "slow detailed pixel bars",
+        "high resolution dot bars rising gently",
+        "плотная светодиодная матрица",
+        "медленные детальные пиксельные столбцы"
+      ],
+      "props": {
+        "rows": 22,
+        "stagger": 10,
+        "speed": 0.75,
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "paper-ledger",
+      "label": "Paper Ledger",
+      "description": "Light warm paper background with ink-dark serif type and a muted teal accent, no grain.",
+      "askedAs": [
+        "light clean version of pixel chart",
+        "editorial serif growth stat",
+        "warm paper background bar chart",
+        "светлый график на бумажном фоне",
+        "спокойный вариант с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1e1b16",
+        "accent": "#1f7a6e",
+        "fontFamily": "Fraunces",
+        "grain": false
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "Phosphor-green accent on near-black with monospace type, evoking a vintage terminal readout.",
+      "askedAs": [
+        "green terminal style chart",
+        "hacker console growth bars",
+        "old CRT monitor look",
+        "зелёный терминал как в старом мониторе",
+        "консольный стиль для графика роста"
+      ],
+      "props": {
+        "accent": "#3fbf6a",
+        "background": "#0a0f0b",
+        "ink": "#d6f5de",
+        "fontFamily": "JetBrains Mono",
+        "rows": 16
+      }
+    },
+    {
+      "id": "big-reveal",
+      "label": "Big Reveal",
+      "description": "An oversized, deliberate build that waits a beat, then climbs slowly to land the number large.",
+      "askedAs": [
+        "big dramatic stat reveal",
+        "slow zoomed in pixel chart",
+        "make the chart larger and slower with a pause",
+        "крупный медленный показ цифры",
+        "большой график с паузой перед стартом"
+      ],
+      "props": {
+        "scale": 1.35,
+        "speed": 0.5,
+        "delay": 20,
+        "stagger": 8,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "compact-clean",
+      "label": "Compact Clean",
+      "description": "A small, crisp light-theme chart with neutral sans type and no grain for tidy dashboards.",
+      "askedAs": [
+        "small clean chart for a corner",
+        "minimal light pixel bars",
+        "compact dashboard style stat",
+        "маленький аккуратный график",
+        "минималистичный светлый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "scale": 0.75,
+        "grain": false,
+        "fontFamily": "Inter",
+        "speed": 1.5
+      }
+    }
+  ]
+}

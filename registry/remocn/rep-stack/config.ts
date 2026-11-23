@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const repStackConfig: ComponentConfig = {
   componentName: "RepStack",
@@ -32,6 +38,16 @@ export const repStackConfig: ComponentConfig = {
       description: "Reps",
       hiddenFromList: false,
     },
+    runLength: {
+      type: "number",
+      default: 42,
+      min: 12,
+      max: 90,
+      step: 1,
+      description: "Run (frames)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Archivo Narrow" }),
     speed: {
       type: "number",
       default: 1,

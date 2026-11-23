@@ -8,9 +8,9 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -205,11 +205,18 @@ export function SelectionSnap({
   speed = selectionSnapDefaults.speed,
   className,
 }: SelectionSnapProps) {
-  const frame = useCurrentFrame();
-  const { fps, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const { fps, height } = useSceneConfig();
   const unit = height / 720;
   const t = getSelectionSnapTime(frame, { fps, speed });
   const state = getSelectionSnapState(t);
+  // The back ease overshoots, so the badge counts as moving while its value
+  // differs from either neighbour, not while a progress is midway.
+  const step = getSelectionSnapTime(1, { fps, speed });
+  const badgeMoving =
+    Math.abs(getSelectionSnapState(t + step).badge - state.badge) > 1e-5 ||
+    Math.abs(state.badge - getSelectionSnapState(t - step).badge) > 1e-5;
 
   const size = fontSize * unit;
   const pad = getSelectionSnapPadding(state.snap);
@@ -325,7 +332,7 @@ export function SelectionSnap({
               fontVariantNumeric: "tabular-nums",
               whiteSpace: "nowrap",
               opacity: Math.min(1, state.badge),
-              transform: `translate(-50%, ${(1 - state.badge) * 8 * unit}px) scale(${0.6 + 0.4 * state.badge})`,
+              transform: `translate(-50%, ${(1 - state.badge) * 8 * unit}px) scale(${0.6 + 0.4 * state.badge})${glide(badgeMoving)}`,
               transformOrigin: "50% 0",
             }}
           >

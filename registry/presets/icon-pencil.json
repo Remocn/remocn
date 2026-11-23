@@ -1,0 +1,116 @@
+{
+  "component": "icon-pencil",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "fine-sketch",
+      "label": "Fine Sketch",
+      "description": "A large, thin-lined pencil that slowly draws itself in a soft graphite tone.",
+      "askedAs": [
+        "thin slow drawing pencil",
+        "delicate line pencil icon",
+        "big pencil that sketches itself slowly",
+        "тонкий карандаш медленно рисуется",
+        "изящная линия карандаша"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#4b5563"
+      }
+    },
+    {
+      "id": "busy-writer",
+      "label": "Busy Writer",
+      "description": "A brisk, looping writing motion in a confident editorial blue.",
+      "askedAs": [
+        "pencil writing on repeat",
+        "looping edit icon blue",
+        "fast scribbling pencil",
+        "карандаш пишет по кругу",
+        "быстрая анимация редактирования"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 1.75,
+        "color": "#1f6feb"
+      }
+    },
+    {
+      "id": "bold-marker",
+      "label": "Bold Marker",
+      "description": "A chunky, heavy-stroked pencil at hero scale in deep charcoal.",
+      "askedAs": [
+        "thick bold pencil icon",
+        "big heavy edit icon",
+        "pencil like a marker",
+        "толстый крупный карандаш",
+        "жирная иконка редактирования"
+      ],
+      "props": {
+        "size": 160,
+        "strokeWidth": 3,
+        "color": "#111827"
+      }
+    },
+    {
+      "id": "warm-draft",
+      "label": "Warm Draft",
+      "description": "A terracotta pencil that draws in and writes at a relaxed, continuous pace.",
+      "askedAs": [
+        "warm orange pencil loop",
+        "calm drafting animation",
+        "terracotta edit icon",
+        "тёплый карандаш в цикле",
+        "спокойная анимация черновика"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "loop": true,
+        "speed": 0.75,
+        "size": 80
+      }
+    },
+    {
+      "id": "quick-tick",
+      "label": "Quick Tick",
+      "description": "A small, fast UI-sized pencil in muted slate that snaps into place.",
+      "askedAs": [
+        "tiny quick pencil icon",
+        "small snappy edit button",
+        "fast compact pencil",
+        "маленький быстрый карандаш",
+        "компактная иконка редактирования"
+      ],
+      "props": {
+        "size": 32,
+        "speed": 2.5,
+        "strokeWidth": 1.75,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "forest-ink",
+      "label": "Forest Ink",
+      "description": "A medium pencil in deep green that slowly draws its outline only once.",
+      "askedAs": [
+        "green pencil drawing outline",
+        "slow green edit icon",
+        "pencil outline reveal",
+        "зелёный карандаш рисует контур",
+        "медленное появление карандаша"
+      ],
+      "props": {
+        "animation": "draw",
+        "color": "#166534",
+        "size": 96,
+        "speed": 0.75,
+        "strokeWidth": 1.5
+      }
+    }
+  ]
+}

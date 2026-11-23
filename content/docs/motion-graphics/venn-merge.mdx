@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="VennMerge"
     component={VennMergeScene}
-    durationInFrames={150}
-    fps={30}
+    durationInFrames={300}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -75,10 +75,61 @@ Outlined circles draw in, slide together until they overlap, and the shared lens
       description: "Line shown under the diagram.",
     },
     {
+      name: "slide",
+      type: "number",
+      default: "40",
+      description: "Frames the circles take to slide together.",
+    },
+    {
+      name: "ringWidth",
+      type: "number",
+      default: "2",
+      description: "Stroke width of the circles, in pixels at 720p.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the deep gradient stop in the lens.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Serif\"",
+      description: "Typeface for the set labels. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

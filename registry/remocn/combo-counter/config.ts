@@ -1,8 +1,33 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const comboCounterConfig: ComponentConfig = {
   componentName: "ComboCounter",
   importPath: "@/components/remocn/combo-counter",
+  lists: {
+    hits: {
+      default: [
+        "Captions",
+        "Transitions",
+        "Logo reveal",
+        "Backgrounds",
+        "Charts",
+        "Text effects",
+        "Lower thirds",
+        "Mockups",
+        "Countdowns",
+        "Kinetic type",
+        "Particles",
+        "Templates",
+      ],
+      description: "Hits",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -13,11 +38,22 @@ export const comboCounterConfig: ComponentConfig = {
       },
       description: "Theme",
     },
+    hitLabel: {
+      type: "text-content",
+      default: "HIT",
+      description: "Hit label",
+    },
+    comboLabel: {
+      type: "text-content",
+      default: "COMBO",
+      description: "Combo label",
+    },
     accent: {
       type: "color",
       default: "#3B5BFD",
       description: "Accent",
     },
+    ...sceneControls({ font: "Saira" }),
     speed: {
       type: "number",
       default: 1,

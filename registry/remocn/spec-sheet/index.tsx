@@ -5,14 +5,9 @@ import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -39,6 +34,20 @@ export interface SpecSheetProps {
   name?: string;
   logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the title, values and logo; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the labels and values. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Frames between rows as the table builds. */
+  stagger?: number;
+  /** Frame the highlighted row starts to expand. */
+  expandAt?: number;
+  /** Size of the sheet, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -206,6 +215,24 @@ function Value({ value, p }: { value: string; p: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SpecSheet({
   rows = DEFAULT_ROWS,
   highlight = 3,
@@ -213,13 +240,23 @@ export function SpecSheet({
   name = "3.0",
   logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  stagger = STAGGER,
+  expandAt = EXPAND,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: SpecSheetProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
   const n = Math.max(1, rows.length);
   const hl = Math.min(Math.max(0, Math.round(highlight)), n - 1);
 
@@ -241,28 +278,46 @@ export function SpecSheet({
   );
   const hScale = valueF / hlF;
 
-  const grow = interpolate(t, [EXPAND, EXPAND + 22], [0, 1], {
+  const grow = interpolate(t, [expandAt, expandAt + 22], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const heights = rows.map((_, i) => baseH + (i === hl ? extra * grow : 0));
-  const total = heights.reduce((a, b) => a + b, 0);
-  const top = (H - total) / 2;
-  const rowTop = (i: number) => {
-    let y = top;
-    for (let k = 0; k < i; k++) y += heights[k];
-    return y;
+  const geometry = (g: number) => {
+    const heights = rows.map((_, i) => baseH + (i === hl ? extra * g : 0));
+    const total = heights.reduce((a, b) => a + b, 0);
+    const top = (H - total) / 2;
+    const rowTop = (i: number) => {
+      let y = top;
+      for (let k = 0; k < i; k++) y += heights[k];
+      return y;
+    };
+    return { heights, total, top, rowTop };
   };
+  // Text is laid out where the open row leaves it and travels there by
+  // transform all its life: layout rounds a box and a baseline to whole
+  // pixels, so rows pushed by `top` click along pixel by pixel, and text
+  // handed back to layout at rest jumps by what the rounding takes. The
+  // rules have no text: closed, they keep their live layout and stay crisp,
+  // and only ride a transform while the row opens.
+  const expanding = grow > 0 && grow < 1;
+  const live = geometry(grow);
+  const { heights, total, top, rowTop } = geometry(1);
+  const shift = (y: number, yAt: number) => yAt - y;
+  const ruleAt = expanding ? rowTop : live.rowTop;
+  const ruleShift = (i: number) =>
+    expanding
+      ? `translateY(${live.rowTop(i) - rowTop(i)}px)${glide(false)}`
+      : undefined;
 
   const rule = (i: number) =>
-    interpolate(t, [4 + i * STAGGER, 26 + i * STAGGER], [0, 1], {
+    interpolate(t, [4 + i * stagger, 26 + i * stagger], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
   const rise = (d: number) =>
     interpolate(t, [d, d + 18], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const valueP = (i: number) =>
-    interpolate(t, [12 + i * STAGGER, 34 + i * STAGGER], [0, 1], CLAMP);
+    interpolate(t, [12 + i * stagger, 34 + i * stagger], [0, 1], CLAMP);
 
   const titleF = 84 * u;
   const titleP = rise(0);
@@ -270,152 +325,166 @@ export function SpecSheet({
   const bottom = top + total;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 70% 80% at 30% 30%, ${c.key}, transparent 70%)`,
-        }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          left: mX,
-          top: top - 2 * u,
-          height: titleF * 1.2,
-          overflow: "hidden",
-        }}
-      >
+    <AbsoluteFill
+      style={{ background: background ?? c.bg, overflow: "hidden" }}
+    >
+      {background === "transparent" ? null : (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse 70% 80% at 30% 30%, ${c.key}, transparent 70%)`,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
-            fontFamily: serif,
-            fontWeight: 400,
-            fontSize: titleF,
-            lineHeight: 1.2,
-            letterSpacing: "-0.02em",
-            whiteSpace: "nowrap",
-            color: c.fg,
-            transform: `translateY(${(1 - titleP) * titleF * 1.2}px)`,
+            position: "absolute",
+            left: mX,
+            top: top - 2 * u,
+            height: titleF * 1.2,
+            overflow: "hidden",
+            transform: `translateY(${shift(top, live.top)}px)${glide(expanding)}`,
           }}
         >
-          {title}
-        </div>
-      </div>
-
-      <div
-        style={{
-          position: "absolute",
-          left: mX,
-          top: bottom - 24 * u - 28 * u,
-          height: 28 * u,
-          display: "flex",
-          alignItems: "baseline",
-          gap: 10 * u,
-          fontFamily: sans,
-          fontWeight: 400,
-          fontSize: 22 * u,
-          lineHeight: 1,
-          letterSpacing: "-0.01em",
-          color: c.muted,
-          opacity: lockP,
-          transform: `translateY(${(1 - lockP) * 10 * u}px)`,
-        }}
-      >
-        {logo ?? <RemocnLogo fontSize={26 * u} color={c.fg} />}
-        {name}
-      </div>
-
-      {Array.from({ length: n + 1 }, (_, i) => {
-        const strong = i === 0;
-        const th = strong ? 2 * u : hair;
-        return (
           <div
-            key={`r${i}`}
             style={{
-              position: "absolute",
-              left: tableX,
-              top: rowTop(i) - th / 2,
-              width: tableW * rule(i),
-              height: th,
-              background: strong ? c.rule : c.hair,
+              fontFamily: serif,
+              fontWeight: 400,
+              fontSize: titleF,
+              lineHeight: 1.2,
+              letterSpacing: "-0.02em",
+              whiteSpace: "nowrap",
+              color: fg,
+              transform: `translateY(${(1 - titleP) * titleF * 1.2}px)${glide(midway(titleP) && !expanding)}`,
             }}
-          />
-        );
-      })}
+          >
+            {title}
+          </div>
+        </div>
 
-      {rows.map((row, i) => {
-        const y = rowTop(i);
-        const h = heights[i];
-        const isHl = i === hl;
-        const lp = rise(10 + i * STAGGER);
-        const scale = isHl ? hScale + (1 - hScale) * grow : 1;
-        const fill =
-          isHl && grow > 0
-            ? {
-                backgroundImage: haloFill(
-                  theme,
-                  t,
-                  rgba(c.fg, 1 - grow),
-                  accent,
-                ),
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                color: "transparent",
-              }
-            : { color: c.fg };
-        const labelColor = isHl
-          ? interpolateColors(grow, [0, 1], [c.muted, c.fg])
-          : c.muted;
-        return (
-          <div key={`${i}-${row.label}`}>
+        <div
+          style={{
+            position: "absolute",
+            left: mX,
+            top: bottom - 24 * u - 28 * u,
+            height: 28 * u,
+            display: "flex",
+            alignItems: "baseline",
+            gap: 10 * u,
+            fontFamily,
+            fontWeight: 400,
+            fontSize: 22 * u,
+            lineHeight: 1,
+            letterSpacing: "-0.01em",
+            color: c.muted,
+            opacity: lockP,
+            transform: `translateY(${(1 - lockP) * 10 * u + shift(top + total, live.top + live.total)}px)${glide(midway(lockP) || expanding)}`,
+          }}
+        >
+          {logo ?? <RemocnLogo fontSize={26 * u} color={fg} />}
+          {name}
+        </div>
+
+        {Array.from({ length: n + 1 }, (_, i) => {
+          const strong = i === 0;
+          const th = strong ? 2 * u : hair;
+          return (
             <div
+              key={`r${i}`}
               style={{
                 position: "absolute",
                 left: tableX,
-                top: y,
-                height: h,
-                display: "flex",
-                alignItems: "center",
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: 22 * u,
-                lineHeight: 1,
-                letterSpacing: "-0.005em",
-                whiteSpace: "nowrap",
-                color: labelColor,
-                opacity: lp,
-                transform: `translateY(${(1 - lp) * 12 * u}px)`,
+                top: ruleAt(i) - th / 2,
+                transform: ruleShift(i),
+                width: tableW * rule(i),
+                height: th,
+                background: strong ? c.rule : c.hair,
               }}
-            >
-              {row.label}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                right: mX,
-                top: y,
-                height: h,
-                display: "flex",
-                alignItems: "center",
-                fontFamily: sans,
-                fontWeight: 500,
-                fontSize: isHl ? hlF : valueF,
-                lineHeight: 1.1,
-                letterSpacing: "-0.03em",
-                fontVariantNumeric: "tabular-nums",
-                whiteSpace: "pre",
-                ...fill,
-                transform: `scale(${scale})`,
-                transformOrigin: "100% 50%",
-              }}
-            >
-              <Value value={row.value} p={valueP(i)} />
-            </div>
-          </div>
-        );
-      })}
+            />
+          );
+        })}
 
-      <Grain opacity={c.grain} />
+        {rows.map((row, i) => {
+          const y = rowTop(i);
+          const h = heights[i];
+          // Rows are centred in their slot, so the highlighted one travels by
+          // its centre while its slot grows.
+          const dy = shift(y + h / 2, live.rowTop(i) + live.heights[i] / 2);
+          const isHl = i === hl;
+          const lp = rise(10 + i * stagger);
+          // Written to land on exactly 1 when the row is open, so the value
+          // rests on the pixel grid there.
+          const grown = isHl ? 1 - (1 - hScale) * (1 - grow) : 1;
+          const fill =
+            isHl && grow > 0
+              ? {
+                  backgroundImage: haloFill(
+                    theme,
+                    t,
+                    ink
+                      ? `color-mix(in srgb, ${ink} ${((1 - grow) * 100).toFixed(2)}%, transparent)`
+                      : rgba(c.fg, 1 - grow),
+                    accent,
+                  ),
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                }
+              : { color: fg };
+          const labelColor = isHl
+            ? interpolateColors(grow, [0, 1], [c.muted, fg])
+            : c.muted;
+          return (
+            <div key={`${i}-${row.label}`}>
+              <div
+                style={{
+                  position: "absolute",
+                  left: tableX,
+                  top: y,
+                  height: h,
+                  display: "flex",
+                  alignItems: "center",
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 22 * u,
+                  lineHeight: 1,
+                  letterSpacing: "-0.005em",
+                  whiteSpace: "nowrap",
+                  color: labelColor,
+                  opacity: lp,
+                  transform: `translateY(${(1 - lp) * 12 * u + dy}px)${glide(midway(lp) || expanding)}`,
+                }}
+              >
+                {row.label}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  right: mX,
+                  top: y,
+                  height: h,
+                  display: "flex",
+                  alignItems: "center",
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: isHl ? hlF : valueF,
+                  lineHeight: 1.1,
+                  letterSpacing: "-0.03em",
+                  fontVariantNumeric: "tabular-nums",
+                  whiteSpace: "pre",
+                  ...fill,
+                  transform: `translateY(${dy}px) scale(${grown})${glide(expanding)}`,
+                  transformOrigin: "100% 50%",
+                }}
+              >
+                <Value value={row.value} p={valueP(i)} />
+              </div>
+            </div>
+          );
+        })}
+      </ScaleLayer>
+
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

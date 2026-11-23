@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Afacad";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -8,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const afacad = loadFont("normal", {
   weights: ["400", "500"],
@@ -26,7 +27,19 @@ export interface OvernightProps {
   evening?: StoryBeat;
   night?: StoryBeat;
   morning?: StoryBeat;
+  /** Frame the night panel starts to come down, at a 180-frame length. */
+  nightAt?: number;
+  /** Frame the morning panel starts to rise, at a 180-frame length. */
+  morningAt?: number;
   accent?: string;
+  /** Evening ground under the panels; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the slugs and lines. Load it yourself; Afacad by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center; the panels stay put. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -76,8 +89,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-function useWidths(strings: string[]) {
-  const key = strings.join("\u0001");
+function useWidths(strings: string[], family: string) {
+  const key = `${family}\u0002${strings.join("\u0001")}`;
   const [state, setState] = useState<{
     key: string;
     w: Record<string, number>;
@@ -90,14 +103,14 @@ function useWidths(strings: string[]) {
     let live = true;
     Promise.all([
       afacad.waitUntilDone(),
-      document.fonts.load(`400 ${PX}px "${afacad.fontFamily}"`),
+      document.fonts.load(`400 ${PX}px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const ctx = document.createElement("canvas").getContext("2d");
         const w: Record<string, number> = {};
-        if (ctx) ctx.font = `400 ${PX}px "${afacad.fontFamily}"`;
+        if (ctx) ctx.font = `400 ${PX}px "${family}"`;
         for (const s of ref.current) {
           w[s] = ctx ? ctx.measureText(s).width / PX : s.length * 0.45;
         }
@@ -110,7 +123,7 @@ function useWidths(strings: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, family, handle]);
   return state && state.key === key ? state.w : null;
 }
 
@@ -128,19 +141,44 @@ function lineCount(ws: number[], space: number, max: number) {
   return lines;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function Overnight({
   evening = DEFAULT_EVENING,
   night = DEFAULT_NIGHT,
   morning = DEFAULT_MORNING,
+  nightAt = 52,
+  morningAt = 118,
   accent,
+  background,
+  fontFamily = afacad.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: OvernightProps) {
-  const frame = useCurrentFrame();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
-  const { width: W, height: H, durationInFrames: T } = useVideoConfig();
+  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const ground =
+    background === "transparent" ? undefined : (background ?? c.evening);
   const morningBg =
     theme === "dark"
       ? hi
@@ -149,11 +187,11 @@ export function Overnight({
   const beats = [evening, night, morning];
   const tokens = beats.map((b) => b.line.split(/\s+/).filter(Boolean));
   const strings = Array.from(new Set([" ", ...tokens.flat()]));
-  const w = useWidths(strings);
+  const w = useWidths(strings, fontFamily);
 
   if (!w) {
     return (
-      <div style={{ position: "absolute", inset: 0, background: c.evening }} />
+      <div style={{ position: "absolute", inset: 0, background: ground }} />
     );
   }
 
@@ -178,10 +216,10 @@ export function Overnight({
 
   const k = Math.min(1.6, Math.max(0.75, T / 180));
   const at = (f: number) => f * k;
-  const duskA = at(52);
-  const duskB = at(78);
-  const dawnA = at(118);
-  const dawnB = at(140);
+  const duskA = at(nightAt);
+  const duskB = at(nightAt + 26);
+  const dawnA = at(morningAt);
+  const dawnB = at(morningAt + 22);
 
   const down = interpolate(t, [duskA, duskB], [0, 1], {
     ...CLAMP,
@@ -266,7 +304,7 @@ export function Overnight({
             marginBottom: S * 1.1,
             whiteSpace: "nowrap",
             opacity: se,
-            transform: `translateY(${((1 - se) * S).toFixed(2)}px)`,
+            transform: `translateY(${((1 - se) * S).toFixed(2)}px)${glide(se > 0 && se < 1)}`,
           }}
         >
           {beats[i].slug}
@@ -280,7 +318,7 @@ export function Overnight({
             color: inks[i],
             textWrap: "balance",
             opacity: e,
-            transform: `translateY(${((1 - e) * F * 0.32).toFixed(2)}px)`,
+            transform: `translateY(${((1 - e) * F * 0.32).toFixed(2)}px)${glide(e > 0 && e < 1)}`,
           }}
         >
           {beats[i].line}
@@ -292,12 +330,12 @@ export function Overnight({
   return (
     <AbsoluteFill
       style={{
-        background: c.evening,
+        background: ground,
         overflow: "hidden",
-        fontFamily: afacad.fontFamily,
+        fontFamily,
       }}
     >
-      {text(0)}
+      <ScaleLayer scale={scale}>{text(0)}</ScaleLayer>
       <div
         style={{
           position: "absolute",
@@ -308,7 +346,7 @@ export function Overnight({
           background: c.night,
         }}
       />
-      {text(1)}
+      <ScaleLayer scale={scale}>{text(1)}</ScaleLayer>
       <div
         style={{
           position: "absolute",
@@ -319,7 +357,7 @@ export function Overnight({
           background: morningBg,
         }}
       />
-      {text(2)}
+      <ScaleLayer scale={scale}>{text(2)}</ScaleLayer>
     </AbsoluteFill>
   );
 }

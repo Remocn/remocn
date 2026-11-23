@@ -1,0 +1,99 @@
+{
+  "component": "caption-bounce-in",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "big-punch",
+      "label": "Big Punch",
+      "description": "Oversized heavy words that land one or two at a time with a strong springy overshoot.",
+      "askedAs": [
+        "huge bouncy captions one word at a time",
+        "make the subtitles big and punchy",
+        "tiktok style giant words",
+        "огромные прыгающие субтитры",
+        "крупные слова по одному"
+      ],
+      "props": {
+        "fontSize": 110,
+        "fontWeight": 900,
+        "bounce": 0.9,
+        "combineTokensWithinMilliseconds": 300,
+        "holdMs": 300
+      }
+    },
+    {
+      "id": "soft-settle",
+      "label": "Soft Settle",
+      "description": "Medium-weight captions that rise gently with barely any overshoot and stay up longer as full phrases.",
+      "askedAs": [
+        "calm subtle caption animation",
+        "less bouncy gentle subtitles",
+        "smooth captions for a podcast",
+        "спокойные мягкие субтитры",
+        "субтитры без сильного прыжка"
+      ],
+      "props": {
+        "fontSize": 56,
+        "fontWeight": 500,
+        "bounce": 0.15,
+        "combineTokensWithinMilliseconds": 2400,
+        "holdMs": 1200
+      }
+    },
+    {
+      "id": "sunny-pop",
+      "label": "Sunny Pop",
+      "description": "Warm yellow bold words that hop in with a lively bounce over a soft shadow.",
+      "askedAs": [
+        "yellow bouncy captions",
+        "bright fun subtitles for vlogs",
+        "warm colored word pop",
+        "жёлтые весёлые субтитры",
+        "яркие прыгающие слова"
+      ],
+      "props": {
+        "color": "#ffd23f",
+        "bounce": 0.75,
+        "fontSize": 76
+      }
+    },
+    {
+      "id": "clean-ink",
+      "label": "Clean Ink",
+      "description": "Dark charcoal text without shadow for light backgrounds, with a modest hop.",
+      "askedAs": [
+        "dark captions for white background",
+        "black text subtitles no shadow",
+        "minimal clean bouncing words",
+        "тёмные субтитры для светлого фона",
+        "чёрный текст без тени"
+      ],
+      "props": {
+        "color": "#1c1f26",
+        "shadow": false,
+        "fontWeight": 700,
+        "bounce": 0.4
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Compact coral words that flash in quickly and clear almost immediately for fast-talking clips.",
+      "askedAs": [
+        "fast captions for quick speech",
+        "short snappy subtitles that disappear fast",
+        "quick word by word captions",
+        "быстрые субтитры для быстрой речи",
+        "короткие резкие субтитры"
+      ],
+      "props": {
+        "fontSize": 48,
+        "color": "#ff7a59",
+        "combineTokensWithinMilliseconds": 600,
+        "holdMs": 150,
+        "bounce": 0.55
+      }
+    }
+  ]
+}

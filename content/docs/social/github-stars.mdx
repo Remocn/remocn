@@ -23,8 +23,8 @@ askedAs:
 
 <ComponentPreview name="github-stars" />
 
-<Note title="Live generator">
-  Want to see it with your own repo before installing? Head to [/stars](/stars), paste any GitHub repo URL, preview the animation, and download an MP4 — it's the live demo of this component.
+<Note title="Real stargazers">
+  GitHub's stargazers API now needs authentication, so fetch your repo's stargazers with a token and pass them in as props. Want a finished stars video without Remotion? [Starwall](https://starwall.radiumcoders.com/) builds one for any repo — see [/stars](/stars).
 </Note>
 
 <InstallBlock name="github-stars" />
@@ -53,8 +53,8 @@ export const RemotionRoot = () => (
   <Composition
     id="GitHubStars"
     component={GitHubStarsScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -96,8 +96,8 @@ export const RemotionRoot = () => (
   <Composition
     id="GitHubStars"
     component={GitHubStarsScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />

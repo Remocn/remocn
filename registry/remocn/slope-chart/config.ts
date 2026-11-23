@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const slopeChartConfig: ComponentConfig = {
   componentName: "SlopeChart",
@@ -12,11 +18,6 @@ export const slopeChartConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     value: {
       type: "text-content",
@@ -38,6 +39,30 @@ export const slopeChartConfig: ComponentConfig = {
       default: "After",
       description: "After label",
     },
+    stagger: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Line stagger",
+      hiddenFromList: false,
+    },
+    climbAt: {
+      type: "number",
+      default: 60,
+      min: 20,
+      max: 100,
+      step: 1,
+      description: "Climb at (frame)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Instrument Sans", grain: true }),
     speed: {
       type: "number",
       default: 1,

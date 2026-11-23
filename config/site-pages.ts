@@ -25,9 +25,9 @@ export const SITE_PAGES = {
       "How Remocn handles your data, and the terms that apply to the site, the free components, and paid products.",
   },
   stars: {
-    title: "GitHub Stars Video Generator",
+    title: "GitHub Stars Video",
     description:
-      "Turn your repo's stars into a shareable animated video. Paste a GitHub repo and we animate every stargazer into a clip you can own.",
+      "Make a GitHub stars video: Starwall builds one for your repo, or build it in Remotion with Remocn's free github-stars component.",
   },
   about: {
     title: "About",

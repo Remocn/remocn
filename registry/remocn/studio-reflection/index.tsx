@@ -3,14 +3,11 @@
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadLexendExa } from "@remotion/google-fonts/LexendExa";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const exa = loadLexendExa("normal", { weights: ["400"], subsets: ["latin"] });
 const geist = loadGeist("normal", { weights: ["400"], subsets: ["latin"] });
@@ -21,7 +18,20 @@ export interface StudioReflectionProps {
   label?: string;
   eyebrow?: string;
   accent?: string;
+  /** Color of the label under the figure; overrides the theme. */
+  ink?: string;
+  /** Color of the light bands that sweep the figure; overrides the theme. */
+  shine?: string;
   background?: string;
+  /** Typeface for the label. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frame the eyebrow and label start to rise in. */
+  captionAt?: number;
+  /** Size of the figure and its copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -131,18 +141,43 @@ const BANDS: Band[] = [
 ];
 const HORIZON = 0.5;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function StudioReflection({
   value = "250+",
   label = "launch-ready scenes, one command away",
   eyebrow = "In the library",
   accent = "#3B5BFD",
+  ink,
+  shine,
   background,
+  fontFamily = geist.fontFamily,
+  captionAt = 50,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: StudioReflectionProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const p = PALETTES[theme];
+  const reflect = shine ?? p.reflect;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const clipId = `c${uid}`;
   const chromeId = `ch${uid}`;
@@ -221,26 +256,32 @@ export function StudioReflection({
           y={y - core / 2}
           width={x1 - x0}
           height={core}
-          fill={p.reflect}
+          fill={reflect}
         />
       </g>
     );
   });
 
-  const push = interpolate(frame, [0, 120], [1.06, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const drift = interpolate(frame, [0, 120], [10 * s, 0], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const pushAt = (f: number) =>
+    interpolate(f, [0, 120], [1.06, 1], { ...CLAMP, easing: EASE_OUT });
+  const driftAt = (f: number) =>
+    interpolate(f, [0, 120], [10 * s, 0], { ...CLAMP, easing: EASE_OUT });
+  const push = pushAt(frame);
+  const drift = driftAt(frame);
+  // The push eases out over the whole clip, so it has no clean progress to
+  // test: it counts as moving while the figure's edge still shifts by a
+  // thousandth of a pixel per frame.
+  const reach = width / 2;
+  const step = (a: number, b: number) =>
+    Math.abs(driftAt(a) - driftAt(b)) + Math.abs(pushAt(a) - pushAt(b)) * reach;
+  const pushing =
+    step(frame + 1, frame) > 1e-3 || step(frame, frame - 1) > 1e-3;
 
-  const eyeIn = interpolate(frame, [50, 72], [0, 1], {
+  const eyeIn = interpolate(frame, [captionAt, captionAt + 22], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const labelIn = interpolate(frame, [56, 82], [0, 1], {
+  const labelIn = interpolate(frame, [captionAt + 6, captionAt + 32], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -285,152 +326,154 @@ export function StudioReflection({
         />
       ) : null}
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `translateY(${drift}px) scale(${push})`,
-          transformOrigin: `50% ${(yOf(hz) / height) * 100}%`,
-        }}
-      >
-        {eyebrow ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: top,
-              height: eyeFs,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: eyeFs * 0.7,
-              opacity: eyeIn,
-              transform: `translateY(${(1 - eyeIn) * eyeFs * 0.6}px)`,
-            }}
-          >
-            <div
-              style={{
-                width: eyeFs * 0.36,
-                height: eyeFs * 0.36,
-                borderRadius: 1,
-                background: accent,
-              }}
-            />
-            <span
-              style={{
-                fontFamily: mono.fontFamily,
-                fontWeight: 400,
-                fontSize: eyeFs,
-                lineHeight: 1,
-                textTransform: "uppercase",
-                letterSpacing: "0.22em",
-                marginRight: "-0.22em",
-                color: p.muted,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {eyebrow}
-            </span>
-          </div>
-        ) : null}
-
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `translateY(${drift}px) scale(${push})${glide(pushing)}`,
+            transformOrigin: `50% ${(yOf(hz) / height) * 100}%`,
+          }}
         >
-          <defs>
-            <clipPath id={clipId}>
-              <text
-                x={width / 2}
-                y={baseline}
-                textAnchor="middle"
-                fontFamily={exa.fontFamily}
-                fontWeight={400}
-                fontSize={fs}
-                letterSpacing={`${TRACK}em`}
-              >
-                {value}
-              </text>
-            </clipPath>
-            <linearGradient
-              id={chromeId}
-              gradientUnits="userSpaceOnUse"
-              x1="0"
-              x2="0"
-              y1={yOf(0)}
-              y2={yOf(1)}
-            >
-              {chromeStops.map(([o, c]) => (
-                <stop key={o} offset={o} stopColor={c} />
-              ))}
-            </linearGradient>
-            <linearGradient id={`${uid}soft`} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0" stopColor={p.reflect} stopOpacity={0} />
-              <stop offset="0.5" stopColor={p.reflect} stopOpacity={0.55} />
-              <stop offset="1" stopColor={p.reflect} stopOpacity={0} />
-            </linearGradient>
-            <filter id={blurId} x="-10%" y="-50%" width="120%" height="200%">
-              <feGaussianBlur stdDeviation={3 * s} />
-            </filter>
-          </defs>
-
-          <g clipPath={`url(#${clipId})`}>
-            <rect
-              x={x0}
-              y={yOf(-0.3)}
-              width={x1 - x0}
-              height={capH * 1.6}
-              fill={p.body}
-              opacity={0.35 + 0.65 * ambient}
-            />
-            <rect
-              x={x0}
-              y={yOf(-0.3)}
-              width={x1 - x0}
-              height={capH * 1.6}
-              fill={`url(#${chromeId})`}
-              opacity={chrome}
-            />
-            <g filter={`url(#${blurId})`}>{bandEls}</g>
-            <g>{bandEls}</g>
-          </g>
-        </svg>
-
-        {label ? (
-          <div
-            style={{
-              position: "absolute",
-              left: (width - labelMax) / 2,
-              width: labelMax,
-              top: baseline + labelGap,
-              height: labelH + labelFs * 0.4,
-              overflow: "hidden",
-            }}
-          >
+          {eyebrow ? (
             <div
               style={{
-                transform: `translateY(${(1 - labelIn) * labelFs * 1.4}px)`,
-                opacity: interpolate(labelIn, [0, 0.5], [0, 1], CLAMP),
-                textAlign: "center",
-                textWrap: "balance",
-                fontFamily: geist.fontFamily,
-                fontWeight: 400,
-                fontSize: labelFs,
-                lineHeight: 1.3,
-                letterSpacing: "-0.01em",
-                color: p.muted,
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: top,
+                height: eyeFs,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: eyeFs * 0.7,
+                opacity: eyeIn,
+                transform: `translateY(${(1 - eyeIn) * eyeFs * 0.6}px)`,
               }}
             >
-              {label}
+              <div
+                style={{
+                  width: eyeFs * 0.36,
+                  height: eyeFs * 0.36,
+                  borderRadius: 1,
+                  background: accent,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: mono.fontFamily,
+                  fontWeight: 400,
+                  fontSize: eyeFs,
+                  lineHeight: 1,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.22em",
+                  marginRight: "-0.22em",
+                  color: p.muted,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {eyebrow}
+              </span>
             </div>
-          </div>
-        ) : null}
-      </div>
+          ) : null}
 
-      {!transparent ? <Grain opacity={p.grain} /> : null}
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            <defs>
+              <clipPath id={clipId}>
+                <text
+                  x={width / 2}
+                  y={baseline}
+                  textAnchor="middle"
+                  fontFamily={exa.fontFamily}
+                  fontWeight={400}
+                  fontSize={fs}
+                  letterSpacing={`${TRACK}em`}
+                >
+                  {value}
+                </text>
+              </clipPath>
+              <linearGradient
+                id={chromeId}
+                gradientUnits="userSpaceOnUse"
+                x1="0"
+                x2="0"
+                y1={yOf(0)}
+                y2={yOf(1)}
+              >
+                {chromeStops.map(([o, c]) => (
+                  <stop key={o} offset={o} stopColor={c} />
+                ))}
+              </linearGradient>
+              <linearGradient id={`${uid}soft`} x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stopColor={reflect} stopOpacity={0} />
+                <stop offset="0.5" stopColor={reflect} stopOpacity={0.55} />
+                <stop offset="1" stopColor={reflect} stopOpacity={0} />
+              </linearGradient>
+              <filter id={blurId} x="-10%" y="-50%" width="120%" height="200%">
+                <feGaussianBlur stdDeviation={3 * s} />
+              </filter>
+            </defs>
+
+            <g clipPath={`url(#${clipId})`}>
+              <rect
+                x={x0}
+                y={yOf(-0.3)}
+                width={x1 - x0}
+                height={capH * 1.6}
+                fill={p.body}
+                opacity={0.35 + 0.65 * ambient}
+              />
+              <rect
+                x={x0}
+                y={yOf(-0.3)}
+                width={x1 - x0}
+                height={capH * 1.6}
+                fill={`url(#${chromeId})`}
+                opacity={chrome}
+              />
+              <g filter={`url(#${blurId})`}>{bandEls}</g>
+              <g>{bandEls}</g>
+            </g>
+          </svg>
+
+          {label ? (
+            <div
+              style={{
+                position: "absolute",
+                left: (width - labelMax) / 2,
+                width: labelMax,
+                top: baseline + labelGap,
+                height: labelH + labelFs * 0.4,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  transform: `translateY(${(1 - labelIn) * labelFs * 1.4}px)`,
+                  opacity: interpolate(labelIn, [0, 0.5], [0, 1], CLAMP),
+                  textAlign: "center",
+                  textWrap: "balance",
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: labelFs,
+                  lineHeight: 1.3,
+                  letterSpacing: "-0.01em",
+                  color: ink ?? p.muted,
+                }}
+              >
+                {label}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
+
+      {!transparent && grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

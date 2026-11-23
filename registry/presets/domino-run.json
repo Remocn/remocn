@@ -1,0 +1,124 @@
+{
+  "component": "domino-run",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-cascade",
+      "label": "Slow Cascade",
+      "description": "A patient, deliberate fall on deep navy with a serif headline that lets each domino land.",
+      "askedAs": [
+        "make the dominoes fall slowly",
+        "dramatic slow chain reaction",
+        "elegant serif domino version",
+        "медленное падение домино",
+        "элегантная цепная реакция с засечками"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 2.4,
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#0f1626",
+        "accent": "#e8b86b"
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "A fast, tight chain of dominoes that snaps straight into a bold 10x payoff.",
+      "askedAs": [
+        "fast domino chain",
+        "quick punchy version",
+        "dominoes falling rapidly",
+        "быстрое домино",
+        "резкая и энергичная версия"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 0.4,
+        "fontWeight": 700,
+        "fontFamily": "Space Grotesk",
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A warm off-white page with forest-green accents and soft grain, like a printed explainer.",
+      "askedAs": [
+        "light background domino",
+        "clean print style",
+        "warm paper look",
+        "светлая версия на бумаге",
+        "тёплый светлый фон"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "accent": "#2f6b4f",
+        "fontFamily": "Fraunces",
+        "grain": true
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A crisp, grain-free dark screen with monospace type and a mint accent for a technical feel.",
+      "askedAs": [
+        "code style domino",
+        "developer monospace look",
+        "clean tech version no grain",
+        "моноширинный шрифт как в терминале",
+        "техничный стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "grain": false,
+        "background": "#0b0f0e",
+        "accent": "#4fd1a5",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "big-stage",
+      "label": "Big Stage",
+      "description": "An oversized, heavy composition on light ground with a delayed start for a confident reveal.",
+      "askedAs": [
+        "make it bigger and bolder",
+        "large scale domino for a keynote",
+        "fill the frame",
+        "крупнее и жирнее",
+        "большой масштаб для презентации"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontWeight": 700,
+        "theme": "light",
+        "accent": "#6a3bea",
+        "delay": 15,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A small, light-weight Inter layout in muted graphite with no grain for understated slides.",
+      "askedAs": [
+        "subtle minimal version",
+        "smaller and quieter",
+        "clean corporate look",
+        "минималистичный спокойный вариант",
+        "скромный деловой стиль"
+      ],
+      "props": {
+        "scale": 0.75,
+        "fontWeight": 300,
+        "fontFamily": "Inter",
+        "grain": false,
+        "accent": "#8a94a6",
+        "background": "#16181d"
+      }
+    }
+  ]
+}

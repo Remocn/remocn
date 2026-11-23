@@ -1,0 +1,87 @@
+{
+  "component": "alert-dialog",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "The dialog drifts open at half speed with a long, deliberate backdrop dim.",
+      "askedAs": [
+        "slow dialog opening",
+        "gentle modal entrance",
+        "calm confirmation popup",
+        "медленное открытие диалога",
+        "плавное появление модального окна"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-open",
+      "label": "Snappy Open",
+      "description": "A quick, crisp zoom-in that feels like a responsive native app.",
+      "askedAs": [
+        "fast modal pop",
+        "quick alert open",
+        "snappy confirm dialog",
+        "быстрое открытие диалога",
+        "резкое появление алерта"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 2
+      }
+    },
+    {
+      "id": "instant-flash",
+      "label": "Instant Flash",
+      "description": "The alert appears almost instantly, ideal for tight cuts in fast-paced demos.",
+      "askedAs": [
+        "instant popup",
+        "dialog appears immediately",
+        "very fast alert",
+        "мгновенный диалог",
+        "алерт без задержки"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 4
+      }
+    },
+    {
+      "id": "cinematic-dismiss",
+      "label": "Cinematic Dismiss",
+      "description": "The dialog closes in slow motion as the backdrop gradually lifts away.",
+      "askedAs": [
+        "slow close modal",
+        "dialog fading out slowly",
+        "dismiss alert gently",
+        "медленное закрытие окна",
+        "плавно скрыть диалог"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "quick-dismiss",
+      "label": "Quick Dismiss",
+      "description": "A brisk close that snaps the modal away and clears the backdrop fast.",
+      "askedAs": [
+        "fast close dialog",
+        "quickly dismiss alert",
+        "modal closes snappy",
+        "быстро закрыть диалог",
+        "резкое исчезновение окна"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 2
+      }
+    }
+  ]
+}

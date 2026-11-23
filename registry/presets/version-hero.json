@@ -1,0 +1,106 @@
+{
+  "component": "version-hero",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, paper-toned stage with an elegant serif numeral and a muted oxblood glow.",
+      "askedAs": [
+        "elegant serif version number on light background",
+        "classy magazine style release reveal",
+        "soft cream launch title with serif font",
+        "светлый элегантный анонс версии с засечками",
+        "журнальный стиль для номера версии"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "accent": "#8c2f39",
+        "background": "#f4efe6",
+        "ink": "#1e1a17",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "A deep navy backdrop with a warm gold ring and a slow, luxurious rise.",
+      "askedAs": [
+        "luxury gold version reveal on dark",
+        "slow premium launch with golden glow",
+        "navy and gold release announcement",
+        "роскошный золотой анонс на тёмном фоне",
+        "медленное премиальное появление версии"
+      ],
+      "props": {
+        "accent": "#c9a45c",
+        "background": "#0b1220",
+        "ink": "#f3ebdd",
+        "speed": 0.5,
+        "depth": 0.35,
+        "stagger": 3.5
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "A fast monospaced numeral with a cool mint ring on near-black, crisp and grain-free.",
+      "askedAs": [
+        "developer style version number in monospace",
+        "quick techy release reveal",
+        "code font launch announcement",
+        "быстрый анонс версии моноширинным шрифтом",
+        "техничный стиль для релиза"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fbf9a",
+        "background": "#0a0d0c",
+        "ink": "#e6f2ee",
+        "speed": 1.75,
+        "grain": false
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "An oversized numeral that snaps in quickly with tight slices and a vivid coral glow.",
+      "askedAs": [
+        "big punchy version number",
+        "fast energetic launch reveal",
+        "huge bold release numeral",
+        "крупный и быстрый номер версии",
+        "энергичный анонс релиза"
+      ],
+      "props": {
+        "scale": 1.35,
+        "speed": 2,
+        "stagger": 0.8,
+        "accent": "#ff6b4a",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A small, flat Inter numeral on soft grey with a slate ring and almost no depth.",
+      "askedAs": [
+        "minimal clean version announcement",
+        "subtle understated release title",
+        "flat simple light version reveal",
+        "минималистичный анонс версии",
+        "спокойный и сдержанный стиль релиза"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "background": "#eef0f3",
+        "ink": "#1b1f27",
+        "accent": "#5b6b82",
+        "depth": 0.04
+      }
+    }
+  ]
+}

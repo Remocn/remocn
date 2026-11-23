@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const blockCityConfig: ComponentConfig = {
   componentName: "BlockCity",
@@ -12,11 +18,6 @@ export const blockCityConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     prefix: {
       type: "text-content",
@@ -42,6 +43,30 @@ export const blockCityConfig: ComponentConfig = {
       description: "Value",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 400,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    countUp: {
+      type: "number",
+      default: 40,
+      min: 2,
+      max: 120,
+      step: 2,
+      description: "Count-up (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Sora", grain: true }),
     speed: {
       type: "number",
       default: 1,
@@ -54,6 +79,8 @@ export const blockCityConfig: ComponentConfig = {
   },
   durationInFrames: 250,
   fps: FPS,
+  // Does not hold 60 fps in the browser yet (`audit:playback`: paint).
+  previewFps: 30,
   compositionWidth: W,
   compositionHeight: H,
 };

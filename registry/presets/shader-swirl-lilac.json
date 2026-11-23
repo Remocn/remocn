@@ -1,0 +1,96 @@
+{
+  "component": "shader-swirl-lilac",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "A barely moving, wide two-band swirl that feels like calm breathing behind text.",
+      "askedAs": [
+        "make it slower and calmer",
+        "very gentle background motion",
+        "subtle slow swirl",
+        "медленнее и спокойнее",
+        "едва заметное движение фона"
+      ],
+      "props": {
+        "speed": 0.25,
+        "bandCount": 1,
+        "twist": 0.05
+      }
+    },
+    {
+      "id": "tight-vortex",
+      "label": "Tight Vortex",
+      "description": "Many crisp, strongly twisted bands spiralling quickly into the dark centre.",
+      "askedAs": [
+        "more dramatic spiral",
+        "sharp hypnotic swirl",
+        "faster with lots of rings",
+        "закрученная резкая спираль",
+        "гипнотический водоворот"
+      ],
+      "props": {
+        "speed": 2,
+        "bandCount": 8,
+        "twist": 0.7,
+        "softness": 0.2
+      }
+    },
+    {
+      "id": "midnight-ink",
+      "label": "Midnight Ink",
+      "description": "A deep navy backdrop with soft, gently curling lilac ribbons for a moodier tone.",
+      "askedAs": [
+        "darker version",
+        "night blue swirl",
+        "moody deep background",
+        "тёмно-синий фон",
+        "более мрачный вариант"
+      ],
+      "props": {
+        "colorBack": "#0f1626",
+        "bandCount": 3,
+        "twist": 0.3,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "silk-ribbons",
+      "label": "Silk Ribbons",
+      "description": "Medium-paced flowing bands with moderate twist that read like draped silk.",
+      "askedAs": [
+        "flowing fabric look",
+        "elegant ribbon swirl",
+        "smooth medium twist",
+        "как шёлковые ленты",
+        "плавные изогнутые полосы"
+      ],
+      "props": {
+        "bandCount": 5,
+        "twist": 0.45,
+        "softness": 0.7,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "plum-graphic",
+      "label": "Plum Graphic",
+      "description": "Hard-edged, poster-like stripes over a rich plum ground with a light twist.",
+      "askedAs": [
+        "crisp graphic stripes",
+        "bold poster swirl",
+        "sharp edges no blur",
+        "чёткие графичные полосы",
+        "плакатный стиль с резкими краями"
+      ],
+      "props": {
+        "softness": 0,
+        "bandCount": 6,
+        "twist": 0.2,
+        "colorBack": "#3b1838"
+      }
+    }
+  ]
+}

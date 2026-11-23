@@ -1,8 +1,27 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const rideTrackingConfig: ComponentConfig = {
   componentName: "RideTracking",
   importPath: "@/components/remocn/ride-tracking",
+  lists: {
+    lines: {
+      default: [
+        "Book it in one tap.",
+        "Watch it come to you.",
+        "Your ride is here.",
+      ],
+      description: "Lines",
+      min: 3,
+      max: 3,
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -13,15 +32,15 @@ export const rideTrackingConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     pickup: {
       type: "text-content",
       default: "214 Linden St",
       description: "Pickup",
+    },
+    arrivedTitle: {
+      type: "text-content",
+      default: "Your driver has arrived",
+      description: "Arrival title",
     },
     eta: {
       type: "number",
@@ -32,6 +51,22 @@ export const rideTrackingConfig: ComponentConfig = {
       description: "Eta",
       hiddenFromList: false,
     },
+    drive: {
+      type: "number",
+      default: 162,
+      min: 60,
+      max: 240,
+      step: 6,
+      description: "Drive (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#276EF1",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Onest" }),
     speed: {
       type: "number",
       default: 1,

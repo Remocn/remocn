@@ -47,8 +47,8 @@ export const RemotionRoot = () => (
   <Composition
     id="ActivityRings"
     component={ActivityRingsScene}
-    durationInFrames={130}
-    fps={30}
+    durationInFrames={260}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -72,10 +72,56 @@ Three concentric rings fill clockwise one after another, snap closed, then lap p
       description: "Small heading above the readouts.",
     },
     {
+      name: "goalLabel",
+      type: "string",
+      default: "\"of goal\"",
+      description: "Text after the over-goal percentage on each readout.",
+    },
+    {
+      name: "fill",
+      type: "number",
+      default: "42",
+      description: "Frames the outer ring takes to close; inner rings follow 4 frames apart.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the outer hero ring.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Sora\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

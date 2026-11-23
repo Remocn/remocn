@@ -1,0 +1,101 @@
+{
+  "component": "micro-scale-fade",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "whisper-label",
+      "label": "Whisper Label",
+      "description": "A small, light-weight grey label that drifts in slowly with barely any scale change.",
+      "askedAs": [
+        "subtle small caption fade",
+        "quiet gray label entrance",
+        "barely noticeable text appear",
+        "тихая маленькая подпись",
+        "едва заметное появление текста"
+      ],
+      "props": {
+        "scaleFrom": 0.99,
+        "fontSize": 28,
+        "color": "#6b7280",
+        "fontWeight": "400",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-headline",
+      "label": "Bold Headline",
+      "description": "A large, heavy near-black heading with a more noticeable scale pop at a brisk pace.",
+      "askedAs": [
+        "big bold title pop in",
+        "strong heading entrance",
+        "punchy large headline",
+        "крупный жирный заголовок",
+        "заголовок с заметным появлением"
+      ],
+      "props": {
+        "scaleFrom": 0.88,
+        "fontSize": 128,
+        "color": "#0a0a0a",
+        "fontWeight": "700",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-luxe",
+      "label": "Slow Luxe",
+      "description": "A medium-weight warm charcoal heading that settles in gently at a slow, premium pace.",
+      "askedAs": [
+        "slow elegant text reveal",
+        "luxury brand title fade",
+        "calm premium heading",
+        "медленное элегантное появление",
+        "премиальный спокойный заголовок"
+      ],
+      "props": {
+        "scaleFrom": 0.94,
+        "fontSize": 84,
+        "color": "#3f3a36",
+        "fontWeight": "500",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-ui",
+      "label": "Snappy UI",
+      "description": "A crisp slate-blue interface label that pops in quickly like a product UI element.",
+      "askedAs": [
+        "fast saas label pop",
+        "quick interface text",
+        "snappy product ui caption",
+        "быстрая подпись для интерфейса",
+        "резкое появление метки"
+      ],
+      "props": {
+        "scaleFrom": 0.92,
+        "fontSize": 40,
+        "color": "#1e3a8a",
+        "fontWeight": "600",
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "soft-subhead",
+      "label": "Soft Subhead",
+      "description": "A mid-size muted steel subheading with a relaxed fade suited to sitting under a hero.",
+      "askedAs": [
+        "supporting subtitle under title",
+        "muted subheading fade",
+        "secondary text entrance",
+        "подзаголовок под главным текстом",
+        "приглушённый подзаголовок"
+      ],
+      "props": {
+        "fontSize": 48,
+        "color": "#475569",
+        "fontWeight": "500",
+        "speed": 0.75
+      }
+    }
+  ]
+}

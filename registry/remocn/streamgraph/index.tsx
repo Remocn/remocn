@@ -2,15 +2,11 @@
 
 import { loadFont as loadBricolage } from "@remotion/google-fonts/BricolageGrotesque";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -30,7 +26,25 @@ export interface StreamgraphProps {
   series?: StreamSeries[];
   highlight?: number;
   label?: string;
+  /** Frame the stream finishes growing and the share lands. */
+  landAt?: number;
+  /** How far the other layers fade when the share lands, 0 to 1. */
+  dim?: number;
   accent?: string;
+  /** Text color of the share and name; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark when the highlighted layer is remocn. */
+  logo?: React.ReactNode;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the chart and share, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -173,18 +187,46 @@ const smooth = (a: number, b: number, x: number) => {
   return k * k * (3 - 2 * k);
 };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function Streamgraph({
   series = DEFAULT_SERIES,
   highlight = 2,
   label = "of new projects",
+  landAt = HIT,
+  dim: dimBy = 0.38,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  logo,
+  grain = true,
+  scale: size = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: StreamgraphProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg = background ?? p.bg;
   const list = series.slice(0, 6);
   const hl = Math.min(Math.max(0, Math.round(highlight)), list.length - 1);
 
@@ -202,7 +244,7 @@ export function Streamgraph({
 
   const wave = (uu: number) =>
     height * 0.022 * Math.sin(Math.PI * 2 * 0.9 * uu + 0.4);
-  const front = interpolate(t, GROW, [0, 1 + TIP], {
+  const front = interpolate(t, [GROW[0], landAt], [0, 1 + TIP], {
     ...CLAMP,
     easing: EASE_GROW,
   });
@@ -247,29 +289,29 @@ export function Streamgraph({
   for (let i = 0; i < hl; i++) hlTop += endVals[i] * scale;
   const hlMid = hlTop + (endVals[hl] * scale) / 2;
 
-  const dim = interpolate(t, [HIT - 6, HIT + 14], [0, 1], {
+  const dim = interpolate(t, [landAt - 6, landAt + 14], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const land = spring({
-    frame: t - HIT,
+    frame: t - landAt,
     fps,
     config: { damping: 18, stiffness: 150, mass: 0.8 },
   });
-  const landO = interpolate(t, [HIT, HIT + 8], [0, 1], CLAMP);
-  const blur = interpolate(t, [HIT, HIT + 14], [1, 0], {
+  const landO = interpolate(t, [landAt, landAt + 8], [0, 1], CLAMP);
+  const blur = interpolate(t, [landAt, landAt + 14], [1, 0], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const count = interpolate(t, [HIT, HIT + 28], [0.6, 1], {
+  const count = interpolate(t, [landAt, landAt + 28], [0.6, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
-  const lead = interpolate(t, [HIT - 4, HIT + 14], [0, 1], {
+  const lead = interpolate(t, [landAt - 4, landAt + 14], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const cap = interpolate(t, [HIT + 10, HIT + 28], [0, 1], {
+  const cap = interpolate(t, [landAt + 10, landAt + 28], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -291,143 +333,147 @@ export function Streamgraph({
   const numLeft = x1 + 44 * u;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${push})`,
-          transformOrigin: "45% 50%",
-          opacity: stage,
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          <defs>
-            <linearGradient
-              id={`${id}g`}
-              gradientUnits="userSpaceOnUse"
-              x1={x0}
-              y1={0}
-              x2={fEnd}
-              y2={0}
-            >
-              <stop offset={0} stopColor="#fff" stopOpacity={0} />
-              <stop offset={inStop} stopColor="#fff" stopOpacity={1} />
-              <stop offset={outStop} stopColor="#fff" stopOpacity={1} />
-              <stop offset={1} stopColor="#fff" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient
-              id={`${id}b`}
-              gradientUnits="userSpaceOnUse"
-              x1={x0 + span * 0.08}
-              y1={hlMid + height * 0.12}
-              x2={x1}
-              y2={hlMid - height * 0.06}
-            >
-              <stop offset={0} stopColor={p.beam[0]} />
-              <stop offset={0.42 - 0.06 * sheen} stopColor={p.beam[1]} />
-              <stop offset={0.8 - 0.04 * sheen} stopColor={p.beam[2]} />
-              <stop offset={1} stopColor={p.beam[3]} />
-            </linearGradient>
-            <mask id={`${id}m`}>
-              <rect width={width} height={height} fill={`url(#${id}g)`} />
-            </mask>
-          </defs>
-          <g mask={`url(#${id}m)`}>
-            {list.map((s, k) => (
-              <path
-                key={s.label}
-                d={layerPath(k)}
-                fill={k === hl ? `url(#${id}b)` : colors[k]}
-                stroke={p.bg}
-                strokeWidth={2 * u}
-                strokeLinejoin="round"
-                opacity={k === hl ? 1 : 1 - 0.38 * dim}
-              />
-            ))}
-          </g>
-          <line
-            x1={x1 + 12 * u}
-            y1={hlMid}
-            x2={x1 + 12 * u + 20 * u * lead}
-            y2={hlMid}
-            stroke={accent}
-            strokeWidth={Math.max(1, 1.5 * u)}
-            opacity={lead}
-          />
-        </svg>
-
-        <div
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={size}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: numLeft,
-            top: hlMid,
-            transform: `translateY(${-numSize * 0.47}px)`,
+            // The slow push carries the number and its caption, so the tilt
+            // rides here for the whole of it.
+            transform: `scale(${push})${glide(t > 0 && t < 150)}`,
+            transformOrigin: "45% 50%",
+            opacity: stage,
           }}
         >
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={`${id}g`}
+                gradientUnits="userSpaceOnUse"
+                x1={x0}
+                y1={0}
+                x2={fEnd}
+                y2={0}
+              >
+                <stop offset={0} stopColor="#fff" stopOpacity={0} />
+                <stop offset={inStop} stopColor="#fff" stopOpacity={1} />
+                <stop offset={outStop} stopColor="#fff" stopOpacity={1} />
+                <stop offset={1} stopColor="#fff" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient
+                id={`${id}b`}
+                gradientUnits="userSpaceOnUse"
+                x1={x0 + span * 0.08}
+                y1={hlMid + height * 0.12}
+                x2={x1}
+                y2={hlMid - height * 0.06}
+              >
+                <stop offset={0} stopColor={p.beam[0]} />
+                <stop offset={0.42 - 0.06 * sheen} stopColor={p.beam[1]} />
+                <stop offset={0.8 - 0.04 * sheen} stopColor={p.beam[2]} />
+                <stop offset={1} stopColor={p.beam[3]} />
+              </linearGradient>
+              <mask id={`${id}m`}>
+                <rect width={width} height={height} fill={`url(#${id}g)`} />
+              </mask>
+            </defs>
+            <g mask={`url(#${id}m)`}>
+              {list.map((s, k) => (
+                <path
+                  key={s.label}
+                  d={layerPath(k)}
+                  fill={k === hl ? `url(#${id}b)` : colors[k]}
+                  stroke={bg}
+                  strokeWidth={2 * u}
+                  strokeLinejoin="round"
+                  opacity={k === hl ? 1 : 1 - dimBy * dim}
+                />
+              ))}
+            </g>
+            <line
+              x1={x1 + 12 * u}
+              y1={hlMid}
+              x2={x1 + 12 * u + 20 * u * lead}
+              y2={hlMid}
+              stroke={accent}
+              strokeWidth={Math.max(1, 1.5 * u)}
+              opacity={lead}
+            />
+          </svg>
+
           <div
             style={{
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: numSize,
-              lineHeight: 0.9,
-              letterSpacing: "-0.05em",
-              color: p.fg,
-              fontVariantNumeric: "tabular-nums",
-              whiteSpace: "nowrap",
-              opacity: landO,
-              filter: blur > 0.01 ? `blur(${blur * 8 * u}px)` : undefined,
-              transform: `translateX(${(1 - land) * -24 * u}px)`,
+              position: "absolute",
+              left: numLeft,
+              top: hlMid,
+              transform: `translateY(${-numSize * 0.47}px)`,
             }}
           >
-            {Math.round(share * 100 * count)}
-            <span
+            <div
               style={{
-                fontSize: numSize * 0.5,
-                letterSpacing: "-0.02em",
-                marginLeft: numSize * 0.03,
-                color: p.muted,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: numSize,
+                lineHeight: 0.9,
+                letterSpacing: "-0.05em",
+                color: fg,
+                fontVariantNumeric: "tabular-nums",
+                whiteSpace: "nowrap",
+                opacity: landO,
+                filter: blur > 0.01 ? `blur(${blur * 8 * u}px)` : undefined,
+                transform: `translateX(${(1 - land) * -24 * u}px)`,
               }}
             >
-              %
-            </span>
+              {Math.round(share * 100 * count)}
+              <span
+                style={{
+                  fontSize: numSize * 0.5,
+                  letterSpacing: "-0.02em",
+                  marginLeft: numSize * 0.03,
+                  color: p.muted,
+                }}
+              >
+                %
+              </span>
+            </div>
+            <div
+              style={{
+                marginTop: 20 * u,
+                marginLeft: numSize * 0.04,
+                opacity: cap,
+                transform: `translateY(${(1 - cap) * 8 * u}px)`,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 21 * u,
+                lineHeight: 1.35,
+                letterSpacing: "-0.01em",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {list[hl]?.label.toLowerCase() === "remocn" ? (
+                (logo ?? <RemocnLogo fontSize={30 * u} color={fg} />)
+              ) : (
+                <div style={{ color: fg, fontSize: 24 * u }}>
+                  {list[hl]?.label}
+                </div>
+              )}
+              <div style={{ color: p.muted, marginTop: 6 * u }}>{label}</div>
+            </div>
           </div>
-          <div
-            style={{
-              marginTop: 20 * u,
-              marginLeft: numSize * 0.04,
-              opacity: cap,
-              transform: `translateY(${(1 - cap) * 8 * u}px)`,
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 21 * u,
-              lineHeight: 1.35,
-              letterSpacing: "-0.01em",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {list[hl]?.label.toLowerCase() === "remocn" ? (
-              <RemocnLogo fontSize={30 * u} color={p.fg} />
-            ) : (
-              <div style={{ color: p.fg, fontSize: 24 * u }}>
-                {list[hl]?.label}
-              </div>
-            )}
-            <div style={{ color: p.muted, marginTop: 6 * u }}>{label}</div>
-          </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${bg} 100%)`,
           opacity: 0.6,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

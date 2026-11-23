@@ -2,14 +2,11 @@
 
 import { loadFont } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -29,8 +26,21 @@ export interface OvalTypeProps {
   accentWord?: number;
   /** Frames between two conveyor steps. */
   beat?: number;
+  /** Frames the tagline takes to grow into the tall poster ovals. */
+  landLen?: number;
   /** Kept for the shared draft API; the capsules take the "mesh" field. */
   accent?: string;
+  /** Color of the words in the capsules; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the words. Sizing is measured for Instrument Sans 500; load it yourself. */
+  fontFamily?: string;
+  /** Size of the capsule row, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -136,16 +146,40 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function OvalType({
   tagline = ["Make", "it", "move"],
   words = ["Plan", "Cut", "Edit", "Loop", "Sync", "Draft"],
   accentWord = 1,
   beat = 9,
+  landLen = LAND_LEN,
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: OvalTypeProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
 
   const row = tagline.length > 0 ? tagline : ["Make"];
@@ -215,10 +249,9 @@ export function OvalType({
 
     const fi = k - m;
     const growAt = posterAt + Math.max(0, fi) * 2;
-    const grow =
-      fi >= 0
-        ? GROW(interpolate(t, [growAt, growAt + LAND_LEN], [0, 1], CLAMP))
-        : 0;
+    const growP =
+      fi >= 0 ? interpolate(t, [growAt, growAt + landLen], [0, 1], CLAMP) : 0;
+    const grow = fi >= 0 ? GROW(growP) : 0;
     const gap = gapLoose + (gapTight - gapLoose) * grow;
     const pitchNow = ow + gap;
     const rowW = n * ow + (n - 1) * gap;
@@ -237,66 +270,119 @@ export function OvalType({
     // Capsules that already passed slide out as the poster row closes up.
     const clear =
       fi < 0
-        ? GROW(interpolate(t, [posterAt, posterAt + LAND_LEN], [0, 1], CLAMP)) *
+        ? GROW(interpolate(t, [posterAt, posterAt + landLen], [0, 1], CLAMP)) *
           (ow + 0.1 * W)
         : 0;
-    const fs = fsPoster * (0.84 + 0.16 * grow) * (isAccent(k) ? SERIF_BUMP : 1);
-    return { key: `${k}-${word}`, word, k, x: x - clear, w, h, fs };
+    const fsRest = fsPoster * (isAccent(k) ? SERIF_BUMP : 1);
+    const fs = fsRest * (0.84 + 0.16 * grow);
+    const growing = growP > 0 && growP < 1;
+    return {
+      key: `${k}-${word}`,
+      word,
+      k,
+      x: x - clear,
+      w,
+      h,
+      fs,
+      fsRest,
+      growing,
+    };
+  });
+
+  const wordStyle = (k: number, size: number): React.CSSProperties => ({
+    color: ink ?? c.word,
+    fontFamily: isAccent(k) ? serif : fontFamily,
+    fontStyle: isAccent(k) ? "italic" : "normal",
+    fontWeight: isAccent(k) ? 400 : 500,
+    fontSize: size,
+    letterSpacing: isAccent(k) ? "0em" : `${TRACK}em`,
+    lineHeight: 1,
+    whiteSpace: "nowrap",
+    fontKerning: "normal",
   });
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      {capsules.map((q) => {
-        if (q.x + q.w / 2 < -20 || q.x - q.w / 2 > W + 20) return null;
-        const left = q.x - q.w / 2;
-        const top = cy - q.h / 2;
-        return (
-          <div
-            key={q.key}
-            style={{
-              position: "absolute",
-              left,
-              top,
-              width: q.w,
-              height: q.h,
-              borderRadius: Math.min(q.w, q.h) / 2,
-              overflow: "hidden",
-            }}
-          >
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.stage),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        {capsules.map((q) => {
+          if (q.x + q.w / 2 < -20 || q.x - q.w / 2 > W + 20) return null;
+          const left = q.x - q.w / 2;
+          const top = cy - q.h / 2;
+          return (
             <div
+              key={q.key}
               style={{
                 position: "absolute",
-                left: -left,
-                top: -top,
-                width: W,
-                height: H,
-                background: field,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: c.word,
-                fontFamily: isAccent(q.k) ? serif : sans,
-                fontStyle: isAccent(q.k) ? "italic" : "normal",
-                fontWeight: isAccent(q.k) ? 400 : 500,
-                fontSize: q.fs,
-                letterSpacing: isAccent(q.k) ? "0em" : `${TRACK}em`,
-                lineHeight: 1,
-                whiteSpace: "nowrap",
-                fontKerning: "normal",
+                left,
+                top,
+                width: q.w,
+                height: q.h,
+                borderRadius: Math.min(q.w, q.h) / 2,
+                overflow: "hidden",
               }}
             >
-              {q.word}
+              <div
+                style={{
+                  position: "absolute",
+                  left: -left,
+                  top: -top,
+                  width: W,
+                  height: H,
+                  background: field,
+                }}
+              />
+              {q.growing ? (
+                // While the poster grows, the capsule's top and the type size
+                // both ease, and layout rounds each baseline to whole pixels,
+                // so the word clicks along. Here it is laid out once, on the
+                // frame's centre line at its settled size, and the ride and
+                // the size are a transform, marked as moving.
+                <div
+                  style={{
+                    position: "absolute",
+                    left: -left,
+                    top: -top,
+                    width: W,
+                    height: H,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      ...wordStyle(q.k, q.fsRest),
+                      transform: `translateX(${q.x - W / 2}px) scale(${q.fs / q.fsRest})${glide(true)}`,
+                    }}
+                  >
+                    {q.word}
+                  </div>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    ...wordStyle(q.k, q.fs),
+                  }}
+                >
+                  {q.word}
+                </div>
+              )}
             </div>
-          </div>
-        );
-      })}
-      <Grain opacity={c.grain} />
+          );
+        })}
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

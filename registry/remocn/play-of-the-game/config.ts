@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const playOfTheGameConfig: ComponentConfig = {
   componentName: "PlayOfTheGame",
@@ -12,11 +18,6 @@ export const playOfTheGameConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -38,6 +39,26 @@ export const playOfTheGameConfig: ComponentConfig = {
       default: "6 hours",
       description: "Highlight",
     },
+    impact: {
+      type: "number",
+      default: 14,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Impact shake",
+      hiddenFromList: false,
+    },
+    badge: {
+      type: "boolean",
+      default: true,
+      description: "Role badge",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Saira" }),
     speed: {
       type: "number",
       default: 1,

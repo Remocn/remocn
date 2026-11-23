@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="PhraseListBridge"
     component={PhraseListBridgeScene}
-    durationInFrames={150}
-    fps={30}
+    durationInFrames={300}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -82,6 +82,12 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Zero-based index of the row that gets picked.",
     },
     {
+      name: "searchLabel",
+      type: "string",
+      default: "\"Search scenes\"",
+      description: "Placeholder text in the panel's search field.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of the picked row and the final chip.",
@@ -94,7 +100,37 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
     {
       name: "background",
       type: "string",
-      description: "Base background color behind the gradient ground.",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between words of the phrase as they rise in.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
     {
       name: "theme",

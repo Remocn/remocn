@@ -1,0 +1,106 @@
+{
+  "component": "measure-dim",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "blueprint",
+      "label": "Blueprint",
+      "description": "Classic engineering-drawing look with pale cyan lines and monospace type on deep blueprint blue.",
+      "askedAs": [
+        "make it look like a blueprint",
+        "technical drawing style on blue paper",
+        "engineering schematic look",
+        "как чертёж на синей бумаге",
+        "стиль инженерного чертежа"
+      ],
+      "props": {
+        "background": "#0f2a4a",
+        "ink": "#e6f1ff",
+        "accent": "#7cc4ff",
+        "fontFamily": "JetBrains Mono",
+        "radius": 0,
+        "grain": false
+      }
+    },
+    {
+      "id": "drafting-paper",
+      "label": "Drafting Paper",
+      "description": "Warm off-white paper with graphite ink and a muted rust accent, like a hand-drafted spec sheet.",
+      "askedAs": [
+        "light paper technical sketch",
+        "warm print-style measurement",
+        "cream background spec drawing",
+        "светлая бумага как в архиве",
+        "тёплый бумажный чертёж"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#2b2a28",
+        "accent": "#c2562e",
+        "fontFamily": "Space Grotesk",
+        "radius": 2
+      }
+    },
+    {
+      "id": "quick-spec",
+      "label": "Quick Spec",
+      "description": "Fast, punchy reveal with bold Inter type and a vivid green accent for snappy performance beats.",
+      "askedAs": [
+        "faster snappier animation",
+        "quick bold stat reveal",
+        "speed it up and make it punchy",
+        "быстрая энергичная анимация",
+        "сделай быстрее и жирнее"
+      ],
+      "props": {
+        "speed": 2,
+        "fontWeight": 600,
+        "fontFamily": "Inter",
+        "accent": "#22c55e",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "editorial-slow",
+      "label": "Editorial Slow",
+      "description": "Unhurried, elegant reveal in Fraunces on a light ground with a deep plum accent and soft corners.",
+      "askedAs": [
+        "slow elegant serif version",
+        "calm magazine style comparison",
+        "refined slow reveal",
+        "медленно и элегантно с засечками",
+        "спокойный журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "fontWeight": 400,
+        "accent": "#6b2d5c",
+        "speed": 0.5,
+        "radius": 20
+      }
+    },
+    {
+      "id": "graphite-minimal",
+      "label": "Graphite Minimal",
+      "description": "Compact, grain-free charcoal layout with a cool silver accent and a short lead-in delay.",
+      "askedAs": [
+        "minimal dark monochrome",
+        "clean grey no grain",
+        "smaller subtle measurement",
+        "минималистичный тёмно-серый",
+        "без шума, сдержанно"
+      ],
+      "props": {
+        "background": "#18181b",
+        "ink": "#e4e4e7",
+        "accent": "#a1a1aa",
+        "grain": false,
+        "scale": 0.85,
+        "delay": 15
+      }
+    }
+  ]
+}

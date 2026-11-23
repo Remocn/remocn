@@ -1,6 +1,6 @@
 import { Img } from "remotion";
 import type { SceneProps } from "../content";
-import { tween } from "../motion";
+import { midway, tween, useGlide } from "../motion";
 import { Center, LogoGlyph, Title } from "../ui";
 
 // Fixed staggered field, clear at the headline's center. No runtime randomness.
@@ -36,6 +36,7 @@ const positions = [
 ];
 
 export function Proof({ scene, t }: SceneProps) {
+  const glide = useGlide();
   const age = t - 907 / 60;
   const reveal = tween(age, 0.06, 0.73);
   const zoom = tween(age, 0.13, 1.1, 1.43, 1);
@@ -53,7 +54,7 @@ export function Proof({ scene, t }: SceneProps) {
         style={{
           position: "absolute",
           inset: 0,
-          transform: `scale(${zoom}) translateX(${(1 - reveal) * 340}px)`,
+          transform: `scale(${zoom}) translateX(${(1 - reveal) * 340}px)${glide(midway(tween(age, 0.13, 1.1)))}`,
           transformOrigin: "50% 50%",
         }}
       >
@@ -68,7 +69,7 @@ export function Proof({ scene, t }: SceneProps) {
               style={{
                 position: "absolute",
                 left: x - 12,
-                top: y - 12 + Math.sin(age * 0.7 + i) * 2,
+                top: y - 12,
                 width: 27,
                 height: 27,
                 display: "grid",
@@ -76,7 +77,9 @@ export function Proof({ scene, t }: SceneProps) {
                 color: "#51735b",
                 opacity: [0.73, 0.3, 0.58, 0.19, 0.4][i % 5] * reveal,
                 filter: `blur(${blur}px)`,
-                transform: `rotate(${Math.sin(i * 2.8) * 9}deg)`,
+                // The bob is a transform: layout rounds a box to whole
+                // pixels, so a mark floated by `top` hops between them.
+                transform: `translateY(${Math.sin(age * 0.7 + i) * 2}px) rotate(${Math.sin(i * 2.8) * 9}deg)`,
                 background: i % 7 === 0 ? "#dce3cf" : undefined,
                 borderRadius: 7,
                 boxShadow: i % 7 === 0 ? "0 3px 12px #34492812" : undefined,

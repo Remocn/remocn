@@ -1,7 +1,8 @@
 "use client";
 
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate, spring } from "remotion";
 import { Caret } from "@/components/remocn/caret";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { type RemocnTheme, revealedText } from "@/lib/remocn-ui";
 
 export interface TelegramMessage {
@@ -371,7 +372,7 @@ export function TelegramChatFlow({
   accentColor,
   speed = 1,
 }: TelegramChatFlowProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const eff = frame * speed;
   const accent = accentColor ?? TELEGRAM_BLUE;
 
@@ -619,7 +620,7 @@ function TelegramRow({
   contact?: TelegramContact;
   accent: string;
 }) {
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   const outgoing = item.from === "me";
 
   const enter = spring({

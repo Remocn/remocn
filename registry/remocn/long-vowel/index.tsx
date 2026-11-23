@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const fraunces = loadFraunces("normal", {
   weights: ["400"],
@@ -26,7 +26,20 @@ export interface LongVowelProps {
   repeat?: number;
   rest?: string;
   accent?: string;
+  /** Text color of the word; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the word and caption. Load it yourself; Fraunces by default. */
+  fontFamily?: string;
+  /** Frame the vowel starts to stretch. */
+  stretchAt?: number;
+  /** Frames between the extra copies of the vowel drawing out. */
+  stagger?: number;
+  /** Size of the word and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -76,11 +89,11 @@ interface Metrics {
   restDesc: number;
 }
 
-function measure(drawn: string, rest: string): Metrics {
+function measure(drawn: string, rest: string, family: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("long-vowel: no 2d context");
-  const fam = `"${fraunces.fontFamily}"`;
+  const fam = `"${family}"`;
   ctx.font = `400 ${FONT_PX}px ${fam}`;
   const chars = Array.from(drawn);
   const x: number[] = [];
@@ -112,7 +125,7 @@ function measure(drawn: string, rest: string): Metrics {
   };
 }
 
-function useMetrics(drawn: string, rest: string) {
+function useMetrics(drawn: string, rest: string, family: string) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("long-vowel: measuring"));
   const released = useRef(false);
@@ -120,13 +133,13 @@ function useMetrics(drawn: string, rest: string) {
     let live = true;
     Promise.all([
       fraunces.waitUntilDone(),
-      document.fonts.load(`400 100px "${fraunces.fontFamily}"`),
-      document.fonts.load(`italic 400 100px "${fraunces.fontFamily}"`),
+      document.fonts.load(`400 100px "${family}"`),
+      document.fonts.load(`italic 400 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(drawn, rest));
+        setMetrics(measure(drawn, rest, family));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -135,7 +148,7 @@ function useMetrics(drawn: string, rest: string) {
     return () => {
       live = false;
     };
-  }, [drawn, rest, handle]);
+  }, [drawn, rest, family, handle]);
   return metrics;
 }
 
@@ -175,18 +188,44 @@ function rampAt(ramp: readonly string[], u: number) {
   return `color-mix(in oklab, ${ramp[i]} ${((1 - f) * 100).toFixed(1)}%, ${ramp[i + 1]})`;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LongVowel({
   word = "Way",
   letter,
   repeat = 5,
   rest = "less keyframing.",
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = fraunces.fontFamily,
+  stretchAt = DRAWL_AT,
+  stagger = DRAWL_GAP,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: LongVowelProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const ramp = c.ramp(accent);
@@ -210,7 +249,7 @@ export function LongVowel({
       ].join(""),
     [chars, hold, copies],
   );
-  const m = useMetrics(drawn, rest);
+  const m = useMetrics(drawn, rest, fontFamily);
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -226,16 +265,18 @@ export function LongVowel({
   const baseY = H / 2 + (blockTop - blockBot) / 2;
   const restBase = baseY + gap + m.restAsc * R;
 
-  const prog = Array.from({ length: copies }, (_, k) =>
-    spring({
-      frame: t - DRAWL_AT - k * DRAWL_GAP,
-      fps,
-      config: { damping: 15, stiffness: 140, mass: 0.8 },
-    }),
-  );
+  const progAt = (f: number) =>
+    Array.from({ length: copies }, (_, k) =>
+      spring({
+        frame: f - stretchAt - k * stagger,
+        fps,
+        config: { damping: 15, stiffness: 140, mass: 0.8 },
+      }),
+    );
+  const prog = progAt(t);
   const vel = prog.map((_, k) => {
     const a = spring({
-      frame: t - DRAWL_AT - k * DRAWL_GAP - 1,
+      frame: t - stretchAt - k * stagger - 1,
       fps,
       config: { damping: 15, stiffness: 140, mass: 0.8 },
     });
@@ -245,17 +286,25 @@ export function LongVowel({
   const n = chars.length + copies;
   const fx = m.x;
   const step = (i: number) => (i + 1 < n ? fx[i + 1] - fx[i] : 0);
-  const xs: number[] = [];
-  let shrink = 0;
-  for (let i = 0; i < n; i++) {
-    if (i > hold && i <= hold + copies) {
-      const k = i - hold - 1;
-      shrink += (1 - prog[k]) * step(i - 1);
+  /** Left edge of each glyph, in px, for the springs at `pr`. */
+  const lefts = (pr: number[]) => {
+    const xs: number[] = [];
+    let shrink = 0;
+    for (let i = 0; i < n; i++) {
+      if (i > hold && i <= hold + copies) {
+        const k = i - hold - 1;
+        shrink += (1 - pr[k]) * step(i - 1);
+      }
+      xs.push(fx[i] - shrink);
     }
-    xs.push(fx[i] - shrink);
-  }
-  const curW = m.width - shrink;
-  const left = (W - curW * F) / 2;
+    const left = (W - (m.width - shrink) * F) / 2;
+    return xs.map((x) => left + x * F);
+  };
+  const xNow = lefts(prog);
+  const xPrev = lefts(progAt(t - speed));
+  const xNext = lefts(progAt(t + speed));
+  // Where every glyph lands once all copies are drawn out.
+  const xRest = lefts(prog.map(() => 1));
 
   const maskTop = baseY - m.asc * F;
   const maskH = (m.asc + m.desc) * F;
@@ -275,7 +324,21 @@ export function LongVowel({
       { ...CLAMP, easing: EASE_OUT },
     );
     const dy = (1 - rp) * maskH * 1.05;
-    let color: string = c.ink;
+    // Layout rounds a box and a baseline to whole pixels, so a glyph moved by
+    // `left`/`top` clicks along pixel by pixel, and jumps where layout takes
+    // over from a transform. Every glyph is laid out where it lands and
+    // carried there by a transform all its life.
+    const moving =
+      (rp > 0 && rp < 1) ||
+      Math.max(Math.abs(xNext[i] - xNow[i]), Math.abs(xNow[i] - xPrev[i])) >
+        1e-3;
+    const place: React.CSSProperties = {
+      left: xRest[i],
+      top: lineTop - maskTop,
+    };
+    const dx = xNow[i] - xRest[i];
+    const travel = `translate(${Math.abs(dx) > 1e-3 ? dx : 0}px, ${dy}px)${glide(moving)} `;
+    let color: string = ink ?? c.ink;
     let opacity = 1;
     let skew = 0;
     if (isCopy) {
@@ -289,15 +352,14 @@ export function LongVowel({
           key={`g${i}`}
           style={{
             position: "absolute",
-            left: left + xs[i] * F,
-            top: lineTop - maskTop + dy,
-            fontFamily: fraunces.fontFamily,
+            ...place,
+            fontFamily,
             fontWeight: 400,
             fontSize: F,
             lineHeight: `${F}px`,
             whiteSpace: "pre",
             opacity,
-            transform: `skewX(${skew.toFixed(2)}deg)`,
+            transform: `${travel}skewX(${skew.toFixed(2)}deg)`,
             transformOrigin: `0 ${(m.asc * F).toFixed(1)}px`,
             backgroundImage: `linear-gradient(90deg, ${color}, ${rampAt(ramp, u1)})`,
             WebkitBackgroundClip: "text",
@@ -315,14 +377,14 @@ export function LongVowel({
         key={`g${i}`}
         style={{
           position: "absolute",
-          left: left + xs[i] * F,
-          top: lineTop - maskTop + dy,
-          fontFamily: fraunces.fontFamily,
+          ...place,
+          fontFamily,
           fontWeight: 400,
           fontSize: F,
           lineHeight: `${F}px`,
           whiteSpace: "pre",
           color,
+          transform: travel.trimEnd(),
         }}
       >
         {ch}
@@ -330,67 +392,69 @@ export function LongVowel({
     );
   }
 
-  const restAt = DRAWL_AT + (copies - 1) * DRAWL_GAP + 14 + REST_GAP_AFTER;
+  const restAt = stretchAt + (copies - 1) * stagger + 14 + REST_GAP_AFTER;
   const restWords = rest ? rest.split(" ") : [];
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: maskTop,
-          height: maskH,
-          overflow: "hidden",
-        }}
-      >
-        {glyphs}
-      </div>
-      {rest ? (
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
             left: 0,
             width: W,
-            top: restBase - R,
-            height: R * 1.3,
+            top: maskTop,
+            height: maskH,
             overflow: "hidden",
-            display: "flex",
-            justifyContent: "center",
-            fontFamily: fraunces.fontFamily,
-            fontStyle: "italic",
-            fontWeight: 400,
-            fontSize: R,
-            lineHeight: `${R}px`,
-            letterSpacing: `${REST_TRACK}em`,
-            color: c.muted,
-            whiteSpace: "pre",
           }}
         >
-          {restWords.map((w, k) => {
-            const p = interpolate(
-              t,
-              [restAt + k * 3, restAt + k * 3 + 16],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            return (
-              <span
-                key={`${w}-${k}`}
-                style={{
-                  display: "inline-block",
-                  transform: `translateY(${((1 - p) * R * 1.2).toFixed(2)}px)`,
-                }}
-              >
-                {w}
-                {k < restWords.length - 1 ? " " : ""}
-              </span>
-            );
-          })}
+          {glyphs}
         </div>
-      ) : null}
-      {bg === "transparent" ? null : <Grain opacity={c.grain} />}
+        {rest ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: restBase - R,
+              height: R * 1.3,
+              overflow: "hidden",
+              display: "flex",
+              justifyContent: "center",
+              fontFamily,
+              fontStyle: "italic",
+              fontWeight: 400,
+              fontSize: R,
+              lineHeight: `${R}px`,
+              letterSpacing: `${REST_TRACK}em`,
+              color: c.muted,
+              whiteSpace: "pre",
+            }}
+          >
+            {restWords.map((w, k) => {
+              const p = interpolate(
+                t,
+                [restAt + k * 3, restAt + k * 3 + 16],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              return (
+                <span
+                  key={`${w}-${k}`}
+                  style={{
+                    display: "inline-block",
+                    transform: `translateY(${((1 - p) * R * 1.2).toFixed(2)}px)${glide(midway(p))}`,
+                  }}
+                >
+                  {w}
+                  {k < restWords.length - 1 ? " " : ""}
+                </span>
+              );
+            })}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {!grain || bg === "transparent" ? null : <Grain opacity={c.grain} />}
     </AbsoluteFill>
   );
 }

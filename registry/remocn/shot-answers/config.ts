@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const shotAnswersConfig: ComponentConfig = {
   componentName: "ShotAnswers",
@@ -28,6 +35,27 @@ export const shotAnswersConfig: ComponentConfig = {
       default: "remocn.dev/studio",
       description: "Url",
     },
+    stagger: {
+      type: "number",
+      default: 1.6,
+      min: 0,
+      max: 6,
+      step: 0.2,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    answerAt: {
+      type: "number",
+      default: 58,
+      min: 20,
+      max: 100,
+      step: 1,
+      description: "Answer at (frame)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Onest" }),
     speed: {
       type: "number",
       default: 1,

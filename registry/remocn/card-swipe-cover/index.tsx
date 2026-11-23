@@ -18,9 +18,14 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+  useSceneFrameCount,
+} from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -143,10 +148,13 @@ const CardSwipeCoverPresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
-  const { fps, width, height } = useVideoConfig();
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
+  const { fps, width, height } = useSceneConfig();
   const o = { ...cardSwipeCoverDefaults, ...passedProps };
   const side = o.from === "bottom-left" ? -1 : 1;
-  const frames = Math.max(2, presentationDurationInFrames);
+  const frames = Math.max(2, sceneLength);
   const p = presentationProgress;
   const pose = cardPose(p, frames, fps, side, o.tilt);
 
@@ -261,6 +269,47 @@ export interface CardSwipeCoverDemoProps {
   groundB?: GshPresetId;
   groundParamsB?: Partial<GradientParams>;
   transition?: CardSwipeCoverProps;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Text color of the headline, title and logo; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of both gradient grounds; "transparent" drops it. */
+  background?: string;
+  /** Replaces the remocn mark in both scenes. */
+  logo?: React.ReactNode;
+  /** Filter tabs above the card grid in scene B. */
+  tabs?: string[];
+  /** Label of the pill next to the grid heading. */
+  ctaLabel?: string;
+  /** Frames between cards as the grid lands. */
+  stagger?: number;
+  /** Size of the foreground in both scenes, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+/** Solid stand-in for a gradient ground; nothing when "transparent". */
+function Fill({ background }: { background: string }) {
+  if (background === "transparent") return null;
+  return <AbsoluteFill style={{ background }} />;
 }
 
 const THEMES = {
@@ -394,14 +443,27 @@ function SceneA({
   palette,
   ground,
   groundParams,
+  fontFamily,
+  background,
+  logo,
+  fgScale,
+  delay,
+  speed,
 }: {
   line: string;
   palette: (typeof THEMES)["dark"];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  fontFamily: string;
+  background?: string;
+  logo?: React.ReactNode;
+  fgScale: number;
+  delay: number;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const tall = height > width;
   const chars = parseLine(line);
   const firstAccent = chars.findIndex((c) => c.accent);
@@ -424,86 +486,94 @@ function SceneA({
 
   return (
     <AbsoluteFill>
-      <GshGround
-        preset={ground}
-        params={ground ? groundParams : { ...palette.groundA, ...groundParams }}
-        timeOffset={4}
-        timeScale={0.7}
-      />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${push})`,
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          gap: fs * 0.62,
-          padding: `0 ${width * 0.08}px`,
-        }}
-      >
-        <div
+      {background === undefined ? (
+        <GshGround
+          preset={ground}
+          params={
+            ground ? groundParams : { ...palette.groundA, ...groundParams }
+          }
+          timeOffset={4}
+          timeScale={0.7}
+        />
+      ) : (
+        <Fill background={background} />
+      )}
+      <ScaleLayer scale={fgScale}>
+        <AbsoluteFill
           style={{
-            opacity: logoIn,
-            transform: `translateY(${(1 - logoIn) * 14}px)`,
+            transform: `scale(${push})${glide(frame > 0 && frame < A_LEN)}`,
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: fs * 0.62,
+            padding: `0 ${width * 0.08}px`,
           }}
         >
-          <RemocnLogo fontSize={fs * 0.42} color={palette.ink} />
-        </div>
-        <div
-          style={{
-            fontFamily: sans.fontFamily,
-            fontWeight: 300,
-            fontSize: fs,
-            lineHeight: 1.08,
-            letterSpacing: "-0.035em",
-            color: palette.ink,
-            textAlign: "center",
-            maxWidth: tall ? width * 0.84 : width * 0.86,
-          }}
-        >
-          {chars.map((c, i) => {
-            const shown = i < typed;
-            const breakHere = tall && c.accent && i === firstAccent;
-            return (
-              <Fragment key={`${c.ch}-${i}`}>
-                {breakHere ? (
-                  <span style={{ display: "block", height: 0 }} />
-                ) : null}
-                <span
-                  style={{
-                    color: shown
-                      ? c.accent
-                        ? palette.accent
-                        : palette.ink
-                      : "transparent",
-                    fontFamily: c.accent ? serif.fontFamily : undefined,
-                    fontStyle: c.accent ? "italic" : undefined,
-                    fontWeight: c.accent ? 400 : undefined,
-                    letterSpacing: c.accent ? "-0.01em" : undefined,
-                    fontSize: c.accent ? "1.08em" : undefined,
-                    position: "relative",
-                  }}
-                >
-                  {c.ch}
-                  {i === Math.max(0, typed - 1) ? (
-                    <span
-                      style={{
-                        position: "absolute",
-                        right: -fs * 0.08,
-                        top: "0.12em",
-                        bottom: "0.06em",
-                        width: Math.max(2, fs * 0.045),
-                        borderRadius: 2,
-                        backgroundColor: palette.caret,
-                        opacity: blinkOn && typed > 0 ? 1 : 0,
-                      }}
-                    />
+          <div
+            style={{
+              opacity: logoIn,
+              transform: `translateY(${(1 - logoIn) * 14}px)`,
+            }}
+          >
+            {logo ?? <RemocnLogo fontSize={fs * 0.42} color={palette.ink} />}
+          </div>
+          <div
+            style={{
+              fontFamily,
+              fontWeight: 300,
+              fontSize: fs,
+              lineHeight: 1.08,
+              letterSpacing: "-0.035em",
+              color: palette.ink,
+              textAlign: "center",
+              maxWidth: tall ? width * 0.84 : width * 0.86,
+            }}
+          >
+            {chars.map((c, i) => {
+              const shown = i < typed;
+              const breakHere = tall && c.accent && i === firstAccent;
+              return (
+                <Fragment key={`${c.ch}-${i}`}>
+                  {breakHere ? (
+                    <span style={{ display: "block", height: 0 }} />
                   ) : null}
-                </span>
-              </Fragment>
-            );
-          })}
-        </div>
-      </AbsoluteFill>
+                  <span
+                    style={{
+                      color: shown
+                        ? c.accent
+                          ? palette.accent
+                          : palette.ink
+                        : "transparent",
+                      fontFamily: c.accent ? serif.fontFamily : undefined,
+                      fontStyle: c.accent ? "italic" : undefined,
+                      fontWeight: c.accent ? 400 : undefined,
+                      letterSpacing: c.accent ? "-0.01em" : undefined,
+                      fontSize: c.accent ? "1.08em" : undefined,
+                      position: "relative",
+                    }}
+                  >
+                    {c.ch}
+                    {i === Math.max(0, typed - 1) ? (
+                      <span
+                        style={{
+                          position: "absolute",
+                          right: -fs * 0.08,
+                          top: "0.12em",
+                          bottom: "0.06em",
+                          width: Math.max(2, fs * 0.045),
+                          borderRadius: 2,
+                          backgroundColor: palette.caret,
+                          opacity: blinkOn && typed > 0 ? 1 : 0,
+                        }}
+                      />
+                    ) : null}
+                  </span>
+                </Fragment>
+              );
+            })}
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -695,6 +765,14 @@ function SceneB({
   accent,
   ground,
   groundParams,
+  fontFamily,
+  background,
+  logo,
+  tabs,
+  ctaLabel,
+  stagger,
+  fgScale,
+  speed,
 }: {
   title: string;
   subtitle: string;
@@ -703,9 +781,17 @@ function SceneB({
   accent: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  fontFamily: string;
+  background?: string;
+  logo?: React.ReactNode;
+  tabs: string[];
+  ctaLabel: string;
+  stagger: number;
+  fgScale: number;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { width, height, fps } = useSceneConfig();
   const tall = height > width;
   const m = width * 0.07;
   const scale = tall ? width / 820 : width / 1280;
@@ -727,162 +813,178 @@ function SceneB({
 
   return (
     <AbsoluteFill>
-      <GshGround
-        preset={ground}
-        params={ground ? groundParams : { ...palette.groundB, ...groundParams }}
-        timeOffset={6}
-        timeScale={0.6}
-      />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${push})`,
-          padding: `${tall ? height * 0.07 : height * 0.085}px ${m}px`,
-          fontFamily: sans.fontFamily,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: tall ? "center" : "flex-start",
-          gap: tall ? 40 * scale : 0,
-        }}
-      >
-        <div
+      {background === undefined ? (
+        <GshGround
+          preset={ground}
+          params={
+            ground ? groundParams : { ...palette.groundB, ...groundParams }
+          }
+          timeOffset={6}
+          timeScale={0.6}
+        />
+      ) : (
+        <Fill background={background} />
+      )}
+      <ScaleLayer scale={fgScale}>
+        <AbsoluteFill
           style={{
+            transform: `scale(${push})`,
+            padding: `${tall ? height * 0.07 : height * 0.085}px ${m}px`,
+            fontFamily,
             display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+            flexDirection: "column",
+            justifyContent: tall ? "center" : "flex-start",
+            gap: tall ? 40 * scale : 0,
           }}
         >
-          <RemocnLogo fontSize={24 * scale} color={palette.ink} />
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8 * scale,
-              padding: `${4 * scale}px`,
-              borderRadius: 999,
-              backgroundColor: palette.chrome,
-              boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
-              fontSize: 16 * scale,
-              color: palette.muted,
+              justifyContent: "space-between",
             }}
           >
-            {["All", "Videos", "Stills", "Captions"].map((t, i) => (
+            {logo ?? <RemocnLogo fontSize={24 * scale} color={palette.ink} />}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8 * scale,
+                padding: `${4 * scale}px`,
+                borderRadius: 999,
+                backgroundColor: palette.chrome,
+                boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
+                fontSize: 16 * scale,
+                color: palette.muted,
+              }}
+            >
+              {tabs.map((t, i) => (
+                <div
+                  key={t}
+                  style={{
+                    padding: `${7 * scale}px ${14 * scale}px`,
+                    borderRadius: 999,
+                    color: i === 0 ? palette.ink : palette.muted,
+                    backgroundColor:
+                      i === 0 ? "rgba(255,255,255,0.14)" : "transparent",
+                    boxShadow:
+                      i === 0
+                        ? `inset 0 0 0 1px ${palette.hairline}`
+                        : undefined,
+                  }}
+                >
+                  {t}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              marginTop: tall ? 0 : height * 0.07,
+              marginBottom: tall ? 0 : height * 0.05,
+              opacity: head,
+              transform: `translateY(${(1 - head) * 16}px)`,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 8 * scale,
+              }}
+            >
               <div
-                key={t}
                 style={{
-                  padding: `${7 * scale}px ${14 * scale}px`,
-                  borderRadius: 999,
-                  color: i === 0 ? palette.ink : palette.muted,
-                  backgroundColor:
-                    i === 0 ? "rgba(255,255,255,0.14)" : "transparent",
-                  boxShadow:
-                    i === 0 ? `inset 0 0 0 1px ${palette.hairline}` : undefined,
+                  fontSize: (tall ? 84 : 58) * scale,
+                  fontWeight: 300,
+                  letterSpacing: "-0.035em",
+                  lineHeight: 1,
+                  color: palette.ink,
                 }}
               >
-                {t}
+                {title}
               </div>
-            ))}
-          </div>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            marginTop: tall ? 0 : height * 0.07,
-            marginBottom: tall ? 0 : height * 0.05,
-            opacity: head,
-            transform: `translateY(${(1 - head) * 16}px)`,
-          }}
-        >
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: 8 * scale }}
-          >
-            <div
-              style={{
-                fontSize: (tall ? 84 : 58) * scale,
-                fontWeight: 300,
-                letterSpacing: "-0.035em",
-                lineHeight: 1,
-                color: palette.ink,
-              }}
-            >
-              {title}
+              <div
+                style={{
+                  fontSize: (tall ? 28 : 20) * scale,
+                  fontWeight: 400,
+                  color: palette.muted,
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {subtitle}
+              </div>
             </div>
             <div
               style={{
-                fontSize: (tall ? 28 : 20) * scale,
+                display: "flex",
+                alignItems: "center",
+                gap: 8 * scale,
+                padding: `${10 * scale}px ${18 * scale}px`,
+                borderRadius: 999,
+                backgroundColor: accent,
+                color: "#0b0d12",
+                fontSize: 17 * scale,
                 fontWeight: 400,
-                color: palette.muted,
-                letterSpacing: "-0.01em",
+                opacity: interpolate(pill, [0, 0.3], [0, 1], CLAMP),
+                transform: `scale(${0.7 + pill * 0.3})`,
+                boxShadow: `0 8px 24px rgba(${palette.shadow},0.25)`,
               }}
             >
-              {subtitle}
+              <svg
+                viewBox="0 0 24 24"
+                width={16 * scale}
+                height={16 * scale}
+                aria-hidden
+              >
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="#0b0d12"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+              {ctaLabel}
             </div>
           </div>
           <div
             style={{
               display: "flex",
-              alignItems: "center",
-              gap: 8 * scale,
-              padding: `${10 * scale}px ${18 * scale}px`,
-              borderRadius: 999,
-              backgroundColor: accent,
-              color: "#0b0d12",
-              fontSize: 17 * scale,
-              fontWeight: 400,
-              opacity: interpolate(pill, [0, 0.3], [0, 1], CLAMP),
-              transform: `scale(${0.7 + pill * 0.3})`,
-              boxShadow: `0 8px 24px rgba(${palette.shadow},0.25)`,
+              flexWrap: "wrap",
+              gap,
             }}
           >
-            <svg
-              viewBox="0 0 24 24"
-              width={16 * scale}
-              height={16 * scale}
-              aria-hidden
-            >
-              <path
-                d="M12 5v14M5 12h14"
-                stroke="#0b0d12"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
-            New kit
+            {covers.slice(0, 4).map((c, i) => {
+              const appear = spring({
+                frame: frame - B_BEATS.covers - i * stagger,
+                fps,
+                config: CARD,
+              });
+              return (
+                <Cover
+                  key={c.title}
+                  item={c}
+                  w={cw}
+                  h={ch}
+                  scale={scale}
+                  appear={appear}
+                  lift={i === 0 ? lift : 0}
+                  accent={accent}
+                  shadow={palette.shadow}
+                />
+              );
+            })}
           </div>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap,
-          }}
-        >
-          {covers.slice(0, 4).map((c, i) => {
-            const appear = spring({
-              frame: frame - B_BEATS.covers - i * 3,
-              fps,
-              config: CARD,
-            });
-            return (
-              <Cover
-                key={c.title}
-                item={c}
-                w={cw}
-                h={ch}
-                scale={scale}
-                appear={appear}
-                lift={i === 0 ? lift : 0}
-                accent={accent}
-                shadow={palette.shadow}
-              />
-            );
-          })}
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
+
+const DEFAULT_TABS = ["All", "Videos", "Stills", "Captions"];
 
 export function CardSwipeCoverDemo({
   theme = "dark",
@@ -896,18 +998,47 @@ export function CardSwipeCoverDemo({
   groundB,
   groundParamsB,
   transition,
+  fontFamily = sans.fontFamily,
+  ink,
+  background,
+  logo,
+  tabs = DEFAULT_TABS,
+  ctaLabel = "New kit",
+  stagger = 3,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: CardSwipeCoverDemoProps) {
-  const palette = THEMES[theme];
+  const theme0 = THEMES[theme];
+  const palette = { ...theme0, ink: ink ?? theme0.ink };
   const tone = accent ?? palette.accent;
+  // Speed scales the series itself so the transition keeps pace with the scenes.
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   return (
-    <AbsoluteFill style={{ backgroundColor: palette.backdrop }}>
+    <AbsoluteFill
+      style={{
+        backgroundColor:
+          background === "transparent" ? undefined : palette.backdrop,
+      }}
+    >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={A_LEN}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(A_LEN)}
+        >
           <SceneA
             line={line}
             palette={{ ...palette, accent: tone, caret: tone }}
             ground={ground}
             groundParams={groundParams}
+            fontFamily={fontFamily}
+            background={background}
+            logo={logo}
+            fgScale={scale}
+            delay={delay}
+            speed={speed}
           />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
@@ -917,9 +1048,9 @@ export function CardSwipeCoverDemo({
             dim: palette.dim,
             ...transition,
           })}
-          timing={linearTiming({ durationInFrames: T_LEN })}
+          timing={linearTiming({ durationInFrames: len(T_LEN) })}
         />
-        <TransitionSeries.Sequence durationInFrames={B_LEN}>
+        <TransitionSeries.Sequence durationInFrames={len(B_LEN)}>
           <SceneB
             title={title}
             subtitle={subtitle}
@@ -928,6 +1059,14 @@ export function CardSwipeCoverDemo({
             accent={tone}
             ground={groundB}
             groundParams={groundParamsB}
+            fontFamily={fontFamily}
+            background={background}
+            logo={logo}
+            tabs={tabs}
+            ctaLabel={ctaLabel}
+            stagger={stagger}
+            fgScale={scale}
+            speed={speed}
           />
         </TransitionSeries.Sequence>
       </TransitionSeries>

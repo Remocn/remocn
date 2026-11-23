@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const syne = loadFont("normal", {
   weights: ["400", "500"],
@@ -22,7 +22,20 @@ const syne = loadFont("normal", {
 export interface BatonWordProps {
   scenes?: string[];
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines. Load it yourself; Syne by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between words as a line rises in. */
+  stagger?: number;
+  /** Frames the baton word takes to travel to the next line. */
+  travel?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -59,11 +72,15 @@ interface Metrics {
   desc: number;
 }
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(
+  texts: string[],
+  fontFamily: string,
+  fontWeight: number,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("baton-word: no 2d context");
-  ctx.font = `${WGHT} ${FONT_PX}px "${syne.fontFamily}"`;
+  ctx.font = `${fontWeight} ${FONT_PX}px "${fontFamily}"`;
   const em: Record<string, number> = {};
   for (const s of texts) {
     em[s] = ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
@@ -76,21 +93,30 @@ function measureAll(texts: string[]): Metrics {
   };
 }
 
-function useMetrics(texts: string[]) {
+function useMetrics(texts: string[], fontFamily: string, fontWeight: number) {
   const key = texts.join("\u0001");
-  const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
+  const font = `${fontWeight} ${fontFamily}`;
+  const [state, setState] = useState<{
+    key: string;
+    font: string;
+    m: Metrics;
+  } | null>(null);
   const [handle] = useState(() => delayRender("baton-word: measuring"));
   const released = useRef(false);
   useEffect(() => {
     let live = true;
     Promise.all([
       syne.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${syne.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureAll(key.split("\u0001")) });
+        setState({
+          key,
+          font: `${fontWeight} ${fontFamily}`,
+          m: measureAll(key.split("\u0001"), fontFamily, fontWeight),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -99,8 +125,8 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
-  return state && state.key === key ? state.m : null;
+  }, [key, handle, fontFamily, fontWeight]);
+  return state && state.key === key && state.font === font ? state.m : null;
 }
 
 interface Placed {
@@ -159,6 +185,24 @@ function splitPunct(word: string) {
   return { core: word.slice(0, word.length - punct.length), punct };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function prefixes(s: string) {
   const chars = Array.from(s);
   return chars.map((_, i) => chars.slice(0, i).join(""));
@@ -171,14 +215,23 @@ export function BatonWord({
     "Film it in code.",
   ],
   accent,
+  ink,
   background,
+  fontFamily = syne.fontFamily,
+  fontWeight = WGHT,
+  stagger = STAGGER,
+  travel = TRAVEL,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: BatonWordProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -208,7 +261,7 @@ export function BatonWord({
       ...prefixes(bt.b.core),
     );
   }
-  const m = useMetrics(texts);
+  const m = useMetrics(texts, fontFamily, fontWeight);
 
   if (!m) {
     return (
@@ -247,12 +300,12 @@ export function BatonWord({
 
   const n = list.length;
   const fixedIn = (k: number) =>
-    RISE + Math.max(0, sceneWords[k].length - 1) * STAGGER;
+    RISE + Math.max(0, sceneWords[k].length - 1) * stagger;
   let fixed = FINAL_HOLD;
   for (let k = 0; k < n; k++) fixed += fixedIn(k);
   const clearIn = (k: number) =>
     Math.max(0, sceneWords[k].length - 2) * DROP_STAGGER + DROP - 3;
-  for (let k = 0; k < n - 1; k++) fixed += clearIn(k) + TRAVEL - 3;
+  for (let k = 0; k < n - 1; k++) fixed += clearIn(k) + travel - 3;
   const read = Math.max(14, Math.floor((durationInFrames - fixed) / n));
 
   const inAt: number[] = [];
@@ -265,7 +318,7 @@ export function BatonWord({
     outAt.push(settled + read);
     const go = settled + read + (k < n - 1 ? clearIn(k) : 0);
     travelAt.push(go);
-    cursor = go + TRAVEL - 3;
+    cursor = go + travel - 3;
   }
 
   const lineTop = (L: SceneLayout, line: number) => L.top + line * LH * L.F;
@@ -274,8 +327,8 @@ export function BatonWord({
     height: size * LH,
     lineHeight: `${size * LH}px`,
     whiteSpace: "pre",
-    fontFamily: syne.fontFamily,
-    fontWeight: WGHT,
+    fontFamily,
+    fontWeight,
     fontSize: size,
     letterSpacing: `${TRACK}em`,
   });
@@ -294,7 +347,7 @@ export function BatonWord({
       const order = i - first;
       const p = interpolate(
         t,
-        [inAt[k] + order * STAGGER, inAt[k] + order * STAGGER + RISE],
+        [inAt[k] + order * stagger, inAt[k] + order * stagger + RISE],
         [0, 1],
         { ...CLAMP, easing: EASE_OUT },
       );
@@ -308,7 +361,7 @@ export function BatonWord({
             )
           : 0;
       if (p <= 0 || q >= 1) return;
-      const leadColor = k > 0 && i === 0 ? hi : c.ink;
+      const leadColor = k > 0 && i === 0 ? hi : fg;
       const y = (1 - p) * L.F * 1.2 + q * L.F * 0.14;
       nodes.push(
         <div
@@ -328,7 +381,7 @@ export function BatonWord({
               top: L.F * 0.12,
               color: leadColor,
               opacity: 1 - q,
-              transform: `translateY(${y.toFixed(2)}px)`,
+              transform: `translateY(${y.toFixed(2)}px)${glide(midway(p) || midway(q))}`,
             }}
           >
             {pw.word}
@@ -346,7 +399,7 @@ export function BatonWord({
     const bw = B.words[0];
     const solo = k > 0 && A.words.length === 1;
     const handsOn = k + 1 < n - 1 && B.words.length === 1;
-    const startIn = inAt[k] + (A.words.length - 1 - (k > 0 ? 1 : 0)) * STAGGER;
+    const startIn = inAt[k] + (A.words.length - 1 - (k > 0 ? 1 : 0)) * stagger;
     if (solo && t < outAt[k]) continue;
     if (!solo && t < startIn - 1) continue;
     if (handsOn && t >= outAt[k + 1]) continue;
@@ -357,7 +410,7 @@ export function BatonWord({
           ...CLAMP,
           easing: EASE_OUT,
         });
-    const go = interpolate(t, [travelAt[k], travelAt[k] + TRAVEL], [0, 1], {
+    const go = interpolate(t, [travelAt[k], travelAt[k] + travel], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -384,8 +437,15 @@ export function BatonWord({
           })
         : 0;
     if (qOut >= 1) continue;
-    const color = interpolateColors(lit, [0, 1], [c.ink, hi]);
+    const color = interpolateColors(lit, [0, 1], [fg, hi]);
 
+    const masked = go <= 0 || qOut > 0;
+    // All its life the baton is laid out where it lands, at the size it lands
+    // at, and the travel and growth are a transform: layout rounds a baseline
+    // to whole pixels, so a word carried by `left`/`top` or grown by
+    // `font-size` clicks along pixel by pixel, and one handed from a
+    // transform back to layout jumps by the rounding when it stops.
+    const Fl = B.F;
     const aChars = Array.from(a.core);
     const bChars = Array.from(b.core);
     const same = aChars.length === bChars.length;
@@ -394,10 +454,10 @@ export function BatonWord({
     const glyphs: React.ReactNode[] = [];
     if (same) {
       aChars.forEach((ch, i) => {
-        const gx = (pa[i] + (pb[i] - pa[i]) * swap) * F;
+        const gx = (pa[i] + (pb[i] - pa[i]) * swap) * Fl;
         if (ch === bChars[i]) {
           glyphs.push(
-            <span key={`g${i}`} style={{ ...textStyle(F), left: gx, top: 0 }}>
+            <span key={`g${i}`} style={{ ...textStyle(Fl), left: gx, top: 0 }}>
               {ch}
             </span>,
           );
@@ -405,13 +465,13 @@ export function BatonWord({
           glyphs.push(
             <span
               key={`ga${i}`}
-              style={{ ...textStyle(F), left: gx, top: 0, opacity: 1 - swap }}
+              style={{ ...textStyle(Fl), left: gx, top: 0, opacity: 1 - swap }}
             >
               {ch}
             </span>,
             <span
               key={`gb${i}`}
-              style={{ ...textStyle(F), left: gx, top: 0, opacity: swap }}
+              style={{ ...textStyle(Fl), left: gx, top: 0, opacity: swap }}
             >
               {bChars[i]}
             </span>,
@@ -422,29 +482,29 @@ export function BatonWord({
       glyphs.push(
         <span
           key="wa"
-          style={{ ...textStyle(F), left: 0, top: 0, opacity: 1 - swap }}
+          style={{ ...textStyle(Fl), left: 0, top: 0, opacity: 1 - swap }}
         >
           {a.core}
         </span>,
         <span
           key="wb"
-          style={{ ...textStyle(F), left: 0, top: 0, opacity: swap }}
+          style={{ ...textStyle(Fl), left: 0, top: 0, opacity: swap }}
         >
           {b.core}
         </span>,
       );
     }
-    const coreW = (m.em[a.core] + (m.em[b.core] - m.em[a.core]) * swap) * F;
+    const coreW = (m.em[a.core] + (m.em[b.core] - m.em[a.core]) * swap) * Fl;
     if (a.punct && punctOut > 0) {
       glyphs.push(
         <span
           key="pa"
           style={{
-            ...textStyle(F),
+            ...textStyle(Fl),
             left: coreW,
             top: 0,
             opacity: punctOut,
-            color: c.ink,
+            color: fg,
           }}
         >
           {a.punct}
@@ -457,11 +517,11 @@ export function BatonWord({
         <span
           key="pb"
           style={{
-            ...textStyle(F),
+            ...textStyle(Fl),
             left: coreW,
             top: 0,
             opacity: pIn2,
-            color: c.ink,
+            color: fg,
           }}
         >
           {b.punct}
@@ -471,48 +531,47 @@ export function BatonWord({
 
     const dropY = qOut * B.F * 0.14;
     const riseY = (1 - pIn) * A.F * 1.2;
-    const masked = go <= 0 || qOut > 0;
     const maskL = go <= 0 ? A : B;
-    const inner = (
+    // Exactly 0 where it lands, so the word rests there as layout puts it.
+    const dx = (x0 - x1) * (1 - go);
+    const dy = go < 1 ? (y0 - y1) * (1 - go) - arc : 0;
+    // The mask is a clip in the frame's own coordinates rather than a box the
+    // word is laid out in, so the word keeps one layout position.
+    const clipTop = y - maskL.F * 0.12;
+    const clipBottom = H - clipTop - maskL.F * (LH + 0.3);
+    nodes.push(
       <div
+        key={`b${k}`}
         style={{
           position: "absolute",
-          left: masked ? 0 : x,
-          top: masked ? maskL.F * 0.12 : y,
-          width: 1,
-          height: F * LH,
-          color,
-          opacity: 1 - qOut,
-          transform: `translateY(${(riseY + dropY).toFixed(2)}px)`,
+          inset: 0,
+          clipPath: masked
+            ? `inset(${clipTop}px ${-x}px ${clipBottom}px ${x}px)`
+            : undefined,
         }}
       >
-        {glyphs}
-      </div>
-    );
-    nodes.push(
-      masked ? (
         <div
-          key={`b${k}`}
           style={{
             position: "absolute",
-            left: x,
-            top: y - maskL.F * 0.12,
-            width: W,
-            height: maskL.F * (LH + 0.3),
-            overflow: "hidden",
+            left: x1,
+            top: y1,
+            width: 1,
+            height: Fl * LH,
+            color,
+            opacity: 1 - qOut,
+            transform: `translate(${dx}px, ${dy}px) translateY(${(riseY + dropY).toFixed(2)}px) scale(${F / Fl})${glide((go > 0 && go < 1) || midway(pIn) || midway(qOut))}`,
+            transformOrigin: "0 0",
           }}
         >
-          {inner}
+          {glyphs}
         </div>
-      ) : (
-        <div key={`b${k}`}>{inner}</div>
-      ),
+      </div>,
     );
   }
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,0 +1,85 @@
+---
+title: "How to make word-by-word captions like TikTok and Reels, in code"
+navTitle: "Word-by-word captions"
+description: "How are word-by-word subtitles made? Transcribe the voiceover once to get each word's timing, then render captions that pop, highlight or type in on the exact word. Free with Remotion and Remocn caption styles."
+---
+
+_Last updated: November 18, 2026_
+
+Word-by-word captions are made in two steps: a speech-to-text model transcribes the voiceover with
+the start and end time of every word, then the captions are rendered so each word appears or lights
+up at its own timestamp. Apps like CapCut do both inside their editor. If you build videos in code,
+or let a coding agent build them, you can do it for free: transcribe locally with whisper.cpp, then
+drop in a Remocn caption component that reads the timed words.
+
+## Two ways to get them
+
+- **In an editing app** (CapCut, Premiere, Descript): auto-captions, pick a preset, export. Best if
+  you already edit your videos there.
+- **In code** (Remotion + Remocn): the captions are a component in your video project. Best if you
+  make many videos from templates, want your own caption style everywhere, or an agent builds your
+  videos.
+
+This page is about the second.
+
+## The fix: timed words in, animated captions out
+
+<ComponentPreview name="caption-word-pop" />
+
+[Word Pop](/docs/captions/components/caption-word-pop) puts one big word on screen at a time, each
+popping in on a spring the moment it's spoken: the punchy short-form style.
+
+<ComponentPreview name="caption-karaoke" />
+
+[Karaoke](/docs/captions/components/caption-karaoke) keeps the whole phrase on screen and lights up
+each word as it's spoken, so viewers can read ahead. That's better for explainers and talking heads.
+
+Both read the same input: an array of words with times from `@remotion/captions`.
+
+```tsx
+import { CaptionWordPop } from "@/components/remocn/caption-word-pop";
+import captions from "./captions.json";
+
+<CaptionWordPop captions={captions} />
+```
+
+## Do it
+
+1. **Transcribe once.** Locally and free with whisper.cpp, or with the OpenAI or ElevenLabs APIs.
+   [Get a transcript](/docs/captions/getting-started/get-a-transcript) has each recipe, all ending in
+   the same `captions.json`.
+2. **Install a style:** `npx shadcn@latest add @remocn/caption-word-pop`.
+   [Captions](/docs/captions/getting-started/introduction) lists every style.
+3. **Place it** over your footage. [Positioning](/docs/captions/getting-started/positioning) covers
+   safe areas for vertical video.
+
+Or hand it to your agent:
+
+<GuidePrompt>
+
+```text
+Add word-by-word captions to the talking-head video in public/<FILE>.mp4.
+Transcribe it with whisper.cpp to captions.json, then overlay remocn's
+caption-word-pop (remocn.dev), centered, inside the vertical safe area.
+Render a 1080×1920 MP4.
+```
+
+</GuidePrompt>
+
+## When this isn't the fix
+
+- **You edit in CapCut already** and post one video a week. Its auto-captions are faster.
+- **You need captions in a language your transcriber handles badly.** Check the transcript before
+  styling it; the animation can't fix a wrong word.
+
+<Faq>
+
+**Is it free?**
+whisper.cpp runs locally for free and Remocn is MIT-licensed. Remotion is free for individuals and
+small companies; see [its license](https://www.remotion.dev/license).
+
+**Can I highlight keywords in a different color?**
+Yes. The components take styling props, and since the source is copied into your project you can
+change anything, such as coloring words from a list.
+
+</Faq>

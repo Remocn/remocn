@@ -1,0 +1,125 @@
+{
+  "component": "feature-chips-flow",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-light",
+      "label": "Snappy Light",
+      "description": "A bright, clean light theme where the pills race past and snap together fast.",
+      "askedAs": [
+        "fast light version",
+        "quick clean white feature chips",
+        "snappy bright pills",
+        "быстрый светлый вариант",
+        "яркие чипы быстро собираются"
+      ],
+      "props": {
+        "theme": "light",
+        "speed": 1.75,
+        "converge": 30,
+        "accent": "#2f6bff",
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-cinematic",
+      "label": "Slow Cinematic",
+      "description": "A slow, deep push-in on a near-black stage with a warm amber accent and film grain.",
+      "askedAs": [
+        "slow dramatic ending",
+        "cinematic closing montage",
+        "moody dark slow zoom",
+        "медленный кинематографичный финал",
+        "тёмный драматичный вариант"
+      ],
+      "props": {
+        "speed": 0.5,
+        "converge": 100,
+        "push": 0.12,
+        "accent": "#e0a458",
+        "background": "#0e0d0c",
+        "ink": "#f2ece4"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Elegant serif pills on a soft cream background with a deep forest accent.",
+      "askedAs": [
+        "elegant serif style",
+        "magazine look feature list",
+        "classy cream background",
+        "элегантный стиль с засечками",
+        "журнальный кремовый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1f2a24",
+        "accent": "#2f5d4a",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "Monospace chips on a dark slate background with a mint accent for a developer-tool feel.",
+      "askedAs": [
+        "developer tool vibe",
+        "code style monospace chips",
+        "terminal look features",
+        "стиль для разработчиков",
+        "моноширинный шрифт как терминал"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0f1419",
+        "ink": "#d6e2e0",
+        "accent": "#3dd9a4",
+        "grain": false,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "bold-pop",
+      "label": "Bold Pop",
+      "description": "Oversized chunky grotesque pills with a coral accent and a punchy, quick convergence.",
+      "askedAs": [
+        "big bold playful chips",
+        "fun energetic feature cluster",
+        "larger pills with coral",
+        "крупные яркие плашки",
+        "весёлый энергичный вариант"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.35,
+        "accent": "#ff6b5a",
+        "speed": 1.5,
+        "push": 0.08
+      }
+    },
+    {
+      "id": "calm-minimal",
+      "label": "Calm Minimal",
+      "description": "A small, still, minimal light layout with a muted slate accent and no zoom.",
+      "askedAs": [
+        "minimal calm version",
+        "subtle no zoom chips",
+        "quiet understated features",
+        "минималистичный спокойный вариант",
+        "без зума и тихо"
+      ],
+      "props": {
+        "theme": "light",
+        "push": 0,
+        "scale": 0.8,
+        "accent": "#5b6b82",
+        "fontFamily": "Inter",
+        "speed": 0.75
+      }
+    }
+  ]
+}

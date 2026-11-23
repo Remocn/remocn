@@ -2,13 +2,9 @@
 
 import { loadFont } from "@remotion/google-fonts/Sora";
 import { type CSSProperties, type ReactNode, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["300", "400"],
@@ -25,6 +21,22 @@ export interface CellDivideProps {
   generations?: number;
   label?: string;
   accent?: string;
+  /** Text color of the count; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the count and label. Load it yourself; Sora by default. */
+  fontFamily?: string;
+  /** Weight of the count. */
+  fontWeight?: number;
+  /** Frames of rest between one division and the next. */
+  pause?: number;
+  /** Size of the cells and count, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -41,6 +53,8 @@ const ROLL = 9;
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_DIV = Easing.bezier(0.42, 0, 0.45, 1);
+const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -69,15 +83,15 @@ function gridOf(g: number) {
   return { cols: 2 ** Math.ceil(g / 2), rows: 2 ** Math.floor(g / 2) };
 }
 
-function schedule(G: number) {
+function schedule(G: number, pause: number) {
   let t = START;
   const divs: { start: number; dur: number }[] = [];
   for (let g = 0; g < G; g++) {
     const dur = MOTION[Math.min(g, MOTION.length - 1)];
     divs.push({ start: t, dur });
-    t += dur + PAUSE;
+    t += dur + pause;
   }
-  return { divs, end: t - PAUSE };
+  return { divs, end: t - pause };
 }
 
 function smin(a: number, b: number, k: number) {
@@ -154,6 +168,22 @@ function lobe(
   return `M${pts.join("L")}Z`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
@@ -182,15 +212,26 @@ export function CellDivide({
   generations = 6,
   label = "×2 every week",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sora,
+  fontWeight = 300,
+  pause = PAUSE,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: CellDivideProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage = background ?? p.bg;
   const G = Math.max(2, Math.min(7, Math.round(generations)));
-  const { divs, end } = schedule(G);
+  const { divs, end } = schedule(G, pause);
 
   const heroSize = 176 * u;
   const labelSize = 24 * u;
@@ -238,6 +279,9 @@ export function CellDivide({
     easing: EASE_IO,
   });
   const camScale = 0.985 + 0.03 * push;
+  // The clamped push starts at exactly 0 and lands on exactly 1; between
+  // them the camera carries the tilt for everything inside it.
+  const camMoving = push > 0 && push < 1;
 
   const gradId = `cd${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const colW = f * E;
@@ -339,139 +383,141 @@ export function CellDivide({
   });
   const lineH = heroSize * 0.98;
   const numStyle: CSSProperties = {
-    fontFamily: sora,
-    fontWeight: 300,
+    fontFamily,
+    fontWeight,
     fontSize: heroSize,
     lineHeight: `${lineH}px`,
     height: lineH,
     letterSpacing: "-0.05em",
-    color: p.fg,
+    color: fg,
     fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
   };
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(${colW * 0.95}px ${E * 0.95}px at ${colCx}px ${cy}px, color-mix(in oklab, ${BEAM.c[2]} ${p.glow * 100}%, transparent) 0%, transparent 100%)`,
           opacity: intro,
         }}
       />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${camScale})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0, opacity: intro }}
-          aria-hidden
-        >
-          <defs>
-            <radialGradient
-              id={gradId}
-              gradientUnits="userSpaceOnUse"
-              cx={gradCx}
-              cy={gradCy}
-              r={gradR}
-            >
-              <stop offset="0" stopColor={p.stops[0]} />
-              <stop offset="0.3" stopColor={p.stops[1]} />
-              <stop offset="0.66" stopColor={p.stops[2]} />
-              <stop offset="1" stopColor={p.stops[3]} />
-            </radialGradient>
-          </defs>
-          {shapes}
-        </svg>
-
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: slotRight + gap,
-            top: cy,
-            transform: "translateY(-50%)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-            gap: 16 * u,
+            transform: `scale(${camScale})${glide(camMoving)}`,
+            transformOrigin: "50% 50%",
           }}
         >
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0, opacity: intro }}
+            aria-hidden
+          >
+            <defs>
+              <radialGradient
+                id={gradId}
+                gradientUnits="userSpaceOnUse"
+                cx={gradCx}
+                cy={gradCy}
+                r={gradR}
+              >
+                <stop offset="0" stopColor={p.stops[0]} />
+                <stop offset="0.3" stopColor={p.stops[1]} />
+                <stop offset="0.66" stopColor={p.stops[2]} />
+                <stop offset="1" stopColor={p.stops[3]} />
+              </radialGradient>
+            </defs>
+            {shapes}
+          </svg>
+
           <div
             style={{
-              position: "relative",
-              height: lineH,
-              overflow: "hidden",
-              opacity: textIn,
-              transform: `translateY(${(1 - textIn) * 14 * u}px)`,
+              position: "absolute",
+              left: slotRight + gap,
+              top: cy,
+              transform: "translateY(-50%)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: 16 * u,
             }}
           >
             <div
               style={{
-                ...numStyle,
-                transform: `translateY(${rolling ? (1 - rollK) * lineH : 0}px)`,
+                position: "relative",
+                height: lineH,
+                overflow: "hidden",
+                opacity: textIn,
+                transform: `translateY(${(1 - textIn) * 14 * u}px)${glide(midway(textIn) && !camMoving)}`,
               }}
             >
-              {cur}
-            </div>
-            {rolling ? (
               <div
                 style={{
                   ...numStyle,
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  transform: `translateY(${-rollK * lineH}px)`,
+                  transform: `translateY(${rolling ? (1 - rollK) * lineH : 0}px)${glide(rolling && !camMoving)}`,
                 }}
               >
-                {prev}
+                {cur}
               </div>
-            ) : null}
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12 * u,
-              marginLeft: 6 * u,
-              opacity: labelIn,
-              transform: `translateY(${(1 - labelIn) * 8 * u}px)`,
-            }}
-          >
-            <span
+              {rolling ? (
+                <div
+                  style={{
+                    ...numStyle,
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    transform: `translateY(${-rollK * lineH}px)`,
+                  }}
+                >
+                  {prev}
+                </div>
+              ) : null}
+            </div>
+            <div
               style={{
-                width: 10 * u,
-                height: 10 * u,
-                borderRadius: "50%",
-                background: accent,
-                flexShrink: 0,
-              }}
-            />
-            <span
-              style={{
-                fontFamily: sora,
-                fontWeight: 400,
-                fontSize: labelSize,
-                letterSpacing: "-0.015em",
-                color: p.muted,
-                whiteSpace: "nowrap",
+                display: "flex",
+                alignItems: "center",
+                gap: 12 * u,
+                marginLeft: 6 * u,
+                opacity: labelIn,
+                transform: `translateY(${(1 - labelIn) * 8 * u}px)${glide(midway(labelIn) && !camMoving)}`,
               }}
             >
-              {label}
-            </span>
+              <span
+                style={{
+                  width: 10 * u,
+                  height: 10 * u,
+                  borderRadius: "50%",
+                  background: accent,
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: labelSize,
+                  letterSpacing: "-0.015em",
+                  color: p.muted,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {label}
+              </span>
+            </div>
           </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 64%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 64%, ${stage} 100%)`,
           opacity: 0.5,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

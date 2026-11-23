@@ -1,0 +1,103 @@
+{
+  "component": "gravity-grid",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "black-hole",
+      "label": "Black Hole",
+      "description": "A near-black field with a very deep well and a slow, heavy landing in cool violet.",
+      "askedAs": [
+        "deep dramatic gravity well",
+        "slow heavy logo drop dark",
+        "cinematic black hole reveal",
+        "глубокая гравитационная воронка",
+        "медленное тяжёлое появление логотипа"
+      ],
+      "props": {
+        "wellDepth": 9.4,
+        "speed": 0.75,
+        "impactAt": 100,
+        "accent": "#7c6cf2",
+        "background": "#07070c",
+        "ink": "#ecebf5"
+      }
+    },
+    {
+      "id": "paper-lab",
+      "label": "Paper Lab",
+      "description": "A light, clean lab-sheet look with a shallow dip and a precise mono caption.",
+      "askedAs": [
+        "light minimal grid logo",
+        "clean white technical reveal",
+        "blueprint style on white",
+        "светлая техническая сетка",
+        "минималистичное появление на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "wellDepth": 3,
+        "fontFamily": "JetBrains Mono",
+        "accent": "#1f4fd8",
+        "grain": false
+      }
+    },
+    {
+      "id": "quick-drop",
+      "label": "Quick Drop",
+      "description": "A snappy, early impact with a mid-depth well for short social cuts.",
+      "askedAs": [
+        "fast logo landing",
+        "short punchy intro",
+        "quick gravity reveal for social",
+        "быстрое появление логотипа",
+        "короткая энергичная заставка"
+      ],
+      "props": {
+        "speed": 2,
+        "impactAt": 40,
+        "wellDepth": 6,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "amber-orbit",
+      "label": "Amber Orbit",
+      "description": "Warm graphite background with an amber accent and a slightly larger, editorial serif caption.",
+      "askedAs": [
+        "warm dark gravity intro",
+        "gold accent tech logo",
+        "elegant serif launch reveal",
+        "тёплая тёмная заставка с золотым",
+        "элегантное появление логотипа"
+      ],
+      "props": {
+        "background": "#161412",
+        "ink": "#f3ede4",
+        "accent": "#e0a44a",
+        "fontFamily": "Fraunces",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "soft-landing",
+      "label": "Soft Landing",
+      "description": "A gentle sage-on-ivory scene with a barely-there well and a delayed, unhurried start.",
+      "askedAs": [
+        "calm soft logo reveal",
+        "gentle light green intro",
+        "subtle shallow grid bend",
+        "спокойная мягкая заставка",
+        "нежное появление логотипа"
+      ],
+      "props": {
+        "background": "#f4f2ec",
+        "ink": "#1e2420",
+        "accent": "#4f7a63",
+        "wellDepth": 1.8,
+        "delay": 20,
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

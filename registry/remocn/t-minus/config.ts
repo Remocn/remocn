@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const tMinusConfig: ComponentConfig = {
   componentName: "TMinus",
@@ -12,11 +18,6 @@ export const tMinusConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -56,6 +57,22 @@ export const tMinusConfig: ComponentConfig = {
       description: "Beat",
       hiddenFromList: false,
     },
+    bloom: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 1.5,
+      step: 0.05,
+      description: "Bloom",
+      hiddenFromList: false,
+    },
+    flash: { type: "boolean", default: true, description: "Flash at T–0" },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "IBM Plex Mono", grain: true }),
     speed: {
       type: "number",
       default: 1,

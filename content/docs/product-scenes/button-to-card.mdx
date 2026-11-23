@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="ButtonToCard"
     component={ButtonToCardScene}
-    durationInFrames={162}
-    fps={30}
+    durationInFrames={324}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -69,6 +69,40 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "string",
       default: "\"#f2552c\"",
       description: "Accent color for the button and status highlights.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hanken Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
     {
       name: "buttonLabel",
@@ -103,6 +137,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "string",
       default: "\"Studio Goods\"",
       description: "Store name shown in the header and catalogue title.",
+    },
+    {
+      name: "formTitle",
+      type: "string",
+      default: "\"New product\"",
+      description: "Heading of the new-product form.",
+    },
+    {
+      name: "saveLabel",
+      type: "string",
+      default: "\"Add to store\"",
+      description: "Label of the primary button that saves the product.",
+    },
+    {
+      name: "dropLabel",
+      type: "string",
+      default: "\"Drop an image here\"",
+      description: "Prompt in the empty image slot.",
     },
     {
       name: "ground",

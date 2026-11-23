@@ -4,13 +4,9 @@ import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 import type React from "react";
 import { Fragment } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", {
   weights: ["400", "500"],
@@ -45,9 +41,21 @@ export interface FeatureHeadlineProps {
   align?: "left" | "center";
   /** Leave through the masks over the last 12 frames of the composition. */
   exit?: boolean;
+  /** Frames between headline words rising. */
+  stagger?: number;
+  /** Weight of the headline. */
+  fontWeight?: number;
   accent?: string;
+  /** Text color of the label and headline; overrides the theme. */
+  ink?: string;
   /** Stage fill. "transparent" drops the stage. */
   background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -89,6 +97,8 @@ const PALETTES = {
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN = Easing.bezier(0.6, 0, 0.9, 0.5);
+const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -178,6 +188,22 @@ function highlightFill(
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FeatureHeadline({
   tag = "New",
   label = "Captions",
@@ -186,15 +212,24 @@ export function FeatureHeadline({
   subhead = "31 transcript-driven caption styles, ready to drop into any video.",
   align = "left",
   exit = true,
+  stagger = 2,
+  fontWeight = 500,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: FeatureHeadlineProps) {
-  const raw = useCurrentFrame();
+  const glide = useGlide();
+  const now = useSceneFrame();
+  const raw = Math.max(0, now - delay);
   const frame = raw * speed;
-  const { width, height, durationInFrames } = useVideoConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
   const p = PALETTES[theme];
+  const fg = ink ?? p.fg;
   const centre = align === "center";
 
   const portrait = height > width * 1.1;
@@ -221,7 +256,7 @@ export function FeatureHeadline({
     easing: EASE_OUT,
   });
   const wordT = (i: number) =>
-    interpolate(frame, [4 + i * 2, 20 + i * 2], [0, 1], {
+    interpolate(frame, [4 + i * stagger, 20 + i * stagger], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -234,7 +269,7 @@ export function FeatureHeadline({
   const exitStart = durationInFrames - EXIT;
   const exitT = (delay: number) =>
     exit
-      ? interpolate(raw, [exitStart + delay, exitStart + delay + 9], [0, 1], {
+      ? interpolate(now, [exitStart + delay, exitStart + delay + 9], [0, 1], {
           ...CLAMP,
           easing: EASE_IN,
         })
@@ -269,147 +304,149 @@ export function FeatureHeadline({
         />
       ) : null}
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          padding: `0 ${padX}px`,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: centre ? "center" : "flex-start",
-          textAlign: centre ? "center" : "left",
-        }}
-      >
-        {showPill ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: pillFs * 0.6,
-              height: pillFs * 2.15,
-              padding: `0 ${pillFs * 0.95}px 0 ${tag ? pillFs * 0.3 : pillFs * 0.95}px`,
-              borderRadius: 999,
-              background: p.pillBg,
-              boxShadow: `inset 0 0 0 1px ${p.pillLine}`,
-              clipPath: pillClip,
-              opacity: 1 - pillExit,
-              transform: `translateY(${-pillExit * 14 * s}px)`,
-              marginBottom: fs * 0.42,
-            }}
-          >
-            {tag ? (
-              <span
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  height: pillFs * 1.55,
-                  padding: `0 ${pillFs * 0.6}px`,
-                  borderRadius: 999,
-                  background: accent,
-                  color: p.tagFg,
-                  fontFamily: mono.fontFamily,
-                  fontWeight: 500,
-                  fontSize: pillFs * 0.72,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                  transform: `translateX(${(1 - pillT) * -10 * s}px)`,
-                }}
-              >
-                {tag}
-              </span>
-            ) : null}
-            <span
-              style={{
-                fontFamily: geist.fontFamily,
-                fontWeight: 500,
-                fontSize: pillFs,
-                letterSpacing: "-0.01em",
-                color: p.fg,
-                whiteSpace: "nowrap",
-                opacity: interpolate(pillT, [0.3, 1], [0, 1], CLAMP),
-                transform: `translateX(${(1 - pillT) * -14 * s}px)`,
-              }}
-            >
-              {label}
-            </span>
-          </div>
-        ) : null}
-
+      <ScaleLayer scale={scale}>
         <div
           style={{
-            maxWidth: maxW,
-            fontFamily: geist.fontFamily,
-            fontWeight: 500,
-            fontSize: fs,
-            lineHeight: 1.06,
-            letterSpacing: "-0.035em",
-            color: p.fg,
+            position: "absolute",
+            inset: 0,
+            padding: `0 ${padX}px`,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: centre ? "center" : "flex-start",
+            textAlign: centre ? "center" : "left",
           }}
         >
-          {Array.from({ length: hardLines }, (_, line) => (
-            <div key={line} style={{ textWrap: "balance" }}>
-              {words
-                .filter((w) => w.line === line)
-                .map((w, k) => {
-                  const t = wordT(w.index);
-                  const out = exitT(w.index * 0.6);
-                  const y = (1 - t) * 108 - out * 108;
-                  const hlStyle: React.CSSProperties = w.hl
-                    ? highlightFill(w.hl, drift, p.highlight(accent))
-                    : {};
-                  return (
-                    <Fragment key={w.index}>
-                      {k > 0 ? " " : null}
-                      <span
-                        style={{
-                          display: "inline-block",
-                          overflow: "hidden",
-                          verticalAlign: "top",
-                          paddingBottom: "0.14em",
-                          marginBottom: "-0.14em",
-                          paddingRight: "0.04em",
-                          marginRight: "-0.04em",
-                        }}
-                      >
+          {showPill ? (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: pillFs * 0.6,
+                height: pillFs * 2.15,
+                padding: `0 ${pillFs * 0.95}px 0 ${tag ? pillFs * 0.3 : pillFs * 0.95}px`,
+                borderRadius: 999,
+                background: p.pillBg,
+                boxShadow: `inset 0 0 0 1px ${p.pillLine}`,
+                clipPath: pillClip,
+                opacity: 1 - pillExit,
+                transform: `translateY(${-pillExit * 14 * s}px)${glide(midway(pillExit))}`,
+                marginBottom: fs * 0.42,
+              }}
+            >
+              {tag ? (
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    height: pillFs * 1.55,
+                    padding: `0 ${pillFs * 0.6}px`,
+                    borderRadius: 999,
+                    background: accent,
+                    color: p.tagFg,
+                    fontFamily: mono.fontFamily,
+                    fontWeight: 500,
+                    fontSize: pillFs * 0.72,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    transform: `translateX(${(1 - pillT) * -10 * s}px)`,
+                  }}
+                >
+                  {tag}
+                </span>
+              ) : null}
+              <span
+                style={{
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: pillFs,
+                  letterSpacing: "-0.01em",
+                  color: fg,
+                  whiteSpace: "nowrap",
+                  opacity: interpolate(pillT, [0.3, 1], [0, 1], CLAMP),
+                  transform: `translateX(${(1 - pillT) * -14 * s}px)`,
+                }}
+              >
+                {label}
+              </span>
+            </div>
+          ) : null}
+
+          <div
+            style={{
+              maxWidth: maxW,
+              fontFamily,
+              fontWeight,
+              fontSize: fs,
+              lineHeight: 1.06,
+              letterSpacing: "-0.035em",
+              color: fg,
+            }}
+          >
+            {Array.from({ length: hardLines }, (_, line) => (
+              <div key={line} style={{ textWrap: "balance" }}>
+                {words
+                  .filter((w) => w.line === line)
+                  .map((w, k) => {
+                    const t = wordT(w.index);
+                    const out = exitT(w.index * 0.6);
+                    const y = (1 - t) * 108 - out * 108;
+                    const hlStyle: React.CSSProperties = w.hl
+                      ? highlightFill(w.hl, drift, p.highlight(accent))
+                      : {};
+                    return (
+                      <Fragment key={w.index}>
+                        {k > 0 ? " " : null}
                         <span
                           style={{
                             display: "inline-block",
-                            transform: `translateY(${y}%)`,
-                            ...hlStyle,
+                            overflow: "hidden",
+                            verticalAlign: "top",
+                            paddingBottom: "0.14em",
+                            marginBottom: "-0.14em",
+                            paddingRight: "0.04em",
+                            marginRight: "-0.04em",
                           }}
                         >
-                          {w.text}
+                          <span
+                            style={{
+                              display: "inline-block",
+                              transform: `translateY(${y}%)${glide(midway(t) || midway(out))}`,
+                              ...hlStyle,
+                            }}
+                          >
+                            {w.text}
+                          </span>
                         </span>
-                      </span>
-                    </Fragment>
-                  );
-                })}
-            </div>
-          ))}
-        </div>
-
-        {subhead ? (
-          <div
-            style={{
-              marginTop: fs * 0.36,
-              maxWidth: Math.min(maxW * 0.82, 760 * s * (portrait ? 1.3 : 1)),
-              fontFamily: geist.fontFamily,
-              fontWeight: 400,
-              fontSize: (portrait ? 30 : 26) * s,
-              lineHeight: 1.4,
-              letterSpacing: "-0.008em",
-              color: p.muted,
-              textWrap: "balance",
-              opacity: subT * (1 - subExit),
-              transform: `translateY(${(1 - subT) * 14 * s - subExit * 12 * s}px)`,
-              filter: `blur(${(1 - subT) * 6 * s}px)`,
-            }}
-          >
-            {subhead}
+                      </Fragment>
+                    );
+                  })}
+              </div>
+            ))}
           </div>
-        ) : null}
-      </div>
+
+          {subhead ? (
+            <div
+              style={{
+                marginTop: fs * 0.36,
+                maxWidth: Math.min(maxW * 0.82, 760 * s * (portrait ? 1.3 : 1)),
+                fontFamily,
+                fontWeight: 400,
+                fontSize: (portrait ? 30 : 26) * s,
+                lineHeight: 1.4,
+                letterSpacing: "-0.008em",
+                color: p.muted,
+                textWrap: "balance",
+                opacity: subT * (1 - subExit),
+                transform: `translateY(${(1 - subT) * 14 * s - subExit * 12 * s}px)${glide(midway(subT) || midway(subExit))}`,
+                filter: `blur(${(1 - subT) * 6 * s}px)`,
+              }}
+            >
+              {subhead}
+            </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

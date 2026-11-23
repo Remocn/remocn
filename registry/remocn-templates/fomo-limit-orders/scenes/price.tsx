@@ -1,8 +1,9 @@
 import type { SceneProps } from "../content";
-import { ramp, travel, tween } from "../motion";
+import { midway, ramp, travel, tween, useGlide } from "../motion";
 import { AssetIcon, Layer, lightMuted as muted } from "../ui";
 
 export function Price({ t, content: c, theme }: SceneProps) {
+  const glide = useGlide();
   const zoom = tween(t, 11.65, 12.25, 1, 2.7, travel);
   const targetX = tween(t, 11.65, 12.25, 240, 277, travel);
   const typed =
@@ -25,12 +26,13 @@ export function Price({ t, content: c, theme }: SceneProps) {
         }}
       />
       <Layer
-        x={240 - targetX * zoom}
-        y={135 - 135 * zoom}
         w={480}
         h={270}
         style={{
-          transform: `scale(${zoom})`,
+          // The zoom keeps its target centred with a translate, not
+          // `left`/`top`: layout rounds a box and a baseline to whole stage
+          // pixels, so a form zoomed by layout clicks along as it grows.
+          transform: `translate(${240 - targetX * zoom}px, ${135 - 135 * zoom}px) scale(${zoom})${glide(midway(ramp(t, 11.65, 12.25)))}`,
           transformOrigin: "0 0",
           color: "#28281f",
         }}

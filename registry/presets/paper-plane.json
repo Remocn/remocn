@@ -1,0 +1,123 @@
+{
+  "component": "paper-plane",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "kraft-paper",
+      "label": "Kraft Paper",
+      "description": "Warm brown kraft background with dark ink and a rust accent for a handmade, stationery feel.",
+      "askedAs": [
+        "warm brown paper look",
+        "make it look like kraft envelope",
+        "cozy handmade craft style",
+        "крафтовая бумага",
+        "тёплый бумажный стиль"
+      ],
+      "props": {
+        "background": "#d9c4a0",
+        "ink": "#2e2418",
+        "accent": "#b5502b",
+        "fontFamily": "Instrument Serif",
+        "grain": true
+      }
+    },
+    {
+      "id": "night-flight",
+      "label": "Night Flight",
+      "description": "Dark navy theme with a soft amber accent and a slower, unhurried glide to the landing.",
+      "askedAs": [
+        "dark mode slow version",
+        "plane flying at night",
+        "moody dark navy reveal",
+        "ночной полёт",
+        "тёмная тема медленно"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0f1626",
+        "ink": "#e8e4da",
+        "accent": "#f2b45a",
+        "speed": 0.75,
+        "land": 240
+      }
+    },
+    {
+      "id": "quick-launch",
+      "label": "Quick Launch",
+      "description": "Clean grotesk type with no grain and a fast flight that lands early for snappy edits.",
+      "askedAs": [
+        "faster shorter version",
+        "quick snappy launch",
+        "clean modern fast plane",
+        "быстрый запуск",
+        "короткая быстрая версия"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "grain": false,
+        "speed": 1.5,
+        "land": 120,
+        "accent": "#111111"
+      }
+    },
+    {
+      "id": "blueprint",
+      "label": "Blueprint",
+      "description": "Deep blueprint blue with white monospace type and a pale sky trail, like a technical drawing.",
+      "askedAs": [
+        "technical blueprint style",
+        "engineering drawing look",
+        "blue background monospace",
+        "стиль чертежа",
+        "синий фон моноширинный шрифт"
+      ],
+      "props": {
+        "background": "#1e3a6e",
+        "ink": "#f2f5fa",
+        "accent": "#9cc3ff",
+        "fontFamily": "JetBrains Mono",
+        "grain": false
+      }
+    },
+    {
+      "id": "minimal-wordmark",
+      "label": "Minimal Wordmark",
+      "description": "No trail, no grain, larger scale and a short delay for a quiet, focused brand reveal.",
+      "askedAs": [
+        "minimal clean reveal",
+        "no dotted line just plane",
+        "bigger simpler logo ending",
+        "минималистичный вариант",
+        "без следа и шума"
+      ],
+      "props": {
+        "trail": false,
+        "grain": false,
+        "scale": 1.25,
+        "fontFamily": "Inter",
+        "delay": 12
+      }
+    },
+    {
+      "id": "sage-notebook",
+      "label": "Sage Notebook",
+      "description": "Soft sage paper with forest green ink and a terracotta accent at a relaxed, slightly smaller scale.",
+      "askedAs": [
+        "soft green notebook vibe",
+        "calm muted earthy colors",
+        "gentle relaxed paper style",
+        "спокойный зелёный блокнот",
+        "мягкие природные цвета"
+      ],
+      "props": {
+        "background": "#e3e8da",
+        "ink": "#23362a",
+        "accent": "#c4673f",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 0.9,
+        "speed": 0.75
+      }
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+---
+title: "How to make a product demo without showing your face or recording your voice"
+navTitle: "No face, no voiceover"
+description: "Don't want to be on camera or narrate your SaaS demo? Let words on screen and a scripted product scene tell the story. It also plays better on muted social feeds."
+---
+
+_Last updated: November 18, 2026_
+
+You can make a product demo without a face or a voiceover by letting the words on screen do the
+talking: short lines of animated text set up each step, and a scripted product scene shows it
+happening. Most viewers watch muted anyway, on X, LinkedIn and Product Hunt's gallery, so a demo
+built this way often works better than a narrated one. Remocn has both halves as components (kinetic
+type and app scenes), and a coding agent puts them together with your words.
+
+## Why "just narrate it" doesn't work for everyone
+
+- **You don't want to be on camera,** or your accent, your mic or your room isn't how you want the
+  product to sound.
+- **Feeds autoplay muted.** A demo that depends on narration says nothing until someone taps.
+- **Narration ties you down.** Change one feature and the voiceover is wrong too.
+- **AI avatars** solve the face problem but add a stranger to your brand.
+
+## The fix: text that speaks, a screen that shows
+
+<GuideVideo
+  src="https://cdn.remocn.dev/videos/remocn-v3.mp4"
+  poster="https://cdn.remocn.dev/posters/remocn-v3.png"
+  label="The Remocn 3 release film: words on screen and product scenes, no presenter"
+  duration={175}
+/>
+
+The Remocn 3 release film runs about three minutes with nobody on camera. Every point is made by
+words on screen, numbers that count up and product scenes that act it out, so it reads with the
+sound off. Every scene in it is a Remocn component.
+
+Lead each beat with one short line, set big enough to read in two seconds:
+
+<ComponentPreview name="zoom-words" />
+
+[Zoom Words](/docs/typography/zoom-words) reveals a phrase word by word while the camera rides the
+line, so a sentence reads like it's being said. Then show the step:
+
+<ComponentPreview name="shot-answers" />
+
+In [Shot Answers](/docs/media/shot-answers) a question rewrites itself word by word into its answer
+while a screenshot slides in beside it: the question a narrator would ask, answered by the product.
+
+The pattern for a whole video is line, screen, line, screen. [Words on screen](/docs/guides/words-on-screen)
+has the rules for writing the lines.
+
+## Do it
+
+Set up Remocn once ([Setup](/docs/guides/setup)), then:
+
+<GuidePrompt>
+
+```text
+Make a ~40-second product demo for <PRODUCT NAME> with remocn components (remocn.dev).
+No voiceover and no presenter: every beat opens with one short line of animated text,
+then a scripted app screen shows that step. Lines:
+1. "<THE PROBLEM, ONE SENTENCE>"
+2. "<STEP ONE>"
+3. "<STEP TWO>"
+4. "<THE RESULT>"
+Close on <URL>. Text large enough to read on a phone, each line held at least two
+seconds. 1920×1080, 60fps.
+```
+
+</GuidePrompt>
+
+## If you do record a voice later
+
+Captions turn a voiceover into on-screen words, so the video still works muted:
+[Word-by-word captions](/docs/guides/word-by-word-captions).
+
+## When this isn't the fix
+
+- **Trust is the product** (consulting, coaching, a personal brand). A face does work text can't.
+- **The flow takes explaining,** like an onboarding walkthrough for a complex tool. Narration, or a
+  written tutorial, does that better than slogans.

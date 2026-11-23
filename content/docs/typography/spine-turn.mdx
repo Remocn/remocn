@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="SpineTurn"
     component={SpineTurnScene}
-    durationInFrames={170}
-    fps={30}
+    durationInFrames={340}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -63,6 +63,18 @@ Each title rises in large over a hairline rule, holds, then rotates 90 degrees a
       description: "Frames each title holds before it turns.",
     },
     {
+      name: "turn",
+      type: "number",
+      default: "26",
+      description: "Frames for a title to turn onto its spine.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "Weight of the titles.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Hero title color. Defaults to the theme accent.",
@@ -71,6 +83,24 @@ Each title rises in large over a hairline rule, holds, then rotates 90 degrees a
       name: "background",
       type: "string",
       description: "Stage color. Use \"transparent\" to composite over other layers.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"IBM Plex Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

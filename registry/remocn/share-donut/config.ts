@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const shareDonutConfig: ComponentConfig = {
   componentName: "ShareDonut",
@@ -13,11 +19,6 @@ export const shareDonutConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     highlight: {
       type: "number",
       default: 0,
@@ -27,6 +28,30 @@ export const shareDonutConfig: ComponentConfig = {
       description: "Highlight",
       hiddenFromList: false,
     },
+    drawLength: {
+      type: "number",
+      default: 52,
+      min: 10,
+      max: 120,
+      step: 1,
+      description: "Draw length (frames)",
+      hiddenFromList: false,
+    },
+    thickness: {
+      type: "number",
+      default: 12,
+      min: 2,
+      max: 40,
+      step: 1,
+      description: "Ring thickness",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "DM Sans", grain: true }),
     speed: {
       type: "number",
       default: 1,

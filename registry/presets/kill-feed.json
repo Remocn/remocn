@@ -1,0 +1,121 @@
+{
+  "component": "kill-feed",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "arcade-rush",
+      "label": "Arcade Rush",
+      "description": "Fast, hard-hitting feed with heavy shake and a hot coral accent for maximum hype.",
+      "askedAs": [
+        "make it fast and intense",
+        "more shake, more energy",
+        "hype gamer style",
+        "быстрее и с сильной тряской",
+        "энергичный игровой стиль"
+      ],
+      "props": {
+        "speed": 1.75,
+        "shake": 1.8,
+        "accent": "#ff5a4e",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "calm-recap",
+      "label": "Calm Recap",
+      "description": "Slow, steady feed with no shake and a clean sans typeface for a composed summary.",
+      "askedAs": [
+        "slower and calmer",
+        "no shaking please",
+        "clean professional version",
+        "спокойнее и без тряски",
+        "медленная аккуратная версия"
+      ],
+      "props": {
+        "speed": 0.75,
+        "shake": 0,
+        "fontFamily": "Inter",
+        "accent": "#5b7cfa"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Light warm-paper background with dark ink and a teal accent for a friendly daytime look.",
+      "askedAs": [
+        "light background version",
+        "white theme kill feed",
+        "bright and friendly",
+        "светлая тема",
+        "светлый фон с тёмным текстом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f2ea",
+        "ink": "#1c1b1a",
+        "accent": "#0f8b8d",
+        "fontFamily": "Bricolage Grotesque",
+        "shake": 0.6
+      }
+    },
+    {
+      "id": "terminal-ops",
+      "label": "Terminal Ops",
+      "description": "Monospace type on near-black with a muted green accent, like a dev console logging wins.",
+      "askedAs": [
+        "hacker terminal style",
+        "monospace console look",
+        "dev log vibe",
+        "в стиле терминала",
+        "моноширинный шрифт как в консоли"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d7e8dc",
+        "accent": "#3fb97a",
+        "shake": 0.4
+      }
+    },
+    {
+      "id": "royal-finale",
+      "label": "Royal Finale",
+      "description": "Oversized editorial serif on deep plum with a gold accent and a delayed dramatic entrance.",
+      "askedAs": [
+        "make it feel premium",
+        "elegant serif version",
+        "dramatic big finale",
+        "элегантно и дорого",
+        "крупно с драматичным появлением"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#1e1229",
+        "ink": "#f4ecf7",
+        "accent": "#e0b04f",
+        "scale": 1.3,
+        "delay": 20
+      }
+    },
+    {
+      "id": "compact-corner",
+      "label": "Compact Corner",
+      "description": "Small, quick feed with light shake in Space Grotesk, sized to sit unobtrusively in a corner.",
+      "askedAs": [
+        "smaller and quicker",
+        "make it compact",
+        "subtle overlay size",
+        "поменьше и побыстрее",
+        "компактная версия"
+      ],
+      "props": {
+        "scale": 0.7,
+        "speed": 1.5,
+        "shake": 0.5,
+        "fontFamily": "Space Grotesk",
+        "accent": "#8b5cf6"
+      }
+    }
+  ]
+}

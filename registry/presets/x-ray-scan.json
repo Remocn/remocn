@@ -1,0 +1,117 @@
+{
+  "component": "x-ray-scan",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "medical-cyan",
+      "label": "Medical Cyan",
+      "description": "A cool clinical scan with a cyan beam over a deep navy field and a teal highlighted part.",
+      "askedAs": [
+        "make it look like a real x-ray",
+        "blue medical scanner style",
+        "cool cyan scan on dark blue",
+        "как настоящий рентген",
+        "голубой медицинский сканер"
+      ],
+      "props": {
+        "background": "#0b1622",
+        "shell": "#1e3a5f",
+        "line": "#7fdbff",
+        "accent": "#2ec4b6",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "slow-top-down",
+      "label": "Slow Top Down",
+      "description": "A deliberate vertical pass at half speed that lets every component register.",
+      "askedAs": [
+        "slow scan from top to bottom",
+        "vertical reveal, take your time",
+        "dramatic slow scanner pass",
+        "медленное сканирование сверху вниз",
+        "неспешный вертикальный скан"
+      ],
+      "props": {
+        "direction": "vertical",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "amber-security",
+      "label": "Amber Security",
+      "description": "An airport-style security scan with a warm amber beam over charcoal and an orange flagged part.",
+      "askedAs": [
+        "airport security scanner look",
+        "warm orange scan",
+        "amber scanner on dark grey",
+        "как сканер в аэропорту",
+        "оранжевый тёплый скан"
+      ],
+      "props": {
+        "background": "#151412",
+        "shell": "#3a3530",
+        "line": "#ffc266",
+        "accent": "#f28c28"
+      }
+    },
+    {
+      "id": "quick-mono",
+      "label": "Quick Mono",
+      "description": "A fast, restrained grayscale sweep where only a single electric blue part stands out.",
+      "askedAs": [
+        "fast minimal black and white scan",
+        "quick scan with blue chip highlight",
+        "snappy monochrome reveal",
+        "быстрый чёрно-белый скан",
+        "минималистичный скан с синей деталью"
+      ],
+      "props": {
+        "background": "#0a0a0a",
+        "shell": "#4a4a4a",
+        "line": "#ededed",
+        "accent": "#3d7bff",
+        "speed": 2
+      }
+    },
+    {
+      "id": "lab-light",
+      "label": "Lab Light",
+      "description": "A bright blueprint-style scan on a pale grey field with a dark graphite beam and a crimson part.",
+      "askedAs": [
+        "light background scanner",
+        "white clean lab version",
+        "blueprint style on light grey",
+        "светлый фон для скана",
+        "версия в стиле чертежа на светлом"
+      ],
+      "props": {
+        "background": "#eef0f2",
+        "shell": "#9aa3ad",
+        "line": "#1c2430",
+        "accent": "#c8283a",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "emerald-vertical",
+      "label": "Emerald Vertical",
+      "description": "A top-to-bottom night-vision pass with a soft green beam over near-black and a lime highlighted part.",
+      "askedAs": [
+        "green night vision scan",
+        "vertical green scanner",
+        "matrix style hardware reveal",
+        "зелёный скан как прибор ночного видения",
+        "вертикальный зелёный сканер"
+      ],
+      "props": {
+        "direction": "vertical",
+        "background": "#07110c",
+        "shell": "#1f3a2b",
+        "line": "#8ef0b4",
+        "accent": "#c6f432"
+      }
+    }
+  ]
+}

@@ -3,13 +3,9 @@
 import { loadFont as loadSpace } from "@remotion/google-fonts/SpaceGrotesk";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: space } = loadSpace("normal", {
   weights: ["400", "500"],
@@ -20,6 +16,21 @@ export interface FlowArrowProps {
   metric?: string;
   label?: string;
   accent?: string;
+  /** Text color of the metric; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the metric and label. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Weight of the metric. */
+  fontWeight?: number;
+  /** Frames each dot takes to fly into the arrow. */
+  flight?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -68,7 +79,6 @@ const LAUNCH = 4;
 const SPAN = 52;
 const JITTER = 8;
 const FLY = 32;
-const HIT = LAUNCH + SPAN + JITTER + FLY;
 const PASSERS = 80;
 
 function hash(n: number) {
@@ -234,17 +244,46 @@ function buildArrow(W: number, H: number, u: number) {
   return { pts, tip, start: knots[0], by1 };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FlowArrow({
   metric = "3×",
   label = "faster growth",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = space,
+  fontWeight = 400,
+  flight = FLY,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: FlowArrowProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const hit = LAUNCH + SPAN + JITTER + flight;
   // The tail starts in the accent (the palette's own first stop is the same blue).
   const halo = useMemo(
     () => [accent, ...HALO[theme].slice(1)],
@@ -300,24 +339,24 @@ export function FlowArrow({
     [W, H],
   );
 
-  const sweep = interpolate(t, [HIT - 2, HIT + 26], [-0.15, 1.15], {
+  const sweep = interpolate(t, [hit - 2, hit + 26], [-0.15, 1.15], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const land = interpolate(t, [HIT - 6, HIT + 16], [0, 1], {
+  const land = interpolate(t, [hit - 6, hit + 16], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const labIn = interpolate(t, [HIT + 4, HIT + 22], [0, 1], {
+  const labIn = interpolate(t, [hit + 4, hit + 22], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const hairIn = interpolate(t, [6, 60], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const push = interpolate(t, [0, HIT + 50], [0, 1], {
+  const push = interpolate(t, [0, hit + 50], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const scale = 0.975 + 0.035 * push;
+  const zoom = 0.975 + 0.035 * push;
 
   const marks: React.ReactNode[] = [];
   for (const q of passers) {
@@ -342,13 +381,13 @@ export function FlowArrow({
     );
   }
   for (const q of particles) {
-    const raw = interpolate(t, [q.start, q.start + FLY], [0, 1], CLAMP);
+    const raw = interpolate(t, [q.start, q.start + flight], [0, 1], CLAMP);
     if (raw <= 0) continue;
     if (raw >= 1) {
       const g = Math.exp(-(((q.s - sweep) / 0.07) ** 2));
       const settle = interpolate(
         t,
-        [q.start + FLY, q.start + FLY + 6],
+        [q.start + flight, q.start + flight + 6],
         [1.3, 1],
         CLAMP,
       );
@@ -387,69 +426,81 @@ export function FlowArrow({
   const baseX1 = W * 0.9;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${scale})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          <line
-            x1={baseX0}
-            y1={baseY}
-            x2={baseX0 + (baseX1 - baseX0) * hairIn}
-            y2={baseY}
-            stroke={p.hair}
-            strokeWidth={Math.max(1, u)}
-          />
-          {marks}
-        </svg>
-
-        <div
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? p.bg),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: arrow.tip.x + 44 * u,
-            top: arrow.tip.y - 30 * u,
-            display: "flex",
-            flexDirection: "column",
-            whiteSpace: "nowrap",
+            transform: `scale(${zoom})${glide(midway(push))}`,
+            transformOrigin: "50% 50%",
           }}
         >
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <line
+              x1={baseX0}
+              y1={baseY}
+              x2={baseX0 + (baseX1 - baseX0) * hairIn}
+              y2={baseY}
+              stroke={p.hair}
+              strokeWidth={Math.max(1, u)}
+            />
+            {marks}
+          </svg>
+
           <div
             style={{
-              fontFamily: space,
-              fontWeight: 400,
-              fontSize: 176 * u,
-              lineHeight: 0.9,
-              letterSpacing: "-0.04em",
-              color: p.fg,
-              fontVariantNumeric: "tabular-nums",
-              opacity: land,
-              filter: land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
-              transform: `translate(${(1 - land) * -16 * u}px, ${(1 - land) * 14 * u}px)`,
+              position: "absolute",
+              left: arrow.tip.x + 44 * u,
+              top: arrow.tip.y - 30 * u,
+              display: "flex",
+              flexDirection: "column",
+              whiteSpace: "nowrap",
             }}
           >
-            {metric}
+            <div
+              style={{
+                fontFamily,
+                fontWeight,
+                fontSize: 176 * u,
+                lineHeight: 0.9,
+                letterSpacing: "-0.04em",
+                color: fg,
+                fontVariantNumeric: "tabular-nums",
+                opacity: land,
+                filter:
+                  land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
+                transform: `translate(${(1 - land) * -16 * u}px, ${(1 - land) * 14 * u}px)`,
+              }}
+            >
+              {metric}
+            </div>
+            <div
+              style={{
+                marginTop: 16 * u,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 26 * u,
+                letterSpacing: "-0.01em",
+                color: p.muted,
+                opacity: labIn,
+                transform: `translateY(${(1 - labIn) * 8 * u}px)`,
+              }}
+            >
+              {label}
+            </div>
           </div>
-          <div
-            style={{
-              marginTop: 16 * u,
-              fontFamily: space,
-              fontWeight: 400,
-              fontSize: 26 * u,
-              letterSpacing: "-0.01em",
-              color: p.muted,
-              opacity: labIn,
-              transform: `translateY(${(1 - labIn) * 8 * u}px)`,
-            }}
-          >
-            {label}
-          </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
@@ -458,7 +509,7 @@ export function FlowArrow({
           pointerEvents: "none",
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

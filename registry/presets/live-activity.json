@@ -1,0 +1,120 @@
+{
+  "component": "live-activity",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "deploy-terminal",
+      "label": "Deploy Terminal",
+      "description": "A dark, developer-flavoured card in monospace with a mint accent over a deep charcoal ground.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace dev style live activity",
+        "green accent deploy status",
+        "стиль терминала для разработчиков",
+        "моноширинный шрифт и зелёный акцент"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3ddc97",
+        "ground": "charcoal-satin",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "daylight-clean",
+      "label": "Daylight Clean",
+      "description": "A bright light-theme card in Inter with a calm blue accent on a pale polar ground.",
+      "askedAs": [
+        "light mode version",
+        "clean bright lock screen",
+        "white minimal live activity",
+        "светлая тема",
+        "чистый светлый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#1f6feb",
+        "ground": "polar"
+      }
+    },
+    {
+      "id": "warm-delivery",
+      "label": "Warm Delivery",
+      "description": "A cosy amber-accented card on an ember ground with friendly rounded type, paced gently.",
+      "askedAs": [
+        "warm orange delivery tracker",
+        "cozy food delivery look",
+        "slower warm tones",
+        "тёплые оранжевые тона",
+        "как трекер доставки еды"
+      ],
+      "props": {
+        "accent": "#f59e42",
+        "ground": "ember",
+        "fontFamily": "Manrope",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "editorial-night",
+      "label": "Editorial Night",
+      "description": "A refined serif treatment with a soft lilac accent over a velvet dusk ground, slow and enlarged.",
+      "askedAs": [
+        "elegant serif version",
+        "premium slow cinematic look",
+        "bigger luxurious card",
+        "элегантный вариант с засечками",
+        "медленно и премиально"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "accent": "#b9a3ff",
+        "ground": "velvet-hour",
+        "scale": 1.2,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "A compact, fast-moving card in Space Grotesk with a crisp cyan accent on a cobalt ground.",
+      "askedAs": [
+        "fast snappy progress",
+        "quick punchy social cut",
+        "smaller and faster",
+        "быстрая анимация",
+        "компактно и динамично"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "accent": "#22d3ee",
+        "ground": "cobalt-rise",
+        "scale": 0.85,
+        "speed": 2
+      }
+    },
+    {
+      "id": "paper-mono",
+      "label": "Paper Mono",
+      "description": "A quiet off-white card with near-black ink and a graphite accent, entering after a short pause.",
+      "askedAs": [
+        "black and white minimal",
+        "paper like monochrome",
+        "no colour understated",
+        "монохромный минимализм",
+        "как на бумаге, без цвета"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1a1a1a",
+        "accent": "#3a3a3a",
+        "ground": "paper-crease",
+        "delay": 15
+      }
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "component": "coupon-apply",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-checkout",
+      "label": "Midnight Checkout",
+      "description": "A dark order summary on a deep blue ground with a soft violet accent and Geist type.",
+      "askedAs": [
+        "dark mode checkout with discount",
+        "night themed coupon form",
+        "sleek dark payment summary",
+        "тёмная тема оформления заказа",
+        "промокод на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#8b7cf6",
+        "ground": "nightfold",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "paper-receipt",
+      "label": "Paper Receipt",
+      "description": "A warm editorial checkout in Fraunces on cream paper with deep green ink and a calm pace.",
+      "askedAs": [
+        "warm editorial checkout look",
+        "serif receipt style discount",
+        "cozy paper order summary",
+        "чек в стиле бумаги с засечками",
+        "тёплый спокойный вид корзины"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#f6f1e7",
+        "ink": "#1f2a24",
+        "accent": "#2f6b4f",
+        "ground": "paper-crease",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snappy-promo",
+      "label": "Snappy Promo",
+      "description": "A fast, punchy launch-offer cut with a coral accent and bold Bricolage type.",
+      "askedAs": [
+        "quick energetic promo code moment",
+        "fast discount animation for ad",
+        "punchy sale checkout",
+        "быстрая анимация скидки для рекламы",
+        "энергичный промокод"
+      ],
+      "props": {
+        "speed": 1.75,
+        "accent": "#e5533d",
+        "fontFamily": "Bricolage Grotesque",
+        "ground": "ember",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "A monospaced dark checkout with a mint accent on a charcoal ground, styled for developer tools.",
+      "askedAs": [
+        "developer style billing screen",
+        "monospace checkout dark",
+        "api pricing coupon look",
+        "моноширинный шрифт оформление оплаты",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fbf8f",
+        "ground": "charcoal-satin"
+      }
+    },
+    {
+      "id": "slow-spotlight",
+      "label": "Slow Spotlight",
+      "description": "A large, slow-moving checkout under a spotlight ground with a gentle delay before it starts.",
+      "askedAs": [
+        "big slow checkout close-up",
+        "dramatic slow discount reveal",
+        "zoomed in order total drop",
+        "крупный медленный показ скидки",
+        "драматичное появление итога"
+      ],
+      "props": {
+        "scale": 1.35,
+        "speed": 0.5,
+        "delay": 20,
+        "ground": "spotlight",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "compact-polar",
+      "label": "Compact Polar",
+      "description": "A small, crisp light card on a cool polar ground with a steel blue accent and Inter type.",
+      "askedAs": [
+        "small clean checkout card",
+        "minimal light coupon form",
+        "cool icy billing summary",
+        "маленькая светлая карточка заказа",
+        "минималистичная корзина"
+      ],
+      "props": {
+        "scale": 0.8,
+        "ground": "polar",
+        "accent": "#2c6e9b",
+        "fontFamily": "Inter"
+      }
+    }
+  ]
+}

@@ -1,18 +1,28 @@
 "use client";
 
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface SplitWordProps {
   word?: string;
   insert?: string;
+  /** Frames between letters as the word rises in. */
+  stagger?: number;
+  /** Frames the slit stays wide open before it settles. */
+  hold?: number;
   accent?: string;
+  /** Color of the split word; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the word and slit, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -306,17 +316,43 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SplitWord({
   word = "Now",
   insert = "Available",
+  stagger = 3,
+  hold = 14,
   accent = "#3B5BFD",
+  ink,
+  background,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: SplitWordProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const ids = {
     box: `b${uid}`,
@@ -349,7 +385,10 @@ export function SplitWord({
 
   const cut = interpolate(t, [20, 30], [0, 1], { ...CLAMP, easing: EASE_IO });
   const open = interpolate(t, [30, 54], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const back = interpolate(t, [68, 94], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const back = interpolate(t, [54 + hold, 80 + hold], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
 
   const shift = (off / 2) * (open - 2 * back);
   const gap = gapOpen * open + (gapEnd - gapOpen) * back;
@@ -360,7 +399,7 @@ export function SplitWord({
   const bottomY = cy + gap / 2;
 
   const rise = (i: number) =>
-    interpolate(t, [i * 3 - 6, i * 3 + 12], [1, 0], {
+    interpolate(t, [i * stagger - 6, i * stagger + 12], [1, 0], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -377,7 +416,7 @@ export function SplitWord({
     <g
       transform={`translate(${x - hero.left * sh} ${baselineShift}) scale(${sh})`}
       clipPath={`url(#${clip})`}
-      fill={c.fg}
+      fill={fg}
     >
       <g clipPath={`url(#${ids.box})`}>{letters}</g>
     </g>
@@ -403,101 +442,105 @@ export function SplitWord({
   const bandH = Math.max(0, bottomY - topY);
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 75% 85% at 35% 30%, ${c.key}, transparent 70%)`,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: topY,
-          width: W,
-          height: bandH,
-          overflow: "hidden",
-        }}
-      >
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {background === undefined ? (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse 75% 85% at 35% 30%, ${c.key}, transparent 70%)`,
+          }}
+        />
+      ) : null}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
             left: 0,
-            top: -topY,
+            top: topY,
             width: W,
-            height: H,
-            background: sky,
+            height: bandH,
+            overflow: "hidden",
           }}
-        />
-      </div>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <clipPath id={ids.box}>
-            <rect
-              x={-1000}
-              y={-CAP - 60}
-              width={hero.ink + 4000}
-              height={CAP + 80}
-            />
-          </clipPath>
-          <clipPath id={ids.top}>
-            <rect
-              x={-1000}
-              y={-CAP - 200}
-              width={hero.ink + 4000}
-              height={HALF + 200}
-            />
-          </clipPath>
-          <clipPath id={ids.bottom}>
-            <rect
-              x={-1000}
-              y={-HALF}
-              width={hero.ink + 4000}
-              height={HALF + 200}
-            />
-          </clipPath>
-          <clipPath id={ids.band}>
-            <rect
-              x={0}
-              y={topY}
-              width={W}
-              height={Math.max(0, bottomY - topY)}
-            />
-          </clipPath>
-        </defs>
-
-        <g clipPath={`url(#${ids.band})`} fill={c.ins}>
-          <g transform={`translate(${insX} ${cy + capI / 2}) scale(${si})`}>
-            {ins.glyphs.map((g, i) => (
-              <path
-                key={`${i}-${g.x}`}
-                d={g.d}
-                transform={`translate(${g.x} 0)`}
-              />
-            ))}
-          </g>
-        </g>
-
-        {half(topX, topY + HALF * sh, ids.top)}
-        {half(bottomX, bottomY + HALF * sh, ids.bottom)}
-
-        {cut > 0 && open === 0 ? (
-          <rect
-            x={x0 - 8 * u}
-            y={cy - hair / 2}
-            width={(heroW + 16 * u) * cut}
-            height={hair}
-            fill={accent}
+        >
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: -topY,
+              width: W,
+              height: H,
+              background: sky,
+            }}
           />
-        ) : null}
-      </svg>
-      <Grain opacity={c.grain} />
+        </div>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <clipPath id={ids.box}>
+              <rect
+                x={-1000}
+                y={-CAP - 60}
+                width={hero.ink + 4000}
+                height={CAP + 80}
+              />
+            </clipPath>
+            <clipPath id={ids.top}>
+              <rect
+                x={-1000}
+                y={-CAP - 200}
+                width={hero.ink + 4000}
+                height={HALF + 200}
+              />
+            </clipPath>
+            <clipPath id={ids.bottom}>
+              <rect
+                x={-1000}
+                y={-HALF}
+                width={hero.ink + 4000}
+                height={HALF + 200}
+              />
+            </clipPath>
+            <clipPath id={ids.band}>
+              <rect
+                x={0}
+                y={topY}
+                width={W}
+                height={Math.max(0, bottomY - topY)}
+              />
+            </clipPath>
+          </defs>
+
+          <g clipPath={`url(#${ids.band})`} fill={c.ins}>
+            <g transform={`translate(${insX} ${cy + capI / 2}) scale(${si})`}>
+              {ins.glyphs.map((g, i) => (
+                <path
+                  key={`${i}-${g.x}`}
+                  d={g.d}
+                  transform={`translate(${g.x} 0)`}
+                />
+              ))}
+            </g>
+          </g>
+
+          {half(topX, topY + HALF * sh, ids.top)}
+          {half(bottomX, bottomY + HALF * sh, ids.bottom)}
+
+          {cut > 0 && open === 0 ? (
+            <rect
+              x={x0 - 8 * u}
+              y={cy - hair / 2}
+              width={(heroW + 16 * u) * cut}
+              height={hair}
+              fill={accent}
+            />
+          ) : null}
+        </svg>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

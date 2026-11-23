@@ -1,15 +1,10 @@
 "use client";
 
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Sora";
+import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import {
-  AbsoluteFill,
-  continueRender,
-  delayRender,
-  Easing,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, continueRender, delayRender, Easing } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const DISPLAY = loadDisplay("normal", {
   weights: ["500"],
@@ -21,6 +16,20 @@ export interface DotTypeProps {
   accentLast?: boolean;
   count?: number;
   accent?: string;
+  /** Color of the dots; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the soft radial stage; "transparent" drops it. */
+  background?: string;
+  /** Typeface the words are sampled from. Load it yourself; Sora by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames each word holds before the dots fly to the next. */
+  hold?: number;
+  /** Size of the dot field and words, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -37,19 +46,22 @@ const FLIGHT = 0.66;
 const INOUT = Easing.bezier(0.65, 0, 0.35, 1);
 const SOFT = Easing.bezier(0.45, 0, 0.2, 1);
 
-function windows(wordCount: number) {
+function windows(wordCount: number, hold = HOLD) {
   const out: { start: number; len: number }[] = [];
   let t = FIELD;
   for (let i = 0; i < wordCount; i++) {
     const len = i === 0 ? FIRST : STREAM;
     out.push({ start: t, len });
-    t += len + HOLD;
+    t += len + hold;
   }
   return out;
 }
 
-export const dotTypeLength = (wordCount = DEFAULT_WORDS.length) => {
-  const w = windows(wordCount);
+export const dotTypeLength = (
+  wordCount = DEFAULT_WORDS.length,
+  hold = HOLD,
+) => {
+  const w = windows(wordCount, hold);
   const last = w[w.length - 1];
   return last.start + last.len + FINAL_HOLD;
 };
@@ -140,6 +152,7 @@ function xOrder(pts: Pt[]): number[] {
 function sampleWords(
   words: string[],
   family: string,
+  weight: number,
   n: number,
   W: number,
   H: number,
@@ -151,7 +164,7 @@ function sampleWords(
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) return null;
   const setFont = (px: number) => {
-    ctx.font = `500 ${px}px "${family}", sans-serif`;
+    ctx.font = `${weight} ${px}px "${family}", sans-serif`;
     if ("letterSpacing" in ctx) {
       (
         ctx as CanvasRenderingContext2D & { letterSpacing: string }
@@ -284,19 +297,43 @@ function circle(x: number, y: number, r: number) {
   return `M${(x - r).toFixed(1)} ${y.toFixed(1)}a${rs} ${rs} 0 1 0 ${d} 0a${rs} ${rs} 0 1 0 -${d} 0`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DotType({
   words = DEFAULT_WORDS,
   accentLast = true,
   count = 1500,
   accent = "#3B5BFD",
+  ink: inkProp,
+  background,
+  fontFamily = DISPLAY.fontFamily,
+  fontWeight = 500,
+  hold = HOLD,
+  scale = 1,
+  delay: wait = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: DotTypeProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - wait) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const isLight = theme === "light";
   const bg = isLight ? "#F5F4F0" : "#0A0A0B";
-  const ink = isLight ? "#141416" : "#EEEEF0";
+  const ink = inkProp ?? (isLight ? "#141416" : "#EEEEF0");
   const n = Math.max(300, Math.round(count));
   const list = words.length ? words : DEFAULT_WORDS;
   const key = list.join("\u0000");
@@ -313,14 +350,14 @@ export function DotType({
     DISPLAY.waitUntilDone()
       .then(() =>
         typeof document !== "undefined" && document.fonts
-          ? document.fonts.load(`500 120px "${DISPLAY.fontFamily}"`)
+          ? document.fonts.load(`${fontWeight} 120px "${fontFamily}"`)
           : undefined,
       )
       .then(done, done);
     return () => {
       alive = false;
     };
-  }, []);
+  }, [fontFamily, fontWeight]);
 
   useEffect(() => {
     if (ready && !released.current) {
@@ -333,7 +370,8 @@ export function DotType({
     if (!ready) return null;
     const samples = sampleWords(
       key.split("\u0000"),
-      DISPLAY.fontFamily,
+      fontFamily,
+      fontWeight,
       n,
       W,
       H,
@@ -375,10 +413,10 @@ export function DotType({
       rankOf,
       spacing: samples.map((s) => s.spacing),
     };
-  }, [ready, key, n, W, H]);
+  }, [ready, key, n, W, H, fontFamily, fontWeight]);
 
-  const wins = windows(list.length);
-  const total = dotTypeLength(list.length);
+  const wins = windows(list.length, hold);
+  const total = dotTypeLength(list.length, hold);
   const cx = W / 2;
   const cy = H / 2;
 
@@ -466,57 +504,64 @@ export function DotType({
   return (
     <AbsoluteFill
       style={{
-        background: isLight
-          ? `radial-gradient(80% 75% at 50% 45%, #FBFAF7 0%, ${bg} 72%)`
-          : `radial-gradient(80% 75% at 50% 45%, #121215 0%, ${bg} 72%)`,
+        background:
+          background !== undefined
+            ? background
+            : isLight
+              ? `radial-gradient(80% 75% at 50% 45%, #FBFAF7 0%, ${bg} 72%)`
+              : `radial-gradient(80% 75% at 50% 45%, #121215 0%, ${bg} 72%)`,
         overflow: "hidden",
       }}
     >
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={gid}
-            gradientUnits="userSpaceOnUse"
-            colorInterpolation="linearRGB"
-            x1={W * (0.2 - 0.04 * sweep)}
-            y1={H * 0.36}
-            x2={W * (0.8 - 0.04 * sweep)}
-            y2={H * 0.64}
-          >
-            <stop offset="0" stopColor={accent} />
-            <stop offset="0.18" stopColor={stops[0]} />
-            <stop offset="0.66" stopColor={stops[1]} />
-            <stop offset="1" stopColor={stops[2]} />
-          </linearGradient>
-        </defs>
-        {inkPaths.map((segs, i) =>
-          segs.length ? (
-            <path
-              key={`i${i}`}
-              d={segs.join("")}
-              fill={ink}
-              opacity={0.22 + ((i + 1) / BUCKETS) * 0.78}
-            />
-          ) : null,
-        )}
-        {accPaths.map((segs, i) =>
-          segs.length ? (
-            <path
-              key={`a${i}`}
-              d={segs.join("")}
-              fill={`url(#${gid})`}
-              opacity={0.5 + ((i + 1) / BUCKETS) * 0.5}
-            />
-          ) : null,
-        )}
-      </svg>
-      <Grain opacity={isLight ? 0.045 : 0.06} light={isLight} />
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={gid}
+              gradientUnits="userSpaceOnUse"
+              colorInterpolation="linearRGB"
+              x1={W * (0.2 - 0.04 * sweep)}
+              y1={H * 0.36}
+              x2={W * (0.8 - 0.04 * sweep)}
+              y2={H * 0.64}
+            >
+              <stop offset="0" stopColor={accent} />
+              <stop offset="0.18" stopColor={stops[0]} />
+              <stop offset="0.66" stopColor={stops[1]} />
+              <stop offset="1" stopColor={stops[2]} />
+            </linearGradient>
+          </defs>
+          {inkPaths.map((segs, i) =>
+            segs.length ? (
+              <path
+                key={`i${i}`}
+                d={segs.join("")}
+                fill={ink}
+                opacity={0.22 + ((i + 1) / BUCKETS) * 0.78}
+              />
+            ) : null,
+          )}
+          {accPaths.map((segs, i) =>
+            segs.length ? (
+              <path
+                key={`a${i}`}
+                d={segs.join("")}
+                fill={`url(#${gid})`}
+                opacity={0.5 + ((i + 1) / BUCKETS) * 0.5}
+              />
+            ) : null,
+          )}
+        </svg>
+      </ScaleLayer>
+      {grain ? (
+        <Grain opacity={isLight ? 0.045 : 0.06} light={isLight} />
+      ) : null}
     </AbsoluteFill>
   );
 }

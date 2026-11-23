@@ -9,9 +9,9 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -30,10 +30,22 @@ export interface BeforeAfterProps {
   aspect?: number;
   fit?: "cover" | "contain";
   pauseAt?: number;
+  /** Frames the divider rests at `pauseAt` before sweeping to the after side. */
+  hold?: number;
+  /** Corner radius of the frame, in px at 1280 wide. */
+  radius?: number;
   accent?: string;
+  /** Text color of the title and after label; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the title and labels. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Size of the title, frame and labels, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -105,6 +117,22 @@ function Chevrons({ size, color }: { size: number; color: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BeforeAfter({
   before,
   after,
@@ -114,16 +142,26 @@ export function BeforeAfter({
   aspect,
   fit = "cover",
   pauseAt = 0.5,
+  hold = BEAT.leg2 - BEAT.leg1,
+  radius: radiusPx = 16,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = hanken.fontFamily,
   ground,
   groundParams,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: BeforeAfterProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const leg2At = BEAT.leg1 + hold;
+  const gripOutAt = leg2At + (BEAT.gripOut - BEAT.leg2);
 
   const portrait = height > width * 1.1;
   const s = portrait
@@ -145,7 +183,7 @@ export function BeforeAfter({
   const groupTop = (height - groupH) / 2;
   const frameTop = groupTop + titleH;
   const frameLeft = (width - frameW) / 2;
-  const radius = 16 * s;
+  const radius = radiusPx * s;
 
   const at = (start: number, config: Record<string, number>) =>
     spring({ frame: frame - start, fps, config });
@@ -160,13 +198,12 @@ export function BeforeAfter({
     easing: ENTER,
   });
   const leg1 = at(BEAT.leg1, CARD);
-  const leg2 = at(BEAT.leg2, MORPH);
-  const pos =
-    frame >= BEAT.leg2 ? pauseAt * (1 - leg2) : 1 - (1 - pauseAt) * leg1;
+  const leg2 = at(leg2At, MORPH);
+  const pos = frame >= leg2At ? pauseAt * (1 - leg2) : 1 - (1 - pauseAt) * leg1;
   const push = interpolate(frame, [0, 150], [1, 1.02], CLAMP);
 
   const gripIn = at(BEAT.grip, CHIP);
-  const gripOut = interpolate(frame, [BEAT.gripOut, BEAT.gripOut + 8], [0, 1], {
+  const gripOut = interpolate(frame, [gripOutAt, gripOutAt + 8], [0, 1], {
     ...CLAMP,
     easing: EXIT,
   });
@@ -175,6 +212,13 @@ export function BeforeAfter({
   const grip = Math.min(1, gripIn) * (1 - gripOut);
 
   const divX = Math.max(0, Math.min(1, pos)) * frameW;
+  // Layout rounds box edges to whole pixels, so a divider swept by `left`
+  // clicks across pixel by pixel. Everything riding the divider is laid out
+  // where the current leg comes to rest and travels there by a transform.
+  const restX =
+    Math.max(0, Math.min(1, frame >= leg2At ? 0 : pauseAt)) * frameW;
+  const dx = divX - restX;
+  const slide = Math.abs(dx) < 1e-3 ? undefined : `translateX(${dx}px)`;
   const capsIn = interpolate(frame, [BEAT.leg1, BEAT.leg1 + 12], [0, 1], {
     ...CLAMP,
     easing: ENTER,
@@ -202,7 +246,7 @@ export function BeforeAfter({
   const label: React.CSSProperties = {
     position: "absolute",
     top: frameTop + frameH + capGap,
-    fontFamily: hanken.fontFamily,
+    fontFamily,
     fontWeight: 400,
     fontSize: capFs,
     lineHeight: 1.2,
@@ -224,7 +268,7 @@ export function BeforeAfter({
       style={{
         background: transparent ? "transparent" : (background ?? "#050302"),
         overflow: "hidden",
-        fontFamily: hanken.fontFamily,
+        fontFamily,
       }}
     >
       {!transparent && background === undefined ? (
@@ -239,134 +283,147 @@ export function BeforeAfter({
         </AbsoluteFill>
       ) : null}
 
-      {title ? (
+      <ScaleLayer scale={scale}>
+        {title ? (
+          <div
+            style={{
+              position: "absolute",
+              left: frameLeft,
+              top: groupTop,
+              width: frameW,
+              height: titleFs * 1.2,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                fontWeight: 300,
+                fontSize: titleFs,
+                lineHeight: 1.1,
+                letterSpacing: "-0.03em",
+                color: fg,
+                whiteSpace: "nowrap",
+                // The ease lands so softly that its last frames still move the
+                // line by thousandths of a pixel: tilt until it is exactly home.
+                transform: `translateY(${(1 - titleT) * 105}%)${glide(titleT > 0 && titleT < 1)}`,
+              }}
+            >
+              {title}
+            </div>
+          </div>
+        ) : null}
+
         <div
           style={{
             position: "absolute",
             left: frameLeft,
-            top: groupTop,
+            top: frameTop,
             width: frameW,
-            height: titleFs * 1.2,
+            height: frameH,
+            borderRadius: radius,
             overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              fontWeight: 300,
-              fontSize: titleFs,
-              lineHeight: 1.1,
-              letterSpacing: "-0.03em",
-              color: p.fg,
-              whiteSpace: "nowrap",
-              transform: `translateY(${(1 - titleT) * 105}%)`,
-            }}
-          >
-            {title}
-          </div>
-        </div>
-      ) : null}
-
-      <div
-        style={{
-          position: "absolute",
-          left: frameLeft,
-          top: frameTop,
-          width: frameW,
-          height: frameH,
-          borderRadius: radius,
-          overflow: "hidden",
-          boxShadow: p.shadow,
-          opacity: fadeIn,
-          transform: `translateY(${(1 - enter) * 40 * s}px) scale(${(0.96 + enter * 0.04) * push})`,
-          background: "#111",
-        }}
-      >
-        <Img
-          src={afterSrc}
-          style={imgStyle(after ? undefined : GRADED, !after)}
-        />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            clipPath: `inset(0 ${(100 - (divX / frameW) * 100).toFixed(4)}% 0 0)`,
+            boxShadow: p.shadow,
+            opacity: fadeIn,
+            transform: `translateY(${(1 - enter) * 40 * s}px) scale(${(0.96 + enter * 0.04) * push})`,
+            background: "#111",
           }}
         >
           <Img
-            src={beforeSrc}
-            style={imgStyle(before ? undefined : FLAT, !before)}
+            src={afterSrc}
+            style={imgStyle(after ? undefined : GRADED, !after)}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              clipPath: `inset(0 ${(100 - (divX / frameW) * 100).toFixed(4)}% 0 0)`,
+            }}
+          >
+            <Img
+              src={beforeSrc}
+              style={imgStyle(before ? undefined : FLAT, !before)}
+            />
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: restX - 1 * s,
+              width: 2 * s,
+              transform: slide,
+              background: "rgba(255,255,255,0.95)",
+              boxShadow:
+                "0 0 0 0.5px rgba(0,0,0,0.12), 0 0 12px rgba(0,0,0,0.25)",
+              opacity: grip,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: restX - gripD / 2,
+              top: frameH / 2 - gripD / 2,
+              width: gripD,
+              height: gripD,
+              borderRadius: gripD,
+              background: "#FFFFFF",
+              boxShadow:
+                "0 1px 2px rgba(0,0,0,0.25), 0 8px 20px -6px rgba(0,0,0,0.45)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: grip,
+              transform: `${slide ? `${slide} ` : ""}scale(${(0.6 + 0.4 * gripIn) * pressed})`,
+            }}
+          >
+            <Chevrons size={gripD * 0.56} color="#2A2A30" />
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: radius,
+              boxShadow: `inset 0 0 0 1px ${p.outline}`,
+              pointerEvents: "none",
+            }}
           />
         </div>
 
         <div
           style={{
             position: "absolute",
+            left: frameLeft,
             top: 0,
-            bottom: 0,
-            left: divX - 1 * s,
-            width: 2 * s,
-            background: "rgba(255,255,255,0.95)",
-            boxShadow:
-              "0 0 0 0.5px rgba(0,0,0,0.12), 0 0 12px rgba(0,0,0,0.25)",
-            opacity: grip,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: divX - gripD / 2,
-            top: frameH / 2 - gripD / 2,
-            width: gripD,
-            height: gripD,
-            borderRadius: gripD,
-            background: "#FFFFFF",
-            boxShadow:
-              "0 1px 2px rgba(0,0,0,0.25), 0 8px 20px -6px rgba(0,0,0,0.45)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: grip,
-            transform: `scale(${(0.6 + 0.4 * gripIn) * pressed})`,
-          }}
-        >
-          <Chevrons size={gripD * 0.56} color="#2A2A30" />
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: radius,
-            boxShadow: `inset 0 0 0 1px ${p.outline}`,
+            width: frameW,
+            height,
+            overflow: "hidden",
             pointerEvents: "none",
           }}
-        />
-      </div>
-
-      <div
-        style={{
-          position: "absolute",
-          left: frameLeft,
-          top: 0,
-          width: frameW,
-          height,
-          overflow: "hidden",
-          pointerEvents: "none",
-        }}
-      >
-        <div
-          style={{
-            ...label,
-            right: frameW - divX + capGap * 0.9,
-            color: p.dim,
-          }}
         >
-          {beforeLabel} <span style={tick(p.dim)} />
+          <div
+            style={{
+              ...label,
+              right: frameW - restX + capGap * 0.9,
+              color: p.dim,
+              transform: slide,
+            }}
+          >
+            {beforeLabel} <span style={tick(p.dim)} />
+          </div>
+          <div
+            style={{
+              ...label,
+              left: restX + capGap * 0.9,
+              color: fg,
+              transform: slide,
+            }}
+          >
+            <span style={tick(accent)} /> {afterLabel}
+          </div>
         </div>
-        <div style={{ ...label, left: divX + capGap * 0.9, color: p.fg }}>
-          <span style={tick(accent)} /> {afterLabel}
-        </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

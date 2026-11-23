@@ -1,0 +1,117 @@
+{
+  "component": "terminal-simulator",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-human-typing",
+      "label": "Human Typist",
+      "description": "Large type entered slowly character by character, like someone typing live on a deep charcoal terminal.",
+      "askedAs": [
+        "slow realistic typing",
+        "make it look like a person typing",
+        "big readable terminal text",
+        "медленный набор текста как человек",
+        "крупный шрифт в терминале"
+      ],
+      "props": {
+        "fontSize": 24,
+        "charsPerFrame": 0.5,
+        "speed": 0.75,
+        "background": "#111214",
+        "chromeColor": "#1e2024"
+      }
+    },
+    {
+      "id": "fast-build-log",
+      "label": "Build Log",
+      "description": "Small dense text streaming out in fast chunks like a busy compiler or CI log.",
+      "askedAs": [
+        "fast scrolling build output",
+        "dense log streaming quickly",
+        "ci pipeline logs flying by",
+        "быстрый вывод логов сборки",
+        "много текста быстро прокручивается"
+      ],
+      "props": {
+        "fontSize": 13,
+        "charsPerFrame": 4,
+        "chunkSize": 8,
+        "speed": 2
+      }
+    },
+    {
+      "id": "midnight-navy",
+      "label": "Midnight Navy",
+      "description": "A calm deep-navy window with slate chrome and an unhurried, steady typing pace.",
+      "askedAs": [
+        "dark blue terminal",
+        "navy themed console",
+        "calm blue code window",
+        "тёмно-синий терминал",
+        "спокойный синий фон консоли"
+      ],
+      "props": {
+        "background": "#0d1424",
+        "chromeColor": "#1a2338",
+        "fontSize": 20,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "agent-burst",
+      "label": "Agent Burst",
+      "description": "Word-sized bursts at high speed on a graphite window, mimicking an AI agent streaming tokens.",
+      "askedAs": [
+        "ai agent streaming output",
+        "token by token like chatgpt",
+        "bursty fast terminal text",
+        "вывод как у ии агента",
+        "текст появляется кусками быстро"
+      ],
+      "props": {
+        "chunkSize": 5,
+        "charsPerFrame": 2,
+        "speed": 1.5,
+        "background": "#16171a",
+        "chromeColor": "#26282d"
+      }
+    },
+    {
+      "id": "presentation-large",
+      "label": "Stage Display",
+      "description": "Oversized type on a warm near-black with a relaxed pace, built for slides and big screens.",
+      "askedAs": [
+        "huge text for a presentation",
+        "terminal readable on big screen",
+        "keynote style console",
+        "огромный шрифт для презентации",
+        "терминал для слайдов"
+      ],
+      "props": {
+        "fontSize": 30,
+        "background": "#141210",
+        "chromeColor": "#24201c",
+        "charsPerFrame": 0.75
+      }
+    },
+    {
+      "id": "forest-console",
+      "label": "Forest Console",
+      "description": "A muted dark-green terminal with olive chrome and a brisk, even typing rhythm.",
+      "askedAs": [
+        "dark green terminal",
+        "retro hacker green vibe but subtle",
+        "muted green console window",
+        "тёмно-зелёный терминал",
+        "зелёная консоль в стиле хакера"
+      ],
+      "props": {
+        "background": "#0c1410",
+        "chromeColor": "#18241c",
+        "charsPerFrame": 1.5,
+        "fontSize": 16
+      }
+    }
+  ]
+}

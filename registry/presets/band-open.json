@@ -1,0 +1,127 @@
+{
+  "component": "band-open",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, light-weight serif reveal on warm paper with a soft dim and gentle parallax, like a magazine spread.",
+      "askedAs": [
+        "magazine style title reveal",
+        "elegant serif opening",
+        "slow classy editorial reveal",
+        "элегантное открытие с засечками",
+        "журнальный стиль заголовка"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "transitionFrames": 56,
+        "ground": "paper-crease",
+        "dim": 0.25
+      }
+    },
+    {
+      "id": "launch-punch",
+      "label": "Launch Punch",
+      "description": "A fast, heavy grotesk stack that snaps open with tight stagger and a strong push for product launches.",
+      "askedAs": [
+        "fast bold launch reveal",
+        "punchy product intro title",
+        "quick snappy band open",
+        "быстрое резкое открытие для запуска",
+        "жирный заголовок для релиза"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "transitionFrames": 18,
+        "stagger": 0,
+        "push": 0.14,
+        "ground": "cobalt-rise"
+      }
+    },
+    {
+      "id": "cinematic-low",
+      "label": "Cinematic Low",
+      "description": "A widescreen band set low in frame that opens slowly over a deeply dimmed image with strong parallax.",
+      "askedAs": [
+        "movie style letterbox reveal",
+        "cinematic slow opening",
+        "dark moody title card",
+        "кинематографичное открытие",
+        "медленный тёмный титр как в кино"
+      ],
+      "props": {
+        "center": 0.62,
+        "transitionFrames": 68,
+        "stagger": 5,
+        "dim": 0.7,
+        "parallax": 0.14,
+        "ground": "nightfold"
+      }
+    },
+    {
+      "id": "warm-ember",
+      "label": "Warm Ember",
+      "description": "A copper-toned reveal with a matching amber edge line and medium-weight Fraunces lettering.",
+      "askedAs": [
+        "warm orange title reveal",
+        "copper toned event card",
+        "cozy warm opening",
+        "тёплое оранжевое открытие",
+        "медный заголовок события"
+      ],
+      "props": {
+        "ground": "ember",
+        "edge": "#e8a46b",
+        "fontFamily": "Fraunces",
+        "fontWeight": 500,
+        "ink": "#fbefe3",
+        "transitionFrames": 44
+      }
+    },
+    {
+      "id": "mono-minimal",
+      "label": "Mono Minimal",
+      "description": "A small, technical mono title on a cool grey ground with no dim and a thin graphite edge.",
+      "askedAs": [
+        "minimal tech style reveal",
+        "small monospace title",
+        "clean developer look opening",
+        "минималистичный моноширинный титр",
+        "строгое техно открытие"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 300,
+        "scale": 0.75,
+        "ground": "mercury",
+        "dim": 0,
+        "edge": "#8a929c"
+      }
+    },
+    {
+      "id": "wide-split",
+      "label": "Wide Split",
+      "description": "A band that opens high and wide, expanding from the top with a large-scale stack and wide strip stagger.",
+      "askedAs": [
+        "big wide split reveal",
+        "large text opening up top",
+        "dramatic wide band opening",
+        "широкое раскрытие крупного текста",
+        "большой заголовок сверху"
+      ],
+      "props": {
+        "center": 0.38,
+        "expandFrom": 0.2,
+        "openUntil": 0.55,
+        "scale": 1.3,
+        "stagger": 7,
+        "ground": "polar"
+      }
+    }
+  ]
+}

@@ -3,13 +3,9 @@
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { type ReactNode, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["400", "600"],
@@ -21,6 +17,20 @@ export interface FlipStingProps {
   /** Small line under the logo once the flip settles. Pass "" to hide. */
   line?: string;
   accent?: string;
+  /** Color of the line; overrides the theme's muted tone. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line. Load it yourself; Geist Mono by default. */
+  fontFamily?: string;
+  /** Frames the camera takes to pull out of the R to the whole logo. */
+  pull?: number;
+  /** How far into the R the camera starts, as a zoom factor. */
+  zoomFrom?: number;
+  /** Size of the logo and line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -315,14 +325,38 @@ function Page({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FlipSting({
   line = "LAUNCH FILMS",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = mono.fontFamily,
+  pull: pullEnd = PULL_END,
+  zoomFrom = 3.6,
+  scale: zoom = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: FlipStingProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
@@ -331,16 +365,25 @@ export function FlipSting({
   const centerY = showLine ? H * 0.46 : H * 0.5;
 
   // Camera: out of the R, settling on the whole logo, then a slow push.
-  const pull = interpolate(t, [0, PULL_END], [0, 1], {
-    ...CLAMP,
-    easing: PULL,
-  });
-  const push = interpolate(t, [PULL_END, FLIP_STING_DURATION], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const s0 = 3.6;
-  const scale = Math.exp(Math.log(s0) * (1 - pull)) * (1 + push * 0.025);
+  const pullAt = (f: number) =>
+    interpolate(f, [0, pullEnd], [0, 1], {
+      ...CLAMP,
+      easing: PULL,
+    });
+  const scaleAt = (f: number) => {
+    const push = interpolate(f, [pullEnd, FLIP_STING_DURATION], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    return Math.exp(Math.log(zoomFrom) * (1 - pullAt(f))) * (1 + push * 0.025);
+  };
+  const pull = pullAt(t);
+  const scale = scaleAt(t);
+  const restScale = scaleAt(FLIP_STING_DURATION);
+  // Any change at all: the push eases out to the last frame, and the logo
+  // rests under it off the pixel grid, so the lean must not drop early.
+  const cameraMoving =
+    scaleAt(t + speed) !== scale || scale !== scaleAt(t - speed);
   const focusX =
     ((-LOGO_WIDTH * size) / 2 + R_WIDTH * size * 0.42) * (1 - pull);
   const focusY = -R_HEIGHT * size * 0.1 * (1 - pull);
@@ -362,67 +405,95 @@ export function FlipSting({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const logoBottom = centerY + (R_HEIGHT * size * scale) / 2;
+  // The line is laid out under the settled logo; the camera's pull on it is
+  // a transform, since layout would round its baseline to whole pixels.
+  const logoBottom = centerY + (R_HEIGHT * size * restScale) / 2;
+  const lineYAt = (f: number) =>
+    (R_HEIGHT * size * (scaleAt(f) - restScale)) / 2 +
+    (1 -
+      interpolate(f, [LINE_AT, LINE_AT + 16], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      })) *
+      H *
+      0.015;
+  const lineY = lineYAt(t);
+  const lineMoving =
+    lineYAt(t + speed) !== lineY || lineY !== lineYAt(t - speed);
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <clipPath id={`${uid}-logo`}>
-            <LogoShape
-              size={size}
-              camera={`translate(${W / 2} ${centerY}) scale(${scale}) translate(${-focusX} ${-focusY})`}
-            />
-          </clipPath>
-          <linearGradient
-            id={`${uid}-fill`}
-            gradientUnits="userSpaceOnUse"
-            x1={W * (0.2 + drift * 0.06)}
-            y1={centerY - size * 0.6}
-            x2={W * (0.8 + drift * 0.06)}
-            y2={centerY + size * 0.6}
-          >
-            <stop offset="0" stopColor={c.fill[0]} />
-            <stop offset="0.5" stopColor={c.fill[1]} />
-            <stop offset="1" stopColor={c.fill[2]} />
-          </linearGradient>
-        </defs>
-        <g clipPath={`url(#${uid}-logo)`}>
-          {settled ? (
-            <rect width={W} height={H} fill={`url(#${uid}-fill)`} />
-          ) : (
-            <Page index={page} W={W} H={H} c={c} accent={accent} />
-          )}
-        </g>
-      </svg>
-      {showLine ? (
-        <div
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.bg),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={zoom}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          // The camera is an SVG attribute, which can't carry the mark, so
+          // the drawing it moves is marked instead.
           style={{
             position: "absolute",
-            left: 0,
-            right: 0,
-            top: logoBottom + H * 0.075,
-            textAlign: "center",
-            fontFamily: mono.fontFamily,
-            fontWeight: 400,
-            fontSize: H * 0.03,
-            lineHeight: 1,
-            letterSpacing: "0.42em",
-            paddingLeft: "0.42em",
-            color: c.muted,
-            opacity: lineIn,
-            transform: `translateY(${(1 - lineIn) * H * 0.015}px)`,
+            inset: 0,
+            transform: glide(cameraMoving),
           }}
+          aria-hidden
         >
-          {line}
-        </div>
-      ) : null}
+          <defs>
+            <clipPath id={`${uid}-logo`}>
+              <LogoShape
+                size={size}
+                camera={`translate(${W / 2} ${centerY}) scale(${scale}) translate(${-focusX} ${-focusY})`}
+              />
+            </clipPath>
+            <linearGradient
+              id={`${uid}-fill`}
+              gradientUnits="userSpaceOnUse"
+              x1={W * (0.2 + drift * 0.06)}
+              y1={centerY - size * 0.6}
+              x2={W * (0.8 + drift * 0.06)}
+              y2={centerY + size * 0.6}
+            >
+              <stop offset="0" stopColor={c.fill[0]} />
+              <stop offset="0.5" stopColor={c.fill[1]} />
+              <stop offset="1" stopColor={c.fill[2]} />
+            </linearGradient>
+          </defs>
+          <g clipPath={`url(#${uid}-logo)`}>
+            {settled ? (
+              <rect width={W} height={H} fill={`url(#${uid}-fill)`} />
+            ) : (
+              <Page index={page} W={W} H={H} c={c} accent={accent} />
+            )}
+          </g>
+        </svg>
+        {showLine ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: logoBottom + H * 0.075,
+              textAlign: "center",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: H * 0.03,
+              lineHeight: 1,
+              letterSpacing: "0.42em",
+              paddingLeft: "0.42em",
+              color: ink ?? c.muted,
+              opacity: lineIn,
+              transform: `translateY(${lineY}px)${glide(lineMoving)}`,
+            }}
+          >
+            {line}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

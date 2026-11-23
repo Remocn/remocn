@@ -10,9 +10,8 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -235,8 +234,41 @@ export interface PhoneTrioProps {
   images?: string[];
   skills?: string[];
   liveLabel?: string;
+  /** Large heading on the middle phone's work screen. */
+  workTitle?: string;
+  /** Call to action at the bottom of the about screen. */
+  ctaLabel?: string;
+  /** Primary button on the profile screen. */
+  followLabel?: string;
+  /** Text color inside the phones; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Size of the phones, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function PhoneTrio({
@@ -260,11 +292,20 @@ export function PhoneTrio({
   ],
   skills = ["Motion", "Sound", "Web"],
   liveLabel = "Portfolio is live",
+  workTitle = "Selected work",
+  ctaLabel = "Open for projects",
+  followLabel = "Follow",
+  ink,
+  background,
+  fontFamily = manrope.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: PhoneTrioProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 720 : 1280;
@@ -275,7 +316,7 @@ export function PhoneTrio({
     ? {
         dark: true,
         bg: "#0c0c0e",
-        ink: "#f5f4f2",
+        ink: ink ?? "#f5f4f2",
         muted: "rgba(245,244,242,0.56)",
         faint: "rgba(245,244,242,0.34)",
         hair: "rgba(255,255,255,0.09)",
@@ -285,7 +326,7 @@ export function PhoneTrio({
     : {
         dark: false,
         bg: "#ffffff",
-        ink: "#141414",
+        ink: ink ?? "#141414",
         muted: "rgba(20,20,20,0.55)",
         faint: "rgba(20,20,20,0.32)",
         hair: "rgba(20,20,20,0.08)",
@@ -470,7 +511,7 @@ export function PhoneTrio({
               justifyContent: "center",
             }}
           >
-            Follow
+            {followLabel}
           </div>
           <div
             style={{
@@ -592,7 +633,7 @@ export function PhoneTrio({
             letterSpacing: "-0.035em",
           }}
         >
-          Selected work
+          {workTitle}
         </div>
         <div style={{ display: "flex", gap: 6, padding: "12px 16px 14px" }}>
           {["All", "Motion", "Web", "Sound"].map((c, i) => (
@@ -863,7 +904,7 @@ export function PhoneTrio({
         }}
       >
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 15, color: t.ink }}>Open for projects</div>
+          <div style={{ fontSize: 15, color: t.ink }}>{ctaLabel}</div>
           <div style={{ fontSize: 13, color: t.muted }}>
             Replies within a day
           </div>
@@ -891,15 +932,21 @@ export function PhoneTrio({
   const screens = [profileScreen, workScreen, aboutScreen];
 
   return (
-    <AbsoluteFill
-      style={{ fontFamily: manrope.fontFamily, overflow: "hidden" }}
-    >
-      <GshGround
-        preset={resolvedPreset}
-        params={resolvedParams}
-        timeOffset={2}
-        timeScale={0.4}
-      />
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <GshGround
+          preset={resolvedPreset}
+          params={resolvedParams}
+          timeOffset={2}
+          timeScale={0.4}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
       <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
         {rise.map((r, i) => (
           <filter
@@ -916,64 +963,66 @@ export function PhoneTrio({
           </filter>
         ))}
       </svg>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${k})`,
-          transformOrigin: "0 0",
-          perspective: 2400,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: stageW / 2,
-            top: stageH / 2,
-            width: 0,
-            height: 0,
-            transformStyle: "preserve-3d",
-            transform: `scale(${camPush}) rotateX(${4 - 2 * fwd}deg)`,
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${k})`,
+            transformOrigin: "0 0",
+            perspective: 2400,
           }}
         >
-          {[0, 2, 1].map((i) => {
-            const L = layout[i];
-            const r = rise[i];
-            const side = i !== 1;
-            const blurV = Math.abs(r - risePrev[i]) * PH * 0.06;
-            const tilt = (i - 1) * mix(10, 0, Math.min(1, r));
-            return (
-              <div
-                key={i}
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  zIndex: L.z,
-                  transform: `translate(${L.x}px, ${L.y + mix(stageH * 0.85, 0, r)}px) rotateZ(${tilt}deg) rotateY(${(1 - i) * 6 * (side ? 1 - fwd * 0.4 : 0)}deg) scale(${L.s})`,
-                  filter:
-                    [
-                      blurV > 0.4 ? `url(#pt-rise-${i})` : "",
-                      side && fwd > 0.01
-                        ? `brightness(${mix(1, dark ? 0.62 : 0.9, fwd)}) blur(${fwd * 1.4}px)`
-                        : "",
-                    ]
-                      .join(" ")
-                      .trim() || undefined,
-                  opacity: frame >= B.rise[i] ? 1 : 0,
-                }}
-              >
-                <Phone t={t} shellDark={dark}>
-                  {screens[i]}
-                </Phone>
-              </div>
-            );
-          })}
+          <div
+            style={{
+              position: "absolute",
+              left: stageW / 2,
+              top: stageH / 2,
+              width: 0,
+              height: 0,
+              transformStyle: "preserve-3d",
+              transform: `scale(${camPush}) rotateX(${4 - 2 * fwd}deg)`,
+            }}
+          >
+            {[0, 2, 1].map((i) => {
+              const L = layout[i];
+              const r = rise[i];
+              const side = i !== 1;
+              const blurV = Math.abs(r - risePrev[i]) * PH * 0.06;
+              const tilt = (i - 1) * mix(10, 0, Math.min(1, r));
+              return (
+                <div
+                  key={i}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    zIndex: L.z,
+                    transform: `translate(${L.x}px, ${L.y + mix(stageH * 0.85, 0, r)}px) rotateZ(${tilt}deg) rotateY(${(1 - i) * 6 * (side ? 1 - fwd * 0.4 : 0)}deg) scale(${L.s})`,
+                    filter:
+                      [
+                        blurV > 0.4 ? `url(#pt-rise-${i})` : "",
+                        side && fwd > 0.01
+                          ? `brightness(${mix(1, dark ? 0.62 : 0.9, fwd)}) blur(${fwd * 1.4}px)`
+                          : "",
+                      ]
+                        .join(" ")
+                        .trim() || undefined,
+                    opacity: frame >= B.rise[i] ? 1 : 0,
+                  }}
+                >
+                  <Phone t={t} shellDark={dark}>
+                    {screens[i]}
+                  </Phone>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

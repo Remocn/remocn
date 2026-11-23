@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="AndYou"
     component={AndYouScene}
-    durationInFrames={180}
-    fps={30}
+    durationInFrames={360}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -67,9 +67,38 @@ A list of audiences scrolls in clause by clause, each one stacking under the las
       description: "Color for the closing phrase; defaults to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Gabarito\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "2",
+      description: "Frames between words as a clause builds.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

@@ -45,8 +45,8 @@ export const RemotionRoot = () => (
   <Composition
     id="NameGloss"
     component={NameGlossScene}
-    durationInFrames={170}
-    fps={30}
+    durationInFrames={340}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -70,14 +70,49 @@ The name words rise in the middle as one phrase, then glide apart into columns a
       description: "Closing sentence in the accent color.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "2",
+      description: "Frames between words as a gloss writes in.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "42",
+      description: "Frames held on the finished card; the glosses space out to fit the rest.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of the closing sentence.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geologica\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

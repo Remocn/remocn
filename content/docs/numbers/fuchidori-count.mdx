@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="FuchidoriCount"
     component={FuchidoriCountScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -97,9 +97,44 @@ A large number rises into place and counts from `from` to `value` on a log-like 
       description: "Colour of the first ring and the caption text.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage colour; pass 'transparent' to layer over other footage.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Zen Kaku Gothic New\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "Weight of the figure.",
+    },
+    {
+      name: "countLength",
+      type: "number",
+      default: "68",
+      description: "Frames the count takes to reach the value; the rings land along the way.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

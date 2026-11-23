@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { Easing, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type CodeMorphTheme = "dark" | "light";
 
@@ -1192,9 +1194,16 @@ export function getCodeMorphState(
   };
 }
 
-function transformOf(token: CodeMorphRenderToken, lineHeight: number) {
+function transformOf(
+  token: CodeMorphRenderToken,
+  lineHeight: number,
+  moving: boolean,
+  tilt: (moving: boolean) => string,
+) {
   const move = `translate(${token.col}ch, ${token.line * lineHeight}px)`;
-  return token.scale === 1 ? move : `${move} scale(${token.scale})`;
+  return token.scale === 1
+    ? `${move}${tilt(moving)}`
+    : `${move} scale(${token.scale})${tilt(moving)}`;
 }
 
 export function CodeMorph({
@@ -1210,14 +1219,33 @@ export function CodeMorph({
   speed = codeMorphDefaults.speed,
   className,
 }: CodeMorphProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  // `glide` is taken by the easing above.
+  const tilt = useGlide();
+  const { width, height, fps } = useSceneConfig();
   const layout = useMemo(() => {
     const shape = { steps, fontSize, lineNumbers, filename, windowDots };
     return getCodeMorphLayout({ ...shape, width, height });
   }, [steps, fontSize, lineNumbers, filename, windowDots, width, height]);
   const motion = { steps, morphDuration, highlight, speed, fps };
   const state = getCodeMorphState(frame, motion, layout);
+  // The same tokens a frame either side, to tell one in motion from one at
+  // rest.
+  const around = [frame - 1, frame + 1].map(
+    (f) =>
+      new Map(
+        getCodeMorphState(f, motion, layout).tokens.map((t) => [t.key, t]),
+      ),
+  );
+  const tokenMoves = (token: CodeMorphRenderToken) =>
+    around.some((tokens) => {
+      const o = tokens.get(token.key);
+      return (
+        !o ||
+        Math.abs(o.line - token.line) * layout.lineHeight > 1e-3 ||
+        Math.abs(o.scale - token.scale) > 1e-5
+      );
+    });
   const palette = theme === "light" ? PALETTES.light : PALETTES.dark;
   const unit = layout.unit;
   const hairline = Math.max(1, unit);
@@ -1391,7 +1419,12 @@ export function CodeMorph({
                   whiteSpace: "pre",
                   color: colorOf(token.kind),
                   opacity: token.opacity,
-                  transform: transformOf(token, layout.lineHeight),
+                  transform: transformOf(
+                    token,
+                    layout.lineHeight,
+                    tokenMoves(token),
+                    tilt,
+                  ),
                   filter: token.blur > 0 ? `blur(${token.blur}px)` : undefined,
                 }}
               >

@@ -10,9 +10,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const shoulders = loadFont("normal", {
   weights: ["400", "500"],
@@ -59,7 +59,18 @@ export interface BetaThanksProps {
   before?: string;
   after?: string;
   accent?: string;
+  /** Text color of the copy and logo; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Big Shoulders by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between words of the thank-you line. */
+  stagger?: number;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -112,8 +123,26 @@ function offsetIn(el: HTMLElement, root: HTMLElement) {
   return { x, y };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function words(s: string) {
   return s.split(/\s+/).filter(Boolean);
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function BetaThanks({
@@ -123,14 +152,22 @@ export function BetaThanks({
   before = "Thank you,",
   after = "testers.",
   accent,
+  ink,
   background,
+  fontFamily = shoulders.fontFamily,
+  fontWeight = 500,
+  stagger = 4,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: BetaThanksProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
   const pace = Math.max(1, (NATURAL_END + 30) / Math.max(1, durationInFrames));
@@ -149,7 +186,7 @@ export function BetaThanks({
     Promise.all([
       shoulders.waitUntilDone(),
       manrope.waitUntilDone(),
-      document.fonts.load(`500 100px "${shoulders.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -158,7 +195,7 @@ export function BetaThanks({
     return () => {
       live = false;
     };
-  }, []);
+  }, [fontFamily, fontWeight]);
 
   useLayoutEffect(() => {
     if (!fontsOk) return;
@@ -243,8 +280,8 @@ export function BetaThanks({
   const afterWords = words(after);
 
   const display: React.CSSProperties = {
-    fontFamily: shoulders.fontFamily,
-    fontWeight: 500,
+    fontFamily,
+    fontWeight,
     lineHeight: 1,
     letterSpacing: "-0.01em",
   };
@@ -256,7 +293,7 @@ export function BetaThanks({
         display: "inline-block",
         color,
         opacity: p,
-        transform: `translateY(${((1 - p) * 0.32).toFixed(3)}em)`,
+        transform: `translateY(${((1 - p) * 0.32).toFixed(3)}em)${glide(midway(p))}`,
       }}
     >
       {text}
@@ -268,110 +305,112 @@ export function BetaThanks({
 
   const line2Nodes: React.ReactNode[] = [
     ...beforeWords.map((w, i) =>
-      riser(`b${i}`, w, rise(T_BEFORE + i * 4), c.ink),
+      riser(`b${i}`, w, rise(T_BEFORE + i * stagger), fg),
     ),
     <span
       key="slot"
       ref={slotRef}
       style={{
         display: "inline-block",
-        color: c.ink,
+        color: fg,
         opacity: landed ? 1 : 0,
       }}
     >
       {tag}
     </span>,
     ...afterWords.map((w, i) =>
-      riser(`a${i}`, w, rise(T_AFTER + i * 4), c.ink),
+      riser(`a${i}`, w, rise(T_AFTER + i * stagger), fg),
     ),
   ];
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: marginX,
-          bottom: marginY,
-          transformOrigin: "0 100%",
-          transform: `scale(${k})`,
-          opacity: m ? 1 : 0,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
-          ref={rootRef}
           style={{
-            position: "relative",
-            display: "inline-flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
+            position: "absolute",
+            left: marginX,
+            bottom: marginY,
+            transformOrigin: "0 100%",
+            transform: `scale(${k})`,
+            opacity: m ? 1 : 0,
           }}
         >
           <div
+            ref={rootRef}
             style={{
-              display: "flex",
-              alignItems: "baseline",
-              whiteSpace: "nowrap",
+              position: "relative",
+              display: "inline-flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
             }}
           >
             <div
-              ref={logoRef}
               style={{
-                display: "inline-flex",
+                display: "flex",
                 alignItems: "baseline",
-                opacity: logoIn,
-                transform: `translateY(${((1 - logoIn) * REF * 0.18).toFixed(2)}px)`,
+                whiteSpace: "nowrap",
               }}
             >
-              {logo ?? <RemocnLogo fontSize={REF} color={c.ink} />}
+              <div
+                ref={logoRef}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "baseline",
+                  opacity: logoIn,
+                  transform: `translateY(${((1 - logoIn) * REF * 0.18).toFixed(2)}px)${glide(midway(logoIn))}`,
+                }}
+              >
+                {logo ?? <RemocnLogo fontSize={REF} color={fg} />}
+              </div>
+              <div
+                style={{
+                  ...display,
+                  fontSize: REF * 0.97,
+                  marginLeft: REF * STATUS_GAP,
+                  whiteSpace: "pre",
+                }}
+              >
+                {joinSpaced(
+                  statusWords.map((w, i) =>
+                    riser(`s${i}`, w, rise(T_STATUS + i * 5, 18), hi),
+                  ),
+                )}
+              </div>
             </div>
             <div
               style={{
                 ...display,
-                fontSize: REF * 0.97,
-                marginLeft: REF * STATUS_GAP,
-                whiteSpace: "pre",
-              }}
-            >
-              {joinSpaced(
-                statusWords.map((w, i) =>
-                  riser(`s${i}`, w, rise(T_STATUS + i * 5, 18), hi),
-                ),
-              )}
-            </div>
-          </div>
-          <div
-            style={{
-              ...display,
-              fontSize: REF * LINE2_EM,
-              marginTop: REF * LINE_GAP,
-              maxWidth: REF * 4.6,
-              whiteSpace: "normal",
-              textWrap: "balance",
-            }}
-          >
-            {joinSpaced(line2Nodes)}
-          </div>
-          {m && !landed ? (
-            <span
-              style={{
-                ...display,
-                position: "absolute",
-                left: 0,
-                top: 0,
                 fontSize: REF * LINE2_EM,
-                color: c.ink,
-                opacity: tagIn * tagColorMix,
-                transformOrigin: "0 0",
-                transform: `translate(${tagX.toFixed(2)}px, ${tagY.toFixed(2)}px) scale(${tagS.toFixed(4)})`,
-                whiteSpace: "pre",
+                marginTop: REF * LINE_GAP,
+                maxWidth: REF * 4.6,
+                whiteSpace: "normal",
+                textWrap: "balance",
               }}
             >
-              {tag}
-            </span>
-          ) : null}
+              {joinSpaced(line2Nodes)}
+            </div>
+            {m && !landed ? (
+              <span
+                style={{
+                  ...display,
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  fontSize: REF * LINE2_EM,
+                  color: fg,
+                  opacity: tagIn * tagColorMix,
+                  transformOrigin: "0 0",
+                  transform: `translate(${tagX.toFixed(2)}px, ${tagY.toFixed(2)}px) scale(${tagS.toFixed(4)})${glide(midway(lift) || midway(drop) || midway(slide))}`,
+                  whiteSpace: "pre",
+                }}
+              >
+                {tag}
+              </span>
+            ) : null}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

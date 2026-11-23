@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="BloomRingDemo"
     component={BloomRingDemoScene}
-    durationInFrames={126}
-    fps={30}
+    durationInFrames={252}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -81,6 +81,27 @@ Scene A rises in a two-line headline, a lead plus an accent line. A ring of blur
       description: "Tagline shown under the logo in scene B",
     },
     {
+      name: "accent",
+      type: "string",
+      description: "Color of the scene A accent line; overrides the theme accent.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
       name: "ring",
       type: "BloomRingProps",
       description: "Overrides for colors, origin, cell size, stripe and seed",
@@ -106,6 +127,11 @@ Scene A rises in a two-line headline, a lead plus an accent line. A ring of blur
       description: "Overrides for the scene B shader parameters",
     },
     {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
       name: "sceneA",
       type: "number",
       default: "BLOOM_RING_DEMO.sceneA",
@@ -122,6 +148,30 @@ Scene A rises in a two-line headline, a lead plus an accent line. A ring of blur
       type: "number",
       default: "BLOOM_RING_DEMO.transition",
       description: "Transition length in frames",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between words as the scene A headline rises.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

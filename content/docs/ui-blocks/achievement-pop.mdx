@@ -42,8 +42,8 @@ export const RemotionRoot = () => (
   <Composition
     id="AchievementPop"
     component={AchievementPopScene}
-    durationInFrames={150}
-    fps={30}
+    durationInFrames={300}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -76,6 +76,51 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "totalLabel",
+      type: "string",
+      default: "\"Launch week\"",
+      description: "Label above the running total in portrait.",
+    },
+    {
+      name: "unit",
+      type: "string",
+      default: "\"XP\"",
+      description: "Unit shown after each points value and the total.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

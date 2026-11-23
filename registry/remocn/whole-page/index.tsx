@@ -2,7 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/Gloock";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
   continueRender,
@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const gloock = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -20,7 +20,19 @@ export interface WholePageProps {
   beliefs?: string[];
   title?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Gloock by default. */
+  fontFamily?: string;
+  /** Frames the whole page holds at the end. */
+  hold?: number;
+  /** Frames of the final pull back to the whole page. */
+  pull?: number;
+  /** Size of the page, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -54,34 +66,38 @@ const CLAMP = {
 
 let measureCtx: CanvasRenderingContext2D | null = null;
 
-function em(s: string): number {
+function em(s: string, fontFamily: string): number {
   if (!measureCtx) {
     measureCtx = document.createElement("canvas").getContext("2d");
   }
   if (!measureCtx) return s.length * 0.5;
-  measureCtx.font = `400 100px "${gloock.fontFamily}"`;
+  measureCtx.font = `400 100px "${fontFamily}"`;
   return measureCtx.measureText(s).width / 100 + TRACK * Array.from(s).length;
 }
 
-function useFontReady() {
-  const [ready, setReady] = useState(false);
+function useFontReady(fontFamily: string) {
+  const [ready, setReady] = useState<string | null>(null);
   const [handle] = useState(() => delayRender("whole-page: font"));
+  const released = useRef(false);
   useEffect(() => {
     let live = true;
     gloock
       .waitUntilDone()
-      .then(() => document.fonts.load(`400 100px "${gloock.fontFamily}"`))
+      .then(() => document.fonts.load(`400 100px "${fontFamily}"`))
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setReady(true);
-        continueRender(handle);
+        setReady(fontFamily);
+        if (!released.current) {
+          released.current = true;
+          continueRender(handle);
+        }
       });
     return () => {
       live = false;
     };
-  }, [handle]);
-  return ready;
+  }, [handle, fontFamily]);
+  return ready !== null;
 }
 
 interface Laid {
@@ -89,8 +105,13 @@ interface Laid {
   lines: number;
 }
 
-function wrapAt(words: string[], widths: number[], maxEm: number): Laid {
-  const space = em(" ");
+function wrapAt(
+  words: string[],
+  widths: number[],
+  maxEm: number,
+  fontFamily: string,
+): Laid {
+  const space = em(" ", fontFamily);
   const out: { text: string; x: number; line: number }[] = [];
   let line = 0;
   let x = 0;
@@ -105,36 +126,60 @@ function wrapAt(words: string[], widths: number[], maxEm: number): Laid {
   return { words: out, lines: line + 1 };
 }
 
-function balanced(text: string, maxEm: number): Laid {
+function balanced(text: string, maxEm: number, fontFamily: string): Laid {
   const words = text.split(/\s+/).filter(Boolean);
-  const widths = words.map(em);
-  const base = wrapAt(words, widths, maxEm);
+  const widths = words.map((w) => em(w, fontFamily));
+  const base = wrapAt(words, widths, maxEm, fontFamily);
   let lo = Math.max(...widths, 0.1);
   let hi = maxEm;
   for (let i = 0; i < 14; i++) {
     const mid = (lo + hi) / 2;
-    if (wrapAt(words, widths, mid).lines <= base.lines) hi = mid;
+    if (wrapAt(words, widths, mid, fontFamily).lines <= base.lines) hi = mid;
     else lo = mid;
   }
-  return wrapAt(words, widths, hi);
+  return wrapAt(words, widths, hi, fontFamily);
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function WholePage({
   beliefs = DEFAULT_BELIEFS,
   title = "What we believe",
   accent,
+  ink,
   background,
+  fontFamily = gloock.fontFamily,
+  hold = HOLD,
+  pull: pullLen = PULL,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: WholePageProps) {
-  const frame = useCurrentFrame();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const ready = useFontReady();
+  const ready = useFontReady(fontFamily);
 
   if (!ready || beliefs.length === 0) {
     return (
@@ -155,7 +200,7 @@ export function WholePage({
   const gridH = H * (portrait ? 0.9 : 0.9) - gridTop;
 
   const layoutAt = (F: number) => {
-    const lays = beliefs.map((b) => balanced(b, colW / F));
+    const lays = beliefs.map((b) => balanced(b, colW / F, fontFamily));
     const rowLines = Array.from({ length: rows }, (_, r) =>
       Math.max(...lays.slice(r * cols, r * cols + cols).map((l) => l.lines), 1),
     );
@@ -165,7 +210,7 @@ export function WholePage({
   };
 
   const widestWord = Math.max(
-    ...beliefs.flatMap((b) => b.split(/\s+/).map(em)),
+    ...beliefs.flatMap((b) => b.split(/\s+/).map((w) => em(w, fontFamily))),
   );
   const fits = (F: number) =>
     layoutAt(F).total <= gridH && widestWord * F <= colW;
@@ -197,7 +242,10 @@ export function WholePage({
     lay: l,
   }));
   const zoomOf = paras.map((p) => {
-    const lineW = Math.max(...p.lay.words.map((w) => w.x + em(w.text)), 0.1);
+    const lineW = Math.max(
+      ...p.lay.words.map((w) => w.x + em(w.text, fontFamily)),
+      0.1,
+    );
     return Math.max(
       1,
       Math.min(
@@ -210,36 +258,42 @@ export function WholePage({
   const ax = mx;
   const ay = H * (portrait ? 0.1 : 0.1);
 
-  const D = durationInFrames * speed;
-  const per = Math.max(30, (D - START - PULL - HOLD) / n);
+  const D = Math.max(0, durationInFrames - delay) * speed;
+  const per = Math.max(30, (D - START - pullLen - hold) / n);
   const pan = Math.min(16, per * 0.36);
   const arriveAt = (i: number) => START + i * per;
   const pullAt = START + n * per - 6;
 
-  let qx = paras[0].x;
-  let qy = paras[0].y;
-  let S = zoomOf[0];
-  for (let i = 1; i < n; i++) {
-    const p = interpolate(t, [arriveAt(i) - pan, arriveAt(i)], [0, 1], {
+  const pullOf = (tt: number) =>
+    interpolate(tt, [pullAt, pullAt + pullLen], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-    if (p > 0) {
-      qx = paras[i - 1].x + (paras[i].x - paras[i - 1].x) * p;
-      qy = paras[i - 1].y + (paras[i].y - paras[i - 1].y) * p;
-      S = zoomOf[i - 1] * (zoomOf[i] / zoomOf[i - 1]) ** p;
+  const cameraAt = (tt: number) => {
+    let qx = paras[0].x;
+    let qy = paras[0].y;
+    let S = zoomOf[0];
+    for (let i = 1; i < n; i++) {
+      const p = interpolate(tt, [arriveAt(i) - pan, arriveAt(i)], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      });
+      if (p > 0) {
+        qx = paras[i - 1].x + (paras[i].x - paras[i - 1].x) * p;
+        qy = paras[i - 1].y + (paras[i].y - paras[i - 1].y) * p;
+        S = zoomOf[i - 1] * (zoomOf[i] / zoomOf[i - 1]) ** p;
+      }
     }
-  }
-  const pull = interpolate(t, [pullAt, pullAt + PULL], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const z = S ** (1 - pull);
-  const zp = (S - z) / Math.max(0.0001, S - 1);
-  const cx = qx + (ax - qx) * zp;
-  const cy = qy + (ay - qy) * zp;
-  const tx = ax - cx * z;
-  const ty = ay - cy * z;
+    const z = S ** (1 - pullOf(tt));
+    const zp = (S - z) / Math.max(0.0001, S - 1);
+    const cx = qx + (ax - qx) * zp;
+    const cy = qy + (ay - qy) * zp;
+    return `translate(${(ax - cx * z).toFixed(2)}px, ${(ay - cy * z).toFixed(2)}px) scale(${z.toFixed(5)})`;
+  };
+  const pull = pullOf(t);
+  const camera = cameraAt(t);
+  const cameraMoving =
+    cameraAt(t + speed) !== camera || cameraAt(t - speed) !== camera;
 
   const intro = interpolate(t, [0, 18], [0, 1], {
     ...CLAMP,
@@ -277,8 +331,10 @@ export function WholePage({
       const finalOp = read ? 1 : DIM;
       const opacity = (base + (finalOp - base) * settle) * intro;
       const color = isLast
-        ? interpolateColors(Math.max(focus, settle * read), [0, 1], [c.ink, hi])
-        : c.ink;
+        ? interpolateColors(Math.max(focus, settle * read), [0, 1], [fg, hi])
+        : fg;
+      // The first paragraph rises in by transform, not `top`: layout rounds a
+      // baseline to whole pixels, so words eased by `top` click into place.
       const rise = i === 0 ? (1 - intro) * Fp * 0.3 : 0;
       nodes.push(
         <div
@@ -286,8 +342,8 @@ export function WholePage({
           style={{
             position: "absolute",
             left: para.x + w.x * Fp,
-            top: para.y + w.line * LH * Fp + rise,
-            fontFamily: gloock.fontFamily,
+            top: para.y + w.line * LH * Fp,
+            fontFamily,
             fontWeight: 400,
             fontSize: Fp,
             lineHeight: `${LH * Fp}px`,
@@ -295,6 +351,10 @@ export function WholePage({
             whiteSpace: "pre",
             color,
             opacity,
+            transform:
+              i === 0
+                ? `translateY(${rise > 1e-3 ? rise : 0}px)${glide(intro > 0 && intro < 1)}`
+                : undefined,
           }}
         >
           {w.text}
@@ -307,38 +367,40 @@ export function WholePage({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: W,
-          height: H,
-          transformOrigin: "0 0",
-          transform: `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${z.toFixed(5)})`,
-        }}
-      >
-        {title ? (
-          <div
-            style={{
-              position: "absolute",
-              left: mx,
-              top: top + slack,
-              fontFamily: gloock.fontFamily,
-              fontWeight: 400,
-              fontSize: Ft,
-              lineHeight: 1,
-              letterSpacing: "-0.01em",
-              whiteSpace: "pre",
-              color: c.ink,
-              opacity: 0.6 * titleOp,
-            }}
-          >
-            {title}
-          </div>
-        ) : null}
-        {nodes}
-      </div>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: W,
+            height: H,
+            transformOrigin: "0 0",
+            transform: `${camera}${glide(cameraMoving)}`,
+          }}
+        >
+          {title ? (
+            <div
+              style={{
+                position: "absolute",
+                left: mx,
+                top: top + slack,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: Ft,
+                lineHeight: 1,
+                letterSpacing: "-0.01em",
+                whiteSpace: "pre",
+                color: fg,
+                opacity: 0.6 * titleOp,
+              }}
+            >
+              {title}
+            </div>
+          ) : null}
+          {nodes}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

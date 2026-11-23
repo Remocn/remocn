@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="LayeredCutout"
     component={LayeredCutoutScene}
-    durationInFrames={170}
-    fps={30}
+    durationInFrames={340}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -77,6 +77,52 @@ Between 4 and 6 cut sheets part in depth while the camera pushes through them. T
       name: "accentLayer",
       type: "number",
       description: "Which sheet, 0 at the front, is cut from gradient paper",
+    },
+    {
+      name: "push",
+      type: "number",
+      default: "132",
+      description: "Frames the camera takes to dolly through the cuts.",
+    },
+    {
+      name: "depthBlur",
+      type: "number",
+      default: "1",
+      description: "Strength of the blur on sheets near the camera; 0 keeps every sheet sharp.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hanken Grotesk\"",
+      description: "Typeface for the tagline. Load the font in your project first.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="SpeedRampWord"
     component={SpeedRampWordScene}
-    durationInFrames={121}
-    fps={30}
+    durationInFrames={242}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -69,10 +69,56 @@ The phrase rushes across the frame, then time slows on the key word as it warms 
       description: "Show the small timecode and speed readout that slow down with the shot.",
     },
     {
+      name: "ghosts",
+      type: "boolean",
+      default: "true",
+      description: "Trailing copies of the key word that gather while it slows.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "Weight of the phrase; the key word keeps its serif italic.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color of the phrase; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Schibsted Grotesk\"",
+      description: "Typeface for the phrase; the key word keeps its serif italic. Load the font in your project first.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

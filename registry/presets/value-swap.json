@@ -1,0 +1,92 @@
+{
+  "component": "value-swap",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-flip",
+      "label": "Snap Flip",
+      "description": "A quick, short-travel swap that flips the value almost instantly like a ticker.",
+      "askedAs": [
+        "fast short value flip",
+        "instant number swap",
+        "quick ticker change",
+        "быстрая смена значения",
+        "мгновенный переключатель цифры"
+      ],
+      "props": {
+        "duration": 5,
+        "distance": 6,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A long, deliberate slide with generous travel that lets the new value settle in calmly.",
+      "askedAs": [
+        "slow dramatic value change",
+        "gentle reveal of new price",
+        "calm smooth swap",
+        "медленная смена значения",
+        "плавное появление нового числа"
+      ],
+      "props": {
+        "duration": 20,
+        "distance": 24,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "drop-down",
+      "label": "Drop Down",
+      "description": "The new value falls in from above with a medium slide, reading as a decrease or downgrade.",
+      "askedAs": [
+        "value drops from top",
+        "swap downward",
+        "price goes down animation",
+        "значение падает сверху",
+        "смена вниз"
+      ],
+      "props": {
+        "direction": "down",
+        "duration": 12,
+        "distance": 16
+      }
+    },
+    {
+      "id": "big-launch",
+      "label": "Big Launch",
+      "description": "A punchy upward swap with long travel that throws the old value out of frame for an emphatic promotion.",
+      "askedAs": [
+        "bold upward status change",
+        "energetic big swap",
+        "promotion reveal with impact",
+        "резкая смена вверх с размахом",
+        "эффектное повышение статуса"
+      ],
+      "props": {
+        "distance": 32,
+        "duration": 8,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "subtle-nudge",
+      "label": "Subtle Nudge",
+      "description": "A barely-there slide with minimal travel for quiet token or hex updates in dense layouts.",
+      "askedAs": [
+        "minimal subtle value update",
+        "quiet hex code swap",
+        "soft small change",
+        "едва заметная смена значения",
+        "тихое обновление токена"
+      ],
+      "props": {
+        "distance": 4,
+        "duration": 14,
+        "speed": 0.5
+      }
+    }
+  ]
+}

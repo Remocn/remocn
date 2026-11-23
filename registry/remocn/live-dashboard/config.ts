@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const liveDashboardConfig: ComponentConfig = {
   componentName: "LiveDashboard",
@@ -12,11 +19,6 @@ export const liveDashboardConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -32,6 +34,21 @@ export const liveDashboardConfig: ComponentConfig = {
       type: "text-content",
       default: "USD",
       description: "Currency",
+    },
+    volumeLabel: {
+      type: "text-content",
+      default: "Gross volume",
+      description: "Volume label",
+    },
+    feedTitle: {
+      type: "text-content",
+      default: "Payments",
+      description: "Feed title",
+    },
+    visitorsLabel: {
+      type: "text-content",
+      default: "on site",
+      description: "Visitors label",
     },
     change: {
       type: "number",
@@ -51,6 +68,13 @@ export const liveDashboardConfig: ComponentConfig = {
       description: "Visitors",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

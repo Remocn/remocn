@@ -5,6 +5,7 @@ import {
   CanvasSceneA,
   CanvasSceneB,
 } from "@/components/docs/examples/canvas-scenes";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { displacement } from "@/registry/remocn/displacement";
 
 interface DisplacementExampleProps {
@@ -24,13 +25,14 @@ export function DisplacementExampleScene({
   grain,
   stagger,
 }: DisplacementExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={45}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(45)}>
         <CanvasSceneA />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 18 })}
+        timing={linearTiming({ durationInFrames: toFrames(18) })}
         presentation={displacement({
           grid,
           cellAspect,
@@ -40,7 +42,7 @@ export function DisplacementExampleScene({
           stagger,
         })}
       />
-      <TransitionSeries.Sequence durationInFrames={45}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(45)}>
         <CanvasSceneB />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -61,14 +63,14 @@ import { displacement } from "@/components/remocn/displacement";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={45}>
+    <TransitionSeries.Sequence durationInFrames={90}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 18 })}
+      timing={linearTiming({ durationInFrames: 36 })}
       presentation={displacement({ grid: ${grid}, cellAspect: ${cellAspect}, shift: ${shift}, aberration: ${aberration}, grain: ${grain}, stagger: ${stagger} })}
     />
-    <TransitionSeries.Sequence durationInFrames={45}>
+    <TransitionSeries.Sequence durationInFrames={90}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

@@ -2,14 +2,8 @@
 
 import { type Font, parse } from "opentype.js";
 import { useEffect, useId, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface OutlineTraceProps {
   text?: string;
@@ -279,8 +273,8 @@ export function OutlineTrace({
   speed = outlineTraceDefaults.speed,
   className,
 }: OutlineTraceProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
   const id = `outline-trace-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const font = useOutlineFont(fontUrl);
   if (!font) return null;

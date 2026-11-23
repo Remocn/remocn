@@ -1,0 +1,119 @@
+{
+  "component": "shader-perlin-noise",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "morning-fog",
+      "label": "Morning Fog",
+      "description": "Pale, very soft grey mist drifting slowly over an off-white field.",
+      "askedAs": [
+        "light misty background",
+        "soft white fog texture",
+        "calm pale clouds",
+        "светлый туман фон",
+        "мягкая белая дымка"
+      ],
+      "props": {
+        "speed": 0.5,
+        "softness": 0.7,
+        "proportion": 0.45,
+        "colorBack": "#f4f3ef",
+        "colorFront": "#c9c7c0"
+      }
+    },
+    {
+      "id": "deep-ocean",
+      "label": "Deep Ocean",
+      "description": "Dark navy depths with muted teal clouds rolling gently through.",
+      "askedAs": [
+        "dark blue underwater clouds",
+        "navy and teal noise",
+        "calm ocean texture",
+        "тёмно-синие облака под водой",
+        "морской фон с бирюзой"
+      ],
+      "props": {
+        "speed": 0.75,
+        "softness": 0.4,
+        "colorBack": "#0b1a2b",
+        "colorFront": "#2f7a7e"
+      }
+    },
+    {
+      "id": "ink-blots",
+      "label": "Ink Blots",
+      "description": "Crisp, high-contrast black shapes on paper white, like spreading ink.",
+      "askedAs": [
+        "sharp black and white noise",
+        "ink stain pattern",
+        "hard edged clouds",
+        "чернильные пятна",
+        "чёрно-белый резкий шум"
+      ],
+      "props": {
+        "softness": 0,
+        "proportion": 0.5,
+        "colorBack": "#f5f2ea",
+        "colorFront": "#161616"
+      }
+    },
+    {
+      "id": "ember-smoke",
+      "label": "Ember Smoke",
+      "description": "Warm terracotta haze swirling briskly over a deep charcoal-brown base.",
+      "askedAs": [
+        "warm orange smoke background",
+        "fast drifting rust clouds",
+        "fiery haze texture",
+        "тёплый дым оранжевый",
+        "быстрые огненные облака"
+      ],
+      "props": {
+        "speed": 2,
+        "softness": 0.3,
+        "proportion": 0.3,
+        "colorBack": "#1c120e",
+        "colorFront": "#c0603a"
+      }
+    },
+    {
+      "id": "sparse-wisps",
+      "label": "Sparse Wisps",
+      "description": "Thin, faint lavender wisps barely surfacing from a near-black night.",
+      "askedAs": [
+        "subtle faint clouds",
+        "minimal dark texture",
+        "barely visible noise",
+        "едва заметные облака",
+        "тонкая тёмная дымка"
+      ],
+      "props": {
+        "speed": 0.25,
+        "proportion": 0.15,
+        "softness": 0.6,
+        "colorBack": "#0d0c14",
+        "colorFront": "#8b80b0"
+      }
+    },
+    {
+      "id": "sage-meadow",
+      "label": "Sage Meadow",
+      "description": "Dense sage-green clouds filling a soft cream ground at an easy pace.",
+      "askedAs": [
+        "green organic clouds",
+        "sage and cream backdrop",
+        "natural soft texture",
+        "зелёные мягкие облака",
+        "природный фон шалфей"
+      ],
+      "props": {
+        "proportion": 0.65,
+        "softness": 0.5,
+        "speed": 1.25,
+        "colorBack": "#ece8dc",
+        "colorFront": "#7f9a7a"
+      }
+    }
+  ]
+}

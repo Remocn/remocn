@@ -4,13 +4,8 @@ import { loadFont as loadDisplay } from "@remotion/google-fonts/BricolageGrotesq
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -118,15 +113,24 @@ function Headline({
   tone,
   accent,
   mark,
+  fontFamily,
+  fontWeight,
+  ink,
+  logoNode,
 }: {
   text: string;
   tone: Tone;
   accent: string;
   mark: boolean;
+  fontFamily: string;
+  fontWeight: number;
+  ink?: string;
+  logoNode?: React.ReactNode;
 }) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const c = TONES[tone];
+  const fg = ink ?? c.fg;
   const logo = mark && isLogo(text);
   const dot = mark && !logo && text.endsWith(".");
   const body = dot ? text.slice(0, -1) : text;
@@ -134,21 +138,23 @@ function Headline({
   return (
     <AbsoluteFill
       style={{
-        color: c.fg,
+        color: fg,
         alignItems: "center",
         justifyContent: "center",
       }}
     >
       {logo ? (
-        <RemocnLogo
-          fontSize={Math.min(168 * u, (0.56 * W) / 3.9)}
-          color={c.fg}
-        />
+        (logoNode ?? (
+          <RemocnLogo
+            fontSize={Math.min(168 * u, (0.56 * W) / 3.9)}
+            color={fg}
+          />
+        ))
       ) : (
         <div
           style={{
-            fontFamily: display,
-            fontWeight: 500,
+            fontFamily,
+            fontWeight,
             fontSize: size,
             letterSpacing: "-0.04em",
             lineHeight: 1,
@@ -171,28 +177,46 @@ function Scene({
   accent,
   mark,
   ground,
+  bg,
+  fontFamily,
+  fontWeight,
+  ink,
+  logo,
+  scale,
 }: {
   content: React.ReactNode;
   tone: Tone;
   accent: string;
   mark: boolean;
   ground?: string;
+  bg?: string;
+  fontFamily: string;
+  fontWeight: number;
+  ink?: string;
+  logo?: React.ReactNode;
+  scale: number;
 }) {
   const text = typeof content === "string" || typeof content === "number";
   return (
     <AbsoluteFill
-      style={{ backgroundColor: TONES[tone].bg, backgroundImage: ground }}
+      style={{ backgroundColor: bg ?? TONES[tone].bg, backgroundImage: ground }}
     >
-      {text ? (
-        <Headline
-          text={String(content)}
-          tone={tone}
-          accent={accent}
-          mark={mark}
-        />
-      ) : (
-        content
-      )}
+      <ScaleLayer scale={scale}>
+        {text ? (
+          <Headline
+            text={String(content)}
+            tone={tone}
+            accent={accent}
+            mark={mark}
+            fontFamily={fontFamily}
+            fontWeight={fontWeight}
+            ink={ink}
+            logoNode={logo}
+          />
+        ) : (
+          content
+        )}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -239,6 +263,38 @@ export interface BandShiftProps {
   speed?: number;
   /** `dark` lands on a dark scene, `light` on a light one. */
   theme?: Tone;
+  /** Frames each band takes to cross the frame. */
+  travel?: number;
+  /** Typeface for the headlines. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Weight of the headlines. */
+  fontWeight?: number;
+  /** Text color of the landed scene; overrides the theme ink. */
+  ink?: string;
+  /** Fill of the landed scene in place of its mesh ground; "transparent" drops it. */
+  background?: string;
+  /** Replaces the remocn mark when `to` is "remocn". */
+  logo?: React.ReactNode;
+  /** Size of the headlines, around the frame's center. */
+  scale?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 const TRAVEL = 22;
@@ -256,9 +312,17 @@ export function BandShift({
   accent = "#3B5BFD",
   speed = 1,
   theme = "dark",
+  travel = TRAVEL,
+  fontFamily = display,
+  fontWeight = 500,
+  ink,
+  background,
+  logo,
+  scale = 1,
+  grain = true,
 }: BandShiftProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = useSceneFrame() * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const n = Math.round(Math.min(7, Math.max(5, bands)));
   const toneB: Tone = theme;
@@ -266,15 +330,27 @@ export function BandShift({
   const fills = colors?.length ? colors : null;
   const drift = Math.min(1, t / 150);
   const field = meshField(drift * 0.18);
-  const ground = meshGround(toneB, drift * 0.12);
+  const ground =
+    background === undefined ? meshGround(toneB, drift * 0.12) : undefined;
+  const bgB =
+    background === undefined
+      ? TONES[toneB].bg
+      : background === "transparent"
+        ? "transparent"
+        : background;
   const bandH = H / n;
-  const lastEnd = delay + (n - 1) * stagger + TRAVEL;
+  const lastEnd = delay + (n - 1) * stagger + travel;
 
   return (
-    <AbsoluteFill style={{ background: STAGE, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background: background === "transparent" ? undefined : STAGE,
+        overflow: "hidden",
+      }}
+    >
       {Array.from({ length: n }, (_, i) => {
         const start = delay + i * stagger;
-        const p = interpolate(t, [start, start + TRAVEL], [0, 1], CLAMP);
+        const p = interpolate(t, [start, start + travel], [0, 1], CLAMP);
         const e = EASE_SHIFT(p);
         const d = i % 2 === 0 ? 1 : -1;
         const S = BLOCKS[i % BLOCKS.length] * W;
@@ -293,6 +369,11 @@ export function BandShift({
         const landed = p >= 1;
         const fill = fills ? fills[i % fills.length] : null;
         const inView = (x: number, w: number) => x < W && x + w > 0;
+        // Layout rounds a box to whole pixels, so a scene slid by `left`
+        // lands in uneven steps on the ease's last frames; the slide is a
+        // transform instead, and none at all where the scene rests.
+        const slide = (x: number) =>
+          Math.abs(x) < 1e-3 ? undefined : `translateX(${x}px)`;
         return (
           <div
             key={`band-${top}`}
@@ -303,15 +384,16 @@ export function BandShift({
               width: W,
               height: y1 - y0,
               overflow: "hidden",
-              background: landed || !idle ? TONES[toneB].bg : TONES[toneA].bg,
+              background: landed || !idle ? bgB : TONES[toneA].bg,
             }}
           >
             {landed || !inView(xA, W) ? null : (
               <div
                 style={{
                   position: "absolute",
-                  left: xA,
+                  left: 0,
                   top: -y0,
+                  transform: slide(xA),
                   width: W,
                   height: H,
                 }}
@@ -321,6 +403,9 @@ export function BandShift({
                   tone={toneA}
                   accent={accent}
                   mark={false}
+                  fontFamily={fontFamily}
+                  fontWeight={fontWeight}
+                  scale={scale}
                 />
               </div>
             )}
@@ -346,8 +431,9 @@ export function BandShift({
               <div
                 style={{
                   position: "absolute",
-                  left: landed ? 0 : xB,
+                  left: 0,
                   top: -y0,
+                  transform: landed ? undefined : slide(xB),
                   width: W,
                   height: H,
                 }}
@@ -358,13 +444,19 @@ export function BandShift({
                   accent={accent}
                   mark
                   ground={ground}
+                  bg={bgB}
+                  fontFamily={fontFamily}
+                  fontWeight={fontWeight}
+                  ink={ink}
+                  logo={logo}
+                  scale={scale}
                 />
               </div>
             )}
           </div>
         );
       })}
-      <Grain opacity={theme === "light" ? 0.035 : 0.05} />
+      {grain ? <Grain opacity={theme === "light" ? 0.035 : 0.05} /> : null}
     </AbsoluteFill>
   );
 }

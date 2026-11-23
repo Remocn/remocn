@@ -37,21 +37,21 @@ import { pageTurn } from "@/components/remocn/page-turn";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={76}>
+    <TransitionSeries.Sequence durationInFrames={152}>
       <PageOne />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 24 })}
+      timing={linearTiming({ durationInFrames: 48 })}
       presentation={pageTurn()}
     />
-    <TransitionSeries.Sequence durationInFrames={76}>
+    <TransitionSeries.Sequence durationInFrames={152}>
       <PageTwo />
     </TransitionSeries.Sequence>
   </TransitionSeries>
 );
 ```
 
-24 frames is the pairing this transition was built around — eight poses at the
+24 frames at 30 fps, 48 at 60 fps, is the pairing this transition was built around — eight poses at the
 kit's default tempo of three frames each.
 
 ### The exiting scene stays on top

@@ -4,13 +4,9 @@ import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/Saira";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: saira } = loadFont("normal", {
   weights: ["400", "500"],
@@ -70,6 +66,22 @@ export interface TimingTowerProps {
   intervalLabel?: string;
   /** The live dot in the tower header. */
   accent?: string;
+  /** Text color of the car codes, numeral and poster; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the tower and poster. Load it yourself; Saira by default. */
+  fontFamily?: string;
+  /** Word before the lap counter in the tower header. */
+  lapLabel?: string;
+  /** Label over the giant numeral, after the hero code. */
+  positionLabel?: string;
+  /** Replaces the remocn mark in the poster. */
+  logo?: React.ReactNode;
+  /** Size of the tower and poster, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -135,6 +147,8 @@ const THEMES = {
   },
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function ramp(t: number, from: number, len: number) {
   return interpolate(t, [from, from + len], [0, 1], CLAMP);
 }
@@ -176,6 +190,22 @@ const SWAPS: number[][][] = [
   ],
 ];
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TimingTower({
   code = "RMC",
   field = ["KRV", "DLA", "MTS", "BRN", "OKO", "VAL", "PIR", "SAN", "TOR"],
@@ -184,13 +214,25 @@ export function TimingTower({
   interval = "+12.408",
   intervalLabel = "Gap to P2",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = saira,
+  lapLabel = "LAP",
+  positionLabel = "Position",
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: TimingTowerProps) {
+  const glide = useGlide();
   // Starts four frames in, so frame 0 already shows the tower wiping in.
-  const t = useCurrentFrame() * speed + 4;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + 4;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
   // ── Orders per lap ────────────────────────────────────────────────────────
@@ -274,7 +316,7 @@ export function TimingTower({
     ];
     return (
       <span style={{ position: "relative", display: "inline-block" }}>
-        <span style={{ color: c.ink, opacity: 1 - p1 }}>{ch}</span>
+        <span style={{ color: fg, opacity: 1 - p1 }}>{ch}</span>
         {fills.map(([fill, op]) =>
           op > 0 ? (
             <span
@@ -307,7 +349,7 @@ export function TimingTower({
         top: 0,
         width: cellW,
         height: giantFs,
-        transform: `translateY(${y}px)`,
+        transform: `translateY(${y}px)${glide(y !== 0 && midway(rollP))}`,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -324,7 +366,7 @@ export function TimingTower({
         inset: 0,
         display: "flex",
         alignItems: "center",
-        fontFamily: saira,
+        fontFamily,
         fontWeight: 500,
         fontSize: giantFs,
         lineHeight: 1,
@@ -368,25 +410,33 @@ export function TimingTower({
   const drawOrder = cars.map((_, i) => i).filter((i) => i !== hero);
   drawOrder.push(hero);
 
+  const finalOrder = orders[orders.length - 1];
   const rows = drawOrder.map((car) => {
     const a = slotIn(from, car);
     const b = slotIn(to, car);
-    const slot = a + (b - a) * swapP;
     const settled = b;
     const isHero = car === hero;
     const passing = a !== b && b < a ? Math.sin(Math.PI * swapP) : 0;
     const ent = enter(3 + settled * 1.2);
     const ex = exitP(settled);
-    const x = towerX - (1 - ent) * (towerW + towerX) - ex * exitDX;
-    const y = rowsY + slot * pitch;
+    // Layout rounds a box and a baseline to whole pixels, so a row eased by
+    // `left`/`top` steps unevenly. The row is laid out once, in the slot it
+    // holds after the last lap, and every slot before that is a transform:
+    // moving its layout from slot to slot on each lap would snap its text by
+    // the rounding difference on that frame.
+    const home = slotIn(finalOrder, car);
+    const dx = -(1 - ent) * (towerW + towerX) - ex * exitDX + passing * 14 * u;
+    const dy = (b - home + (a - b) * (1 - swapP)) * pitch;
+    const off = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
     const stripe = isHero ? PURPLE : c.stripes[(car * 3) % c.stripes.length];
     return (
       <div
         key={cars[car]}
         style={{
           position: "absolute",
-          left: x + posW + 4 * u + passing * 14 * u,
-          top: y,
+          left: towerX + posW + 4 * u,
+          top: rowsY + home * pitch,
+          transform: `translate(${off(dx)}px, ${off(dy)}px)${glide(a !== b && midway(swapP))}`,
           width: towerW - posW - 4 * u,
           height: rowH,
           background: c.row,
@@ -430,11 +480,11 @@ export function TimingTower({
           style={{
             position: "relative",
             marginLeft: 14 * u,
-            fontFamily: saira,
+            fontFamily,
             fontWeight: 500,
             fontSize: 27 * u,
             letterSpacing: "0.06em",
-            color: isHero && (p1 > 0.5 || passFlash > 0.4) ? "#FFFFFF" : c.ink,
+            color: isHero && (p1 > 0.5 || passFlash > 0.4) ? "#FFFFFF" : fg,
             flex: 1,
             paddingTop: 1 * u,
           }}
@@ -445,7 +495,7 @@ export function TimingTower({
           style={{
             position: "relative",
             marginRight: 18 * u,
-            fontFamily: saira,
+            fontFamily,
             fontWeight: 400,
             fontSize: 22 * u,
             fontVariantNumeric: "tabular-nums",
@@ -464,13 +514,16 @@ export function TimingTower({
   const posBoxes = cars.map((_, s) => {
     const ent = enter(3 + s * 1.2);
     const ex = exitP(s);
+    // Laid out in place and slid in by a transform, like the rows.
+    const dx = -(1 - ent) * (towerW + towerX) - ex * exitDX;
     return (
       <div
         key={`pos-${s + 1}`}
         style={{
           position: "absolute",
-          left: towerX - (1 - ent) * (towerW + towerX) - ex * exitDX,
+          left: towerX,
           top: rowsY + s * pitch,
+          transform: Math.abs(dx) < 1e-3 ? undefined : `translateX(${dx}px)`,
           width: posW,
           height: rowH,
           background: c.pos,
@@ -478,7 +531,7 @@ export function TimingTower({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: saira,
+          fontFamily,
           fontWeight: 500,
           fontSize: 25 * u,
           fontVariantNumeric: "tabular-nums",
@@ -491,6 +544,7 @@ export function TimingTower({
 
   const headEnt = enter(0);
   const headEx = exitP(-1);
+  const headDX = -(1 - headEnt) * (towerW + towerX) - headEx * exitDX;
 
   const label: React.CSSProperties = {
     fontFamily: mono,
@@ -502,7 +556,7 @@ export function TimingTower({
   };
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
@@ -512,183 +566,187 @@ export function TimingTower({
         }}
       />
 
-      {/* Tower header: lap counter. */}
-      <div
-        style={{
-          position: "absolute",
-          left: towerX - (1 - headEnt) * (towerW + towerX) - headEx * exitDX,
-          top: towerY,
-          width: towerW,
-          height: headH,
-          background: c.head,
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: 18 * u,
-          paddingRight: 18 * u,
-          gap: 12 * u,
-          overflow: "hidden",
-        }}
-      >
+      <ScaleLayer scale={scale}>
+        {/* Tower header: lap counter. */}
         <div
           style={{
             position: "absolute",
-            left: 0,
-            top: 0,
-            right: 0,
-            height: 4 * u,
-            background: `linear-gradient(90deg, ${AURORA[0]} 0%, ${AURORA[1]} 35%, ${AURORA[2]} 70%, ${AURORA[3]} 100%)`,
-          }}
-        />
-        <div
-          style={{
-            width: 9 * u,
-            height: 9 * u,
-            background: accent,
-            opacity: Math.floor(t / 15) % 2 === 0 ? 1 : 0.35,
-          }}
-        />
-        <div
-          style={{
-            fontFamily: saira,
-            fontWeight: 500,
-            fontSize: 26 * u,
-            letterSpacing: "0.08em",
-            color: "#F3F2EF",
-            flex: 1,
-            paddingTop: 2 * u,
-          }}
-        >
-          LAP{" "}
-          <span
-            style={{
-              fontVariantNumeric: "tabular-nums",
-              color: lapFlash > 0.3 ? AURORA[0] : "#F3F2EF",
-            }}
-          >
-            {lapNow}
-          </span>
-          <span style={{ color: "#8A8990" }}>/{laps}</span>
-        </div>
-        <div style={{ ...label, color: "#8A8990", fontSize: 13 * u }}>
-          Interval
-        </div>
-      </div>
-
-      {posBoxes}
-      {rows}
-
-      {/* Giant numeral; slides left into the poster with the info block. */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div
-          style={{
+            left: towerX,
+            top: towerY,
+            transform:
+              Math.abs(headDX) < 1e-3 ? undefined : `translateX(${headDX}px)`,
+            width: towerW,
+            height: headH,
+            background: c.head,
             display: "flex",
             alignItems: "center",
-            gap: 52 * u,
-            transform: `translateX(${giantShift}px)`,
+            paddingLeft: 18 * u,
+            paddingRight: 18 * u,
+            gap: 12 * u,
+            overflow: "hidden",
           }}
         >
           <div
             style={{
-              position: "relative",
-              width: giantW,
-              height: giantFs,
-              transform: `translateY(${(1 - giantIn) * 60 * u}px)`,
-              opacity: giantIn,
+              position: "absolute",
+              left: 0,
+              top: 0,
+              right: 0,
+              height: 4 * u,
+              background: `linear-gradient(90deg, ${AURORA[0]} 0%, ${AURORA[1]} 35%, ${AURORA[2]} 70%, ${AURORA[3]} 100%)`,
+            }}
+          />
+          <div
+            style={{
+              width: 9 * u,
+              height: 9 * u,
+              background: accent,
+              opacity: Math.floor(t / 15) % 2 === 0 ? 1 : 0.35,
+            }}
+          />
+          <div
+            style={{
+              fontFamily,
+              fontWeight: 500,
+              fontSize: 26 * u,
+              letterSpacing: "0.08em",
+              color: "#F3F2EF",
+              flex: 1,
+              paddingTop: 2 * u,
             }}
           >
-            <div
+            {lapLabel}{" "}
+            <span
               style={{
-                ...label,
-                position: "absolute",
-                left: 0.02 * giantFs,
-                top: 0.06 * giantFs,
-                opacity: 1 - posterP,
+                fontVariantNumeric: "tabular-nums",
+                color: lapFlash > 0.3 ? AURORA[0] : "#F3F2EF",
               }}
             >
-              {code} · Position
-            </div>
-            {giantText}
+              {lapNow}
+            </span>
+            <span style={{ color: "#8A8990" }}>/{laps}</span>
           </div>
+          <div style={{ ...label, color: "#8A8990", fontSize: 13 * u }}>
+            Interval
+          </div>
+        </div>
 
-          {/* Poster block: code, team, interval. */}
+        {posBoxes}
+        {rows}
+
+        {/* Giant numeral; slides left into the poster with the info block. */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              width: 400 * u,
+              alignItems: "center",
+              gap: 52 * u,
+              transform: `translateX(${giantShift}px)`,
             }}
           >
-            <div style={{ overflow: "hidden" }}>
+            <div
+              style={{
+                position: "relative",
+                width: giantW,
+                height: giantFs,
+                transform: `translateY(${(1 - giantIn) * 60 * u}px)${glide(midway(giantIn))}`,
+                opacity: giantIn,
+              }}
+            >
               <div
                 style={{
-                  fontFamily: saira,
-                  fontWeight: 500,
-                  fontSize: 150 * u,
-                  lineHeight: 0.9,
-                  letterSpacing: "0.02em",
-                  color: c.ink,
-                  transform: `translateY(${(1 - blockIn(0)) * 100}%)`,
+                  ...label,
+                  position: "absolute",
+                  left: 0.02 * giantFs,
+                  top: 0.06 * giantFs,
+                  opacity: 1 - posterP,
                 }}
               >
-                {code}
+                {code} · {positionLabel}
               </div>
+              {giantText}
             </div>
+
+            {/* Poster block: code, team, interval. */}
             <div
               style={{
-                marginTop: 18 * u,
-                opacity: blockIn(3),
-                transform: `translateX(${(1 - blockIn(3)) * -30 * u}px)`,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                width: 400 * u,
               }}
             >
-              <RemocnLogo fontSize={46 * u} color={c.ink} />
-            </div>
-            <div
-              style={{
-                marginTop: 34 * u,
-                width: 360 * u,
-                height: 2 * u,
-                background: c.faint,
-                transformOrigin: "0 0",
-                transform: `scaleX(${blockIn(5)})`,
-              }}
-            />
-            <div
-              style={{
-                ...label,
-                marginTop: 16 * u,
-                opacity: blockIn(6),
-              }}
-            >
-              {intervalLabel}
-            </div>
-            <div
-              style={{
-                marginTop: 4 * u,
-                fontFamily: saira,
-                fontWeight: 500,
-                fontSize: 78 * u,
-                lineHeight: 1,
-                letterSpacing: "-0.01em",
-                fontVariantNumeric: "tabular-nums",
-                color: c.greenInk,
-                opacity: blockIn(6),
-                transform: `translateX(${(1 - blockIn(6)) * -30 * u}px)`,
-              }}
-            >
-              {intervalText}
+              <div style={{ overflow: "hidden" }}>
+                <div
+                  style={{
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: 150 * u,
+                    lineHeight: 0.9,
+                    letterSpacing: "0.02em",
+                    color: fg,
+                    transform: `translateY(${(1 - blockIn(0)) * 100}%)${glide(midway(blockIn(0)))}`,
+                  }}
+                >
+                  {code}
+                </div>
+              </div>
+              <div
+                style={{
+                  marginTop: 18 * u,
+                  opacity: blockIn(3),
+                  transform: `translateX(${(1 - blockIn(3)) * -30 * u}px)`,
+                }}
+              >
+                {logo ?? <RemocnLogo fontSize={46 * u} color={fg} />}
+              </div>
+              <div
+                style={{
+                  marginTop: 34 * u,
+                  width: 360 * u,
+                  height: 2 * u,
+                  background: c.faint,
+                  transformOrigin: "0 0",
+                  transform: `scaleX(${blockIn(5)})`,
+                }}
+              />
+              <div
+                style={{
+                  ...label,
+                  marginTop: 16 * u,
+                  opacity: blockIn(6),
+                }}
+              >
+                {intervalLabel}
+              </div>
+              <div
+                style={{
+                  marginTop: 4 * u,
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: 78 * u,
+                  lineHeight: 1,
+                  letterSpacing: "-0.01em",
+                  fontVariantNumeric: "tabular-nums",
+                  color: c.greenInk,
+                  opacity: blockIn(6),
+                  transform: `translateX(${(1 - blockIn(6)) * -30 * u}px)`,
+                }}
+              >
+                {intervalText}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

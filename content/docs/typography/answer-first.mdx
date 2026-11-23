@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="AnswerFirst"
     component={AnswerFirstScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -68,9 +68,44 @@ A big answer rises word by word first, then slides up and shrinks as the questio
       description: "Color of the question text; defaults to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Outfit\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "moveAt",
+      type: "number",
+      default: "34",
+      description: "Frame the answer starts shrinking into the corner; the question follows it.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "4",
+      description: "Frames between words of the question.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

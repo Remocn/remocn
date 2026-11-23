@@ -45,8 +45,8 @@ export const RemotionRoot = () => (
   <Composition
     id="ShapeCut"
     component={ShapeCutScene}
-    durationInFrames={110}
-    fps={30}
+    durationInFrames={220}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -76,10 +76,49 @@ A shape slides in from the left edge and swells until it covers the `from` headl
       description: "Shape that grows out of the text: circle, square or pill",
     },
     {
+      name: "travel",
+      type: "number",
+      default: "50",
+      description: "Frames the shape takes to grow over the frame and close on the mark",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color used by the scenes",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color of the headlines; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Bricolage Grotesque\"",
+      description: "Typeface for the headlines. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark shown when `to` is remocn.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the headlines and shape around the frame's center; the background stays put.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",
@@ -92,6 +131,12 @@ A shape slides in from the left edge and swells until it covers the `from` headl
       type: "number",
       default: "1",
       description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
   ]}
 />

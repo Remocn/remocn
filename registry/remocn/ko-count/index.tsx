@@ -3,13 +3,10 @@
 import { loadFont } from "@remotion/google-fonts/BigShoulders";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont as loadSerif } from "@remotion/google-fonts/Newsreader";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: shoulders } = loadFont("normal", {
   weights: ["400", "500"],
@@ -61,8 +58,23 @@ export interface KoCountProps {
   subline?: string;
   /** Small label next to the count, bottom left. */
   label?: string;
+  /** Replaces the remocn mark. */
+  logo?: React.ReactNode;
+  /** Frames the count holds on ten before the word slams in. */
+  hold?: number;
+  /** Strength of the camera kick on each hit; 0 holds the frame still. */
+  shake?: number;
   /** The count ticks. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the count, word and label. Load it yourself; Big Shoulders by default. */
+  fontFamily?: string;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -166,45 +178,93 @@ function shake(t: number, at: number, len: number, amp: number) {
   };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function KoCount({
   word = "Knockout",
   subline = "The old workflow did not get up.",
   label = "The count",
+  logo,
+  hold = HOLD_TEN,
+  shake: shakeAmt = 1,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = shoulders,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: KoCountProps) {
-  const t = useCurrentFrame() * speed + 1;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + 1;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stageFill =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
   const countAt: number[] = [0];
   for (const g of GAPS) countAt.push(countAt[countAt.length - 1] + g);
-  const koAt = countAt[9] + HOLD_TEN;
+  const koAt = countAt[9] + hold;
   const hitAt = koAt + SLAM_LEN;
   const subAt = hitAt + SUB_DELAY;
   const logoAt = hitAt + LOGO_DELAY;
 
-  let idx = 0;
-  for (let i = 0; i < 10; i++) if (t >= countAt[i]) idx = i;
+  const idxAt = (tt: number) => {
+    let i0 = 0;
+    for (let i = 0; i < 10; i++) if (tt >= countAt[i]) i0 = i;
+    return i0;
+  };
+  const idx = idxAt(t);
   const counting = t < koAt;
   const local = t - countAt[idx];
 
   // ── Camera: a kick on every count, growing; a big one on the word ─────────
-  const kickAmp = (3 + idx * 1.4) * u;
-  const sk = counting ? shake(t, countAt[idx] + 2, 5, kickAmp) : { x: 0, y: 0 };
-  const sh = shake(t, hitAt, 14, 22 * u);
-  const camX = sk.x + sh.x;
-  const camY = sk.y + sh.y;
+  const camAt = (tt: number) => {
+    const i = idxAt(tt);
+    const sk =
+      tt < koAt
+        ? shake(tt, countAt[i] + 2, 5, (3 + i * 1.4) * u)
+        : { x: 0, y: 0 };
+    const sh = shake(tt, hitAt, 14, 22 * u);
+    return { x: (sk.x + sh.x) * shakeAmt, y: (sk.y + sh.y) * shakeAmt };
+  };
+  const cam = camAt(t);
+  const camX = cam.x;
+  const camY = cam.y;
+  const camStep = (a: number, b: number) => {
+    const p = camAt(a);
+    const q = camAt(b);
+    return Math.abs(p.x - q.x) + Math.abs(p.y - q.y);
+  };
+  const camMoving =
+    camStep(t + speed, t) > 1e-3 || camStep(t, Math.max(1, t - speed)) > 1e-3;
 
   const shot = SHOTS[idx];
   const numFs = shot.fs * H;
   const numSlam = SLAM(ramp(local, 0, 3));
   const numScale = (1.16 - 0.16 * numSlam) * (1 + 0.035 * ramp(local, 3, 10));
   const inverted = counting && idx === 7;
-  const stage = inverted ? c.ink : c.stage;
-  const numInk = inverted ? c.stage : c.ink;
+  const stage = inverted ? fg : stageFill;
+  const numInk = inverted ? c.stage : fg;
   const isTen = idx === 9;
   const digits = String(idx + 1);
   const angle = 100 + 14 * Math.sin(t / 30);
@@ -235,7 +295,7 @@ export function KoCount({
       >
         <div
           style={{
-            fontFamily: shoulders,
+            fontFamily,
             fontWeight: 500,
             fontSize: 22 * u,
             letterSpacing: "0.26em",
@@ -291,150 +351,156 @@ export function KoCount({
   );
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stageFill, overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: counting ? stage : impact ? c.ground(angle) : c.stage,
+          background: counting ? stage : impact ? c.ground(angle) : stageFill,
         }}
       />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `translate(${camX}px, ${camY}px)`,
-        }}
-      >
-        {counting ? (
-          <>
-            {/* The numeral, cropped by the frame. */}
-            <div
-              style={{
-                position: "absolute",
-                left: shot.x * W - W,
-                width: 2 * W,
-                top: shot.y * H - CAP_TOP * numFs - (CAP * numFs) / 2,
-                display: "flex",
-                justifyContent: "center",
-                transform: `rotate(${shot.r}deg) scale(${numScale})`,
-                transformOrigin: `50% ${CAP_TOP * numFs + (CAP * numFs) / 2}px`,
-              }}
-            >
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `translate(${camX}px, ${camY}px)${glide(camMoving)}`,
+          }}
+        >
+          {counting ? (
+            <>
+              {/* The numeral, cropped by the frame. */}
               <div
                 style={{
-                  fontFamily: shoulders,
-                  fontWeight: 500,
-                  fontSize: numFs,
-                  lineHeight: 1,
-                  letterSpacing: "-0.03em",
-                  fontVariantNumeric: "tabular-nums",
-                  whiteSpace: "nowrap",
-                  color: isTen ? "transparent" : numInk,
-                  backgroundImage: isTen ? c.fill(angle) : undefined,
-                  WebkitBackgroundClip: isTen ? "text" : undefined,
-                  backgroundClip: isTen ? "text" : undefined,
-                  width: digits.length * FIG * numFs * 1.1,
-                  textAlign: "center",
+                  position: "absolute",
+                  left: shot.x * W - W,
+                  width: 2 * W,
+                  top: shot.y * H - CAP_TOP * numFs - (CAP * numFs) / 2,
+                  display: "flex",
+                  justifyContent: "center",
+                  transform: `rotate(${shot.r}deg) scale(${numScale})`,
+                  transformOrigin: `50% ${CAP_TOP * numFs + (CAP * numFs) / 2}px`,
                 }}
               >
-                {digits}
-              </div>
-            </div>
-            {hud(numInk, inverted ? c.off : c.dim)}
-          </>
-        ) : (
-          <>
-            {/* The word, with echoes trailing the slam. */}
-            {[4, 2, 0].map((lag) => {
-              const ghost = lag > 0;
-              if (ghost && t >= hitAt) return null;
-              const tt = t - lag;
-              const op = ramp(tt, koAt, 2) * (ghost ? 0.22 / lag : 1);
-              return (
                 <div
-                  key={lag}
+                  style={{
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: numFs,
+                    lineHeight: 1,
+                    letterSpacing: "-0.03em",
+                    fontVariantNumeric: "tabular-nums",
+                    whiteSpace: "nowrap",
+                    color: isTen ? "transparent" : numInk,
+                    backgroundImage: isTen ? c.fill(angle) : undefined,
+                    WebkitBackgroundClip: isTen ? "text" : undefined,
+                    backgroundClip: isTen ? "text" : undefined,
+                    width: digits.length * FIG * numFs * 1.1,
+                    textAlign: "center",
+                  }}
+                >
+                  {digits}
+                </div>
+              </div>
+              {hud(numInk, inverted ? c.off : c.dim)}
+            </>
+          ) : (
+            <>
+              {/* The word, with echoes trailing the slam. */}
+              {[4, 2, 0].map((lag) => {
+                const ghost = lag > 0;
+                if (ghost && t >= hitAt) return null;
+                const tt = t - lag;
+                const op = ramp(tt, koAt, 2) * (ghost ? 0.22 / lag : 1);
+                return (
+                  <div
+                    key={lag}
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      width: W,
+                      top: wordCy - CAP_TOP * wordFs - wordCapH / 2,
+                      display: "flex",
+                      justifyContent: "center",
+                      transform: `scale(${wordScale(tt)})${glide(
+                        !camMoving &&
+                          (midway(ramp(tt, koAt, SLAM_LEN)) ||
+                            midway(ramp(tt, hitAt, 60))),
+                      )}`,
+                      transformOrigin: `50% ${CAP_TOP * wordFs + wordCapH / 2}px`,
+                      opacity: op,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontFamily,
+                        fontWeight: 500,
+                        fontSize: wordFs,
+                        lineHeight: 1,
+                        letterSpacing: "-0.01em",
+                        textTransform: "uppercase",
+                        whiteSpace: "nowrap",
+                        color: impact || ghost ? c.impactInk : "transparent",
+                        backgroundImage:
+                          impact || ghost ? undefined : c.fill(angle),
+                        WebkitBackgroundClip:
+                          impact || ghost ? undefined : "text",
+                        backgroundClip: impact || ghost ? undefined : "text",
+                        ...(ghost ? { color: fg } : {}),
+                        paddingRight: 0.02 * wordFs,
+                      }}
+                    >
+                      {word}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Subline wipes in from the left. */}
+              {subP > 0 ? (
+                <div
                   style={{
                     position: "absolute",
                     left: 0,
                     width: W,
-                    top: wordCy - CAP_TOP * wordFs - wordCapH / 2,
+                    top: wordCy + wordCapH / 2 + 34 * u,
                     display: "flex",
                     justifyContent: "center",
-                    transform: `scale(${wordScale(tt)})`,
-                    transformOrigin: `50% ${CAP_TOP * wordFs + wordCapH / 2}px`,
-                    opacity: op,
+                    fontFamily: serif,
+                    fontStyle: "italic",
+                    fontWeight: 400,
+                    fontSize: 50 * u,
+                    lineHeight: 1.1,
+                    letterSpacing: "-0.01em",
+                    color: fg,
+                    clipPath: `inset(-20% ${100 - 100 * subP}% -20% 0)`,
+                    transform: `translateX(${(1 - subP) * -20 * u}px)`,
                   }}
                 >
-                  <div
-                    style={{
-                      fontFamily: shoulders,
-                      fontWeight: 500,
-                      fontSize: wordFs,
-                      lineHeight: 1,
-                      letterSpacing: "-0.01em",
-                      textTransform: "uppercase",
-                      whiteSpace: "nowrap",
-                      color: impact || ghost ? c.impactInk : "transparent",
-                      backgroundImage:
-                        impact || ghost ? undefined : c.fill(angle),
-                      WebkitBackgroundClip:
-                        impact || ghost ? undefined : "text",
-                      backgroundClip: impact || ghost ? undefined : "text",
-                      ...(ghost ? { color: c.ink } : {}),
-                      paddingRight: 0.02 * wordFs,
-                    }}
-                  >
-                    {word}
-                  </div>
+                  {subline}
                 </div>
-              );
-            })}
+              ) : null}
 
-            {/* Subline wipes in from the left. */}
-            {subP > 0 ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  width: W,
-                  top: wordCy + wordCapH / 2 + 34 * u,
-                  display: "flex",
-                  justifyContent: "center",
-                  fontFamily: serif,
-                  fontStyle: "italic",
-                  fontWeight: 400,
-                  fontSize: 50 * u,
-                  lineHeight: 1.1,
-                  letterSpacing: "-0.01em",
-                  color: c.ink,
-                  clipPath: `inset(-20% ${100 - 100 * subP}% -20% 0)`,
-                  transform: `translateX(${(1 - subP) * -20 * u}px)`,
-                }}
-              >
-                {subline}
-              </div>
-            ) : null}
-
-            {logoP > 0 ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  width: W,
-                  bottom: 44 * u,
-                  display: "flex",
-                  justifyContent: "center",
-                  opacity: logoP,
-                  transform: `translateY(${(1 - logoP) * 14 * u}px)`,
-                }}
-              >
-                <RemocnLogo fontSize={34 * u} color={c.ink} />
-              </div>
-            ) : null}
-          </>
-        )}
-      </div>
+              {logoP > 0 ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    width: W,
+                    bottom: 44 * u,
+                    display: "flex",
+                    justifyContent: "center",
+                    opacity: logoP,
+                    transform: `translateY(${(1 - logoP) * 14 * u}px)${glide(midway(logoP) && !camMoving)}`,
+                  }}
+                >
+                  {logo ?? <RemocnLogo fontSize={34 * u} color={fg} />}
+                </div>
+              ) : null}
+            </>
+          )}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

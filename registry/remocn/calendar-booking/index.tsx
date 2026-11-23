@@ -3,14 +3,9 @@
 import { loadFont as loadSans } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -51,7 +46,23 @@ export interface CalendarBookingProps {
   pick?: string;
   /** Day of the month the cursor picks. */
   day?: number;
+  /** Label of the button the picked slot splits into. */
+  confirmLabel?: string;
+  /** Line next to the check once the booking lands. */
+  sentLabel?: string;
+  /** Headline of the confirmation, before the host's first name. */
+  bookedLabel?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Size of the card, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -228,17 +239,28 @@ function Icon({
   );
 }
 
+/** A spring's leftover under a thousandth of a pixel counts as arrived. */
+const near = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
+const shift = (dx: number, dy: number) =>
+  near(dx) || near(dy) ? `translate(${near(dx)}px, ${near(dy)}px)` : "";
+
 function Cursor({
   x,
   y,
+  rest,
   press,
   opacity,
 }: {
   x: number;
   y: number;
+  rest: { x: number; y: number };
   press: number;
   opacity: number;
 }) {
+  // Laid out where the cursor comes to rest; the travel is a transform so its
+  // box edges don't step pixel by pixel.
+  const dx = near(x - rest.x);
+  const dy = near(y - rest.y);
   return (
     <svg
       width={24}
@@ -247,11 +269,11 @@ function Cursor({
       aria-hidden
       style={{
         position: "absolute",
-        left: x - 2.2,
-        top: y - 2.2,
+        left: rest.x - 2.2,
+        top: rest.y - 2.2,
         opacity,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.04 * press})`,
+        transform: `${dx || dy ? `translate(${dx}px, ${dy}px) ` : ""}scale(${1 - 0.04 * press})`,
         filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
         overflow: "visible",
       }}
@@ -264,6 +286,22 @@ function Cursor({
         strokeLinejoin="round"
       />
     </svg>
+  );
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
   );
 }
 
@@ -329,27 +367,42 @@ export function CalendarBooking({
   slots = DEFAULT_SLOTS,
   pick,
   day = 18,
+  confirmLabel = "Confirm",
+  sentLabel = "Invite sent to your inbox",
+  bookedLabel = "You’re booked with",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   ground,
   groundParams,
 }: CalendarBookingProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const tall = height > width;
   const SW = tall ? 600 : 1280;
   const SH = tall ? (600 * height) / width : 720;
   const k = width / SW;
   const dark = theme === "dark";
-  const c = PALETTES[theme];
+  const c = { ...PALETTES[theme], text: ink ?? PALETTES[theme].text };
   const event = { ...DEFAULT_EVENT, ...eventProp };
   const first = event.firstWeekday ?? 1;
   const days = event.daysInMonth ?? 30;
   const gridRows = Math.ceil((first + days) / 7);
   const G = geometry(tall, gridRows);
+  const spAt = (f: number, at: number, config: Record<string, number>) =>
+    spring({ frame: f - at, fps, config });
   const sp = (at: number, config: Record<string, number>) =>
-    spring({ frame: frame - at, fps, config });
+    spAt(frame, at, config);
+  // Whether a value built from the frame moves into or out of this frame.
+  const stirs = (at: (f: number) => number, eps: number) =>
+    Math.abs(at(frame + 1) - at(frame)) > eps ||
+    Math.abs(at(frame) - at(frame - 1)) > eps;
   const isOpen = (d: number) => {
     const wd = (first + d - 1) % 7;
     return d >= (event.firstAvailable ?? 1) && wd !== 0 && wd !== 6;
@@ -359,23 +412,57 @@ export function CalendarBooking({
   const pickIdx = wanted >= 0 ? wanted : Math.min(3, shown.length - 1);
   const pickLabel = shown[pickIdx] ?? "";
 
-  const cardIn = sp(BEAT.card, SPR.heavy);
   const cardOp = tween(frame, BEAT.card, 10, EASE.enter);
   const dayFill = sp(BEAT.day, SPR.chip);
   const widen = sp(BEAT.day + 2, SPR.heavy);
   const split = sp(BEAT.slot + 1, SPR.card);
   const morph = sp(BEAT.confirm + 2, SPR.morph);
-  const cam =
+  const camAt = (f: number) =>
     1 +
-    0.03 * tween(frame, 6, 80, EASE.camera) +
-    0.015 * tween(frame, BEAT.confirm + 10, 60, EASE.camera);
+    0.03 * tween(f, 6, 80, EASE.camera) +
+    0.015 * tween(f, BEAT.confirm + 10, 60, EASE.camera);
+  const cam = camAt(frame);
+  // The camera carries the whole scene, so its tilt covers everything under
+  // it; the movers below tilt themselves only while it holds still.
+  const camMoving = stirs(camAt, 1e-6);
 
   const bookW = G.narrow.w + (G.wide.w - G.narrow.w) * widen;
   const bookH = G.narrow.h + (G.wide.h - G.narrow.h) * widen;
   const cardW = bookW + (G.done.w - bookW) * morph;
   const cardH = bookH + (G.done.h - bookH) * morph;
-  const cardX = (SW - cardW) / 2;
-  const cardY = (SH - cardH) / 2 + (1 - cardIn) * 36;
+  // The card is laid out at its final size and place; its recentring as it
+  // widens and morphs, and its rise, are a transform, since layout rounds a
+  // box and a baseline to whole pixels.
+  const restX = (SW - G.done.w) / 2;
+  const restY = (SH - G.done.h) / 2;
+  const cardShiftAt = (f: number) => {
+    const wi = spAt(f, BEAT.day + 2, SPR.heavy);
+    const mo = spAt(f, BEAT.confirm + 2, SPR.morph);
+    const bw = G.narrow.w + (G.wide.w - G.narrow.w) * wi;
+    const bh = G.narrow.h + (G.wide.h - G.narrow.h) * wi;
+    const cw = bw + (G.done.w - bw) * mo;
+    const ch = bh + (G.done.h - bh) * mo;
+    return {
+      x: (G.done.w - cw) / 2,
+      y: (G.done.h - ch) / 2 + (1 - spAt(f, BEAT.card, SPR.heavy)) * 36,
+    };
+  };
+  const cardShift = cardShiftAt(frame);
+  const cardMoving =
+    !camMoving &&
+    (stirs((f) => cardShiftAt(f).x, 5e-4) ||
+      stirs((f) => cardShiftAt(f).y, 5e-4));
+  const confirmPressing =
+    !camMoving &&
+    !cardMoving &&
+    stirs(
+      (f) =>
+        clamp01(
+          spAt(f, BEAT.confirm - 2, SPR.chip) -
+            spAt(f, BEAT.confirm + 3, SPR.chip),
+        ),
+      1e-5,
+    );
 
   const cellPos = (d: number) => {
     const idx = first + d - 1;
@@ -449,266 +536,287 @@ export function CalendarBooking({
     <AbsoluteFill
       style={{
         overflow: "hidden",
-        fontFamily: sans.fontFamily,
+        fontFamily,
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <GshGround
-        preset={ground ?? (dark ? "film-blue" : "glasswork")}
-        params={groundParams ?? (dark ? undefined : LIGHT_GROUND)}
-        timeOffset={2}
-        timeScale={0.45}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: SW,
-          height: SH,
-          transform: `scale(${k})`,
-          transformOrigin: "0 0",
-        }}
-      >
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? (dark ? "film-blue" : "glasswork")}
+          params={groundParams ?? (dark ? undefined : LIGHT_GROUND)}
+          timeOffset={2}
+          timeScale={0.45}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${cam})`,
-            transformOrigin: `${SW / 2}px ${SH / 2}px`,
+            left: 0,
+            top: 0,
+            width: SW,
+            height: SH,
+            transform: `scale(${k})`,
+            transformOrigin: "0 0",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: cardX,
-              top: cardY,
-              width: cardW,
-              height: cardH,
-              borderRadius: 22,
-              background: c.card,
-              boxShadow: c.shadow,
-              overflow: "hidden",
-              opacity: cardOp,
+              inset: 0,
+              transform: `scale(${cam})${glide(camMoving)}`,
+              transformOrigin: `${SW / 2}px ${SH / 2}px`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: 0,
-                top: 0,
-                width: G.wide.w,
-                height: G.wide.h,
-                opacity: bookOp,
-                transform: `scale(${1 - 0.03 * morph})`,
-                transformOrigin: "50% 40%",
+                left: restX,
+                top: restY,
+                width: cardW,
+                height: cardH,
+                transform:
+                  shift(cardShift.x, cardShift.y) + glide(cardMoving) ||
+                  undefined,
+                borderRadius: 22,
+                background: c.card,
+                boxShadow: c.shadow,
+                overflow: "hidden",
+                opacity: cardOp,
               }}
             >
-              <HostPanel host={host} event={event} c={c} tall={tall} G={G} />
               <div
                 style={{
                   position: "absolute",
-                  left: G.calX,
-                  top: G.calY,
-                  width: 7 * G.cell + 6 * G.gap,
-                  height: 32,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
+                  left: 0,
+                  top: 0,
+                  width: G.wide.w,
+                  height: G.wide.h,
+                  opacity: bookOp,
+                  transform: `scale(${1 - 0.03 * morph})`,
+                  transformOrigin: "50% 40%",
                 }}
               >
-                <div style={{ fontSize: 19, color: c.text }}>
-                  {event.month}{" "}
-                  <span style={{ color: c.muted }}>{event.year}</span>
-                </div>
-                <div style={{ display: "flex", gap: 14 }}>
-                  <Icon name="left" color={c.faint} size={20} />
-                  <Icon name="right" color={c.text} size={20} />
-                </div>
-              </div>
-              {WEEKDAYS.map((w, i) => (
+                <HostPanel host={host} event={event} c={c} tall={tall} G={G} />
                 <div
-                  key={w}
                   style={{
                     position: "absolute",
-                    left: G.calX + i * (G.cell + G.gap),
-                    top: G.weekY,
-                    width: G.cell,
-                    textAlign: "center",
-                    fontSize: 16,
-                    color: c.muted,
+                    left: G.calX,
+                    top: G.calY,
+                    width: 7 * G.cell + 6 * G.gap,
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
                   }}
                 >
-                  {w}
+                  <div style={{ fontSize: 19, color: c.text }}>
+                    {event.month}{" "}
+                    <span style={{ color: c.muted }}>{event.year}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 14 }}>
+                    <Icon name="left" color={c.faint} size={20} />
+                    <Icon name="right" color={c.text} size={20} />
+                  </div>
                 </div>
-              ))}
-              {Array.from({ length: days }, (_, i) => i + 1).map((d) => {
-                const idx = first + d - 1;
-                const open = isOpen(d);
-                const sel = d === day;
-                const pos = cellPos(d);
-                const appear = tween(
-                  frame,
-                  3 + (idx % 7) * 0.7 + Math.floor(idx / 7) * 1.6,
-                  10,
-                  EASE.soft,
-                );
-                return (
+                {WEEKDAYS.map((w, i) => (
                   <div
-                    key={d}
+                    key={w}
                     style={{
                       position: "absolute",
-                      left: pos.x,
-                      top: pos.y,
+                      left: G.calX + i * (G.cell + G.gap),
+                      top: G.weekY,
                       width: G.cell,
-                      height: G.cell,
-                      borderRadius: 12,
-                      background: open ? c.tint : "transparent",
-                      opacity: appear,
-                      transform: `translateY(${(1 - appear) * 8}px)`,
+                      textAlign: "center",
+                      fontSize: 16,
+                      color: c.muted,
                     }}
                   >
-                    {sel ? (
+                    {w}
+                  </div>
+                ))}
+                {Array.from({ length: days }, (_, i) => i + 1).map((d) => {
+                  const idx = first + d - 1;
+                  const open = isOpen(d);
+                  const sel = d === day;
+                  const pos = cellPos(d);
+                  const appear = tween(
+                    frame,
+                    3 + (idx % 7) * 0.7 + Math.floor(idx / 7) * 1.6,
+                    10,
+                    EASE.soft,
+                  );
+                  return (
+                    <div
+                      key={d}
+                      style={{
+                        position: "absolute",
+                        left: pos.x,
+                        top: pos.y,
+                        width: G.cell,
+                        height: G.cell,
+                        borderRadius: 12,
+                        background: open ? c.tint : "transparent",
+                        opacity: appear,
+                        transform: `translateY(${(1 - appear) * 8}px)`,
+                      }}
+                    >
+                      {sel ? (
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            borderRadius: 12,
+                            background: c.ink,
+                            transform: `scale(${0.6 + 0.4 * dayFill})`,
+                            opacity: clamp01(dayFill * 3),
+                          }}
+                        />
+                      ) : null}
                       <div
                         style={{
                           position: "absolute",
                           inset: 0,
-                          borderRadius: 12,
-                          background: c.ink,
-                          transform: `scale(${0.6 + 0.4 * dayFill})`,
-                          opacity: clamp01(dayFill * 3),
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 17,
+                          fontVariantNumeric: "tabular-nums",
+                          color:
+                            sel && dayFill > 0.3
+                              ? c.inkText
+                              : open
+                                ? c.text
+                                : c.faint,
                         }}
-                      />
-                    ) : null}
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 17,
-                        fontVariantNumeric: "tabular-nums",
-                        color:
-                          sel && dayFill > 0.3
-                            ? c.inkText
-                            : open
-                              ? c.text
-                              : c.faint,
-                      }}
-                    >
-                      {d}
+                      >
+                        {d}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-              <div
-                style={{
-                  position: "absolute",
-                  left: tall ? 0 : G.narrow.w,
-                  top: tall ? G.narrow.h - 1 : 0,
-                  width: tall ? G.wide.w : 1,
-                  height: tall ? 1 : G.wide.h,
-                  background: c.line,
-                  opacity: clamp01(widen * 2),
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  left: G.slotX,
-                  top: G.slotHeadY,
-                  height: 32,
-                  display: "flex",
-                  alignItems: "center",
-                  fontSize: 19,
-                  color: c.text,
-                  opacity: tween(frame, BEAT.day + 8, 10, EASE.enter),
-                }}
-              >
-                {WEEKDAY_LONG[wd].slice(0, 3)}&nbsp;
-                <span style={{ color: c.muted }}>{day}</span>
-              </div>
-              {shown.map((s, i) => {
-                const inn = sp(BEAT.day + 10 + i * 2, SPR.card);
-                const picked = i === pickIdx;
-                const sv = picked ? split : 0;
-                const pos = slotPos(i);
-                const timeW = G.slotW - (G.slotW - half) * sv;
-                const base: React.CSSProperties = {
-                  position: "absolute",
-                  top: pos.y,
-                  height: G.slotH,
-                  borderRadius: 10,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  fontSize: 17,
-                  boxSizing: "border-box",
-                  overflow: "hidden",
-                  whiteSpace: "nowrap",
-                  fontVariantNumeric: "tabular-nums",
-                };
-                return (
-                  <div key={s}>
-                    <div
-                      style={{
-                        ...base,
-                        left: pos.x + (1 - inn) * 18,
-                        width: timeW,
-                        opacity: clamp01(inn * 1.5),
-                        color: c.text,
-                        background: picked && sv > 0.05 ? c.tint : c.card,
-                        boxShadow:
-                          picked && slotHover > 0 && sv < 0.5
-                            ? `0 0 0 1px ${c.text}`
-                            : c.ghost,
-                      }}
-                    >
-                      {s}
-                    </div>
-                    {picked && sv > 0.01 ? (
+                  );
+                })}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: tall ? 0 : G.narrow.w,
+                    top: tall ? G.narrow.h - 1 : 0,
+                    width: tall ? G.wide.w : 1,
+                    height: tall ? 1 : G.wide.h,
+                    background: c.line,
+                    opacity: clamp01(widen * 2),
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    left: G.slotX,
+                    top: G.slotHeadY,
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    fontSize: 19,
+                    color: c.text,
+                    opacity: tween(frame, BEAT.day + 8, 10, EASE.enter),
+                  }}
+                >
+                  {WEEKDAY_LONG[wd].slice(0, 3)}&nbsp;
+                  <span style={{ color: c.muted }}>{day}</span>
+                </div>
+                {shown.map((s, i) => {
+                  const inn = sp(BEAT.day + 10 + i * 2, SPR.card);
+                  const picked = i === pickIdx;
+                  const sv = picked ? split : 0;
+                  const pos = slotPos(i);
+                  const timeW = G.slotW - (G.slotW - half) * sv;
+                  const base: React.CSSProperties = {
+                    position: "absolute",
+                    top: pos.y,
+                    height: G.slotH,
+                    borderRadius: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    fontSize: 17,
+                    boxSizing: "border-box",
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                    fontVariantNumeric: "tabular-nums",
+                  };
+                  return (
+                    <div key={s}>
                       <div
                         style={{
                           ...base,
-                          left: pos.x + timeW + 8,
-                          width: Math.max(0, G.slotW - timeW - 8),
-                          background: accent,
-                          color: "#FFFFFF",
-                          opacity: clamp01(sv * 2),
-                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
-                          transform: `scale(${1 - 0.04 * pressOf(BEAT.confirm)})`,
+                          left: pos.x + (1 - inn) * 18,
+                          width: timeW,
+                          opacity: clamp01(inn * 1.5),
+                          color: c.text,
+                          background: picked && sv > 0.05 ? c.tint : c.card,
+                          boxShadow:
+                            picked && slotHover > 0 && sv < 0.5
+                              ? `0 0 0 1px ${c.text}`
+                              : c.ghost,
                         }}
                       >
-                        Confirm
+                        {s}
                       </div>
-                    ) : null}
-                  </div>
-                );
-              })}
+                      {picked && sv > 0.01 ? (
+                        <div
+                          style={{
+                            ...base,
+                            left: pos.x + timeW + 8,
+                            width: Math.max(0, G.slotW - timeW - 8),
+                            background: accent,
+                            color: "#FFFFFF",
+                            opacity: clamp01(sv * 2),
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
+                            transform: `scale(${1 - 0.04 * pressOf(BEAT.confirm)})${glide(confirmPressing)}`,
+                          }}
+                        >
+                          {confirmLabel}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+              {morph > 0.01 ? (
+                <SuccessView
+                  frame={frame - BEAT.confirm - 6}
+                  fps={fps}
+                  c={c}
+                  accent={accent}
+                  opacity={doneOp}
+                  dx={(cardW - G.done.w) / 2}
+                  dy={(cardH - G.done.h) / 2}
+                  w={G.done.w}
+                  h={G.done.h}
+                  host={host}
+                  event={event}
+                  sentLabel={sentLabel}
+                  bookedLabel={bookedLabel}
+                  when={`${WEEKDAY_LONG[wd]}, ${event.month} ${day}`}
+                  time={`${pickLabel}${end ? ` – ${end}` : ""}`}
+                />
+              ) : null}
             </div>
-            {morph > 0.01 ? (
-              <SuccessView
-                frame={frame - BEAT.confirm - 6}
-                fps={fps}
-                c={c}
-                accent={accent}
-                opacity={doneOp}
-                left={(cardW - G.done.w) / 2}
-                top={(cardH - G.done.h) / 2}
-                w={G.done.w}
-                h={G.done.h}
-                host={host}
-                event={event}
-                when={`${WEEKDAY_LONG[wd]}, ${event.month} ${day}`}
-                time={`${pickLabel}${end ? ` – ${end}` : ""}`}
-              />
-            ) : null}
+            <Cursor
+              x={curX}
+              y={curY}
+              rest={legs[legs.length - 1].to}
+              press={press}
+              opacity={curOp}
+            />
           </div>
-          <Cursor x={curX} y={curY} press={press} opacity={curOp} />
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -827,12 +935,14 @@ function SuccessView({
   c,
   accent,
   opacity,
-  left,
-  top,
+  dx,
+  dy,
   w,
   h,
   host,
   event,
+  sentLabel,
+  bookedLabel,
   when,
   time,
 }: {
@@ -841,12 +951,15 @@ function SuccessView({
   c: Palette;
   accent: string;
   opacity: number;
-  left: number;
-  top: number;
+  /** Offset from the card's top-left while the card is still resizing. */
+  dx: number;
+  dy: number;
   w: number;
   h: number;
   host: BookingHost;
   event: BookingEvent;
+  sentLabel: string;
+  bookedLabel: string;
   when: string;
   time: string;
 }) {
@@ -879,8 +992,11 @@ function SuccessView({
     <div
       style={{
         position: "absolute",
-        left,
-        top,
+        // Pinned at the settled card's corner; the offset while the card
+        // resizes around it is a transform, not left/top.
+        left: 0,
+        top: 0,
+        transform: shift(dx, dy) || undefined,
         width: w,
         height: h,
         boxSizing: "border-box",
@@ -916,7 +1032,7 @@ function SuccessView({
           </svg>
         </div>
         <div style={{ fontSize: 17, color: c.muted, ...item(0) }}>
-          Invite sent to your inbox
+          {sentLabel}
         </div>
       </div>
       <div
@@ -930,7 +1046,7 @@ function SuccessView({
           color: c.text,
         }}
       >
-        You’re booked with {host.name.split(" ")[0]}
+        {bookedLabel} {host.name.split(" ")[0]}
       </div>
       <div
         style={{

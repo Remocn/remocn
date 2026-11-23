@@ -1,0 +1,92 @@
+{
+  "component": "github-stars",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Dark theme with a warm gold accent for a premium milestone celebration.",
+      "askedAs": [
+        "dark mode github stars with gold",
+        "premium dark star counter",
+        "night version of the star celebration",
+        "тёмная тема с золотым акцентом",
+        "звёзды гитхаба на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "accentColor": "#e8b04a"
+      }
+    },
+    {
+      "id": "hyperdrive",
+      "label": "Hyperdrive",
+      "description": "Fast dark fly-through with a cool blue accent that rushes past the faces to the total.",
+      "askedAs": [
+        "make the avatars fly by really fast",
+        "high energy star count animation",
+        "speed it up a lot",
+        "быстрая анимация звёзд",
+        "ускоренный пролёт аватаров"
+      ],
+      "props": {
+        "speed": 3,
+        "theme": "dark",
+        "accentColor": "#4f8cff"
+      }
+    },
+    {
+      "id": "story-vertical",
+      "label": "Story Vertical",
+      "description": "Vertical 9:16 layout on a light theme with a coral accent, sized for social stories.",
+      "askedAs": [
+        "vertical version for instagram stories",
+        "9:16 star count for reels",
+        "portrait github stars clip",
+        "вертикальная версия для сторис",
+        "звёзды гитхаба для рилс"
+      ],
+      "props": {
+        "orientation": "vertical",
+        "accentColor": "#f0645a",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "calm-mint",
+      "label": "Calm Mint",
+      "description": "Slow, relaxed light-theme glide with a soft mint-green accent.",
+      "askedAs": [
+        "slow gentle star counter",
+        "calm minimal github milestone",
+        "soft green accent slow pace",
+        "медленная спокойная анимация",
+        "мягкий зелёный акцент"
+      ],
+      "props": {
+        "speed": 1,
+        "accentColor": "#2fa37a",
+        "theme": "light"
+      }
+    },
+    {
+      "id": "violet-pulse",
+      "label": "Violet Pulse",
+      "description": "Dark vertical card with a muted violet accent and a brisk, punchy pace.",
+      "askedAs": [
+        "purple dark vertical star count",
+        "tiktok github stars dark",
+        "moody violet milestone clip",
+        "фиолетовая тёмная вертикальная версия",
+        "тёмные звёзды для тикток"
+      ],
+      "props": {
+        "theme": "dark",
+        "orientation": "vertical",
+        "accentColor": "#9b7bff",
+        "speed": 2
+      }
+    }
+  ]
+}

@@ -3,12 +3,12 @@
 import { Player, type PlayerRef } from "@remotion/player";
 import { useRef } from "react";
 import registry from "@/lib/previews";
-import { previewManifest } from "@/registry/__manifest__";
+import { sitePreview } from "@/lib/previews/site-preview";
 import { useAutoplay } from "./use-autoplay";
 
 export default function MegaMenuPreview({ name }: { name: string }) {
   const entry = registry[name];
-  const preview = previewManifest[name];
+  const preview = sitePreview(name);
   const playerRef = useRef<PlayerRef>(null);
   const { containerRef } = useAutoplay(playerRef);
 

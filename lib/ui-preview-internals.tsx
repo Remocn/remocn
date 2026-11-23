@@ -3,13 +3,14 @@
 import { Player, type PlayerRef } from "@remotion/player";
 import { PlayIcon } from "lucide-react";
 import {
+  parseAsArrayOf,
   parseAsBoolean,
   parseAsFloat,
   parseAsString,
   parseAsStringLiteral,
 } from "nuqs";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ControlConfig } from "@/lib/customizer-config";
+import { type ControlConfig, customizerUrlKey } from "@/lib/customizer-config";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
 import type { BackdropFill } from "@/registry/remocn/backdrop";
@@ -24,16 +25,20 @@ export function buildParsers(name: string, controls: ControlConfig) {
   // biome-ignore lint/suspicious/noExplicitAny: holds nuqs parsers of differing generic types (string/number/boolean); no common narrower type exists
   const parsers: Record<string, any> = {};
   const urlKeys: Record<string, string> = {};
-  const prefix = name.replace(/-/g, "_");
 
   for (const [key, ctrl] of Object.entries(controls)) {
-    urlKeys[key] = `${prefix}_${key}`;
+    urlKeys[key] = customizerUrlKey(name, key);
     if (ctrl.type === "text") {
       parsers[key] = parseAsString.withDefault(ctrl.default);
     } else if (ctrl.type === "number" || ctrl.type === "number-input") {
       parsers[key] = parseAsFloat.withDefault(ctrl.default);
-    } else if (ctrl.type === "color") {
+    } else if (ctrl.type === "color" || ctrl.type === "font") {
       parsers[key] = parseAsString.withDefault(ctrl.default);
+    } else if (ctrl.type === "list") {
+      // One item per line, as the control edits them.
+      parsers[key] = parseAsArrayOf(parseAsString, "\n").withDefault(
+        ctrl.default,
+      );
     } else if (ctrl.type === "select") {
       parsers[key] = parseAsStringLiteral(
         ctrl.options as readonly string[],

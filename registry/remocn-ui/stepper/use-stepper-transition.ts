@@ -1,7 +1,6 @@
 "use client";
-
-import { useCurrentFrame } from "remotion";
 import type { StepperStyle } from "@/components/remocn/stepper";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 
 export interface StepperStep {
@@ -31,7 +30,7 @@ export function useStepperTransition(
   opts: StepperTransitionOptions = {},
 ): StepperStyle {
   const { speed = 1 } = opts;
-  const raw = useCurrentFrame() * speed;
+  const raw = useSceneFrame() * speed;
   return stepperStyleAt(steps, raw, opts);
 }
 

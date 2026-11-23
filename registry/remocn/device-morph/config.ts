@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const deviceMorphConfig: ComponentConfig = {
   componentName: "DeviceMorph",
@@ -13,16 +20,33 @@ export const deviceMorphConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
+    brand: {
+      type: "text-content",
+      default: "remocn",
+      description: "Brand",
+    },
+    greeting: {
+      type: "text-content",
+      default: "Good morning, Maya",
+      description: "Greeting",
+    },
+    ctaLabel: {
+      type: "text-content",
+      default: "New video",
+      description: "Button label",
     },
     reverse: {
       type: "boolean",
       default: false,
       description: "Reverse",
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

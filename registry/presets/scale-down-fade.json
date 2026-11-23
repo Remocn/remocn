@@ -1,0 +1,95 @@
+{
+  "component": "scale-down-fade",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-luxe",
+      "label": "Slow Luxe",
+      "description": "Large, light-weight type in warm charcoal that settles in at an unhurried, editorial pace.",
+      "askedAs": [
+        "slow elegant headline fade",
+        "luxury thin title settling in",
+        "calm premium text entrance",
+        "медленное элегантное появление заголовка",
+        "люксовый тонкий текст плавно"
+      ],
+      "props": {
+        "fontSize": 110,
+        "fontWeight": "400",
+        "color": "#2b2622",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "corporate-navy",
+      "label": "Corporate Navy",
+      "description": "Bold deep-navy headline with a brisk, businesslike settle.",
+      "askedAs": [
+        "corporate blue title fade",
+        "bold navy headline for business",
+        "professional quick text entrance",
+        "корпоративный синий заголовок",
+        "деловой жирный текст появление"
+      ],
+      "props": {
+        "color": "#1e3a5f",
+        "fontWeight": "700",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "quiet-caption",
+      "label": "Quiet Caption",
+      "description": "Small, medium-weight slate text that fades in gently like an understated caption.",
+      "askedAs": [
+        "small subtle caption fade",
+        "quiet subtitle text",
+        "understated small label animation",
+        "маленькая тихая подпись",
+        "скромный небольшой текст плавно"
+      ],
+      "props": {
+        "fontSize": 36,
+        "fontWeight": "500",
+        "color": "#64748b",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snap-statement",
+      "label": "Snap Statement",
+      "description": "Oversized heavy black type that settles in fast for a punchy, confident beat.",
+      "askedAs": [
+        "big bold fast headline",
+        "quick punchy title settle",
+        "huge heavy text snaps in",
+        "большой жирный быстрый заголовок",
+        "резкое крупное появление текста"
+      ],
+      "props": {
+        "fontSize": 140,
+        "fontWeight": "700",
+        "color": "#0a0a0a",
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "forest-calm",
+      "label": "Forest Calm",
+      "description": "Deep muted green semibold headline with a slightly relaxed settle for a natural, grounded feel.",
+      "askedAs": [
+        "green calm title fade",
+        "natural earthy headline",
+        "soft muted green text entrance",
+        "спокойный зелёный заголовок",
+        "природный приглушённый текст"
+      ],
+      "props": {
+        "color": "#2f4a3a",
+        "fontSize": 88,
+        "speed": 0.75
+      }
+    }
+  ]
+}

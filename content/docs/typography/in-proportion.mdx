@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="InProportion"
     component={InProportionScene}
-    durationInFrames={200}
-    fps={30}
+    durationInFrames={400}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -63,14 +63,49 @@ A worry builds word by word in large white type, then shrinks into a dimmed note
       description: "Worry and answer pairs, played in order; two or three work best.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between words as a line builds.",
+    },
+    {
+      name: "shrink",
+      type: "number",
+      default: "24",
+      description: "Frames the worry takes to shrink into a side note.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of the answer text; overrides the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hubot Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

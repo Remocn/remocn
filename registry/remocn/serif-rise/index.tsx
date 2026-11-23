@@ -9,17 +9,28 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const gothic = loadVariableFont("normal", { subsets: ["latin"] });
 
 export interface SerifRiseProps {
   lines?: string[];
   highlight?: string;
+  /** Frames between letters as they rise in. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines; a variable face with a weight axis works best. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  grain?: boolean;
+  /** Size of the lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -111,6 +122,7 @@ function findStems(
   xh: number,
   cap: number,
   asc: number,
+  fontFamily: string,
 ): Stem[] {
   const S = RASTER;
   const pad = Math.round(S * 0.3);
@@ -120,7 +132,7 @@ function findStems(
   const base = Math.round(S * 1.15);
   ctx.canvas.width = W;
   ctx.canvas.height = H;
-  ctx.font = `${WGHT} ${S}px "${gothic.fontFamily}"`;
+  ctx.font = `${WGHT} ${S}px "${fontFamily}"`;
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = "#000";
   ctx.fillText(ch, pad, base);
@@ -170,7 +182,7 @@ function findStems(
   return stems;
 }
 
-function measure(lines: string[]): Metrics {
+function measure(lines: string[], fontFamily: string): Metrics {
   const probe = document.createElement("span");
   Object.assign(probe.style, {
     position: "absolute",
@@ -178,7 +190,7 @@ function measure(lines: string[]): Metrics {
     top: "0",
     visibility: "hidden",
     whiteSpace: "pre",
-    fontFamily: `"${gothic.fontFamily}"`,
+    fontFamily: `"${fontFamily}"`,
     fontStyle: "normal",
     fontSize: "100px",
     lineHeight: "1",
@@ -216,7 +228,7 @@ function measure(lines: string[]): Metrics {
   let cap = 0.7;
   let baseline = 0.8;
   if (ctx) {
-    ctx.font = `${WGHT} 100px "${gothic.fontFamily}"`;
+    ctx.font = `${WGHT} 100px "${fontFamily}"`;
     const fH = ctx.measureText("H");
     cap = fH.actualBoundingBoxAscent / 100;
     const xh = ctx.measureText("x").actualBoundingBoxAscent / 100;
@@ -225,13 +237,13 @@ function measure(lines: string[]): Metrics {
     const fd = fH.fontBoundingBoxDescent / 100;
     baseline = (1 - (fa + fd)) / 2 + fa;
     for (const ch of Object.keys(adv)) {
-      stems[ch] = ch.trim() ? findStems(ctx, ch, xh, cap, asc) : [];
+      stems[ch] = ch.trim() ? findStems(ctx, ch, xh, cap, asc, fontFamily) : [];
     }
   }
   return { adv, kern, stems, cap, baseline };
 }
 
-function useMetrics(lines: string[]) {
+function useMetrics(lines: string[], fontFamily: string) {
   const key = lines.join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("serif-rise: measuring"));
@@ -240,12 +252,12 @@ function useMetrics(lines: string[]) {
     let live = true;
     Promise.all([
       gothic.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${gothic.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(key.split("\u0001")) });
+        setState({ key, m: measure(key.split("\u0001"), fontFamily) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -254,7 +266,7 @@ function useMetrics(lines: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -282,23 +294,47 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SerifRise({
   lines = ["From rough cut", "to final cut."],
   highlight = "final cut.",
+  stagger = RISE_GAP,
   accent,
+  ink,
   background,
+  fontFamily = gothic.fontFamily,
+  grain = true,
+  scale: layerScale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: SerifRiseProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const rows = useMemo(
     () => (lines.length > 0 ? lines : ["final cut."]).map((l) => l || " "),
     [lines],
   );
-  const m = useMetrics(rows);
+  const m = useMetrics(rows, fontFamily);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -398,18 +434,24 @@ export function SerifRise({
     const left = edge;
     const hl = hlRanges[r];
     const hlFill = (i: number) => hl !== null && i >= hl[0] && i < hl[1];
-    const colorFor = (i: number) => (hlFill(i) ? spot : c.ink);
+    const colorFor = (i: number) => (hlFill(i) ? spot : fg);
 
     progress.forEach(({ ch, ctrs, serif }, i) => {
       const idx = gi + i;
       const gxPx = left + xs[i] * F;
-      const rise = interpolate(
-        t,
-        [idx * RISE_GAP, idx * RISE_GAP + RISE_LEN],
-        [0, 1],
-        { ...CLAMP, easing: EASE_OUT },
-      );
+      const riseAt = (tt: number) =>
+        interpolate(tt, [idx * stagger, idx * stagger + RISE_LEN], [0, 1], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        });
+      const rise = riseAt(t);
       const dy = (1 - rise) * F * 0.9;
+      // The ease-out tail still crosses pixels after `rise` is all but 1, so
+      // the glyph counts as moving while its drop changes against either
+      // neighbouring frame.
+      const moving =
+        Math.abs(riseAt(t + speed) - rise) * F * 0.9 > 1e-3 ||
+        Math.abs(rise - riseAt(t - speed)) * F * 0.9 > 1e-3;
       glyphNodes.push(
         <div
           key={`m${r}-${i}`}
@@ -431,11 +473,11 @@ export function SerifRise({
               height: F,
               lineHeight: `${F}px`,
               whiteSpace: "pre",
-              fontFamily: gothic.fontFamily,
+              fontFamily,
               fontStyle: "normal",
               fontSize: F,
               fontVariationSettings: fvs(CTRS_MAX * ctrs),
-              transform: `translateY(${dy.toFixed(2)}px)`,
+              transform: `translateY(${dy.toFixed(2)}px)${glide(moving)}`,
               color: colorFor(i),
             }}
           >
@@ -486,10 +528,12 @@ export function SerifRise({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {ruleNodes}
-      {glyphNodes}
-      {serifNodes}
-      {transparent ? null : <Grain opacity={c.grain} />}
+      <ScaleLayer scale={layerScale}>
+        {ruleNodes}
+        {glyphNodes}
+        {serifNodes}
+      </ScaleLayer>
+      {transparent || !grain ? null : <Grain opacity={c.grain} />}
     </AbsoluteFill>
   );
 }

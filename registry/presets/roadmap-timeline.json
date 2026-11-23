@@ -1,0 +1,114 @@
+{
+  "component": "roadmap-timeline",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-ops",
+      "label": "Midnight Ops",
+      "description": "Dark theme on a deep blue-hour ground with a cool teal accent and Geist type.",
+      "askedAs": [
+        "dark roadmap with teal highlights",
+        "night mode project timeline",
+        "moody blue planning chart",
+        "тёмная дорожная карта",
+        "ночной таймлайн проекта"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#2dd4bf",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm paper ground with serif type, ink-dark text and a terracotta accent for an investor-letter feel.",
+      "askedAs": [
+        "roadmap that looks like a printed report",
+        "serif investor update timeline",
+        "warm paper style schedule",
+        "роадмап в стиле журнала",
+        "тёплый бумажный таймлайн"
+      ],
+      "props": {
+        "ground": "paper-crease",
+        "fontFamily": "Fraunces",
+        "accent": "#c2562e",
+        "ink": "#2a2420"
+      }
+    },
+    {
+      "id": "snappy-drag",
+      "label": "Snappy Drag",
+      "description": "A quick, decisive drag with faster playback and a crisp green accent.",
+      "askedAs": [
+        "fast reschedule animation",
+        "quick snappy bar drag",
+        "speed up the timeline move",
+        "быстрое перетаскивание задач",
+        "резкая анимация переноса"
+      ],
+      "props": {
+        "dragFrames": 12,
+        "speed": 1.5,
+        "accent": "#16a34a"
+      }
+    },
+    {
+      "id": "slow-glide",
+      "label": "Slow Glide",
+      "description": "A slow, deliberate glide that eases in after a short pause, zoomed in for emphasis.",
+      "askedAs": [
+        "slow smooth drag on the roadmap",
+        "calm cinematic timeline",
+        "zoomed in gentle reschedule",
+        "медленное плавное перетаскивание",
+        "спокойный крупный таймлайн"
+      ],
+      "props": {
+        "dragFrames": 52,
+        "speed": 0.75,
+        "delay": 20,
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "terminal-plan",
+      "label": "Terminal Plan",
+      "description": "Monospace type on a charcoal satin ground with an amber accent for a developer-tool look.",
+      "askedAs": [
+        "developer style roadmap",
+        "monospace dark timeline",
+        "engineering sprint plan look",
+        "роадмап в стиле терминала",
+        "моноширинный тёмный таймлайн"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#f5a524"
+      }
+    },
+    {
+      "id": "polar-minimal",
+      "label": "Polar Minimal",
+      "description": "Bright polar ground with a slate-violet accent and Manrope at a compact scale.",
+      "askedAs": [
+        "light airy roadmap",
+        "minimal icy timeline",
+        "clean compact project plan",
+        "светлый минималистичный роадмап",
+        "лёгкий холодный таймлайн"
+      ],
+      "props": {
+        "ground": "polar",
+        "accent": "#6366f1",
+        "fontFamily": "Manrope",
+        "scale": 0.85
+      }
+    }
+  ]
+}

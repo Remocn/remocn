@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const serif = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -25,7 +25,17 @@ export interface ChangedMindProps {
   steps?: ChangedMindStep[];
   name?: string;
   accent?: string;
+  /** Text color of the quote and name; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Young Serif by default. */
+  fontFamily?: string;
+  /** Longest a quote-to-quote rewrite may take, in frames. */
+  transition?: number;
+  /** Size of the quote and name, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -209,8 +219,8 @@ function wrap(
   return { pos, lines: L, widths };
 }
 
-function useWidths(strings: string[]) {
-  const key = strings.join("\u0001");
+function useWidths(strings: string[], fontFamily: string) {
+  const key = `${fontFamily}\u0002${strings.join("\u0001")}`;
   const [state, setState] = useState<{
     key: string;
     w: Record<string, number>;
@@ -223,14 +233,14 @@ function useWidths(strings: string[]) {
     let live = true;
     Promise.all([
       serif.waitUntilDone(),
-      document.fonts.load(`400 100px "${serif.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const ctx = document.createElement("canvas").getContext("2d");
         const w: Record<string, number> = {};
-        if (ctx) ctx.font = `400 100px "${serif.fontFamily}"`;
+        if (ctx) ctx.font = `400 100px "${fontFamily}"`;
         for (const s of ref.current) {
           w[s] = ctx ? ctx.measureText(s).width / 100 : s.length * 0.5;
         }
@@ -243,22 +253,45 @@ function useWidths(strings: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.w : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function ChangedMind({
   steps = DEFAULT_STEPS,
   name = "Ines Vargas, solo founder",
   accent,
+  ink,
   background,
+  fontFamily = serif.fontFamily,
+  transition = 18,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ChangedMindProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames: T } = useVideoConfig();
+  const tilt = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -273,7 +306,7 @@ export function ChangedMind({
       ...rows.flatMap((r) => r.map((tk) => tk.text)),
     ]),
   );
-  const w = useWidths(strings);
+  const w = useWidths(strings, fontFamily);
 
   if (!w) {
     return (
@@ -329,7 +362,7 @@ export function ChangedMind({
   const tail = Math.max(30, T * 0.22);
   const span = Math.max(1, T - tail - intro);
   const gap = n > 1 ? span / (n - 1) : span;
-  const TR = Math.min(18, gap * 0.45);
+  const TR = Math.min(transition, gap * 0.45);
   const startOf = (k: number) => intro + gap * k - TR;
 
   let cur = 0;
@@ -349,9 +382,11 @@ export function ChangedMind({
     : marginY;
   const lineH = LH * F;
   const colorIn = (k: number, id: string) =>
-    k > 0 && fresh[k].has(id) ? hi : c.ink;
+    k > 0 && fresh[k].has(id) ? hi : fg;
 
   const nodes: React.ReactNode[] = [];
+  // A word is laid out where it rests and travels by (dx, dy): layout rounds a
+  // box and a baseline to whole pixels, so a word eased by `top` clicks along.
   const glyph = (
     key: string,
     text: string,
@@ -359,27 +394,34 @@ export function ChangedMind({
     y: number,
     opacity: number,
     color: string,
-  ) => (
-    <div
-      key={key}
-      style={{
-        position: "absolute",
-        left: x,
-        top: y,
-        height: lineH,
-        lineHeight: `${lineH}px`,
-        fontFamily: serif.fontFamily,
-        fontWeight: 400,
-        fontSize: F,
-        letterSpacing: `${TRACK}em`,
-        whiteSpace: "pre",
-        color,
-        opacity,
-      }}
-    >
-      {text}
-    </div>
-  );
+    dx = 0,
+    dy = 0,
+  ) => {
+    // The transform stays at rest, so the word keeps one way of being drawn.
+    const moving = Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3;
+    return (
+      <div
+        key={key}
+        style={{
+          position: "absolute",
+          left: x,
+          top: y,
+          transform: `translate(${moving ? dx : 0}px, ${moving ? dy : 0}px)${tilt(moving)}`,
+          height: lineH,
+          lineHeight: `${lineH}px`,
+          fontFamily,
+          fontWeight: 400,
+          fontSize: F,
+          letterSpacing: `${TRACK}em`,
+          whiteSpace: "pre",
+          color,
+          opacity,
+        }}
+      >
+        {text}
+      </div>
+    );
+  };
 
   const xy = (k: number, i: number) => {
     const p = layouts[k].pos[i];
@@ -399,9 +441,11 @@ export function ChangedMind({
       "open",
       OPEN,
       marginX - adv(OPEN) * F,
-      top + lift * (1 - openIn),
+      top,
       openIn,
-      c.ink,
+      fg,
+      0,
+      lift * (1 - openIn),
     ),
   );
 
@@ -414,9 +458,11 @@ export function ChangedMind({
           ids[to][i],
           tk.text,
           x,
-          y + lift * (1 - e),
+          y,
           e,
           colorIn(to, ids[to][i]),
+          0,
+          lift * (1 - e),
         ),
       );
     });
@@ -433,8 +479,11 @@ export function ChangedMind({
       const j = idxB.get(id);
       if (j !== undefined) {
         const b = xy(to, j);
-        const gx = a.x + (b.x - a.x) * glide;
-        const gy = a.y + (b.y - a.y) * glide;
+        // Laid out at either end while it waits there, at the end it settles
+        // on while it travels.
+        const at = glide > 0 ? b : a;
+        const gx = (a.x - b.x) * (1 - glide) * (glide > 0 ? 1 : 0);
+        const gy = (a.y - b.y) * (1 - glide) * (glide > 0 ? 1 : 0);
         const col = interpolateColors(
           glide,
           [0, 1],
@@ -443,11 +492,12 @@ export function ChangedMind({
         const ta = rows[from][i].text;
         const tb = rows[to][j].text;
         if (ta === tb) {
-          nodes.push(glyph(id, tb, gx, gy, 1, col));
+          nodes.push(glyph(id, tb, at.x, at.y, 1, col, gx, gy));
         } else {
           const swap = interpolate(lt, [TR * 0.1, TR * 0.4], [0, 1], CLAMP);
-          if (swap < 1) nodes.push(glyph(`${id}-a`, ta, gx, gy, 1 - swap, col));
-          nodes.push(glyph(id, tb, gx, gy, swap, col));
+          if (swap < 1)
+            nodes.push(glyph(`${id}-a`, ta, at.x, at.y, 1 - swap, col, gx, gy));
+          nodes.push(glyph(id, tb, at.x, at.y, swap, col, gx, gy));
         }
       } else {
         const u = interpolate(lt, [outOrder, outOrder + TR * 0.34], [0, 1], {
@@ -461,9 +511,11 @@ export function ChangedMind({
               `${id}-out`,
               rows[from][i].text,
               a.x,
-              a.y + lift * u,
+              a.y,
               1 - u,
               colorIn(from, id),
+              0,
+              lift * u,
             ),
           );
         }
@@ -485,9 +537,11 @@ export function ChangedMind({
             id,
             rows[to][j].text,
             b.x,
-            b.y + lift * (1 - v),
+            b.y,
             v,
             colorIn(to, id),
+            0,
+            lift * (1 - v),
           ),
         );
       }
@@ -513,7 +567,12 @@ export function ChangedMind({
   const quoteBottom =
     top + Math.max(...layouts.map((l) => l.lines)) * lineH + F * 0.7;
 
-  const whenLine = (text: string, dy: number, opacity: number) => (
+  const whenLine = (
+    text: string,
+    dy: number,
+    opacity: number,
+    moving = false,
+  ) => (
     <div
       style={{
         position: "absolute",
@@ -521,7 +580,7 @@ export function ChangedMind({
         top: 0,
         lineHeight: `${slotH}px`,
         whiteSpace: "pre",
-        transform: `translateY(${dy.toFixed(2)}px)`,
+        transform: `translateY(${moving ? dy : dy.toFixed(2)}px)${tilt(moving)}`,
         opacity,
       }}
     >
@@ -531,52 +590,58 @@ export function ChangedMind({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
-      <div
-        style={{
-          position: "absolute",
-          left: marginX,
-          width: measure,
-          ...(portrait ? { top: quoteBottom } : { bottom: marginY }),
-          fontFamily: serif.fontFamily,
-          fontWeight: 400,
-          fontSize: L,
-          letterSpacing: "-0.005em",
-          opacity: attrIn,
-          transform: `translateY(${((1 - attrIn) * L * 0.6).toFixed(2)}px)`,
-        }}
-      >
+      <ScaleLayer scale={scale}>
+        {nodes}
         <div
           style={{
-            lineHeight: `${slotH}px`,
-            paddingLeft: dashW,
-            textIndent: -dashW,
-            textWrap: "balance",
-            color: c.ink,
-            opacity: 0.72,
+            position: "absolute",
+            left: marginX,
+            width: measure,
+            ...(portrait ? { top: quoteBottom } : { bottom: marginY }),
+            fontFamily,
+            fontWeight: 400,
+            fontSize: L,
+            letterSpacing: "-0.005em",
+            opacity: attrIn,
+            transform: `translateY(${
+              attrIn > 0 && attrIn < 1
+                ? (1 - attrIn) * L * 0.6
+                : ((1 - attrIn) * L * 0.6).toFixed(2)
+            }px)${tilt(attrIn > 0 && attrIn < 1)}`,
           }}
         >
-          {`— ${name}`}
+          <div
+            style={{
+              lineHeight: `${slotH}px`,
+              paddingLeft: dashW,
+              textIndent: -dashW,
+              textWrap: "balance",
+              color: fg,
+              opacity: 0.72,
+            }}
+          >
+            {`— ${name}`}
+          </div>
+          <div
+            style={{
+              position: "relative",
+              marginLeft: dashW,
+              height: slotH,
+              width: measure - dashW,
+              overflow: "hidden",
+              color: hi,
+            }}
+          >
+            {whenMix < 1
+              ? whenLine(whenPrev, -slotH * whenMix, 1 - whenMix, whenMix > 0)
+              : null}
+            {whenMix > 0 && cur > 0
+              ? whenLine(whenNext, slotH * (1 - whenMix), whenMix, whenMix < 1)
+              : null}
+            {cur === 0 ? whenLine(whenNext, 0, 1) : null}
+          </div>
         </div>
-        <div
-          style={{
-            position: "relative",
-            marginLeft: dashW,
-            height: slotH,
-            width: measure - dashW,
-            overflow: "hidden",
-            color: hi,
-          }}
-        >
-          {whenMix < 1
-            ? whenLine(whenPrev, -slotH * whenMix, 1 - whenMix)
-            : null}
-          {whenMix > 0 && cur > 0
-            ? whenLine(whenNext, slotH * (1 - whenMix), whenMix)
-            : null}
-          {cur === 0 ? whenLine(whenNext, 0, 1) : null}
-        </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

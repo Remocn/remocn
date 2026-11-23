@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="ChurnCount"
     component={ChurnCountScene}
-    durationInFrames={130}
-    fps={30}
+    durationInFrames={260}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -69,14 +69,55 @@ A giant number sits at the bottom right and counts from `from` to `value` with a
       description: "Small caption beside the figure.",
     },
     {
+      name: "separator",
+      type: "string",
+      default: "\",\"",
+      description: "Thousands separator in the figure.",
+    },
+    {
+      name: "duration",
+      type: "number",
+      default: "76",
+      description: "Frames the count takes from `from` to `value`.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Colour of digits while they are still changing. Hex value expected.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink. Hex value expected.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage colour; pass 'transparent' to layer over other footage.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Urbanist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "600",
+      description: "Weight the digits settle to; changing digits drop to 100.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

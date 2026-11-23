@@ -1,14 +1,10 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Inter";
-import {
-  AbsoluteFill,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, spring } from "remotion";
 import { Caret } from "@/components/remocn/caret";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import { useTypewriter } from "@/lib/remocn-ui";
 
 const { fontFamily: SANS_FAMILY } = loadFont();
@@ -98,6 +94,19 @@ function fadeUpAt(
   return {
     opacity: interpolate(frame, range, [0, 1], opts),
     translateY: interpolate(frame, range, [12, 0], opts),
+  };
+}
+
+// The intro spring overshoots and never quite lands, so "moving" compares the
+// travel itself with the neighbouring frames.
+function introAt(frame: number, fps: number) {
+  const intro = introBounceIn(frame, fps);
+  const heading = fadeUpAt(frame, [4, 20]);
+  const box = fadeUpAt(frame, [10, 26]);
+  return {
+    headingY: heading.translateY + intro.translateY * 0.4,
+    boxY: box.translateY + intro.translateY * 0.6,
+    scale: intro.scale,
   };
 }
 
@@ -203,8 +212,9 @@ export function V0({
   projectName = "Project",
   speed = 1,
 }: V0Props) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
+  const glide = useGlide();
   const t = THEMES.dark;
 
   const refW = 1280;
@@ -220,9 +230,20 @@ export function V0({
   const showText = tw.count > 0;
   const morph = morphProgressAt(frame, { fps, speed });
 
-  const intro = introBounceIn(frame * speed, fps);
   const headingFade = fadeUpAt(frame * speed, [4, 20]);
   const boxFade = fadeUpAt(frame * speed, [10, 26]);
+  const now = introAt(frame * speed, fps);
+  const prev = introAt((frame - 1) * speed, fps);
+  const next = introAt((frame + 1) * speed, fps);
+  const headingMoving =
+    Math.abs(next.headingY - now.headingY) > 1e-3 ||
+    Math.abs(now.headingY - prev.headingY) > 1e-3;
+  // The scale step is weighed by the box's far corner, ~450px from its origin.
+  const boxMoving =
+    Math.abs(next.boxY - now.boxY) > 1e-3 ||
+    Math.abs(now.boxY - prev.boxY) > 1e-3 ||
+    Math.abs(next.scale - now.scale) * 450 > 1e-3 ||
+    Math.abs(now.scale - prev.scale) * 450 > 1e-3;
 
   const boxWidth = 880;
   const boxLeft = (refW - boxWidth) / 2;
@@ -255,7 +276,7 @@ export function V0({
             fontWeight: 700,
             color: t.fg,
             opacity: headingFade.opacity,
-            translate: `0 ${headingFade.translateY + intro.translateY * 0.4}px`,
+            transform: `translateY(${now.headingY}px)${glide(headingMoving)}`,
           }}
         >
           {greeting}
@@ -273,8 +294,7 @@ export function V0({
             borderRadius: 16,
             boxShadow: "0 8px 40px -16px rgba(0,0,0,0.8)",
             opacity: boxFade.opacity,
-            translate: `0 ${boxFade.translateY + intro.translateY * 0.6}px`,
-            scale: `${intro.scale}`,
+            transform: `translateY(${now.boxY}px) scale(${now.scale})${glide(boxMoving)}`,
             transformOrigin: "center top",
             display: "flex",
             flexDirection: "column",

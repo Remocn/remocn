@@ -1,0 +1,122 @@
+{
+  "component": "signal-resolve",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "lab-scope",
+      "label": "Lab Scope",
+      "description": "Phosphor-green traces on a near-black field with a monospace caption, like a bench oscilloscope.",
+      "askedAs": [
+        "oscilloscope green look",
+        "retro lab scope style",
+        "terminal monospace signal",
+        "осциллограф зелёный",
+        "как на экране осциллографа"
+      ],
+      "props": {
+        "accent": "#3ddc97",
+        "background": "#0a0f0d",
+        "ink": "#e6f2ec",
+        "fontFamily": "JetBrains Mono",
+        "traces": 9
+      }
+    },
+    {
+      "id": "paper-report",
+      "label": "Paper Report",
+      "description": "A light, gridless editorial version with serif type and a deep ink-blue line on warm paper.",
+      "askedAs": [
+        "clean light editorial version",
+        "serif on white paper",
+        "calm report style",
+        "светлый редакционный стиль",
+        "газетный вариант с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f1ea",
+        "ink": "#1c1b19",
+        "accent": "#1f3a68",
+        "fontFamily": "Instrument Serif",
+        "grid": false
+      }
+    },
+    {
+      "id": "quick-sting",
+      "label": "Quick Sting",
+      "description": "A fast, compact sting with few traces and tight word timing for short social cuts.",
+      "askedAs": [
+        "make it faster and shorter",
+        "quick logo sting",
+        "snappy data bumper",
+        "быстрая короткая заставка",
+        "ускорить анимацию"
+      ],
+      "props": {
+        "speed": 2,
+        "traces": 3,
+        "stagger": 1,
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A deliberate, large-scale reveal with dense noise and wide word spacing for voice-over pacing.",
+      "askedAs": [
+        "slow cinematic reveal",
+        "big dramatic logo reveal",
+        "longer with voiceover",
+        "медленное раскрытие логотипа",
+        "кинематографично и неспешно"
+      ],
+      "props": {
+        "speed": 0.5,
+        "traces": 13,
+        "stagger": 7,
+        "scale": 1.25,
+        "delay": 20
+      }
+    },
+    {
+      "id": "amber-ops",
+      "label": "Amber Ops",
+      "description": "Warm amber line over graphite with geometric grotesk type, a control-room monitoring feel.",
+      "askedAs": [
+        "warm orange monitoring look",
+        "control room dashboard style",
+        "amber on dark grey",
+        "янтарный на тёмном",
+        "стиль мониторинга дашборда"
+      ],
+      "props": {
+        "accent": "#f2a93b",
+        "background": "#17181b",
+        "ink": "#f3eee6",
+        "fontFamily": "Space Grotesk",
+        "traces": 7
+      }
+    },
+    {
+      "id": "minimal-mono",
+      "label": "Minimal Mono",
+      "description": "A stripped-back light version with no grid or grain, a single graphite line and Geist type.",
+      "askedAs": [
+        "minimal black and white",
+        "clean without grid",
+        "simple monochrome version",
+        "минималистичный чёрно-белый",
+        "без сетки и шума"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#111111",
+        "grid": false,
+        "grain": false,
+        "fontFamily": "Geist",
+        "traces": 2
+      }
+    }
+  ]
+}

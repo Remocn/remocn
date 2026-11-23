@@ -4,14 +4,9 @@ import { loadFont as loadSans } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -35,6 +30,20 @@ export interface SlopeChartProps {
   beforeLabel?: string;
   afterLabel?: string;
   accent?: string;
+  /** Text color of the axis headings and the hero stat; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the labels and values. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Frames between grey lines as they draw in. */
+  stagger?: number;
+  /** Frame the hero line starts to climb; the stat lands with it. */
+  climbAt?: number;
+  /** Size of the chart, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -157,6 +166,22 @@ function taper(
 const fmt = (n: number) =>
   Number.isInteger(n) ? String(n) : n.toFixed(1).replace(/\.0$/, "");
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SlopeChart({
   lines = DEFAULT_LINES,
   highlight = DEFAULT_HIGHLIGHT,
@@ -165,13 +190,27 @@ export function SlopeChart({
   beforeLabel = "Before",
   afterLabel = "After",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  stagger = GREY_STAGGER,
+  climbAt = CLIMB[0],
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: SlopeChartProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage = background ?? p.bg;
+  const hole = background && background !== "transparent" ? background : p.bg;
+  const climbR = [climbAt, climbAt + CLIMB[1] - CLIMB[0]] as const;
+  const hitAt = HIT + climbAt - CLIMB[0];
 
   const greys = lines.slice(0, 8);
   const all = [...greys, highlight];
@@ -189,23 +228,33 @@ export function SlopeChart({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const push = interpolate(t, [0, HIT + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const camScale = 0.975 + 0.025 * push;
   // The chart sits centred alone; the frame eases over as the number lands.
-  const slide = interpolate(t, [CLIMB[0] + 8, HIT + 14], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const camX = W * 0.11 * (1 - slide);
+  const camera = (tt: number) => {
+    const push = interpolate(tt, [0, hitAt + 30], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    const slide = interpolate(tt, [climbR[0] + 8, hitAt + 14], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    return { s: 0.975 + 0.025 * push, x: W * 0.11 * (1 - slide) };
+  };
+  const { s: camScale, x: camX } = camera(t);
+  // The camera's scale is weighed by the half width, the furthest any text
+  // sits from its centre.
+  const camStep = (a: number, b: number) => {
+    const p0 = camera(a);
+    const p1 = camera(b);
+    return Math.abs(p1.x - p0.x) + Math.abs(p1.s - p0.s) * (W / 2) > 1e-3;
+  };
+  const camMoving = camStep(t - speed, t) || camStep(t, t + speed);
 
-  const climb = interpolate(t, CLIMB, [0, 1], {
+  const climb = interpolate(t, climbR, [0, 1], {
     ...CLAMP,
     easing: CLIMB_EASE,
   });
-  const dim = interpolate(t, [CLIMB[0] - 2, CLIMB[0] + 20], [0, 1], {
+  const dim = interpolate(t, [climbR[0] - 2, climbR[0] + 20], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -228,22 +277,22 @@ export function SlopeChart({
   const wStart = 2.2 * u;
   const wTip = (2.2 + 5.4 * climb) * u;
   const startDot = spring({
-    frame: t - CLIMB[0] + 6,
+    frame: t - climbR[0] + 6,
     fps,
     config: { damping: 14, stiffness: 180, mass: 0.6 },
   });
 
   const hit = spring({
-    frame: t - HIT,
+    frame: t - hitAt,
     fps,
     config: { damping: 15, stiffness: 170, mass: 0.7 },
   });
-  const hitO = interpolate(t, [HIT, HIT + 6], [0, 1], CLAMP);
-  const ring = interpolate(t, [HIT, HIT + 26], [0, 1], {
+  const hitO = interpolate(t, [hitAt, hitAt + 6], [0, 1], CLAMP);
+  const ring = interpolate(t, [hitAt, hitAt + 26], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const lab = interpolate(t, [HIT + 8, HIT + 26], [0, 1], {
+  const lab = interpolate(t, [hitAt + 8, hitAt + 26], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -256,7 +305,7 @@ export function SlopeChart({
   const greyEls: React.ReactNode[] = [];
   const greyDots: React.ReactNode[] = [];
   greys.forEach((l, i) => {
-    const start = GREY_AT + i * GREY_STAGGER;
+    const start = GREY_AT + i * stagger;
     const prog = interpolate(t, [start, start + GREY_DRAW], [0, 1], {
       ...CLAMP,
       easing: DRAW_EASE,
@@ -310,252 +359,256 @@ export function SlopeChart({
   const gridVals = [0.25, 0.5, 0.75, 1].map((k) => min + (max - min) * k);
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `translateX(${camX}px) scale(${camScale})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `translateX(${camX}px) scale(${camScale})${glide(camMoving)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
-          <defs>
-            <linearGradient
-              id={gradId}
-              gradientUnits="userSpaceOnUse"
-              x1={hx0}
-              y1={hy0}
-              x2={hx1}
-              y2={hy1}
-            >
-              {p.limb.map((c, i) => (
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={gradId}
+                gradientUnits="userSpaceOnUse"
+                x1={hx0}
+                y1={hy0}
+                x2={hx1}
+                y2={hy1}
+              >
+                {p.limb.map((c, i) => (
+                  <stop
+                    key={c}
+                    offset={i / (p.limb.length - 1)}
+                    stopColor={c === "accent" ? accent : c}
+                  />
+                ))}
+              </linearGradient>
+              <linearGradient
+                id={`${gradId}-w`}
+                gradientUnits="userSpaceOnUse"
+                x1={0}
+                y1={hy1}
+                x2={0}
+                y2={hy0}
+              >
                 <stop
-                  key={c}
-                  offset={i / (p.limb.length - 1)}
-                  stopColor={c === "accent" ? accent : c}
+                  offset={0}
+                  stopColor={p.limb[1] === "accent" ? accent : p.limb[1]}
+                  stopOpacity={p.wedge}
                 />
-              ))}
-            </linearGradient>
-            <linearGradient
-              id={`${gradId}-w`}
-              gradientUnits="userSpaceOnUse"
-              x1={0}
-              y1={hy1}
-              x2={0}
-              y2={hy0}
-            >
-              <stop
-                offset={0}
-                stopColor={p.limb[1] === "accent" ? accent : p.limb[1]}
-                stopOpacity={p.wedge}
+                <stop offset={1} stopColor={accent} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            {gridVals.map((v) => (
+              <line
+                key={v}
+                x1={xL}
+                x2={xL + (xR - xL) * axisIn}
+                y1={yOf(v)}
+                y2={yOf(v)}
+                stroke={p.tick}
+                strokeWidth={stroke}
+                strokeDasharray={`${2 * u} ${6 * u}`}
               />
-              <stop offset={1} stopColor={accent} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          {gridVals.map((v) => (
-            <line
-              key={v}
-              x1={xL}
-              x2={xL + (xR - xL) * axisIn}
-              y1={yOf(v)}
-              y2={yOf(v)}
-              stroke={p.tick}
-              strokeWidth={stroke}
-              strokeDasharray={`${2 * u} ${6 * u}`}
-            />
-          ))}
-          {[xL, xR].map((x) => (
-            <line
-              key={x}
-              x1={x}
-              x2={x}
-              y1={yBot + 14 * u}
-              y2={yBot + 14 * u - (yBot - yTop + 28 * u) * axisIn}
-              stroke={p.axis}
-              strokeWidth={stroke}
-            />
-          ))}
-          {climb > 0 && (
-            <path
-              d={`M${hx0} ${hy0} L${tipX} ${tipY} L${tipX} ${hy0} Z`}
-              fill={`url(#${gradId}-w)`}
-            />
-          )}
-          {greyEls}
-          {greyDots}
-          {climb > 0 && (
-            <>
+            ))}
+            {[xL, xR].map((x) => (
+              <line
+                key={x}
+                x1={x}
+                x2={x}
+                y1={yBot + 14 * u}
+                y2={yBot + 14 * u - (yBot - yTop + 28 * u) * axisIn}
+                stroke={p.axis}
+                strokeWidth={stroke}
+              />
+            ))}
+            {climb > 0 && (
               <path
-                d={taper(hx0, hy0, tipX, tipY, wStart, wTip)}
-                fill={`url(#${gradId})`}
+                d={`M${hx0} ${hy0} L${tipX} ${tipY} L${tipX} ${hy0} Z`}
+                fill={`url(#${gradId}-w)`}
               />
+            )}
+            {greyEls}
+            {greyDots}
+            {climb > 0 && (
+              <>
+                <path
+                  d={taper(hx0, hy0, tipX, tipY, wStart, wTip)}
+                  fill={`url(#${gradId})`}
+                />
+                <circle
+                  cx={tipX}
+                  cy={tipY}
+                  r={wTip / 2}
+                  fill={`url(#${gradId})`}
+                />
+              </>
+            )}
+            <circle
+              cx={hx0}
+              cy={hy0}
+              r={5 * u * (0.6 + 0.4 * startDot)}
+              fill={accent}
+              opacity={Math.min(1, startDot * 1.4)}
+            />
+            {t >= hitAt && (
+              <circle
+                cx={hx1}
+                cy={hy1}
+                r={(8 + 34 * ring) * u}
+                fill="none"
+                stroke={tipColor}
+                strokeWidth={1.5 * u}
+                opacity={(1 - ring) * 0.7}
+              />
+            )}
+            {climb > 0 && (
               <circle
                 cx={tipX}
                 cy={tipY}
-                r={wTip / 2}
+                r={(6.5 + 2 * hit) * u}
                 fill={`url(#${gradId})`}
               />
-            </>
-          )}
-          <circle
-            cx={hx0}
-            cy={hy0}
-            r={5 * u * (0.6 + 0.4 * startDot)}
-            fill={accent}
-            opacity={Math.min(1, startDot * 1.4)}
-          />
-          {t >= HIT && (
-            <circle
-              cx={hx1}
-              cy={hy1}
-              r={(8 + 34 * ring) * u}
-              fill="none"
-              stroke={tipColor}
-              strokeWidth={1.5 * u}
-              opacity={(1 - ring) * 0.7}
-            />
-          )}
-          {climb > 0 && (
-            <circle
-              cx={tipX}
-              cy={tipY}
-              r={(6.5 + 2 * hit) * u}
-              fill={`url(#${gradId})`}
-            />
-          )}
-          {climb > 0 && <circle cx={tipX} cy={tipY} r={2.4 * u} fill={p.bg} />}
-        </svg>
+            )}
+            {climb > 0 && (
+              <circle cx={tipX} cy={tipY} r={2.4 * u} fill={hole} />
+            )}
+          </svg>
 
-        {all.map((l, i) => {
-          const isHl = i === all.length - 1;
-          const start = isHl ? CLIMB[0] - 6 : GREY_AT + i * GREY_STAGGER;
-          const a = interpolate(t, [start + 2, start + 14], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          const o = isHl ? 1 : 0.9 - 0.45 * dim;
-          return (
+          {all.map((l, i) => {
+            const isHl = i === all.length - 1;
+            const start = isHl ? climbR[0] - 6 : GREY_AT + i * stagger;
+            const a = interpolate(t, [start + 2, start + 14], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            const o = isHl ? 1 : 0.9 - 0.45 * dim;
+            return (
+              <div
+                key={`v${i}`}
+                style={{
+                  position: "absolute",
+                  left: xL - 120 * u - 18 * u,
+                  top: leftYs[i] - 10 * u,
+                  width: 120 * u,
+                  textAlign: "right",
+                  fontFamily,
+                  fontWeight: isHl ? 500 : 400,
+                  fontSize: 16 * u,
+                  lineHeight: `${20 * u}px`,
+                  color: isHl ? accent : p.muted,
+                  fontVariantNumeric: "tabular-nums",
+                  opacity: a * o,
+                  transform: `translateX(${(1 - a) * 8 * u}px)`,
+                }}
+              >
+                {fmt(l.before)}
+              </div>
+            );
+          })}
+
+          {greys.map((l, i) => {
+            const end = GREY_AT + i * stagger + GREY_DRAW;
+            const a = interpolate(t, [end - 4, end + 10], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            return (
+              <div
+                key={`r${i}`}
+                style={{
+                  position: "absolute",
+                  left: xR + 18 * u,
+                  top: rightYs[i] - 10 * u,
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 16 * u,
+                  lineHeight: `${20 * u}px`,
+                  color: p.muted,
+                  fontVariantNumeric: "tabular-nums",
+                  opacity: a * (0.9 - 0.45 * dim),
+                  transform: `translateX(${(1 - a) * -8 * u}px)`,
+                }}
+              >
+                {fmt(l.after)}
+              </div>
+            );
+          })}
+
+          {[
+            { x: xL, text: beforeLabel },
+            { x: xR, text: afterLabel },
+          ].map((ax) => (
             <div
-              key={`v${i}`}
+              key={ax.text}
               style={{
                 position: "absolute",
-                left: xL - 120 * u - 18 * u,
-                top: leftYs[i] - 10 * u,
-                width: 120 * u,
-                textAlign: "right",
-                fontFamily: sans,
-                fontWeight: isHl ? 500 : 400,
-                fontSize: 16 * u,
-                lineHeight: `${20 * u}px`,
-                color: isHl ? accent : p.muted,
-                fontVariantNumeric: "tabular-nums",
-                opacity: a * o,
-                transform: `translateX(${(1 - a) * 8 * u}px)`,
+                left: ax.x - 100 * u,
+                width: 200 * u,
+                top: yBot + 30 * u,
+                textAlign: "center",
+                fontFamily,
+                fontWeight: 500,
+                fontSize: 18 * u,
+                letterSpacing: "-0.01em",
+                color: fg,
+                opacity: axisLabelIn,
+                transform: `translateY(${(1 - axisLabelIn) * 8 * u}px)`,
               }}
             >
-              {fmt(l.before)}
+              {ax.text}
             </div>
-          );
-        })}
+          ))}
 
-        {greys.map((l, i) => {
-          const end = GREY_AT + i * GREY_STAGGER + GREY_DRAW;
-          const a = interpolate(t, [end - 4, end + 10], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          return (
-            <div
-              key={`r${i}`}
-              style={{
-                position: "absolute",
-                left: xR + 18 * u,
-                top: rightYs[i] - 10 * u,
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: 16 * u,
-                lineHeight: `${20 * u}px`,
-                color: p.muted,
-                fontVariantNumeric: "tabular-nums",
-                opacity: a * (0.9 - 0.45 * dim),
-                transform: `translateX(${(1 - a) * -8 * u}px)`,
-              }}
-            >
-              {fmt(l.after)}
-            </div>
-          );
-        })}
-
-        {[
-          { x: xL, text: beforeLabel },
-          { x: xR, text: afterLabel },
-        ].map((ax) => (
           <div
-            key={ax.text}
             style={{
               position: "absolute",
-              left: ax.x - 100 * u,
-              width: 200 * u,
-              top: yBot + 30 * u,
-              textAlign: "center",
-              fontFamily: sans,
-              fontWeight: 500,
-              fontSize: 18 * u,
-              letterSpacing: "-0.01em",
-              color: p.fg,
-              opacity: axisLabelIn,
-              transform: `translateY(${(1 - axisLabelIn) * 8 * u}px)`,
+              left: xR + 44 * u,
+              top: hy1 - valueSize * 0.5,
+              opacity: hitO,
+              transform: `translateX(${(1 - hit) * -18 * u}px)`,
             }}
           >
-            {ax.text}
+            <div
+              style={{
+                fontFamily: serif,
+                fontWeight: 400,
+                fontSize: valueSize,
+                lineHeight: 1,
+                letterSpacing: "-0.02em",
+                color: fg,
+                fontVariantNumeric: "tabular-nums",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {value}
+            </div>
+            <div
+              style={{
+                marginTop: 10 * u,
+                fontFamily,
+                fontWeight: 500,
+                fontSize: 20 * u,
+                letterSpacing: "-0.01em",
+                color: p.muted,
+                opacity: lab,
+                transform: `translateY(${(1 - lab) * 8 * u}px)`,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {label}
+            </div>
           </div>
-        ))}
-
-        <div
-          style={{
-            position: "absolute",
-            left: xR + 44 * u,
-            top: hy1 - valueSize * 0.5,
-            opacity: hitO,
-            transform: `translateX(${(1 - hit) * -18 * u}px)`,
-          }}
-        >
-          <div
-            style={{
-              fontFamily: serif,
-              fontWeight: 400,
-              fontSize: valueSize,
-              lineHeight: 1,
-              letterSpacing: "-0.02em",
-              color: p.fg,
-              fontVariantNumeric: "tabular-nums",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {value}
-          </div>
-          <div
-            style={{
-              marginTop: 10 * u,
-              fontFamily: sans,
-              fontWeight: 500,
-              fontSize: 20 * u,
-              letterSpacing: "-0.01em",
-              color: p.muted,
-              opacity: lab,
-              transform: `translateY(${(1 - lab) * 8 * u}px)`,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {label}
-          </div>
-        </div>
-      </AbsoluteFill>
-      <Grain opacity={p.grain} />
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

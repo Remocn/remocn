@@ -1,0 +1,104 @@
+{
+  "component": "point-hop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "Monospace digits on near-black with a green point that snaps quickly between places.",
+      "askedAs": [
+        "fast hacker terminal style",
+        "quick monospace green decimal",
+        "code console look number",
+        "терминальный стиль быстро",
+        "моноширинный шрифт зелёная точка"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d7e4da",
+        "accent": "#3fb950",
+        "hop": 4,
+        "rest": 5
+      }
+    },
+    {
+      "id": "lab-paper",
+      "label": "Lab Paper",
+      "description": "Light, calm serif treatment with an ink-blue point that hops deliberately like a measured reading.",
+      "askedAs": [
+        "light scientific paper look",
+        "elegant serif measurement",
+        "slow calm academic style",
+        "светлый научный стиль",
+        "спокойная анимация с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f6f3ec",
+        "ink": "#1d1c1a",
+        "accent": "#2f5bb7",
+        "rest": 22
+      }
+    },
+    {
+      "id": "keynote-hero",
+      "label": "Keynote Hero",
+      "description": "Oversized grotesk figure with a warm orange point, staged after a short pause for a big reveal.",
+      "askedAs": [
+        "big bold keynote number",
+        "large dramatic stat reveal",
+        "presentation hero figure",
+        "крупная цифра для презентации",
+        "большой эффектный показатель"
+      ],
+      "props": {
+        "scale": 1.4,
+        "fontFamily": "Space Grotesk",
+        "accent": "#ff7a45",
+        "delay": 20,
+        "hop": 10
+      }
+    },
+    {
+      "id": "slow-motion",
+      "label": "Slow Motion",
+      "description": "Half-speed hops with long rests so each unit step reads clearly on a deep navy ground.",
+      "askedAs": [
+        "slow readable decimal shift",
+        "explain each step slowly",
+        "calm navy tech look",
+        "медленная анимация шагов",
+        "спокойный тёмно-синий стиль"
+      ],
+      "props": {
+        "speed": 0.5,
+        "rest": 30,
+        "background": "#0e1726",
+        "ink": "#e6ecf5",
+        "accent": "#7aa2ff"
+      }
+    },
+    {
+      "id": "compact-caption",
+      "label": "Compact Caption",
+      "description": "Small, quick Inter figure in light mode with a violet point, suited as an inline caption beat.",
+      "askedAs": [
+        "small inline number",
+        "compact light stat",
+        "quick subtle caption figure",
+        "маленькая компактная цифра",
+        "быстрый светлый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "scale": 0.7,
+        "speed": 1.5,
+        "accent": "#7c3aed"
+      }
+    }
+  ]
+}

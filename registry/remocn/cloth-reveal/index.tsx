@@ -2,12 +2,8 @@
 
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type ClothRevealDirection = "right" | "left" | "up" | "down";
 
@@ -334,8 +330,8 @@ export function ClothReveal({
   seed = clothRevealDefaults.seed,
   speed = clothRevealDefaults.speed,
 }: ClothRevealProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const uid = `cloth-reveal-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const shadowId = `${uid}-shadow`;
   const softenId = `${uid}-soften`;

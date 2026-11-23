@@ -1,7 +1,7 @@
 "use client";
 
 import { loadVariableFont } from "@remotion/google-fonts/InterTight";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
   continueRender,
@@ -9,9 +9,9 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const inter = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -25,7 +25,19 @@ export interface BeatCountProps {
   suffix?: string;
   label?: string;
   accent?: string;
+  /** Text color of the number; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the number and caption. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  /** Weight of the number between beats; each beat swells it toward 500. */
+  fontWeight?: number;
+  /** How far each beat squashes the number, as a fraction of its height. */
+  punch?: number;
+  /** Size of the number and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -71,17 +83,17 @@ interface Metrics {
   baseline: number;
 }
 
-function measure(text: string): Metrics {
+function measure(text: string, fontFamily: string, weight: number): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   let rest = 0.55 * text.length;
   let duck = 0.62 * text.length;
   let figTop = 0.72;
   let baseline = 0.8;
   if (ctx) {
-    ctx.font = `${WGHT.rest} 200px "${inter.fontFamily}"`;
+    ctx.font = `${weight} 200px "${fontFamily}"`;
     ctx.letterSpacing = `${TRACK.rest * 200}px`;
     rest = ctx.measureText(text).width / 200;
-    ctx.font = `${WGHT.duck} 200px "${inter.fontFamily}"`;
+    ctx.font = `${WGHT.duck} 200px "${fontFamily}"`;
     ctx.letterSpacing = `${TRACK.duck * 200}px`;
     duck = ctx.measureText(text).width / 200;
     const fm = ctx.measureText("0");
@@ -93,7 +105,8 @@ function measure(text: string): Metrics {
   return { rest, duck, figTop, baseline };
 }
 
-function useMetrics(text: string) {
+function useMetrics(text: string, fontFamily: string, rest: number) {
+  const key = `${rest} ${fontFamily} ${text}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("beat-count: measuring"));
   const released = useRef(false);
@@ -101,13 +114,13 @@ function useMetrics(text: string) {
     let live = true;
     Promise.all([
       inter.waitUntilDone(),
-      document.fonts.load(`${WGHT.rest} 100px "${inter.fontFamily}"`),
-      document.fonts.load(`${WGHT.duck} 100px "${inter.fontFamily}"`),
+      document.fonts.load(`${rest} 100px "${fontFamily}"`),
+      document.fonts.load(`${WGHT.duck} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key: text, m: measure(text) });
+        setState({ key, m: measure(text, fontFamily, rest) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -116,9 +129,27 @@ function useMetrics(text: string) {
     return () => {
       live = false;
     };
-  }, [text, handle]);
-  return state && state.key === text ? state.m : null;
+  }, [key, text, fontFamily, rest, handle]);
+  return state && state.key === key ? state.m : null;
 }
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 function envelope(since: number, release: number) {
   if (since < 0) return 0;
@@ -136,19 +167,27 @@ export function BeatCount({
   suffix = "",
   label = "cuts, each one landing on the kick",
   accent,
+  ink,
   background,
+  fontFamily = inter.fontFamily,
+  fontWeight = WGHT.rest,
+  punch = DUCK,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: BeatCountProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const finalText = useMemo(
     () => `${prefix}${format(value, decimals)}${suffix}`,
     [prefix, value, decimals, suffix],
   );
-  const m = useMetrics(finalText);
+  const m = useMetrics(finalText, fontFamily, fontWeight);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -165,12 +204,11 @@ export function BeatCount({
   const n = Math.max(1, Math.round(beats));
   const beatLen = (fps * 60) / Math.max(30, bpm);
   const lastBeat = FIRST_BEAT + (n - 1) * beatLen;
-  const k =
-    t < FIRST_BEAT
+  const beatOf = (f: number) =>
+    f < FIRST_BEAT
       ? -1
-      : Math.min(n - 1, Math.floor((t - FIRST_BEAT) / beatLen));
-  const beatT = FIRST_BEAT + Math.max(0, k) * beatLen;
-  const isLast = k === n - 1;
+      : Math.min(n - 1, Math.floor((f - FIRST_BEAT) / beatLen));
+  const k = beatOf(t);
 
   const shown = k < 0 ? from : from + ((value - from) * (k + 1)) / n;
   const text = `${prefix}${format(
@@ -179,20 +217,31 @@ export function BeatCount({
   )}${suffix}`;
 
   const release = Math.max(2, beatLen * 0.26);
-  let d = k < 0 ? 0 : envelope(t - beatT, release) * DUCK;
-  if (isLast) {
-    const since = t - lastBeat;
-    const back = spring({
-      frame: since - 2,
-      fps,
-      config: { damping: 9, stiffness: 120, mass: 0.8 },
-    });
-    const attack = Math.min(1, (since + 1) / 2);
-    d = LAST_DUCK * (since < 2 ? attack : 1 - back);
-  }
+  const duckAt = (f: number) => {
+    const b = beatOf(f);
+    if (b === n - 1) {
+      const since = f - lastBeat;
+      const back = spring({
+        frame: since - 2,
+        fps,
+        config: { damping: 9, stiffness: 120, mass: 0.8 },
+      });
+      const attack = Math.min(1, (since + 1) / 2);
+      return LAST_DUCK * (since < 2 ? attack : 1 - back);
+    }
+    return b < 0
+      ? 0
+      : envelope(f - (FIRST_BEAT + b * beatLen), release) * punch;
+  };
+  const d = duckAt(t);
+  // The squash decays and springs without a clean end, so the test is on
+  // the squash itself, against the neighbouring frames.
+  const squashing =
+    Math.abs(duckAt(t + speed) - d) > 2e-6 ||
+    Math.abs(d - duckAt(t - speed)) > 2e-6;
   const duck = Math.max(0, Math.min(1, d / LAST_DUCK));
   const sy = 1 - d;
-  const wght = WGHT.rest + (WGHT.duck - WGHT.rest) * duck;
+  const wght = fontWeight + (WGHT.duck - fontWeight) * duck;
   const track = TRACK.rest + (TRACK.duck - TRACK.rest) * duck;
 
   const margin = portrait ? W * 0.08 : W * 0.065;
@@ -204,10 +253,15 @@ export function BeatCount({
   const boxTop = baseY - m.baseline * F;
   const labelFs = (portrait ? 50 : 32) * s;
 
-  const enter = interpolate(t, [0, ENTER_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const enterAt = (f: number) =>
+    interpolate(f, [0, ENTER_LEN], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const enter = enterAt(t);
+  // The rise lands a frame before the first beat squashes the figure, so the
+  // tilt holds through the landing frame instead of blinking off for it.
+  const entering = enter !== enterAt(t - speed) || enter !== enterAt(t + speed);
   const labelP = interpolate(
     t,
     [FIRST_BEAT + beatLen, FIRST_BEAT + beatLen + 16],
@@ -220,49 +274,51 @@ export function BeatCount({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          right: margin - F * 0.02,
-          top: boxTop,
-          height: F,
-          lineHeight: `${F}px`,
-          whiteSpace: "pre",
-          fontFamily: inter.fontFamily,
-          fontSize: F,
-          fontVariationSettings: `"wght" ${wght.toFixed(1)}`,
-          fontVariantNumeric: "tabular-nums",
-          letterSpacing: `${track.toFixed(4)}em`,
-          color: c.ink,
-          opacity: enter,
-          transformOrigin: `100% ${(m.baseline * F).toFixed(1)}px`,
-          transform: `translateY(${((1 - enter) * F * 0.08).toFixed(2)}px) scaleY(${sy.toFixed(4)})`,
-        }}
-      >
-        {text}
-      </div>
-
-      {label ? (
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: margin,
-            top: margin,
-            width: W * (portrait ? 0.7 : 0.34),
-            fontFamily: inter.fontFamily,
-            fontVariationSettings: `"wght" 400`,
-            fontSize: labelFs,
-            lineHeight: 1.2,
-            letterSpacing: "-0.015em",
-            textWrap: "balance",
-            color: spot,
-            opacity: labelP,
-            transform: `translateY(${((1 - labelP) * labelFs * 0.5).toFixed(2)}px)`,
+            right: margin - F * 0.02,
+            top: boxTop,
+            height: F,
+            lineHeight: `${F}px`,
+            whiteSpace: "pre",
+            fontFamily,
+            fontSize: F,
+            fontVariationSettings: `"wght" ${wght.toFixed(1)}`,
+            fontVariantNumeric: "tabular-nums",
+            letterSpacing: `${track.toFixed(4)}em`,
+            color: fg,
+            opacity: enter,
+            transformOrigin: `100% ${(m.baseline * F).toFixed(1)}px`,
+            transform: `translateY(${((1 - enter) * F * 0.08).toFixed(2)}px) scaleY(${sy.toFixed(4)})${glide(squashing || entering)}`,
           }}
         >
-          {label}
+          {text}
         </div>
-      ) : null}
+
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: margin,
+              top: margin,
+              width: W * (portrait ? 0.7 : 0.34),
+              fontFamily,
+              fontVariationSettings: `"wght" 400`,
+              fontSize: labelFs,
+              lineHeight: 1.2,
+              letterSpacing: "-0.015em",
+              textWrap: "balance",
+              color: spot,
+              opacity: labelP,
+              transform: `translateY(${((1 - labelP) * labelFs * 0.5).toFixed(2)}px)${glide(midway(labelP))}`,
+            }}
+          >
+            {label}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

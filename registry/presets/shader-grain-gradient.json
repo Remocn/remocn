@@ -1,0 +1,116 @@
+{
+  "component": "shader-grain-gradient",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-film",
+      "label": "Still Film",
+      "description": "A near-motionless, very soft blend with heavy film grain for a quiet editorial backdrop.",
+      "askedAs": [
+        "slow grainy film background",
+        "barely moving soft gradient with grain",
+        "quiet analog texture backdrop",
+        "медленный зернистый фон как плёнка",
+        "тихий мягкий градиент с зерном"
+      ],
+      "props": {
+        "speed": 0.25,
+        "softness": 0.9,
+        "noise": 0.45,
+        "intensity": 0.1
+      }
+    },
+    {
+      "id": "print-paper",
+      "label": "Print Paper",
+      "description": "A warm off-white field with soft blending and fine print-like grain.",
+      "askedAs": [
+        "light paper texture gradient",
+        "cream background with grain",
+        "risograph print look",
+        "светлый фон как бумага с зерном",
+        "кремовый градиент с текстурой печати"
+      ],
+      "props": {
+        "colorBack": "#f2ece1",
+        "noise": 0.3,
+        "softness": 0.8,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-drift",
+      "label": "Bold Drift",
+      "description": "A faster, punchier gradient with crisper color bands and light grain.",
+      "askedAs": [
+        "more energetic gradient motion",
+        "vivid moving gradient background",
+        "sharper bolder color blend",
+        "яркий быстрый градиент",
+        "энергичный движущийся фон"
+      ],
+      "props": {
+        "speed": 2,
+        "softness": 0.3,
+        "intensity": 0.6,
+        "noise": 0.1
+      }
+    },
+    {
+      "id": "midnight-velvet",
+      "label": "Midnight Velvet",
+      "description": "A deep navy base with smooth, slow-moving color and subtle grain for luxury scenes.",
+      "askedAs": [
+        "dark navy luxury gradient",
+        "deep blue premium background",
+        "elegant dark velvet backdrop",
+        "тёмно-синий премиальный фон",
+        "роскошный тёмный градиент"
+      ],
+      "props": {
+        "colorBack": "#0b1426",
+        "speed": 0.75,
+        "softness": 0.75,
+        "intensity": 0.35,
+        "noise": 0.2
+      }
+    },
+    {
+      "id": "clean-digital",
+      "label": "Clean Digital",
+      "description": "A smooth, nearly grainless gradient with crisp contrast for a modern tech feel.",
+      "askedAs": [
+        "smooth gradient without grain",
+        "clean modern tech background",
+        "no noise flat gradient",
+        "чистый градиент без зерна",
+        "современный гладкий фон"
+      ],
+      "props": {
+        "noise": 0,
+        "softness": 0.45,
+        "intensity": 0.45,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "oxblood-grain",
+      "label": "Oxblood Grain",
+      "description": "A dark burgundy base under heavy, coarse grain for a moody cinematic texture.",
+      "askedAs": [
+        "dark red grainy background",
+        "moody cinematic film texture",
+        "burgundy gritty gradient",
+        "тёмно-бордовый зернистый фон",
+        "кинематографичная текстура с сильным зерном"
+      ],
+      "props": {
+        "colorBack": "#2a0f14",
+        "noise": 0.6,
+        "intensity": 0.3,
+        "speed": 0.5
+      }
+    }
+  ]
+}

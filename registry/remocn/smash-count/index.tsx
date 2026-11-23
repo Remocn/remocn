@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadRubik } from "@remotion/google-fonts/Rubik";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -8,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const rubik = loadRubik("normal", {
   weights: ["400", "500"],
@@ -25,7 +26,19 @@ export interface SmashCountProps {
   suffix?: string;
   label?: string;
   accent?: string;
+  /** Text color of the label; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the number and label. Load it yourself; Rubik by default. */
+  fontFamily?: string;
+  /** Frames between the first two cuts; the gaps shrink toward `lastGap`. */
+  firstGap?: number;
+  /** Frames between the last two cuts. */
+  lastGap?: number;
+  /** Size of the number and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -74,20 +87,19 @@ function cutValues(from: number, value: number, cuts: number) {
   return out;
 }
 
-function cutTimes(n: number) {
+function cutTimes(n: number, firstGap: number, lastGap: number) {
   const out = [0];
   for (let k = 1; k < n; k++) {
-    const g =
-      FIRST_GAP + (LAST_GAP - FIRST_GAP) * ((k - 1) / Math.max(1, n - 2));
+    const g = firstGap + (lastGap - firstGap) * ((k - 1) / Math.max(1, n - 2));
     out.push(out[k - 1] + g);
   }
   return out.map((v) => Math.round(v));
 }
 
-function measure(texts: string[], label: string): Metrics {
+function measure(texts: string[], label: string, fontFamily: string): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) throw new Error("smash-count: no 2d context");
-  ctx.font = `500 100px "${rubik.fontFamily}"`;
+  ctx.font = `500 100px "${fontFamily}"`;
   const widths = texts.map(
     (s) =>
       ctx.measureText(s).width / 100 +
@@ -96,7 +108,7 @@ function measure(texts: string[], label: string): Metrics {
   const fm = ctx.measureText("0123456789");
   const asc = fm.fontBoundingBoxAscent / 100;
   const desc = fm.fontBoundingBoxDescent / 100;
-  ctx.font = `400 100px "${rubik.fontFamily}"`;
+  ctx.font = `400 100px "${fontFamily}"`;
   return {
     widths,
     cap: ctx.measureText("0").actualBoundingBoxAscent / 100,
@@ -105,8 +117,9 @@ function measure(texts: string[], label: string): Metrics {
   };
 }
 
-function useMetrics(texts: string[], label: string) {
+function useMetrics(texts: string[], label: string, fontFamily: string) {
   const key = [...texts, label].join("\u0001");
+  const stateKey = `${fontFamily}\u0002${key}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("smash-count: measuring"));
   const released = useRef(false);
@@ -115,15 +128,19 @@ function useMetrics(texts: string[], label: string) {
     const parts = key.split("\u0001");
     Promise.all([
       rubik.waitUntilDone(),
-      document.fonts.load(`500 100px "${rubik.fontFamily}"`),
-      document.fonts.load(`400 100px "${rubik.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         setState({
-          key,
-          m: measure(parts.slice(0, -1), parts[parts.length - 1] ?? ""),
+          key: stateKey,
+          m: measure(
+            parts.slice(0, -1),
+            parts[parts.length - 1] ?? "",
+            fontFamily,
+          ),
         });
         if (!released.current) {
           released.current = true;
@@ -133,8 +150,8 @@ function useMetrics(texts: string[], label: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
-  return state && state.key === key ? state.m : null;
+  }, [key, stateKey, handle, fontFamily]);
+  return state && state.key === stateKey ? state.m : null;
 }
 
 function splitLabel(label: string) {
@@ -154,6 +171,22 @@ function splitLabel(label: string) {
   return [words.slice(0, best).join(" "), words.slice(best).join(" ")];
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SmashCount({
   value = 64,
   from = 1,
@@ -162,12 +195,19 @@ export function SmashCount({
   suffix = "",
   label = "scenes, zero keyframes",
   accent = RED,
+  ink,
   background,
+  fontFamily = rubik.fontFamily,
+  firstGap = FIRST_GAP,
+  lastGap = LAST_GAP,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: SmashCountProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const values = useMemo(
     () => cutValues(Math.round(from), Math.round(value), Math.round(cuts)),
@@ -181,6 +221,7 @@ export function SmashCount({
   const m = useMetrics(
     texts,
     lines.reduce((a, b) => (a.length > b.length ? a : b), ""),
+    fontFamily,
   );
 
   const transparent = background === "transparent";
@@ -194,7 +235,7 @@ export function SmashCount({
 
   const portrait = H > W * 1.1;
   const n = texts.length;
-  const times = cutTimes(n);
+  const times = cutTimes(n, firstGap, lastGap);
   let k = 0;
   for (let i = 0; i < n; i++) if (t >= times[i]) k = i;
   const last = k === n - 1;
@@ -248,44 +289,48 @@ export function SmashCount({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left,
-          top: baseY - m.base * F,
-          height: F,
-          lineHeight: `${F}px`,
-          whiteSpace: "pre",
-          fontFamily: rubik.fontFamily,
-          fontWeight: 500,
-          fontSize: F,
-          letterSpacing: `${TRACK}em`,
-          color: accent,
-          transform: `scale(${punch.toFixed(4)})`,
-          transformOrigin: `${ox} ${oy}`,
-        }}
-      >
-        {texts[k]}
-      </div>
-      {last && lines.length > 0 ? (
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            right: margin,
-            top: margin - labelFs * 0.1,
-            textAlign: "right",
-            fontFamily: rubik.fontFamily,
-            fontWeight: 400,
-            fontSize: labelFs,
-            lineHeight: 1.12,
-            letterSpacing: "-0.015em",
+            left,
+            top: baseY - m.base * F,
+            height: F,
+            lineHeight: `${F}px`,
             whiteSpace: "pre",
-            color: c.ink,
+            fontFamily,
+            fontWeight: 500,
+            fontSize: F,
+            letterSpacing: `${TRACK}em`,
+            color: accent,
+            // Unrounded: a scale rounded to 1e-4 steps the far glyphs by
+            // a fraction of a pixel per frame on its own.
+            transform: `scale(${punch})${glide(punch !== 1)}`,
+            transformOrigin: `${ox} ${oy}`,
           }}
         >
-          {lines.join("\n")}
+          {texts[k]}
         </div>
-      ) : null}
+        {last && lines.length > 0 ? (
+          <div
+            style={{
+              position: "absolute",
+              right: margin,
+              top: margin - labelFs * 0.1,
+              textAlign: "right",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: labelFs,
+              lineHeight: 1.12,
+              letterSpacing: "-0.015em",
+              whiteSpace: "pre",
+              color: ink ?? c.ink,
+            }}
+          >
+            {lines.join("\n")}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

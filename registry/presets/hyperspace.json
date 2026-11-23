@@ -1,0 +1,116 @@
+{
+  "component": "hyperspace",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ice-blue-jump",
+      "label": "Ice Blue Jump",
+      "description": "Cool pale-blue streaks with cyan accents and a soft icy flash for a clean sci-fi launch.",
+      "askedAs": [
+        "cold blue warp transition",
+        "icy hyperspace jump",
+        "sci-fi blue star tunnel",
+        "холодный синий гиперпрыжок",
+        "голубой варп переход"
+      ],
+      "props": {
+        "streakColor": "#dcebff",
+        "accentColor": "#4fa3ff",
+        "accentRatio": 0.3,
+        "flashColor": "#e8f2ff"
+      }
+    },
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "A sparse field of white stars that stretches slowly and fades through without a flash.",
+      "askedAs": [
+        "calm slow starfield transition",
+        "gentle space drift no flash",
+        "minimal stars moving slowly",
+        "медленный звездный переход",
+        "спокойный космос без вспышки"
+      ],
+      "props": {
+        "stars": 120,
+        "speed": 0.5,
+        "flash": false,
+        "accentRatio": 0
+      }
+    },
+    {
+      "id": "overdrive",
+      "label": "Overdrive",
+      "description": "A dense, fast storm of streaks with frequent red accents that slams into a bright white cut.",
+      "askedAs": [
+        "fast intense warp speed",
+        "dense hyperdrive punch",
+        "aggressive star jump transition",
+        "быстрый мощный гиперпрыжок",
+        "интенсивный варп"
+      ],
+      "props": {
+        "stars": 560,
+        "speed": 2.5,
+        "accentRatio": 0.26
+      }
+    },
+    {
+      "id": "golden-launch",
+      "label": "Golden Launch",
+      "description": "Warm cream streaks flecked with amber that resolve into a soft golden flash for a premium release.",
+      "askedAs": [
+        "gold warp transition",
+        "warm premium launch effect",
+        "amber starfield jump",
+        "золотой гиперпрыжок",
+        "теплый переход со звездами"
+      ],
+      "props": {
+        "streakColor": "#fff4de",
+        "accentColor": "#f2a93b",
+        "accentRatio": 0.22,
+        "flashColor": "#ffe9c2",
+        "stars": 320
+      }
+    },
+    {
+      "id": "violet-nebula",
+      "label": "Violet Nebula",
+      "description": "Lavender streaks with a heavy share of violet accents and a pale lilac flash for a dreamy tech look.",
+      "askedAs": [
+        "purple hyperspace tunnel",
+        "violet warp transition",
+        "nebula style star jump",
+        "фиолетовый гиперпрыжок",
+        "сиреневый космический переход"
+      ],
+      "props": {
+        "streakColor": "#e9e2ff",
+        "accentColor": "#8b5cf6",
+        "accentRatio": 0.44,
+        "flashColor": "#f1ecff",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "monochrome-dark-cut",
+      "label": "Mono Blackout",
+      "description": "Pure white streaks with no accents that cut to black instead of white for a stark, cinematic jump.",
+      "askedAs": [
+        "black and white warp",
+        "hyperspace cut to black",
+        "monochrome star tunnel",
+        "черно-белый гиперпрыжок",
+        "переход в черный экран со звездами"
+      ],
+      "props": {
+        "accentRatio": 0,
+        "flashColor": "#000000",
+        "stars": 400,
+        "speed": 1.5
+      }
+    }
+  ]
+}

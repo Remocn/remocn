@@ -2,19 +2,14 @@
 
 import { loadFont } from "@remotion/google-fonts/Figtree";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const figtree = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -48,7 +43,25 @@ export interface MobilePaywallProps {
   dates?: [string, string, string];
   /** Three lines beside the phone: paywall, confirm, welcome. */
   lines?: [string, string, string];
+  /** Heading on the welcome screen after the purchase. */
+  welcomeTitle?: string;
+  /** Line under the welcome heading. */
+  welcomeSub?: string;
+  /** Button on the welcome screen. */
+  welcomeCta?: string;
   accent?: string;
+  /** Color of the lines beside the phone; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark on the app icon. */
+  logo?: React.ReactNode;
+  /** Size of the phone and lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -134,6 +147,10 @@ const LIGHT = Easing.bezier(0.22, 1, 0.36, 1);
 const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
 const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
+
+/** Whether a value of the frame moves into or out of `f`. */
+const stirs = (at: (f: number) => number, f: number, eps = 1e-3) =>
+  Math.abs(at(f + 1) - at(f)) > eps || Math.abs(at(f) - at(f - 1)) > eps;
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
@@ -208,7 +225,15 @@ function Glyph({
   );
 }
 
-function AppTile({ size, accent }: { size: number; accent: string }) {
+function AppTile({
+  size,
+  accent,
+  logo,
+}: {
+  size: number;
+  accent: string;
+  logo?: React.ReactNode;
+}) {
   return (
     <div
       style={{
@@ -223,9 +248,11 @@ function AppTile({ size, accent }: { size: number; accent: string }) {
         flexShrink: 0,
       }}
     >
-      <svg viewBox="0 0 124.06 134.26" height={size * 0.42} aria-hidden>
-        <path fill="#fff" d={REMOCN_R_PATH} />
-      </svg>
+      {logo ?? (
+        <svg viewBox="0 0 124.06 134.26" height={size * 0.42} aria-hidden>
+          <path fill="#fff" d={REMOCN_R_PATH} />
+        </svg>
+      )}
     </div>
   );
 }
@@ -309,11 +336,17 @@ function Phone({
   sidePress: number;
   c: Palette;
 }) {
+  // The press nudges the button by a transform: layout would round its
+  // edge to whole pixels. A spring leaves a sliver behind; that is dropped.
   const btn = (side: "left" | "right", top: number, h: number, dx = 0) => (
     <div
       style={{
         position: "absolute",
-        [side]: -3 + dx,
+        [side]: -3,
+        transform:
+          Math.abs(dx) >= 1e-3
+            ? `translateX(${side === "right" ? -dx : dx}px)`
+            : undefined,
         top,
         width: 4,
         height: h,
@@ -406,6 +439,22 @@ function Radio({ on, accent, c }: { on: number; accent: string; c: Palette }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MobilePaywall({
   appName = "remocn Pro",
   title = "Ship launch videos in minutes",
@@ -419,16 +468,27 @@ export function MobilePaywall({
     "Double-click to confirm.",
     "Seven days, on us.",
   ],
+  welcomeTitle = "Welcome to Pro",
+  welcomeSub = "Your free week starts now. Here’s how it works.",
+  welcomeCta = "Start creating",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = figtree.fontFamily,
+  logo,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   ground,
   groundParams,
 }: MobilePaywallProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { fps, width, height } = useSceneConfig();
   const f = frame * speed;
   const c = theme === "dark" ? DARK_PAL : LIGHT_PAL;
+  const fg = ink ?? c.copy;
   const tall = height > width;
   const W = tall ? 720 : 1280;
   const H = tall ? 1280 : 720;
@@ -476,6 +536,7 @@ export function MobilePaywall({
       };
     }
   }
+  const tapRest = keys[keys.length - 1];
   const tapOpacity = interpolate(
     f,
     [TAP_IN, TAP_IN + 6, TAP2 + 6, TAP2 + 11],
@@ -526,6 +587,17 @@ export function MobilePaywall({
     ...clamp,
     easing: CAMERA,
   });
+  // Asked of the px at the phone's far edge: the rise never quite lands and
+  // the push eases out so gently that its progress outlasts the motion.
+  const phoneMoving =
+    stirs((g) => (1 - spring({ frame: g, fps, config: HEAVY })) * H * 0.9, f) ||
+    stirs(
+      (g) =>
+        interpolate(g, [0, 250], [1, 1.035], { ...clamp, easing: CAMERA }) *
+        k *
+        (BH / 2),
+      f,
+    );
 
   const enter = (v: number, dy = 10): React.CSSProperties => ({
     opacity: Math.min(1, v * 1.4),
@@ -542,18 +614,26 @@ export function MobilePaywall({
   const copyLine = (i: number) => {
     const inAt = beats[i] + (i === 0 ? 8 : 0);
     const outAt = beats[i + 1];
-    const pin = interpolate(f, [inAt, inAt + 14], [0, 1], {
-      ...clamp,
-      easing: ENTER,
-    });
-    const pout =
-      outAt === undefined
-        ? 0
-        : interpolate(f, [outAt - 2, outAt + 6], [0, 1], {
-            ...clamp,
-            easing: EXIT,
-          });
+    const at = (g: number) => {
+      const pin = interpolate(g, [inAt, inAt + 14], [0, 1], {
+        ...clamp,
+        easing: ENTER,
+      });
+      const pout =
+        outAt === undefined
+          ? 0
+          : interpolate(g, [outAt - 2, outAt + 6], [0, 1], {
+              ...clamp,
+              easing: EXIT,
+            });
+      return { pin, pout, dy: (1 - pin) * 70 - pout * 50 };
+    };
+    const { pin, pout, dy } = at(f);
     if (pin <= 0 || pout >= 1) return null;
+    // Compared in % of a 72px line: a thousandth of a pixel is about 1.4e-3%.
+    const moving =
+      Math.abs(at(f + speed).dy - dy) > 1.4e-3 ||
+      Math.abs(dy - at(f - speed).dy) > 1.4e-3;
     return (
       <div
         key={i}
@@ -562,7 +642,7 @@ export function MobilePaywall({
           left: 0,
           right: 0,
           top: 0,
-          transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
+          transform: `translateY(${dy}%)${glide(moving)}`,
           opacity: pin * (1 - pout),
         }}
       >
@@ -579,110 +659,566 @@ export function MobilePaywall({
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? (c.dark ? "flood" : "glasswork")}
-        params={
-          groundParams ??
-          (c.dark || ground
-            ? undefined
-            : { colors: ["#a9bbff", "#3552ff", "#1a2a9e", "#7f9bff"] })
-        }
-        timeOffset={c.dark ? 3 : 8}
-        timeScale={0.35}
-      />
-      <AbsoluteFill
-        style={{
-          background: c.dark ? "rgba(2,3,8,0.25)" : "rgba(240,241,245,0.3)",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - W * u) / 2,
-          top: (height - H * u) / 2,
-          width: W,
-          height: H,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (c.dark ? "flood" : "glasswork")}
+            params={
+              groundParams ??
+              (c.dark || ground
+                ? undefined
+                : { colors: ["#a9bbff", "#3552ff", "#1a2a9e", "#7f9bff"] })
+            }
+            timeOffset={c.dark ? 3 : 8}
+            timeScale={0.35}
+          />
+          <AbsoluteFill
+            style={{
+              background: c.dark ? "rgba(2,3,8,0.25)" : "rgba(240,241,245,0.3)",
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: tall ? 56 : 92,
-            top: tall ? 88 : H / 2 - 80,
-            width: tall ? W - 112 : 500,
-            height: 160,
-            fontSize: tall ? 60 : 72,
-            fontWeight: 300,
-            lineHeight: 1.04,
-            letterSpacing: "-0.035em",
-            color: c.copy,
-            overflow: "hidden",
-            textWrap: "balance",
+            left: (width - W * u) / 2,
+            top: (height - H * u) / 2,
+            width: W,
+            height: H,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
-          {[0, 1, 2].map((i) => copyLine(i))}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: phoneCx - BW / 2,
-            top: phoneCy - BH / 2,
-            width: BW,
-            height: BH,
-            transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camera})`,
-          }}
-        >
-          <Phone sidePress={sidePress} c={c}>
-            <StatusBar color="#fff" />
-            <div
-              style={{
-                position: "absolute",
-                top: 47,
-                left: 14,
-                right: 14,
-                height: 60,
-                borderRadius: 12,
-                background: c.behind,
-                opacity: sheetIn,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: SHEET_TOP,
-                bottom: 0,
-                borderRadius: "14px 14px 0 0",
-                background: c.sheet,
-                color: c.text,
-                overflow: "hidden",
-                transform: `translateY(${(1 - sheetIn) * SH}px)`,
-              }}
-            >
+          <div
+            style={{
+              position: "absolute",
+              left: tall ? 56 : 92,
+              top: tall ? 88 : H / 2 - 80,
+              width: tall ? W - 112 : 500,
+              height: 160,
+              fontSize: tall ? 60 : 72,
+              fontWeight: 300,
+              lineHeight: 1.04,
+              letterSpacing: "-0.035em",
+              color: fg,
+              overflow: "hidden",
+              textWrap: "balance",
+            }}
+          >
+            {[0, 1, 2].map((i) => copyLine(i))}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: phoneCx - BW / 2,
+              top: phoneCy - BH / 2,
+              width: BW,
+              height: BH,
+              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camera})${glide(phoneMoving)}`,
+            }}
+          >
+            <Phone sidePress={sidePress} c={c}>
+              <StatusBar color="#fff" />
               <div
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  opacity: out,
-                  transform: `scale(${0.96 + out * 0.04})`,
+                  top: 47,
+                  left: 14,
+                  right: 14,
+                  height: 60,
+                  borderRadius: 12,
+                  background: c.behind,
+                  opacity: sheetIn,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: SHEET_TOP,
+                  bottom: 0,
+                  borderRadius: "14px 14px 0 0",
+                  background: c.sheet,
+                  color: c.text,
+                  overflow: "hidden",
+                  transform: `translateY(${(1 - sheetIn) * SH}px)`,
                 }}
               >
                 <div
                   style={{
-                    ...abs(74),
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
+                    position: "absolute",
+                    inset: 0,
+                    opacity: out,
+                    transform: `scale(${0.96 + out * 0.04})`,
                   }}
                 >
                   <div
                     style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 16,
+                      ...abs(74),
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 16,
+                        background: c.chip,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Glyph
+                        d="M7 7l10 10M17 7L7 17"
+                        size={15}
+                        color={c.muted}
+                        sw={2}
+                      />
+                    </div>
+                    <span style={{ fontSize: 15, color: c.muted }}>
+                      Restore
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      ...abs(112),
+                      display: "flex",
+                      opacity: Math.min(1, hero * 1.5),
+                      transform: `scale(${0.8 + hero * 0.2})`,
+                      transformOrigin: "0 50%",
+                    }}
+                  >
+                    <AppTile size={64} accent={accent} logo={logo} />
+                  </div>
+                  <div
+                    style={{
+                      ...abs(196),
+                      fontSize: 34,
+                      fontWeight: 300,
+                      letterSpacing: "-0.035em",
+                      lineHeight: 1.08,
+                      textWrap: "balance",
+                      paddingRight: 30,
+                      boxSizing: "border-box",
+                      ...enter(titleIn, 16),
+                    }}
+                  >
+                    {title}
+                  </div>
+                  <div
+                    style={{
+                      ...abs(298),
+                      height: 1,
+                      background: c.hair,
+                      opacity: featIn[0],
+                    }}
+                  />
+                  {features.slice(0, 4).map((ft, i) => (
+                    <div
+                      key={ft.title}
+                      style={{
+                        ...abs(316 + i * 52),
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 14,
+                        fontSize: 17,
+                        ...enter(featIn[i], 12),
+                      }}
+                    >
+                      <Glyph
+                        d={ICONS[ft.icon ?? "grid"]}
+                        size={22}
+                        color={c.text}
+                      />
+                      {ft.title}
+                    </div>
+                  ))}
+                  {plans.map((pl, i) => {
+                    const on = i === 0 ? sel : 1 - sel;
+                    const press = i === 0 ? pressAt(TAP1) : 0;
+                    return (
+                      <div
+                        key={pl.label}
+                        style={{
+                          position: "absolute",
+                          left: PAD + i * (CARD_W + 10),
+                          top: PLANS_Y - SHEET_TOP,
+                          width: CARD_W,
+                          height: 96,
+                          borderRadius: 16,
+                          background: withAlpha(
+                            accent,
+                            (c.dark ? 0.12 : 0.05) * on,
+                          ),
+                          boxShadow: `inset 0 0 0 ${1 + on * 0.5}px ${on > 0.5 ? accent : c.ring}`,
+                          padding: "16px 14px",
+                          boxSizing: "border-box",
+                          fontVariantNumeric: "tabular-nums",
+                          opacity: Math.min(1, plansIn[i] * 1.4),
+                          transform: `translateY(${(1 - plansIn[i]) * 16}px) scale(${1 - press * 0.04})`,
+                        }}
+                      >
+                        {pl.badge ? (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: -10,
+                              right: 12,
+                              height: 20,
+                              padding: "0 7px",
+                              borderRadius: 6,
+                              background: on > 0.5 ? accent : c.text,
+                              color: on > 0.5 ? "#fff" : c.sheet,
+                              fontSize: 13,
+                              lineHeight: "20px",
+                            }}
+                          >
+                            {pl.badge}
+                          </div>
+                        ) : null}
+                        <div
+                          style={{ position: "absolute", right: 12, top: 16 }}
+                        >
+                          <Radio on={on} accent={accent} c={c} />
+                        </div>
+                        <div style={{ fontSize: 15, color: c.muted }}>
+                          {pl.label}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 22,
+                            fontWeight: 300,
+                            letterSpacing: "-0.02em",
+                            marginTop: 4,
+                          }}
+                        >
+                          {pl.price}
+                        </div>
+                        <div
+                          style={{ fontSize: 13, color: c.muted, marginTop: 2 }}
+                        >
+                          {pl.detail}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div
+                    style={{
+                      ...abs(668),
+                      height: 18,
+                      fontSize: 14,
+                      color: c.muted,
+                      textAlign: "center",
+                      opacity: Math.min(1, ctaIn * 1.4),
+                    }}
+                  >
+                    {plans.map((pl, i) => {
+                      const o = i === 0 ? sel : 1 - sel;
+                      return (
+                        <div
+                          key={pl.label}
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            opacity: o,
+                            transform: `translateY(${(1 - o) * (i === 0 ? 8 : -8)}px)`,
+                          }}
+                        >
+                          7 days free, then{" "}
+                          <span style={{ color: c.text }}>{pl.renews}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div
+                    style={{
+                      ...abs(CTA_Y),
+                      height: 56,
+                      borderRadius: 28,
+                      background: c.ctaBg,
+                      color: c.ctaText,
+                      fontSize: 17,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: Math.min(1, ctaIn * 1.4),
+                      transform: `translateY(${(1 - ctaIn) * 16}px) scale(${1 - ctaPress * 0.04})`,
+                    }}
+                  >
+                    {cta}
+                  </div>
+                  <div
+                    style={{
+                      ...abs(764),
+                      textAlign: "center",
+                      fontSize: 14,
+                      color: c.muted,
+                      opacity: ctaIn,
+                    }}
+                  >
+                    Cancel anytime · Terms · Privacy
+                  </div>
+                </div>
+
+                {f >= WELCOME - 2 ? (
+                  <div style={{ position: "absolute", inset: 0 }}>
+                    <div
+                      style={{
+                        ...abs(164),
+                        opacity: Math.min(1, wIcon * 1.5),
+                        transform: `scale(${0.85 + wIcon * 0.15})`,
+                        transformOrigin: "0 50%",
+                      }}
+                    >
+                      <div style={{ position: "relative", width: 72 }}>
+                        <AppTile size={72} accent={accent} logo={logo} />
+                        <div
+                          style={{
+                            position: "absolute",
+                            right: -8,
+                            bottom: -8,
+                            width: 30,
+                            height: 30,
+                            borderRadius: 15,
+                            background: "#1f9d55",
+                            boxShadow: `0 0 0 3px ${c.sheet}`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            transform: `scale(${wBadge})`,
+                          }}
+                        >
+                          <Glyph
+                            d="M6 12.5l4 4 8-9"
+                            size={16}
+                            color="#fff"
+                            sw={2}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        ...abs(266),
+                        fontSize: 34,
+                        fontWeight: 300,
+                        letterSpacing: "-0.035em",
+                        ...enter(wTitle, 16),
+                      }}
+                    >
+                      {welcomeTitle}
+                    </div>
+                    <div
+                      style={{
+                        ...abs(312),
+                        fontSize: 16,
+                        lineHeight: 1.4,
+                        color: c.muted,
+                        textWrap: "pretty",
+                        ...enter(wSub, 12),
+                      }}
+                    >
+                      {welcomeSub}
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: PAD + 10.25,
+                        top: 412 - SHEET_TOP,
+                        width: 1.5,
+                        height: 148 * wRail,
+                        background: `linear-gradient(${accent}, ${c.hair})`,
+                      }}
+                    />
+                    {timeline.map(([date, head, body], i) => (
+                      <div
+                        key={head}
+                        style={{
+                          ...abs(400 + i * 74),
+                          display: "flex",
+                          gap: 16,
+                          ...enter(wRows[i], 14),
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 22,
+                            height: 22,
+                            borderRadius: 11,
+                            flexShrink: 0,
+                            background: i === 0 ? accent : c.sheet,
+                            boxShadow:
+                              i === 0 ? "none" : `inset 0 0 0 1.5px ${c.ring}`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginTop: 1,
+                          }}
+                        >
+                          {i === 0 ? (
+                            <Glyph
+                              d="M6 12.5l4 4 8-9"
+                              size={13}
+                              color="#fff"
+                              sw={2}
+                            />
+                          ) : null}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              fontSize: 17,
+                            }}
+                          >
+                            {head}
+                            <span
+                              style={{
+                                fontSize: 15,
+                                color: c.muted,
+                                fontVariantNumeric: "tabular-nums",
+                              }}
+                            >
+                              {date}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 15,
+                              color: c.muted,
+                              marginTop: 3,
+                            }}
+                          >
+                            {body}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div
+                      style={{
+                        ...abs(CTA_Y),
+                        height: 56,
+                        borderRadius: 28,
+                        background: accent,
+                        color: "#fff",
+                        fontSize: 17,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        ...enter(wCta, 24),
+                      }}
+                    >
+                      {welcomeCta}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "#000",
+                  opacity: 0.5 * Math.max(0, pay - away),
+                  zIndex: 10,
+                }}
+              />
+              {hintOn ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: 225,
+                    height: 98,
+                    zIndex: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                    padding: "0 10px 0 18px",
+                    borderRadius: "22px 0 0 22px",
+                    background: "rgba(28,28,30,0.94)",
+                    boxShadow:
+                      "inset 0 0 0 0.5px rgba(255,255,255,0.12), 0 8px 24px rgba(0,0,0,0.35)",
+                    opacity:
+                      Math.min(1, hintIn * 1.5) *
+                      interpolate(f, [DC2, DC2 + 5], [1, 0], {
+                        ...clamp,
+                        easing: EXIT,
+                      }),
+                    transform: `translateX(${(1 - hintIn) * 40}px)`,
+                  }}
+                >
+                  <div
+                    style={{
+                      textAlign: "right",
+                      color: "#fff",
+                      fontSize: 15,
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    Double Click
+                    <br />
+                    to Subscribe
+                  </div>
+                  <div
+                    style={{
+                      width: 4,
+                      height: 74,
+                      borderRadius: 2,
+                      background: "#fff",
+                      opacity: 0.35 + hintPulse * 0.65,
+                      transform: `translateX(${sidePress * 2}px)`,
+                    }}
+                  />
+                </div>
+              ) : null}
+              <div
+                style={{
+                  position: "absolute",
+                  left: 8,
+                  right: 8,
+                  bottom: 8,
+                  height: 404,
+                  borderRadius: 48,
+                  background: c.pay,
+                  fontVariantNumeric: "tabular-nums",
+                  color: c.text,
+                  zIndex: 11,
+                  padding: "22px 24px",
+                  boxSizing: "border-box",
+                  transform: `translateY(${(1 - pay) * 430 + away * 440}px)`,
+                  boxShadow: c.dark
+                    ? "inset 0 1px 0 rgba(255,255,255,0.06)"
+                    : "0 -4px 30px rgba(0,0,0,0.16)",
+                  opacity: f >= PAY_AT ? 1 : 0,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <AppTile size={44} accent={accent} logo={logo} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 17 }}>{appName}</div>
+                    <div style={{ fontSize: 14, color: c.muted, marginTop: 1 }}>
+                      {plans[0].label} subscription
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 15,
                       background: c.chip,
                       display: "flex",
                       alignItems: "center",
@@ -691,603 +1227,169 @@ export function MobilePaywall({
                   >
                     <Glyph
                       d="M7 7l10 10M17 7L7 17"
-                      size={15}
+                      size={13}
                       color={c.muted}
                       sw={2}
                     />
                   </div>
-                  <span style={{ fontSize: 15, color: c.muted }}>Restore</span>
                 </div>
-                <div
-                  style={{
-                    ...abs(112),
-                    display: "flex",
-                    opacity: Math.min(1, hero * 1.5),
-                    transform: `scale(${0.8 + hero * 0.2})`,
-                    transformOrigin: "0 50%",
-                  }}
-                >
-                  <AppTile size={64} accent={accent} />
-                </div>
-                <div
-                  style={{
-                    ...abs(196),
-                    fontSize: 34,
-                    fontWeight: 300,
-                    letterSpacing: "-0.035em",
-                    lineHeight: 1.08,
-                    textWrap: "balance",
-                    paddingRight: 30,
-                    boxSizing: "border-box",
-                    ...enter(titleIn, 16),
-                  }}
-                >
-                  {title}
-                </div>
-                <div
-                  style={{
-                    ...abs(298),
-                    height: 1,
-                    background: c.hair,
-                    opacity: featIn[0],
-                  }}
-                />
-                {features.slice(0, 4).map((ft, i) => (
-                  <div
-                    key={ft.title}
-                    style={{
-                      ...abs(316 + i * 52),
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 14,
-                      fontSize: 17,
-                      ...enter(featIn[i], 12),
-                    }}
-                  >
-                    <Glyph
-                      d={ICONS[ft.icon ?? "grid"]}
-                      size={22}
-                      color={c.text}
-                    />
-                    {ft.title}
-                  </div>
-                ))}
-                {plans.map((pl, i) => {
-                  const on = i === 0 ? sel : 1 - sel;
-                  const press = i === 0 ? pressAt(TAP1) : 0;
-                  return (
+                <div style={{ marginTop: 16 }}>
+                  {[
+                    ["Free trial", "7 days"],
+                    ["Then", plans[0].renews],
+                    ["First charge", `${dates[2]}, 2026`],
+                    ["Account", account],
+                  ].map(([kk, v]) => (
                     <div
-                      key={pl.label}
+                      key={kk}
                       style={{
-                        position: "absolute",
-                        left: PAD + i * (CARD_W + 10),
-                        top: PLANS_Y - SHEET_TOP,
-                        width: CARD_W,
-                        height: 96,
-                        borderRadius: 16,
-                        background: withAlpha(
-                          accent,
-                          (c.dark ? 0.12 : 0.05) * on,
-                        ),
-                        boxShadow: `inset 0 0 0 ${1 + on * 0.5}px ${on > 0.5 ? accent : c.ring}`,
-                        padding: "16px 14px",
-                        boxSizing: "border-box",
-                        fontVariantNumeric: "tabular-nums",
-                        opacity: Math.min(1, plansIn[i] * 1.4),
-                        transform: `translateY(${(1 - plansIn[i]) * 16}px) scale(${1 - press * 0.04})`,
-                      }}
-                    >
-                      {pl.badge ? (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: -10,
-                            right: 12,
-                            height: 20,
-                            padding: "0 7px",
-                            borderRadius: 6,
-                            background: on > 0.5 ? accent : c.text,
-                            color: on > 0.5 ? "#fff" : c.sheet,
-                            fontSize: 13,
-                            lineHeight: "20px",
-                          }}
-                        >
-                          {pl.badge}
-                        </div>
-                      ) : null}
-                      <div style={{ position: "absolute", right: 12, top: 16 }}>
-                        <Radio on={on} accent={accent} c={c} />
-                      </div>
-                      <div style={{ fontSize: 15, color: c.muted }}>
-                        {pl.label}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 22,
-                          fontWeight: 300,
-                          letterSpacing: "-0.02em",
-                          marginTop: 4,
-                        }}
-                      >
-                        {pl.price}
-                      </div>
-                      <div
-                        style={{ fontSize: 13, color: c.muted, marginTop: 2 }}
-                      >
-                        {pl.detail}
-                      </div>
-                    </div>
-                  );
-                })}
-                <div
-                  style={{
-                    ...abs(668),
-                    height: 18,
-                    fontSize: 14,
-                    color: c.muted,
-                    textAlign: "center",
-                    opacity: Math.min(1, ctaIn * 1.4),
-                  }}
-                >
-                  {plans.map((pl, i) => {
-                    const o = i === 0 ? sel : 1 - sel;
-                    return (
-                      <div
-                        key={pl.label}
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          opacity: o,
-                          transform: `translateY(${(1 - o) * (i === 0 ? 8 : -8)}px)`,
-                        }}
-                      >
-                        7 days free, then{" "}
-                        <span style={{ color: c.text }}>{pl.renews}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div
-                  style={{
-                    ...abs(CTA_Y),
-                    height: 56,
-                    borderRadius: 28,
-                    background: c.ctaBg,
-                    color: c.ctaText,
-                    fontSize: 17,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: Math.min(1, ctaIn * 1.4),
-                    transform: `translateY(${(1 - ctaIn) * 16}px) scale(${1 - ctaPress * 0.04})`,
-                  }}
-                >
-                  {cta}
-                </div>
-                <div
-                  style={{
-                    ...abs(764),
-                    textAlign: "center",
-                    fontSize: 14,
-                    color: c.muted,
-                    opacity: ctaIn,
-                  }}
-                >
-                  Cancel anytime · Terms · Privacy
-                </div>
-              </div>
-
-              {f >= WELCOME - 2 ? (
-                <div style={{ position: "absolute", inset: 0 }}>
-                  <div
-                    style={{
-                      ...abs(164),
-                      opacity: Math.min(1, wIcon * 1.5),
-                      transform: `scale(${0.85 + wIcon * 0.15})`,
-                      transformOrigin: "0 50%",
-                    }}
-                  >
-                    <div style={{ position: "relative", width: 72 }}>
-                      <AppTile size={72} accent={accent} />
-                      <div
-                        style={{
-                          position: "absolute",
-                          right: -8,
-                          bottom: -8,
-                          width: 30,
-                          height: 30,
-                          borderRadius: 15,
-                          background: "#1f9d55",
-                          boxShadow: `0 0 0 3px ${c.sheet}`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          transform: `scale(${wBadge})`,
-                        }}
-                      >
-                        <Glyph
-                          d="M6 12.5l4 4 8-9"
-                          size={16}
-                          color="#fff"
-                          sw={2}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      ...abs(266),
-                      fontSize: 34,
-                      fontWeight: 300,
-                      letterSpacing: "-0.035em",
-                      ...enter(wTitle, 16),
-                    }}
-                  >
-                    Welcome to Pro
-                  </div>
-                  <div
-                    style={{
-                      ...abs(312),
-                      fontSize: 16,
-                      lineHeight: 1.4,
-                      color: c.muted,
-                      textWrap: "pretty",
-                      ...enter(wSub, 12),
-                    }}
-                  >
-                    Your free week starts now. Here’s how it works.
-                  </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: PAD + 10.25,
-                      top: 412 - SHEET_TOP,
-                      width: 1.5,
-                      height: 148 * wRail,
-                      background: `linear-gradient(${accent}, ${c.hair})`,
-                    }}
-                  />
-                  {timeline.map(([date, head, body], i) => (
-                    <div
-                      key={head}
-                      style={{
-                        ...abs(400 + i * 74),
                         display: "flex",
-                        gap: 16,
-                        ...enter(wRows[i], 14),
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        height: 42,
+                        boxShadow: `inset 0 1px 0 ${c.hair}`,
+                        fontSize: 15,
                       }}
                     >
-                      <div
-                        style={{
-                          width: 22,
-                          height: 22,
-                          borderRadius: 11,
-                          flexShrink: 0,
-                          background: i === 0 ? accent : c.sheet,
-                          boxShadow:
-                            i === 0 ? "none" : `inset 0 0 0 1.5px ${c.ring}`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          marginTop: 1,
-                        }}
-                      >
-                        {i === 0 ? (
-                          <Glyph
-                            d="M6 12.5l4 4 8-9"
-                            size={13}
-                            color="#fff"
-                            sw={2}
-                          />
-                        ) : null}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            fontSize: 17,
-                          }}
-                        >
-                          {head}
-                          <span
-                            style={{
-                              fontSize: 15,
-                              color: c.muted,
-                              fontVariantNumeric: "tabular-nums",
-                            }}
-                          >
-                            {date}
-                          </span>
-                        </div>
-                        <div
-                          style={{ fontSize: 15, color: c.muted, marginTop: 3 }}
-                        >
-                          {body}
-                        </div>
-                      </div>
+                      <span style={{ color: c.muted }}>{kk}</span>
+                      <span>{v}</span>
                     </div>
                   ))}
-                  <div
-                    style={{
-                      ...abs(CTA_Y),
-                      height: 56,
-                      borderRadius: 28,
-                      background: accent,
-                      color: "#fff",
-                      fontSize: 17,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      ...enter(wCta, 24),
-                    }}
-                  >
-                    Start creating
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: "#000",
-                opacity: 0.5 * Math.max(0, pay - away),
-                zIndex: 10,
-              }}
-            />
-            {hintOn ? (
-              <div
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  top: 225,
-                  height: 98,
-                  zIndex: 12,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  padding: "0 10px 0 18px",
-                  borderRadius: "22px 0 0 22px",
-                  background: "rgba(28,28,30,0.94)",
-                  boxShadow:
-                    "inset 0 0 0 0.5px rgba(255,255,255,0.12), 0 8px 24px rgba(0,0,0,0.35)",
-                  opacity:
-                    Math.min(1, hintIn * 1.5) *
-                    interpolate(f, [DC2, DC2 + 5], [1, 0], {
-                      ...clamp,
-                      easing: EXIT,
-                    }),
-                  transform: `translateX(${(1 - hintIn) * 40}px)`,
-                }}
-              >
-                <div
-                  style={{
-                    textAlign: "right",
-                    color: "#fff",
-                    fontSize: 15,
-                    lineHeight: 1.3,
-                  }}
-                >
-                  Double Click
-                  <br />
-                  to Subscribe
                 </div>
                 <div
                   style={{
-                    width: 4,
-                    height: 74,
-                    borderRadius: 2,
-                    background: "#fff",
-                    opacity: 0.35 + hintPulse * 0.65,
-                    transform: `translateX(${sidePress * 2}px)`,
-                  }}
-                />
-              </div>
-            ) : null}
-            <div
-              style={{
-                position: "absolute",
-                left: 8,
-                right: 8,
-                bottom: 8,
-                height: 404,
-                borderRadius: 48,
-                background: c.pay,
-                fontVariantNumeric: "tabular-nums",
-                color: c.text,
-                zIndex: 11,
-                padding: "22px 24px",
-                boxSizing: "border-box",
-                transform: `translateY(${(1 - pay) * 430 + away * 440}px)`,
-                boxShadow: c.dark
-                  ? "inset 0 1px 0 rgba(255,255,255,0.06)"
-                  : "0 -4px 30px rgba(0,0,0,0.16)",
-                opacity: f >= PAY_AT ? 1 : 0,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <AppTile size={44} accent={accent} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 17 }}>{appName}</div>
-                  <div style={{ fontSize: 14, color: c.muted, marginTop: 1 }}>
-                    {plans[0].label} subscription
-                  </div>
-                </div>
-                <div
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: 15,
-                    background: c.chip,
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 30,
                     display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
-                    justifyContent: "center",
+                    gap: 10,
                   }}
                 >
-                  <Glyph
-                    d="M7 7l10 10M17 7L7 17"
-                    size={13}
-                    color={c.muted}
-                    sw={2}
-                  />
-                </div>
-              </div>
-              <div style={{ marginTop: 16 }}>
-                {[
-                  ["Free trial", "7 days"],
-                  ["Then", plans[0].renews],
-                  ["First charge", `${dates[2]}, 2026`],
-                  ["Account", account],
-                ].map(([kk, v]) => (
-                  <div
-                    key={kk}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      height: 42,
-                      boxShadow: `inset 0 1px 0 ${c.hair}`,
-                      fontSize: 15,
-                    }}
-                  >
-                    <span style={{ color: c.muted }}>{kk}</span>
-                    <span>{v}</span>
+                  <div style={{ position: "relative", width: 50, height: 50 }}>
+                    {done ? (
+                      <svg width={50} height={50} viewBox="0 0 50 50">
+                        <circle
+                          cx={25}
+                          cy={25}
+                          r={22}
+                          fill="none"
+                          stroke={accent}
+                          strokeWidth={2}
+                          pathLength={1}
+                          strokeDasharray={1}
+                          strokeDashoffset={1 - check}
+                          transform="rotate(-90 25 25)"
+                        />
+                        <path
+                          d="M15 25.5l7 7 13-14"
+                          fill="none"
+                          stroke={accent}
+                          strokeWidth={2.4}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          pathLength={1}
+                          strokeDasharray={1}
+                          strokeDashoffset={
+                            1 - interpolate(check, [0.4, 1], [0, 1], clamp)
+                          }
+                        />
+                      </svg>
+                    ) : processing ? (
+                      <svg
+                        width={50}
+                        height={50}
+                        viewBox="0 0 50 50"
+                        style={{ transform: `rotate(${f * 14}deg)` }}
+                      >
+                        <circle
+                          cx={25}
+                          cy={25}
+                          r={20}
+                          fill="none"
+                          stroke={c.hair}
+                          strokeWidth={2.5}
+                        />
+                        <circle
+                          cx={25}
+                          cy={25}
+                          r={20}
+                          fill="none"
+                          stroke={accent}
+                          strokeWidth={2.5}
+                          strokeLinecap="round"
+                          strokeDasharray="34 200"
+                        />
+                      </svg>
+                    ) : (
+                      <svg width={50} height={50} viewBox="0 0 50 50">
+                        <rect
+                          x={14}
+                          y={6}
+                          width={20}
+                          height={38}
+                          rx={6}
+                          fill="none"
+                          stroke={c.text}
+                          strokeWidth={1.5}
+                        />
+                        <rect
+                          x={35 + sidePress * -1.5}
+                          y={14}
+                          width={3.5}
+                          height={11}
+                          rx={1.5}
+                          fill={accent}
+                          opacity={0.5 + hintPulse * 0.5}
+                        />
+                      </svg>
+                    )}
                   </div>
-                ))}
+                  <div style={{ fontSize: 15 }}>
+                    {done
+                      ? "Done"
+                      : processing
+                        ? "Processing…"
+                        : "Confirm with side button"}
+                  </div>
+                </div>
               </div>
               <div
                 style={{
                   position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 30,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 10,
+                  // Laid out at the last key; the travel is a transform,
+                  // since layout would round the ring's edges to whole pixels.
+                  left: tapRest.x - 22,
+                  top: tapRest.y - 22,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  background: "rgba(40,40,48,0.24)",
+                  boxShadow:
+                    "inset 0 0 0 1.5px rgba(255,255,255,0.85), 0 4px 14px rgba(0,0,0,0.22)",
+                  opacity: tapOpacity,
+                  transform: `translate(${tap.x - tapRest.x}px, ${tap.y - tapRest.y}px) scale(${tapScale})`,
+                  zIndex: 15,
                 }}
-              >
-                <div style={{ position: "relative", width: 50, height: 50 }}>
-                  {done ? (
-                    <svg width={50} height={50} viewBox="0 0 50 50">
-                      <circle
-                        cx={25}
-                        cy={25}
-                        r={22}
-                        fill="none"
-                        stroke={accent}
-                        strokeWidth={2}
-                        pathLength={1}
-                        strokeDasharray={1}
-                        strokeDashoffset={1 - check}
-                        transform="rotate(-90 25 25)"
-                      />
-                      <path
-                        d="M15 25.5l7 7 13-14"
-                        fill="none"
-                        stroke={accent}
-                        strokeWidth={2.4}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        pathLength={1}
-                        strokeDasharray={1}
-                        strokeDashoffset={
-                          1 - interpolate(check, [0.4, 1], [0, 1], clamp)
-                        }
-                      />
-                    </svg>
-                  ) : processing ? (
-                    <svg
-                      width={50}
-                      height={50}
-                      viewBox="0 0 50 50"
-                      style={{ transform: `rotate(${f * 14}deg)` }}
-                    >
-                      <circle
-                        cx={25}
-                        cy={25}
-                        r={20}
-                        fill="none"
-                        stroke={c.hair}
-                        strokeWidth={2.5}
-                      />
-                      <circle
-                        cx={25}
-                        cy={25}
-                        r={20}
-                        fill="none"
-                        stroke={accent}
-                        strokeWidth={2.5}
-                        strokeLinecap="round"
-                        strokeDasharray="34 200"
-                      />
-                    </svg>
-                  ) : (
-                    <svg width={50} height={50} viewBox="0 0 50 50">
-                      <rect
-                        x={14}
-                        y={6}
-                        width={20}
-                        height={38}
-                        rx={6}
-                        fill="none"
-                        stroke={c.text}
-                        strokeWidth={1.5}
-                      />
-                      <rect
-                        x={35 + sidePress * -1.5}
-                        y={14}
-                        width={3.5}
-                        height={11}
-                        rx={1.5}
-                        fill={accent}
-                        opacity={0.5 + hintPulse * 0.5}
-                      />
-                    </svg>
-                  )}
-                </div>
-                <div style={{ fontSize: 15 }}>
-                  {done
-                    ? "Done"
-                    : processing
-                      ? "Processing…"
-                      : "Confirm with side button"}
-                </div>
-              </div>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: tap.x - 22,
-                top: tap.y - 22,
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                background: "rgba(40,40,48,0.24)",
-                boxShadow:
-                  "inset 0 0 0 1.5px rgba(255,255,255,0.85), 0 4px 14px rgba(0,0,0,0.22)",
-                opacity: tapOpacity,
-                transform: `scale(${tapScale})`,
-                zIndex: 15,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                bottom: 8,
-                left: (SW - 136) / 2,
-                width: 136,
-                height: 5,
-                borderRadius: 3,
-                background: c.dark ? "#fff" : "#111",
-                zIndex: 16,
-              }}
-            />
-          </Phone>
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 8,
+                  left: (SW - 136) / 2,
+                  width: 136,
+                  height: 5,
+                  borderRadius: 3,
+                  background: c.dark ? "#fff" : "#111",
+                  zIndex: 16,
+                }}
+              />
+            </Phone>
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

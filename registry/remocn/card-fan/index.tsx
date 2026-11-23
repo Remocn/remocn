@@ -3,14 +3,10 @@
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont } from "@remotion/google-fonts/Onest";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -41,6 +37,19 @@ export interface CardFanProps {
   ink?: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the title, caption and card labels. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Frames between title words as the title rises in. */
+  stagger?: number;
+  /** Blur, in px, on the cards that step back when one is picked. */
+  blur?: number;
+  /** Size of the fan and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const DEFAULT_CARDS: FanCard[] = [
@@ -147,6 +156,22 @@ function GlyphIcon({ glyph, size }: { glyph: Glyph; size: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CardFan({
   title = "Your top formats",
   accentWord = 2,
@@ -157,9 +182,17 @@ export function CardFan({
   ink,
   ground,
   groundParams,
+  background,
+  fontFamily = onest.fontFamily,
+  stagger = 3,
+  blur: blurPx = 3,
+  scale: scaleProp = 1,
+  delay = 0,
+  speed = 1,
 }: CardFanProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const t = THEMES[theme];
   const light = theme === "light";
   const fg = ink ?? t.ink;
@@ -246,11 +279,35 @@ export function CardFan({
       x += side * cardW * (portrait ? 0.08 : 0.16) * lift;
       y += cardH * 0.06 * lift;
       z = -60 * lift;
-      blur = 3 * Math.min(1, lift);
+      blur = blurPx * Math.min(1, lift);
       dim = 1 - 0.3 * Math.min(1, lift);
     }
     const hidden = !isFront && frame < beat("drop") + 6;
-    return { x, y, rz, ry, rx, z, scale, blur, dim, hidden };
+    // Where the card comes to rest: fanned, dropped and the pick lifted.
+    // Layout sits there and the travel is a transform, since layout rounds a
+    // box to whole pixels and a card eased by `left`/`top` clicks along.
+    const restX =
+      j === pickIdx
+        ? openX + (cx - openX) * pull
+        : openX + (j < pickIdx ? -1 : 1) * cardW * (portrait ? 0.08 : 0.16);
+    const restY =
+      j === pickIdx
+        ? openY - cardH * (portrait ? 0.1 : 0.12)
+        : openY + cardH * 0.06;
+    return {
+      dx: x - restX,
+      dy: y - restY,
+      left: restX - cardW / 2,
+      top: restY - cardH / 2,
+      rz,
+      ry,
+      rx,
+      z,
+      scale,
+      blur,
+      dim,
+      hidden,
+    };
   };
 
   const order = list
@@ -268,212 +325,226 @@ export function CardFan({
 
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={light ? 2.2 : 3}
-        timeScale={0.6}
-      />
-      <AbsoluteFill style={{ transform: `scale(${push})` }}>
+      {background === undefined ? (
+        <GshGround
+          preset={preset}
+          params={gParams}
+          timeOffset={light ? 2.2 : 3}
+          timeScale={0.6}
+        />
+      ) : (
         <AbsoluteFill
           style={{
-            perspective: portrait ? 2200 : 1400,
-            perspectiveOrigin: `50% ${(cy / H) * 100}%`,
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scaleProp}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${push})${glide(frame > 0 && frame < beat("end"))}`,
           }}
         >
-          {order.map((j) => {
-            const c = list[j] as FanCard;
-            const s = cardState(j);
-            if (s.hidden) return null;
-            return (
-              <div
-                key={`card-${c.label}-${j}`}
-                style={{
-                  position: "absolute",
-                  left: s.x - cardW / 2,
-                  top: s.y - cardH / 2,
-                  width: cardW,
-                  height: cardH,
-                  borderRadius: radius,
-                  transform: `translateZ(${s.z}px) rotateX(${s.rx}deg) rotateY(${s.ry}deg) rotateZ(${s.rz}deg) scale(${s.scale})`,
-                  filter:
-                    s.blur > 0.01
-                      ? `blur(${s.blur}px) brightness(${s.dim})`
-                      : undefined,
-                  boxShadow: shadow,
-                  backgroundColor: t.card,
-                  fontFamily: onest.fontFamily,
-                }}
-              >
+          <AbsoluteFill
+            style={{
+              perspective: portrait ? 2200 : 1400,
+              perspectiveOrigin: `50% ${(cy / H) * 100}%`,
+            }}
+          >
+            {order.map((j) => {
+              const c = list[j] as FanCard;
+              const s = cardState(j);
+              if (s.hidden) return null;
+              return (
                 <div
+                  key={`card-${c.label}-${j}`}
                   style={{
                     position: "absolute",
-                    left: pad,
-                    top: pad,
-                    width: coverS,
-                    height: coverS,
-                    borderRadius: radius - pad,
-                    backgroundImage: `linear-gradient(160deg, ${shade(c.color, 18, "#fff")} 0%, ${c.color} 46%, ${shade(c.color, 38, "#000")} 100%)`,
-                    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.12)",
-                    color: "rgba(255,255,255,0.92)",
-                    overflow: "hidden",
+                    left: s.left,
+                    top: s.top,
+                    width: cardW,
+                    height: cardH,
+                    borderRadius: radius,
+                    transform: `translate(${s.dx}px, ${s.dy}px) translateZ(${s.z}px) rotateX(${s.rx}deg) rotateY(${s.ry}deg) rotateZ(${s.rz}deg) scale(${s.scale})`,
+                    filter:
+                      s.blur > 0.01
+                        ? `blur(${s.blur}px) brightness(${s.dim})`
+                        : undefined,
+                    boxShadow: shadow,
+                    backgroundColor: t.card,
+                    fontFamily,
                   }}
                 >
                   <div
                     style={{
                       position: "absolute",
-                      left: coverS * 0.09,
-                      bottom: coverS * 0.09,
+                      left: pad,
+                      top: pad,
+                      width: coverS,
+                      height: coverS,
+                      borderRadius: radius - pad,
+                      backgroundImage: `linear-gradient(160deg, ${shade(c.color, 18, "#fff")} 0%, ${c.color} 46%, ${shade(c.color, 38, "#000")} 100%)`,
+                      boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.12)",
+                      color: "rgba(255,255,255,0.92)",
+                      overflow: "hidden",
                     }}
                   >
-                    <GlyphIcon
-                      glyph={c.glyph ?? "spark"}
-                      size={coverS * 0.24}
-                    />
-                  </div>
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: pad + cardW * 0.02,
-                    right: pad,
-                    top: pad + coverS + cardW * 0.06,
-                    color: t.cardInk,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: cardW * 0.1,
-                      fontWeight: 400,
-                      letterSpacing: "-0.025em",
-                      lineHeight: 1.1,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {c.label}
-                  </div>
-                  {c.meta ? (
                     <div
                       style={{
-                        marginTop: cardW * 0.025,
-                        fontFamily: mono.fontFamily,
-                        fontWeight: 400,
-                        fontSize: Math.max(cardW * 0.066, H * 0.022),
-                        letterSpacing: "-0.01em",
-                        fontVariantNumeric: "tabular-nums",
-                        whiteSpace: "nowrap",
-                        color: t.cardSub,
+                        position: "absolute",
+                        left: coverS * 0.09,
+                        bottom: coverS * 0.09,
                       }}
                     >
-                      {c.meta}
+                      <GlyphIcon
+                        glyph={c.glyph ?? "spark"}
+                        size={coverS * 0.24}
+                      />
                     </div>
-                  ) : null}
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: pad + cardW * 0.02,
+                      right: pad,
+                      top: pad + coverS + cardW * 0.06,
+                      color: t.cardInk,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: cardW * 0.1,
+                        fontWeight: 400,
+                        letterSpacing: "-0.025em",
+                        lineHeight: 1.1,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {c.label}
+                    </div>
+                    {c.meta ? (
+                      <div
+                        style={{
+                          marginTop: cardW * 0.025,
+                          fontFamily: mono.fontFamily,
+                          fontWeight: 400,
+                          fontSize: Math.max(cardW * 0.066, H * 0.022),
+                          letterSpacing: "-0.01em",
+                          fontVariantNumeric: "tabular-nums",
+                          whiteSpace: "nowrap",
+                          color: t.cardSub,
+                        }}
+                      >
+                        {c.meta}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </AbsoluteFill>
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: titleY - titleSize * 0.55,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "baseline",
+              columnGap: "0.24em",
+              fontFamily,
+              fontWeight: 300,
+              fontSize: titleSize,
+              lineHeight: 1.1,
+              letterSpacing: "-0.04em",
+              color: fg,
+            }}
+          >
+            {titleWords.map((word, i) => {
+              const s = beat("title") + i * stagger;
+              const p = interpolate(frame, [s, s + 14], [0, 1], {
+                ...CLAMP,
+                easing: EASE_ENTER,
+              });
+              const accent = i === accentWord;
+              return (
+                <span
+                  key={`${word}-${i}`}
+                  style={{
+                    display: "inline-block",
+                    overflow: "hidden",
+                    padding: "0.04em 0.08em 0.18em",
+                    margin: "-0.04em -0.08em -0.18em",
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "inline-block",
+                      transform: `translateY(${(1 - p) * 120}%)`,
+                      fontFamily: accent ? serif.fontFamily : undefined,
+                      fontStyle: accent ? "italic" : undefined,
+                      fontWeight: 400,
+                      fontSize: accent ? "1.12em" : undefined,
+                      letterSpacing: accent ? "-0.02em" : undefined,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {word}
+                  </span>
+                </span>
+              );
+            })}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: W * 0.08,
+              width: W * 0.84,
+              top: capY - capSize * 0.6,
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              columnGap: "0.26em",
+              fontFamily,
+              fontWeight: 300,
+              fontSize: capSize,
+              letterSpacing: "-0.01em",
+              fontVariantNumeric: "tabular-nums",
+              color: t.sub,
+            }}
+          >
+            {capWords.map((word, i) => {
+              const s = beat("caption") + i * 2;
+              const p = interpolate(frame, [s, s + 12], [0, 1], {
+                ...CLAMP,
+                easing: EASE_ENTER,
+              });
+              return (
+                <span
+                  key={`${word}-${i}`}
+                  style={{
+                    display: "inline-block",
+                    overflow: "hidden",
+                    padding: "0.04em 0.04em 0.18em",
+                    margin: "-0.04em -0.04em -0.18em",
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "inline-block",
+                      transform: `translateY(${(1 - p) * 120}%)`,
+                      color: /\d/.test(word) ? fg : undefined,
+                    }}
+                  >
+                    {word}
+                  </span>
+                </span>
+              );
+            })}
+          </div>
         </AbsoluteFill>
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: titleY - titleSize * 0.55,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "baseline",
-            columnGap: "0.24em",
-            fontFamily: onest.fontFamily,
-            fontWeight: 300,
-            fontSize: titleSize,
-            lineHeight: 1.1,
-            letterSpacing: "-0.04em",
-            color: fg,
-          }}
-        >
-          {titleWords.map((word, i) => {
-            const s = beat("title") + i * 3;
-            const p = interpolate(frame, [s, s + 14], [0, 1], {
-              ...CLAMP,
-              easing: EASE_ENTER,
-            });
-            const accent = i === accentWord;
-            return (
-              <span
-                key={`${word}-${i}`}
-                style={{
-                  display: "inline-block",
-                  overflow: "hidden",
-                  padding: "0.04em 0.08em 0.18em",
-                  margin: "-0.04em -0.08em -0.18em",
-                }}
-              >
-                <span
-                  style={{
-                    display: "inline-block",
-                    transform: `translateY(${(1 - p) * 120}%)`,
-                    fontFamily: accent ? serif.fontFamily : undefined,
-                    fontStyle: accent ? "italic" : undefined,
-                    fontWeight: 400,
-                    fontSize: accent ? "1.12em" : undefined,
-                    letterSpacing: accent ? "-0.02em" : undefined,
-                    lineHeight: 1,
-                  }}
-                >
-                  {word}
-                </span>
-              </span>
-            );
-          })}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: W * 0.08,
-            width: W * 0.84,
-            top: capY - capSize * 0.6,
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            columnGap: "0.26em",
-            fontFamily: onest.fontFamily,
-            fontWeight: 300,
-            fontSize: capSize,
-            letterSpacing: "-0.01em",
-            fontVariantNumeric: "tabular-nums",
-            color: t.sub,
-          }}
-        >
-          {capWords.map((word, i) => {
-            const s = beat("caption") + i * 2;
-            const p = interpolate(frame, [s, s + 12], [0, 1], {
-              ...CLAMP,
-              easing: EASE_ENTER,
-            });
-            return (
-              <span
-                key={`${word}-${i}`}
-                style={{
-                  display: "inline-block",
-                  overflow: "hidden",
-                  padding: "0.04em 0.04em 0.18em",
-                  margin: "-0.04em -0.04em -0.18em",
-                }}
-              >
-                <span
-                  style={{
-                    display: "inline-block",
-                    transform: `translateY(${(1 - p) * 120}%)`,
-                    color: /\d/.test(word) ? fg : undefined,
-                  }}
-                >
-                  {word}
-                </span>
-              </span>
-            );
-          })}
-        </div>
-      </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

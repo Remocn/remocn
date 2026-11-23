@@ -12,9 +12,9 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -66,7 +66,21 @@ export interface FigureReelsProps {
   images?: string[];
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
   background?: string;
+  /** Typeface for the figure and label. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Weight of the figure. */
+  fontWeight?: number;
+  /** Vertical motion blur on the rolling digits, reels and zoom. */
+  motionBlur?: boolean;
+  /** Replaces the remocn mark beside the label. */
+  logo?: React.ReactNode;
+  /** Size of the figure and reels, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -158,24 +172,28 @@ interface Metrics {
   text: (s: string, weight: number) => number;
 }
 
-function buildMetrics(_version: number): Metrics {
+function buildMetrics(
+  _version: number,
+  fontFamily: string,
+  weight: number,
+): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   const text = (s: string, weight: number) => {
     const key = `${weight}|${s}`;
     if (cache[key] === undefined) {
       if (!ctx) return s.length * 0.55;
-      ctx.font = `${weight} ${FONT_PX}px "${figtree.fontFamily}"`;
+      ctx.font = `${weight} ${FONT_PX}px "${fontFamily}"`;
       cache[key] = ctx.measureText(s).width / FONT_PX;
     }
     return cache[key];
   };
   let slot = 0;
-  for (let d = 0; d < 10; d++) slot = Math.max(slot, text(String(d), 300));
+  for (let d = 0; d < 10; d++) slot = Math.max(slot, text(String(d), weight));
   return { slot, text };
 }
 
-function useMetrics() {
+function useMetrics(fontFamily: string, fontWeight: number) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("figure-reels: measuring"));
   const released = useRef(false);
@@ -188,8 +206,8 @@ function useMetrics() {
     Promise.all([
       figtree.waitUntilDone(),
       manrope.waitUntilDone(),
-      document.fonts.load(`300 100px "${figtree.fontFamily}"`),
-      document.fonts.load(`400 100px "${figtree.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -203,8 +221,11 @@ function useMetrics() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMetrics(version), [version]);
+  }, [handle, fontFamily, fontWeight]);
+  return useMemo(
+    () => buildMetrics(version, fontFamily, fontWeight),
+    [version, fontFamily, fontWeight],
+  );
 }
 
 function BlurDefs({ items }: { items: { id: string; y: number }[] }) {
@@ -234,6 +255,22 @@ function colPos(v: number, k: number) {
   return base + Math.max(0, rem - (p - 1));
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FigureReels({
   from = 396,
   to = 400,
@@ -244,19 +281,27 @@ export function FigureReels({
   accent,
   ink,
   background,
+  fontFamily = figtree.fontFamily,
+  fontWeight = 300,
+  motionBlur = true,
+  logo,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: FigureReelsProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
   const bg = background ?? gshParams(preset, gParams).background;
-  const m = useMetrics();
+  const m = useMetrics(fontFamily, fontWeight);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const portrait = H > W * 1.1;
 
@@ -312,9 +357,9 @@ export function FigureReels({
   if (m) {
     const cx = W / 2;
     const cy = H / 2;
-    const preW = prefix ? m.text(prefix, 300) : 0;
-    const sufW = suffix ? m.text(suffix, 300) : 0;
-    const sepW = m.text(",", 300) * 0.9;
+    const preW = prefix ? m.text(prefix, fontWeight) : 0;
+    const sufW = suffix ? m.text(suffix, fontWeight) : 0;
+    const sepW = m.text(",", fontWeight) * 0.9;
     const seps = grouped ? Math.floor((digits - 1) / 3) : 0;
     const figEm = preW + sufW + digits * m.slot + seps * sepW;
 
@@ -347,7 +392,7 @@ export function FigureReels({
     const lnZ = Math.log(Zc) * (1 - pull);
     const Z = Math.exp(lnZ) * push;
     const zoomVel = Math.abs(Math.log(Zc) * (pull - pullPrev));
-    const zoomBlur = Math.min(6, zoomVel * 40);
+    const zoomBlur = motionBlur ? Math.min(6, zoomVel * 40) : 0;
 
     const colorP =
       interpolate(frame, [BEAT.carry, BEAT.carry + 6], [0, 1], {
@@ -389,7 +434,7 @@ export function FigureReels({
       const p = colPos(valueAt(frame, k), k);
       const pPrev = colPos(valueAt(frame - 1, k), k);
       const vel = Math.abs(p - pPrev);
-      const blur = Math.min(lh * 0.1, vel * lh * 0.28);
+      const blur = motionBlur ? Math.min(lh * 0.1, vel * lh * 0.28) : 0;
       const fid = `${uid}c${j}`;
       blurItems.push({ id: fid, y: blur });
       const base = Math.floor(p);
@@ -398,7 +443,11 @@ export function FigureReels({
       const boxH = lh * 1.7;
       const boxPad = (boxH - lh) / 2;
       for (let q = base - 1; q <= base + 2; q++) {
-        const off = (q - p) * lh;
+        // Layout rounds a baseline to whole pixels, so a digit rolled by
+        // `top` clicks pixel by pixel. Layout holds the whole-digit place and
+        // the fraction of the roll is a transform.
+        const off = (q - base) * lh;
+        const roll = (base - p) * lh;
         const d = ((q % 10) + 10) % 10;
         nodes.push(
           <div
@@ -409,6 +458,8 @@ export function FigureReels({
               right: 0,
               top: boxPad + off,
               height: lh,
+              transform:
+                Math.abs(roll) < 1e-3 ? undefined : `translateY(${roll}px)`,
               opacity:
                 (leading && d === 0 && q <= 0 ? 0 : 1) *
                 Math.max(0, Math.min(1, 1.15 - Math.abs(q - p) * 1.15)),
@@ -478,7 +529,7 @@ export function FigureReels({
       const s = reelPos(frame, delay);
       const sPrev = reelPos(frame - 1, delay);
       const vel = Math.abs(s - sPrev);
-      const blur = Math.min(th * 0.12, vel * th * 0.22);
+      const blur = motionBlur ? Math.min(th * 0.12, vel * th * 0.22) : 0;
       const fid = `${uid}${key}`;
       blurItems.push({ id: fid, y: blur });
       const tiles: React.ReactNode[] = [];
@@ -531,7 +582,13 @@ export function FigureReels({
           style={{
             position: "absolute",
             left: cx - tw / 2,
-            top: ccy - th / 2,
+            // Laid out at the reel's home; the slide in from off frame is a
+            // transform, since layout would round its edges to whole pixels.
+            top: ccy0 - th / 2,
+            transform:
+              Math.abs(ccy - ccy0) < 1e-3
+                ? undefined
+                : `translateY(${ccy - ccy0}px)`,
             width: tw,
             height: th,
             opacity: reelOpacity,
@@ -585,13 +642,13 @@ export function FigureReels({
             transform: `translateY(${((1 - logoIn) * e * 0.8).toFixed(2)}px) scale(${(0.8 + 0.2 * logoIn).toFixed(4)})`,
           }}
         >
-          <RemocnLogo fontSize={e} color={inkC} />
+          {logo ?? <RemocnLogo fontSize={e} color={inkC} />}
         </div>
         {label ? (
           <div
             style={{
               clipPath: `inset(-20% ${((1 - labelIn) * 100).toFixed(2)}% -20% 0)`,
-              fontFamily: figtree.fontFamily,
+              fontFamily,
               fontWeight: 400,
               fontSize: e,
               lineHeight: 1,
@@ -621,7 +678,9 @@ export function FigureReels({
             width: W,
             height: H,
             transformOrigin: "0 0",
-            transform: `translate(${cx}px, ${cy}px) scale(${Z.toFixed(5)}) translate(${-cx}px, ${-cy}px)`,
+            // The push never rests, so the text under it is marked as moving
+            // on every frame.
+            transform: `translate(${cx}px, ${cy}px) scale(${Z.toFixed(5)}) translate(${-cx}px, ${-cy}px)${glide(true)}`,
           }}
         >
           {reel(topImgs, topCy, -1, 0, "rt")}
@@ -630,8 +689,8 @@ export function FigureReels({
             style={{
               position: "absolute",
               inset: 0,
-              fontFamily: figtree.fontFamily,
-              fontWeight: 300,
+              fontFamily,
+              fontWeight,
               letterSpacing: "-0.02em",
               color: figColor,
               fontVariantNumeric: "tabular-nums",
@@ -647,19 +706,21 @@ export function FigureReels({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.6}
-      />
+      {background === undefined ? (
+        <GshGround
+          preset={preset}
+          params={gParams}
+          timeOffset={c.groundOffset}
+          timeScale={0.6}
+        />
+      ) : null}
       <AbsoluteFill
         style={{
           background: `radial-gradient(${portrait ? "90% 50%" : "60% 70%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
         }}
       />
       <BlurDefs items={blurItems} />
-      {content}
+      <ScaleLayer scale={scale}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

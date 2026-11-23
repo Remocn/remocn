@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const coreSumConfig: ComponentConfig = {
   componentName: "CoreSum",
@@ -51,6 +57,26 @@ export const coreSumConfig: ComponentConfig = {
       description: "Parts",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 10,
+      step: 1,
+      description: "Row stagger",
+      hiddenFromList: false,
+    },
+    mergeGap: {
+      type: "number",
+      default: 16,
+      min: 8,
+      max: 40,
+      step: 1,
+      description: "Merge gap (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Saira" }),
     speed: {
       type: "number",
       default: 1,

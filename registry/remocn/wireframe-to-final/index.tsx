@@ -2,15 +2,11 @@
 
 import { loadFont } from "@remotion/google-fonts/IBMPlexMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400", "500"],
@@ -38,6 +34,20 @@ export interface WireframeToFinalProps {
   /** Blueprint stage. Off-white by default. */
   theme?: "light" | "dark";
   accent?: string;
+  /** Color of the caption under the screen; overrides the theme. */
+  ink?: string;
+  /** Stage fill behind the blueprint; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the caption and measurements. Load it yourself; IBM Plex Mono by default. */
+  fontFamily?: string;
+  /** Frames the diagonal fill takes to sweep across the screen. */
+  sweep?: number;
+  /** Strength of the colour bloom behind the finished screen; 0 turns it off. */
+  glow?: number;
+  /** Size of the screen and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   /** Small caption under the screen, before and after the fill. Empty strings hide it. */
   captions?: [string, string];
@@ -283,6 +293,8 @@ function mixHex(a: string, b: string, t: number) {
 const INOUT = Easing.bezier(0.65, 0, 0.35, 1);
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 // Timeline (frames at speed 1).
 const FRAME_DRAW = [2, 28];
 const DIM_DRAW = [12, 36];
@@ -351,18 +363,49 @@ function choreograph(): Drawn[] {
 
 const ELS = choreograph();
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WireframeToFinal({
   src,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = mono,
+  sweep = SWEEP[1] - SWEEP[0],
+  glow = 1,
+  scale = 1,
+  delay = 0,
   speed = 1,
   captions = ["Idea", "Product"],
   measurements = ["1440", "900", "288"],
 }: WireframeToFinalProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const P = PALETTE[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? P.stage);
+  const paper =
+    background === undefined || background === "transparent"
+      ? P.stage
+      : background;
+  const sweepEnd = SWEEP[0] + sweep;
   const dark = theme === "dark";
   const k = width / 1280;
   const W = Math.round(width * 0.64);
@@ -380,24 +423,33 @@ export function WireframeToFinal({
     interpolate(frame, [start, start + dur], [0, 1], { ...clamp, easing: OUT });
 
   // Fill sweep front along the "to bottom right" axis.
-  const front = interpolate(frame, SWEEP, [-0.02, 1 + EDGE + 0.02], {
-    ...clamp,
-    easing: INOUT,
-  });
+  const front = interpolate(
+    frame,
+    [SWEEP[0], sweepEnd],
+    [-0.02, 1 + EDGE + 0.02],
+    {
+      ...clamp,
+      easing: INOUT,
+    },
+  );
   const sweepLife = interpolate(
     frame,
-    [SWEEP[0], SWEEP[0] + 6, SWEEP[1] - 6, SWEEP[1]],
+    [SWEEP[0], SWEEP[0] + 6, sweepEnd - 6, sweepEnd],
     [0, 1, 1, 0],
     clamp,
   );
-  const after = interpolate(frame, [SWEEP[1] - 14, SWEEP[1] + 16], [0, 1], {
+  const after = interpolate(frame, [sweepEnd - 14, sweepEnd + 16], [0, 1], {
     ...clamp,
     easing: INOUT,
   });
-  const push = interpolate(frame, [96, 230], [1, 1.05], {
-    ...clamp,
-    easing: INOUT,
-  });
+  const pushAt = (f: number) =>
+    interpolate(f, [96, 230], [1, 1.05], { ...clamp, easing: INOUT });
+  const push = pushAt(frame);
+  // The slow in-out push creeps at its start; weigh each step by how far
+  // the furthest text sits from the origin.
+  const pushing =
+    Math.abs(pushAt(frame + speed) - push) * width * 0.6 > 1e-3 ||
+    Math.abs(push - pushAt(frame - speed)) * width * 0.6 > 1e-3;
   const gridIn = interpolate(frame, [0, 14], [0.55, 1], clamp);
   const drift = interpolate(frame, [SWEEP[0], 230], [0, 1], clamp);
   const gridOp = gridIn * (1 - after * 0.55);
@@ -441,420 +493,428 @@ export function WireframeToFinal({
   const tick = 6 * k;
   const gap = 26 * k;
   const label = {
-    fontFamily: mono,
+    fontFamily,
     fontSize: 11 * k,
     fill: line,
     letterSpacing: "0.04em",
   } as const;
 
   return (
-    <AbsoluteFill style={{ background: P.stage, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <Grid
         width={width}
         height={height}
         k={k}
-        P={P}
+        P={stage === P.stage ? P : { ...P, stage }}
         uid={uid}
         opacity={gridOp}
       />
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 48%" }}
-      >
-        {/* pixel-glass underglow: the finished screen sits on a band of colour */}
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: left + W * 0.06,
-            top: top + H * 0.18,
-            width: W * 0.88,
-            height: H * 0.8,
-            borderRadius: radius * 3,
-            background: `linear-gradient(${100 + drift * 14}deg, ${GLASS[0]} 0%, ${GLASS[1]} 50%, ${GLASS[2]} 100%)`,
-            filter: `blur(${70 * k}px)`,
-            opacity: after * (dark ? 0.5 : 0.42),
-            transform: `translateY(${(30 + 10 * after) * k}px)`,
-          }}
-        />
-        {/* contact shadow, grows in once the screen is real */}
-        <div
-          style={{
-            position: "absolute",
-            left,
-            top,
-            width: W,
-            height: H,
-            borderRadius: radius,
-            opacity: after,
-            boxShadow: dark
-              ? `0 0 0 1px rgba(255,255,255,0.09), 0 ${40 * k}px ${90 * k}px -${20 * k}px rgba(0,0,0,0.8)`
-              : `0 0 0 1px rgba(20,20,24,0.07), 0 ${36 * k}px ${80 * k}px -${24 * k}px rgba(60,45,20,0.24), 0 ${4 * k}px ${12 * k}px -${4 * k}px rgba(60,45,20,0.08)`,
-          }}
-        />
-        {/* final render, revealed by the diagonal sweep */}
-        <div
-          style={{
-            position: "absolute",
-            left,
-            top,
-            width: W,
-            height: H,
-            borderRadius: radius,
-            overflow: "hidden",
-            WebkitMaskImage: mask,
-            maskImage: mask,
-            background: P.pane,
+            transform: `scale(${push})${glide(pushing)}`,
+            transformOrigin: "50% 48%",
           }}
         >
-          {src ? (
-            <Img
-              src={src}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          ) : null}
-        </div>
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", left, top, overflow: "visible" }}
-        >
-          <title>Wireframe</title>
-          <defs>
-            <linearGradient id={gid} x1="0" y1="0" x2="1" y2="0">
-              {GLASS.map((c, i) => (
-                <stop key={c} offset={i / (GLASS.length - 1)} stopColor={c} />
-              ))}
-            </linearGradient>
-            <linearGradient id={`${gid}-fade`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#FFFFFF" stopOpacity={0.3} />
-              <stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
-            </linearGradient>
-            <mask id={`${gid}-mask`} maskContentUnits="objectBoundingBox">
-              <rect width={1} height={1} fill={`url(#${gid}-fade)`} />
-            </mask>
-            <clipPath id={clipId}>
-              <rect width={W} height={H} rx={radius} />
-            </clipPath>
-          </defs>
+          {/* pixel-glass underglow: the finished screen sits on a band of colour */}
+          <div
+            style={{
+              position: "absolute",
+              left: left + W * 0.06,
+              top: top + H * 0.18,
+              width: W * 0.88,
+              height: H * 0.8,
+              borderRadius: radius * 3,
+              background: `linear-gradient(${100 + drift * 14}deg, ${GLASS[0]} 0%, ${GLASS[1]} 50%, ${GLASS[2]} 100%)`,
+              filter: `blur(${70 * k}px)`,
+              opacity: after * (dark ? 0.5 : 0.42) * glow,
+              transform: `translateY(${(30 + 10 * after) * k}px)`,
+            }}
+          />
+          {/* contact shadow, grows in once the screen is real */}
+          <div
+            style={{
+              position: "absolute",
+              left,
+              top,
+              width: W,
+              height: H,
+              borderRadius: radius,
+              opacity: after,
+              boxShadow: dark
+                ? `0 0 0 1px rgba(255,255,255,0.09), 0 ${40 * k}px ${90 * k}px -${20 * k}px rgba(0,0,0,0.8)`
+                : `0 0 0 1px rgba(20,20,24,0.07), 0 ${36 * k}px ${80 * k}px -${24 * k}px rgba(60,45,20,0.24), 0 ${4 * k}px ${12 * k}px -${4 * k}px rgba(60,45,20,0.08)`,
+            }}
+          />
+          {/* final render, revealed by the diagonal sweep */}
+          <div
+            style={{
+              position: "absolute",
+              left,
+              top,
+              width: W,
+              height: H,
+              borderRadius: radius,
+              overflow: "hidden",
+              WebkitMaskImage: mask,
+              maskImage: mask,
+              background: P.pane,
+            }}
+          >
+            {src ? (
+              <Img
+                src={src}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : null}
+          </div>
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", left, top, overflow: "visible" }}
+          >
+            <title>Wireframe</title>
+            <defs>
+              <linearGradient id={gid} x1="0" y1="0" x2="1" y2="0">
+                {GLASS.map((c, i) => (
+                  <stop key={c} offset={i / (GLASS.length - 1)} stopColor={c} />
+                ))}
+              </linearGradient>
+              <linearGradient id={`${gid}-fade`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#FFFFFF" stopOpacity={0.3} />
+                <stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
+              </linearGradient>
+              <mask id={`${gid}-mask`} maskContentUnits="objectBoundingBox">
+                <rect width={1} height={1} fill={`url(#${gid}-fade)`} />
+              </mask>
+              <clipPath id={clipId}>
+                <rect width={W} height={H} rx={radius} />
+              </clipPath>
+            </defs>
 
-          {/* final fills, region by region */}
-          {src ? null : (
-            <g clipPath={`url(#${clipId})`}>
+            {/* final fills, region by region */}
+            {src ? null : (
+              <g clipPath={`url(#${clipId})`}>
+                {ELS.map((e, i) => {
+                  const op = filled(e.at);
+                  if (op <= 0) return null;
+                  const key = `f${i}`;
+                  if (e.t === "l")
+                    return (
+                      <line
+                        key={key}
+                        x1={e.x * s}
+                        y1={e.y * s}
+                        x2={e.x2 * s}
+                        y2={e.y2 * s}
+                        stroke={P.hair}
+                        opacity={op}
+                      />
+                    );
+                  if (e.t === "c")
+                    return (
+                      <circle
+                        key={key}
+                        cx={e.x * s}
+                        cy={e.y * s}
+                        r={e.r * s}
+                        fill={tone(e.f)}
+                        opacity={op}
+                      />
+                    );
+                  if (e.t === "logo") {
+                    const rh = e.size * 0.76 * s;
+                    return (
+                      <g key={key} opacity={op}>
+                        <path
+                          d={REMOCN_R_PATH}
+                          fill={P.logo}
+                          transform={`translate(${e.x * s} ${e.y * s - rh}) scale(${rh / 134.26})`}
+                        />
+                        <text
+                          x={e.x * s + rh * R_ASPECT + e.size * 0.04 * s}
+                          y={e.y * s}
+                          fill={P.logo}
+                          style={{
+                            fontFamily: manrope.fontFamily,
+                            fontWeight: 600,
+                            fontSize: e.size * s,
+                            letterSpacing: "-0.025em",
+                          }}
+                        >
+                          emocn
+                        </text>
+                      </g>
+                    );
+                  }
+                  if (e.t === "p") {
+                    const pts = e.pts.map(
+                      ([x, y]) => [x * s, y * s] as [number, number],
+                    );
+                    const d = smooth(pts);
+                    const base = 650 * s;
+                    return (
+                      <g key={key} opacity={op}>
+                        <path
+                          d={`${d} L ${pts[pts.length - 1][0]} ${base} L ${pts[0][0]} ${base} Z`}
+                          fill={`url(#${gid})`}
+                          mask={`url(#${gid}-mask)`}
+                        />
+                        <path
+                          d={d}
+                          fill="none"
+                          stroke={`url(#${gid})`}
+                          strokeWidth={Math.max(1.5, 3.4 * s)}
+                          strokeLinecap="round"
+                        />
+                      </g>
+                    );
+                  }
+                  return (
+                    <rect
+                      key={key}
+                      x={e.x * s}
+                      y={e.y * s}
+                      width={e.w * s}
+                      height={e.h * s}
+                      rx={(e.r ?? 0) * s}
+                      fill={tone(e.f)}
+                      fillOpacity={e.f === "accentSoft" ? 0.16 : 1}
+                      stroke={e.s ? P.hair : "none"}
+                      opacity={op}
+                    />
+                  );
+                })}
+              </g>
+            )}
+
+            {/* blueprint linework */}
+            <g fill="none" stroke={line} strokeWidth={1}>
+              <rect
+                x={0.5}
+                y={0.5}
+                width={W - 1}
+                height={H - 1}
+                rx={radius}
+                pathLength={1}
+                strokeDasharray="1 1"
+                strokeDashoffset={1 - frameDraw}
+                opacity={0.9 * (1 - after)}
+              />
               {ELS.map((e, i) => {
-                const op = filled(e.at);
-                if (op <= 0) return null;
-                const key = `f${i}`;
+                if (e.kind === "bg") return null;
+                const p = draw(e.start, e.dur);
+                if (p <= 0) return null;
+                const op =
+                  (e.kind === "content" ? 0.75 : 0.9) *
+                  (1 - Math.min(1, Math.max(0, (front - e.at) / (EDGE * 1.6))));
+                if (op <= 0.01) return null;
+                const key = `b${i}`;
+                const common = {
+                  pathLength: 1,
+                  strokeDasharray: "1 1",
+                  strokeDashoffset: 1 - p,
+                  opacity: op,
+                };
                 if (e.t === "l")
                   return (
                     <line
-                      key={key}
+                      {...common}
                       x1={e.x * s}
                       y1={e.y * s}
                       x2={e.x2 * s}
                       y2={e.y2 * s}
-                      stroke={P.hair}
-                      opacity={op}
                     />
                   );
                 if (e.t === "c")
                   return (
                     <circle
                       key={key}
+                      {...common}
                       cx={e.x * s}
                       cy={e.y * s}
                       r={e.r * s}
-                      fill={tone(e.f)}
-                      opacity={op}
                     />
                   );
                 if (e.t === "logo") {
                   const rh = e.size * 0.76 * s;
+                  const xh = e.size * 0.555 * s;
+                  const tx = e.x * s + rh * R_ASPECT + e.size * 0.06 * s;
                   return (
-                    <g key={key} opacity={op}>
+                    <g key={key}>
                       <path
+                        {...common}
                         d={REMOCN_R_PATH}
-                        fill={P.logo}
+                        vectorEffect="non-scaling-stroke"
                         transform={`translate(${e.x * s} ${e.y * s - rh}) scale(${rh / 134.26})`}
                       />
-                      <text
-                        x={e.x * s + rh * R_ASPECT + e.size * 0.04 * s}
-                        y={e.y * s}
-                        fill={P.logo}
-                        style={{
-                          fontFamily: manrope.fontFamily,
-                          fontWeight: 600,
-                          fontSize: e.size * s,
-                          letterSpacing: "-0.025em",
-                        }}
-                      >
-                        emocn
-                      </text>
+                      <rect
+                        {...common}
+                        x={tx}
+                        y={e.y * s - xh}
+                        width={e.size * 3.02 * s}
+                        height={xh}
+                        rx={xh / 2}
+                      />
                     </g>
                   );
                 }
-                if (e.t === "p") {
-                  const pts = e.pts.map(
-                    ([x, y]) => [x * s, y * s] as [number, number],
-                  );
-                  const d = smooth(pts);
-                  const base = 650 * s;
+                if (e.t === "p")
                   return (
-                    <g key={key} opacity={op}>
-                      <path
-                        d={`${d} L ${pts[pts.length - 1][0]} ${base} L ${pts[0][0]} ${base} Z`}
-                        fill={`url(#${gid})`}
-                        mask={`url(#${gid}-mask)`}
-                      />
-                      <path
-                        d={d}
-                        fill="none"
-                        stroke={`url(#${gid})`}
-                        strokeWidth={Math.max(1.5, 3.4 * s)}
-                        strokeLinecap="round"
-                      />
-                    </g>
+                    <path
+                      {...common}
+                      d={smooth(
+                        e.pts.map(
+                          ([x, y]) => [x * s, y * s] as [number, number],
+                        ),
+                      )}
+                    />
                   );
-                }
                 return (
                   <rect
                     key={key}
-                    x={e.x * s}
-                    y={e.y * s}
-                    width={e.w * s}
-                    height={e.h * s}
+                    {...common}
+                    x={e.x * s + 0.5}
+                    y={e.y * s + 0.5}
+                    width={Math.max(0, e.w * s - 1)}
+                    height={Math.max(0, e.h * s - 1)}
                     rx={(e.r ?? 0) * s}
-                    fill={tone(e.f)}
-                    fillOpacity={e.f === "accentSoft" ? 0.16 : 1}
-                    stroke={e.s ? P.hair : "none"}
-                    opacity={op}
                   />
                 );
               })}
             </g>
-          )}
 
-          {/* blueprint linework */}
-          <g fill="none" stroke={line} strokeWidth={1}>
-            <rect
-              x={0.5}
-              y={0.5}
-              width={W - 1}
-              height={H - 1}
-              rx={radius}
-              pathLength={1}
-              strokeDasharray="1 1"
-              strokeDashoffset={1 - frameDraw}
-              opacity={0.9 * (1 - after)}
-            />
-            {ELS.map((e, i) => {
-              if (e.kind === "bg") return null;
-              const p = draw(e.start, e.dur);
-              if (p <= 0) return null;
-              const op =
-                (e.kind === "content" ? 0.75 : 0.9) *
-                (1 - Math.min(1, Math.max(0, (front - e.at) / (EDGE * 1.6))));
-              if (op <= 0.01) return null;
-              const key = `b${i}`;
-              const common = {
-                pathLength: 1,
-                strokeDasharray: "1 1",
-                strokeDashoffset: 1 - p,
-                opacity: op,
-              };
-              if (e.t === "l")
-                return (
-                  <line
-                    {...common}
-                    x1={e.x * s}
-                    y1={e.y * s}
-                    x2={e.x2 * s}
-                    y2={e.y2 * s}
-                  />
-                );
-              if (e.t === "c")
-                return (
-                  <circle
-                    key={key}
-                    {...common}
-                    cx={e.x * s}
-                    cy={e.y * s}
-                    r={e.r * s}
-                  />
-                );
-              if (e.t === "logo") {
-                const rh = e.size * 0.76 * s;
-                const xh = e.size * 0.555 * s;
-                const tx = e.x * s + rh * R_ASPECT + e.size * 0.06 * s;
-                return (
-                  <g key={key}>
-                    <path
-                      {...common}
-                      d={REMOCN_R_PATH}
-                      vectorEffect="non-scaling-stroke"
-                      transform={`translate(${e.x * s} ${e.y * s - rh}) scale(${rh / 134.26})`}
-                    />
-                    <rect
-                      {...common}
-                      x={tx}
-                      y={e.y * s - xh}
-                      width={e.size * 3.02 * s}
-                      height={xh}
-                      rx={xh / 2}
-                    />
-                  </g>
-                );
-              }
-              if (e.t === "p")
-                return (
-                  <path
-                    {...common}
-                    d={smooth(
-                      e.pts.map(([x, y]) => [x * s, y * s] as [number, number]),
-                    )}
-                  />
-                );
-              return (
-                <rect
-                  key={key}
-                  {...common}
-                  x={e.x * s + 0.5}
-                  y={e.y * s + 0.5}
-                  width={Math.max(0, e.w * s - 1)}
-                  height={Math.max(0, e.h * s - 1)}
-                  rx={(e.r ?? 0) * s}
-                />
-              );
-            })}
-          </g>
-
-          {/* sweep front */}
-          <g clipPath={`url(#${clipId})`} opacity={sweepLife}>
-            <line
-              x1={fx1}
-              y1={fy1}
-              x2={fx2}
-              y2={fy2}
-              stroke={line}
-              strokeWidth={1.25}
-            />
-          </g>
-
-          {/* measurements, crop marks and column ticks */}
-          <g opacity={guides} stroke={line} strokeWidth={1} fill="none">
-            {[
-              [0, 0, -1, -1],
-              [W, 0, 1, -1],
-              [0, H, -1, 1],
-              [W, H, 1, 1],
-            ].map(([x, y, dx, dy]) => {
-              const o = 10 * k;
-              const L = 16 * k * cropIn;
-              return (
-                <path
-                  key={`crop-${x}-${y}`}
-                  d={`M ${x + dx * o} ${y + dy * (o + L)} L ${x + dx * o} ${y + dy * o} L ${x + dx * (o + L)} ${y + dy * o}`}
-                  opacity={0.7}
-                />
-              );
-            })}
-            <g opacity={0.85}>
-              <line x1={0} y1={-gap} x2={W * dimDraw} y2={-gap} />
-              <line x1={0} y1={-gap - tick} x2={0} y2={-gap + tick} />
+            {/* sweep front */}
+            <g clipPath={`url(#${clipId})`} opacity={sweepLife}>
               <line
-                x1={W}
-                y1={-gap - tick}
-                x2={W}
-                y2={-gap + tick}
-                opacity={dimDraw >= 0.99 ? 1 : 0}
-              />
-              <line x1={-gap} y1={0} x2={-gap} y2={H * dimDraw} />
-              <line x1={-gap - tick} y1={0} x2={-gap + tick} y2={0} />
-              <line
-                x1={-gap - tick}
-                y1={H}
-                x2={-gap + tick}
-                y2={H}
-                opacity={dimDraw >= 0.99 ? 1 : 0}
-              />
-              <line x1={0} y1={H + gap} x2={288 * s * dimDraw} y2={H + gap} />
-              <line x1={0} y1={H + gap - tick} x2={0} y2={H + gap + tick} />
-              <line
-                x1={288 * s}
-                y1={H + gap - tick}
-                x2={288 * s}
-                y2={H + gap + tick}
-                opacity={dimDraw >= 0.99 ? 1 : 0}
+                x1={fx1}
+                y1={fy1}
+                x2={fx2}
+                y2={fy2}
+                stroke={line}
+                strokeWidth={1.25}
               />
             </g>
-            {Array.from({ length: 13 }, (_, c) => {
-              const x = (288 + (c * (VW - 288)) / 12) * s;
-              const on = draw(DIM_DRAW[0] + 4 + c * 1.2, 8);
-              return (
+
+            {/* measurements, crop marks and column ticks */}
+            <g opacity={guides} stroke={line} strokeWidth={1} fill="none">
+              {[
+                [0, 0, -1, -1],
+                [W, 0, 1, -1],
+                [0, H, -1, 1],
+                [W, H, 1, 1],
+              ].map(([x, y, dx, dy]) => {
+                const o = 10 * k;
+                const L = 16 * k * cropIn;
+                return (
+                  <path
+                    key={`crop-${x}-${y}`}
+                    d={`M ${x + dx * o} ${y + dy * (o + L)} L ${x + dx * o} ${y + dy * o} L ${x + dx * (o + L)} ${y + dy * o}`}
+                    opacity={0.7}
+                  />
+                );
+              })}
+              <g opacity={0.85}>
+                <line x1={0} y1={-gap} x2={W * dimDraw} y2={-gap} />
+                <line x1={0} y1={-gap - tick} x2={0} y2={-gap + tick} />
                 <line
-                  key={`col-${c}`}
-                  x1={x}
-                  y1={-4 * k}
-                  x2={x}
-                  y2={-4 * k - 5 * k * on}
-                  opacity={0.55 * on}
+                  x1={W}
+                  y1={-gap - tick}
+                  x2={W}
+                  y2={-gap + tick}
+                  opacity={dimDraw >= 0.99 ? 1 : 0}
                 />
-              );
-            })}
-          </g>
-          <g opacity={guides * labelIn} style={label} stroke="none">
-            <rect
-              x={W / 2 - 24 * k}
-              y={-gap - 8 * k}
-              width={48 * k}
-              height={16 * k}
-              fill={P.stage}
-            />
-            <text x={W / 2} y={-gap + 4 * k} textAnchor="middle" fill={line}>
-              {measurements[0]}
-            </text>
-            <rect
-              x={-gap - 8 * k}
-              y={H / 2 - 20 * k}
-              width={16 * k}
-              height={40 * k}
-              fill={P.stage}
-            />
-            <text
-              x={-gap + 4 * k}
-              y={H / 2}
-              textAnchor="middle"
-              fill={line}
-              transform={`rotate(-90 ${-gap + 4 * k} ${H / 2})`}
-            >
-              {measurements[1]}
-            </text>
-            <rect
-              x={144 * s - 18 * k}
-              y={H + gap - 8 * k}
-              width={36 * k}
-              height={16 * k}
-              fill={P.stage}
-            />
-            <text
-              x={144 * s}
-              y={H + gap + 4 * k}
-              textAnchor="middle"
-              fill={line}
-            >
-              {measurements[2]}
-            </text>
-          </g>
-        </svg>
-      </AbsoluteFill>
-      <Caption
-        captions={captions}
-        swap={capSwap}
-        opacity={capIn}
-        x={left + W}
-        y={top + H + 18 * k}
-        k={k}
-        ink={P.ink}
-        accent={line}
-      />
+                <line x1={-gap} y1={0} x2={-gap} y2={H * dimDraw} />
+                <line x1={-gap - tick} y1={0} x2={-gap + tick} y2={0} />
+                <line
+                  x1={-gap - tick}
+                  y1={H}
+                  x2={-gap + tick}
+                  y2={H}
+                  opacity={dimDraw >= 0.99 ? 1 : 0}
+                />
+                <line x1={0} y1={H + gap} x2={288 * s * dimDraw} y2={H + gap} />
+                <line x1={0} y1={H + gap - tick} x2={0} y2={H + gap + tick} />
+                <line
+                  x1={288 * s}
+                  y1={H + gap - tick}
+                  x2={288 * s}
+                  y2={H + gap + tick}
+                  opacity={dimDraw >= 0.99 ? 1 : 0}
+                />
+              </g>
+              {Array.from({ length: 13 }, (_, c) => {
+                const x = (288 + (c * (VW - 288)) / 12) * s;
+                const on = draw(DIM_DRAW[0] + 4 + c * 1.2, 8);
+                return (
+                  <line
+                    key={`col-${c}`}
+                    x1={x}
+                    y1={-4 * k}
+                    x2={x}
+                    y2={-4 * k - 5 * k * on}
+                    opacity={0.55 * on}
+                  />
+                );
+              })}
+            </g>
+            <g opacity={guides * labelIn} style={label} stroke="none">
+              <rect
+                x={W / 2 - 24 * k}
+                y={-gap - 8 * k}
+                width={48 * k}
+                height={16 * k}
+                fill={paper}
+              />
+              <text x={W / 2} y={-gap + 4 * k} textAnchor="middle" fill={line}>
+                {measurements[0]}
+              </text>
+              <rect
+                x={-gap - 8 * k}
+                y={H / 2 - 20 * k}
+                width={16 * k}
+                height={40 * k}
+                fill={paper}
+              />
+              <text
+                x={-gap + 4 * k}
+                y={H / 2}
+                textAnchor="middle"
+                fill={line}
+                transform={`rotate(-90 ${-gap + 4 * k} ${H / 2})`}
+              >
+                {measurements[1]}
+              </text>
+              <rect
+                x={144 * s - 18 * k}
+                y={H + gap - 8 * k}
+                width={36 * k}
+                height={16 * k}
+                fill={paper}
+              />
+              <text
+                x={144 * s}
+                y={H + gap + 4 * k}
+                textAnchor="middle"
+                fill={line}
+              >
+                {measurements[2]}
+              </text>
+            </g>
+          </svg>
+        </AbsoluteFill>
+        <Caption
+          captions={captions}
+          swap={capSwap}
+          opacity={capIn}
+          x={left + W}
+          y={top + H + 18 * k}
+          k={k}
+          ink={ink ?? P.ink}
+          accent={line}
+          fontFamily={fontFamily}
+        />
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -868,6 +928,7 @@ function Caption({
   k,
   ink,
   accent,
+  fontFamily,
 }: {
   captions: [string, string];
   swap: number;
@@ -877,7 +938,9 @@ function Caption({
   k: number;
   ink: string;
   accent: string;
+  fontFamily: string;
 }) {
+  const glide = useGlide();
   if (!captions[0] && !captions[1]) return null;
   const row = (n: number, text: string, p: number) => (
     <div
@@ -889,7 +952,7 @@ function Caption({
         gap: 10 * k,
         whiteSpace: "nowrap",
         opacity: p,
-        transform: `translateY(${(1 - p) * (n === 1 ? -8 : 8) * k}px)`,
+        transform: `translateY(${(1 - p) * (n === 1 ? -8 : 8) * k}px)${glide(midway(p))}`,
       }}
     >
       <span style={{ color: accent }}>{`0${n + 1}`}</span>
@@ -904,7 +967,7 @@ function Caption({
         top: y,
         width: 300 * k,
         height: 16 * k,
-        fontFamily: mono,
+        fontFamily,
         fontSize: 11 * k,
         letterSpacing: "0.08em",
         textTransform: "uppercase",

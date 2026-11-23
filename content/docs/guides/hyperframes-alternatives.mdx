@@ -1,0 +1,199 @@
+---
+title: "HyperFrames Alternatives (2026): Remotion + Remocn and 4 More Code-to-Video Tools for AI Agents"
+navTitle: HyperFrames alternatives
+description: "Alternatives to HyperFrames for agent-made video, compared: Remotion with Remocn's component registry, Motion Canvas, Revideo, Creatomate and Shotstack. Dated licences, prices, agent tooling, a HyperFrames to Remotion mapping, and when to stay on HyperFrames."
+---
+
+_Last updated: November 17, 2026. Remocn wrote this page, and Remocn is one of the tools compared. Facts about other tools come from their own sites and repositories; see [Sources](#sources)._
+
+The main alternatives to HyperFrames are [Remotion](https://www.remotion.dev) with the Remocn component
+registry (React), [Motion Canvas](https://motioncanvas.io) and [Revideo](https://github.com/midrender/revideo)
+(TypeScript), and the hosted video APIs [Creatomate](https://creatomate.com) and [Shotstack](https://shotstack.io).
+If you use HyperFrames for its block catalog and agent skills, Remotion + Remocn is the closest match in React:
+934 free, MIT-licensed components installed as source with `npx shadcn@latest add @remocn/<name>`, plus an
+agent skill, a Claude Code plugin and a free MCP server.
+
+HyperFrames itself is good at what it does: HTML, CSS and seekable animations rendered to MP4, Apache 2.0, no
+per-render fees. Look elsewhere when your team works in React, when you want rendering as a hosted API, or when
+you want a different kind of editor. If none of that applies, [stay on HyperFrames](#when-to-stay-on-hyperframes).
+
+## HyperFrames alternatives at a glance
+
+- **Remotion + Remocn:** pick it if your team writes React and you want a ready-made component catalog your
+  coding agent can install. Remotion needs a paid licence above 3 people.
+- **Motion Canvas:** pick it for technical explainers synced to a voiceover, edited in a visual preview.
+- **Revideo:** pick it if you want an MIT TypeScript render engine to embed in your own pipeline.
+- **Creatomate:** pick it if you want one template filled with data many times, rendered on someone else's
+  servers, and driven by an agent through a hosted MCP server.
+- **Shotstack:** pick it if you want to assemble video through an API at volume, with an official CLI, agent
+  skill and MCP server.
+
+## HyperFrames alternatives compared
+
+Licences and prices were checked on November 10, 2026, and GitHub stars on November 11, 2026, except
+HyperFrames, checked on November 17, 2026. Agent tooling was checked on November 17, 2026, on each vendor's own
+pages. Prices change; follow the links before you commit.
+
+| Tool | You write | Licence | Price | Ready-made blocks | Agent tooling | Where it renders | GitHub stars |
+|---|---|---|---|---|---|---|---|
+| [HyperFrames](https://github.com/heygen-com/hyperframes) | HTML, CSS, JavaScript (GSAP, CSS, Lottie, Three.js, Anime.js, WAAPI) | Apache 2.0 | Free, "no per-render fees or commercial-use thresholds". Studio app Pro plan $25/month for HeyGen's AI models | Catalog of about 450 blocks and components, `npx hyperframes add <name>` | 9 agent skills, Claude Code plugin, connector for AI chats, llms.txt | Your machine, AWS Lambda, Google Cloud Run, or managed cloud | 85.9k |
+| [Remotion](https://www.remotion.dev) + [Remocn](/docs/getting-started/introduction) | React, TypeScript | Remotion License (source-available); Remocn MIT | Remotion is free for teams of up to 3 people; above that a Company License, minimum spend $100/month. Remocn is free | Remocn: 934 components, `npx shadcn@latest add @remocn/<name>` | Remocn agent skill, Claude Code and Codex plugin, free MCP server (no key), llms.txt | Your machine or servers, or AWS through `@remotion/lambda` | Remotion 72.4k, Remocn 1.7k |
+| [Motion Canvas](https://motioncanvas.io) | TypeScript (generator functions) | MIT | Free | None built in | llms.txt; no MCP server or agent skill found | Your machine | 19.8k |
+| [Revideo](https://github.com/midrender/revideo) | TypeScript | MIT | Free | None built in | No MCP server, agent skill or llms.txt found | Your machine or servers | 4.2k |
+| [Creatomate](https://creatomate.com) | JSON over HTTP, or a template editor | Commercial, hosted | 50 free credits; Essential $45/month | Templates in its editor | Hosted MCP server (`https://api.creatomate.com/mcp`, OAuth or API key); renders spend credits | Creatomate's servers | Not open source |
+| [Shotstack](https://shotstack.io) | JSON over HTTP, or a template editor | Commercial, hosted | 10 free credits; pay as you go $10 for 50 minutes; Starter $39/month | Templates in its editor | Hosted MCP server, `@shotstack/cli`, agent skill (`npx skills add shotstack/shotstack-cli`); rendering needs an API key | Shotstack's servers | Not open source |
+
+Catalog sizes are not directly comparable. Remocn's 934 counts every installable item, including 101 icons and
+46 UI primitives. HyperFrames' figure comes from its own registry skill ("about 450 ready-made blocks and
+components").
+
+## HyperFrames vs Remotion + Remocn: what maps to what
+
+HyperFrames describes timing with data attributes on HTML. Remotion describes it with React components and the
+current frame number. Most concepts map one to one; the right column shows where Remocn already has the finished
+piece.
+
+| In HyperFrames | In Remotion | Ready-made in Remocn |
+|---|---|---|
+| Composition: an HTML file with `data-composition-id`, `data-width`, `data-height` | `<Composition>` with `width`, `height`, `fps`, `durationInFrames` | [Templates](/docs/templates): full compositions |
+| Clip timing with `data-start` and `data-duration` | `<Sequence from={60} durationInFrames={120}>` | Each component page states its natural length in frames |
+| Tracks with `data-track-index` | JSX order: later siblings paint on top | — |
+| Sub-composition with `data-composition-src` | A React component placed inside a `<Sequence>` | [Compositions](/docs/compositions) |
+| GSAP timeline, CSS or WAAPI animation, seeked per frame | `interpolate()` and `spring()` driven by `useCurrentFrame()` | Every component; motion is computed per frame |
+| Lottie | `@remotion/lottie` | — |
+| Three.js | `@remotion/three` | [Camera & Physics](/docs/camera) shots |
+| `<audio>` with `data-volume` | `<Audio volume={0.5}>` | [Music and sound](/docs/guides/music-and-sound) guide |
+| Catalog: `npx hyperframes add data-chart` writes `compositions/data-chart.html` | — | `npx shadcn@latest add @remocn/animated-bar-chart` writes source into `components/remocn/`. See [Numbers](/docs/numbers) and [UI blocks](/docs/ui-blocks) |
+| Catalog: transitions | `<TransitionSeries>` from `@remotion/transitions` | [Transitions](/docs/transitions), for example [Zoom Blur](/docs/transitions/zoom-blur) |
+| Catalog: text and captions | `@remotion/captions` plus your own styling | [Typography](/docs/typography) and [Captions](/docs/captions/getting-started/introduction) |
+| Catalog: cursors and code | — | [Simulated Cursor](/docs/effects/simulated-cursor), [Glass Code Block](/docs/ui-blocks/glass-code-block), [Terminal Simulator](/docs/ui-blocks/terminal-simulator) |
+| Agent skills: `npx skills add heygen-com/hyperframes` | Remotion's own Agent Skills | `npx skills add Remocn/remocn` ([Agent skill](/docs/getting-started/agent-skill)) |
+| Claude Code plugin: `claude plugin install hyperframes@hyperframes` | — | `/plugin install remocn --marketplace Remocn/remocn`, then `/remocn:video <brief>` ([Plugin](/docs/getting-started/plugin)) |
+| Connector for AI chats, renders in your HeyGen account | — | MCP server at `https://remocn.dev/mcp`: no key, read-only, does not render ([MCP server](/docs/getting-started/mcp-server)) |
+| `npx hyperframes preview` | `npx remotion studio` | — |
+| `npx hyperframes snapshot --at 0,2,5` | `npx remotion still` | — |
+| `npx hyperframes render` | `npx remotion render` | — |
+| AWS Lambda rendering | `@remotion/lambda` | — |
+| HyperFrames Studio desktop app | Remotion Studio in the browser | [Remocn Studio](https://remocn.studio), macOS only |
+| `hyperframes.heygen.com/llms.txt` | — | [remocn.dev/llms.txt](https://remocn.dev/llms.txt) and [llms-components.txt](https://remocn.dev/llms-components.txt) |
+
+A dash means there is no direct counterpart. HyperFrames ships a `/remotion-to-hyperframes` skill. Remocn has no
+converter in the other direction: moving a HyperFrames project to Remotion means rewriting its compositions as
+React components.
+
+## Moving from HyperFrames to Remotion + Remocn
+
+Start from a Remotion project, add components, and place them with a `Sequence`:
+
+```bash
+npx create-video@latest
+npx shadcn@latest init
+npx shadcn@latest add @remocn/soft-blur-in @remocn/zoom-blur
+```
+
+```tsx
+import { Sequence } from "remotion";
+import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
+
+export const Intro = () => (
+  <Sequence durationInFrames={180}>
+    <SoftBlurIn text="Ship the launch video today" />
+  </Sequence>
+);
+```
+
+The source of each component lands in `components/remocn/`, where you edit it like any file. Preview with
+`npx remotion studio` and render with `npx remotion render`. The full setup is on
+[Installation](/docs/getting-started/installation).
+
+To have an agent do it, install the skill (`npx skills add Remocn/remocn`) or the plugin, and describe the video.
+With the skill, the agent reads the live component index from remocn.dev and picks components by their use and
+avoid notes. [Launch video](/docs/guides/launch-video) walks through a first video from a brief, and
+[Directing your agent](/docs/guides/directing-your-agent) covers how to steer it.
+
+## When to stay on HyperFrames
+
+- **Your team writes HTML, CSS and GSAP, not React.** HyperFrames has no React requirement, and existing web
+  animations can be seeked frame by frame. Remocn only works inside a Remotion project.
+- **The licence has to be permissive at any company size.** HyperFrames is Apache 2.0 with no commercial-use
+  threshold. Remocn is MIT, but Remotion is free only for teams of up to 3 people; read
+  [Remotion's licence](https://www.remotion.dev/docs/license) before you build on it at work.
+- **You want generative models in the same tool.** The HyperFrames Studio Pro plan adds HeyGen's video, image,
+  voice and music models. Remocn has no voice, music or image generation.
+- **You want an agent to render from a chat.** HyperFrames' connector builds and renders the video in your HeyGen
+  account. Remocn's MCP server plans and previews, but rendering happens wherever you run Remotion.
+- **You need a desktop app on Windows or Linux.** HyperFrames Studio runs on Mac, Windows and Linux. Remocn Studio
+  is macOS only.
+
+## Remocn's limits
+
+- **Not a framework.** Remocn is a component registry. It has no renderer of its own and needs an existing
+  Remotion project.
+- **Not hosted.** No account, no render servers and no cloud exports. You render with Remotion on your machine or
+  your own infrastructure, or AWS through `@remotion/lambda`.
+- **No timeline.** You write or prompt code and watch the result in Remotion Studio.
+- **Motion graphics, not footage.** Remocn does not cut, trim or grade recorded video.
+- **A community project.** Remocn is independent and not affiliated with Remotion, shadcn or HeyGen. It is much
+  smaller than HyperFrames by GitHub stars (1.7k against 85.9k).
+
+## Pick another alternative when…
+
+- **…you want rendering as a service.** Creatomate and Shotstack render on their servers and bill per credit or
+  minute; both have hosted MCP servers an agent can call.
+- **…you animate explainers by eye.** Motion Canvas has a visual editor with real-time preview for syncing
+  animation to audio.
+- **…you want MIT at any company size and plain TypeScript.** Motion Canvas and Revideo are MIT with no
+  company-size threshold. Motion Canvas's last stable release is v3.17.2 from December 14, 2024, and re.video now
+  redirects to midrender.com.
+
+For HyperFrames against Remotion alone, including HeyGen's same-prompt Claude Code benchmark, see
+[HyperFrames vs Remotion](/docs/guides/after-effects-alternatives-for-developers#hyperframes-vs-remotion-which-should-i-use).
+The wider field, including Manim, FFmpeg and Lottie, is in
+[After Effects alternatives for developers](/docs/guides/after-effects-alternatives-for-developers).
+
+## Sources
+
+- HyperFrames: [github.com/heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) (README, LICENSE, 85.9k stars and release v0.9.64 on November 17, 2026), [hyperframes.heygen.com](https://hyperframes.heygen.com) (introduction, quickstart, CLI, Studio, catalog, llms.txt) and [hyperframes.studio/pricing](https://hyperframes.studio/pricing)
+- Remotion licence and pricing: [remotion.dev/docs/license](https://www.remotion.dev/docs/license). Stars: [github.com/remotion-dev/remotion](https://github.com/remotion-dev/remotion)
+- Motion Canvas: [motioncanvas.io](https://motioncanvas.io), its llms.txt and [github.com/motion-canvas/motion-canvas](https://github.com/motion-canvas/motion-canvas)
+- Revideo: [github.com/midrender/revideo](https://github.com/midrender/revideo) and its docs at midrender.com/revideo/docs
+- Creatomate: [creatomate.com/pricing](https://creatomate.com/pricing) and its [MCP integration docs](https://creatomate.com/docs/fundamentals/getting-started/mcp-integration)
+- Shotstack: [shotstack.io/pricing](https://shotstack.io/pricing/), its [MCP server](https://shotstack.io/docs/guide/agents/mcp-server.md) and [CLI](https://shotstack.io/docs/guide/agents/cli.md) docs
+- Remocn: this site's registry, where the count is every installable item at the time of writing, and [github.com/Remocn/remocn](https://github.com/Remocn/remocn)
+
+## FAQ
+
+<Faq>
+
+**What are the best alternatives to HyperFrames?**
+Remotion with the Remocn component registry for React teams, Motion Canvas and Revideo for TypeScript, and Creatomate and Shotstack for hosted rendering through an API. Remotion + Remocn is the closest match to HyperFrames' block catalog and agent skills.
+
+**What is the React equivalent of HyperFrames?**
+Remotion renders React components to video, the way HyperFrames renders HTML. Remocn adds what HyperFrames' catalog provides: 934 MIT-licensed components installed as source with `npx shadcn@latest add @remocn/<name>`, plus an agent skill, a plugin and an MCP server.
+
+**HyperFrames vs Remotion: which should I use?**
+HyperFrames if you write HTML, CSS and GSAP, or need Apache 2.0 at any company size. Remotion if you write React and want its ecosystem, with Remocn for ready-made components. Remotion needs a paid Company License above 3 people.
+
+**Is HyperFrames free?**
+Yes. The framework is Apache 2.0 with no per-render fees or commercial-use thresholds. The HyperFrames Studio app is free too; its Pro plan, $25 a month, adds HeyGen's AI models and unlimited cloud exports.
+
+**Is Remocn an alternative to HyperFrames?**
+Not on its own. Remocn is a component registry for Remotion, not a framework. Together, Remotion and Remocn cover what HyperFrames does: a renderer, a catalog of blocks and agent tooling.
+
+**Can AI agents build videos with Remotion and Remocn?**
+Yes. Install the agent skill with `npx skills add Remocn/remocn`, or the plugin for Claude Code and Codex with `/plugin install remocn --marketplace Remocn/remocn`, or connect any MCP client to `https://remocn.dev/mcp`. The agent writes Remotion code from Remocn components; you render with `npx remotion render`.
+
+**Can I convert a HyperFrames project to Remotion?**
+Not automatically. Remocn has no converter. Each composition is rewritten as a React component; the [mapping table](#hyperframes-vs-remotion--remocn-what-maps-to-what) shows what replaces what.
+
+**Is Remocn affiliated with HeyGen or Remotion?**
+No. Remocn is an independent open-source project. It is not affiliated with HeyGen, Remotion or shadcn. It is listed on Remotion's resources page.
+
+</Faq>
+
+## What's next
+
+- [Introduction](/docs/getting-started/introduction): what Remocn is and is not
+- [Installation](/docs/getting-started/installation): add Remocn to an existing Remotion project
+- [Components](/docs/components): every component, grouped by category
+- [After Effects alternatives for developers](/docs/guides/after-effects-alternatives-for-developers): the wider field of code-first video tools

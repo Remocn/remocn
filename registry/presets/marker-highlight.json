@@ -1,0 +1,118 @@
+{
+  "component": "marker-highlight",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "pink-pop",
+      "label": "Pink Pop",
+      "description": "A soft bubblegum pink marker swipes quickly behind bold dark text for a cheerful, upbeat accent.",
+      "askedAs": [
+        "pink highlighter effect",
+        "playful pink marker behind text",
+        "fast cute highlight",
+        "розовый маркер под текстом",
+        "яркое весёлое выделение"
+      ],
+      "props": {
+        "markerColor": "#f9a8d4",
+        "fontWeight": "700",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "brand-ink",
+      "label": "Brand Ink",
+      "description": "A deep blue brand-style marker fills behind the phrase while the highlighted words flip to white.",
+      "askedAs": [
+        "blue highlight with white text",
+        "brand color background on a word",
+        "corporate marker highlight",
+        "синий маркер с белым текстом",
+        "выделение фирменным цветом"
+      ],
+      "props": {
+        "markerColor": "#1d4ed8",
+        "highlightedTextColor": "#ffffff",
+        "baseColor": "#1e293b",
+        "fontWeight": "700"
+      }
+    },
+    {
+      "id": "mint-study",
+      "label": "Mint Study",
+      "description": "A calm mint green marker draws slowly behind regular-weight text like notes in a study guide.",
+      "askedAs": [
+        "green highlighter like in textbook",
+        "slow educational highlight",
+        "calm study notes marker",
+        "зелёный маркер как в конспекте",
+        "медленное спокойное выделение"
+      ],
+      "props": {
+        "markerColor": "#86efac",
+        "baseColor": "#334155",
+        "highlightedTextColor": "#14532d",
+        "fontWeight": "400",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "headline-punch",
+      "label": "Headline Punch",
+      "description": "Oversized heavy type gets a fast coral-red stroke for a loud, poster-like statement.",
+      "askedAs": [
+        "big bold headline highlight",
+        "huge text with red marker",
+        "punchy fast emphasis",
+        "огромный заголовок с выделением",
+        "крупный текст с красным маркером"
+      ],
+      "props": {
+        "markerColor": "#f87171",
+        "highlightedTextColor": "#ffffff",
+        "fontSize": 128,
+        "fontWeight": "700",
+        "speed": 2
+      }
+    },
+    {
+      "id": "lavender-whisper",
+      "label": "Lavender Whisper",
+      "description": "A pale lavender marker glides gently behind smaller medium-weight text for a soft, understated note.",
+      "askedAs": [
+        "subtle purple highlight",
+        "soft gentle marker for small text",
+        "quiet pastel emphasis",
+        "нежное фиолетовое выделение",
+        "тонкий пастельный маркер"
+      ],
+      "props": {
+        "markerColor": "#c4b5fd",
+        "baseColor": "#3f3f46",
+        "highlightedTextColor": "#2e1065",
+        "fontSize": 48,
+        "fontWeight": "500",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "orange-zest",
+      "label": "Orange Zest",
+      "description": "A warm tangerine marker snaps in quickly behind dark brown text for a sunny, energetic feel.",
+      "askedAs": [
+        "orange highlighter effect",
+        "warm energetic marker",
+        "quick orange emphasis on word",
+        "оранжевый маркер",
+        "тёплое энергичное выделение"
+      ],
+      "props": {
+        "markerColor": "#fdba74",
+        "baseColor": "#292524",
+        "highlightedTextColor": "#431407",
+        "speed": 1.75
+      }
+    }
+  ]
+}

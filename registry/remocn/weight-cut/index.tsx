@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/BarlowCondensed";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -9,9 +10,9 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const WEIGHTS = ["100", "200", "300", "400", "500"] as const;
 const barlow = loadFont("normal", {
@@ -29,7 +30,17 @@ export interface WeightCutProps {
   label?: string;
   lightWeight?: number;
   accent?: string;
+  /** Text color of the figure and label; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Barlow Condensed by default. */
+  fontFamily?: string;
+  /** Frames the figure takes to count from `from` to `value`. */
+  count?: number;
+  /** Size of the figure and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -76,7 +87,7 @@ function snapWeight(w: number) {
   return Math.round(v / 100) * 100;
 }
 
-function measure(chars: string[], light: number): Metrics {
+function measure(chars: string[], light: number, fontFamily: string): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   const adv: Record<string, number> = {};
   let slot = 0.45;
@@ -89,13 +100,13 @@ function measure(chars: string[], light: number): Metrics {
     return { adv, slot, stemLight, stemHeavy, baseline, figTop };
   }
   const ink = (w: number) => {
-    ctx.font = `${w} 200px "${barlow.fontFamily}"`;
+    ctx.font = `${w} 200px "${fontFamily}"`;
     const mm = ctx.measureText("I");
     return (mm.actualBoundingBoxLeft + mm.actualBoundingBoxRight) / 200;
   };
   stemHeavy = ink(500);
   stemLight = ink(light);
-  ctx.font = `${light} 200px "${barlow.fontFamily}"`;
+  ctx.font = `${light} 200px "${fontFamily}"`;
   for (const ch of chars) adv[ch] = ctx.measureText(ch).width / 200;
   slot = Math.max(
     ...Array.from({ length: 10 }, (_, d) => adv[String(d)] ?? 0.4),
@@ -108,8 +119,8 @@ function measure(chars: string[], light: number): Metrics {
   return { adv, slot, stemLight, stemHeavy, baseline, figTop };
 }
 
-function useMetrics(chars: string[], light: number) {
-  const key = `${light}\u0002${chars.join("\u0001")}`;
+function useMetrics(chars: string[], light: number, fontFamily: string) {
+  const key = `${light}\u0002${chars.join("\u0001")}\u0002${fontFamily}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("weight-cut: measuring"));
   const released = useRef(false);
@@ -118,14 +129,15 @@ function useMetrics(chars: string[], light: number) {
     const [lw, list] = key.split("\u0002");
     Promise.all([
       barlow.waitUntilDone(),
-      ...WEIGHTS.map((w) =>
-        document.fonts.load(`${w} 100px "${barlow.fontFamily}"`),
-      ),
+      ...WEIGHTS.map((w) => document.fonts.load(`${w} 100px "${fontFamily}"`)),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(list.split("\u0001"), Number(lw)) });
+        setState({
+          key,
+          m: measure(list.split("\u0001"), Number(lw), fontFamily),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -134,7 +146,7 @@ function useMetrics(chars: string[], light: number) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -150,6 +162,24 @@ function intDigits(v: number, decimals: number) {
   return Math.max(1, Math.floor(shown).toString().length);
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WeightCut({
   value = 6.8,
   from = 94,
@@ -160,14 +190,22 @@ export function WeightCut({
   label = "Lighter than your logo file.",
   lightWeight = 100,
   accent,
+  ink,
   background,
+  fontFamily = barlow.fontFamily,
+  count = COUNT_END - COUNT_AT,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: WeightCutProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
+  const fg = ink ?? c.ink;
+  const countEnd = COUNT_AT + count;
   const light = snapWeight(lightWeight);
   const chars = useMemo(
     () =>
@@ -176,7 +214,7 @@ export function WeightCut({
       ),
     [prefix, suffix],
   );
-  const m = useMetrics(chars, light);
+  const m = useMetrics(chars, light, fontFamily);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -184,8 +222,8 @@ export function WeightCut({
   const drops = useMemo(() => {
     const out: { at: number }[] = [];
     let prev = intDigits(from, decimals);
-    for (let f = COUNT_AT; f <= COUNT_END; f += 0.25) {
-      const g = EASE_COUNT((f - COUNT_AT) / (COUNT_END - COUNT_AT));
+    for (let f = COUNT_AT; f <= countEnd; f += 0.25) {
+      const g = EASE_COUNT((f - COUNT_AT) / (countEnd - COUNT_AT));
       const d = intDigits(from + (value - from) * g, decimals);
       if (d < prev) {
         for (let k = prev; k > d; k--) out.push({ at: f });
@@ -193,7 +231,7 @@ export function WeightCut({
       }
     }
     return out;
-  }, [from, value, decimals]);
+  }, [from, value, decimals, countEnd]);
 
   if (!m) {
     return (
@@ -204,7 +242,7 @@ export function WeightCut({
   const portrait = H > W * 1.1;
   const s = portrait ? W / 1080 : Math.min(W / 1280, H / 720);
 
-  const g = interpolate(t, [COUNT_AT, COUNT_END], [0, 1], {
+  const g = interpolate(t, [COUNT_AT, countEnd], [0, 1], {
     ...CLAMP,
     easing: EASE_COUNT,
   });
@@ -219,7 +257,7 @@ export function WeightCut({
     easing: EASE_OUT,
   });
   const relax = spring({
-    frame: t - (COUNT_END - 10),
+    frame: t - (countEnd - 10),
     fps,
     config: { damping: 18, stiffness: 120, mass: 0.9 },
   });
@@ -289,103 +327,105 @@ export function WeightCut({
   const figure = {
     position: "absolute" as const,
     whiteSpace: "pre" as const,
-    fontFamily: barlow.fontFamily,
+    fontFamily,
     fontWeight: light,
-    color: c.ink,
+    color: fg,
     WebkitTextStroke:
-      stroke > 0.05 ? `${stroke.toFixed(2)}px ${c.ink}` : undefined,
+      stroke > 0.05 ? `${stroke.toFixed(2)}px ${fg}` : undefined,
   };
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: enter,
-          transform: `translateY(${((1 - enter) * F * 0.06).toFixed(2)}px)`,
-        }}
-      >
-        {glyphs.map((gl, i) => (
-          <div
-            key={i}
-            style={{
-              ...figure,
-              left: gl.x,
-              width: gl.w,
-              top: boxTop,
-              height: F,
-              lineHeight: `${F}px`,
-              textAlign: "center",
-              fontSize: F,
-            }}
-          >
-            {gl.ch}
-          </div>
-        ))}
-        {sufText ? (
-          <div
-            style={{
-              ...figure,
-              left: numRight + F * 0.03,
-              top: baseY - m.baseline * sufF,
-              height: sufF,
-              lineHeight: `${sufF}px`,
-              fontSize: sufF,
-              WebkitTextStroke:
-                stroke > 0.05
-                  ? `${(stroke * SUFFIX_SCALE).toFixed(2)}px ${c.ink}`
-                  : undefined,
-            }}
-          >
-            {sufText}
-          </div>
-        ) : null}
-      </div>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: enter,
+            transform: `translateY(${((1 - enter) * F * 0.06).toFixed(2)}px)${glide(midway(enter))}`,
+          }}
+        >
+          {glyphs.map((gl, i) => (
+            <div
+              key={i}
+              style={{
+                ...figure,
+                left: gl.x,
+                width: gl.w,
+                top: boxTop,
+                height: F,
+                lineHeight: `${F}px`,
+                textAlign: "center",
+                fontSize: F,
+              }}
+            >
+              {gl.ch}
+            </div>
+          ))}
+          {sufText ? (
+            <div
+              style={{
+                ...figure,
+                left: numRight + F * 0.03,
+                top: baseY - m.baseline * sufF,
+                height: sufF,
+                lineHeight: `${sufF}px`,
+                fontSize: sufF,
+                WebkitTextStroke:
+                  stroke > 0.05
+                    ? `${(stroke * SUFFIX_SCALE).toFixed(2)}px ${fg}`
+                    : undefined,
+              }}
+            >
+              {sufText}
+            </div>
+          ) : null}
+        </div>
 
-      <div
-        style={{
-          position: "absolute",
-          ...(portrait
-            ? { left: margin, right: margin, top: margin * 1.6 }
-            : { right: margin, width: colW - margin * 0.5, top: margin }),
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          gap: eyebrowFs * 0.7,
-          fontFamily: barlow.fontFamily,
-          textTransform: "uppercase",
-        }}
-      >
-        {eyebrow ? (
-          <div
-            style={{
-              fontWeight: 500,
-              fontSize: eyebrowFs,
-              lineHeight: 1,
-              color: spot,
-              opacity: eyebrowP,
-            }}
-          >
-            {eyebrow}
-          </div>
-        ) : null}
-        {label ? (
-          <div
-            style={{
-              fontWeight: 500,
-              fontSize: labelFs,
-              lineHeight: 0.94,
-              color: c.ink,
-              textWrap: "balance",
-              opacity: labelP,
-              transform: `translateY(${((1 - labelP) * labelFs * 0.4).toFixed(2)}px)`,
-            }}
-          >
-            {label}
-          </div>
-        ) : null}
-      </div>
+        <div
+          style={{
+            position: "absolute",
+            ...(portrait
+              ? { left: margin, right: margin, top: margin * 1.6 }
+              : { right: margin, width: colW - margin * 0.5, top: margin }),
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: eyebrowFs * 0.7,
+            fontFamily,
+            textTransform: "uppercase",
+          }}
+        >
+          {eyebrow ? (
+            <div
+              style={{
+                fontWeight: 500,
+                fontSize: eyebrowFs,
+                lineHeight: 1,
+                color: spot,
+                opacity: eyebrowP,
+              }}
+            >
+              {eyebrow}
+            </div>
+          ) : null}
+          {label ? (
+            <div
+              style={{
+                fontWeight: 500,
+                fontSize: labelFs,
+                lineHeight: 0.94,
+                color: fg,
+                textWrap: "balance",
+                opacity: labelP,
+                transform: `translateY(${((1 - labelP) * labelFs * 0.4).toFixed(2)}px)${glide(midway(labelP))}`,
+              }}
+            >
+              {label}
+            </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

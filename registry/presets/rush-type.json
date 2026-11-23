@@ -1,0 +1,103 @@
+{
+  "component": "rush-type",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hard-strobe",
+      "label": "Hard Strobe",
+      "description": "Heavy bold words snap through tall, wide RGB smears with almost no rest between blasts.",
+      "askedAs": [
+        "fast aggressive glitch text",
+        "rapid fire words with rgb split",
+        "high energy strobe typography",
+        "быстрый агрессивный текст с rgb",
+        "резкая мигающая типографика"
+      ],
+      "props": {
+        "fontWeight": "700",
+        "verticalStretch": 10,
+        "chromaticSpread": 1.6,
+        "restDuration": 7,
+        "peakHoldDuration": 1,
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "Large light words linger at rest and stretch gently with a faint colour fringe.",
+      "askedAs": [
+        "calm slow kinetic text",
+        "subtle chromatic words",
+        "gentle readable word cycle",
+        "медленный спокойный текст",
+        "мягкая смена слов"
+      ],
+      "props": {
+        "fontSize": 96,
+        "verticalStretch": 4,
+        "chromaticSpread": 0.4,
+        "restDuration": 26,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "paper-print",
+      "label": "Paper Print",
+      "description": "Dark ink type on warm off-white paper with a restrained, print-like colour split.",
+      "askedAs": [
+        "light background version",
+        "black text on white glitch",
+        "editorial kinetic type",
+        "светлый фон с тёмным текстом",
+        "текст как на бумаге"
+      ],
+      "props": {
+        "backgroundColor": "#f3efe6",
+        "color": "#141414",
+        "fontWeight": "600",
+        "chromaticSpread": 0.7
+      }
+    },
+    {
+      "id": "deep-signal",
+      "label": "Deep Signal",
+      "description": "Pale mint words on midnight navy with long held peaks and a wide spectral tear.",
+      "askedAs": [
+        "dark blue tech text",
+        "cyber terminal words",
+        "sci-fi signal typography",
+        "тёмно-синий технологичный текст",
+        "киберпанк заголовок"
+      ],
+      "props": {
+        "backgroundColor": "#0b1426",
+        "color": "#d6f5ec",
+        "fontWeight": "500",
+        "chromaticSpread": 1.4,
+        "peakHoldDuration": 8,
+        "verticalStretch": 8.5
+      }
+    },
+    {
+      "id": "mono-impact",
+      "label": "Mono Impact",
+      "description": "Huge bold white words blast vertically with no colour separation at all.",
+      "askedAs": [
+        "no rgb just stretch",
+        "clean black and white impact text",
+        "huge bold words no color",
+        "без цветного разделения",
+        "крупный жирный чёрно-белый текст"
+      ],
+      "props": {
+        "fontSize": 130,
+        "fontWeight": "700",
+        "chromaticSpread": 0,
+        "verticalStretch": 12,
+        "restDuration": 16
+      }
+    }
+  ]
+}

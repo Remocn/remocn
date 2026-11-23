@@ -1,0 +1,123 @@
+{
+  "component": "shot-answers",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "A bright paper-toned scene with a serif headline and an unhurried word-by-word reveal.",
+      "askedAs": [
+        "light background with serif font",
+        "calm magazine style answer",
+        "elegant slow text reveal",
+        "светлый стиль с засечками",
+        "спокойный журнальный вид"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "stagger": 2.4,
+        "speed": 0.75,
+        "accent": "#b4532a"
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "Monospaced type on deep charcoal with a mint accent and a brisk, snappy pace.",
+      "askedAs": [
+        "code style monospace look",
+        "developer terminal vibe",
+        "fast techy dark version",
+        "моноширинный шрифт как в терминале",
+        "быстрый стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#5ee6a8",
+        "stagger": 0.8,
+        "speed": 1.5,
+        "answerAt": 40
+      }
+    },
+    {
+      "id": "cobalt-launch",
+      "label": "Cobalt Launch",
+      "description": "A rich blue gradient ground with bold grotesk type and a slightly larger, confident scale.",
+      "askedAs": [
+        "bold blue launch announcement",
+        "big confident product reveal",
+        "blue gradient with strong type",
+        "синий фон для запуска продукта",
+        "крупный уверенный текст"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "fontFamily": "Space Grotesk",
+        "scale": 1.15,
+        "accent": "#ffd166"
+      }
+    },
+    {
+      "id": "warm-ember",
+      "label": "Warm Ember",
+      "description": "Glowing copper-ember tones with a soft rounded font and a measured, lingering reveal.",
+      "askedAs": [
+        "warm orange glow background",
+        "cozy slow reveal",
+        "copper toned dramatic look",
+        "тёплый оранжевый фон",
+        "медленное тёплое появление"
+      ],
+      "props": {
+        "ground": "ember",
+        "fontFamily": "Fraunces",
+        "stagger": 2.8,
+        "answerAt": 80,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-cut",
+      "label": "Quick Cut",
+      "description": "A compact, fast-moving clean white version that lands the answer almost immediately.",
+      "askedAs": [
+        "fast punchy social clip",
+        "quick short version for reels",
+        "minimal white and quick",
+        "быстрая короткая версия",
+        "минималистичный белый и быстрый"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111418",
+        "fontFamily": "Inter",
+        "speed": 2,
+        "stagger": 0.6
+      }
+    },
+    {
+      "id": "midnight-iris",
+      "label": "Midnight Iris",
+      "description": "A deep violet night ground with Geist type and a soft lavender accent at a slightly reduced scale.",
+      "askedAs": [
+        "dark purple moody look",
+        "subtle night violet style",
+        "understated dark premium",
+        "тёмный фиолетовый стиль",
+        "сдержанный ночной вид"
+      ],
+      "props": {
+        "ground": "iris",
+        "fontFamily": "Geist",
+        "accent": "#c4b5fd",
+        "scale": 0.9,
+        "delay": 12
+      }
+    }
+  ]
+}

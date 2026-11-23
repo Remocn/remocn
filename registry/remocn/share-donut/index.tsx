@@ -3,15 +3,11 @@
 import { loadFont } from "@remotion/google-fonts/DMSans";
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Fraunces";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -68,6 +64,24 @@ export interface ShareDonutProps {
   segments?: DonutSegment[];
   highlight?: number;
   accent?: string;
+  /** Color of the percentages and the center figure; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the labels. Load it yourself; DM Sans by default. */
+  fontFamily?: string;
+  /** Frames for the ring to draw all the way round. */
+  drawLength?: number;
+  /** Ring thickness, in px at 720p. */
+  thickness?: number;
+  /** Replaces the remocn mark wherever a slice is labelled "remocn". */
+  logo?: React.ReactNode;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the donut and labels, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -153,17 +167,46 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ShareDonut({
   segments = DEFAULT_SEGMENTS,
   highlight = 0,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  drawLength = DRAW_LEN,
+  thickness = 12,
+  logo,
+  grain = true,
+  scale: size = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: ShareDonutProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const fill =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const list = segments.slice(0, 5);
   const hl = Math.min(Math.max(0, Math.round(highlight)), list.length - 1);
   const total = list.reduce((s, x) => s + Math.max(0, x.value), 0) || 1;
@@ -171,7 +214,7 @@ export function ShareDonut({
   const cx = width / 2;
   const cy = height / 2;
   const R = height * 0.3;
-  const sw = 12 * u;
+  const sw = thickness * u;
   const gapA = (6 * u) / R;
 
   let acc = 0;
@@ -182,7 +225,7 @@ export function ShareDonut({
     const a0 = acc * TAU;
     acc += frac;
     const a1 = acc * TAU;
-    const dur = Math.max(9, DRAW_LEN * frac);
+    const dur = Math.max(9, drawLength * frac);
     const start = clock;
     clock += dur - 2;
     const color = i === hl ? accent : p.grays[Math.min(grayIdx++, 3)];
@@ -243,7 +286,7 @@ export function ShareDonut({
   const hy = target ? -Math.cos(target.mid) * off : 0;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(circle at 50% 50%, transparent ${R * 0.62}px, ${p.haze[0]} ${R * 1.02}px, ${p.haze[1]} ${R * 1.3}px, transparent ${R * 1.85}px)`,
@@ -251,228 +294,237 @@ export function ShareDonut({
           transform: `rotate(${spin}deg)`,
         }}
       />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${scale})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0, opacity: stage }}
-          aria-hidden
+      <ScaleLayer scale={size}>
+        <AbsoluteFill
+          style={{
+            // The push outlasts every other move, so this one tilt covers the
+            // labels and the center figure too.
+            transform: `scale(${scale})${glide(push > 0 && push < 1)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
-          <defs>
-            <linearGradient
-              id={gradId}
-              gradientUnits="userSpaceOnUse"
-              x1={g0.x}
-              y1={g0.y}
-              x2={g1.x}
-              y2={g1.y}
-            >
-              <stop offset="0" stopColor={accent} />
-              <stop offset="0.58" stopColor={p.halo[0]} />
-              <stop offset="1" stopColor={p.halo[1]} />
-            </linearGradient>
-          </defs>
-          <g transform={`rotate(${spin} ${cx} ${cy})`}>
-            <circle
-              cx={cx}
-              cy={cy}
-              r={R}
-              fill="none"
-              stroke={p.track}
-              strokeWidth={sw}
-              opacity={1 - dim}
-            />
-            {segs.map((s) => {
-              const k = interpolate(t, [s.start, s.end], [0, 1], {
-                ...CLAMP,
-                easing: EASE_SEG,
-              });
-              if (k <= 0 || s.a1 <= s.a0) return null;
-              const isHl = s.i === hl;
-              const a1 = s.a0 + (s.a1 - s.a0) * k;
-              return (
-                <path
-                  key={s.label}
-                  d={arc(cx, cy, R, s.a0, a1)}
-                  fill="none"
-                  stroke={isHl ? `url(#${gradId})` : s.color}
-                  strokeLinecap={isHl ? "round" : "butt"}
-                  strokeWidth={isHl ? sw * (1 + 0.5 * detach) : sw}
-                  opacity={isHl ? 1 : 1 - 0.5 * dim}
-                  transform={isHl ? `translate(${hx} ${hy})` : undefined}
-                />
-              );
-            })}
-            {segs.map((s) => {
-              const a = interpolate(t, [s.end - 6, s.end + 8], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
-              const p0 = pt(cx, cy, R + sw / 2 + 8 * u, s.mid);
-              const p1 = pt(cx, cy, R + sw / 2 + 8 * u + 14 * u * a, s.mid);
-              const fade = s.i === hl ? 1 - dim : 1 - 0.55 * dim;
-              return (
-                <line
-                  key={s.label}
-                  x1={p0.x}
-                  y1={p0.y}
-                  x2={p1.x}
-                  y2={p1.y}
-                  stroke={p.hair}
-                  strokeWidth={Math.max(1, u)}
-                  opacity={a * fade}
-                />
-              );
-            })}
-          </g>
-        </svg>
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0, opacity: stage }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={gradId}
+                gradientUnits="userSpaceOnUse"
+                x1={g0.x}
+                y1={g0.y}
+                x2={g1.x}
+                y2={g1.y}
+              >
+                <stop offset="0" stopColor={accent} />
+                <stop offset="0.58" stopColor={p.halo[0]} />
+                <stop offset="1" stopColor={p.halo[1]} />
+              </linearGradient>
+            </defs>
+            <g transform={`rotate(${spin} ${cx} ${cy})`}>
+              <circle
+                cx={cx}
+                cy={cy}
+                r={R}
+                fill="none"
+                stroke={p.track}
+                strokeWidth={sw}
+                opacity={1 - dim}
+              />
+              {segs.map((s) => {
+                const k = interpolate(t, [s.start, s.end], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_SEG,
+                });
+                if (k <= 0 || s.a1 <= s.a0) return null;
+                const isHl = s.i === hl;
+                const a1 = s.a0 + (s.a1 - s.a0) * k;
+                return (
+                  <path
+                    key={s.label}
+                    d={arc(cx, cy, R, s.a0, a1)}
+                    fill="none"
+                    stroke={isHl ? `url(#${gradId})` : s.color}
+                    strokeLinecap={isHl ? "round" : "butt"}
+                    strokeWidth={isHl ? sw * (1 + 0.5 * detach) : sw}
+                    opacity={isHl ? 1 : 1 - 0.5 * dim}
+                    transform={isHl ? `translate(${hx} ${hy})` : undefined}
+                  />
+                );
+              })}
+              {segs.map((s) => {
+                const a = interpolate(t, [s.end - 6, s.end + 8], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                });
+                const p0 = pt(cx, cy, R + sw / 2 + 8 * u, s.mid);
+                const p1 = pt(cx, cy, R + sw / 2 + 8 * u + 14 * u * a, s.mid);
+                const fade = s.i === hl ? 1 - dim : 1 - 0.55 * dim;
+                return (
+                  <line
+                    key={s.label}
+                    x1={p0.x}
+                    y1={p0.y}
+                    x2={p1.x}
+                    y2={p1.y}
+                    stroke={p.hair}
+                    strokeWidth={Math.max(1, u)}
+                    opacity={a * fade}
+                  />
+                );
+              })}
+            </g>
+          </svg>
 
-        {segs.map((s) => {
-          const a = interpolate(t, [s.end - 4, s.end + 12], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          const ang = s.mid + (spin * Math.PI) / 180;
-          const q = pt(cx, cy, R + sw / 2 + 38 * u + (1 - a) * -8 * u, ang);
-          const right = Math.sin(ang) >= -0.05;
-          const fade = s.i === hl ? 1 - dim : 1 - 0.6 * dim;
-          return (
-            <div
-              key={s.label}
-              style={{
-                position: "absolute",
-                left: q.x,
-                top: q.y,
-                transform: `translate(${right ? 0 : -100}%, -50%)`,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: right ? "flex-start" : "flex-end",
-                gap: 2 * u,
-                opacity: a * fade * stage,
-                whiteSpace: "nowrap",
-              }}
-            >
-              <span
+          {segs.map((s) => {
+            const a = interpolate(t, [s.end - 4, s.end + 12], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            const ang = s.mid + (spin * Math.PI) / 180;
+            const q = pt(cx, cy, R + sw / 2 + 38 * u + (1 - a) * -8 * u, ang);
+            // Placed by `left`/`top`, a label clicked along its orbit pixel by
+            // pixel; layout holds where it lands and the travel is a transform.
+            const rest = pt(cx, cy, R + sw / 2 + 38 * u, s.mid);
+            const dx = q.x - rest.x;
+            const dy = q.y - rest.y;
+            const right = Math.sin(ang) >= -0.05;
+            const fade = s.i === hl ? 1 - dim : 1 - 0.6 * dim;
+            return (
+              <div
+                key={s.label}
                 style={{
-                  fontFamily: sans,
-                  fontWeight: 500,
-                  fontSize: 22 * u,
-                  letterSpacing: "-0.02em",
-                  color: p.fg,
-                  fontVariantNumeric: "tabular-nums",
+                  position: "absolute",
+                  left: rest.x,
+                  top: rest.y,
+                  transform: `${dx || dy ? `translate(${dx}px, ${dy}px) ` : ""}translate(${right ? 0 : -100}%, -50%)`,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: right ? "flex-start" : "flex-end",
+                  gap: 2 * u,
+                  opacity: a * fade * stage,
+                  whiteSpace: "nowrap",
                 }}
               >
-                {s.pct}%
-              </span>
-              {isBrand(s.label) ? (
-                <RemocnLogo fontSize={15 * u} color={p.muted} />
-              ) : (
                 <span
                   style={{
-                    fontFamily: sans,
-                    fontWeight: 400,
-                    fontSize: 15 * u,
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: 22 * u,
+                    letterSpacing: "-0.02em",
+                    color: fg,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {s.pct}%
+                </span>
+                {isBrand(s.label) ? (
+                  (logo ?? <RemocnLogo fontSize={15 * u} color={p.muted} />)
+                ) : (
+                  <span
+                    style={{
+                      fontFamily,
+                      fontWeight: 400,
+                      fontSize: 15 * u,
+                      color: p.muted,
+                    }}
+                  >
+                    {s.label}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+
+          {target ? (
+            <AbsoluteFill
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "column",
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: display,
+                  fontWeight: 300,
+                  fontSize: 176 * u,
+                  lineHeight: 0.9,
+                  letterSpacing: "-0.035em",
+                  color: fg,
+                  fontVariantNumeric: "tabular-nums",
+                  whiteSpace: "nowrap",
+                  opacity: land,
+                  filter:
+                    land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
+                  transform: `translateY(${(1 - land) * 22 * u}px) scale(${1.05 - 0.05 * land})`,
+                  marginTop: 10 * u,
+                }}
+              >
+                {Math.round(target.pct * count)}
+                <span
+                  style={{
+                    fontSize: 92 * u,
+                    fontStyle: "italic",
+                    letterSpacing: "-0.02em",
+                    marginLeft: 4 * u,
                     color: p.muted,
                   }}
                 >
-                  {s.label}
+                  %
                 </span>
-              )}
-            </div>
-          );
-        })}
-
-        {target ? (
-          <AbsoluteFill
-            style={{
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "column",
-            }}
-          >
-            <div
-              style={{
-                fontFamily: display,
-                fontWeight: 300,
-                fontSize: 176 * u,
-                lineHeight: 0.9,
-                letterSpacing: "-0.035em",
-                color: p.fg,
-                fontVariantNumeric: "tabular-nums",
-                whiteSpace: "nowrap",
-                opacity: land,
-                filter:
-                  land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
-                transform: `translateY(${(1 - land) * 22 * u}px) scale(${1.05 - 0.05 * land})`,
-                marginTop: 10 * u,
-              }}
-            >
-              {Math.round(target.pct * count)}
-              <span
+              </div>
+              <div
                 style={{
-                  fontSize: 92 * u,
-                  fontStyle: "italic",
-                  letterSpacing: "-0.02em",
-                  marginLeft: 4 * u,
-                  color: p.muted,
+                  marginTop: 14 * u,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10 * u,
+                  opacity: labIn,
+                  transform: `translateY(${(1 - labIn) * 8 * u}px)`,
                 }}
               >
-                %
-              </span>
-            </div>
-            <div
-              style={{
-                marginTop: 14 * u,
-                display: "flex",
-                alignItems: "center",
-                gap: 10 * u,
-                opacity: labIn,
-                transform: `translateY(${(1 - labIn) * 8 * u}px)`,
-              }}
-            >
-              {isBrand(target.label) ? (
-                <RemocnLogo fontSize={28 * u} color={p.fg} />
-              ) : (
-                <>
-                  <span
-                    style={{
-                      width: 10 * u,
-                      height: 10 * u,
-                      borderRadius: "50%",
-                      background: `linear-gradient(135deg, ${accent}, ${p.halo[0]}, ${p.halo[1]})`,
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontFamily: sans,
-                      fontWeight: 400,
-                      fontSize: 22 * u,
-                      letterSpacing: "-0.01em",
-                      color: p.muted,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {target.label}
-                  </span>
-                </>
-              )}
-            </div>
-          </AbsoluteFill>
-        ) : null}
-      </AbsoluteFill>
+                {isBrand(target.label) ? (
+                  (logo ?? <RemocnLogo fontSize={28 * u} color={fg} />)
+                ) : (
+                  <>
+                    <span
+                      style={{
+                        width: 10 * u,
+                        height: 10 * u,
+                        borderRadius: "50%",
+                        background: `linear-gradient(135deg, ${accent}, ${p.halo[0]}, ${p.halo[1]})`,
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontFamily,
+                        fontWeight: 400,
+                        fontSize: 22 * u,
+                        letterSpacing: "-0.01em",
+                        color: p.muted,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {target.label}
+                    </span>
+                  </>
+                )}
+              </div>
+            </AbsoluteFill>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${fill} 100%)`,
           opacity: 0.6,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

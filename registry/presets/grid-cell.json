@@ -1,0 +1,104 @@
+{
+  "component": "grid-cell",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "blueprint-light",
+      "label": "Blueprint Light",
+      "description": "A clean light canvas with a deep cobalt accent and generous cells, like a Figma frame on paper.",
+      "askedAs": [
+        "light version of the grid",
+        "white background design tool look",
+        "clean figma style grid",
+        "светлая сетка как в фигме",
+        "белый фон с синим акцентом"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#1f4fe0",
+        "cellSize": 104,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A near-black terminal with soft green accent, monospace type and slow deliberate keystrokes.",
+      "askedAs": [
+        "make it look like a terminal",
+        "hacker console typing",
+        "monospace slow typing",
+        "как терминал с моноширинным шрифтом",
+        "медленный набор текста в консоли"
+      ],
+      "props": {
+        "background": "#0b0f0c",
+        "ink": "#d7e6da",
+        "accent": "#4cb782",
+        "fontFamily": "JetBrains Mono",
+        "stagger": 3,
+        "cellSize": 56
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm cream paper, ink-dark serif headline and a terracotta accent for a refined launch note.",
+      "askedAs": [
+        "elegant serif announcement",
+        "warm magazine style",
+        "beige background classy",
+        "элегантный вариант с засечками",
+        "тёплый бежевый стиль журнала"
+      ],
+      "props": {
+        "background": "#f4efe6",
+        "ink": "#1e1b17",
+        "accent": "#c2562e",
+        "fontFamily": "Fraunces",
+        "cellSize": 128,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Fast, punchy typing in a tight grid with a bright violet accent for quick social cuts.",
+      "askedAs": [
+        "make it faster",
+        "quick snappy typing",
+        "energetic fast version",
+        "сделай быстрее",
+        "резкий быстрый набор"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 0.5,
+        "accent": "#7c5cff",
+        "fontFamily": "Space Grotesk",
+        "cellSize": 48
+      }
+    },
+    {
+      "id": "keynote-hero",
+      "label": "Keynote Hero",
+      "description": "An oversized cell on deep navy with an amber accent and a short pause before it lights up.",
+      "askedAs": [
+        "big bold keynote reveal",
+        "large dramatic headline",
+        "product launch hero shot",
+        "крупный эффектный анонс",
+        "большой заголовок как на презентации"
+      ],
+      "props": {
+        "background": "#0e1424",
+        "ink": "#f2f4f8",
+        "accent": "#f2a93b",
+        "scale": 1.3,
+        "cellSize": 160,
+        "delay": 20
+      }
+    }
+  ]
+}

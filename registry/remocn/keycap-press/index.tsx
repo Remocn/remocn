@@ -2,14 +2,9 @@
 
 import { loadFont } from "@remotion/google-fonts/BricolageGrotesque";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -33,6 +28,20 @@ export interface KeycapPressProps {
   accent?: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Frames between words as the label writes in. */
+  stagger?: number;
+  /** Strength of the accent underglow beneath the keys, 0 to 1. */
+  glow?: number;
+  /** Text color of the label; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the label and legends. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Size of the keys and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
 }
 
@@ -54,6 +63,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const MATERIALS = {
   dark: {
@@ -153,6 +164,7 @@ function Keycap({
   keyDef,
   m,
   unit,
+  fontFamily,
 }: {
   w: number;
   d: number;
@@ -160,6 +172,7 @@ function Keycap({
   keyDef: KeycapKey;
   m: Material;
   unit: number;
+  fontFamily: string;
 }) {
   const side = unit * 0.13;
   const front = unit * 0.17;
@@ -230,7 +243,7 @@ function Keycap({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontFamily: sans,
+            fontFamily,
             fontWeight: 400,
             fontSize: legendSize,
             lineHeight: 1,
@@ -263,7 +276,7 @@ function Keycap({
               position: "absolute",
               left: unit * 0.09,
               bottom: unit * 0.07,
-              fontFamily: sans,
+              fontFamily,
               fontWeight: 400,
               fontSize: unit * 0.085,
               letterSpacing: "0.01em",
@@ -278,6 +291,22 @@ function Keycap({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function KeycapPress({
   keys = DEFAULT_KEYS,
   label = "Everything, one shortcut away",
@@ -286,10 +315,18 @@ export function KeycapPress({
   accent = "#3B5BFD",
   ground,
   groundParams,
+  stagger = 3,
+  glow: glowK = 1,
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
   speed = 1,
 }: KeycapPressProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const tall = height > width;
   const u = tall ? width / 760 : Math.min(width / 1280, height / 720);
   const m = MATERIALS[material];
@@ -341,9 +378,9 @@ export function KeycapPress({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const keysY =
-    height * ((tall ? 0.42 : 0.46) - lift * (tall ? 0.05 : 0.08)) +
-    kick * 2 * u;
+  const keysY0 = height * (tall ? 0.42 : 0.46);
+  const keysDy = height * -(lift * (tall ? 0.05 : 0.08)) + kick * 2 * u;
+  const keysY = keysY0 + keysDy;
   const perspective = 1800 * u;
 
   const keyState = defs.map((_, i) => {
@@ -380,11 +417,14 @@ export function KeycapPress({
         style={{
           position: "absolute",
           left: width / 2,
-          top: keysY,
+          // Laid out where the keys start; the lift after the chord is a
+          // transform, since layout rounds a box edge to a whole pixel and
+          // every cap would step up with it.
+          top: keysY0,
           width: 0,
           height: 0,
           transformStyle: "preserve-3d",
-          transform: `scale(${camScale}) rotateX(${rotX}deg) rotateZ(${rotZ}deg)`,
+          transform: `${keysDy === 0 ? "" : `translateY(${keysDy}px) `}scale(${camScale}) rotateX(${rotX}deg) rotateZ(${rotZ}deg)`,
         }}
       >
         {children}
@@ -488,7 +528,7 @@ export function KeycapPress({
           width: total * 1.9 * glowSpread,
           height: depth * 2.2 * glowSpread,
           background: underglow,
-          opacity: glow,
+          opacity: glow * glowK,
           mixBlendMode: stage.glowBlend,
           filter: `blur(${unit * 0.12}px)`,
         }}
@@ -560,6 +600,7 @@ export function KeycapPress({
             keyDef={k}
             m={m}
             unit={unit}
+            fontFamily={fontFamily}
           />
         </div>
       );
@@ -567,57 +608,80 @@ export function KeycapPress({
   );
   const words = label.split(" ");
   const word = (i: number) =>
-    interpolate(t, [chord + 6 + i * 3, chord + 26 + i * 3], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    interpolate(
+      t,
+      [chord + 6 + i * stagger, chord + 26 + i * stagger],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
 
   return (
-    <AbsoluteFill style={{ background: stage.base, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={groundParams ?? (look === "light" ? LIGHT_GLASS : undefined)}
-        timeOffset={look === "dark" ? 2 : 5}
-        timeScale={0.45}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(60% 55% at 50% ${tall ? 42 : 46}%, rgba(${stage.scrim},${stage.scrimA}) 0%, rgba(${stage.scrim},${stage.scrimA * 0.4}) 100%)`,
-        }}
-      />
-      {floor}
-      {caps}
-      <div
-        style={{
-          position: "absolute",
-          left: "10%",
-          right: "10%",
-          top: height * (tall ? 0.6 : 0.7),
-          textAlign: "center",
-          fontFamily: sans,
-          fontWeight: 300,
-          fontSize: (tall ? 72 : 60) * u,
-          lineHeight: 1.08,
-          letterSpacing: "-0.04em",
-          color: stage.fg,
-          textWrap: "balance",
-        }}
-      >
-        {words.map((w, i) => (
-          <span
-            key={i}
+    <AbsoluteFill
+      style={{
+        background:
+          background === undefined
+            ? stage.base
+            : background === "transparent"
+              ? undefined
+              : background,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={resolvedGround}
+            params={
+              groundParams ?? (look === "light" ? LIGHT_GLASS : undefined)
+            }
+            timeOffset={look === "dark" ? 2 : 5}
+            timeScale={0.45}
+          />
+          <AbsoluteFill
             style={{
-              display: "inline-block",
-              whiteSpace: "pre",
-              opacity: word(i),
-              transform: `translateY(${(1 - word(i)) * 14 * u}px)`,
-              filter: `blur(${(1 - word(i)) * 5 * u}px)`,
+              background: `radial-gradient(60% 55% at 50% ${tall ? 42 : 46}%, rgba(${stage.scrim},${stage.scrimA}) 0%, rgba(${stage.scrim},${stage.scrimA * 0.4}) 100%)`,
             }}
-          >
-            {i < words.length - 1 ? `${w} ` : w}
-          </span>
-        ))}
-      </div>
+          />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>
+        {floor}
+        {caps}
+        <div
+          style={{
+            position: "absolute",
+            left: "10%",
+            right: "10%",
+            top: height * (tall ? 0.6 : 0.7),
+            textAlign: "center",
+            fontFamily,
+            fontWeight: 300,
+            fontSize: (tall ? 72 : 60) * u,
+            lineHeight: 1.08,
+            letterSpacing: "-0.04em",
+            color: ink ?? stage.fg,
+            textWrap: "balance",
+          }}
+        >
+          {words.map((w, i) => (
+            <span
+              key={i}
+              style={{
+                display: "inline-block",
+                whiteSpace: "pre",
+                opacity: word(i),
+                transform: `translateY(${(1 - word(i)) * 14 * u}px)${glide(midway(word(i)))}`,
+                filter: `blur(${(1 - word(i)) * 5 * u}px)`,
+              }}
+            >
+              {i < words.length - 1 ? `${w} ` : w}
+            </span>
+          ))}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

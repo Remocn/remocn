@@ -1,13 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const themeFlipConfig: ComponentConfig = {
   componentName: "ThemeFlip",
   importPath: "@/components/remocn/theme-flip",
   controls: {
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
+    brand: {
+      type: "text-content",
+      default: "remocn",
+      description: "Brand",
     },
     startTheme: {
       type: "enum",
@@ -33,6 +40,31 @@ export const themeFlipConfig: ComponentConfig = {
       default: false,
       description: "Reverse",
     },
+    clickAt: {
+      type: "number",
+      default: 36,
+      min: 16,
+      max: 80,
+      step: 1,
+      description: "Click at (frame)",
+      hiddenFromList: false,
+    },
+    zoom: {
+      type: "number",
+      default: 2.1,
+      min: 1,
+      max: 3,
+      step: 0.1,
+      description: "Zoom",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

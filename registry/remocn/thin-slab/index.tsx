@@ -4,13 +4,9 @@ import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadInterTight } from "@remotion/google-fonts/InterTight";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const display = loadInterTight("normal", {
   weights: ["400", "500"],
@@ -33,7 +29,19 @@ export interface ThinSlabProps {
   after?: ThinSlabSide;
   callout?: string;
   accent?: string;
+  /** Text color of the number and callout; overrides the theme. */
+  ink?: string;
   background?: string;
+  /** Typeface for the title, number and callout. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  /** Corner radius of the slab, in px at 1280 wide. */
+  radius?: number;
+  /** Frames the slab takes to squeeze to its new thickness. */
+  squeezeDuration?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -124,6 +132,8 @@ function autoCallout(before: number, after: number) {
   return `${after < before ? "−" : "+"}${pct}%`;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function Roll({
   text,
   progressIn,
@@ -135,6 +145,7 @@ function Roll({
   progressOut?: number;
   style: React.CSSProperties;
 }) {
+  const glide = useGlide();
   return (
     <div
       style={{
@@ -147,13 +158,31 @@ function Roll({
       <div
         style={{
           ...style,
-          transform: `translateY(${(1 - progressIn) * 150 - progressOut * 150}%)`,
+          transform: `translateY(${(1 - progressIn) * 150 - progressOut * 150}%)${glide(
+            midway(progressIn) || midway(progressOut),
+          )}`,
           whiteSpace: "nowrap",
         }}
       >
         {text}
       </div>
     </div>
+  );
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
   );
 }
 
@@ -174,13 +203,22 @@ export function ThinSlab({
   after = DEFAULT_AFTER,
   callout,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = display.fontFamily,
+  radius: corner = 14,
+  squeezeDuration = 36,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ThinSlabProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
+  const fg = ink ?? t.fg;
+  const lag = squeezeDuration - 36;
   const gid = `ts${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const defaultSides = before === DEFAULT_BEFORE && after === DEFAULT_AFTER;
@@ -209,16 +247,16 @@ export function ThinSlab({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const squeeze = interpolate(frame, [46, 82], [0, 1], {
+  const squeeze = interpolate(frame, [46, 46 + squeezeDuration], [0, 1], {
     ...CLAMP,
     easing: EASE_SQUEEZE,
   });
   const count = Math.min(1, Math.max(0, squeeze));
-  const calloutIn = interpolate(frame, [70, 88], [0, 1], {
+  const calloutIn = interpolate(frame, [70 + lag, 88 + lag], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const sheen = interpolate(frame, [84, 108], [0, 1], {
+  const sheen = interpolate(frame, [84 + lag, 108 + lag], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -265,7 +303,7 @@ export function ThinSlab({
   const numY = labelY + labelFs * 1.5;
   const slabCy = numY + numFs * 1.02 + gap + tMax / 2;
 
-  const radius = (h: number) => Math.min(14 * s, h / 2);
+  const radius = (h: number) => Math.min(corner * s, h / 2);
   const slabTop = slabCy - thick / 2;
   const ghostTop = slabCy - tBefore / 2;
   const callText =
@@ -287,7 +325,7 @@ export function ThinSlab({
         height={tBefore}
         rx={radius(tBefore)}
         fill="none"
-        stroke={grows ? t.fg : t.ghost}
+        stroke={grows ? fg : t.ghost}
         strokeWidth={1.4 * s}
         strokeDasharray={`${6 * s} ${6 * s}`}
         opacity={ghostIn * 0.9}
@@ -295,7 +333,7 @@ export function ThinSlab({
       <text
         x={left + 18 * s}
         y={ghostTop + 18 * s + labelFs * 0.8}
-        fill={grows ? t.fg : t.muted}
+        fill={grows ? fg : t.muted}
         fontFamily={mono.fontFamily}
         fontSize={labelFs * 0.9}
         letterSpacing={labelFs * 0.9 * 0.08}
@@ -324,198 +362,200 @@ export function ThinSlab({
         />
       ) : null}
 
-      <div
-        style={{
-          position: "absolute",
-          left,
-          top: titleY,
-          maxWidth: width - left * 2,
-          fontFamily: display.fontFamily,
-          fontWeight: 400,
-          fontSize: titleFs,
-          lineHeight: 1.2,
-          letterSpacing: "-0.01em",
-          color: t.muted,
-          opacity: titleIn,
-          transform: `translateY(${(1 - titleIn) * 10 * s}px)`,
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
-        {title}
-      </div>
-
-      <div
-        style={{
-          position: "absolute",
-          left,
-          top: labelY,
-          height: labelFs * 1.3,
-        }}
-      >
-        <div style={{ position: "absolute", left: 0, top: 0 }}>
-          <Roll
-            text={before.label.toUpperCase()}
-            progressIn={numIn}
-            progressOut={labelSwap}
-            style={{
-              fontFamily: mono.fontFamily,
-              fontWeight: 400,
-              fontSize: labelFs,
-              letterSpacing: "0.08em",
-              color: t.muted,
-            }}
-          />
-        </div>
-        <div style={{ position: "absolute", left: 0, top: 0 }}>
-          <Roll
-            text={after.label.toUpperCase()}
-            progressIn={labelSwap}
-            style={{
-              fontFamily: mono.fontFamily,
-              fontWeight: 500,
-              fontSize: labelFs,
-              letterSpacing: "0.08em",
-              color: theme === "dark" ? BEAM[1] : accent,
-            }}
-          />
-        </div>
-      </div>
-
-      <div style={{ position: "absolute", left, top: numY }}>
-        <Roll
-          text={numText}
-          progressIn={numIn}
+      <ScaleLayer scale={scale}>
+        <div
           style={{
-            fontFamily: display.fontFamily,
-            fontWeight: 500,
-            fontSize: numFs,
-            lineHeight: 1,
-            letterSpacing: "-0.035em",
-            fontVariantNumeric: "tabular-nums",
-            color: t.fg,
+            position: "absolute",
+            left,
+            top: titleY,
+            maxWidth: width - left * 2,
+            fontFamily,
+            fontWeight: 400,
+            fontSize: titleFs,
+            lineHeight: 1.2,
+            letterSpacing: "-0.01em",
+            color: t.muted,
+            opacity: titleIn,
+            transform: `translateY(${(1 - titleIn) * 10 * s}px)${glide(midway(titleIn))}`,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
-        />
-      </div>
+        >
+          {title}
+        </div>
 
-      <svg
-        width={width}
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
-        style={{ position: "absolute", inset: 0, overflow: "visible" }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient id={`${gid}f`} x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0" stopColor={t.deep} />
-            <stop offset="0.5" stopColor={accent} />
-            <stop offset="0.86" stopColor={BEAM[1]} />
-            <stop offset="1" stopColor={t.tip} />
-          </linearGradient>
-          <linearGradient
-            id={`${gid}s`}
-            gradientUnits="userSpaceOnUse"
-            x1={left - slabW * 0.3 + sheen * slabW * 1.6}
-            x2={left + slabW * 0.0 + sheen * slabW * 1.6}
-            y1="0"
-            y2="0"
-          >
-            <stop offset="0" stopColor="#fff" stopOpacity={0} />
-            <stop offset="0.5" stopColor="#fff" stopOpacity={0.85} />
-            <stop offset="1" stopColor="#fff" stopOpacity={0} />
-          </linearGradient>
-          <clipPath id={`${gid}c`}>
-            <rect x={left} y={0} width={slabW * wipe} height={height} />
-          </clipPath>
-        </defs>
+        <div
+          style={{
+            position: "absolute",
+            left,
+            top: labelY,
+            height: labelFs * 1.3,
+          }}
+        >
+          <div style={{ position: "absolute", left: 0, top: 0 }}>
+            <Roll
+              text={before.label.toUpperCase()}
+              progressIn={numIn}
+              progressOut={labelSwap}
+              style={{
+                fontFamily: mono.fontFamily,
+                fontWeight: 400,
+                fontSize: labelFs,
+                letterSpacing: "0.08em",
+                color: t.muted,
+              }}
+            />
+          </div>
+          <div style={{ position: "absolute", left: 0, top: 0 }}>
+            <Roll
+              text={after.label.toUpperCase()}
+              progressIn={labelSwap}
+              style={{
+                fontFamily: mono.fontFamily,
+                fontWeight: 500,
+                fontSize: labelFs,
+                letterSpacing: "0.08em",
+                color: theme === "dark" ? BEAM[1] : accent,
+              }}
+            />
+          </div>
+        </div>
 
-        {grows ? null : ghost}
-        <g clipPath={`url(#${gid}c)`}>
-          <rect
-            x={left}
-            y={slabTop}
-            width={slabW}
-            height={thick}
-            rx={radius(thick)}
-            fill={t.slab}
-            stroke={t.slabEdge}
-            strokeWidth={1 * s}
+        <div style={{ position: "absolute", left, top: numY }}>
+          <Roll
+            text={numText}
+            progressIn={numIn}
+            style={{
+              fontFamily,
+              fontWeight: 500,
+              fontSize: numFs,
+              lineHeight: 1,
+              letterSpacing: "-0.035em",
+              fontVariantNumeric: "tabular-nums",
+              color: fg,
+            }}
           />
-          <rect
-            x={left}
-            y={slabTop}
-            width={slabW}
-            height={thick}
-            rx={radius(thick)}
-            fill={`url(#${gid}f)`}
-            opacity={Math.min(1, Math.max(0, squeeze * 1.15))}
-          />
-          {sheen > 0 && sheen < 1 ? (
+        </div>
+
+        <svg
+          width={width}
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          style={{ position: "absolute", inset: 0, overflow: "visible" }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient id={`${gid}f`} x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0" stopColor={t.deep} />
+              <stop offset="0.5" stopColor={accent} />
+              <stop offset="0.86" stopColor={BEAM[1]} />
+              <stop offset="1" stopColor={t.tip} />
+            </linearGradient>
+            <linearGradient
+              id={`${gid}s`}
+              gradientUnits="userSpaceOnUse"
+              x1={left - slabW * 0.3 + sheen * slabW * 1.6}
+              x2={left + slabW * 0.0 + sheen * slabW * 1.6}
+              y1="0"
+              y2="0"
+            >
+              <stop offset="0" stopColor="#fff" stopOpacity={0} />
+              <stop offset="0.5" stopColor="#fff" stopOpacity={0.85} />
+              <stop offset="1" stopColor="#fff" stopOpacity={0} />
+            </linearGradient>
+            <clipPath id={`${gid}c`}>
+              <rect x={left} y={0} width={slabW * wipe} height={height} />
+            </clipPath>
+          </defs>
+
+          {grows ? null : ghost}
+          <g clipPath={`url(#${gid}c)`}>
             <rect
               x={left}
               y={slabTop}
               width={slabW}
               height={thick}
               rx={radius(thick)}
-              fill={`url(#${gid}s)`}
-              opacity={0.9}
+              fill={t.slab}
+              stroke={t.slabEdge}
+              strokeWidth={1 * s}
             />
-          ) : null}
-        </g>
+            <rect
+              x={left}
+              y={slabTop}
+              width={slabW}
+              height={thick}
+              rx={radius(thick)}
+              fill={`url(#${gid}f)`}
+              opacity={Math.min(1, Math.max(0, squeeze * 1.15))}
+            />
+            {sheen > 0 && sheen < 1 ? (
+              <rect
+                x={left}
+                y={slabTop}
+                width={slabW}
+                height={thick}
+                rx={radius(thick)}
+                fill={`url(#${gid}s)`}
+                opacity={0.9}
+              />
+            ) : null}
+          </g>
 
-        {grows ? ghost : null}
+          {grows ? ghost : null}
 
-        <g opacity={interpolate(wipe, [0.7, 1], [0, 1], CLAMP)}>
-          <line
-            x1={dimX - tick}
-            x2={dimX + tick}
-            y1={slabTop}
-            y2={slabTop}
-            stroke={t.muted}
-            strokeWidth={1.4 * s}
-          />
-          <line
-            x1={dimX - tick}
-            x2={dimX + tick}
-            y1={slabTop + thick}
-            y2={slabTop + thick}
-            stroke={t.muted}
-            strokeWidth={1.4 * s}
-          />
-          <line
-            x1={dimX}
-            x2={dimX}
-            y1={slabTop}
-            y2={slabTop + thick}
-            stroke={t.muted}
-            strokeWidth={1.4 * s}
-          />
-        </g>
-      </svg>
+          <g opacity={interpolate(wipe, [0.7, 1], [0, 1], CLAMP)}>
+            <line
+              x1={dimX - tick}
+              x2={dimX + tick}
+              y1={slabTop}
+              y2={slabTop}
+              stroke={t.muted}
+              strokeWidth={1.4 * s}
+            />
+            <line
+              x1={dimX - tick}
+              x2={dimX + tick}
+              y1={slabTop + thick}
+              y2={slabTop + thick}
+              stroke={t.muted}
+              strokeWidth={1.4 * s}
+            />
+            <line
+              x1={dimX}
+              x2={dimX}
+              y1={slabTop}
+              y2={slabTop + thick}
+              stroke={t.muted}
+              strokeWidth={1.4 * s}
+            />
+          </g>
+        </svg>
 
-      {callText ? (
-        <div
-          style={{
-            position: "absolute",
-            left: portrait ? undefined : dimX + 18 * s,
-            right: portrait ? width - (left + slabW) : undefined,
-            top: portrait ? slabCy + tMax / 2 + 26 * s : slabCy,
-            transform: portrait
-              ? `translateY(${(1 - calloutIn) * 12 * s}px)`
-              : `translate(${(1 - calloutIn) * -10 * s}px, -50%)`,
-            opacity: calloutIn,
-            fontFamily: display.fontFamily,
-            fontWeight: 500,
-            fontSize: (portrait ? 44 : 30) * s,
-            letterSpacing: "-0.02em",
-            color: t.fg,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {callText}
-        </div>
-      ) : null}
+        {callText ? (
+          <div
+            style={{
+              position: "absolute",
+              left: portrait ? undefined : dimX + 18 * s,
+              right: portrait ? width - (left + slabW) : undefined,
+              top: portrait ? slabCy + tMax / 2 + 26 * s : slabCy,
+              transform: portrait
+                ? `translateY(${(1 - calloutIn) * 12 * s}px)${glide(midway(calloutIn))}`
+                : `translate(${(1 - calloutIn) * -10 * s}px, -50%)`,
+              opacity: calloutIn,
+              fontFamily,
+              fontWeight: 500,
+              fontSize: (portrait ? 44 : 30) * s,
+              letterSpacing: "-0.02em",
+              color: fg,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {callText}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

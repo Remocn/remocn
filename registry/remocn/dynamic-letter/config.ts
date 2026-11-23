@@ -1,8 +1,28 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const dynamicLetterConfig: ComponentConfig = {
   componentName: "DynamicLetter",
   importPath: "@/components/remocn/dynamic-letter",
+  lists: {
+    variants: {
+      default: [
+        "solid",
+        "outline",
+        "stripes",
+        "slice",
+        "stencil",
+        "dots",
+        "counter",
+      ],
+      description: "Treatments",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -13,19 +33,25 @@ export const dynamicLetterConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     text: {
       type: "text-content",
       default: "emocn",
       description: "Text",
     },
     final: {
-      type: "text-content",
+      type: "enum",
       default: "overflow",
+      variants: {
+        solid: {},
+        outline: {},
+        stripes: {},
+        slice: {},
+        stencil: {},
+        dots: {},
+        overflow: {},
+        counter: {},
+        shadow: {},
+      },
       description: "Final",
     },
     beat: {
@@ -37,6 +63,21 @@ export const dynamicLetterConfig: ComponentConfig = {
       description: "Beat",
       hiddenFromList: false,
     },
+    minBeat: {
+      type: "number",
+      default: 5,
+      min: 1,
+      max: 24,
+      step: 1,
+      description: "Shortest beat (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ grain: true }),
     speed: {
       type: "number",
       default: 1,

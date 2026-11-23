@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const timesTurnConfig: ComponentConfig = {
   componentName: "TimesTurn",
@@ -28,6 +34,26 @@ export const timesTurnConfig: ComponentConfig = {
       default: "more launch cuts from the same storyboard",
       description: "Label",
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 300,
+      max: 700,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 8,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: "#FF4F00", description: "Accent" },
+    ...sceneControls({ font: "Familjen Grotesk" }),
     speed: {
       type: "number",
       default: 1,

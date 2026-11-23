@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const thinSlabConfig: ComponentConfig = {
   componentName: "ThinSlab",
@@ -23,6 +29,25 @@ export const thinSlabConfig: ComponentConfig = {
       default: "Time to your first launch video",
       description: "Title",
     },
+    radius: {
+      type: "number",
+      default: 14,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Slab radius",
+      hiddenFromList: false,
+    },
+    squeezeDuration: {
+      type: "number",
+      default: 36,
+      min: 12,
+      max: 72,
+      step: 2,
+      description: "Squeeze (frames)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Inter Tight" }),
     speed: {
       type: "number",
       default: 1,

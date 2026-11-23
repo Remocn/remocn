@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="DynamicLetter"
     component={DynamicLetterScene}
-    durationInFrames={110}
-    fps={30}
+    durationInFrames={220}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -86,10 +86,49 @@ The R mark and wordmark hold still while one letter (the first o by default) cut
       description: "Frames per treatment at the start; cuts tighten from there.",
     },
     {
+      name: "minBeat",
+      type: "number",
+      default: "5",
+      description: "Shortest beat, in frames, the cuts tighten to.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent colour for the mark and highlights; any CSS colour.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

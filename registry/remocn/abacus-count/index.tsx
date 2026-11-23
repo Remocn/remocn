@@ -2,14 +2,9 @@
 
 import { loadFont } from "@remotion/google-fonts/Geist";
 import { type ReactNode, useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: geist } = loadFont("normal", {
   weights: ["300", "400"],
@@ -26,6 +21,22 @@ export interface AbacusCountProps {
   value?: number;
   label?: string;
   accent?: string;
+  /** Text color of the readout; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the readout and label. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Weight of the readout digits. */
+  fontWeight?: number;
+  /** Thousands separator in the readout. */
+  separator?: string;
+  /** Size of the abacus and readout, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -141,6 +152,22 @@ function buildMoves(seq: number[], times: number[], places: number) {
   return moves;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
@@ -169,13 +196,24 @@ export function AbacusCount({
   value = 48216,
   label = "renders this week",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist,
+  fontWeight = 300,
+  separator = ",",
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: AbacusCountProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage = background ?? p.bg;
   const target = Math.max(0, Math.min(999999, Math.round(value)));
   const places = Math.max(3, String(target).length);
   const { seq, times } = useMemo(
@@ -222,10 +260,17 @@ export function AbacusCount({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const push = interpolate(t, [0, lastAt + 40], [0.985, 1.01], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const pushAt = (tt: number) =>
+    interpolate(tt, [0, lastAt + 40], [0.985, 1.01], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const push = pushAt(t);
+  // The push is a long in-out ease, so it counts as moving while the frame's
+  // edge still shifts, not by its progress.
+  const pushing =
+    Math.abs(pushAt(t + speed) - push) * width > 1e-3 ||
+    Math.abs(push - pushAt(Math.max(0, t - speed))) * width > 1e-3;
 
   const gradId = `ab${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const drift = interpolate(t, [0, lastAt + 40], [0, 1], {
@@ -311,7 +356,7 @@ export function AbacusCount({
           });
     const dNew = digitAt(seq[kc], pl);
     const isLead = pl === lead;
-    const color = pl > lead ? p.faint : isLead ? "transparent" : p.fg;
+    const color = pl > lead ? p.faint : isLead ? "transparent" : fg;
     digitEls.push(
       <span
         key={`d${pl}`}
@@ -342,10 +387,10 @@ export function AbacusCount({
             display: "inline-block",
             width: commaW,
             textAlign: "center",
-            color: pl > lead ? p.faint : p.fg,
+            color: pl > lead ? p.faint : fg,
           }}
         >
-          ,
+          {separator}
         </span>,
       );
     }
@@ -358,7 +403,7 @@ export function AbacusCount({
   const blockH = numSize * 1.12 + 10 * u + 24 * u * 1.3;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
@@ -367,113 +412,118 @@ export function AbacusCount({
           opacity: frameIn,
         }}
       />
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          <g opacity={frameIn}>
-            <rect
-              x={x0 - postW}
-              y={postTop}
-              width={postW}
-              height={postBot - postTop}
-              rx={postW / 2}
-              fill={p.post}
-            />
-            <rect
-              x={x1}
-              y={postTop}
-              width={postW}
-              height={postBot - postTop}
-              rx={postW / 2}
-              fill={p.post}
-            />
-          </g>
-          <defs>
-            <linearGradient
-              id={gradId}
-              gradientUnits="userSpaceOnUse"
-              x1={x1 - travel * (1.1 + 0.15 * drift)}
-              y1={postTop}
-              x2={x1}
-              y2={postBot}
-            >
-              <stop offset="0" stopColor={p.stops[0]} />
-              <stop offset="0.34" stopColor={p.stops[1]} />
-              <stop offset="0.7" stopColor={p.stops[2]} />
-              <stop offset="1" stopColor={p.stops[3]} />
-            </linearGradient>
-          </defs>
-          {rodsEls}
-          {beadEls}
-        </svg>
-
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: readX,
-            top: cy - blockH / 2,
-            opacity: frameIn,
+            transform: `scale(${push})${glide(pushing)}`,
+            transformOrigin: "50% 50%",
           }}
         >
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <g opacity={frameIn}>
+              <rect
+                x={x0 - postW}
+                y={postTop}
+                width={postW}
+                height={postBot - postTop}
+                rx={postW / 2}
+                fill={p.post}
+              />
+              <rect
+                x={x1}
+                y={postTop}
+                width={postW}
+                height={postBot - postTop}
+                rx={postW / 2}
+                fill={p.post}
+              />
+            </g>
+            <defs>
+              <linearGradient
+                id={gradId}
+                gradientUnits="userSpaceOnUse"
+                x1={x1 - travel * (1.1 + 0.15 * drift)}
+                y1={postTop}
+                x2={x1}
+                y2={postBot}
+              >
+                <stop offset="0" stopColor={p.stops[0]} />
+                <stop offset="0.34" stopColor={p.stops[1]} />
+                <stop offset="0.7" stopColor={p.stops[2]} />
+                <stop offset="1" stopColor={p.stops[3]} />
+              </linearGradient>
+            </defs>
+            {rodsEls}
+            {beadEls}
+          </svg>
+
           <div
             style={{
-              display: "flex",
-              fontFamily: geist,
-              fontWeight: 300,
-              fontSize: numSize,
-              lineHeight: 1.12,
-              letterSpacing: "-0.03em",
-              fontVariantNumeric: "tabular-nums",
-              whiteSpace: "nowrap",
+              position: "absolute",
+              left: readX,
+              top: cy - blockH / 2,
+              opacity: frameIn,
             }}
           >
-            {digitEls}
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12 * u,
-              marginTop: 10 * u,
-              paddingLeft: numSize * 0.06,
-              fontFamily: geist,
-              fontWeight: 400,
-              fontSize: 24 * u,
-              lineHeight: 1.3,
-              letterSpacing: "-0.01em",
-              color: p.muted,
-              whiteSpace: "nowrap",
-              opacity: labelIn,
-              transform: `translateY(${(1 - labelIn) * 8 * u}px)`,
-            }}
-          >
-            <span
+            <div
               style={{
-                width: 10 * u,
-                height: 10 * u,
-                borderRadius: "50%",
-                background: accent,
-                flexShrink: 0,
+                display: "flex",
+                fontFamily,
+                fontWeight,
+                fontSize: numSize,
+                lineHeight: 1.12,
+                letterSpacing: "-0.03em",
+                fontVariantNumeric: "tabular-nums",
+                whiteSpace: "nowrap",
               }}
-            />
-            {label}
+            >
+              {digitEls}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12 * u,
+                marginTop: 10 * u,
+                paddingLeft: numSize * 0.06,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 24 * u,
+                lineHeight: 1.3,
+                letterSpacing: "-0.01em",
+                color: p.muted,
+                whiteSpace: "nowrap",
+                opacity: labelIn,
+                transform: `translateY(${(1 - labelIn) * 8 * u}px)`,
+              }}
+            >
+              <span
+                style={{
+                  width: 10 * u,
+                  height: 10 * u,
+                  borderRadius: "50%",
+                  background: accent,
+                  flexShrink: 0,
+                }}
+              />
+              {label}
+            </div>
           </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${stage} 100%)`,
           opacity: 0.55,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

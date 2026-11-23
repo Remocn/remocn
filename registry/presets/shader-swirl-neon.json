@@ -1,0 +1,97 @@
+{
+  "component": "shader-swirl-neon",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-nebula",
+      "label": "Slow Nebula",
+      "description": "A calm, wide-banded swirl drifting slowly with very soft, misty edges.",
+      "askedAs": [
+        "slow dreamy neon swirl",
+        "soft hazy vortex background",
+        "calm ambient spiral",
+        "медленный мягкий неоновый вихрь",
+        "спокойная туманная спираль"
+      ],
+      "props": {
+        "speed": 0.5,
+        "bandCount": 2,
+        "twist": 0.15,
+        "softness": 0.9
+      }
+    },
+    {
+      "id": "hyper-vortex",
+      "label": "Hyper Vortex",
+      "description": "A fast, tightly twisted vortex with many crisp neon bands for high-energy reveals.",
+      "askedAs": [
+        "fast intense neon spiral",
+        "energetic hypnotic vortex",
+        "tight spinning bands for a hype intro",
+        "быстрый яркий неоновый вихрь",
+        "энергичная закрученная спираль"
+      ],
+      "props": {
+        "speed": 2.5,
+        "bandCount": 10,
+        "twist": 0.8,
+        "softness": 0.2
+      }
+    },
+    {
+      "id": "crisp-rings",
+      "label": "Crisp Rings",
+      "description": "Sharp-edged neon rings with little twist that read like clean graphic stripes.",
+      "askedAs": [
+        "sharp neon stripes swirl",
+        "hard-edged graphic vortex",
+        "clean bands with no blur",
+        "четкие неоновые кольца",
+        "резкие полосы без размытия"
+      ],
+      "props": {
+        "bandCount": 6,
+        "twist": 0.05,
+        "softness": 0.05
+      }
+    },
+    {
+      "id": "deep-ink",
+      "label": "Deep Ink",
+      "description": "A near-black navy field with a moderately twisted swirl for a darker, moodier logo backdrop.",
+      "askedAs": [
+        "darker moody neon swirl",
+        "black background vortex for logo",
+        "subtle dark spiral backdrop",
+        "темный неоновый вихрь для логотипа",
+        "мрачная спираль на черном фоне"
+      ],
+      "props": {
+        "colorBack": "#02030a",
+        "speed": 0.75,
+        "twist": 0.45,
+        "softness": 0.7
+      }
+    },
+    {
+      "id": "plum-whirlpool",
+      "label": "Plum Whirlpool",
+      "description": "A deep plum background under a strongly twisted, medium-paced whirlpool of soft bands.",
+      "askedAs": [
+        "purple background whirlpool",
+        "twisted magenta vortex",
+        "rich violet spinning backdrop",
+        "фиолетовый закрученный водоворот",
+        "сливовый фон с вихрем"
+      ],
+      "props": {
+        "colorBack": "#1a0626",
+        "bandCount": 5,
+        "twist": 0.65,
+        "speed": 1.25,
+        "softness": 0.5
+      }
+    }
+  ]
+}

@@ -1,12 +1,13 @@
 "use client";
 
 import type React from "react";
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import {
   type CanvasFilterProps,
   makeCanvasFilter,
   makeFilterShader,
 } from "@/lib/remocn/canvas-presentation";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 
 export type PixelateRect = {
   x: number;
@@ -128,7 +129,7 @@ const PixelateRegionCanvas = makeCanvasFilter<NormalizedProps>({
 export const PixelateRegion: React.FC<
   PixelateRegionProps & CanvasFilterProps
 > = ({ regions, cellSize = DEFAULTS.cellSize, children }) => {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
 
   if (regions.length > MAX_REGIONS) {
     throw new Error(

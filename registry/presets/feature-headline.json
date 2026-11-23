@@ -1,0 +1,106 @@
+{
+  "component": "feature-headline",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm light page with a centred Instrument Serif headline that drifts in slowly, word by word.",
+      "askedAs": [
+        "elegant serif magazine headline",
+        "slow classy centered title on cream",
+        "editorial look with serif font",
+        "элегантный заголовок с засечками",
+        "журнальный стиль, медленно и по центру"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "align": "center",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy background with soft ivory type and a muted gold tag for a luxe, unhurried reveal.",
+      "askedAs": [
+        "dark luxury gold accent headline",
+        "navy and gold premium title",
+        "expensive looking feature intro",
+        "тёмно-синий с золотом премиум",
+        "роскошный заголовок на тёмном фоне"
+      ],
+      "props": {
+        "background": "#0e1424",
+        "ink": "#f2ede3",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "fontWeight": 400,
+        "stagger": 4
+      }
+    },
+    {
+      "id": "snappy-launch",
+      "label": "Snappy Launch",
+      "description": "A fast, tightly staggered Space Grotesk headline at larger scale for punchy product announcements.",
+      "askedAs": [
+        "fast punchy launch title",
+        "quick energetic new feature headline",
+        "bigger bold snappy text reveal",
+        "быстрый энергичный заголовок запуска",
+        "крупный текст, появляется резко"
+      ],
+      "props": {
+        "speed": 1.75,
+        "stagger": 1,
+        "scale": 1.2,
+        "fontFamily": "Space Grotesk",
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "clean-chapter",
+      "label": "Clean Chapter",
+      "description": "A minimal light card with centred Inter type in calm graphite and a sage tag, holding on screen without an exit.",
+      "askedAs": [
+        "simple clean chapter title",
+        "minimal light section heading that stays",
+        "calm centered product tour title",
+        "минималистичный заголовок главы",
+        "светлый спокойный титр без исчезновения"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "align": "center",
+        "accent": "#4f7a63",
+        "exit": false,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "terminal-dev",
+      "label": "Terminal Dev",
+      "description": "A near-black canvas with JetBrains Mono type and a mint tag, revealing words one at a time like code output.",
+      "askedAs": [
+        "developer monospace headline",
+        "code style dark title for dev tool",
+        "terminal look feature text",
+        "моноширинный шрифт как в терминале",
+        "заголовок для разработчиков в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0d0c",
+        "ink": "#e6ede8",
+        "accent": "#3fbf8f",
+        "fontWeight": 400,
+        "stagger": 6
+      }
+    }
+  ]
+}

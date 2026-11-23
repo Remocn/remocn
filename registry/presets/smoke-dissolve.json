@@ -1,0 +1,108 @@
+{
+  "component": "smoke-dissolve",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-fog",
+      "label": "Midnight Fog",
+      "description": "Slow, cool blue-grey smoke drifting over a near-black navy backdrop.",
+      "askedAs": [
+        "slow misty blue reveal",
+        "dark foggy night transition",
+        "calm cinematic smoke opening",
+        "медленный туманный синий переход",
+        "ночной туман раскрытие"
+      ],
+      "props": {
+        "ringColor": "#7d93b5",
+        "colorBack": "#0b1020",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "ember-haze",
+      "label": "Ember Haze",
+      "description": "Warm amber smoke glowing against a deep charcoal-brown ground.",
+      "askedAs": [
+        "warm orange smoke reveal",
+        "fiery ember transition",
+        "cozy amber mist opening",
+        "тёплый оранжевый дым переход",
+        "дымка как от углей"
+      ],
+      "props": {
+        "ringColor": "#c8865a",
+        "colorBack": "#17110d",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "ivory-mist",
+      "label": "Ivory Mist",
+      "description": "Soft pale smoke expanding over a deep graphite base for an elegant, airy reveal.",
+      "askedAs": [
+        "white smoke elegant reveal",
+        "light mist luxury transition",
+        "soft pale fog opening",
+        "белый дым элегантный переход",
+        "светлый туман раскрытие"
+      ],
+      "props": {
+        "ringColor": "#e6e1d6",
+        "colorBack": "#1a1a1c"
+      }
+    },
+    {
+      "id": "jade-vapor",
+      "label": "Jade Vapor",
+      "description": "Muted green vapor rising from a dark forest-black background.",
+      "askedAs": [
+        "green smoke mysterious reveal",
+        "dark forest mist transition",
+        "emerald fog opening",
+        "зелёный дым загадочный переход",
+        "изумрудный туман"
+      ],
+      "props": {
+        "ringColor": "#6fa391",
+        "colorBack": "#0c1512",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "swift-plume",
+      "label": "Swift Plume",
+      "description": "A fast, punchy burst of violet smoke for snappy cuts.",
+      "askedAs": [
+        "fast smoke transition",
+        "quick puff reveal",
+        "snappy smoke burst",
+        "быстрый дымовой переход",
+        "резкое появление из дыма"
+      ],
+      "props": {
+        "ringColor": "#a89be0",
+        "colorBack": "#100e18",
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "crimson-veil",
+      "label": "Crimson Veil",
+      "description": "Dusky wine-red smoke slowly unveiling over a black-plum backdrop.",
+      "askedAs": [
+        "dark red smoke dramatic reveal",
+        "moody burgundy mist",
+        "thriller style smoke opening",
+        "бордовый дым драматичный переход",
+        "тёмно-красная дымка"
+      ],
+      "props": {
+        "ringColor": "#a8505e",
+        "colorBack": "#140a0e",
+        "speed": 0.75
+      }
+    }
+  ]
+}

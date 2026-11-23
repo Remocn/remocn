@@ -10,9 +10,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const SANS = loadSans("normal", { weights: ["500"], subsets: ["latin"] });
 const SERIF = loadSerif("italic", { weights: ["400"], subsets: ["latin"] });
@@ -20,7 +20,8 @@ const SERIF = loadSerif("italic", { weights: ["400"], subsets: ["latin"] });
 /* Lines are Instrument Sans 500; the focus word is Instrument Serif italic. */
 const SANS_TRACK = -0.035;
 const SERIF_TRACK = -0.01;
-const SANS_FONT = (px: number) => `500 ${px}px "${SANS.fontFamily}"`;
+const SANS_FONT = (px: number, family: string = SANS.fontFamily) =>
+  `500 ${px}px "${family}"`;
 const SERIF_FONT = (px: number) => `italic 400 ${px}px "${SERIF.fontFamily}"`;
 
 /* gradients.sh "silk" palette, as the clip-text fill the focus word lights up into. */
@@ -37,7 +38,20 @@ function silkFill(theme: "dark" | "light", d: number) {
 export interface GlassCapsuleProps {
   lines?: string[];
   focus?: string;
+  /** How much the capsule magnifies the focus word once it rests. */
+  magnify?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the lines; the focus word stays Instrument Serif. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -49,6 +63,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const THEMES = {
   dark: {
@@ -84,24 +100,24 @@ type Palette = (typeof THEMES)[keyof typeof THEMES];
 let measureCtx: CanvasRenderingContext2D | null = null;
 
 /** (ascent - descent) in em of the face's line metrics, for baseline matching. */
-function emLift(serif: boolean, ready: boolean) {
+function emLift(serif: boolean, ready: boolean, family: string) {
   if (!ready || typeof document === "undefined") return 0;
   if (!measureCtx)
     measureCtx = document.createElement("canvas").getContext("2d");
   if (!measureCtx) return 0;
-  measureCtx.font = serif ? SERIF_FONT(100) : SANS_FONT(100);
+  measureCtx.font = serif ? SERIF_FONT(100) : SANS_FONT(100, family);
   const m = measureCtx.measureText("Hg");
   return (m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 100;
 }
 
 /** Advance width in em of `s` (tracking included); a rough table until fonts load. */
-function emWidth(s: string, serif: boolean, ready: boolean) {
+function emWidth(s: string, serif: boolean, ready: boolean, family: string) {
   const track = serif ? SERIF_TRACK : SANS_TRACK;
   if (ready && typeof document !== "undefined") {
     if (!measureCtx)
       measureCtx = document.createElement("canvas").getContext("2d");
     if (measureCtx) {
-      measureCtx.font = serif ? SERIF_FONT(100) : SANS_FONT(100);
+      measureCtx.font = serif ? SERIF_FONT(100) : SANS_FONT(100, family);
       return measureCtx.measureText(s).width / 100 + track * [...s].length;
     }
   }
@@ -222,6 +238,8 @@ function AnchoredLine({
 }
 
 function Capsule({
+  fg,
+  inner,
   t,
   seg,
   lw,
@@ -229,7 +247,9 @@ function Capsule({
   lineH,
   offset,
   mag,
+  magMoving,
   disp,
+  margin,
   wordStyle,
   wordNode,
   textStyle,
@@ -240,6 +260,8 @@ function Capsule({
   beforeW,
   wordW,
 }: {
+  fg: string;
+  inner: string;
   wordNode: React.ReactNode;
   room: number;
   beforeW: number;
@@ -251,17 +273,20 @@ function Capsule({
   lineH: number;
   offset: number;
   mag: number;
+  magMoving: boolean;
   disp: number;
+  margin: number;
   wordStyle: React.CSSProperties;
   textStyle: React.CSSProperties;
   p: Palette;
   u: number;
   enter: number;
 }) {
+  const glide = useGlide();
   const fid = `cap${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const radius = lh / 2;
   const edge = lh * 0.26;
-  const M = Math.ceil(disp + 8 * u);
+  const M = margin;
   const map = lensMap(Math.round(lw), Math.round(lh), edge);
   const rimX = 24 + interpolate(t, [10, 80], [0, 14], CLAMP);
   return (
@@ -362,27 +387,34 @@ function Capsule({
             style={{
               position: "absolute",
               inset: 0,
-              background: p.inner,
+              background: inner,
             }}
           />
           <div
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${mag})`,
+              transform: `scale(${mag})${glide(magMoving)}`,
               transformOrigin: "50% 50%",
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: M + lw / 2 - offset,
+                // The line holds still while the capsule slides over it; that
+                // counter-travel is a transform, since a box eased by `left`
+                // steps whole pixels.
+                left: M + lw / 2,
                 top: M + (lh - lineH) / 2,
+                transform:
+                  Math.abs(offset) < 1e-3
+                    ? undefined
+                    : `translateX(${-offset}px)`,
               }}
             >
               <AnchoredLine
                 seg={seg}
-                color={p.fg}
+                color={fg}
                 wordStyle={wordStyle}
                 wordNode={wordNode}
                 style={textStyle}
@@ -439,16 +471,48 @@ function Capsule({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GlassCapsule({
   lines = ["Launch films", "that move."],
   focus = "move",
+  magnify = 1.1,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = SANS.fontFamily,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: GlassCapsuleProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, durationInFrames } = useVideoConfig();
+  const tilt = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, durationInFrames } = useSceneConfig();
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
+  // The capsule hides the line behind it, so its inside stays opaque.
+  const inner =
+    background === undefined || background === "transparent"
+      ? p.inner
+      : background;
   const u = height / 720;
 
   const [ready, setReady] = useState(false);
@@ -462,7 +526,7 @@ export function GlassCapsule({
       .then(() =>
         typeof document !== "undefined" && document.fonts
           ? Promise.all([
-              document.fonts.load(SANS_FONT(100)),
+              document.fonts.load(SANS_FONT(100, fontFamily)),
               document.fonts.load(SERIF_FONT(100)),
             ])
           : undefined,
@@ -471,7 +535,7 @@ export function GlassCapsule({
     return () => {
       alive = false;
     };
-  }, []);
+  }, [fontFamily]);
   useEffect(() => {
     if (ready) continueRender(handle);
   }, [ready, handle]);
@@ -480,19 +544,21 @@ export function GlassCapsule({
   const em = useMemo(() => {
     const lineEm = lines.map((l, i) =>
       i === seg.line
-        ? emWidth(seg.before, false, ready) +
-          emWidth(seg.word, true, ready) +
-          emWidth(seg.after, false, ready)
-        : emWidth(l, false, ready),
+        ? emWidth(seg.before, false, ready, fontFamily) +
+          emWidth(seg.word, true, ready, fontFamily) +
+          emWidth(seg.after, false, ready, fontFamily)
+        : emWidth(l, false, ready, fontFamily),
     );
     return {
       lines: lineEm,
-      before: emWidth(seg.before, false, ready),
-      word: emWidth(seg.word, true, ready),
+      before: emWidth(seg.before, false, ready, fontFamily),
+      word: emWidth(seg.word, true, ready, fontFamily),
       // Serif baseline offset vs the sans baseline, both on the same line-height.
-      drop: (emLift(false, ready) - emLift(true, ready)) / 2,
+      drop:
+        (emLift(false, ready, fontFamily) - emLift(true, ready, fontFamily)) /
+        2,
     };
-  }, [lines, seg.line, seg.before, seg.word, seg.after, ready]);
+  }, [lines, seg.line, seg.before, seg.word, seg.after, ready, fontFamily]);
 
   const longest = Math.max(...em.lines, 0.1);
   const size = Math.min(
@@ -508,7 +574,7 @@ export function GlassCapsule({
   const beforeW = em.before * size;
   const lineW = em.lines[seg.line] * size;
   const wordCenter = (width - lineW) / 2 + beforeW + wordW / 2;
-  const restMag = 1.1;
+  const restMag = magnify;
   const padX = (wordW * (restMag - 1)) / 2 + size * 0.24;
   const lw = wordW + padX * 2;
   const lh = size * 1.0;
@@ -528,6 +594,14 @@ export function GlassCapsule({
   const mag =
     1.05 + (restMag - 1.05) * EASE_IO(interpolate(t, [52, 80], [0, 1], CLAMP));
   const disp = (18 + 16 * travel) * u;
+  // Sized for the strongest displacement, not the live one: a margin that
+  // steps with `Math.ceil` as the lens calms shifted the lens box by a pixel.
+  const margin = Math.ceil((18 + 16) * u + 8 * u);
+  const magAt = (f: number) =>
+    1.05 + (restMag - 1.05) * EASE_IO(interpolate(f, [52, 80], [0, 1], CLAMP));
+  const magMoving =
+    Math.abs(magAt(t + speed) - mag) * lw > 1e-3 ||
+    Math.abs(mag - magAt(t - speed)) * lw > 1e-3;
   const enter = interpolate(t, [8, 14], [0, 1], CLAMP);
   const lit = interpolate(t, [72, 90], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const sheen = interpolate(
@@ -545,7 +619,7 @@ export function GlassCapsule({
     interpolate(t, [d, d + 20], [0, 1], { ...CLAMP, easing: EASE_OUT });
 
   const textStyle: React.CSSProperties = {
-    fontFamily: SANS.fontFamily,
+    fontFamily,
     fontWeight: 500,
     fontSize: size,
     letterSpacing: `${SANS_TRACK}em`,
@@ -568,7 +642,7 @@ export function GlassCapsule({
     WebkitBackgroundClip: "text",
     backgroundClip: "text",
     color: "transparent",
-    WebkitTextFillColor: `color-mix(in oklab, ${p.fg} ${((1 - lit) * 100).toFixed(1)}%, transparent)`,
+    WebkitTextFillColor: `color-mix(in oklab, ${fg} ${((1 - lit) * 100).toFixed(1)}%, transparent)`,
   };
   const stop = /[.!?…]$/.test(seg.word);
   const wordNode = (
@@ -577,7 +651,7 @@ export function GlassCapsule({
       {stop ? (
         <span
           style={{
-            WebkitTextFillColor: `color-mix(in oklab, ${accent} ${(lit * 100).toFixed(1)}%, ${p.fg})`,
+            WebkitTextFillColor: `color-mix(in oklab, ${accent} ${(lit * 100).toFixed(1)}%, ${fg})`,
           }}
         >
           {seg.word.slice(-1)}
@@ -587,91 +661,97 @@ export function GlassCapsule({
   );
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top,
-          width,
-          height: blockH,
-        }}
-      >
-        {lines.map((line, i) => {
-          const r = rise(i * 4);
-          const isFocus = i === seg.line;
-          return (
-            <div
-              key={`${i}-${line}`}
-              style={{
-                position: "absolute",
-                left: 0,
-                top: i * lineH,
-                width,
-                height: lineH,
-                display: "flex",
-                justifyContent: "center",
-                color: p.fg,
-                opacity: r,
-                transform: `translateY(${(1 - r) * 26 * u}px)`,
-              }}
-            >
-              {isFocus ? (
-                <>
-                  <span
-                    style={{
-                      ...textStyle,
-                      transform: `translateX(${shiftLine - room}px)`,
-                    }}
-                  >
-                    {seg.before}
-                  </span>
-                  <span
-                    style={{
-                      position: "relative",
-                      zIndex: 1,
-                      height: lineH,
-                      transform: `translateX(${shiftLine}px)`,
-                    }}
-                  >
-                    <span style={wordStyle}>{wordNode}</span>
-                    <Capsule
-                      t={t}
-                      seg={seg}
-                      lw={lw}
-                      lh={lh}
-                      lineH={lineH}
-                      offset={offset}
-                      mag={mag}
-                      disp={disp}
-                      wordStyle={wordStyle}
-                      wordNode={wordNode}
-                      textStyle={textStyle}
-                      p={p}
-                      u={u}
-                      enter={enter}
-                      room={room}
-                      beforeW={beforeW}
-                      wordW={wordW}
-                    />
-                  </span>
-                  <span
-                    style={{
-                      ...textStyle,
-                      transform: `translateX(${shiftLine + room}px)`,
-                    }}
-                  >
-                    {seg.after}
-                  </span>
-                </>
-              ) : (
-                <span style={textStyle}>{line}</span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <Grain opacity={p.grain} />
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top,
+            width,
+            height: blockH,
+          }}
+        >
+          {lines.map((line, i) => {
+            const r = rise(i * 4);
+            const isFocus = i === seg.line;
+            return (
+              <div
+                key={`${i}-${line}`}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: i * lineH,
+                  width,
+                  height: lineH,
+                  display: "flex",
+                  justifyContent: "center",
+                  color: fg,
+                  opacity: r,
+                  transform: `translateY(${(1 - r) * 26 * u}px)${tilt(midway(r))}`,
+                }}
+              >
+                {isFocus ? (
+                  <>
+                    <span
+                      style={{
+                        ...textStyle,
+                        transform: `translateX(${shiftLine - room}px)`,
+                      }}
+                    >
+                      {seg.before}
+                    </span>
+                    <span
+                      style={{
+                        position: "relative",
+                        zIndex: 1,
+                        height: lineH,
+                        transform: `translateX(${shiftLine}px)`,
+                      }}
+                    >
+                      <span style={wordStyle}>{wordNode}</span>
+                      <Capsule
+                        fg={fg}
+                        inner={inner}
+                        t={t}
+                        seg={seg}
+                        lw={lw}
+                        lh={lh}
+                        lineH={lineH}
+                        offset={offset}
+                        mag={mag}
+                        magMoving={magMoving}
+                        disp={disp}
+                        margin={margin}
+                        wordStyle={wordStyle}
+                        wordNode={wordNode}
+                        textStyle={textStyle}
+                        p={p}
+                        u={u}
+                        enter={enter}
+                        room={room}
+                        beforeW={beforeW}
+                        wordW={wordW}
+                      />
+                    </span>
+                    <span
+                      style={{
+                        ...textStyle,
+                        transform: `translateX(${shiftLine + room}px)`,
+                      }}
+                    >
+                      {seg.after}
+                    </span>
+                  </>
+                ) : (
+                  <span style={textStyle}>{line}</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </ScaleLayer>
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

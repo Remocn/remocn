@@ -2,6 +2,7 @@
 
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadVariableFont } from "@remotion/google-fonts/Urbanist";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -9,9 +10,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const urbanist = loadVariableFont("normal", { subsets: ["latin"] });
 const manrope = loadManrope("normal", {
@@ -31,7 +32,19 @@ export interface BugDockProps {
   headline?: string;
   highlight?: string;
   accent?: string;
+  /** Text color of the name, mark and headline; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the headline and a custom name. Load it yourself; Urbanist by default. */
+  fontFamily?: string;
+  /** Frame the name starts tucking into its first letter. */
+  tuckAt?: number;
+  /** Frames between words of the headline. */
+  stagger?: number;
+  /** Size of the name and headline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -62,14 +75,18 @@ interface Metrics {
   cap: number;
 }
 
-function measure(letters: string[], logo: boolean): Metrics {
+function measure(
+  letters: string[],
+  logo: boolean,
+  fontFamily: string,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   const adv: number[] = [];
   let baseline = 0.78;
   let cap = 0.72;
   if (ctx) {
-    const family = logo ? manrope.fontFamily : urbanist.fontFamily;
+    const family = logo ? manrope.fontFamily : fontFamily;
     const weight = logo ? 600 : 500;
     ctx.font = `${weight} 200px "${family}"`;
     for (const ch of letters) {
@@ -84,7 +101,7 @@ function measure(letters: string[], logo: boolean): Metrics {
   return { adv, baseline, cap };
 }
 
-function useMetrics(letters: string[], logo: boolean) {
+function useMetrics(letters: string[], logo: boolean, fontFamily: string) {
   const key = `${logo ? 1 : 0}${letters.join("")}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("bug-dock: measuring"));
@@ -97,12 +114,12 @@ function useMetrics(letters: string[], logo: boolean) {
       urbanist.waitUntilDone(),
       manrope.waitUntilDone(),
       document.fonts.load(`600 100px "${manrope.fontFamily}"`),
-      document.fonts.load(`500 100px "${urbanist.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(chars, isLogo) });
+        setState({ key, m: measure(chars, isLogo, fontFamily) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -111,7 +128,7 @@ function useMetrics(letters: string[], logo: boolean) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -134,18 +151,42 @@ function normalizeHex(c: string | undefined, fallback: string) {
   return fallback;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BugDock({
   name = "remocn",
   headline = "Playing on every screen you ship.",
   highlight = "every screen",
   accent,
+  ink,
   background,
+  fontFamily = urbanist.fontFamily,
+  tuckAt = TUCK_AT,
+  stagger = 2.5,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: BugDockProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const blue = normalizeHex(accent, c.blue);
 
   const clean = name.trim() || "remocn";
@@ -159,7 +200,7 @@ export function BugDock({
     () => (logo ? tail : [head, ...tail]),
     [logo, tail, head],
   );
-  const m = useMetrics(letters, logo);
+  const m = useMetrics(letters, logo, fontFamily);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -201,21 +242,31 @@ export function BugDock({
   const n = tailAdv.length;
   const tuckP = tailAdv.map((_, k) => {
     const order = n - 1 - k;
-    const at = TUCK_AT + order * TUCK_STEP;
+    const at = tuckAt + order * TUCK_STEP;
     return interpolate(t, [at, at + TUCK_DUR], [0, 1], {
       ...CLAMP,
       easing: EASE_TUCK,
     });
   });
-  const tuckEnd = TUCK_AT + (n - 1) * TUCK_STEP + TUCK_DUR;
+  const tuckEnd = tuckAt + (n - 1) * TUCK_STEP + TUCK_DUR;
   const dockAt = tuckEnd + 2;
   const headAt = dockAt + HEAD_DELAY;
 
-  const visibleEm =
-    firstAdv -
-    (logo ? R_GAP : 0) * tuckP[0] +
-    tailAdv.reduce((a, w, k) => a + w * (1 - tuckP[k]), 0);
-  const groupLeft = (W - visibleEm * LF) / 2;
+  const leftAt = (tucks: number[]) =>
+    (W -
+      (firstAdv -
+        (logo ? R_GAP : 0) * tucks[0] +
+        tailAdv.reduce((a, w, k) => a + w * (1 - tucks[k]), 0)) *
+        LF) /
+    2;
+  const groupLeft = leftAt(tuckP);
+  // Layout rounds a box to whole pixels, so the first letter's box clicks
+  // sideways as the tail tucks in. While it slides it is laid out where it
+  // stood before the tuck and the slide is a transform; standing before or
+  // after the tuck it keeps its plain layout.
+  const sliding = tuckP.some((k) => k > 0 && k < 1);
+  const firstLeft = sliding ? leftAt(tuckP.map(() => 0)) : groupLeft;
+  const firstDx = groupLeft - firstLeft;
 
   const xs: number[] = [];
   let shift = 0;
@@ -242,9 +293,15 @@ export function BugDock({
   const startLeft = groupLeft;
   const startBottom = baseY;
   const endLeft = bugRight - firstW * bugScale;
-  const curLeft = startLeft + (endLeft - startLeft) * dock;
-  const curBottom = startBottom + (bugBottom - startBottom) * dock;
   const curScale = 1 + (bugScale - 1) * dock;
+  // Layout rounds a box to whole pixels, so a mark eased by `left`/`top`
+  // clicks along pixel by pixel. It is laid out where it docks and the ride
+  // there is a transform, exactly 0 once docked.
+  const restTop = bugBottom - firstH * bugScale;
+  const dockDx = (startLeft - endLeft) * (1 - dock);
+  const dockDy =
+    (1 - dock) * (startBottom - bugBottom - firstH * (1 - bugScale));
+  const docking = dock < 1;
   const bugOpacity = 1 - 0.18 * dock;
 
   const enter = (i: number) =>
@@ -253,7 +310,7 @@ export function BugDock({
       easing: EASE_OUT,
     });
 
-  const tailFont = logo ? manrope.fontFamily : urbanist.fontFamily;
+  const tailFont = logo ? manrope.fontFamily : fontFamily;
   const tailWeight = logo ? 600 : 500;
   const tailNodes = tailAdv.map((adv, k) => {
     const prevRight =
@@ -286,8 +343,8 @@ export function BugDock({
             lineHeight: `${LF}px`,
             letterSpacing: `${LOGO_TRACK}em`,
             whiteSpace: "pre",
-            color: c.ink,
-            transform: `translateY(${((1 - e) * LF * 0.9).toFixed(2)}px)`,
+            color: fg,
+            transform: `translateY(${((1 - e) * LF * 0.9).toFixed(2)}px)${glide(e > 0 && (1 - e) * LF > 1e-3)}`,
           }}
         >
           {ch}
@@ -303,127 +360,134 @@ export function BugDock({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: groupLeft,
-          top: baseY - firstH - LF * 0.2,
-          width: firstW + LF * 0.1,
-          height: firstH + LF * 0.2,
-          overflow: "hidden",
-          opacity: dock > 0 ? 0 : 1,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: 0,
-            top: LF * 0.2,
-            transform: `translateY(${((1 - firstEnter) * firstH * 1.1).toFixed(2)}px)`,
+            left: firstLeft,
+            top: baseY - firstH - LF * 0.2,
+            width: firstW + LF * 0.1,
+            height: firstH + LF * 0.2,
+            overflow: "hidden",
+            opacity: dock > 0 ? 0 : 1,
+            transform:
+              Math.abs(firstDx) > 1e-3 ? `translateX(${firstDx}px)` : undefined,
           }}
         >
-          {logo ? (
-            <RMark height={firstH} color={c.ink} />
-          ) : (
-            <span
-              style={{
-                display: "block",
-                fontFamily: urbanist.fontFamily,
-                fontWeight: 500,
-                fontSize: LF,
-                lineHeight: `${firstH}px`,
-                color: c.ink,
-              }}
-            >
-              {head}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {tailNodes}
-
-      {dock > 0 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: curLeft,
-            top: curBottom - firstH * curScale,
-            width: firstW,
-            height: firstH,
-            transformOrigin: "0 0",
-            transform: `scale(${curScale.toFixed(4)})`,
-            opacity: bugOpacity,
-          }}
-        >
-          {logo ? (
-            <RMark height={firstH} color={c.ink} />
-          ) : (
-            <span
-              style={{
-                display: "block",
-                fontFamily: urbanist.fontFamily,
-                fontWeight: 500,
-                fontSize: LF,
-                lineHeight: `${firstH}px`,
-                color: c.ink,
-              }}
-            >
-              {head}
-            </span>
-          )}
-        </div>
-      ) : null}
-
-      <div
-        style={{
-          position: "absolute",
-          left: headLeft,
-          width: headW,
-          top: portrait ? H * 0.36 : H * 0.27,
-          fontFamily: urbanist.fontFamily,
-          fontSize: headFs,
-          fontVariationSettings: '"wght" 400',
-          lineHeight: 1.04,
-          letterSpacing: "-0.03em",
-          color: c.ink,
-          textWrap: "balance",
-        }}
-      >
-        {words.map((w, i) => {
-          const at = headAt + i * 2.5;
-          const p = interpolate(t, [at, at + 16], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          const hi = hiWords.has(
-            w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ""),
-          );
-          return (
-            <span
-              key={`${i}-${w}`}
-              style={{
-                display: "inline-block",
-                overflow: "hidden",
-                verticalAlign: "top",
-                paddingBottom: "0.12em",
-                marginBottom: "-0.12em",
-                marginRight: "0.24em",
-              }}
-            >
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: LF * 0.2,
+              transform: `translateY(${((1 - firstEnter) * firstH * 1.1).toFixed(2)}px)${glide(firstEnter > 0 && (1 - firstEnter) * firstH > 1e-3)}`,
+            }}
+          >
+            {logo ? (
+              <RMark height={firstH} color={fg} />
+            ) : (
               <span
                 style={{
-                  display: "inline-block",
-                  color: hi ? blue : c.ink,
-                  transform: `translateY(${((1 - p) * 1.1).toFixed(3)}em)`,
+                  display: "block",
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: LF,
+                  lineHeight: `${firstH}px`,
+                  color: fg,
                 }}
               >
-                {w}
+                {head}
               </span>
-            </span>
-          );
-        })}
-      </div>
+            )}
+          </div>
+        </div>
+
+        {tailNodes}
+
+        {dock > 0 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: endLeft,
+              top: restTop,
+              width: firstW,
+              height: firstH,
+              transformOrigin: "0 0",
+              transform: `${docking ? `translate(${dockDx}px, ${dockDy}px) ` : ""}scale(${curScale.toFixed(4)})${glide(docking)}`,
+              opacity: bugOpacity,
+            }}
+          >
+            {logo ? (
+              <RMark height={firstH} color={fg} />
+            ) : (
+              <span
+                style={{
+                  display: "block",
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: LF,
+                  lineHeight: `${firstH}px`,
+                  color: fg,
+                }}
+              >
+                {head}
+              </span>
+            )}
+          </div>
+        ) : null}
+
+        <div
+          style={{
+            position: "absolute",
+            left: headLeft,
+            width: headW,
+            top: portrait ? H * 0.36 : H * 0.27,
+            fontFamily,
+            fontSize: headFs,
+            fontVariationSettings: '"wght" 400',
+            lineHeight: 1.04,
+            letterSpacing: "-0.03em",
+            color: fg,
+            textWrap: "balance",
+          }}
+        >
+          {words.map((w, i) => {
+            const at = headAt + i * stagger;
+            const p = interpolate(t, [at, at + 16], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            const hi = hiWords.has(
+              w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ""),
+            );
+            return (
+              <span
+                key={`${i}-${w}`}
+                style={{
+                  display: "inline-block",
+                  overflow: "hidden",
+                  verticalAlign: "top",
+                  paddingBottom: "0.12em",
+                  marginBottom: "-0.12em",
+                  marginRight: "0.24em",
+                }}
+              >
+                <span
+                  style={{
+                    display: "inline-block",
+                    color: hi ? blue : fg,
+                    // The value stays raw (rounding would step it by hand),
+                    // and the mark stays on at rest so the word keeps one way
+                    // of being drawn from the rise into the hold.
+                    transform: `translateY(${(1 - p) * 1.1}em)${glide(p > 0 && p < 1)}`,
+                  }}
+                >
+                  {w}
+                </span>
+              </span>
+            );
+          })}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

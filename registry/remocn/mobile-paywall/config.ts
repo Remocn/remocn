@@ -1,8 +1,33 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const mobilePaywallConfig: ComponentConfig = {
   componentName: "MobilePaywall",
   importPath: "@/components/remocn/mobile-paywall",
+  lists: {
+    lines: {
+      default: [
+        "Pro, one tap away.",
+        "Double-click to confirm.",
+        "Seven days, on us.",
+      ],
+      description: "Lines",
+      min: 3,
+      max: 3,
+    },
+    dates: {
+      default: ["Nov 2", "Nov 7", "Nov 9"],
+      description: "Trial dates",
+      min: 3,
+      max: 3,
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +37,6 @@ export const mobilePaywallConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     appName: {
       type: "text-content",
@@ -38,6 +58,28 @@ export const mobilePaywallConfig: ComponentConfig = {
       default: "maya@kitebase.dev",
       description: "Account",
     },
+    welcomeTitle: {
+      type: "text-content",
+      default: "Welcome to Pro",
+      description: "Welcome title",
+    },
+    welcomeSub: {
+      type: "text-content",
+      default: "Your free week starts now. Here’s how it works.",
+      description: "Welcome subline",
+    },
+    welcomeCta: {
+      type: "text-content",
+      default: "Start creating",
+      description: "Welcome button",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Figtree" }),
     speed: {
       type: "number",
       default: 1,

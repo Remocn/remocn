@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const beatCountConfig: ComponentConfig = {
   componentName: "BeatCount",
@@ -73,6 +79,26 @@ export const beatCountConfig: ComponentConfig = {
       description: "Decimals",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 200,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    punch: {
+      type: "number",
+      default: 0.2,
+      min: 0,
+      max: 0.3,
+      step: 0.05,
+      description: "Beat punch",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Inter Tight" }),
     speed: {
       type: "number",
       default: 1,

@@ -1,0 +1,100 @@
+{
+  "component": "icon-trophy",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "golden-win",
+      "label": "Golden Win",
+      "description": "A large warm-gold trophy that draws in and celebrates at a steady pace.",
+      "askedAs": [
+        "gold trophy icon",
+        "big golden cup animation",
+        "winner trophy in gold",
+        "золотой кубок",
+        "большой золотой трофей"
+      ],
+      "props": {
+        "color": "#c9a227",
+        "size": 120,
+        "strokeWidth": 2.25,
+        "animation": "both"
+      }
+    },
+    {
+      "id": "fine-line-draw",
+      "label": "Fine Line",
+      "description": "A thin slate outline that slowly sketches itself in, with no extra motion.",
+      "askedAs": [
+        "thin line trophy drawing",
+        "slow elegant outline trophy",
+        "minimal sketch cup",
+        "тонкий контур кубка",
+        "медленная отрисовка трофея"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#475569",
+        "size": 96
+      }
+    },
+    {
+      "id": "bold-bounce-loop",
+      "label": "Bold Loop",
+      "description": "A heavy-stroked deep navy trophy that repeats its celebration action quickly on a loop.",
+      "askedAs": [
+        "looping trophy animation",
+        "bold fast trophy bounce",
+        "repeating winner icon",
+        "зацикленный кубок",
+        "жирный трофей быстро"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 3,
+        "speed": 1.75,
+        "color": "#1e3a8a",
+        "size": 72
+      }
+    },
+    {
+      "id": "bronze-badge",
+      "label": "Bronze Badge",
+      "description": "A small bronze-toned trophy that pops in briskly, sized for inline badges.",
+      "askedAs": [
+        "small bronze trophy",
+        "third place cup icon",
+        "tiny award icon quick",
+        "бронзовый кубок",
+        "маленькая иконка награды"
+      ],
+      "props": {
+        "color": "#a0522d",
+        "size": 32,
+        "speed": 1.5,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "silver-showcase",
+      "label": "Silver Showcase",
+      "description": "A very large cool-silver trophy that draws and celebrates in slow, cinematic motion.",
+      "askedAs": [
+        "huge silver trophy",
+        "slow motion award reveal",
+        "cinematic cup animation",
+        "серебряный кубок крупно",
+        "медленное появление трофея"
+      ],
+      "props": {
+        "color": "#8a94a6",
+        "size": 180,
+        "speed": 0.75,
+        "strokeWidth": 1.5
+      }
+    }
+  ]
+}

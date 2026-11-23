@@ -1,15 +1,11 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/BricolageGrotesque";
+import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: brico } = loadFont("normal", {
   weights: ["300", "400"],
@@ -26,7 +22,24 @@ export interface HexFillProps {
   value?: number;
   label?: string;
   rings?: number;
+  /** Mark after the figure. */
+  unit?: string;
   accent?: string;
+  /** Color of the figure; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Weight of the figure. */
+  fontWeight?: number;
+  /** Frames the cells take to fill. */
+  fillLength?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -160,18 +173,45 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function HexFill({
   value = 86,
   label = "of renders served from cache",
   rings = 7,
+  unit = "%",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = brico,
+  fontWeight = 300,
+  fillLength = FILL_LEN,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: HexFillProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
   const N = Math.max(3, Math.min(10, Math.round(rings)));
   const pct = Math.max(0, Math.min(100, value));
   const all = useMemo(() => buildCells(N), [N]);
@@ -205,7 +245,7 @@ export function HexFill({
     const k = Math.min(1, cells[i].ang / Math.max(1e-3, angMax));
     return (
       FILL0 +
-      (FILL_LEN * Math.acos(1 - 2 * k)) / Math.PI +
+      (fillLength * Math.acos(1 - 2 * k)) / Math.PI +
       cells[i].ring * RING_LAG
     );
   };
@@ -218,11 +258,19 @@ export function HexFill({
   }
   const shown = F > 0 ? Math.round((pct * filled) / F) : 0;
 
-  const push = interpolate(t, [0, fillEnd + 40], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const camScale = 0.985 + 0.025 * push;
+  const camAt = (tt: number) =>
+    0.985 +
+    0.025 *
+      interpolate(tt, [0, fillEnd + 40], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      });
+  const camScale = camAt(t);
+  // The push is a long in-out ease, so it counts as moving while the frame's
+  // edge still shifts, not by its progress.
+  const camMoving =
+    Math.abs(camAt(t + speed) - camScale) * width > 1e-3 ||
+    Math.abs(camScale - camAt(Math.max(0, t - speed))) * width > 1e-3;
   const textIn = interpolate(t, [4, 22], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -245,156 +293,164 @@ export function HexFill({
   const sw = Math.max(1, 1.1 * u);
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${camScale})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          <defs>
-            <linearGradient
-              id={gradId}
-              gradientUnits="userSpaceOnUse"
-              x1={gcx - gR * (0.9 - 0.15 * drift)}
-              y1={gcy - gR}
-              x2={gcx + gR * (0.9 + 0.15 * drift)}
-              y2={gcy + gR}
-            >
-              <stop offset="0" stopColor={p.stops[0]} />
-              <stop offset="0.36" stopColor={p.stops[1]} />
-              <stop offset="0.74" stopColor={p.stops[2]} />
-              <stop offset="1" stopColor={p.stops[3]} />
-            </linearGradient>
-          </defs>
-          {cells.map((c, i) => {
-            const x = gcx + c.x * s;
-            const y = gcy + c.y * s;
-            const ringIn = interpolate(
-              t,
-              [c.ring * 1.4, c.ring * 1.4 + 10],
-              [0, 1],
-              {
-                ...CLAMP,
-                easing: EASE_OUT,
-              },
-            );
-            const isFill = i < F;
-            const local = isFill ? t - fillAt(i) : -1;
-            const pop =
-              local >= 0
-                ? spring({
-                    frame: local,
-                    fps,
-                    config: { damping: 13, stiffness: 240, mass: 0.6 },
-                  })
-                : 0;
-            const outlineA = isFill ? ringIn : ringIn * (1 - 0.2 * done);
-            return (
-              <g key={`${c.x.toFixed(2)}_${c.y.toFixed(2)}`}>
-                <path
-                  d={hexPath(x, y, hexR * (0.94 + 0.06 * ringIn))}
-                  fill="none"
-                  stroke={p.hair}
-                  strokeWidth={sw}
-                  opacity={
-                    local >= 0
-                      ? outlineA * (1 - Math.min(1, local / 4))
-                      : outlineA
-                  }
-                />
-                {local >= 0 ? (
-                  <path
-                    d={hexPath(x, y, hexR * (0.55 + 0.45 * pop))}
-                    fill={`url(#${gradId})`}
-                  />
-                ) : null}
-              </g>
-            );
-          })}
-        </svg>
-
-        <div
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? p.bg),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: textX,
-            top: gcy,
-            transform: "translateY(-50%)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-            gap: 18 * u,
+            transform: `scale(${camScale})${glide(camMoving)}`,
+            transformOrigin: "50% 50%",
           }}
         >
-          <div
-            style={{
-              fontFamily: brico,
-              fontWeight: 300,
-              fontSize: heroSize,
-              lineHeight: 0.9,
-              letterSpacing: "-0.05em",
-              color: p.fg,
-              fontVariantNumeric: "tabular-nums",
-              whiteSpace: "nowrap",
-              opacity: textIn,
-              transform: `translateY(${(1 - textIn) * 14 * u}px)`,
-            }}
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
           >
-            {shown}
-            <span
-              style={{
-                fontSize: pctSize,
-                letterSpacing: "-0.02em",
-                marginLeft: 6 * u,
-                color: p.muted,
-              }}
-            >
-              %
-            </span>
-          </div>
+            <defs>
+              <linearGradient
+                id={gradId}
+                gradientUnits="userSpaceOnUse"
+                x1={gcx - gR * (0.9 - 0.15 * drift)}
+                y1={gcy - gR}
+                x2={gcx + gR * (0.9 + 0.15 * drift)}
+                y2={gcy + gR}
+              >
+                <stop offset="0" stopColor={p.stops[0]} />
+                <stop offset="0.36" stopColor={p.stops[1]} />
+                <stop offset="0.74" stopColor={p.stops[2]} />
+                <stop offset="1" stopColor={p.stops[3]} />
+              </linearGradient>
+            </defs>
+            {cells.map((c, i) => {
+              const x = gcx + c.x * s;
+              const y = gcy + c.y * s;
+              const ringIn = interpolate(
+                t,
+                [c.ring * 1.4, c.ring * 1.4 + 10],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                },
+              );
+              const isFill = i < F;
+              const local = isFill ? t - fillAt(i) : -1;
+              const pop =
+                local >= 0
+                  ? spring({
+                      frame: local,
+                      fps,
+                      config: { damping: 13, stiffness: 240, mass: 0.6 },
+                    })
+                  : 0;
+              const outlineA = isFill ? ringIn : ringIn * (1 - 0.2 * done);
+              return (
+                <g key={`${c.x.toFixed(2)}_${c.y.toFixed(2)}`}>
+                  <path
+                    d={hexPath(x, y, hexR * (0.94 + 0.06 * ringIn))}
+                    fill="none"
+                    stroke={p.hair}
+                    strokeWidth={sw}
+                    opacity={
+                      local >= 0
+                        ? outlineA * (1 - Math.min(1, local / 4))
+                        : outlineA
+                    }
+                  />
+                  {local >= 0 ? (
+                    <path
+                      d={hexPath(x, y, hexR * (0.55 + 0.45 * pop))}
+                      fill={`url(#${gradId})`}
+                    />
+                  ) : null}
+                </g>
+              );
+            })}
+          </svg>
+
           <div
             style={{
+              position: "absolute",
+              left: textX,
+              top: gcy,
+              transform: "translateY(-50%)",
               display: "flex",
+              flexDirection: "column",
               alignItems: "flex-start",
-              gap: 12 * u,
-              marginLeft: 6 * u,
-              maxWidth: labelMax + 22 * u,
-              opacity: labelIn,
-              transform: `translateY(${(1 - labelIn) * 8 * u}px)`,
+              gap: 18 * u,
             }}
           >
-            <span
+            <div
               style={{
-                width: 10 * u,
-                height: 10 * u,
-                borderRadius: "50%",
-                background: accent,
-                flexShrink: 0,
-                marginTop: labelSize * 0.42,
-              }}
-            />
-            <span
-              style={{
-                fontFamily: brico,
-                fontWeight: 400,
-                fontSize: labelSize,
-                lineHeight: 1.3,
-                letterSpacing: "-0.01em",
-                color: p.muted,
-                textWrap: "balance",
+                fontFamily,
+                fontWeight,
+                fontSize: heroSize,
+                lineHeight: 0.9,
+                letterSpacing: "-0.05em",
+                color: fg,
+                fontVariantNumeric: "tabular-nums",
+                whiteSpace: "nowrap",
+                opacity: textIn,
+                transform: `translateY(${(1 - textIn) * 14 * u}px)`,
               }}
             >
-              {label}
-            </span>
+              {shown}
+              <span
+                style={{
+                  fontSize: pctSize,
+                  letterSpacing: "-0.02em",
+                  marginLeft: 6 * u,
+                  color: p.muted,
+                }}
+              >
+                {unit}
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 12 * u,
+                marginLeft: 6 * u,
+                maxWidth: labelMax + 22 * u,
+                opacity: labelIn,
+                transform: `translateY(${(1 - labelIn) * 8 * u}px)`,
+              }}
+            >
+              <span
+                style={{
+                  width: 10 * u,
+                  height: 10 * u,
+                  borderRadius: "50%",
+                  background: accent,
+                  flexShrink: 0,
+                  marginTop: labelSize * 0.42,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: labelSize,
+                  lineHeight: 1.3,
+                  letterSpacing: "-0.01em",
+                  color: p.muted,
+                  textWrap: "balance",
+                }}
+              >
+                {label}
+              </span>
+            </div>
           </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
@@ -402,7 +458,7 @@ export function HexFill({
           opacity: 0.5,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

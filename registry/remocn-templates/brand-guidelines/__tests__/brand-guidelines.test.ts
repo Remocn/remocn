@@ -199,7 +199,7 @@ test("installable module graph is closed and no source-brand media or copy ships
     item.files.map((file: { path: string }) => path.resolve(base, file.path)),
   );
   expect(files.size).toBe(10);
-  expect(item.registryDependencies).toEqual(["@remocn/caret"]);
+  expect(item.registryDependencies).toEqual(["@remocn/caret", "@remocn/glide"]);
   expect(item.dependencies).toContain("@fontsource/manrope");
   expect(item.dependencies).toContain("@fontsource/inter");
   for (const file of files) {

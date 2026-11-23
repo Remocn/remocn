@@ -55,8 +55,8 @@ from the Remotion frame and the seed, so renders are deterministic.
 
 The terrain repeats every `loopFrames / speed` frames, 300 frames (10
 seconds) at the defaults. The last frame flows into the first without a
-seam, so a `Sequence` of any multiple of the period, or a Remotion `<Loop>`
-of that length, plays as a continuous background. There is no build-up:
+seam, so a `Sequence` of any multiple of the period (twice as many frames at
+60 fps), or a Remotion `<Loop>` of that length, plays as a continuous background. There is no build-up:
 frame 0 already shows the full map.
 
 ## Performance

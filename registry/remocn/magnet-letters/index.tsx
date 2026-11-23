@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Figtree";
+import type React from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -8,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const face = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -25,6 +26,18 @@ export interface MagnetLettersProps {
   wrongWord?: string;
   /** Magnet body, landing ticks and the right word. */
   accent?: string;
+  /** Frames between letters of the right word dropping in. */
+  stagger?: number;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Size of the line and magnet, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -155,22 +168,46 @@ function Magnet({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MagnetLetters({
   before = "Launch ",
   word = "videos",
   after = ", in code.",
   wrongWord = "slides",
   accent = "#3B5BFD",
+  stagger = DROP_STAGGER,
+  ink,
+  background,
+  fontFamily = face.fontFamily,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: MagnetLettersProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
+  const fg = ink ?? t.fg;
 
   const em = Math.round(width * 0.07);
   const textStyle = {
-    fontFamily: face.fontFamily,
+    fontFamily,
     fontSize: em,
     fontWeight: 400,
     letterSpacing: "-0.03em",
@@ -197,6 +234,8 @@ export function MagnetLetters({
     let live = true;
     face
       .waitUntilDone()
+      .catch(() => undefined)
+      .then(() => document.fonts.load(`400 100px "${fontFamily}"`))
       .catch(() => undefined)
       .then(() => document.fonts.ready)
       .then(() => {
@@ -233,7 +272,7 @@ export function MagnetLetters({
     return () => {
       live = false;
     };
-  }, [before, word, after, wrongWord, em, handle]);
+  }, [before, word, after, wrongWord, em, fontFamily, handle]);
 
   const L = layout;
   const wA = L?.a.w ?? 0;
@@ -323,30 +362,34 @@ export function MagnetLetters({
     return SWEEP_END + 2;
   };
 
-  const flipA = interpolate(frame, [FLIP, FLIP + FLIP_LEN], [0, 1], {
-    ...clamp,
-    easing: EASE_IN_OUT,
-  });
+  const flipAt = (f: number) =>
+    interpolate(f, [FLIP, FLIP + FLIP_LEN], [0, 1], {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    });
+  const flipA = flipAt(frame);
   const flipB = interpolate(frame, [FLIP_BACK, FLIP_BACK + FLIP_LEN], [0, 1], {
     ...clamp,
     easing: EASE_IN_OUT,
   });
   const magnetScaleX = Math.cos(Math.PI * (flipA + flipB));
-  const reflow = interpolate(frame, [REFLOW, REFLOW + REFLOW_LEN], [0, 1], {
-    ...clamp,
-    easing: EASE_IN_OUT,
-  });
+  const reflowAt = (f: number) =>
+    interpolate(f, [REFLOW, REFLOW + REFLOW_LEN], [0, 1], {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    });
 
-  const bump = (land: number) => {
-    const d = frame - land;
+  const bump = (land: number, f: number) => {
+    const d = f - land;
     if (d < 0 || d > 7) return 0;
     return Math.sin((Math.PI * d) / 7) * (1 - d / 9);
   };
 
   const ticks: { x: number; land: number; key: string }[] = [];
 
-  const glyphs = items.map((it) => {
-    if (it.ch === " ") return null;
+  // Where a glyph sits on frame `f`, so a frame can be held against its
+  // neighbours to tell whether the glyph is moving.
+  const poseOf = (it: (typeof items)[number], f: number) => {
     const seed = it.n + 1;
     const wGlyph =
       it.kind === "right" ? (L?.b.ws[it.ib] ?? 0) : (L?.a.ws[it.ia] ?? 0);
@@ -357,40 +400,41 @@ export function MagnetLetters({
     let sy = 1;
     let opacity = 1;
     let blur = 0;
+    let tick: (typeof ticks)[number] | null = null;
 
     if (it.kind === "right") {
-      const start = DROP + it.k * DROP_STAGGER;
+      const start = DROP + it.k * stagger;
       const land = start + FALL;
-      const p = interpolate(frame, [start, land], [0, 1], clamp);
+      const p = interpolate(f, [start, land], [0, 1], clamp);
       x = bx(it.ib);
       y = -em * 1.7 * (1 - p * p);
       rot = (hash(seed * 4.3) - 0.5) * 18 * (1 - p);
       opacity = interpolate(p, [0, 0.45], [0, 1], clamp);
       blur = (1 - opacity) * 6;
-      const b = bump(land);
+      const b = bump(land, f);
       sx = 1 + 0.03 * b;
       sy = 1 - 0.06 * b;
-      ticks.push({ x: bcx(it.ib), land, key: `r${it.n}` });
+      tick = { x: bcx(it.ib), land, key: `r${it.n}` };
     } else {
       const land = landAt(acx(it.ia));
       const home =
         it.kind === "wrong"
           ? ax(it.ia)
-          : interpolate(reflow, [0, 1], [ax(it.ia), bx(it.ib)]);
+          : interpolate(reflowAt(f), [0, 1], [ax(it.ia), bx(it.ib)]);
       // Scattered on three loose tiers so neighbours never sit on top of each other.
       const dx = (hash(seed * 3.1) - 0.5) * 0.35 * em;
       const dy = -(0.35 + (it.n % 3) * 0.62 + hash(seed * 7.7) * 0.3) * em;
       const r0 = (hash(seed * 5.3) - 0.5) * 40;
-      const lean = interpolate(frame, [land - SNAP - 10, land - SNAP], [0, 1], {
+      const lean = interpolate(f, [land - SNAP - 10, land - SNAP], [0, 1], {
         ...clamp,
         easing: EASE_IN_OUT,
       });
-      const q = interpolate(frame, [land - SNAP, land], [0, 1], {
+      const q = interpolate(f, [land - SNAP, land], [0, 1], {
         ...clamp,
         easing: EASE_PULL,
       });
       const fadeIn = interpolate(
-        frame,
+        f,
         [IN + hash(seed * 9.1) * 14, IN + hash(seed * 9.1) * 14 + 16],
         [0, 1],
         { ...clamp, easing: EASE_OUT },
@@ -400,10 +444,10 @@ export function MagnetLetters({
       rot = r0 * (1 - 0.18 * lean) * (1 - q);
       opacity = fadeIn;
       blur = (1 - fadeIn) * 8;
-      const b = bump(land);
+      const b = bump(land, f);
       sx = 1 + 0.03 * b;
       sy = 1 - 0.06 * b;
-      ticks.push({ x: acx(it.ia), land, key: `a${it.n}` });
+      tick = { x: acx(it.ia), land, key: `a${it.n}` };
 
       if (it.kind === "wrong") {
         // Repelled: the word lifts off the line as a unit, then the letters
@@ -412,7 +456,7 @@ export function MagnetLetters({
         const side = n > 1 ? it.k / (n - 1) - 0.5 : 0;
         const delay = Math.abs(side) * 4;
         const rp = interpolate(
-          frame,
+          f,
           [REPEL + delay, REPEL + delay + REPEL_LEN],
           [0, 1],
           clamp,
@@ -420,7 +464,7 @@ export function MagnetLetters({
         const e = EASE_OUT(rp);
         x += side * em * 1.1 * e;
         y +=
-          -em * 0.06 * flipA -
+          -em * 0.06 * flipAt(f) -
           em * (1.6 + hash(seed * 2.9) * 0.6 - Math.abs(side) * 0.6) * e;
         rot += side * (30 + hash(seed * 6.1) * 20) * e;
         opacity *= 1 - interpolate(rp, [0.25, 0.85], [0, 1], clamp);
@@ -428,6 +472,23 @@ export function MagnetLetters({
       }
     }
 
+    return { x, y, rot, sx, sy, opacity, blur, wGlyph, tick };
+  };
+
+  const glyphs = items.map((it) => {
+    if (it.ch === " ") return null;
+    const { x, y, rot, sx, sy, opacity, blur, wGlyph, tick } = poseOf(
+      it,
+      frame,
+    );
+    if (tick) ticks.push(tick);
+    const shifts = (o: ReturnType<typeof poseOf>) =>
+      Math.abs(o.y - y) > 1e-3 ||
+      Math.abs(o.rot - rot) > 1e-4 ||
+      Math.abs(o.sx - sx) * em > 1e-3 ||
+      Math.abs(o.sy - sy) * em > 1e-3;
+    const moving =
+      shifts(poseOf(it, frame - speed)) || shifts(poseOf(it, frame + speed));
     return (
       <span
         key={it.n}
@@ -436,11 +497,11 @@ export function MagnetLetters({
           position: "absolute",
           left: x,
           top: rowTop,
-          color: it.kind === "right" ? accent : t.fg,
+          color: it.kind === "right" ? accent : fg,
           opacity,
           filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
           transformOrigin: `${wGlyph / 2}px ${L?.baseline ?? em}px`,
-          transform: `translateY(${y}px) rotate(${rot}deg) scale(${sx}, ${sy})`,
+          transform: `translateY(${y}px) rotate(${rot}deg) scale(${sx}, ${sy})${glide(moving)}`,
         }}
       >
         {it.ch}
@@ -450,9 +511,29 @@ export function MagnetLetters({
 
   const hair = Math.max(1.5, width / 640);
   const mx = magnetX(frame);
+  // Layout rounds a box's edges to whole pixels, so a magnet eased by `left`
+  // steps sideways pixel by pixel. Layout holds the place the current glide
+  // ends at and the travel there is a transform, which is 0 once it arrives.
+  const magnetRest =
+    frame < SWEEP
+      ? startX
+      : frame < RETURN
+        ? endX
+        : frame < REFLOW
+          ? wrongCentre
+          : frame < EXIT
+            ? rightCentre
+            : width + em;
+  const magnetDx = Math.abs(mx - magnetRest) > 1e-3 ? mx - magnetRest : 0;
 
   return (
-    <AbsoluteFill style={{ background: t.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? t.bg),
+        overflow: "hidden",
+      }}
+    >
       {/* measuring rows: never shown */}
       <div style={{ position: "absolute", visibility: "hidden", top: 0 }}>
         <div ref={aRef} style={{ ...textStyle, display: "inline-block" }}>
@@ -476,44 +557,46 @@ export function MagnetLetters({
         </div>
       </div>
 
-      <div style={{ position: "absolute", inset: 0, opacity: L ? 1 : 0 }}>
-        {ticks.map((tk) => {
-          const d = frame - tk.land;
-          if (d < 0 || d > 24) return null;
-          const grow = interpolate(d, [0, 3], [0, 1], {
-            ...clamp,
-            easing: EASE_OUT,
-          });
-          const fade = interpolate(d, [6, 24], [1, 0], clamp);
-          return (
-            <div
-              key={tk.key}
-              style={{
-                position: "absolute",
-                left: tk.x - hair / 2,
-                top: baseY + em * 0.1,
-                width: hair,
-                height: em * 0.13 * grow,
-                background: accent,
-                opacity: fade,
-              }}
-            />
-          );
-        })}
+      <ScaleLayer scale={scale}>
+        <div style={{ position: "absolute", inset: 0, opacity: L ? 1 : 0 }}>
+          {ticks.map((tk) => {
+            const d = frame - tk.land;
+            if (d < 0 || d > 24) return null;
+            const grow = interpolate(d, [0, 3], [0, 1], {
+              ...clamp,
+              easing: EASE_OUT,
+            });
+            const fade = interpolate(d, [6, 24], [1, 0], clamp);
+            return (
+              <div
+                key={tk.key}
+                style={{
+                  position: "absolute",
+                  left: tk.x - hair / 2,
+                  top: baseY + em * 0.1,
+                  width: hair,
+                  height: em * 0.13 * grow,
+                  background: accent,
+                  opacity: fade,
+                }}
+              />
+            );
+          })}
 
-        {glyphs}
+          {glyphs}
 
-        <div
-          style={{
-            position: "absolute",
-            left: mx,
-            top: baseY + em * 0.36,
-            transform: `translateX(-50%) scaleX(${magnetScaleX})`,
-          }}
-        >
-          <Magnet size={em} body={accent} tipA={t.tipA} tipB={t.tipB} />
+          <div
+            style={{
+              position: "absolute",
+              left: magnetDx ? magnetRest : mx,
+              top: baseY + em * 0.36,
+              transform: `${magnetDx ? `translateX(${magnetDx}px) ` : ""}translateX(-50%) scaleX(${magnetScaleX})`,
+            }}
+          >
+            <Magnet size={em} body={accent} tipA={t.tipA} tipB={t.tipB} />
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

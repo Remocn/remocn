@@ -2,14 +2,10 @@
 
 import { loadFont } from "@remotion/google-fonts/BarlowCondensed";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
-import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { type ReactNode, useId } from "react";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -32,6 +28,20 @@ export interface CandleRallyProps {
   /** Second line of the slam. */
   headline2?: string;
   accent?: string;
+  /** Label before the previous-high price on the dashed level. */
+  levelLabel?: string;
+  /** Weight of the slam headline. */
+  fontWeight?: number;
+  /** Text color of the slam; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the slam. Load it yourself; Barlow Condensed by default. */
+  fontFamily?: string;
+  /** Size of the chart and slam, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -105,6 +115,22 @@ const THEMES = {
   },
 } as const;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CandleRally({
   symbol = "RMCN",
   price = 128.4,
@@ -112,13 +138,22 @@ export function CandleRally({
   headline = "All-time",
   headline2 = "high",
   accent = "#3B5BFD",
+  levelLabel = "PREV HIGH",
+  fontWeight = 500,
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: CandleRallyProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   // ---- candle slots: chop narrow and even, rally widening, last one huge ---
@@ -186,20 +221,25 @@ export function CandleRally({
     });
     return m;
   };
-  let hiSum = 0;
-  for (let k = 0; k < 6; k++) {
-    const top = topAt(t - k);
-    hiSum += Math.max(HI_MIN, top + (top - LO) * 0.12);
-  }
-  const topNow = topAt(t);
-  const hi = Math.max(hiSum / 6, topNow + (topNow - LO) * 0.05);
-  const lo = LO - (hi - HI_MIN) * 0.03;
-  const yOf = (v: number) => H * 0.88 - ((v - lo) / (hi - lo)) * H * 0.76;
+  const yOfAt = (tt: number) => {
+    let hiSum = 0;
+    for (let k = 0; k < 6; k++) {
+      const top = topAt(tt - k);
+      hiSum += Math.max(HI_MIN, top + (top - LO) * 0.12);
+    }
+    const topNow = topAt(tt);
+    const hi = Math.max(hiSum / 6, topNow + (topNow - LO) * 0.05);
+    const lo = LO - (hi - HI_MIN) * 0.03;
+    return (v: number) => H * 0.88 - ((v - lo) / (hi - lo)) * H * 0.76;
+  };
+  const yOf = yOfAt(t);
   // the camera pulls back as the rally needs the room
-  const zx = interpolate(t, [0, RALLY_AT - 4, FINAL_AT + 16], [1.5, 1.42, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const zxAt = (tt: number) =>
+    interpolate(tt, [0, RALLY_AT - 4, FINAL_AT + 16], [1.5, 1.42, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const zx = zxAt(t);
 
   const slam1 = interpolate(t, [SLAM, SLAM + 7], [0, 1], {
     ...CLAMP,
@@ -214,13 +254,26 @@ export function CandleRally({
     easing: EASE_IO,
   });
   // one impact: the chart dips on the slam and settles
-  const hit =
-    interpolate(t, [SLAM + 1, SLAM + 3, SLAM + 16], [0, 1, 0], {
+  const hitAt = (tt: number) =>
+    interpolate(tt, [SLAM + 1, SLAM + 3, SLAM + 16], [0, 1, 0], {
       ...CLAMP,
       easing: EASE_OUT,
     }) *
     10 *
     u;
+  const hit = hitAt(t);
+  // Whether `value(f)`, in px, moves by more than a thousandth of a pixel
+  // into or out of this frame. The range pumps through a box filter and the
+  // eases have flat tails, so there is no single progress to test.
+  const moves = (value: (f: number) => number) =>
+    Math.abs(value(t) - value(t - speed)) > 1e-3 ||
+    Math.abs(value(t + speed) - value(t)) > 1e-3;
+  // The axis labels ride the auto-scaling range and the slam's dip as SVG
+  // attributes, so the mark sits on the drawing's own style and leans it
+  // while either moves.
+  const axisMoving = [60, 120, prevHigh].some((v) =>
+    moves((f) => yOfAt(f)(v) + hitAt(f)),
+  );
 
   // last candle's live close, the tag reads it
   const fk = EASE_PUSH(Math.max(0, Math.min(1, (t - FINAL_AT) / FINAL_LEN)));
@@ -311,12 +364,35 @@ export function CandleRally({
     );
   };
 
-  const fx = cx(fi);
-  const fw = cw(fi);
-  const wickTop = yOf(
-    Math.max(finalCandle[0], live) +
-      (finalCandle[2] - Math.max(finalCandle[0], finalCandle[1])) * fk,
-  );
+  // The tag rides the last wick. Layout rounds a box and a baseline to whole
+  // pixels, so it is laid out where it settles and the ride is a transform,
+  // computed by the same function at both ends so it is exactly 0 at rest.
+  const tagAt = (tt: number) => {
+    const z = zxAt(tt);
+    const k = EASE_PUSH(Math.max(0, Math.min(1, (tt - FINAL_AT) / FINAL_LEN)));
+    const x =
+      W * (0.065 + (xs[fi] - 0.065) * fit * z) -
+      (W * widths[fi] * fit * z) / 2 -
+      14 * u;
+    const y =
+      yOfAt(tt)(
+        Math.max(
+          finalCandle[0],
+          finalCandle[0] + (finalCandle[1] - finalCandle[0]) * k,
+        ) +
+          (finalCandle[2] - Math.max(finalCandle[0], finalCandle[1])) * k,
+      ) + hitAt(tt);
+    return { x, y };
+  };
+  const tag = tagAt(t);
+  const tagRest = tagAt(Math.max(FINAL_AT + FINAL_LEN, SLAM + 16) + 8);
+  const tagDx = tag.x - tagRest.x;
+  const tagDy = tag.y - tagRest.y;
+  const tagRide =
+    Math.abs(tagDx) < 1e-3 && Math.abs(tagDy) < 1e-3
+      ? ""
+      : `translate(${tagDx}px, ${tagDy}px) `;
+  const tagMark = glide(moves((f) => tagAt(f).y));
   const tagIn = interpolate(t, [FINAL_AT + 2, FINAL_AT + 10], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -327,7 +403,9 @@ export function CandleRally({
   const S = H * 0.3;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{ background: background ?? p.bg, overflow: "hidden" }}
+    >
       {/* aurora ground behind the breakout */}
       <div
         style={{
@@ -341,167 +419,173 @@ export function CandleRally({
         }}
       />
 
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        role="img"
-        aria-label={`${symbol} candles rally to ${price.toFixed(2)}, ${headline} ${headline2}`}
-      >
-        <defs>
-          <linearGradient
-            id={`${uid}aurora`}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={yOf(finalCandle[1])}
-            x2={0}
-            y2={yOf(finalCandle[0])}
-          >
-            {AURORA.map((c, i) => (
-              <stop key={c} offset={i / (AURORA.length - 1)} stopColor={c} />
-            ))}
-          </linearGradient>
-          <linearGradient
-            id={`${uid}wick`}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={yOf(finalCandle[2])}
-            x2={0}
-            y2={yOf(finalCandle[3])}
-          >
-            <stop offset={0} stopColor={AURORA[0]} />
-            <stop offset={1} stopColor={AURORA[3]} />
-          </linearGradient>
-        </defs>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(axisMoving),
+          }}
+          role="img"
+          aria-label={`${symbol} candles rally to ${price.toFixed(2)}, ${headline} ${headline2}`}
+        >
+          <defs>
+            <linearGradient
+              id={`${uid}aurora`}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={yOf(finalCandle[1])}
+              x2={0}
+              y2={yOf(finalCandle[0])}
+            >
+              {AURORA.map((c, i) => (
+                <stop key={c} offset={i / (AURORA.length - 1)} stopColor={c} />
+              ))}
+            </linearGradient>
+            <linearGradient
+              id={`${uid}wick`}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={yOf(finalCandle[2])}
+              x2={0}
+              y2={yOf(finalCandle[3])}
+            >
+              <stop offset={0} stopColor={AURORA[0]} />
+              <stop offset={1} stopColor={AURORA[3]} />
+            </linearGradient>
+          </defs>
 
-        <g transform={`translate(0 ${hit})`}>
-          {/* minimal axis: four faint levels with mono ticks */}
-          {[60, 80, 100, 120].map((v) => (
-            <g key={v} opacity={levelIn * (1 - dim * 0.6)}>
-              <rect
-                x={W * 0.04}
-                y={yOf(v) - 0.5 * u}
-                width={W * 0.88}
-                height={1 * u}
-                fill={p.hair}
+          <g transform={`translate(0 ${hit})`}>
+            {/* minimal axis: four faint levels with mono ticks */}
+            {[60, 80, 100, 120].map((v) => (
+              <g key={v} opacity={levelIn * (1 - dim * 0.6)}>
+                <rect
+                  x={W * 0.04}
+                  y={yOf(v) - 0.5 * u}
+                  width={W * 0.88}
+                  height={1 * u}
+                  fill={p.hair}
+                />
+                <text
+                  x={W * 0.965}
+                  y={yOf(v) + 5 * u}
+                  textAnchor="end"
+                  fontFamily={mono}
+                  fontWeight={400}
+                  fontSize={13 * u}
+                  fill={p.muted}
+                >
+                  {v.toFixed(0)}
+                </text>
+              </g>
+            ))}
+
+            {/* previous high: dashed level the last candle punches through */}
+            <g opacity={levelIn * levelOut * (1 - dim)}>
+              <line
+                x1={W * 0.04}
+                x2={W * 0.92}
+                y1={levelY}
+                y2={levelY}
+                stroke={broke ? p.up : accent}
+                strokeOpacity={0.55 + 0.45 * levelFlash}
+                strokeWidth={(1.5 + 2 * levelFlash) * u}
+                strokeDasharray={`${6 * u} ${6 * u}`}
               />
               <text
-                x={W * 0.965}
-                y={yOf(v) + 5 * u}
-                textAnchor="end"
+                x={W * 0.04}
+                y={levelY - 12 * u}
                 fontFamily={mono}
-                fontWeight={400}
-                fontSize={13 * u}
+                fontWeight={500}
+                fontSize={14 * u}
+                letterSpacing="0.1em"
                 fill={p.muted}
               >
-                {v.toFixed(0)}
+                {levelLabel} {prevHigh.toFixed(2)}
               </text>
             </g>
-          ))}
 
-          {/* previous high: dashed level the last candle punches through */}
-          <g opacity={levelIn * levelOut * (1 - dim)}>
-            <line
-              x1={W * 0.04}
-              x2={W * 0.92}
-              y1={levelY}
-              y2={levelY}
-              stroke={broke ? p.up : accent}
-              strokeOpacity={0.55 + 0.45 * levelFlash}
-              strokeWidth={(1.5 + 2 * levelFlash) * u}
-              strokeDasharray={`${6 * u} ${6 * u}`}
-            />
-            <text
-              x={W * 0.04}
-              y={levelY - 12 * u}
-              fontFamily={mono}
-              fontWeight={500}
-              fontSize={14 * u}
-              letterSpacing="0.1em"
-              fill={p.muted}
-            >
-              PREV HIGH {prevHigh.toFixed(2)}
-            </text>
+            {all.map((_, i) => candle(i))}
           </g>
-
-          {all.map((_, i) => candle(i))}
-        </g>
-      </svg>
-
-      {/* price tag riding the last wick */}
-      <div
-        style={{
-          position: "absolute",
-          left: fx - fw / 2 - 14 * u,
-          top: wickTop + hit,
-          height: tagH,
-          transform: `translate(-100%, -50%) translateX(${(1 - tagIn) * 16 * u}px)`,
-          opacity: tagIn,
-          display: "flex",
-          alignItems: "center",
-          gap: 10 * u,
-          padding: `0 ${16 * u}px`,
-          borderRadius: tagH / 2,
-          background: AURORA[0],
-          color: p.tagInk,
-          fontFamily: mono,
-          fontWeight: 500,
-          fontSize: tagFont,
-          letterSpacing: "0.02em",
-          fontVariantNumeric: "tabular-nums",
-          whiteSpace: "nowrap",
-          lineHeight: 1,
-        }}
-      >
-        <span style={{ opacity: 0.62 }}>{symbol}</span>
-        <span>{live.toFixed(2)}</span>
-        <svg
-          width={0.62 * tagFont}
-          height={0.54 * tagFont}
-          viewBox="0 0 10 8.66"
-          aria-hidden
-          style={{ display: "block" }}
-        >
-          <path d="M5 0 L10 8.66 L0 8.66 Z" fill={p.tagInk} />
         </svg>
-      </div>
 
-      {/* the slam */}
-      <div
-        style={{
-          position: "absolute",
-          left: W * 0.058,
-          top: H * 0.255,
-          fontFamily: display,
-          fontWeight: 500,
-          fontSize: S,
-          lineHeight: 0.96,
-          letterSpacing: "-0.012em",
-          textTransform: "uppercase",
-          color: p.fg,
-          whiteSpace: "nowrap",
-        }}
-      >
+        {/* price tag riding the last wick */}
         <div
           style={{
-            opacity: Math.min(1, slam1 * 2.5),
-            transform: `scale(${1.28 - 0.28 * slam1})`,
-            transformOrigin: "0% 60%",
+            position: "absolute",
+            left: tagRest.x,
+            top: tagRest.y,
+            height: tagH,
+            transform: `${tagRide}translate(-100%, -50%) translateX(${(1 - tagIn) * 16 * u}px)${tagMark}`,
+            opacity: tagIn,
+            display: "flex",
+            alignItems: "center",
+            gap: 10 * u,
+            padding: `0 ${16 * u}px`,
+            borderRadius: tagH / 2,
+            background: AURORA[0],
+            color: p.tagInk,
+            fontFamily: mono,
+            fontWeight: 500,
+            fontSize: tagFont,
+            letterSpacing: "0.02em",
+            fontVariantNumeric: "tabular-nums",
+            whiteSpace: "nowrap",
+            lineHeight: 1,
           }}
         >
-          {headline}
+          <span style={{ opacity: 0.62 }}>{symbol}</span>
+          <span>{live.toFixed(2)}</span>
+          <svg
+            width={0.62 * tagFont}
+            height={0.54 * tagFont}
+            viewBox="0 0 10 8.66"
+            aria-hidden
+            style={{ display: "block" }}
+          >
+            <path d="M5 0 L10 8.66 L0 8.66 Z" fill={p.tagInk} />
+          </svg>
         </div>
+
+        {/* the slam */}
         <div
           style={{
-            opacity: Math.min(1, slam2 * 2.5),
-            transform: `scale(${1.28 - 0.28 * slam2})`,
-            transformOrigin: "0% 60%",
+            position: "absolute",
+            left: W * 0.058,
+            top: H * 0.255,
+            fontFamily,
+            fontWeight,
+            fontSize: S,
+            lineHeight: 0.96,
+            letterSpacing: "-0.012em",
+            textTransform: "uppercase",
+            color: fg,
+            whiteSpace: "nowrap",
           }}
         >
-          {headline2}
+          <div
+            style={{
+              opacity: Math.min(1, slam1 * 2.5),
+              transform: `scale(${1.28 - 0.28 * slam1})${glide(slam1 > 0 && slam1 < 1)}`,
+              transformOrigin: "0% 60%",
+            }}
+          >
+            {headline}
+          </div>
+          <div
+            style={{
+              opacity: Math.min(1, slam2 * 2.5),
+              transform: `scale(${1.28 - 0.28 * slam2})${glide(slam2 > 0 && slam2 < 1)}`,
+              transformOrigin: "0% 60%",
+            }}
+          >
+            {headline2}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="BeamSweepDemo"
     component={BeamSweepDemoScene}
-    durationInFrames={108}
-    fps={30}
+    durationInFrames={216}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -87,6 +87,35 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Supporting line under the statement",
     },
     {
+      name: "brand",
+      type: "string",
+      default: "\"Lumen\"",
+      description: "Product name in the scene A app bar and on its page.",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"Make the hero calmer and add the product shots.\"",
+      description: "Request shown in the scene A chat bubble.",
+    },
+    {
+      name: "publishLabel",
+      type: "string",
+      default: "\"Publish\"",
+      description: "Label of the scene A button before it is pressed.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hanken Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "beam",
       type: "BeamSweepProps",
       description: "Overrides for beam preset, angle, burn color, edge and light mode",
@@ -100,6 +129,11 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Overrides for the scene B shader parameters",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
     },
     {
       name: "sceneA",
@@ -118,6 +152,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "number",
       default: "BEAM_SWEEP_DEMO.transition",
       description: "Transition length in frames",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

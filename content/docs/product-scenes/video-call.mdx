@@ -39,8 +39,8 @@ export const RemotionRoot = () => (
   <Composition
     id="VideoCall"
     component={VideoCallScene}
-    durationInFrames={300}
-    fps={30}
+    durationInFrames={600}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -72,6 +72,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Clock time shown in the bottom bar.",
     },
     {
+      name: "callTitle",
+      type: "string",
+      default: "\"Launch sync\"",
+      description: "Call name above the grid in portrait.",
+    },
+    {
+      name: "screenTitle",
+      type: "string",
+      default: "\"Launch week\"",
+      description: "Heading of the built-in shared screen.",
+    },
+    {
+      name: "leaveLabel",
+      type: "string",
+      default: "\"Leave\"",
+      description: "Label of the red leave button.",
+    },
+    {
       name: "presenter",
       type: "number",
       default: "1",
@@ -98,6 +116,34 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for highlights and the active speaker ring.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Onest\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

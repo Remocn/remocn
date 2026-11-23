@@ -1,0 +1,117 @@
+{
+  "component": "pr-merge",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-terminal",
+      "label": "Midnight Terminal",
+      "description": "Dark theme in monospace type with a cool green accent over a deep night ground, like a late-night CLI session.",
+      "askedAs": [
+        "dark terminal style merge",
+        "hacker look with monospace font",
+        "pull request in dark mode with green",
+        "тёмный терминальный стиль",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb950",
+        "ground": "nightfold"
+      }
+    },
+    {
+      "id": "quick-ship",
+      "label": "Quick Ship",
+      "description": "Fast, snappy pass where checks tick green in rapid succession and the merge lands almost instantly.",
+      "askedAs": [
+        "make it faster",
+        "quick merge animation",
+        "rapid checks going green",
+        "быстрее анимацию",
+        "быстрый мерж"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 4,
+        "ground": "cobalt-rise"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Unhurried, enlarged card with long gaps between checks so each green tick reads as a deliberate beat.",
+      "askedAs": [
+        "slow dramatic merge",
+        "bigger and slower",
+        "let each check breathe",
+        "медленно и крупно",
+        "драматичная пауза перед мержем"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 26,
+        "scale": 1.25,
+        "delay": 20
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm off-white paper with a serif face and ink-dark text, a calm changelog look with a muted violet accent.",
+      "askedAs": [
+        "elegant serif changelog look",
+        "warm paper background",
+        "classy light version",
+        "элегантный светлый стиль",
+        "бумажный фон с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f5f1e8",
+        "ink": "#1f1b16",
+        "accent": "#6e40c9",
+        "ground": "paper-crease"
+      }
+    },
+    {
+      "id": "copper-glow",
+      "label": "Copper Glow",
+      "description": "Dark card on a warm copper ground with an amber accent and compact sizing for a cozy launch beat.",
+      "askedAs": [
+        "warm dark orange vibe",
+        "amber accent on dark",
+        "smaller cozy merge card",
+        "тёплый тёмный вариант",
+        "медный оттенок"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "copper",
+        "accent": "#e8954a",
+        "scale": 0.85,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "polar-clean",
+      "label": "Polar Clean",
+      "description": "Crisp icy light look with a teal accent and Inter type for a clean, product-marketing feel.",
+      "askedAs": [
+        "clean minimal light look",
+        "cool blue icy style",
+        "product launch clean version",
+        "чистый светлый минимализм",
+        "холодные голубые тона"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "accent": "#0e8a8a",
+        "fontFamily": "Inter"
+      }
+    }
+  ]
+}

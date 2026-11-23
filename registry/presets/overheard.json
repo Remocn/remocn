@@ -1,0 +1,123 @@
+{
+  "component": "overheard",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm off-white page with deep ink serif and a muted brick accent, like a magazine pull quote.",
+      "askedAs": [
+        "make it look like a magazine quote",
+        "light warm paper background",
+        "printed editorial style",
+        "как цитата в журнале",
+        "светлый тёплый фон как бумага"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#a4462f",
+        "fontFamily": "Instrument Serif",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Words drift in gently with a long, dramatic pause before the answer lands.",
+      "askedAs": [
+        "slower more dramatic timing",
+        "longer pause before the answer",
+        "cinematic slow build",
+        "медленнее и драматичнее",
+        "длинная пауза перед ответом"
+      ],
+      "props": {
+        "stagger": 9,
+        "pause": 52,
+        "speed": 0.75,
+        "delay": 12
+      }
+    },
+    {
+      "id": "snappy-chat",
+      "label": "Snappy Chat",
+      "description": "Quick-fire sans-serif exchange that reads like a fast chat message with a sharp blue accent.",
+      "askedAs": [
+        "faster like a chat",
+        "quick punchy dialogue",
+        "modern sans serif version",
+        "быстро как в чате",
+        "современный шрифт без засечек"
+      ],
+      "props": {
+        "fontFamily": "Inter",
+        "stagger": 2,
+        "pause": 10,
+        "speed": 1.5,
+        "accent": "#3b82f6"
+      }
+    },
+    {
+      "id": "terminal-log",
+      "label": "Terminal Log",
+      "description": "Monospace text on near-black with a soft green accent, like a dev log overheard in the repo.",
+      "askedAs": [
+        "make it look like code",
+        "developer terminal style",
+        "monospace dark version",
+        "в стиле терминала",
+        "как код для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#d7e4dc",
+        "accent": "#5fbf8a",
+        "stagger": 1,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Large Fraunces type in cream on deep navy with a restrained gold accent for a luxe feel.",
+      "askedAs": [
+        "luxury navy and gold",
+        "premium dark elegant look",
+        "bigger fancy serif text",
+        "тёмно-синий с золотом",
+        "роскошный элегантный вид"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#0f1a2e",
+        "ink": "#f2ead8",
+        "accent": "#c9a45c",
+        "scale": 1.3
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Small, calm Geist text on soft grey with no flourish, appearing all at once.",
+      "askedAs": [
+        "minimal clean light version",
+        "smaller subtle text",
+        "simple grey and black",
+        "минималистичный светлый вариант",
+        "спокойный мелкий текст"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Geist",
+        "background": "#ececea",
+        "ink": "#2a2a2a",
+        "stagger": 0,
+        "scale": 0.75
+      }
+    }
+  ]
+}

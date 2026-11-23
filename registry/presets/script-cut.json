@@ -1,0 +1,127 @@
+{
+  "component": "script-cut",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-draft",
+      "label": "Paper Draft",
+      "description": "Warm off-white page with a serif voice and slow, lingering cuts like a printed screenplay.",
+      "askedAs": [
+        "make it look like a printed script",
+        "light serif slow version",
+        "warm paper editorial style",
+        "как сценарий на бумаге",
+        "светлый вариант с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "hold": 48
+      }
+    },
+    {
+      "id": "rapid-edit",
+      "label": "Rapid Edit",
+      "description": "Fast, punchy cuts with heavy grotesque type and almost no word stagger.",
+      "askedAs": [
+        "make the cuts faster",
+        "snappy energetic edit",
+        "quick punchy shots",
+        "быстрый монтаж",
+        "сделай резче и быстрее"
+      ],
+      "props": {
+        "speed": 1.75,
+        "hold": 14,
+        "stagger": 0,
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "terminal-log",
+      "label": "Terminal Log",
+      "description": "Monospaced green-accented type on near-black, like an edit decision list scrolling by.",
+      "askedAs": [
+        "code style monospace",
+        "make it look like a terminal",
+        "technical edit list look",
+        "моноширинный шрифт как в терминале",
+        "технический стиль"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 400,
+        "background": "#0d1110",
+        "ink": "#d9e4dc",
+        "accent": "#4fb286",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "midnight-blue",
+      "label": "Midnight Blue",
+      "description": "Deep navy backdrop with soft white type and a calm blue accent, gently paced.",
+      "askedAs": [
+        "dark blue calm version",
+        "navy background elegant",
+        "slower moody blue",
+        "тёмно-синий фон",
+        "спокойный синий вариант"
+      ],
+      "props": {
+        "background": "#0f1a2e",
+        "ink": "#eef2f8",
+        "accent": "#6c9cf0",
+        "fontFamily": "Manrope",
+        "speed": 0.75,
+        "stagger": 4
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Large, heavy Fraunces headlines on clean white with a terracotta accent and generous holds.",
+      "askedAs": [
+        "big bold headline look",
+        "make the text huge",
+        "dramatic large type",
+        "крупный жирный текст",
+        "большие заголовки"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "fontWeight": 700,
+        "scale": 1.4,
+        "accent": "#c4572f",
+        "hold": 40
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Small, light Inter type with wide word stagger and a slow, airy rhythm.",
+      "askedAs": [
+        "subtle minimal version",
+        "thin light text slow",
+        "understated and airy",
+        "минималистичный тонкий шрифт",
+        "тихий спокойный вариант"
+      ],
+      "props": {
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "scale": 0.75,
+        "stagger": 6,
+        "speed": 0.5,
+        "delay": 12
+      }
+    }
+  ]
+}

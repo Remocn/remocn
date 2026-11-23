@@ -6,14 +6,10 @@ import {
   getPointAtLength,
   warpPath,
 } from "@remotion/paths";
+import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 /**
  * Beat sheet (30fps, speed 1):
@@ -41,6 +37,18 @@ export interface LightTrailWriteProps {
    */
   finish?: "solid" | "accent";
   accent?: string;
+  /** Replaces the remocn mark the script turns into. */
+  logo?: React.ReactNode;
+  /** Stage fill; "transparent" drops it with the vignette and grain. */
+  background?: string;
+  /** Frames the light takes to write the whole path. */
+  write?: number;
+  /** Size of the script and logo, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
 }
@@ -112,8 +120,6 @@ const CLAMP = {
 const EASE_WRITE = Easing.bezier(0.42, 0, 0.58, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
-const SWEEP_START = WRITE_END + 12;
-const SWEEP_END = SWEEP_START + 24;
 
 function rgb(hex: string) {
   const h = hex.replace("#", "");
@@ -202,15 +208,41 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LightTrailWrite({
   path = DEFAULT_PATH,
   strokeWidth,
   finish = "solid",
   accent = "#3B5BFD",
+  logo,
+  background = BG,
+  write = WRITE_END - WRITE_START,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
 }: LightTrailWriteProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const transparent = background === "transparent";
+  const writeEnd = WRITE_START + write;
+  const sweepStart = writeEnd + 12;
+  const sweepEnd = sweepStart + 24;
+  const { width, height } = useSceneConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const ids = {
     wide: `w${uid}`,
@@ -237,7 +269,7 @@ export function LightTrailWrite({
   const vbY = (box.y1 + box.y2) / 2 - vbH / 2 - vbH * 0.02;
 
   const writeAt = (frame: number) =>
-    interpolate(frame, [WRITE_START, WRITE_END], [0, len], {
+    interpolate(frame, [WRITE_START, writeEnd], [0, len], {
       ...CLAMP,
       easing: EASE_WRITE,
     });
@@ -252,19 +284,14 @@ export function LightTrailWrite({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const burnOut = interpolate(
-    t,
-    [WRITE_END - 2, WRITE_END + 10],
-    [1, 0],
-    CLAMP,
-  );
+  const burnOut = interpolate(t, [writeEnd - 2, writeEnd + 10], [1, 0], CLAMP);
   const headOn = ignite * burnOut;
-  const memory = interpolate(t, [WRITE_START, WRITE_END], [0.06, 0.11], CLAMP);
-  const reveal = interpolate(t, [WRITE_END, WRITE_END + 10], [0, 1], {
+  const memory = interpolate(t, [WRITE_START, writeEnd], [0.06, 0.11], CLAMP);
+  const reveal = interpolate(t, [writeEnd, writeEnd + 10], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const drain = interpolate(t, [WRITE_END + 10, SWEEP_END], [0, 1], {
+  const drain = interpolate(t, [writeEnd + 10, sweepEnd], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -272,11 +299,11 @@ export function LightTrailWrite({
 
   // the hand-over: a slanted bar of light crosses the frame; left of it the
   // logo, right of it what is left of the script
-  const sweep = interpolate(t, [SWEEP_START, SWEEP_END], [0, 1], {
+  const sweep = interpolate(t, [sweepStart, sweepEnd], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const sweeping = t >= SWEEP_START - 1 && t <= SWEEP_END + 1;
+  const sweeping = t >= sweepStart - 1 && t <= sweepEnd + 1;
   const logoW = width * 0.52;
   const logoK = logoW / LOGO.w;
   const logoH = LOGO.h * logoK;
@@ -293,19 +320,19 @@ export function LightTrailWrite({
   const edgePct = 50 + (((edge - width / 2) * sn) / gradLen) * 100;
   const soft = 3.5;
   const logoMask =
-    t >= SWEEP_END
+    t >= sweepEnd
       ? undefined
       : `linear-gradient(${slant}deg, #000 ${edgePct - soft}%, transparent ${edgePct + soft}%)`;
   const scriptMask =
-    t < SWEEP_START
+    t < sweepStart
       ? undefined
       : `linear-gradient(${slant}deg, transparent ${edgePct - soft}%, #000 ${edgePct + soft}%)`;
   const barO =
     interpolate(sweep, [0, 0.12, 0.85, 1], [0, 1, 1, 0], CLAMP) *
     (sweeping ? 1 : 0);
   // the finished logo: a silk sheen drifting slowly through it
-  const sheen = interpolate(t, [SWEEP_START, SWEEP_END + 60], [0, 1], CLAMP);
-  const bloom = interpolate(t, [SWEEP_START + 6, SWEEP_END + 14], [1, 0], {
+  const sheen = interpolate(t, [sweepStart, sweepEnd + 60], [0, 1], CLAMP);
+  const bloom = interpolate(t, [sweepStart + 6, sweepEnd + 14], [1, 0], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -316,7 +343,7 @@ export function LightTrailWrite({
 
   // the live trail: short dashes of the same path, each a little older
   const segments: { a: number; b: number; color: string; alpha: number }[] = [];
-  if (t < WRITE_END + TRAIL) {
+  if (t < writeEnd + TRAIL) {
     for (let i = 0; i < TRAIL * STEPS; i++) {
       const age0 = i / STEPS;
       const age1 = (i + 1) / STEPS;
@@ -325,7 +352,12 @@ export function LightTrailWrite({
       if (b - a < 0.01) continue;
       const { color, alpha } = trailColor((age0 + age1) / 2);
       if (alpha <= 0.002) continue;
-      segments.push({ a, b, color, alpha: alpha * burnOutTrail(t, age0) });
+      segments.push({
+        a,
+        b,
+        color,
+        alpha: alpha * burnOutTrail(t, age0, writeEnd),
+      });
     }
   }
 
@@ -359,13 +391,20 @@ export function LightTrailWrite({
   const washR = bh * 2.2;
 
   return (
-    <AbsoluteFill style={{ background: BG, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          background:
-            "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(255,255,255,0.035), transparent 70%)",
-        }}
-      />
+    <AbsoluteFill
+      style={{
+        background,
+        overflow: "hidden",
+      }}
+    >
+      {!transparent ? (
+        <AbsoluteFill
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(255,255,255,0.035), transparent 70%)",
+          }}
+        />
+      ) : null}
       {/* what the exposure leaves on the stage: a faint silk sheen */}
       <AbsoluteFill
         style={{
@@ -373,205 +412,226 @@ export function LightTrailWrite({
           background: `radial-gradient(70% 46% at ${42 + 8 * sheen}% 60%, color-mix(in oklab, ${SILK[0]} 30%, transparent), transparent 70%), radial-gradient(42% 30% at ${62 - 6 * sheen}% 40%, color-mix(in oklab, ${SILK[2]} 14%, transparent), transparent 70%)`,
         }}
       />
-      <svg
-        width={width}
-        height={height}
-        viewBox={`${vbX} ${vbY} ${vbW} ${vbH}`}
-        style={{
-          position: "absolute",
-          inset: 0,
-          maskImage: scriptMask,
-          WebkitMaskImage: scriptMask,
-        }}
-        aria-hidden
-      >
-        <defs>
-          <filter
-            id={ids.wide}
-            x="-50%"
-            y="-50%"
-            width="200%"
-            height="200%"
-            filterUnits="objectBoundingBox"
-          >
-            <feGaussianBlur stdDeviation={sw * 2.6} />
-          </filter>
-          <filter
-            id={ids.mid}
-            x="-50%"
-            y="-50%"
-            width="200%"
-            height="200%"
-            filterUnits="objectBoundingBox"
-          >
-            <feGaussianBlur stdDeviation={sw * 0.8} />
-          </filter>
-          <radialGradient id={ids.head}>
-            <stop offset="0%" stopColor="#fff" stopOpacity={0.95} />
-            <stop offset="18%" stopColor="#fff" stopOpacity={0.5} />
-            <stop offset="45%" stopColor={SILK[1]} stopOpacity={0.2} />
-            <stop offset="100%" stopColor={SILK[2]} stopOpacity={0} />
-          </radialGradient>
-          <radialGradient id={ids.wash}>
-            <stop offset="0%" stopColor="#fff" stopOpacity={0.035} />
-            <stop offset="100%" stopColor="#fff" stopOpacity={0} />
-          </radialGradient>
-        </defs>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={width}
+          height={height}
+          viewBox={`${vbX} ${vbY} ${vbW} ${vbH}`}
+          style={{
+            position: "absolute",
+            inset: 0,
+            maskImage: scriptMask,
+            WebkitMaskImage: scriptMask,
+          }}
+          aria-hidden
+        >
+          <defs>
+            <filter
+              id={ids.wide}
+              x="-50%"
+              y="-50%"
+              width="200%"
+              height="200%"
+              filterUnits="objectBoundingBox"
+            >
+              <feGaussianBlur stdDeviation={sw * 2.6} />
+            </filter>
+            <filter
+              id={ids.mid}
+              x="-50%"
+              y="-50%"
+              width="200%"
+              height="200%"
+              filterUnits="objectBoundingBox"
+            >
+              <feGaussianBlur stdDeviation={sw * 0.8} />
+            </filter>
+            <radialGradient id={ids.head}>
+              <stop offset="0%" stopColor="#fff" stopOpacity={0.95} />
+              <stop offset="18%" stopColor="#fff" stopOpacity={0.5} />
+              <stop offset="45%" stopColor={SILK[1]} stopOpacity={0.2} />
+              <stop offset="100%" stopColor={SILK[2]} stopOpacity={0} />
+            </radialGradient>
+            <radialGradient id={ids.wash}>
+              <stop offset="0%" stopColor="#fff" stopOpacity={0.035} />
+              <stop offset="100%" stopColor="#fff" stopOpacity={0} />
+            </radialGradient>
+          </defs>
 
-        {/* the light spills a little onto the stage around the head */}
-        <circle
-          cx={head.x}
-          cy={head.y}
-          r={washR}
-          fill={`url(#${ids.wash})`}
-          opacity={headOn}
-        />
+          {/* the light spills a little onto the stage around the head */}
+          <circle
+            cx={head.x}
+            cy={head.y}
+            r={washR}
+            fill={`url(#${ids.wash})`}
+            opacity={headOn}
+          />
 
-        {/* exposure memory: what the light has already written, barely there */}
-        <path
-          d={path}
-          fill="none"
-          stroke={SILK[2]}
-          strokeOpacity={memory * (1 - reveal)}
-          strokeWidth={sw * 0.9}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          {...dash(0, headS)}
-        />
-
-        {trailLayer(sw * 5.5, 0.32, ids.wide)}
-        {trailLayer(sw * 2.2, 0.55, ids.mid)}
-        {trailLayer(sw, 1)}
-
-        {/* full exposure: the whole trail at once, then it cools */}
-        <g opacity={glow}>
+          {/* exposure memory: what the light has already written, barely there */}
           <path
             d={path}
             fill="none"
             stroke={SILK[2]}
-            strokeWidth={sw * 5.5}
+            strokeOpacity={memory * (1 - reveal)}
+            strokeWidth={sw * 0.9}
             strokeLinecap="round"
             strokeLinejoin="round"
-            filter={`url(#${ids.wide})`}
-            opacity={0.24}
+            {...dash(0, headS)}
           />
+
+          {trailLayer(sw * 5.5, 0.32, ids.wide)}
+          {trailLayer(sw * 2.2, 0.55, ids.mid)}
+          {trailLayer(sw, 1)}
+
+          {/* full exposure: the whole trail at once, then it cools */}
+          <g opacity={glow}>
+            <path
+              d={path}
+              fill="none"
+              stroke={SILK[2]}
+              strokeWidth={sw * 5.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter={`url(#${ids.wide})`}
+              opacity={0.24}
+            />
+            <path
+              d={path}
+              fill="none"
+              stroke={SILK[1]}
+              strokeWidth={sw * 2.2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter={`url(#${ids.mid})`}
+              opacity={0.4}
+            />
+          </g>
           <path
             d={path}
             fill="none"
-            stroke={SILK[1]}
-            strokeWidth={sw * 2.2}
+            stroke="#ffffff"
+            strokeWidth={sw}
             strokeLinecap="round"
             strokeLinejoin="round"
-            filter={`url(#${ids.mid})`}
-            opacity={0.4}
+            opacity={reveal}
           />
-        </g>
-        <path
-          d={path}
-          fill="none"
-          stroke="#ffffff"
-          strokeWidth={sw}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity={reveal}
-        />
 
-        {/* the point of light */}
-        <g opacity={headOn}>
-          <circle
-            cx={head.x}
-            cy={head.y}
-            r={sw * 7}
-            fill={`url(#${ids.head})`}
-          />
-          <circle cx={head.x} cy={head.y} r={sw * 0.95} fill="#fff" />
-        </g>
-      </svg>
+          {/* the point of light */}
+          <g opacity={headOn}>
+            <circle
+              cx={head.x}
+              cy={head.y}
+              r={sw * 7}
+              fill={`url(#${ids.head})`}
+            />
+            <circle cx={head.x} cy={head.y} r={sw * 0.95} fill="#fff" />
+          </g>
+        </svg>
 
-      {/* the logo the light leaves behind */}
-      {t >= SWEEP_START ? (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            maskImage: logoMask,
-            WebkitMaskImage: logoMask,
-          }}
-        >
-          <svg
-            width={logoW}
-            height={logoH}
-            viewBox={`${LOGO.x} ${LOGO.y} ${LOGO.w} ${LOGO.h}`}
+        {/* the logo the light leaves behind */}
+        {t >= sweepStart ? (
+          <div
             style={{
               position: "absolute",
-              left: logoLeft,
-              top: logoTop,
-              overflow: "visible",
+              inset: 0,
+              maskImage: logoMask,
+              WebkitMaskImage: logoMask,
             }}
-            aria-hidden
           >
-            <defs>
-              <linearGradient
-                id={ids.logo}
-                gradientUnits="userSpaceOnUse"
-                x1={LOGO.x - 40 + 30 * sheen}
-                y1={LOGO.y - 40}
-                x2={LOGO.x + LOGO.w + 30 * sheen}
-                y2={LOGO.y + LOGO.h + 60}
+            {logo !== undefined ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: logoLeft,
+                  top: logoTop,
+                  width: logoW,
+                  height: logoH,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                <stop offset="0%" stopColor={logoStops[0]} />
-                <stop offset="40%" stopColor={logoStops[1]} />
-                <stop offset="75%" stopColor={logoStops[2]} />
-                <stop offset="100%" stopColor={logoStops[3]} />
-              </linearGradient>
-              <filter
-                id={ids.bloom}
-                x="-20%"
-                y="-60%"
-                width="140%"
-                height="220%"
+                {logo}
+              </div>
+            ) : (
+              <svg
+                width={logoW}
+                height={logoH}
+                viewBox={`${LOGO.x} ${LOGO.y} ${LOGO.w} ${LOGO.h}`}
+                style={{
+                  position: "absolute",
+                  left: logoLeft,
+                  top: logoTop,
+                  overflow: "visible",
+                }}
+                aria-hidden
               >
-                <feGaussianBlur stdDeviation={6} />
-              </filter>
-            </defs>
-            <g opacity={bloom * 0.8} filter={`url(#${ids.bloom})`}>
-              <LogoPaths fill={SILK[1]} />
-            </g>
-            <LogoPaths fill={`url(#${ids.logo})`} />
-          </svg>
-        </div>
-      ) : null}
+                <defs>
+                  <linearGradient
+                    id={ids.logo}
+                    gradientUnits="userSpaceOnUse"
+                    x1={LOGO.x - 40 + 30 * sheen}
+                    y1={LOGO.y - 40}
+                    x2={LOGO.x + LOGO.w + 30 * sheen}
+                    y2={LOGO.y + LOGO.h + 60}
+                  >
+                    <stop offset="0%" stopColor={logoStops[0]} />
+                    <stop offset="40%" stopColor={logoStops[1]} />
+                    <stop offset="75%" stopColor={logoStops[2]} />
+                    <stop offset="100%" stopColor={logoStops[3]} />
+                  </linearGradient>
+                  <filter
+                    id={ids.bloom}
+                    x="-20%"
+                    y="-60%"
+                    width="140%"
+                    height="220%"
+                  >
+                    <feGaussianBlur stdDeviation={6} />
+                  </filter>
+                </defs>
+                <g opacity={bloom * 0.8} filter={`url(#${ids.bloom})`}>
+                  <LogoPaths fill={SILK[1]} />
+                </g>
+                <LogoPaths fill={`url(#${ids.logo})`} />
+              </svg>
+            )}
+          </div>
+        ) : null}
 
-      {/* the bar of light doing the hand-over */}
-      {barO > 0 ? (
-        <div
+        {/* the bar of light doing the hand-over */}
+        {barO > 0 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: edge - 90,
+              top: -height * 0.2,
+              width: 180,
+              height: height * 1.4,
+              opacity: barO,
+              transform: `rotate(${slant - 90}deg)`,
+              mixBlendMode: "screen",
+              background: `linear-gradient(90deg, transparent 0%, color-mix(in oklab, ${SILK[0]} 30%, transparent) 22%, color-mix(in oklab, ${SILK[2]} 55%, transparent) 38%, color-mix(in oklab, ${SILK[1]} 85%, transparent) 47%, #fff 50%, color-mix(in oklab, ${SILK[1]} 85%, transparent) 53%, color-mix(in oklab, ${SILK[2]} 55%, transparent) 62%, color-mix(in oklab, ${SILK[0]} 30%, transparent) 78%, transparent 100%)`,
+              maskImage:
+                "linear-gradient(180deg, transparent 18%, #000 40%, #000 60%, transparent 82%)",
+            }}
+          />
+        ) : null}
+      </ScaleLayer>
+      {!transparent ? (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: edge - 90,
-            top: -height * 0.2,
-            width: 180,
-            height: height * 1.4,
-            opacity: barO,
-            transform: `rotate(${slant - 90}deg)`,
-            mixBlendMode: "screen",
-            background: `linear-gradient(90deg, transparent 0%, color-mix(in oklab, ${SILK[0]} 30%, transparent) 22%, color-mix(in oklab, ${SILK[2]} 55%, transparent) 38%, color-mix(in oklab, ${SILK[1]} 85%, transparent) 47%, #fff 50%, color-mix(in oklab, ${SILK[1]} 85%, transparent) 53%, color-mix(in oklab, ${SILK[2]} 55%, transparent) 62%, color-mix(in oklab, ${SILK[0]} 30%, transparent) 78%, transparent 100%)`,
-            maskImage:
-              "linear-gradient(180deg, transparent 18%, #000 40%, #000 60%, transparent 82%)",
+            background:
+              "radial-gradient(ellipse 85% 85% at 50% 50%, transparent 55%, rgba(0,0,0,0.5))",
           }}
         />
       ) : null}
-      <AbsoluteFill
-        style={{
-          background:
-            "radial-gradient(ellipse 85% 85% at 50% 50%, transparent 55%, rgba(0,0,0,0.5))",
-        }}
-      />
-      <Grain opacity={0.06} />
+      {!transparent && grain ? <Grain opacity={0.06} /> : null}
     </AbsoluteFill>
   );
 }
 
 /** Once the head has stopped, the remaining trail drains a little faster. */
-function burnOutTrail(t: number, age: number) {
-  return interpolate(t - age, [WRITE_END, WRITE_END + 8], [1, 0.6], CLAMP);
+function burnOutTrail(t: number, age: number, writeEnd: number) {
+  return interpolate(t - age, [writeEnd, writeEnd + 8], [1, 0.6], CLAMP);
 }

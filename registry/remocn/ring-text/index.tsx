@@ -2,14 +2,8 @@
 
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { useEffect, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -210,8 +204,8 @@ export function RingText({
   speed = ringTextDefaults.speed,
   className,
 }: RingTextProps) {
-  const frame = useCurrentFrame();
-  const { fps, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, height } = useSceneConfig();
   const unit = height / 720;
   const t = getRingTextTime(frame, { fps, speed });
   const chars = getRingTextToken(text, separator);

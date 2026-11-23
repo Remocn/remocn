@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const countdownConfig: ComponentConfig = {
   componentName: "Countdown",
@@ -12,11 +18,6 @@ export const countdownConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     finalLabel: {
       type: "text-content",
@@ -51,6 +52,26 @@ export const countdownConfig: ComponentConfig = {
       description: "Beat",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 400,
+      min: 300,
+      max: 700,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    halo: {
+      type: "boolean",
+      default: true,
+      description: "Halo",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

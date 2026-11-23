@@ -1,15 +1,11 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Fraunces";
+import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: fraunces } = loadFont("normal", {
   weights: ["300", "400"],
@@ -29,6 +25,20 @@ export interface TallyMarksProps {
   rows?: number;
   groupsPerRow?: number;
   accent?: string;
+  /** Color of the tally strokes and the total; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the total and label. Load it yourself; Fraunces by default. */
+  fontFamily?: string;
+  /** Thickness of a tally stroke, in pixels at 720p. */
+  strokeWidth?: number;
+  /** Frames between digits as the total rolls in. */
+  stagger?: number;
+  /** Size of the tally and total, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -159,19 +169,47 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TallyMarks({
   value = 1240,
   label = "videos rendered on launch day",
   rows = 4,
   groupsPerRow = 9,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = fraunces,
+  strokeWidth = 9,
+  stagger = 2,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: TallyMarksProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const transparent = background === "transparent";
+  const stage = background ?? p.bg;
   const nRows = Math.max(1, Math.min(6, Math.round(rows)));
   const nCols = Math.max(2, Math.min(14, Math.round(groupsPerRow)));
   const strokes = useMemo(() => buildStrokes(nRows, nCols), [nRows, nCols]);
@@ -180,7 +218,7 @@ export function TallyMarks({
 
   const cx = width / 2;
   const cy = height / 2;
-  const sw = 9 * u;
+  const sw = strokeWidth * u;
   const L = 74 * u;
   const P = 19 * u;
   const over = 9 * u;
@@ -261,6 +299,7 @@ export function TallyMarks({
     ...CLAMP,
     easing: EASE_IO,
   });
+  const pushing = t > 0 && t < TIP + 30;
   const showStrokes = t < TIP;
 
   const tip = spring({
@@ -328,7 +367,7 @@ export function TallyMarks({
             y1={y1}
             x2={x2}
             y2={y2}
-            stroke={s.slash ? `url(#${gradId})` : p.fg}
+            stroke={s.slash ? `url(#${gradId})` : fg}
             strokeWidth={sw * (1 + 0.22 * (1 - appear))}
             strokeLinecap="round"
             opacity={Math.min(1, appear * 2.5)}
@@ -366,124 +405,131 @@ export function TallyMarks({
   });
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${push})${glide(pushing)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
-          <defs>
-            <linearGradient
-              id={gradId}
-              gradientUnits="userSpaceOnUse"
-              x1={fieldL}
-              y1={ry0 - pitchY}
-              x2={fieldR}
-              y2={ry0 + nRows * pitchY}
-            >
-              {stops}
-            </linearGradient>
-            <linearGradient
-              id={ruleGradId}
-              gradientUnits="userSpaceOnUse"
-              x1={cx - ruleW * (0.5 + 0.1 * drift)}
-              y1={barY}
-              x2={cx + ruleW * (0.5 - 0.1 * drift)}
-              y2={barY}
-            >
-              {stops}
-            </linearGradient>
-          </defs>
-          <g transform={camT}>{lines}</g>
-          {showStrokes ? null : (
-            <line
-              x1={cx - bdx}
-              y1={barY - bdy}
-              x2={cx + bdx}
-              y2={barY + bdy}
-              stroke={`url(#${ruleGradId})`}
-              strokeWidth={barT}
-              strokeLinecap="round"
-            />
-          )}
-        </svg>
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={gradId}
+                gradientUnits="userSpaceOnUse"
+                x1={fieldL}
+                y1={ry0 - pitchY}
+                x2={fieldR}
+                y2={ry0 + nRows * pitchY}
+              >
+                {stops}
+              </linearGradient>
+              <linearGradient
+                id={ruleGradId}
+                gradientUnits="userSpaceOnUse"
+                x1={cx - ruleW * (0.5 + 0.1 * drift)}
+                y1={barY}
+                x2={cx + ruleW * (0.5 - 0.1 * drift)}
+                y2={barY}
+              >
+                {stops}
+              </linearGradient>
+            </defs>
+            <g transform={camT}>{lines}</g>
+            {showStrokes ? null : (
+              <line
+                x1={cx - bdx}
+                y1={barY - bdy}
+                x2={cx + bdx}
+                y2={barY + bdy}
+                stroke={`url(#${ruleGradId})`}
+                strokeWidth={barT}
+                strokeLinecap="round"
+              />
+            )}
+          </svg>
 
-        {t >= NUM_IN - 1 ? (
+          {t >= NUM_IN - 1 ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: ruleY - 22 * u - numSize * 1.12,
+                height: numSize * 1.12,
+                overflow: "hidden",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "flex-end",
+              }}
+            >
+              {chars.map((ch, i) => {
+                const k = interpolate(
+                  t,
+                  [NUM_IN + i * stagger, NUM_IN + i * stagger + 18],
+                  [0, 1],
+                  { ...CLAMP, easing: EASE_OUT },
+                );
+                return (
+                  <span
+                    key={`${ch}${i.toString()}`}
+                    style={{
+                      display: "inline-block",
+                      fontFamily,
+                      fontWeight: 300,
+                      fontSize: numSize,
+                      lineHeight: 1.12,
+                      letterSpacing: "-0.035em",
+                      fontVariantNumeric: "lining-nums tabular-nums",
+                      color: fg,
+                      transform: `translateY(${(1 - k) * 105}%)${glide(k > 0 && (1 - k) * numSize > 1e-3 && !pushing)}`,
+                    }}
+                  >
+                    {ch}
+                  </span>
+                );
+              })}
+            </div>
+          ) : null}
+
           <div
             style={{
               position: "absolute",
               left: 0,
               right: 0,
-              top: ruleY - 22 * u - numSize * 1.12,
-              height: numSize * 1.12,
-              overflow: "hidden",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "flex-end",
+              top: ruleY + 26 * u,
+              textAlign: "center",
+              fontFamily,
+              fontStyle: "italic",
+              fontWeight: 300,
+              fontSize: 30 * u,
+              letterSpacing: "-0.01em",
+              color: p.muted,
+              whiteSpace: "nowrap",
+              opacity: label1,
+              transform: `translateY(${(1 - label1) * 8 * u}px)${glide(label1 > 0 && (1 - label1) * 8 * u > 1e-3 && !pushing)}`,
             }}
           >
-            {chars.map((ch, i) => {
-              const k = interpolate(
-                t,
-                [NUM_IN + i * 2, NUM_IN + i * 2 + 18],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
-              return (
-                <span
-                  key={`${ch}${i.toString()}`}
-                  style={{
-                    display: "inline-block",
-                    fontFamily: fraunces,
-                    fontWeight: 300,
-                    fontSize: numSize,
-                    lineHeight: 1.12,
-                    letterSpacing: "-0.035em",
-                    fontVariantNumeric: "lining-nums tabular-nums",
-                    color: p.fg,
-                    transform: `translateY(${(1 - k) * 105}%)`,
-                  }}
-                >
-                  {ch}
-                </span>
-              );
-            })}
+            {label}
           </div>
-        ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
 
-        <div
+      {transparent ? null : (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: ruleY + 26 * u,
-            textAlign: "center",
-            fontFamily: fraunces,
-            fontStyle: "italic",
-            fontWeight: 300,
-            fontSize: 30 * u,
-            letterSpacing: "-0.01em",
-            color: p.muted,
-            whiteSpace: "nowrap",
-            opacity: label1,
-            transform: `translateY(${(1 - label1) * 8 * u}px)`,
+            background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${stage} 100%)`,
+            opacity: 0.55,
           }}
-        >
-          {label}
-        </div>
-      </AbsoluteFill>
-
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
-          opacity: 0.55,
-        }}
-      />
-      <Grain opacity={p.grain} />
+        />
+      )}
+      {transparent || !grain ? null : <Grain opacity={p.grain} />}
     </AbsoluteFill>
   );
 }

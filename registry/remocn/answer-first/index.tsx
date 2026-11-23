@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Outfit";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -8,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const outfit = loadFont("normal", {
   weights: ["400", "500"],
@@ -21,7 +22,19 @@ export interface AnswerFirstProps {
   answer?: string;
   question?: string;
   accent?: string;
+  /** Text color of the answer; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Outfit by default. */
+  fontFamily?: string;
+  /** Frame the answer starts shrinking into the corner; the question follows it. */
+  moveAt?: number;
+  /** Frames between words of the question. */
+  stagger?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -39,6 +52,8 @@ const MEASURE_PX = 100;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_MOVE = Easing.bezier(0.7, 0, 0.2, 1);
+const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -55,22 +70,23 @@ const MIN_HOLD = 26;
 
 let measureCtx: CanvasRenderingContext2D | null = null;
 
-function ctx2d(weight: number) {
+function ctx2d(weight: number, family: string) {
   if (!measureCtx) {
     measureCtx = document.createElement("canvas").getContext("2d");
   }
   if (!measureCtx) throw new Error("answer-first: no 2d context");
-  measureCtx.font = `${weight} ${MEASURE_PX}px "${outfit.fontFamily}"`;
+  measureCtx.font = `${weight} ${MEASURE_PX}px "${family}"`;
   return measureCtx;
 }
 
-function em(s: string, track = TRACK) {
+function em(family: string, s: string, track = TRACK) {
   return (
-    ctx2d(WGHT).measureText(s).width / MEASURE_PX + track * Array.from(s).length
+    ctx2d(WGHT, family).measureText(s).width / MEASURE_PX +
+    track * Array.from(s).length
   );
 }
 
-function useFontsReady() {
+function useFontsReady(fontFamily: string) {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("answer-first: fonts"));
   const released = useRef(false);
@@ -78,7 +94,7 @@ function useFontsReady() {
     let live = true;
     Promise.all([
       outfit.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${outfit.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -91,7 +107,7 @@ function useFontsReady() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, fontFamily]);
   return ready;
 }
 
@@ -116,25 +132,25 @@ function split(s: string) {
   return s.split(/\s+/).filter(Boolean);
 }
 
-function toRow(words: string[], track: number): Row {
-  const space = em(" ", track);
+function toRow(family: string, words: string[], track: number): Row {
+  const space = em(family, " ", track);
   let x = 0;
   const out = words.map((text) => {
     const at = x;
-    x += em(text, track) + space;
+    x += em(family, text, track) + space;
     return { text, x: at };
   });
-  return { words: out, w: em(words.join(" "), track) };
+  return { words: out, w: em(family, words.join(" "), track) };
 }
 
-function balanced(words: string[], n: number): string[][] {
+function balanced(family: string, words: string[], n: number): string[][] {
   if (n <= 1) return [words];
   let best: string[][] = [words];
   let bestW = Number.POSITIVE_INFINITY;
   const walk = (start: number, left: number, acc: string[][]) => {
     if (left === 1) {
       const rows = [...acc, words.slice(start)];
-      const w = Math.max(...rows.map((r) => em(r.join(" "))));
+      const w = Math.max(...rows.map((r) => em(family, r.join(" "))));
       if (w < bestW) {
         bestW = w;
         best = rows;
@@ -154,6 +170,7 @@ function boxH(n: number) {
 }
 
 function buildLayout(
+  family: string,
   answer: string,
   question: string,
   W: number,
@@ -165,8 +182,8 @@ function buildLayout(
   let F1 = 0;
   const maxN = Math.min(aWords.length, portrait ? 4 : 2);
   for (let n = 1; n <= maxN; n++) {
-    const cand = balanced(aWords, n);
-    const w = Math.max(...cand.map((r) => em(r.join(" "))));
+    const cand = balanced(family, aWords, n);
+    const w = Math.max(...cand.map((r) => em(family, r.join(" "))));
     const f = Math.min(
       (W * (portrait ? 0.86 : 0.84)) / w,
       (H * (portrait ? 0.5 : 0.62)) / boxH(n),
@@ -176,7 +193,7 @@ function buildLayout(
       rows = cand;
     }
   }
-  const answerRows = rows.map((r) => toRow(r, TRACK));
+  const answerRows = rows.map((r) => toRow(family, r, TRACK));
   const answerW = Math.max(...answerRows.map((r) => r.w));
   const F2 = Math.min(
     F1 * (portrait ? 0.8 : 0.74),
@@ -193,7 +210,10 @@ function buildLayout(
     let cur: string[] = [];
     for (const w of qWords) {
       const next = [...cur, w];
-      if (cur.length > 0 && em(next.join(" "), Q_TRACK) * FQ > qMeasure) {
+      if (
+        cur.length > 0 &&
+        em(family, next.join(" "), Q_TRACK) * FQ > qMeasure
+      ) {
         out.push(cur);
         cur = [w];
       } else {
@@ -201,14 +221,14 @@ function buildLayout(
       }
     }
     if (cur.length) out.push(cur);
-    const even = out.length > 1 ? balanced(qWords, out.length) : out;
-    qRows = even.map((r) => toRow(r, Q_TRACK));
+    const even = out.length > 1 ? balanced(family, qWords, out.length) : out;
+    qRows = even.map((r) => toRow(family, r, Q_TRACK));
     const widest = Math.max(...qRows.map((r) => r.w)) * FQ;
     if (qRows.length <= (portrait ? 4 : 3) && widest <= qMeasure) break;
     FQ *= 0.9;
   }
 
-  const c = ctx2d(WGHT);
+  const c = ctx2d(WGHT, family);
   const fm = c.measureText("Hxg");
   const asc = fm.fontBoundingBoxAscent / MEASURE_PX;
   const desc = fm.fontBoundingBoxDescent / MEASURE_PX;
@@ -228,26 +248,51 @@ function buildLayout(
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function AnswerFirst({
   answer = "A pull request.",
   question = "Who made this video?",
   accent,
+  ink,
   background,
+  fontFamily = outfit.fontFamily,
+  moveAt = MOVE_AT,
+  stagger = Q_STAGGER,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: AnswerFirstProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const ready = useFontsReady();
+  const ready = useFontsReady(fontFamily);
 
   const layout = useMemo(
-    () => (ready ? buildLayout(answer, question, W, H) : null),
-    [ready, answer, question, W, H],
+    () => (ready ? buildLayout(fontFamily, answer, question, W, H) : null),
+    [ready, fontFamily, answer, question, W, H],
   );
+  const qAt = Q_AT + (moveAt - MOVE_AT);
 
   if (!layout) {
     return (
@@ -256,7 +301,7 @@ export function AnswerFirst({
   }
 
   const qCount = layout.question.reduce((n, r) => n + r.words.length, 0);
-  const motionEnd = Q_AT + (qCount - 1) * Q_STAGGER + Q_LEN;
+  const motionEnd = qAt + (qCount - 1) * stagger + Q_LEN;
   const room = durationInFrames * speed - MIN_HOLD;
   const k = Math.max(0.55, Math.min(1, room / motionEnd));
   const t = (frame * speed) / k;
@@ -266,22 +311,37 @@ export function AnswerFirst({
   const my = H * (portrait ? 0.07 : 0.1);
   const nA = layout.answer.length;
 
-  const p = interpolate(t, [MOVE_AT, MOVE_AT + MOVE_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_MOVE,
-  });
-  const creep = interpolate(t, [A_LEN, MOVE_AT], [0, 0.02], CLAMP);
-  const sEnd = F2 / F1;
-  const s = Math.exp(Math.log(sEnd) * p) * (1 + creep * (1 - p));
-
   const visTop = baseline - cap;
   const visBottom = (nA - 1) * PITCH + baseline;
-  const bx0 = W / 2 - (answerW * F1 * s) / 2;
-  const by0 = H / 2 - ((visTop + visBottom) / 2) * F1 * s;
+  const sEnd = F2 / F1;
   const bx1 = W - mx - answerW * F2;
   const by1 = H - my - visBottom * F2;
-  const bx = bx0 + (bx1 - bx0) * p;
-  const by = by0 + (by1 - by0) * p;
+  const geometry = (tt: number) => {
+    const p = interpolate(tt, [moveAt, moveAt + MOVE_LEN], [0, 1], {
+      ...CLAMP,
+      easing: EASE_MOVE,
+    });
+    const creep = interpolate(tt, [A_LEN, moveAt], [0, 0.02], CLAMP);
+    const s = Math.exp(Math.log(sEnd) * p) * (1 + creep * (1 - p));
+    const bx0 = W / 2 - (answerW * F1 * s) / 2;
+    const by0 = H / 2 - ((visTop + visBottom) / 2) * F1 * s;
+    return {
+      p,
+      s,
+      bx: bx0 + (bx1 - bx0) * p,
+      by: by0 + (by1 - by0) * p,
+    };
+  };
+  const { p, s, bx, by } = geometry(t);
+  // The creep and the move chain into each other, so motion is read off the
+  // neighbouring frames: a scale step weighed by the block's width, and the
+  // vertical travel.
+  const blockMoving = [t - speed / k, t + speed / k].some((tt) => {
+    const o = geometry(tt);
+    return (
+      Math.abs(o.s - s) * answerW * F1 > 1e-3 || Math.abs(o.by - by) > 1e-3
+    );
+  });
   const align = p;
 
   const R = F1;
@@ -320,14 +380,14 @@ export function AnswerFirst({
                 left: (w.x + 0.2) * R,
                 top: -clipTop,
                 height: R,
-                fontFamily: outfit.fontFamily,
+                fontFamily,
                 fontWeight: WGHT,
                 fontSize: R,
                 lineHeight: `${R}px`,
                 letterSpacing: `${TRACK}em`,
                 whiteSpace: "pre",
-                color: c.ink,
-                transform: `translateY(${((1 - q) * travel).toFixed(2)}px)`,
+                color: fg,
+                transform: `translateY(${((1 - q) * travel).toFixed(2)}px)${glide(midway(q) && !blockMoving)}`,
               }}
             >
               {w.text}
@@ -355,7 +415,7 @@ export function AnswerFirst({
     >
       {row.words.map((w) => {
         const i = qIndex++;
-        const at = Q_AT + i * Q_STAGGER;
+        const at = qAt + i * stagger;
         const q = interpolate(t, [at, at + Q_LEN], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
@@ -368,14 +428,14 @@ export function AnswerFirst({
               left: (w.x + 0.2) * FQ,
               top: -qClipTop,
               height: FQ,
-              fontFamily: outfit.fontFamily,
+              fontFamily,
               fontWeight: WGHT,
               fontSize: FQ,
               lineHeight: `${FQ}px`,
               letterSpacing: `${Q_TRACK}em`,
               whiteSpace: "pre",
               color: hi,
-              transform: `translateY(${((1 - q) * 1.15 * FQ).toFixed(2)}px)`,
+              transform: `translateY(${((1 - q) * 1.15 * FQ).toFixed(2)}px)${glide(midway(q))}`,
             }}
           >
             {w.text}
@@ -387,18 +447,21 @@ export function AnswerFirst({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {questionNodes}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          transformOrigin: "0 0",
-          transform: `translate(${bx.toFixed(2)}px, ${by.toFixed(2)}px) scale(${s.toFixed(5)})`,
-        }}
-      >
-        {answerNodes}
-      </div>
+      <ScaleLayer scale={scale}>
+        {questionNodes}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            transformOrigin: "0 0",
+            // The tilt pivots on the block's top-left corner, which is on screen.
+            transform: `translate(${bx.toFixed(2)}px, ${by.toFixed(2)}px)${glide(blockMoving)} scale(${s.toFixed(5)})`,
+          }}
+        >
+          {answerNodes}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,0 +1,120 @@
+{
+  "component": "orbit-lock",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "cobalt-swarm",
+      "label": "Cobalt Swarm",
+      "description": "Eight pale moons spiral fast into a cobalt core on deep navy for a busy, data-center feel.",
+      "askedAs": [
+        "lots of moons blue",
+        "busy fast orbit blue core",
+        "many satellites converging",
+        "много лун синий",
+        "быстрая орбита синее ядро"
+      ],
+      "props": {
+        "moons": 8,
+        "speed": 1.75,
+        "coreColor": "#2f6bff",
+        "moonColor": "#c9d6f2",
+        "flashColor": "#e6eeff",
+        "backgroundColor": "#0a1020"
+      }
+    },
+    {
+      "id": "lone-satellite",
+      "label": "Lone Satellite",
+      "description": "A single moon drifts slowly on a flat orbit into an amber core for a calm, deliberate reveal.",
+      "askedAs": [
+        "one moon slow orbit",
+        "calm minimal logo reveal",
+        "single satellite slow motion",
+        "одна луна медленно",
+        "спокойное минималистичное появление"
+      ],
+      "props": {
+        "moons": 1,
+        "tilt": 20,
+        "speed": 0.5,
+        "coreColor": "#f2a93b",
+        "flashColor": "#fff4e0"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Charcoal moons orbit a coral core on a warm off-white background for a clean, light-mode sting.",
+      "askedAs": [
+        "light background version",
+        "white theme orbit",
+        "bright clean logo sting",
+        "светлый фон",
+        "белая тема"
+      ],
+      "props": {
+        "backgroundColor": "#f4f1ec",
+        "moonColor": "#2a2a2a",
+        "coreColor": "#e4572e",
+        "flashColor": "#2a2a2a"
+      }
+    },
+    {
+      "id": "steep-strike",
+      "label": "Steep Strike",
+      "description": "Five moons dive on near-edge-on orbits at double speed into a sharp red hit.",
+      "askedAs": [
+        "fast punchy impact",
+        "steep tilted orbits quick",
+        "aggressive short sting",
+        "быстрый резкий удар",
+        "крутой наклон орбит"
+      ],
+      "props": {
+        "moons": 5,
+        "tilt": 82,
+        "speed": 2
+      }
+    },
+    {
+      "id": "emerald-terminal",
+      "label": "Emerald Terminal",
+      "description": "Mint moons fall into an emerald core over near-black green, evoking a terminal or infra dashboard.",
+      "askedAs": [
+        "green hacker style",
+        "terminal green orbit",
+        "matrix like logo intro",
+        "зелёный стиль терминала",
+        "хакерская зелёная заставка"
+      ],
+      "props": {
+        "coreColor": "#1fb57a",
+        "moonColor": "#bfefd9",
+        "flashColor": "#dffbef",
+        "backgroundColor": "#07130e",
+        "moons": 4
+      }
+    },
+    {
+      "id": "violet-dusk",
+      "label": "Violet Dusk",
+      "description": "Lavender moons glide at a relaxed pace into a violet core on a dark plum ground for an AI-product mood.",
+      "askedAs": [
+        "purple ai style",
+        "soft violet logo opener",
+        "dreamy slow orbit purple",
+        "фиолетовый для ии",
+        "мягкая фиолетовая заставка"
+      ],
+      "props": {
+        "coreColor": "#8b5cf6",
+        "moonColor": "#ddd3fb",
+        "flashColor": "#f1ecff",
+        "backgroundColor": "#14101f",
+        "speed": 0.75,
+        "tilt": 45
+      }
+    }
+  ]
+}

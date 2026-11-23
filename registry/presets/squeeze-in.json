@@ -1,0 +1,101 @@
+{
+  "component": "squeeze-in",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "luxury-slow-settle",
+      "label": "Luxury Settle",
+      "description": "Large light type that types in slowly and breathes in from a generous gap, like a fashion house wordmark.",
+      "askedAs": [
+        "slow elegant wordmark reveal",
+        "luxury brand title that tightens",
+        "big thin letters settling together",
+        "медленное элегантное появление логотипа",
+        "люксовый заголовок с сжатием букв"
+      ],
+      "props": {
+        "fontSize": 120,
+        "stagger": 6,
+        "squeeze": 0.15,
+        "fontWeight": "400",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "Heavy compact letters that rip in fast and snap shut with a tight, punchy squeeze.",
+      "askedAs": [
+        "fast bold title snap",
+        "punchy heavy text reveal",
+        "quick tight wordmark",
+        "быстрый жирный заголовок",
+        "резкое появление текста"
+      ],
+      "props": {
+        "fontWeight": "700",
+        "stagger": 1,
+        "squeeze": 0.06,
+        "speed": 1.5,
+        "fontSize": 96
+      }
+    },
+    {
+      "id": "navy-editorial",
+      "label": "Navy Editorial",
+      "description": "Deep navy medium-weight type with a measured cadence for magazine-style titles.",
+      "askedAs": [
+        "dark blue editorial title",
+        "magazine style heading animation",
+        "calm navy wordmark",
+        "темно-синий редакционный заголовок",
+        "спокойный журнальный текст"
+      ],
+      "props": {
+        "color": "#1e2a44",
+        "fontWeight": "500",
+        "stagger": 4,
+        "squeeze": 0.08
+      }
+    },
+    {
+      "id": "quiet-caption",
+      "label": "Quiet Caption",
+      "description": "Small, soft graphite text that appears gently with a barely-there tightening.",
+      "askedAs": [
+        "small subtle caption reveal",
+        "minimal understated subtitle",
+        "gentle grey text animation",
+        "маленькая тихая подпись",
+        "едва заметное появление текста"
+      ],
+      "props": {
+        "fontSize": 36,
+        "color": "#5b5b5b",
+        "squeeze": 0.02,
+        "stagger": 2,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "bronze-display",
+      "label": "Bronze Display",
+      "description": "Oversized semibold letters in warm bronze with a deep, dramatic squeeze.",
+      "askedAs": [
+        "warm gold display title",
+        "dramatic large text compress",
+        "premium bronze wordmark",
+        "крупный бронзовый заголовок",
+        "драматичное сжатие букв"
+      ],
+      "props": {
+        "fontSize": 150,
+        "color": "#8a5a2b",
+        "fontWeight": "600",
+        "squeeze": 0.2,
+        "stagger": 5
+      }
+    }
+  ]
+}

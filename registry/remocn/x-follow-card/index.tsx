@@ -2,19 +2,14 @@
 
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { useState } from "react";
-import {
-  AbsoluteFill,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Img, interpolate, spring } from "remotion";
 import { Cursor, type CursorStyle } from "@/components/remocn/cursor";
 import {
   type CursorWaypoint,
   useCursorPath,
 } from "@/components/remocn/use-cursor-path";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: FONT_FAMILY } = loadFont();
 
@@ -419,6 +414,7 @@ function FollowButton({
   layout: { x: number; y: number; w: number; h: number };
   pressScale: number;
 }) {
+  const glide = useGlide();
   const _followed = followStateAt(frame, speed);
   const flip = interpolate(
     frame * speed,
@@ -441,7 +437,9 @@ function FollowButton({
     fontWeight: 700,
     fontFamily: FONT_FAMILY,
     boxSizing: "border-box" as const,
-    scale: `${pressScale}`,
+    // The label clicks along as the press squeezes it, so it is marked as
+    // moving while the button is pressed in.
+    transform: `scale(${pressScale})${glide(Math.abs(pressScale - 1) > 1e-6)}`,
     transformOrigin: "center",
   };
 
@@ -684,8 +682,9 @@ export function XFollowCard({
   orientation = "horizontal",
   speed = 1,
 }: XFollowCardProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const t = THEMES.light;
   const isVertical = orientation === "vertical";
 
@@ -701,6 +700,27 @@ export function XFollowCard({
 
   const bounce = cardBounceIn(frame * speed, fps);
   const schedule = blurInSchedule();
+  // The bounce overshoots and the blur-ins slide their groups up, all under
+  // the card's transform: it is marked as moving while any of them moves. Checked
+  // against the neighbouring frames, since the spring has a long tail.
+  const shifts = (f: number, groups: number[]) => {
+    const b = cardBounceIn(f * speed, fps);
+    return [
+      b.translateY,
+      b.scale * refH,
+      ...groups.map((g) => blurInAt(schedule[g], f * speed).translateY),
+    ];
+  };
+  const movingOver = (groups: number[]) => {
+    const [before, now, after] = [frame - 1, frame, frame + 1].map((f) =>
+      shifts(f, groups),
+    );
+    return now.some(
+      (v, i) => Math.abs(after[i] - v) > 1e-3 || Math.abs(v - before[i]) > 1e-3,
+    );
+  };
+  const cardMoving = movingOver([0, 1, 2, 3, 4, 5, 7, 8]);
+  const buttonsMoving = movingOver([6]);
 
   const layout = BUTTON_LAYOUT[orientation];
   const buttonCenter = {
@@ -753,8 +773,7 @@ export function XFollowCard({
             border: `1px solid ${t.cardBorder}`,
             borderRadius: 24,
             overflow: "hidden",
-            translate: `0 ${bounce.translateY}px`,
-            scale: `${bounce.scale}`,
+            transform: `translateY(${bounce.translateY}px) scale(${bounce.scale})${glide(cardMoving)}`,
             transformOrigin: "center top",
             boxShadow: "0 12px 40px -16px rgba(15,20,25,0.18)",
           }}
@@ -843,8 +862,7 @@ export function XFollowCard({
           style={{
             position: "absolute",
             inset: 0,
-            translate: `0 ${bounce.translateY}px`,
-            scale: `${bounce.scale}`,
+            transform: `translateY(${bounce.translateY}px) scale(${bounce.scale})${glide(buttonsMoving)}`,
             transformOrigin: "center top",
           }}
         >

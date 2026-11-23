@@ -1,0 +1,103 @@
+{
+  "component": "world-signups",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "night-ops",
+      "label": "Night Ops",
+      "description": "A dark mission-control look with a cool teal accent and monospaced numerals over a deep orbital ground.",
+      "askedAs": [
+        "dark control room map",
+        "monospace dark signup dashboard",
+        "mission control style world map",
+        "тёмная карта как в центре управления",
+        "моноширинный тёмный дашборд регистраций"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#2dd4bf",
+        "ground": "low-orbit",
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A warm off-white page with dark ink, a terracotta accent and serif type for a calm, print-like report.",
+      "askedAs": [
+        "warm paper serif map",
+        "magazine style signup map",
+        "calm editorial world map",
+        "карта в стиле журнала на бумаге",
+        "тёплый светлый вариант с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f0e6",
+        "ink": "#2b2622",
+        "accent": "#c2562f",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "launch-rush",
+      "label": "Launch Rush",
+      "description": "A fast, punchy launch-day cut with doubled pace, a slightly larger layout and an ember glow behind the map.",
+      "askedAs": [
+        "fast launch day signups",
+        "energetic quick world map",
+        "hype signup surge animation",
+        "быстрая анимация для дня запуска",
+        "энергичная карта с регистрациями"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "ember",
+        "accent": "#ff8a3d",
+        "speed": 2,
+        "scale": 1.1,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-glow",
+      "label": "Slow Glow",
+      "description": "A slow, ambient dark blue-hour scene where pings drift in gently with a soft violet accent.",
+      "askedAs": [
+        "slow ambient world map",
+        "calm background signup loop",
+        "soft dark map with violet",
+        "медленная спокойная карта мира",
+        "атмосферный фон с регистрациями"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#a78bfa",
+        "speed": 0.5,
+        "delay": 20
+      }
+    },
+    {
+      "id": "clean-corner",
+      "label": "Clean Corner",
+      "description": "A compact, minimal light card in Geist with a forest-green accent that sits neatly inside a busier slide.",
+      "askedAs": [
+        "small minimal signup map",
+        "compact light world map widget",
+        "clean green growth map",
+        "компактная минималистичная карта",
+        "маленький светлый виджет регистраций"
+      ],
+      "props": {
+        "theme": "light",
+        "scale": 0.75,
+        "accent": "#16a34a",
+        "fontFamily": "Geist",
+        "ground": "polar"
+      }
+    }
+  ]
+}

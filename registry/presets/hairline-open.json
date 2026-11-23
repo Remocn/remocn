@@ -1,0 +1,125 @@
+{
+  "component": "hairline-open",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ivory-editorial",
+      "label": "Ivory Editorial",
+      "description": "A warm paper-white page with deep ink and a burnished gold hairline, unhurried and literary.",
+      "askedAs": [
+        "light editorial magazine look",
+        "cream paper with gold line",
+        "calm bookish title swap",
+        "светлый журнальный стиль",
+        "кремовый фон с золотой линией"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b08a3e",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "slow-curtain",
+      "label": "Slow Curtain",
+      "description": "A long, held sliver of light on near-black that opens slowly like a theatre curtain.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "cinematic curtain opening",
+        "long pause before the line opens",
+        "медленное кинематографичное открытие",
+        "драматичный занавес"
+      ],
+      "props": {
+        "hold": 32,
+        "speed": 0.5,
+        "background": "#0b0b0d",
+        "ink": "#ede8df",
+        "accent": "#e8d9b5",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "swiss-tech",
+      "label": "Swiss Tech",
+      "description": "Clean upright sans type on white with a crisp cobalt line and a quick, grain-free cut.",
+      "askedAs": [
+        "modern clean product launch",
+        "minimal sans serif tech style",
+        "fast crisp title change",
+        "современный чистый стиль для запуска",
+        "быстрая смена заголовка без шума"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Geist",
+        "italic": false,
+        "grain": false,
+        "speed": 1.5,
+        "hold": 4
+      }
+    },
+    {
+      "id": "midnight-emerald",
+      "label": "Midnight Emerald",
+      "description": "Deep forest-green ground with soft ivory italics and a pale jade slit of light.",
+      "askedAs": [
+        "dark green luxury look",
+        "emerald premium style",
+        "rich green background with soft text",
+        "тёмно-зелёный премиальный стиль",
+        "изумрудный фон"
+      ],
+      "props": {
+        "background": "#0f2620",
+        "ink": "#eaf2ec",
+        "accent": "#8fd3b6",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "terminal-note",
+      "label": "Terminal Note",
+      "description": "Monospaced upright text on graphite with an amber hairline, compact and snappy.",
+      "askedAs": [
+        "code style monospace reveal",
+        "developer terminal look",
+        "small quick amber line",
+        "моноширинный шрифт как в терминале",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "italic": false,
+        "background": "#17181b",
+        "ink": "#e6e6e3",
+        "accent": "#f2a93b",
+        "scale": 0.75
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Oversized grotesque headline on dark with a coral line and an energetic, brisk opening.",
+      "askedAs": [
+        "big bold headline swap",
+        "energetic punchy title",
+        "large text fast reveal",
+        "крупный яркий заголовок",
+        "энергичная смена текста"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "italic": false,
+        "scale": 1.4,
+        "accent": "#ff6b4a",
+        "speed": 2,
+        "hold": 6
+      }
+    }
+  ]
+}

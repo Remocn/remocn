@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const tategakiTurnConfig: ComponentConfig = {
   componentName: "TategakiTurn",
@@ -27,6 +33,17 @@ export const tategakiTurnConfig: ComponentConfig = {
       description: "Hold",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 5,
+      min: 0,
+      max: 15,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: "#E03C31", description: "Accent" },
+    ...sceneControls({ font: "Zen Kaku Gothic New" }),
     speed: {
       type: "number",
       default: 1,

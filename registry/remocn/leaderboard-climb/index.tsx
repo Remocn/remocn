@@ -3,14 +3,8 @@
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadOnest } from "@remotion/google-fonts/Onest";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -96,8 +90,43 @@ export interface LeaderboardClimbProps {
   entries?: LeaderboardEntry[];
   self?: { name: string; tagline: string; from: number; to: number };
   toRank?: number;
+  /** Column header over the product names. */
+  productLabel?: string;
+  /** Column header over the scores. */
+  scoreLabel?: string;
+  /** Word after the climb count on your row's badge. */
+  gainLabel?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark on your row. */
+  logo?: React.ReactNode;
+  /** Size of the board, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function LeaderboardClimb({
@@ -122,18 +151,28 @@ export function LeaderboardClimb({
     to: 1284,
   },
   toRank = 3,
+  productLabel = "PRODUCT",
+  scoreLabel = "UPVOTES",
+  gainLabel = "today",
+  ink,
+  background,
+  fontFamily = onest.fontFamily,
+  logo,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: LeaderboardClimbProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 720 : 1280;
   const stageH = portrait ? 1280 : 720;
   const k = width / stageW;
 
-  const ink = dark ? "#f1f2f8" : "#15161c";
+  const fg = ink ?? (dark ? "#f1f2f8" : "#15161c");
   const muted = dark ? "rgba(236,238,248,0.52)" : "rgba(21,22,28,0.5)";
   const faint = dark ? "rgba(236,238,248,0.3)" : "rgba(21,22,28,0.3)";
   const hair = dark ? "rgba(255,255,255,0.08)" : "rgba(21,22,28,0.08)";
@@ -196,6 +235,12 @@ export function LeaderboardClimb({
     score = mix(score, scoreStops[i + 1] ?? self.to, p);
   });
   const selfRank = Math.round(selfSlot) + 1;
+  const selfHome = Math.round(selfSlot);
+  const spread = 6 * moving;
+  const selfOut: [string, string] | undefined =
+    spread < 1e-3
+      ? undefined
+      : [`translateX(${-spread}px)`, `translateX(${spread}px)`];
 
   const payoff = spring({ frame: frame - B.payoff, fps, config: CHIP });
   const flash =
@@ -237,7 +282,7 @@ export function LeaderboardClimb({
           ? "#cf8a54"
           : null;
 
-  const rankCell = (rank: number, onAccent: boolean) => {
+  const rankCell = (rank: number, onAccent: boolean, shift?: string) => {
     const m = medal(rank);
     return (
       <div
@@ -246,6 +291,7 @@ export function LeaderboardClimb({
           display: "flex",
           justifyContent: "center",
           flexShrink: 0,
+          transform: shift,
         }}
       >
         {m ? (
@@ -292,18 +338,19 @@ export function LeaderboardClimb({
     onAccent: boolean,
     trend: "up" | "flat" | "down",
     extra?: React.ReactNode,
+    out?: [string, string],
   ) => (
     <>
-      {rankCell(rank, onAccent)}
+      {rankCell(rank, onAccent, out?.[0])}
       {avatar}
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, transform: out?.[0] }}>
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: 10,
             fontSize: 18 * fs,
-            color: onAccent ? "#ffffff" : ink,
+            color: onAccent ? "#ffffff" : fg,
             letterSpacing: "-0.01em",
             whiteSpace: "nowrap",
           }}
@@ -338,10 +385,11 @@ export function LeaderboardClimb({
         style={{
           fontFamily: mono.fontFamily,
           fontSize: 18 * fs,
-          color: onAccent ? "#ffffff" : ink,
+          color: onAccent ? "#ffffff" : fg,
           fontVariantNumeric: "tabular-nums",
           minWidth: 80 * fs,
           textAlign: "right",
+          transform: out?.[1],
         }}
       >
         {scoreText}
@@ -350,7 +398,7 @@ export function LeaderboardClimb({
         viewBox="0 0 24 24"
         width={18 * fs}
         height={18 * fs}
-        style={{ marginLeft: 10, flexShrink: 0 }}
+        style={{ marginLeft: 10, flexShrink: 0, transform: out?.[1] }}
         aria-hidden
       >
         <path
@@ -377,275 +425,305 @@ export function LeaderboardClimb({
   );
 
   return (
-    <AbsoluteFill style={{ fontFamily: onest.fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedPreset}
-        params={resolvedParams}
-        timeOffset={3}
-        timeScale={0.45}
-      />
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <GshGround
+          preset={resolvedPreset}
+          params={resolvedParams}
+          timeOffset={3}
+          timeScale={0.45}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
       <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
         <filter id="lbc-self" x="-5%" y="-40%" width="110%" height="180%">
           <feGaussianBlur stdDeviation={`0 ${selfBlur}`} />
         </filter>
       </svg>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${k})`,
-          transformOrigin: "0 0",
-          perspective: 2000,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: stageW / 2,
-            top: stageH / 2,
-            width: 0,
-            height: 0,
-            transformStyle: "preserve-3d",
-            transform: `translate(${-fx * z}px, ${-fy * z}px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${z})`,
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${k})`,
+            transformOrigin: "0 0",
+            perspective: 2000,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: -panelW / 2,
-              top: -panelH / 2,
-              width: panelW,
-              height: panelH,
-              borderRadius: 26,
-              background: surface,
-              border: `1px solid ${hair}`,
-              boxShadow: shadow,
+              left: stageW / 2,
+              top: stageH / 2,
+              width: 0,
+              height: 0,
+              transformStyle: "preserve-3d",
+              transform: `translate(${-fx * z}px, ${-fy * z}px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${z})`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: pad,
-                right: pad,
-                top: pad,
-                height: headH,
-                display: "flex",
-                flexDirection: portrait ? "column" : "row",
-                alignItems: portrait ? "flex-start" : "center",
-                gap: portrait ? 18 : 0,
+                left: -panelW / 2,
+                top: -panelH / 2,
+                width: panelW,
+                height: panelH,
+                borderRadius: 26,
+                background: surface,
+                border: `1px solid ${hair}`,
+                boxShadow: shadow,
               }}
             >
-              <div style={{ flex: portrait ? undefined : 1 }}>
-                <div
-                  style={{
-                    fontSize: portrait ? 48 : 44,
-                    fontWeight: 300,
-                    color: ink,
-                    letterSpacing: "-0.045em",
-                    lineHeight: 1,
-                  }}
-                >
-                  {title}
-                </div>
-                <div style={{ fontSize: 16 * fs, color: muted, marginTop: 10 }}>
-                  {subtitle}
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                {["Today", "Week", "Month"].map((t, i) => (
-                  <span
-                    key={t}
+              <div
+                style={{
+                  position: "absolute",
+                  left: pad,
+                  right: pad,
+                  top: pad,
+                  height: headH,
+                  display: "flex",
+                  flexDirection: portrait ? "column" : "row",
+                  alignItems: portrait ? "flex-start" : "center",
+                  gap: portrait ? 18 : 0,
+                }}
+              >
+                <div style={{ flex: portrait ? undefined : 1 }}>
+                  <div
                     style={{
-                      height: 34 * fs,
-                      padding: `0 ${14 * fs}px`,
-                      borderRadius: 10,
-                      fontSize: 15 * fs,
-                      display: "flex",
-                      alignItems: "center",
-                      color: i === 0 ? ink : muted,
-                      background: i === 0 ? rowBg : "transparent",
-                      border: `1px solid ${i === 0 ? hair : "transparent"}`,
+                      fontSize: portrait ? 48 : 44,
+                      fontWeight: 300,
+                      color: fg,
+                      letterSpacing: "-0.045em",
+                      lineHeight: 1,
                     }}
                   >
-                    {t}
-                  </span>
-                ))}
-                <span
-                  style={{
-                    height: 34 * fs,
-                    padding: `0 ${12 * fs}px`,
-                    borderRadius: 10,
-                    border: `1px solid ${hair}`,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    fontFamily: mono.fontFamily,
-                    fontSize: 14 * fs,
-                    color: muted,
-                    marginLeft: 6,
-                  }}
-                >
-                  <svg viewBox="0 0 24 24" width={15} height={15} aria-hidden>
-                    <path
-                      d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM12 8v4l2.5 2"
-                      {...line(muted)}
-                    />
-                  </svg>
-                  06:42:{String(18 - Math.floor(frame / 30)).padStart(2, "0")}
-                </span>
-              </div>
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: pad + 14,
-                right: pad + 14,
-                top: pad + headH,
-                height: labelsH,
-                display: "flex",
-                alignItems: "center",
-                gap: 14,
-                fontFamily: mono.fontFamily,
-                fontSize: 13 * fs,
-                letterSpacing: "0.06em",
-                color: faint,
-                borderBottom: `1px solid ${hair}`,
-              }}
-            >
-              <span style={{ width: 40 * fs, textAlign: "center" }}>#</span>
-              <span style={{ flex: 1 }}>PRODUCT</span>
-              <span style={{ marginRight: 28 * fs }}>UPVOTES</span>
-            </div>
-
-            {others.map((e, j) => {
-              const stepI = fromIdx - 1 - j;
-              const t =
-                stepI >= 0 && stepI < steps.length ? steps[stepI] : null;
-              const drop =
-                t === null
-                  ? 0
-                  : spring({ frame: frame - t - 1, fps, config: CARD });
-              const s = j + drop;
-              const rank = Math.round(s) + 1;
-              return (
-                <div
-                  key={e.name}
-                  style={{
-                    position: "absolute",
-                    left: pad,
-                    right: pad,
-                    top: slotY(s),
-                    height: rowH,
-                    borderRadius: 14,
-                    background: rowBg,
-                    border: `1px solid ${hair}`,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14,
-                    padding: "0 16px 0 14px",
-                    boxSizing: "border-box",
-                    opacity: 1 - 0.25 * Math.sin(Math.PI * Math.min(1, drop)),
-                  }}
-                >
-                  {rowInner(
-                    rank,
-                    <div
+                    {title}
+                  </div>
+                  <div
+                    style={{ fontSize: 16 * fs, color: muted, marginTop: 10 }}
+                  >
+                    {subtitle}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {["Today", "Week", "Month"].map((t, i) => (
+                    <span
+                      key={t}
                       style={{
-                        width: (rowH > 60 ? 46 : 34) * 1,
-                        height: (rowH > 60 ? 46 : 34) * 1,
+                        height: 34 * fs,
+                        padding: `0 ${14 * fs}px`,
                         borderRadius: 10,
-                        flexShrink: 0,
-                        background: `color-mix(in oklab, ${TINTS[j % TINTS.length]} ${dark ? 26 : 18}%, transparent)`,
-                        border: `1px solid color-mix(in oklab, ${TINTS[j % TINTS.length]} 40%, transparent)`,
-                        color: TINTS[j % TINTS.length],
-                        fontSize: 17 * fs,
+                        fontSize: 15 * fs,
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
+                        color: i === 0 ? fg : muted,
+                        background: i === 0 ? rowBg : "transparent",
+                        border: `1px solid ${i === 0 ? hair : "transparent"}`,
                       }}
                     >
-                      {e.name.slice(0, 1)}
-                    </div>,
-                    e.name,
-                    e.tagline,
-                    fmt(e.score),
-                    false,
-                    t !== null && frame >= t ? "down" : j < 2 ? "up" : "flat",
-                  )}
+                      {t}
+                    </span>
+                  ))}
+                  <span
+                    style={{
+                      height: 34 * fs,
+                      padding: `0 ${12 * fs}px`,
+                      borderRadius: 10,
+                      border: `1px solid ${hair}`,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontFamily: mono.fontFamily,
+                      fontSize: 14 * fs,
+                      color: muted,
+                      marginLeft: 6,
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" width={15} height={15} aria-hidden>
+                      <path
+                        d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM12 8v4l2.5 2"
+                        {...line(muted)}
+                      />
+                    </svg>
+                    06:42:{String(18 - Math.floor(frame / 30)).padStart(2, "0")}
+                  </span>
                 </div>
-              );
-            })}
+              </div>
 
-            <div
-              style={{
-                position: "absolute",
-                left: pad - 6 * moving,
-                right: pad - 6 * moving,
-                top: slotY(selfSlot) - 2 * moving,
-                height: rowH,
-                borderRadius: 14,
-                background: accent,
-                display: "flex",
-                alignItems: "center",
-                gap: 14,
-                padding: "0 16px 0 14px",
-                boxSizing: "border-box",
-                opacity: selfIn,
-                transform: `scale(${1 + 0.02 * moving + 0.03 * flash})`,
-                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.25), 0 ${10 + 14 * moving}px ${26 + 24 * moving}px color-mix(in oklab, ${accent} ${45 + 20 * flash}%, transparent), 0 0 0 ${6 * flash}px color-mix(in oklab, ${accent} ${30 * flash}%, transparent)`,
-                filter: selfBlur > 0.4 ? "url(#lbc-self)" : undefined,
-                clipPath: `inset(0 ${100 - 100 * selfIn}% 0 0 round 14px)`,
-              }}
-            >
-              {rowInner(
-                selfRank,
-                <div
-                  style={{
-                    width: rowH > 60 ? 46 : 34,
-                    height: rowH > 60 ? 46 : 34,
-                    borderRadius: 10,
-                    flexShrink: 0,
-                    background: "#ffffff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-                  }}
-                >
-                  <RemocnR height={rowH > 60 ? 22 : 17} color="#0b0c12" />
-                </div>,
-                self.name,
-                self.tagline,
-                fmt(score),
-                true,
-                "up",
-                <span
-                  style={{
-                    height: 24 * fs,
-                    padding: `0 ${9 * fs}px`,
-                    borderRadius: 8,
-                    background: "rgba(255,255,255,0.2)",
-                    color: "#ffffff",
-                    fontFamily: mono.fontFamily,
-                    fontSize: 13 * fs,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    opacity: frame >= B.payoff ? Math.min(1, payoff * 2) : 0,
-                    transform: `scale(${mix(0.5, 1, payoff)})`,
-                  }}
-                >
-                  ▲ {stepCount} today
-                </span>,
-              )}
+              <div
+                style={{
+                  position: "absolute",
+                  left: pad + 14,
+                  right: pad + 14,
+                  top: pad + headH,
+                  height: labelsH,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  fontFamily: mono.fontFamily,
+                  fontSize: 13 * fs,
+                  letterSpacing: "0.06em",
+                  color: faint,
+                  borderBottom: `1px solid ${hair}`,
+                }}
+              >
+                <span style={{ width: 40 * fs, textAlign: "center" }}>#</span>
+                <span style={{ flex: 1 }}>{productLabel}</span>
+                <span style={{ marginRight: 28 * fs }}>{scoreLabel}</span>
+              </div>
+
+              {others.map((e, j) => {
+                const stepI = fromIdx - 1 - j;
+                const t =
+                  stepI >= 0 && stepI < steps.length ? steps[stepI] : null;
+                const drop =
+                  t === null
+                    ? 0
+                    : spring({ frame: frame - t - 1, fps, config: CARD });
+                const s = j + drop;
+                const rank = Math.round(s) + 1;
+                // Layout rounds a box and a baseline to whole pixels, so a row
+                // eased by `top` clicks down pixel by pixel. Layout holds the
+                // nearest slot and the travel is a transform; the slot pitch is
+                // whole pixels, so the hand-over between slots doesn't show.
+                const home = j + Math.round(drop);
+                const dy = (s - home) * slot;
+                return (
+                  <div
+                    key={e.name}
+                    style={{
+                      position: "absolute",
+                      left: pad,
+                      right: pad,
+                      top: slotY(home),
+                      height: rowH,
+                      transform:
+                        Math.abs(dy) < 1e-3 ? undefined : `translateY(${dy}px)`,
+                      borderRadius: 14,
+                      background: rowBg,
+                      border: `1px solid ${hair}`,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 14,
+                      padding: "0 16px 0 14px",
+                      boxSizing: "border-box",
+                      opacity: 1 - 0.25 * Math.sin(Math.PI * Math.min(1, drop)),
+                    }}
+                  >
+                    {rowInner(
+                      rank,
+                      <div
+                        style={{
+                          width: (rowH > 60 ? 46 : 34) * 1,
+                          height: (rowH > 60 ? 46 : 34) * 1,
+                          borderRadius: 10,
+                          flexShrink: 0,
+                          background: `color-mix(in oklab, ${TINTS[j % TINTS.length]} ${dark ? 26 : 18}%, transparent)`,
+                          border: `1px solid color-mix(in oklab, ${TINTS[j % TINTS.length]} 40%, transparent)`,
+                          color: TINTS[j % TINTS.length],
+                          fontSize: 17 * fs,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {e.name.slice(0, 1)}
+                      </div>,
+                      e.name,
+                      e.tagline,
+                      fmt(e.score),
+                      false,
+                      t !== null && frame >= t ? "down" : j < 2 ? "up" : "flat",
+                    )}
+                  </div>
+                );
+              })}
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: pad - 6 * moving,
+                  right: pad - 6 * moving,
+                  // Same as the other rows: layout holds the nearest slot,
+                  // the climb itself is the translate below.
+                  top: slotY(selfHome),
+                  height: rowH,
+                  borderRadius: 14,
+                  background: accent,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  // The row widens by `left`/`right` while it climbs, and the
+                  // padding grows by as much, so layout keeps every item where
+                  // it rests; the items' outward drift is a transform, since
+                  // layout moved them in uneven whole pixels.
+                  padding: `0 ${16 + 6 * moving}px 0 ${14 + 6 * moving}px`,
+                  boxSizing: "border-box",
+                  opacity: selfIn,
+                  transform: `translateY(${(selfSlot - selfHome) * slot - 2 * moving}px) scale(${1 + 0.02 * moving + 0.03 * flash})`,
+                  boxShadow: `inset 0 1px 0 rgba(255,255,255,0.25), 0 ${10 + 14 * moving}px ${26 + 24 * moving}px color-mix(in oklab, ${accent} ${45 + 20 * flash}%, transparent), 0 0 0 ${6 * flash}px color-mix(in oklab, ${accent} ${30 * flash}%, transparent)`,
+                  filter: selfBlur > 0.4 ? "url(#lbc-self)" : undefined,
+                  clipPath: `inset(0 ${100 - 100 * selfIn}% 0 0 round 14px)`,
+                }}
+              >
+                {rowInner(
+                  selfRank,
+                  <div
+                    style={{
+                      width: rowH > 60 ? 46 : 34,
+                      height: rowH > 60 ? 46 : 34,
+                      borderRadius: 10,
+                      flexShrink: 0,
+                      background: "#ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                      transform: selfOut?.[0],
+                    }}
+                  >
+                    {logo ?? (
+                      <RemocnR height={rowH > 60 ? 22 : 17} color="#0b0c12" />
+                    )}
+                  </div>,
+                  self.name,
+                  self.tagline,
+                  fmt(score),
+                  true,
+                  "up",
+                  <span
+                    style={{
+                      height: 24 * fs,
+                      padding: `0 ${9 * fs}px`,
+                      borderRadius: 8,
+                      background: "rgba(255,255,255,0.2)",
+                      color: "#ffffff",
+                      fontFamily: mono.fontFamily,
+                      fontSize: 13 * fs,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      opacity: frame >= B.payoff ? Math.min(1, payoff * 2) : 0,
+                      transform: `scale(${mix(0.5, 1, payoff)})`,
+                    }}
+                  >
+                    ▲ {stepCount} {gainLabel}
+                  </span>,
+                  selfOut,
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

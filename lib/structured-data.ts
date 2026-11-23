@@ -216,6 +216,8 @@ export type DocsPageInput = {
   /** Registry name, for pages that document an installable component. */
   component?: string;
   faq?: FaqItem[];
+  /** The frontmatter `lastModified` ("YYYY-MM-DD"), on pages that state one. */
+  dateModified?: string;
 };
 
 /**
@@ -236,6 +238,7 @@ export function docsPageJsonLd(page: DocsPageInput) {
     isPartOf: { "@id": WEBSITE_ID },
     publisher: ORG_REF,
     author: ORG_REF,
+    ...(page.dateModified ? { dateModified: page.dateModified } : {}),
     ...(page.component
       ? {
           about: {
@@ -327,6 +330,67 @@ export function showcaseJsonLd(showcase: {
         { label: "Showcases", href: "/showcases" },
         { label: showcase.video.name },
       ]),
+    ],
+  };
+}
+
+type PageInput = {
+  url: string;
+  title: string;
+  description: string;
+  crumbs: Crumb[];
+};
+
+/** JSON-LD for a standalone page that is neither an article nor a list. */
+export function webPageJsonLd(page: PageInput) {
+  const url = absolute(page.url);
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": `${url}#webpage`,
+        name: page.title,
+        description: page.description,
+        url,
+        inLanguage: "en",
+        isPartOf: { "@id": WEBSITE_ID },
+        publisher: ORG_REF,
+      },
+      breadcrumbList(page.url, page.crumbs),
+    ],
+  };
+}
+
+/** JSON-LD for an index page (blog, showcases, changelog) and what it lists. */
+export function collectionPageJsonLd(
+  page: PageInput & { items: { url: string; name: string }[] },
+) {
+  const url = absolute(page.url);
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${url}#webpage`,
+        name: page.title,
+        description: page.description,
+        url,
+        inLanguage: "en",
+        isPartOf: { "@id": WEBSITE_ID },
+        publisher: ORG_REF,
+        mainEntity: {
+          "@type": "ItemList",
+          numberOfItems: page.items.length,
+          itemListElement: page.items.map((item, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            url: absolute(item.url),
+            name: item.name,
+          })),
+        },
+      },
+      breadcrumbList(page.url, page.crumbs),
     ],
   };
 }

@@ -1,0 +1,95 @@
+{
+  "component": "animated-bar-chart",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Deep indigo bars rise one by one with long, deliberate pauses for a dramatic build.",
+      "askedAs": [
+        "slow dramatic bar reveal",
+        "bars appear one at a time slowly",
+        "suspenseful chart animation",
+        "медленное появление столбцов",
+        "драматичная анимация графика"
+      ],
+      "props": {
+        "barColor": "#4f46e5",
+        "staggerFrames": 18,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snap-burst",
+      "label": "Snap Burst",
+      "description": "Tightly packed emerald bars shoot up almost together in a quick, punchy burst.",
+      "askedAs": [
+        "fast snappy bar chart",
+        "all bars pop up at once",
+        "quick energetic chart",
+        "быстрый резкий график",
+        "столбцы появляются одновременно"
+      ],
+      "props": {
+        "barColor": "#10b981",
+        "gap": 6,
+        "staggerFrames": 1,
+        "speed": 2
+      }
+    },
+    {
+      "id": "airy-minimal",
+      "label": "Airy Minimal",
+      "description": "Slate bars spaced widely apart rise at a calm, even pace for a clean editorial feel.",
+      "askedAs": [
+        "minimal chart with lots of spacing",
+        "thin spaced out bars",
+        "calm clean bar graph",
+        "минималистичная диаграмма",
+        "столбцы с большими отступами"
+      ],
+      "props": {
+        "barColor": "#475569",
+        "gap": 48,
+        "staggerFrames": 10,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "warm-cascade",
+      "label": "Warm Cascade",
+      "description": "Amber bars ripple up in a smooth, brisk wave with moderate spacing.",
+      "askedAs": [
+        "warm orange bar chart",
+        "smooth wave of bars",
+        "friendly results chart",
+        "тёплый оранжевый график",
+        "плавная волна столбцов"
+      ],
+      "props": {
+        "barColor": "#f59e0b",
+        "gap": 24,
+        "staggerFrames": 4,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "solid-block",
+      "label": "Solid Block",
+      "description": "Gapless rose bars build into a dense histogram-like block in a steady cascade.",
+      "askedAs": [
+        "bars touching no gap",
+        "histogram style chart",
+        "dense block bar chart",
+        "столбцы без промежутков",
+        "гистограмма без зазоров"
+      ],
+      "props": {
+        "barColor": "#e11d48",
+        "gap": 0,
+        "staggerFrames": 8
+      }
+    }
+  ]
+}

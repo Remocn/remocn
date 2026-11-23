@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const cellDivideConfig: ComponentConfig = {
   componentName: "CellDivide",
@@ -12,11 +18,6 @@ export const cellDivideConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     label: {
       type: "text-content",
@@ -32,6 +33,30 @@ export const cellDivideConfig: ComponentConfig = {
       description: "Generations",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 300,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    pause: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 20,
+      step: 1,
+      description: "Pause (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Sora", grain: true }),
     speed: {
       type: "number",
       default: 1,

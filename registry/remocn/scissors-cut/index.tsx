@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Onest";
+import type React from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -8,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const face = loadFont("normal", { weights: ["300"], subsets: ["latin"] });
 
@@ -25,6 +26,19 @@ export interface ScissorsCutProps {
   replacement?: string;
   /** Scissor handles and the replacement word. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between letters as they fade in. */
+  stagger?: number;
+  /** Size of the line and scissors, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -51,6 +65,8 @@ const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_CUT = Easing.bezier(0.45, 0, 0.55, 1);
 const EASE_IN = Easing.bezier(0.55, 0, 0.85, 0.35);
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 // Beats, in frames at 30fps (before `speed`).
 const IN = 0;
@@ -187,24 +203,53 @@ function Scissors({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ScissorsCut({
   before = "Launch ",
   cut = "next month",
   after = ".",
   replacement = "today",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = face.fontFamily,
+  fontWeight = 300,
+  stagger = IN_STAGGER,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: ScissorsCutProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
+  const fg = ink ?? t.fg;
+  const solid =
+    background === undefined || background === "transparent"
+      ? t.bg
+      : background;
 
   const em = Math.round(width * 0.08);
   const textStyle = {
-    fontFamily: face.fontFamily,
+    fontFamily,
     fontSize: em,
-    fontWeight: 300,
+    fontWeight,
     letterSpacing: "-0.035em",
     lineHeight: LINE_HEIGHT,
     whiteSpace: "pre",
@@ -227,8 +272,10 @@ export function ScissorsCut({
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-measure when the copy or size changes
   useLayoutEffect(() => {
     let live = true;
-    face
-      .waitUntilDone()
+    Promise.all([
+      face.waitUntilDone(),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
+    ])
       .catch(() => undefined)
       .then(() => document.fonts.ready)
       .then(() => {
@@ -264,7 +311,7 @@ export function ScissorsCut({
     return () => {
       live = false;
     };
-  }, [before, cut, after, replacement, em, handle]);
+  }, [before, cut, after, replacement, em, handle, fontFamily, fontWeight]);
 
   const L = layout;
   const wA = L?.a.w ?? 0;
@@ -424,15 +471,10 @@ export function ScissorsCut({
     (1 - interpolate(frame, [REPL + 6, REPL + REPL_LEN], [0, 1], clamp));
   const hair = Math.max(1.5, width / 720);
   const fadeIn = (i: number) =>
-    interpolate(
-      frame,
-      [IN + i * IN_STAGGER, IN + i * IN_STAGGER + 18],
-      [0, 1],
-      {
-        ...clamp,
-        easing: EASE_OUT,
-      },
-    );
+    interpolate(frame, [IN + i * stagger, IN + i * stagger + 18], [0, 1], {
+      ...clamp,
+      easing: EASE_OUT,
+    });
   const glyph = (
     ch: string,
     key: string,
@@ -452,7 +494,7 @@ export function ScissorsCut({
           color,
           opacity: p,
           filter: p < 1 ? `blur(${(1 - p) * 8}px)` : undefined,
-          transform: `translateY(${(1 - p) * em * 0.14 + dy}px)`,
+          transform: `translateY(${(1 - p) * em * 0.14 + dy}px)${glide(midway(p))}`,
         }}
       >
         {ch}
@@ -465,7 +507,13 @@ export function ScissorsCut({
   const slipCy = slipA.y + slipA.h / 2;
 
   return (
-    <AbsoluteFill style={{ background: t.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? t.bg),
+        overflow: "hidden",
+      }}
+    >
       {/* measuring rows: never shown */}
       <div style={{ position: "absolute", visibility: "hidden", top: 0 }}>
         <div ref={aRef} style={{ ...textStyle, display: "inline-block" }}>
@@ -489,77 +537,9 @@ export function ScissorsCut({
         </div>
       </div>
 
-      <div style={{ position: "absolute", inset: 0, opacity: L ? 1 : 0 }}>
-        {/* the slot left behind */}
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          <path
-            d={rectPath(slot)}
-            fill="none"
-            stroke={t.edge}
-            strokeWidth={hair}
-            strokeDasharray={`${dashLen} ${dashGap}`}
-            opacity={slotOpacity * 0.7}
-          />
-        </svg>
-
-        {pre.map((ch, i) =>
-          glyph(
-            ch,
-            `p${i}`,
-            interpolate(reflow, [0, 1], [ax(i), bx(i)]) + preShift,
-            fadeIn(i),
-            t.fg,
-          ),
-        )}
-        {post.map((ch, i) =>
-          glyph(
-            ch,
-            `q${i}`,
-            interpolate(
-              reflow,
-              [0, 1],
-              [
-                ax(pre.length + mid.length + i),
-                bx(pre.length + repl.length + i),
-              ],
-            ) + postShift,
-            fadeIn(pre.length + mid.length + i),
-            t.fg,
-          ),
-        )}
-        {repl.map((ch, i) => {
-          const p = interpolate(
-            frame,
-            [REPL + i * 2, REPL + i * 2 + REPL_LEN],
-            [0, 1],
-            { ...clamp, easing: EASE_OUT },
-          );
-          return glyph(
-            ch,
-            `r${i}`,
-            bx(pre.length + i) + midShiftB,
-            p,
-            accent,
-            (1 - p) * em * 0.3,
-          );
-        })}
-
-        {/* the slip: cut-out words plus the edge cut so far */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            opacity: slipOpacity,
-            filter: slipBlur > 0.05 ? `blur(${slipBlur}px)` : undefined,
-            transformOrigin: `${slipCx}px ${slipCy}px`,
-            transform: `translate(${slipDX}px, ${slipDY}px) rotate(${slipRot}deg)`,
-          }}
-        >
+      <ScaleLayer scale={scale}>
+        <div style={{ position: "absolute", inset: 0, opacity: L ? 1 : 0 }}>
+          {/* the slot left behind */}
           <svg
             width={width}
             height={height}
@@ -567,42 +547,112 @@ export function ScissorsCut({
             aria-hidden
           >
             <path
-              d={rectPath(slipA)}
-              pathLength={1}
+              d={rectPath(slot)}
               fill="none"
               stroke={t.edge}
               strokeWidth={hair}
-              strokeDasharray={`${cutP} 2`}
+              strokeDasharray={`${dashLen} ${dashGap}`}
+              opacity={slotOpacity * 0.7}
             />
           </svg>
-          {mid.map((ch, i) =>
-            glyph(ch, `m${i}`, ax(iA + i) + midShiftA, fadeIn(iA + i), t.fg),
-          )}
-        </div>
 
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
-        >
-          {dashes.map((d) => (
-            <polyline
-              key={d.k}
-              points={d.pts}
-              fill="none"
-              stroke={t.dash}
-              strokeWidth={hair}
-            />
-          ))}
-          <g
-            opacity={scOpacity}
-            transform={`translate(${pivotX} ${pivotY}) rotate(${angle}) scale(${S})`}
+          {pre.map((ch, i) =>
+            glyph(
+              ch,
+              `p${i}`,
+              interpolate(reflow, [0, 1], [ax(i), bx(i)]) + preShift,
+              fadeIn(i),
+              fg,
+            ),
+          )}
+          {post.map((ch, i) =>
+            glyph(
+              ch,
+              `q${i}`,
+              interpolate(
+                reflow,
+                [0, 1],
+                [
+                  ax(pre.length + mid.length + i),
+                  bx(pre.length + repl.length + i),
+                ],
+              ) + postShift,
+              fadeIn(pre.length + mid.length + i),
+              fg,
+            ),
+          )}
+          {repl.map((ch, i) => {
+            const p = interpolate(
+              frame,
+              [REPL + i * 2, REPL + i * 2 + REPL_LEN],
+              [0, 1],
+              { ...clamp, easing: EASE_OUT },
+            );
+            return glyph(
+              ch,
+              `r${i}`,
+              bx(pre.length + i) + midShiftB,
+              p,
+              accent,
+              (1 - p) * em * 0.3,
+            );
+          })}
+
+          {/* the slip: cut-out words plus the edge cut so far */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: slipOpacity,
+              filter: slipBlur > 0.05 ? `blur(${slipBlur}px)` : undefined,
+              transformOrigin: `${slipCx}px ${slipCy}px`,
+              transform: `translate(${slipDX}px, ${slipDY}px) rotate(${slipRot}deg)`,
+            }}
           >
-            <Scissors open={open} blade={t.blade} ring={accent} bg={t.bg} />
-          </g>
-        </svg>
-      </div>
+            <svg
+              width={width}
+              height={height}
+              style={{ position: "absolute", inset: 0 }}
+              aria-hidden
+            >
+              <path
+                d={rectPath(slipA)}
+                pathLength={1}
+                fill="none"
+                stroke={t.edge}
+                strokeWidth={hair}
+                strokeDasharray={`${cutP} 2`}
+              />
+            </svg>
+            {mid.map((ch, i) =>
+              glyph(ch, `m${i}`, ax(iA + i) + midShiftA, fadeIn(iA + i), fg),
+            )}
+          </div>
+
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            {dashes.map((d) => (
+              <polyline
+                key={d.k}
+                points={d.pts}
+                fill="none"
+                stroke={t.dash}
+                strokeWidth={hair}
+              />
+            ))}
+            <g
+              opacity={scOpacity}
+              transform={`translate(${pivotX} ${pivotY}) rotate(${angle}) scale(${S})`}
+            >
+              <Scissors open={open} blade={t.blade} ring={accent} bg={solid} />
+            </g>
+          </svg>
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

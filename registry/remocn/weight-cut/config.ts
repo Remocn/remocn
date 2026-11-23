@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const weightCutConfig: ComponentConfig = {
   componentName: "WeightCut",
@@ -69,6 +75,17 @@ export const weightCutConfig: ComponentConfig = {
       description: "Light weight",
       hiddenFromList: false,
     },
+    count: {
+      type: "number",
+      default: 58,
+      min: 10,
+      max: 120,
+      step: 1,
+      description: "Count (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Barlow Condensed" }),
     speed: {
       type: "number",
       default: 1,

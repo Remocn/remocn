@@ -43,8 +43,8 @@ export const RemotionRoot = () => (
   <Composition
     id="HotStage"
     component={HotStageScene}
-    durationInFrames={155}
-    fps={30}
+    durationInFrames={310}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -72,14 +72,43 @@ The first line fades up beside a dim monospaced log. Every `stage` frames the ne
       description: "Frames between one line arriving and the next.",
     },
     {
+      name: "hold",
+      type: "number",
+      default: "30",
+      description: "Frames the first line holds alone before the next one ignites.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of the vent ticks; defaults to the ink color.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Space Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

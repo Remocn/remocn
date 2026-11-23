@@ -1,19 +1,15 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  interpolate,
-  interpolateColors,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, interpolateColors, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   FLOW_BG,
   FLOW_BORDER,
   FLOW_INK,
   FLOW_MUTED,
   FONT_SERIF,
+  stirring,
+  useGlide,
 } from "../foundation";
 
 const clamp = {
@@ -29,17 +25,24 @@ function WordReveal({
   index,
   f,
   fps,
+  step,
 }: {
   word: string;
   index: number;
   f: number;
   fps: number;
+  step: number;
 }) {
-  const reveal = spring({
-    frame: f - index * STAGGER,
-    fps,
-    config: { damping: 18, stiffness: 110 },
-  });
+  const glide = useGlide();
+  const revealAt = (g: number) =>
+    spring({
+      frame: g - index * STAGGER,
+      fps,
+      config: { damping: 18, stiffness: 110 },
+    });
+  const reveal = revealAt(f);
+  // The word travels its own height, about 110px.
+  const rising = stirring((g) => revealAt(g) * 110, f, step);
   const ty = interpolate(reveal, [0, 1], [100, 0]);
   const blur = interpolate(reveal, [0, 1], [6, 0]);
   const settle = interpolate(
@@ -63,8 +66,8 @@ function WordReveal({
           display: "inline-block",
           color,
           translate: `0 ${ty}%`,
+          transform: glide(rising),
           filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
-          willChange: "transform, filter",
         }}
       >
         {word}
@@ -114,19 +117,26 @@ const SCATTER_CARDS = [
 ] as const;
 
 export function ProblemHook({ speed = 1 }: { speed?: number }) {
-  const f = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const f = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
+  const glide = useGlide();
 
   const beat1Opacity = interpolate(f, [0, 4, 40, 55], [0, 1, 1, 0], clamp);
   const beat2Opacity = interpolate(f, [50, 60, 100, 115], [0, 1, 1, 0], clamp);
   const beat3Opacity = interpolate(f, [113, 130], [0, 1], clamp);
-  const beat3ty = interpolate(f, [113, 132], [16, 0], clamp);
+  const beat3tyAt = (g: number) => interpolate(g, [113, 132], [16, 0], clamp);
+  const beat3ty = beat3tyAt(f);
+  const beat3Rising = stirring(beat3tyAt, f, speed);
 
-  const line2Reveal = spring({
-    frame: f - 52,
-    fps,
-    config: { damping: 18, stiffness: 110 },
-  });
+  const line2RevealAt = (g: number) =>
+    spring({
+      frame: g - 52,
+      fps,
+      config: { damping: 18, stiffness: 110 },
+    });
+  const line2Reveal = line2RevealAt(f);
+  // 60% of the line's height, about 64px.
+  const line2Rising = stirring((g) => line2RevealAt(g) * 64, f, speed);
   const line2ty = interpolate(line2Reveal, [0, 1], [60, 0]);
   const line2blur = interpolate(line2Reveal, [0, 1], [6, 0]);
 
@@ -144,7 +154,6 @@ export function ProblemHook({ speed = 1 }: { speed?: number }) {
           alignItems: "center",
           justifyContent: "center",
           opacity: beat1Opacity,
-          willChange: "opacity",
         }}
       >
         <div
@@ -164,7 +173,14 @@ export function ProblemHook({ speed = 1 }: { speed?: number }) {
           }}
         >
           {LINE_1_WORDS.map((word, i) => (
-            <WordReveal key={word} word={word} index={i} f={f} fps={fps} />
+            <WordReveal
+              key={word}
+              word={word}
+              index={i}
+              f={f}
+              fps={fps}
+              step={speed}
+            />
           ))}
         </div>
       </AbsoluteFill>
@@ -174,7 +190,6 @@ export function ProblemHook({ speed = 1 }: { speed?: number }) {
           alignItems: "center",
           justifyContent: "center",
           opacity: beat2Opacity,
-          willChange: "opacity",
         }}
       >
         {SCATTER_CARDS.map((card, i) => {
@@ -207,7 +222,6 @@ export function ProblemHook({ speed = 1 }: { speed?: number }) {
                 border: `1.5px solid ${FLOW_BORDER}`,
                 opacity: cardOpacity,
                 boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-                willChange: "transform, opacity",
               }}
             />
           );
@@ -226,8 +240,8 @@ export function ProblemHook({ speed = 1 }: { speed?: number }) {
             position: "relative",
             zIndex: 1,
             translate: `0 ${line2ty}%`,
+            transform: glide(line2Rising),
             filter: line2blur > 0.05 ? `blur(${line2blur}px)` : undefined,
-            willChange: "transform, filter",
           }}
         >
           <span style={{ color: FLOW_INK }}>Projects</span>
@@ -250,7 +264,7 @@ export function ProblemHook({ speed = 1 }: { speed?: number }) {
           justifyContent: "center",
           opacity: beat3Opacity,
           translate: `0 ${beat3ty}px`,
-          willChange: "transform, opacity",
+          transform: glide(beat3Rising),
         }}
       >
         <span

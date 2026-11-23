@@ -2,13 +2,8 @@
 
 import { type Font, parse } from "opentype.js";
 import { useEffect, useMemo, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-} from "remotion";
+import { continueRender, delayRender, Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface StretchInProps {
   className?: string;
@@ -107,7 +102,7 @@ export function StretchIn({
   strokeWidth = 0,
   stroke = "#ffffff",
 }: StretchInProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const [font, setFont] = useState<Font | null>(null);
 
   useEffect(() => {

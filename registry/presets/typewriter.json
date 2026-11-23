@@ -1,0 +1,99 @@
+{
+  "component": "typewriter",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-letter",
+      "label": "Slow Letter",
+      "description": "Unhurried, light-weight typing in warm ink that reads like a note being written by hand.",
+      "askedAs": [
+        "slow typing text",
+        "gentle handwritten feel typing",
+        "calm letter being typed",
+        "медленный набор текста",
+        "спокойная печать букв"
+      ],
+      "props": {
+        "charsPerSecond": 8,
+        "fontWeight": "400",
+        "color": "#3f3a34",
+        "cursorColor": "#b45309",
+        "fontSize": 56
+      }
+    },
+    {
+      "id": "terminal-prompt",
+      "label": "Terminal Prompt",
+      "description": "Small, quick command-line typing in muted green with a matching cursor.",
+      "askedAs": [
+        "terminal command typing",
+        "code being typed in console",
+        "fast small monospace prompt",
+        "набор команды в терминале",
+        "печать кода в консоли"
+      ],
+      "props": {
+        "fontSize": 32,
+        "charsPerSecond": 40,
+        "fontWeight": "500",
+        "color": "#15803d",
+        "cursorColor": "#15803d"
+      }
+    },
+    {
+      "id": "bold-headline",
+      "label": "Bold Headline",
+      "description": "Oversized heavy title typed at a confident pace with a blue accent cursor.",
+      "askedAs": [
+        "big bold typed title",
+        "large headline typewriter",
+        "huge heading typing in",
+        "крупный жирный заголовок печатается",
+        "большой текст набирается"
+      ],
+      "props": {
+        "fontSize": 128,
+        "fontWeight": "700",
+        "charsPerSecond": 14,
+        "cursorColor": "#1f6feb"
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Near-instant burst of text with no cursor for a snappy, energetic reveal.",
+      "askedAs": [
+        "very fast text reveal",
+        "quick typing without cursor",
+        "snappy instant type on",
+        "очень быстрая печать текста",
+        "быстрое появление без курсора"
+      ],
+      "props": {
+        "charsPerSecond": 60,
+        "speed": 2,
+        "cursor": false
+      }
+    },
+    {
+      "id": "quiet-caption",
+      "label": "Quiet Caption",
+      "description": "Soft grey subtitle-sized text typed at a relaxed pace for understated captions.",
+      "askedAs": [
+        "subtle caption typing",
+        "small grey subtitle typewriter",
+        "understated text reveal",
+        "тихая подпись печатается",
+        "маленький серый текст набор"
+      ],
+      "props": {
+        "fontSize": 36,
+        "fontWeight": "400",
+        "color": "#6b7280",
+        "cursorColor": "#9ca3af",
+        "speed": 0.75
+      }
+    }
+  ]
+}

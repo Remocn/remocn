@@ -1,0 +1,117 @@
+{
+  "component": "diff-swap",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A classic code-editor look with monospaced type on a near-black panel and a green accent.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace code diff style",
+        "git diff in the console",
+        "как в терминале",
+        "моноширинный шрифт как в коде"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "paper-changelog",
+      "label": "Paper Changelog",
+      "description": "A light, editorial changelog with serif type on warm paper and a muted red accent.",
+      "askedAs": [
+        "light editorial version",
+        "serif changelog on paper",
+        "soft printed release notes look",
+        "светлый вариант с засечками",
+        "как страница журнала изменений"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f6f1e7",
+        "ink": "#2a2622",
+        "accent": "#b5523b"
+      }
+    },
+    {
+      "id": "quick-commit",
+      "label": "Quick Commit",
+      "description": "A snappy, early fold that swaps the line fast for punchy social cuts.",
+      "askedAs": [
+        "make the swap faster",
+        "quick snappy diff",
+        "short version for reels",
+        "быстрее поменять строку",
+        "динамичный короткий вариант"
+      ],
+      "props": {
+        "speed": 2,
+        "foldAt": 45,
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 600
+      }
+    },
+    {
+      "id": "slow-review",
+      "label": "Slow Review",
+      "description": "A calm, deliberate pace with a late fold and a pause before it starts, giving viewers time to read.",
+      "askedAs": [
+        "slow it down so people can read",
+        "give the old line more time",
+        "calm unhurried diff",
+        "помедленнее, чтобы успели прочитать",
+        "спокойный медленный темп"
+      ],
+      "props": {
+        "speed": 0.5,
+        "foldAt": 105,
+        "delay": 20,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "bold-headline",
+      "label": "Bold Headline",
+      "description": "Large, heavy grotesque type with a violet accent for a hero-sized statement.",
+      "askedAs": [
+        "make the text bigger and bolder",
+        "hero headline version",
+        "big loud diff for a keynote",
+        "крупный жирный текст",
+        "как заголовок на презентации"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontWeight": 700,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#7c5cff"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "A minimal light-mode product look in Geist with a crisp blue accent at a slightly smaller size.",
+      "askedAs": [
+        "clean light mode",
+        "minimal product UI look",
+        "white background modern diff",
+        "светлая минималистичная тема",
+        "чистый стиль как в интерфейсе"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Geist",
+        "accent": "#0969da",
+        "scale": 0.85
+      }
+    }
+  ]
+}

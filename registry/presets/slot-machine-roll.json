@@ -1,0 +1,112 @@
+{
+  "component": "slot-machine-roll",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "jackpot-pop",
+      "label": "Jackpot Pop",
+      "description": "Huge, heavy digits in warm casino red that spin in fast and land with punch.",
+      "askedAs": [
+        "big fast red price reveal",
+        "casino jackpot style numbers",
+        "make the roll huge and quick",
+        "большие красные цифры как в казино",
+        "быстрый крупный барабан"
+      ],
+      "props": {
+        "fontSize": 200,
+        "color": "#c2302a",
+        "speed": 2
+      }
+    },
+    {
+      "id": "slow-suspense",
+      "label": "Slow Suspense",
+      "description": "Deep navy digits that roll slowly to build anticipation before the final value lands.",
+      "askedAs": [
+        "slow dramatic number reveal",
+        "build suspense before the price",
+        "calm slow reel spin",
+        "медленная интрига перед ценой",
+        "неторопливая прокрутка цифр"
+      ],
+      "props": {
+        "speed": 0.5,
+        "color": "#1e2a4a",
+        "fontSize": 140
+      }
+    },
+    {
+      "id": "quiet-ticker",
+      "label": "Quiet Ticker",
+      "description": "Small, regular-weight slate digits that tick over briskly like a subtle inline counter.",
+      "askedAs": [
+        "small subtle number change",
+        "understated inline counter",
+        "light weight quick ticker",
+        "маленький аккуратный счётчик",
+        "тонкие цифры без акцента"
+      ],
+      "props": {
+        "fontSize": 56,
+        "fontWeight": "400",
+        "color": "#475569",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "upgrade-green",
+      "label": "Upgrade Green",
+      "description": "Medium-size forest green semibold digits for positive changes like savings or plan upgrades.",
+      "askedAs": [
+        "green number for savings",
+        "positive growth value roll",
+        "plan upgrade reveal in green",
+        "зелёные цифры для скидки",
+        "рост показателя зелёным"
+      ],
+      "props": {
+        "color": "#15803d",
+        "fontWeight": "600",
+        "fontSize": 110,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "gold-lounge",
+      "label": "Gold Lounge",
+      "description": "Elegant medium-weight muted gold digits at a relaxed pace for premium pricing.",
+      "askedAs": [
+        "luxury gold price spin",
+        "premium plan elegant numbers",
+        "classy slow golden reel",
+        "золотые цифры для премиум тарифа",
+        "элегантная прокрутка цены"
+      ],
+      "props": {
+        "color": "#a07a2c",
+        "fontWeight": "500",
+        "speed": 0.75,
+        "fontSize": 160
+      }
+    },
+    {
+      "id": "turbo-spin",
+      "label": "Turbo Spin",
+      "description": "Maximum-speed violet reels in bold that snap to the result almost instantly.",
+      "askedAs": [
+        "super fast slot spin",
+        "instant number snap",
+        "hyper quick reel roll",
+        "очень быстрый слот",
+        "мгновенная смена цифр"
+      ],
+      "props": {
+        "speed": 3.5,
+        "color": "#5b3cc4",
+        "fontSize": 130
+      }
+    }
+  ]
+}

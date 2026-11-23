@@ -58,6 +58,8 @@ export function GET() {
     "To add an entry to one Remotion composition as an editable copy, run",
     "`npx remotion elements use <Docs link> --composition <id>` (Remotion 4.0.542+).",
     "",
+    "Every length and frame count in this catalog is counted at 30fps, and a component keeps that",
+    "timing at any composition frame rate: in a 60fps composition hand Remotion twice the number.",
     "`Length` is how many frames of motion the component itself runs at 30fps — for a transition it",
     "is the value to pass to `linearTiming` / `springTiming`, for everything else it is the point at",
     "which the animation has finished. It is a floor for the `Sequence`, not the whole beat: add hold",
@@ -114,6 +116,10 @@ export function GET() {
   }
 
   return new Response(`${lines.join("\n")}\n`, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      // Agents fetch it by URL; in search it would compete with the docs.
+      "X-Robots-Tag": "noindex",
+    },
   });
 }

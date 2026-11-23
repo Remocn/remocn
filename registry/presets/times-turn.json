@@ -1,0 +1,125 @@
+{
+  "component": "times-turn",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "A calm light page with a serif numeral and a deep brick accent, unfolding slowly like a magazine spread.",
+      "askedAs": [
+        "elegant serif version on light background",
+        "slow magazine style stat",
+        "classy editorial multiplier",
+        "светлый журнальный стиль с засечками",
+        "элегантная медленная версия"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "accent": "#b23a1e",
+        "speed": 0.75,
+        "stagger": 4
+      }
+    },
+    {
+      "id": "punchy-pop",
+      "label": "Punchy Pop",
+      "description": "A big, heavy grotesque that snaps in fast with almost no word stagger for a high-energy hit.",
+      "askedAs": [
+        "make it fast and bold",
+        "energetic punchy stat",
+        "bigger and snappier",
+        "быстро и жирно",
+        "энергичная яркая подача"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 700,
+        "scale": 1.3,
+        "speed": 1.75,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "terminal-mint",
+      "label": "Terminal Mint",
+      "description": "Monospaced type on a near-black slate with a soft mint panel for a technical, dev-tool feel.",
+      "askedAs": [
+        "code style monospace look",
+        "techy green on dark",
+        "developer dashboard vibe",
+        "моноширинный технический стиль",
+        "тёмный фон с мятным акцентом"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0f1417",
+        "ink": "#e6edea",
+        "accent": "#3fb68b",
+        "fontWeight": 400,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "cobalt-cream",
+      "label": "Cobalt Cream",
+      "description": "A warm cream backdrop with a confident cobalt panel and crisp navy text in a geometric sans.",
+      "askedAs": [
+        "blue panel on cream",
+        "friendly blue and beige version",
+        "soft warm background with blue",
+        "синяя плашка на кремовом фоне",
+        "мягкий бежевый с синим"
+      ],
+      "props": {
+        "background": "#f4efe6",
+        "ink": "#1b2340",
+        "accent": "#2f5bea",
+        "fontFamily": "Manrope",
+        "fontWeight": 600
+      }
+    },
+    {
+      "id": "quiet-delay",
+      "label": "Quiet Reveal",
+      "description": "A small, light-weight composition that waits a beat and then drifts in with a long, airy stagger.",
+      "askedAs": [
+        "subtle minimal reveal",
+        "start later and slower",
+        "thin and understated",
+        "минималистичное спокойное появление",
+        "тонкий шрифт с задержкой"
+      ],
+      "props": {
+        "fontWeight": 300,
+        "fontFamily": "Inter",
+        "scale": 0.75,
+        "delay": 20,
+        "speed": 0.5,
+        "stagger": 7
+      }
+    },
+    {
+      "id": "plum-night",
+      "label": "Plum Night",
+      "description": "A deep aubergine ground with a dusty rose panel and soft Fraunces numerals for a moody, playful tone.",
+      "askedAs": [
+        "purple moody version",
+        "dark plum with pink",
+        "soft rose accent at night",
+        "тёмно-фиолетовый с розовым",
+        "уютная вечерняя палитра"
+      ],
+      "props": {
+        "background": "#24152b",
+        "ink": "#f5e9ef",
+        "accent": "#d9728f",
+        "fontFamily": "Fraunces",
+        "fontWeight": 600,
+        "scale": 1.1
+      }
+    }
+  ]
+}

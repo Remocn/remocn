@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const lineCascadeConfig: ComponentConfig = {
   componentName: "LineCascade",
@@ -13,11 +19,6 @@ export const lineCascadeConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     value: {
       type: "text-content",
       default: "240",
@@ -28,6 +29,30 @@ export const lineCascadeConfig: ComponentConfig = {
       default: "launch films rendered with remocn today",
       description: "Caption",
     },
+    fontWeight: {
+      type: "number",
+      default: 400,
+      min: 300,
+      max: 700,
+      step: 100,
+      description: "Caption weight",
+      hiddenFromList: false,
+    },
+    lineSpacing: {
+      type: "number",
+      default: 6.5,
+      min: 4,
+      max: 12,
+      step: 0.5,
+      description: "Line spacing",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Hanken Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

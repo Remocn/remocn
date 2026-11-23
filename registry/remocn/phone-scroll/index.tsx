@@ -4,20 +4,14 @@ import { loadFont } from "@remotion/google-fonts/Figtree";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const figtree = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -38,7 +32,23 @@ export interface PhoneScrollProps {
   eyebrow?: string;
   /** Custom screen content (393pt wide), scrolled like the screenshot. */
   children?: React.ReactNode;
+  /** Search field text in the built-in feed's header. */
+  searchLabel?: string;
+  /** Frames from one flick to the next when there are several stops. */
+  flickGap?: number;
+  /** Blur the screen along the scroll while it moves fast. */
+  motionBlur?: boolean;
   accent?: string;
+  /** Text color of the headline; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Size of the phone and headline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -64,10 +74,10 @@ const LIGHT = Easing.bezier(0.22, 1, 0.36, 1);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 
-function scrollAt(f: number, stops: number[], fps: number): number {
+function scrollAt(f: number, stops: number[], fps: number, seg = SEG): number {
   let base = 0;
   for (let i = 0; i < stops.length; i++) {
-    const local = f - (FLICK_START + i * SEG) - PRESS;
+    const local = f - (FLICK_START + i * seg) - PRESS;
     if (local <= 0) return base;
     const dist = stops[i] - base;
     const over = Math.sign(dist) * Math.min(26, Math.abs(dist) * 0.035);
@@ -87,7 +97,7 @@ function scrollAt(f: number, stops: number[], fps: number): number {
       });
       y = momentum - over * back;
     }
-    if (i === stops.length - 1 || local < SEG - PRESS) return y;
+    if (i === stops.length - 1 || local < seg - PRESS) return y;
     base = stops[i];
   }
   return base;
@@ -880,7 +890,15 @@ function FeesNotice({ c }: { c: AppColors }) {
   );
 }
 
-function AppHeader({ scrolled, c }: { scrolled: number; c: AppColors }) {
+function AppHeader({
+  scrolled,
+  c,
+  searchLabel,
+}: {
+  scrolled: number;
+  c: AppColors;
+  searchLabel: string;
+}) {
   const cats: [keyof typeof ICONS, string][] = [
     ["cabin", "Cabins"],
     ["wave", "Beachfront"],
@@ -918,7 +936,7 @@ function AppHeader({ scrolled, c }: { scrolled: number; c: AppColors }) {
         <Icon d={ICONS.search} size={20} color={c.ink} />
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 15, fontWeight: 400, color: c.ink }}>
-            Where to?
+            {searchLabel}
           </div>
           <div style={{ fontSize: 12.5, color: c.muted, marginTop: 1 }}>
             Anywhere · Any week · Add guests
@@ -1112,6 +1130,22 @@ function PhoneBody({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PhoneScroll({
   src,
   stops = [930],
@@ -1119,14 +1153,23 @@ export function PhoneScroll({
   labelAccent = "two taps.",
   eyebrow = "remocn for iOS",
   children,
+  searchLabel = "Where to?",
+  flickGap = SEG,
+  motionBlur = true,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = figtree.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   ground,
   groundParams,
 }: PhoneScrollProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { fps, width, height } = useSceneConfig();
   const f = frame * speed;
   const blurId = `${useId().replace(/[^a-zA-Z0-9_-]/g, "")}mb`;
   const dark = theme === "dark";
@@ -1143,15 +1186,15 @@ export function PhoneScroll({
   const ty = (1 - rise) * height * 0.95;
   const rot = -8 * (1 - level);
 
-  const y = scrollAt(f, stops, fps);
-  const v = Math.abs(y - scrollAt(f - speed, stops, fps));
+  const y = scrollAt(f, stops, fps, flickGap);
+  const v = Math.abs(y - scrollAt(f - speed, stops, fps, flickGap));
   const blur = Math.min(9, v * 0.09);
 
   const flick = Math.max(
     0,
-    Math.min(stops.length - 1, Math.floor((f - FLICK_START + 4) / SEG)),
+    Math.min(stops.length - 1, Math.floor((f - FLICK_START + 4) / flickGap)),
   );
-  const fl = f - (FLICK_START + flick * SEG);
+  const fl = f - (FLICK_START + flick * flickGap);
   const prev = flick === 0 ? 0 : stops[flick - 1];
   const dist = stops[flick] - prev;
   const d0 =
@@ -1177,6 +1220,8 @@ export function PhoneScroll({
     interpolate(f, [16 + d, 32 + d], [0, 1], { ...clamp, easing: ENTER });
   const eyeIn = interpolate(f, [12, 26], [0, 1], { ...clamp, easing: LIGHT });
   const push = interpolate(f, [0, 120], [1, 1.03], clamp);
+  // The push holds the phone and the headline, so its mark covers both.
+  const pushing = f > 0 && f < 120;
 
   const content = children ? (
     <div style={{ width: SW }}>{children}</div>
@@ -1190,7 +1235,7 @@ export function PhoneScroll({
     labelAccent && label.endsWith(labelAccent)
       ? [label.slice(0, label.length - labelAccent.length), labelAccent]
       : [label, ""];
-  const ink = dark ? "#F4F2EE" : "#16161A";
+  const fg = ink ?? (dark ? "#F4F2EE" : "#16161A");
   const sub = dark ? "rgba(244,242,238,0.58)" : "rgba(22,22,26,0.55)";
   const headSize = tall ? width * 0.105 : height * 0.088;
 
@@ -1202,156 +1247,175 @@ export function PhoneScroll({
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <GshGround
-        preset={ground ?? (dark ? "hearth" : "paper-crease")}
-        params={groundParams}
-        timeOffset={dark ? 2 : 4}
-        timeScale={0.3}
-      />
-      <AbsoluteFill
-        style={{
-          background: dark ? "rgba(4,3,3,0.34)" : "rgba(246,244,240,0.28)",
-        }}
-      />
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (dark ? "hearth" : "paper-crease")}
+            params={groundParams}
+            timeOffset={dark ? 2 : 4}
+            timeScale={0.3}
+          />
+          <AbsoluteFill
+            style={{
+              background: dark ? "rgba(4,3,3,0.34)" : "rgba(246,244,240,0.28)",
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
       <svg width="0" height="0" style={{ position: "absolute" }}>
         <filter id={blurId} x="0" y="-10%" width="100%" height="120%">
           <feGaussianBlur stdDeviation={`0 ${blur.toFixed(2)}`} />
         </filter>
       </svg>
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
-      >
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: phoneCx - BW / 2,
-            top: phoneCy - BH / 2,
-            width: BW,
-            height: BH,
-            transform: `translateY(${ty}px) scale(${k}) rotate(${rot}deg)`,
+            transform: `scale(${push})${glide(pushing)}`,
             transformOrigin: "50% 50%",
           }}
         >
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              borderRadius: 68,
-              boxShadow: dark
-                ? "0 2px 6px rgba(0,0,0,0.5), 0 30px 80px -20px rgba(0,0,0,0.7)"
-                : "0 2px 6px rgba(40,32,24,0.12), 0 30px 80px -20px rgba(40,32,24,0.3)",
-            }}
-          />
-          <PhoneBody c={c}>
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                width: SW,
-                transform: `translateY(${-y}px)`,
-                filter: blur > 0.4 ? `url(#${blurId})` : undefined,
-              }}
-            >
-              {content}
-            </div>
-            {!children && !src ? (
-              <>
-                <AppHeader
-                  scrolled={interpolate(y, [0, 60], [0, 1], clamp)}
-                  c={c}
-                />
-                <TabBar accent={accent} c={c} />
-              </>
-            ) : null}
-            <div
-              style={{
-                position: "absolute",
-                left: SW * 0.56 - 21,
-                top: dotY - 21,
-                width: 42,
-                height: 42,
-                borderRadius: 21,
-                background: "rgba(30,30,36,0.22)",
-                boxShadow:
-                  "inset 0 0 0 1.5px rgba(255,255,255,0.9), 0 2px 8px rgba(0,0,0,0.2)",
-                opacity: f >= FLICK_START ? dotIn * dotOut : 0,
-                transform: `scale(${dotScale})`,
-                zIndex: 6,
-              }}
-            />
-          </PhoneBody>
-        </div>
-        {hasLabel ? (
-          <div
-            style={{
-              position: "absolute",
-              ...(tall
-                ? {
-                    left: width * 0.08,
-                    right: width * 0.08,
-                    top: height * 0.07,
-                    textAlign: "center",
-                  }
-                : {
-                    left: width * 0.56,
-                    width: width * 0.37,
-                    top: 0,
-                    bottom: 0,
-                  }),
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
+              left: phoneCx - BW / 2,
+              top: phoneCy - BH / 2,
+              width: BW,
+              height: BH,
+              transform: `translateY(${ty}px) scale(${k}) rotate(${rot}deg)`,
+              transformOrigin: "50% 50%",
             }}
           >
-            {eyebrow ? (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: 68,
+                boxShadow: dark
+                  ? "0 2px 6px rgba(0,0,0,0.5), 0 30px 80px -20px rgba(0,0,0,0.7)"
+                  : "0 2px 6px rgba(40,32,24,0.12), 0 30px 80px -20px rgba(40,32,24,0.3)",
+              }}
+            />
+            <PhoneBody c={c}>
               <div
                 style={{
-                  fontSize: Math.max(height * 0.026, headSize * 0.26),
-                  fontWeight: 400,
-                  color: sub,
-                  marginBottom: headSize * 0.32,
-                  opacity: eyeIn,
-                  transform: `translateY(${(1 - eyeIn) * 10}px)`,
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  width: SW,
+                  transform: `translateY(${-y}px)`,
+                  filter:
+                    motionBlur && blur > 0.4 ? `url(#${blurId})` : undefined,
                 }}
               >
-                {eyebrow}
+                {content}
               </div>
-            ) : null}
-            <div style={{ overflow: "hidden", paddingBottom: headSize * 0.12 }}>
+              {!children && !src ? (
+                <>
+                  <AppHeader
+                    scrolled={interpolate(y, [0, 60], [0, 1], clamp)}
+                    c={c}
+                    searchLabel={searchLabel}
+                  />
+                  <TabBar accent={accent} c={c} />
+                </>
+              ) : null}
               <div
                 style={{
-                  fontSize: headSize,
-                  lineHeight: 1.04,
-                  fontWeight: 300,
-                  letterSpacing: "-0.035em",
-                  color: ink,
-                  textWrap: "balance",
-                  transform: `translateY(${(1 - typeIn(0)) * 105}%)`,
+                  position: "absolute",
+                  left: SW * 0.56 - 21,
+                  top: dotY - 21,
+                  width: 42,
+                  height: 42,
+                  borderRadius: 21,
+                  background: "rgba(30,30,36,0.22)",
+                  boxShadow:
+                    "inset 0 0 0 1.5px rgba(255,255,255,0.9), 0 2px 8px rgba(0,0,0,0.2)",
+                  opacity: f >= FLICK_START ? dotIn * dotOut : 0,
+                  transform: `scale(${dotScale})`,
+                  zIndex: 6,
                 }}
+              />
+            </PhoneBody>
+          </div>
+          {hasLabel ? (
+            <div
+              style={{
+                position: "absolute",
+                ...(tall
+                  ? {
+                      left: width * 0.08,
+                      right: width * 0.08,
+                      top: height * 0.07,
+                      textAlign: "center",
+                    }
+                  : {
+                      left: width * 0.56,
+                      width: width * 0.37,
+                      top: 0,
+                      bottom: 0,
+                    }),
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+              }}
+            >
+              {eyebrow ? (
+                <div
+                  style={{
+                    fontSize: Math.max(height * 0.026, headSize * 0.26),
+                    fontWeight: 400,
+                    color: sub,
+                    marginBottom: headSize * 0.32,
+                    opacity: eyeIn,
+                    transform: `translateY(${(1 - eyeIn) * 10}px)`,
+                  }}
+                >
+                  {eyebrow}
+                </div>
+              ) : null}
+              <div
+                style={{ overflow: "hidden", paddingBottom: headSize * 0.12 }}
               >
-                {split[0]}
-                {split[1] ? (
-                  <span
-                    style={{
-                      fontFamily: serifFamily,
-                      fontStyle: "italic",
-                      fontWeight: 400,
-                      letterSpacing: "-0.01em",
-                      fontSize: headSize * 1.08,
-                      display: "inline-block",
-                      opacity: typeIn(6),
-                      transform: `translateY(${(1 - typeIn(6)) * 30}%)`,
-                    }}
-                  >
-                    {split[1]}
-                  </span>
-                ) : null}
+                <div
+                  style={{
+                    fontSize: headSize,
+                    lineHeight: 1.04,
+                    fontWeight: 300,
+                    letterSpacing: "-0.035em",
+                    color: fg,
+                    textWrap: "balance",
+                    transform: `translateY(${(1 - typeIn(0)) * 105}%)`,
+                  }}
+                >
+                  {split[0]}
+                  {split[1] ? (
+                    <span
+                      style={{
+                        fontFamily: serifFamily,
+                        fontStyle: "italic",
+                        fontWeight: 400,
+                        letterSpacing: "-0.01em",
+                        fontSize: headSize * 1.08,
+                        display: "inline-block",
+                        opacity: typeIn(6),
+                        transform: `translateY(${(1 - typeIn(6)) * 30}%)`,
+                      }}
+                    >
+                      {split[1]}
+                    </span>
+                  ) : null}
+                </div>
               </div>
             </div>
-          </div>
-        ) : null}
-      </AbsoluteFill>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

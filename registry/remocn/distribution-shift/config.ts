@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const distributionShiftConfig: ComponentConfig = {
   componentName: "DistributionShift",
@@ -13,11 +19,6 @@ export const distributionShiftConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     unit: {
       type: "text-content",
       default: "ms",
@@ -27,6 +28,11 @@ export const distributionShiftConfig: ComponentConfig = {
       type: "text-content",
       default: "p99 latency",
       description: "Label",
+    },
+    fromLabel: {
+      type: "text-content",
+      default: "from",
+      description: "From label",
     },
     before: {
       type: "number",
@@ -46,6 +52,21 @@ export const distributionShiftConfig: ComponentConfig = {
       description: "After",
       hiddenFromList: false,
     },
+    shiftDuration: {
+      type: "number",
+      default: 52,
+      min: 12,
+      max: 120,
+      step: 4,
+      description: "Shift length (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Space Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

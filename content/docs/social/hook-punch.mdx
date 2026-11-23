@@ -45,8 +45,8 @@ export const RemotionRoot = () => (
   <Composition
     id="HookPunch"
     component={HookPunchScene}
-    durationInFrames={105}
-    fps={30}
+    durationInFrames={210}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -84,6 +84,28 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "The payoff, slammed huge.",
     },
     {
+      name: "hold",
+      type: "number",
+      default: "30",
+      description: "Frames the first beat holds before the whip to the payoff.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Bricolage Grotesque\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
@@ -98,6 +120,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Overrides for the ground shader parameters.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

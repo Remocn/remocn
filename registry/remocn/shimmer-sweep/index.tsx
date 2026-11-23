@@ -1,6 +1,7 @@
 "use client";
 
-import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface ShimmerSweepProps {
   text: string;
@@ -21,8 +22,8 @@ export function ShimmerSweep({
   speed = 1,
   className,
 }: ShimmerSweepProps) {
-  const frame = useCurrentFrame() * speed;
-  const { durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
 
   const position = interpolate(
     frame,

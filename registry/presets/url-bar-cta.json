@@ -1,0 +1,117 @@
+{
+  "component": "url-bar-cta",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-launch",
+      "label": "Midnight Launch",
+      "description": "Dark browser on a deep night ground with a soft violet accent for a moody product reveal.",
+      "askedAs": [
+        "dark mode landing page",
+        "moody night launch",
+        "dark browser with purple button",
+        "тёмная тема браузера",
+        "ночной запуск продукта"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "nightfold",
+        "accent": "#8b7cf6"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper tones with an elegant serif headline and a terracotta button, like a magazine landing page.",
+      "askedAs": [
+        "elegant serif landing",
+        "warm editorial look",
+        "magazine style website",
+        "элегантный шрифт с засечками",
+        "тёплый журнальный стиль"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "background": "#f6f1e8",
+        "ink": "#2a2420",
+        "accent": "#c2562f"
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "Fast typing and brisk motion for a punchy, energetic call-to-action beat.",
+      "askedAs": [
+        "make it faster",
+        "quick snappy cta",
+        "speed up the typing",
+        "ускорь анимацию",
+        "быстрый призыв к действию"
+      ],
+      "props": {
+        "speed": 2,
+        "typingSpeed": 2.5,
+        "ground": "cobalt-rise"
+      }
+    },
+    {
+      "id": "slow-calm",
+      "label": "Slow Calm",
+      "description": "Unhurried typing and gentle pacing on a cool polar ground with a muted teal accent.",
+      "askedAs": [
+        "slow calm reveal",
+        "relaxed pacing",
+        "gentle typing animation",
+        "медленная спокойная анимация",
+        "плавный неторопливый показ"
+      ],
+      "props": {
+        "speed": 0.5,
+        "typingSpeed": 0.5,
+        "ground": "polar",
+        "accent": "#1f8a84",
+        "delay": 20
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "Dark monospace page with a green accent and larger scale for developer-tool launches.",
+      "askedAs": [
+        "developer tool launch",
+        "monospace code style",
+        "hacker dark look",
+        "стиль для разработчиков",
+        "моноширинный шрифт крупно"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb950",
+        "ground": "charcoal-satin",
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "hands-free",
+      "label": "Hands Free",
+      "description": "Cursor hidden and a compact frame on a warm copper ground for a clean, minimal ending.",
+      "askedAs": [
+        "no mouse pointer",
+        "hide the cursor",
+        "small minimal browser",
+        "без курсора",
+        "компактный минималистичный браузер"
+      ],
+      "props": {
+        "showCursor": false,
+        "scale": 0.8,
+        "ground": "copper",
+        "fontFamily": "Manrope",
+        "accent": "#b4532a"
+      }
+    }
+  ]
+}

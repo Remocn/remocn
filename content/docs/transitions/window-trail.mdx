@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="WindowTrail"
     component={WindowTrailScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -75,14 +75,49 @@ The `from` line sits on the field, then an orange window is thrown up over it, l
       description: "Small line that rises in word by word under the text",
     },
     {
+      name: "slide",
+      type: "number",
+      default: "30",
+      description: "Frames the incoming line takes to slide up into place",
+    },
+    {
+      name: "tail",
+      type: "number",
+      default: "4",
+      description: "Copies left in the trail behind a moving line",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Window color; defaults to orange",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color on the field; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Field color; pass transparent to composite over footage",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Familjen Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the copy around the frame's center; the field and window stay put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

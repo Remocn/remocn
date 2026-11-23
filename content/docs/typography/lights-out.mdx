@@ -39,8 +39,8 @@ export const RemotionRoot = () => (
   <Composition
     id="LightsOut"
     component={LightsOutScene}
-    durationInFrames={112}
-    fps={30}
+    durationInFrames={224}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -73,16 +73,56 @@ Five lights light up on the beat, hold, then go out and the headline slams in wi
       description: "Frames all lights stay on before going out",
     },
     {
+      name: "slant",
+      type: "number",
+      default: "11",
+      description: "Oblique slant of the headline, in degrees.",
+    },
+    {
+      name: "glow",
+      type: "boolean",
+      default: "true",
+      description: "Warm glow that rises from below as the lamps come on.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color (any valid CSS color)",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Unbounded\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
       description: "Ships light and dark palettes",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

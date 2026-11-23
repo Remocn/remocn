@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface ConfettiProps {
   /** Number of confetti pieces. */
@@ -117,8 +113,8 @@ export function Confetti({
   size = 13,
   seed = 1,
 }: ConfettiProps) {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
 
   const tt = frame - startFrame;
   if (tt < 0 || tt > lifetime) return null;
@@ -147,14 +143,17 @@ export function Confetti({
             key={i}
             style={{
               position: "absolute",
-              left: x,
-              top: y,
+              left: 0,
+              top: 0,
               width: w,
               height: w * 0.62,
               borderRadius: 2,
               background: p.color,
               opacity,
-              translate: "-50% -50%",
+              // The flight is a transform, not `left`/`top`: layout rounds a
+              // box to whole pixels, so a piece falling by `top` steps down
+              // pixel by pixel.
+              translate: `calc(${x}px - 50%) calc(${y}px - 50%)`,
               rotate: `${rot}rad`,
               scale: `${flutter} 1`,
             }}

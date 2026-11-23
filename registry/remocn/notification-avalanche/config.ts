@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const notificationAvalancheConfig: ComponentConfig = {
   componentName: "NotificationAvalanche",
@@ -12,11 +19,6 @@ export const notificationAvalancheConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     clearLabel: {
       type: "text-content",
@@ -32,6 +34,16 @@ export const notificationAvalancheConfig: ComponentConfig = {
       type: "text-content",
       default: "unread before 10 am",
       description: "Counter label",
+    },
+    date: {
+      type: "text-content",
+      default: "Tuesday 9 January",
+      description: "Lock screen date",
+    },
+    time: {
+      type: "text-content",
+      default: "9:41",
+      description: "Lock screen time",
     },
     surface: {
       type: "enum",
@@ -51,6 +63,13 @@ export const notificationAvalancheConfig: ComponentConfig = {
       description: "Total",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
     speed: {
       type: "number",
       default: 1,

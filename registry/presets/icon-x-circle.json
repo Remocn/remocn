@@ -1,0 +1,100 @@
+{
+  "component": "icon-x-circle",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "error-alert",
+      "label": "Error Alert",
+      "description": "A large, bold red cross that draws in and shakes quickly to signal a failure.",
+      "askedAs": [
+        "red error icon",
+        "failed state x mark",
+        "big warning cross",
+        "красный крестик ошибки",
+        "иконка ошибки"
+      ],
+      "props": {
+        "color": "#d1342f",
+        "size": 96,
+        "strokeWidth": 2.5,
+        "speed": 1.5,
+        "animation": "both"
+      }
+    },
+    {
+      "id": "quiet-dismiss",
+      "label": "Quiet Dismiss",
+      "description": "A small, thin slate-grey close icon that simply draws itself in slowly.",
+      "askedAs": [
+        "subtle close button",
+        "thin grey x",
+        "minimal dismiss icon",
+        "тонкий серый крестик",
+        "незаметная кнопка закрытия"
+      ],
+      "props": {
+        "color": "#64748b",
+        "size": 32,
+        "strokeWidth": 1.25,
+        "speed": 0.75,
+        "animation": "draw"
+      }
+    },
+    {
+      "id": "hero-stroke",
+      "label": "Hero Stroke",
+      "description": "An oversized charcoal cross drawn with a heavy line at a slow, deliberate pace.",
+      "askedAs": [
+        "huge x circle",
+        "slow dramatic cancel",
+        "thick large cross icon",
+        "огромный крестик в круге",
+        "медленная жирная отмена"
+      ],
+      "props": {
+        "size": 180,
+        "strokeWidth": 3,
+        "speed": 0.5,
+        "animation": "draw"
+      }
+    },
+    {
+      "id": "looping-reject",
+      "label": "Looping Reject",
+      "description": "A medium terracotta cross that keeps repeating its rejection shake in a loop.",
+      "askedAs": [
+        "repeating no animation",
+        "looping cancel icon",
+        "shaking x forever",
+        "повторяющийся крестик",
+        "зацикленный отказ"
+      ],
+      "props": {
+        "color": "#b4532a",
+        "loop": true,
+        "animation": "action",
+        "size": 64,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "snappy-close",
+      "label": "Snappy Close",
+      "description": "A compact deep-indigo close icon that pops in at double speed.",
+      "askedAs": [
+        "fast close icon",
+        "quick x animation",
+        "snappy cancel button",
+        "быстрый крестик",
+        "резкая иконка закрытия"
+      ],
+      "props": {
+        "color": "#3730a3",
+        "speed": 2.5,
+        "size": 40,
+        "strokeWidth": 1.75
+      }
+    }
+  ]
+}

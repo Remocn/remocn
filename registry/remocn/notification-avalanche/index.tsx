@@ -9,14 +9,14 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const hanken = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -41,7 +41,21 @@ export interface NotificationAvalancheProps {
   counterLabel?: string;
   surface?: "phone" | "desktop";
   wallpaper?: string;
+  /** Date line on the lock screen. */
+  date?: string;
+  /** Clock on the lock screen. */
+  time?: string;
   accent?: string;
+  /** Text color of the counter and caption; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the phone and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -126,6 +140,16 @@ const ARRIVE: number[] = (() => {
 const COMPRESS = ARRIVE[3] + 2;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+/** Whether `at` changes by more than `eps` next to frame `f`. */
+const stirs = (
+  at: (f: number) => number,
+  f: number,
+  step: number,
+  eps: number,
+) =>
+  Math.abs(at(f + step) - at(f)) > eps || Math.abs(at(f) - at(f - step)) > eps;
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const LIGHT = Easing.bezier(0.22, 1, 0.36, 1);
 const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
@@ -307,6 +331,7 @@ function Stack({
   from: "top" | "right";
   lk: Look;
 }) {
+  const glide = useGlide();
   const c = spring({ frame: f - COMPRESS, fps, config: HEAVY });
   const arrived = ARRIVE.filter((t) => t <= f).length;
   const enters = ARRIVE.map((t) => spring({ frame: f - t, fps, config: CARD }));
@@ -318,7 +343,7 @@ function Stack({
   const away = (i: number): React.CSSProperties => {
     const st = swipeT(i);
     return {
-      transform: `translateX(${-st * width * 1.15}px) rotate(${-st * 4}deg)`,
+      transform: `translateX(${-st * width * 1.15}px) rotate(${-st * 4}deg)${glide(st > 0 && st < 1)}`,
       opacity: interpolate(st, [0.3, 0.85], [1, 0], clamp),
     };
   };
@@ -494,12 +519,16 @@ function LockScreen({
   fps,
   list,
   wallpaper,
+  date,
+  time,
   lk,
 }: {
   f: number;
   fps: number;
   list: AvalancheNotification[];
   wallpaper: string;
+  date: string;
+  time: string;
   lk: Look;
 }) {
   return (
@@ -598,7 +627,7 @@ function LockScreen({
           opacity: 0.86,
         }}
       >
-        Tuesday 9 January
+        {date}
       </div>
       <div
         style={{
@@ -614,7 +643,7 @@ function LockScreen({
           fontVariantNumeric: "tabular-nums",
         }}
       >
-        9:41
+        {time}
       </div>
       <div style={{ position: "absolute", top: 268, left: 14 }}>
         <Stack
@@ -689,6 +718,7 @@ function SideCopy({
   lk: Look;
   align: "left" | "center";
 }) {
+  const glide = useGlide();
   const arrived = ARRIVE.filter((t) => t <= f).length;
   const countT = interpolate(f, [COMPRESS + 2, SWIPE - 4], [0, 1], clamp);
   const count = Math.round(Math.max(arrived, 4 + (total - 4) * countT ** 2.4));
@@ -717,6 +747,15 @@ function SideCopy({
     easing: MOVE,
   });
   const origin = align === "left" ? "0% 100%" : "50% 100%";
+  const numMoving = midway(numIn) || midway(numOut);
+  // The punch decays without ever landing, so it is tested frame to frame in
+  // px at the digits' size.
+  const punchAt = (ff: number) => {
+    const n = ARRIVE.filter((t) => t <= ff).length;
+    const tk = n > 0 ? ff - ARRIVE[n - 1] : 99;
+    return 0.035 * size * Math.exp(-Math.max(0, tk) / 2.2);
+  };
+  const punchMoving = stirs(punchAt, f, 1, 1e-3);
   return (
     <div
       style={{
@@ -734,7 +773,7 @@ function SideCopy({
           right: 0,
           bottom: size * 0.42,
           opacity: numIn * (1 - numOut),
-          transform: `translateY(${(1 - numIn) * size * 0.12 - numOut * size * 0.16}px)`,
+          transform: `translateY(${(1 - numIn) * size * 0.12 - numOut * size * 0.16}px)${glide(numMoving)}`,
           filter: `blur(${(1 - numIn) * 6 + numOut * 6}px)`,
         }}
       >
@@ -745,7 +784,7 @@ function SideCopy({
             letterSpacing: "-0.045em",
             lineHeight: 0.9,
             fontVariantNumeric: "tabular-nums",
-            transform: `scale(${punch})`,
+            transform: `scale(${punch})${glide(punchMoving)}`,
             transformOrigin: origin,
           }}
         >
@@ -763,7 +802,7 @@ function SideCopy({
           color: lk.muted,
           letterSpacing: "-0.01em",
           opacity: capIn * (1 - numOut),
-          transform: `translateY(${(1 - capIn) * 12}px)`,
+          transform: `translateY(${(1 - capIn) * 12}px)${glide(midway(capIn))}`,
         }}
       >
         {counterLabel}
@@ -784,7 +823,7 @@ function SideCopy({
             fontWeight: 300,
             letterSpacing: "-0.035em",
             lineHeight: 1.04,
-            transform: `translateY(${(1 - payIn) * 110 - drift * 4}%)`,
+            transform: `translateY(${(1 - payIn) * 110 - drift * 4}%)${glide(midway(payIn) || midway(drift))}`,
             opacity: payIn > 0 ? 1 : 0,
           }}
         >
@@ -816,13 +855,29 @@ function SideCopy({
             color: lk.muted,
             fontVariantNumeric: "tabular-nums",
             opacity: subIn,
-            transform: `translateY(${(1 - subIn) * 12}px)`,
+            transform: `translateY(${(1 - subIn) * 12}px)${glide(midway(subIn))}`,
           }}
         >
           {clearSubLabel}
         </div>
       ) : null}
     </div>
+  );
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
   );
 }
 
@@ -834,18 +889,27 @@ export function NotificationAvalanche({
   counterLabel = "unread before 10 am",
   surface = "phone",
   wallpaper = staticFile("reel/reel-1.jpg"),
+  date = "Tuesday 9 January",
+  time = "9:41",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hanken.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: NotificationAvalancheProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { fps, width, height } = useSceneConfig();
   const f = frame * speed;
   const list = notifications.length ? notifications : DEFAULT_NOTIFICATIONS;
   const dark = theme === "dark";
-  const lk = look(dark);
+  const themed = look(dark);
+  const lk = ink ? { ...themed, ink } : themed;
   const tall = height > width;
 
   const buzzAmp = interpolate(
@@ -856,21 +920,28 @@ export function NotificationAvalanche({
   );
   const buzz = Math.sin(f * 2.9) * buzzAmp;
 
-  const groundLayer = (
-    <>
-      <GshGround
-        preset={ground ?? (dark ? "earthshine" : "glasswork")}
-        params={groundParams}
-        timeOffset={dark ? 3 : 5}
-        timeScale={0.35}
-      />
+  const groundLayer =
+    background === undefined ? (
+      <>
+        <GshGround
+          preset={ground ?? (dark ? "earthshine" : "glasswork")}
+          params={groundParams}
+          timeOffset={dark ? 3 : 5}
+          timeScale={0.35}
+        />
+        <AbsoluteFill
+          style={{
+            background: dark ? "rgba(2,3,8,0.28)" : "rgba(244,243,240,0.3)",
+          }}
+        />
+      </>
+    ) : (
       <AbsoluteFill
         style={{
-          background: dark ? "rgba(2,3,8,0.28)" : "rgba(244,243,240,0.3)",
+          background: background === "transparent" ? undefined : background,
         }}
       />
-    </>
-  );
+    );
 
   const copyProps = {
     f,
@@ -885,40 +956,50 @@ export function NotificationAvalanche({
   if (surface === "desktop") {
     const u = height / 720;
     const cardW = 356;
+    // The stack's springs have long tails; their sum is tested frame to frame.
+    const stackAt = (ff: number) =>
+      spring({ frame: ff - COMPRESS, fps, config: HEAVY }) +
+      ARRIVE.reduce(
+        (sum, t) => sum + spring({ frame: ff - t, fps, config: CARD }),
+        0,
+      );
+    const stackMoving = stirs(stackAt, f, speed, 1e-6);
     return (
       <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
         {groundLayer}
-        <div
-          style={{
-            position: "absolute",
-            top: 72 * u,
-            right: 72 * u,
-            width: cardW,
-            transform: `scale(${u * 1.15}) translateX(${buzz}px)`,
-            transformOrigin: "100% 0%",
-          }}
-        >
-          <Stack
-            f={f}
-            fps={fps}
-            list={list}
-            width={cardW}
-            radius={16}
-            maxRows={6}
-            from="right"
-            lk={lk}
-          />
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: width * 0.08,
-            bottom: height * 0.1,
-            width: width * 0.5,
-          }}
-        >
-          <SideCopy {...copyProps} size={height * 0.24} align="left" />
-        </div>
+        <ScaleLayer scale={scale}>
+          <div
+            style={{
+              position: "absolute",
+              top: 72 * u,
+              right: 72 * u,
+              width: cardW,
+              transform: `scale(${u * 1.15}) translateX(${buzz}px)${glide(stackMoving)}`,
+              transformOrigin: "100% 0%",
+            }}
+          >
+            <Stack
+              f={f}
+              fps={fps}
+              list={list}
+              width={cardW}
+              radius={16}
+              maxRows={6}
+              from="right"
+              lk={lk}
+            />
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: width * 0.08,
+              bottom: height * 0.1,
+              width: width * 0.5,
+            }}
+          >
+            <SideCopy {...copyProps} size={height * 0.24} align="left" />
+          </div>
+        </ScaleLayer>
       </AbsoluteFill>
     );
   }
@@ -936,6 +1017,21 @@ export function NotificationAvalanche({
     { ...clamp, easing: MOVE },
   );
   const focusY = interpolate(push, [1, 1.18], [0, 80 * k]);
+  // The phone carries every card on the lock screen; it is tested frame to
+  // frame in px (rise, plus scale at half its height) because the entry
+  // spring has a long tail.
+  const phoneAt = (ff: number) => {
+    const e = spring({ frame: ff, fps, config: HEAVY });
+    const p = interpolate(
+      ff,
+      [ARRIVE[1], ARRIVE[6], SWIPE + 2, CLEAR + 14],
+      [1, 1.18, 1.18, 1.02],
+      { ...clamp, easing: MOVE },
+    );
+    const ty = (1 - e) * 60 + interpolate(p, [1, 1.18], [0, 80 * k]);
+    return ty + k * p * interpolate(e, [0, 1], [0.94, 1]) * (SH / 2 + BEZEL);
+  };
+  const phoneMoving = stirs(phoneAt, f, speed, 1e-3);
   const copySize = tall ? width * 0.3 : height * 0.25;
   return (
     <AbsoluteFill
@@ -946,67 +1042,71 @@ export function NotificationAvalanche({
       }}
     >
       {groundLayer}
-      <div
-        style={{
-          position: "absolute",
-          left: tall ? width * 0.09 : width * 0.075,
-          width: tall ? width * 0.82 : width * 0.42,
-          ...(tall
-            ? { top: height * 0.06 }
-            : { top: height / 2 - copySize * 0.75 }),
-        }}
-      >
-        <SideCopy
-          {...copyProps}
-          size={copySize}
-          align={tall ? "center" : "left"}
-        />
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: phoneCx - (SW / 2 + BEZEL),
-          top: phoneCy - (SH / 2 + BEZEL),
-          width: SW + BEZEL * 2,
-          height: SH + BEZEL * 2,
-          borderRadius: 68,
-          background: lk.frame,
-          boxShadow: `${lk.rim}, 0 2px 6px rgba(0,0,0,${dark ? 0.45 : 0.14}), 0 30px 70px -18px rgba(0,0,0,${dark ? 0.7 : 0.32})`,
-          transform: `translateX(${buzz}px) translateY(${(1 - enter) * 60 + focusY}px) scale(${k * push * interpolate(enter, [0, 1], [0.94, 1])})`,
-          opacity: interpolate(enter, [0, 0.35], [0, 1], clamp),
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: BEZEL,
-            top: BEZEL,
-            width: SW,
-            height: SH,
-            borderRadius: 56,
-            overflow: "hidden",
+            left: tall ? width * 0.09 : width * 0.075,
+            width: tall ? width * 0.82 : width * 0.42,
+            ...(tall
+              ? { top: height * 0.06 }
+              : { top: height / 2 - copySize * 0.75 }),
           }}
         >
-          <LockScreen
-            f={f}
-            fps={fps}
-            list={list}
-            wallpaper={wallpaper}
-            lk={lk}
+          <SideCopy
+            {...copyProps}
+            size={copySize}
+            align={tall ? "center" : "left"}
           />
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: phoneCx - (SW / 2 + BEZEL),
+            top: phoneCy - (SH / 2 + BEZEL),
+            width: SW + BEZEL * 2,
+            height: SH + BEZEL * 2,
+            borderRadius: 68,
+            background: lk.frame,
+            boxShadow: `${lk.rim}, 0 2px 6px rgba(0,0,0,${dark ? 0.45 : 0.14}), 0 30px 70px -18px rgba(0,0,0,${dark ? 0.7 : 0.32})`,
+            transform: `translateX(${buzz}px) translateY(${(1 - enter) * 60 + focusY}px) scale(${k * push * interpolate(enter, [0, 1], [0.94, 1])})${glide(phoneMoving)}`,
+            opacity: interpolate(enter, [0, 0.35], [0, 1], clamp),
+          }}
+        >
           <div
             style={{
               position: "absolute",
-              top: 11,
-              left: (SW - 126) / 2,
-              width: 126,
-              height: 37,
-              borderRadius: 19,
-              background: "#000",
+              left: BEZEL,
+              top: BEZEL,
+              width: SW,
+              height: SH,
+              borderRadius: 56,
+              overflow: "hidden",
             }}
-          />
+          >
+            <LockScreen
+              f={f}
+              fps={fps}
+              list={list}
+              wallpaper={wallpaper}
+              date={date}
+              time={time}
+              lk={lk}
+            />
+            <div
+              style={{
+                position: "absolute",
+                top: 11,
+                left: (SW - 126) / 2,
+                width: 126,
+                height: 37,
+                borderRadius: 19,
+                background: "#000",
+              }}
+            />
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

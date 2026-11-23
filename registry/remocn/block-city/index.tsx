@@ -2,14 +2,9 @@
 
 import { loadFont } from "@remotion/google-fonts/Sora";
 import type React from "react";
-import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { type ReactNode, useId } from "react";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["300", "400"],
@@ -25,7 +20,23 @@ export interface BlockCityProps {
   caption?: string;
   /** Optional dataset: one value per column, left to right (any scale). */
   data?: number[];
+  /** Weight of the hero number. */
+  fontWeight?: number;
+  /** Frames the hero number takes to count up. */
+  countUp?: number;
   accent?: string;
+  /** Text color of the hero number; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the number and caption. Load it yourself; Sora by default. */
+  fontFamily?: string;
+  /** Size of the city and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -152,6 +163,22 @@ function camAt(t: number) {
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
@@ -189,14 +216,24 @@ export function BlockCity({
   suffix = "%",
   caption = "renders",
   data,
+  fontWeight = 400,
+  countUp = 40,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sora,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: BlockCityProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const pal: Palette = PALETTES[theme];
+  const fg = ink ?? pal.fg;
+  const stage = background ?? css(pal.bg);
 
   const cam = camAt(t);
   const persp = cam.lens * u;
@@ -344,7 +381,7 @@ export function BlockCity({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const count = interpolate(t, [T_LABEL, T_LABEL + 40], [0, 1], {
+  const count = interpolate(t, [T_LABEL, T_LABEL + countUp], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -354,130 +391,134 @@ export function BlockCity({
   const fogTop = interpolate(cam.pitch, [54, 72], [0.18, 0.42]);
 
   return (
-    <AbsoluteFill style={{ background: css(pal.bg), overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 80% 60% at 50% 18%, ${pal.sky}, transparent 70%), radial-gradient(ellipse 110% 46% at ${50 + Math.sin(t / 60) * 3}% 0%, ${pal.dusk}, transparent 72%)`,
         }}
       />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          perspective: persp,
-          perspectiveOrigin: "50% 50%",
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: width / 2,
-            top: height / 2,
-            width: 0,
-            height: 0,
-            transformStyle: "preserve-3d",
-            transform: `translateZ(${cam.dolly * u}px) rotateX(${cam.pitch}deg) rotateZ(${cam.yaw}deg) translate3d(${-cam.camX * u}px, ${-cam.camY * u}px, 0px)`,
+            inset: 0,
+            perspective: persp,
+            perspectiveOrigin: "50% 50%",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: -groundW / 2,
-              top: -groundH / 2,
-              width: groundW,
-              height: groundH,
-              background: `repeating-linear-gradient(90deg, ${pal.line} 0 ${Math.max(1, u)}px, transparent ${Math.max(1, u)}px ${CELL * u}px), repeating-linear-gradient(0deg, ${pal.line} 0 ${Math.max(1, u)}px, transparent ${Math.max(1, u)}px ${CELL * u}px), radial-gradient(closest-side, ${pal.ground}, ${css(pal.bg)})`,
-              backgroundPosition: `${(CELL / 2 + 4) * u}px ${(CELL / 2 + 4) * u}px, ${(CELL / 2 + 4) * u}px ${(CELL / 2 + 4) * u}px, 0 0`,
-              transform: "translateZ(-1px)",
+              left: width / 2,
+              top: height / 2,
+              width: 0,
+              height: 0,
+              transformStyle: "preserve-3d",
+              transform: `translateZ(${cam.dolly * u}px) rotateX(${cam.pitch}deg) rotateZ(${cam.yaw}deg) translate3d(${-cam.camX * u}px, ${-cam.camY * u}px, 0px)`,
             }}
-          />
-          {blocks}
+          >
+            <div
+              style={{
+                position: "absolute",
+                left: -groundW / 2,
+                top: -groundH / 2,
+                width: groundW,
+                height: groundH,
+                background: `repeating-linear-gradient(90deg, ${pal.line} 0 ${Math.max(1, u)}px, transparent ${Math.max(1, u)}px ${CELL * u}px), repeating-linear-gradient(0deg, ${pal.line} 0 ${Math.max(1, u)}px, transparent ${Math.max(1, u)}px ${CELL * u}px), radial-gradient(closest-side, ${pal.ground}, ${css(pal.bg)})`,
+                backgroundPosition: `${(CELL / 2 + 4) * u}px ${(CELL / 2 + 4) * u}px, ${(CELL / 2 + 4) * u}px ${(CELL / 2 + 4) * u}px, 0 0`,
+                transform: "translateZ(-1px)",
+              }}
+            />
+            {blocks}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
 
       {/* atmospheric haze toward the horizon */}
       <AbsoluteFill
         style={{
-          background: `linear-gradient(180deg, ${css(pal.bg)} 0%, rgba(${pal.haze.join(",")},${fogTop}) 24%, rgba(${pal.haze.join(",")},0) 50%)`,
+          background: `linear-gradient(180deg, ${stage} 0%, rgba(${pal.haze.join(",")},${fogTop}) 24%, rgba(${pal.haze.join(",")},0) 50%)`,
         }}
       />
 
       {/* hero label: a roof marker, a short leader, the number to its left */}
-      <div
-        style={{
-          position: "absolute",
-          left: roof.x,
-          top: roof.y,
-          width: 0,
-          height: 0,
-          opacity: labelP,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: -3.5 * u,
-            top: -3.5 * u,
-            width: 7 * u,
-            height: 7 * u,
-            borderRadius: "50%",
-            background: accent,
-            boxShadow: `0 0 0 ${2 * u}px ${pal.ring}`,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            right: 10 * u,
-            top: -0.5 * u,
-            width: leadLen,
-            height: Math.max(1, u),
-            background: pal.lead,
-            transformOrigin: "100% 50%",
-            transform: `scaleX(${labelP})`,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            right: leadLen + 22 * u,
-            top: -30 * u,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            gap: 6 * u,
-            whiteSpace: "nowrap",
-            transform: `translateX(${(1 - labelP) * 14 * u}px)`,
+            left: roof.x,
+            top: roof.y,
+            width: 0,
+            height: 0,
+            opacity: labelP,
           }}
         >
-          <span
+          <div
             style={{
-              fontFamily: sora,
-              fontWeight: 400,
-              fontSize: 60 * u,
-              letterSpacing: "-0.045em",
-              lineHeight: 1,
-              color: pal.fg,
-              fontVariantNumeric: "tabular-nums",
+              position: "absolute",
+              left: -3.5 * u,
+              top: -3.5 * u,
+              width: 7 * u,
+              height: 7 * u,
+              borderRadius: "50%",
+              background: accent,
+              boxShadow: `0 0 0 ${2 * u}px ${pal.ring}`,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              right: 10 * u,
+              top: -0.5 * u,
+              width: leadLen,
+              height: Math.max(1, u),
+              background: pal.lead,
+              transformOrigin: "100% 50%",
+              transform: `scaleX(${labelP})`,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              right: leadLen + 22 * u,
+              top: -30 * u,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: 6 * u,
+              whiteSpace: "nowrap",
+              transform: `translateX(${(1 - labelP) * 14 * u}px)`,
             }}
           >
-            {prefix}
-            {shown}
-            {suffix}
-          </span>
-          <span
-            style={{
-              fontFamily: sora,
-              fontWeight: 300,
-              fontSize: 18 * u,
-              letterSpacing: "0.01em",
-              color: pal.muted,
-            }}
-          >
-            {caption}
-          </span>
+            <span
+              style={{
+                fontFamily,
+                fontWeight,
+                fontSize: 60 * u,
+                letterSpacing: "-0.045em",
+                lineHeight: 1,
+                color: fg,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {prefix}
+              {shown}
+              {suffix}
+            </span>
+            <span
+              style={{
+                fontFamily,
+                fontWeight: 300,
+                fontSize: 18 * u,
+                letterSpacing: "0.01em",
+                color: pal.muted,
+              }}
+            >
+              {caption}
+            </span>
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
@@ -487,7 +528,7 @@ export function BlockCity({
               : "radial-gradient(ellipse 85% 85% at 50% 50%, transparent 65%, rgba(110,100,85,0.1) 100%)",
         }}
       />
-      <Grain opacity={pal.grain} />
+      {grain ? <Grain opacity={pal.grain} /> : null}
     </AbsoluteFill>
   );
 }

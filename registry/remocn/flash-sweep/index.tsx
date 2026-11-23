@@ -4,14 +4,9 @@ import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont } from "@remotion/google-fonts/Onest";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -120,6 +115,11 @@ interface Ctx {
   u: number;
   c: Colors;
   accent: string;
+  font: string;
+  eyebrow: string;
+  tagline: string;
+  caption: string;
+  logo?: React.ReactNode;
 }
 
 /**
@@ -197,8 +197,8 @@ const box = (x: number, y: number, w: number, h: number) =>
     height: h,
   }) as const;
 
-const displayType = (size: number): React.CSSProperties => ({
-  fontFamily: sans,
+const displayType = (size: number, font: string): React.CSSProperties => ({
+  fontFamily: font,
   fontWeight: 500,
   fontSize: size,
   letterSpacing: "-0.045em",
@@ -207,7 +207,7 @@ const displayType = (size: number): React.CSSProperties => ({
 });
 
 function TitleBody({ x }: { x: Ctx }) {
-  const { u, c } = x;
+  const { u, c, eyebrow, tagline, logo } = x;
   return (
     <div
       style={{
@@ -228,15 +228,15 @@ function TitleBody({ x }: { x: Ctx }) {
           letterSpacing: "0.01em",
         }}
       >
-        Introducing
+        {eyebrow}
       </div>
       <div style={{ padding: `${10 * u}px 0 ${14 * u}px` }}>
-        <Logo size={150 * u} color={c.fg} />
+        {logo ?? <Logo size={150 * u} color={c.fg} />}
       </div>
       <div
         style={{ fontSize: 24 * u, color: c.muted, letterSpacing: "-0.015em" }}
       >
-        Motion for the films you launch with.
+        {tagline}
       </div>
     </div>
   );
@@ -429,7 +429,7 @@ function PaneBody({ x }: { x: Ctx }) {
 }
 
 function NumberBody({ x }: { x: Ctx }) {
-  const { W, H, u, c } = x;
+  const { W, H, u, c, font } = x;
   const left = 0.08 * W;
   return (
     <>
@@ -461,7 +461,7 @@ function NumberBody({ x }: { x: Ctx }) {
           position: "absolute",
           left: left - 10 * u,
           top: 0.27 * H,
-          ...displayType(250 * u),
+          ...displayType(250 * u, font),
           fontWeight: 400,
           letterSpacing: "-0.055em",
         }}
@@ -518,7 +518,7 @@ function NumberBody({ x }: { x: Ctx }) {
 }
 
 function StatementBody({ x }: { x: Ctx }) {
-  const { W, H, u, c } = x;
+  const { W, H, u, c, font, caption } = x;
   return (
     <>
       <div
@@ -539,7 +539,7 @@ function StatementBody({ x }: { x: Ctx }) {
           left: 0.08 * W,
           right: 0.08 * W,
           top: 0.36 * H,
-          ...displayType(118 * u),
+          ...displayType(118 * u, font),
           lineHeight: 1.02,
           textWrap: "balance",
         }}
@@ -574,7 +574,7 @@ function StatementBody({ x }: { x: Ctx }) {
           color: c.muted,
         }}
       >
-        Copy it in. Change anything.
+        {caption}
       </div>
       <div
         style={{
@@ -606,22 +606,52 @@ const LIGHT_AT: Record<Kind, string> = {
   statement: "78% 100%",
 };
 
+/** Look of the built-in shots, set from the component's props. */
+interface Look {
+  font: string;
+  ink?: string;
+  eyebrow: string;
+  tagline: string;
+  caption: string;
+  logo?: React.ReactNode;
+  scale: number;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 /** One full-frame placeholder shot. */
 function PlaceholderScene({
   kind,
   tone,
   accent,
-}: SceneSpec & { accent: string }) {
-  const { width: W, height: H } = useVideoConfig();
+  look,
+}: SceneSpec & { accent: string; look: Look }) {
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
-  const c = tones(tone, accent);
+  const base = tones(tone, accent);
+  const c = look.ink === undefined ? base : { ...base, fg: look.ink };
   const Body = BODIES[kind];
+  const { font, eyebrow, tagline, caption, logo } = look;
   return (
     <AbsoluteFill
       style={{
         background: c.bg,
         color: c.fg,
-        fontFamily: sans,
+        fontFamily: font,
         overflow: "hidden",
       }}
     >
@@ -630,7 +660,11 @@ function PlaceholderScene({
           background: `radial-gradient(ellipse 75% 85% at ${LIGHT_AT[kind]}, ${c.light}, transparent 72%)`,
         }}
       />
-      <Body x={{ W, H, u, c, accent }} />
+      <ScaleLayer scale={look.scale}>
+        <Body
+          x={{ W, H, u, c, accent, font, eyebrow, tagline, caption, logo }}
+        />
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -678,6 +712,7 @@ function useShots({
   images,
   fallback,
   accent,
+  look,
 }: {
   scenes?: React.ReactNode[];
   from?: React.ReactNode;
@@ -685,19 +720,25 @@ function useShots({
   images?: string[];
   fallback: SceneSpec[];
   accent: string;
+  look: Look;
 }): React.ReactNode[] {
   if (scenes && scenes.length >= 2) return scenes;
   if (from !== undefined || to !== undefined) {
     return [
-      from ?? <PlaceholderScene {...fallback[0]} accent={accent} />,
-      to ?? <PlaceholderScene {...fallback[1]} accent={accent} />,
+      from ?? <PlaceholderScene {...fallback[0]} accent={accent} look={look} />,
+      to ?? <PlaceholderScene {...fallback[1]} accent={accent} look={look} />,
     ];
   }
   if (images && images.length >= 2) {
     return images.map((src) => <ImageScene key={src} src={src} />);
   }
   return fallback.map((s) => (
-    <PlaceholderScene key={`${s.kind}-${s.tone}`} {...s} accent={accent} />
+    <PlaceholderScene
+      key={`${s.kind}-${s.tone}`}
+      {...s}
+      accent={accent}
+      look={look}
+    />
   ));
 }
 
@@ -743,6 +784,24 @@ export interface FlashSweepProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /** Typeface for the built-in shots. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Text color of the built-in shots; overrides their own ink. */
+  ink?: string;
+  /** Small line above the logo in the built-in title shot. */
+  eyebrow?: string;
+  /** Line under the logo in the built-in title shot. */
+  tagline?: string;
+  /** Footer line of the built-in statement shot. */
+  caption?: string;
+  /** Replaces the remocn mark in the built-in title shot. */
+  logo?: React.ReactNode;
+  /** Size of the built-in shots' content, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
 }
 
 /** Frames the incoming shot keeps settling after the peak. */
@@ -804,9 +863,19 @@ export function FlashSweep({
   accent = "#3B5BFD",
   speed = 1,
   theme = "dark",
+  fontFamily = sans,
+  ink,
+  eyebrow = "Introducing",
+  tagline = "Motion for the films you launch with.",
+  caption = "Copy it in. Change anything.",
+  logo,
+  scale = 1,
+  delay = 0,
+  grain = true,
 }: FlashSweepProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const mode = variant ?? (theme === "light" ? "dark" : "light");
   const light = mode === "light";
@@ -819,31 +888,53 @@ export function FlashSweep({
     images,
     fallback: theme === "light" ? LIGHT_SET : DARK_SET,
     accent,
+    look: {
+      font: fontFamily,
+      ink,
+      eyebrow,
+      tagline,
+      caption,
+      logo,
+      scale,
+    },
   });
   const cuts = shots.length - 1;
-  const { k, local } = cutClock(t, cuts, hold, D);
   const peak = D / 2;
-  const swapped = local >= peak;
-  const j = swapped ? k + 1 : k;
+  const camera = (at: number) => {
+    const { k, local } = cutClock(at, cuts, hold, D);
+    const swapped = local >= peak;
+    const j = swapped ? k + 1 : k;
 
-  // Exposure: climbs into the peak, holds one frame of full cover, falls fast.
-  const exposure = swapped
-    ? 1 - EASE_OUT(interpolate(local, [peak, peak + BLOOM], [0, 1], CLAMP))
-    : EASE_IN(interpolate(local, [peak * 0.2, peak], [0, 1], CLAMP));
-  const cover = swapped
-    ? interpolate(local, [peak, peak + 2.2], [1, 0], CLAMP)
-    : interpolate(local, [peak - 1.6, peak], [0, 1], CLAMP);
+    // Exposure: climbs into the peak, holds one frame of full cover, falls fast.
+    const exposure = swapped
+      ? 1 - EASE_OUT(interpolate(local, [peak, peak + BLOOM], [0, 1], CLAMP))
+      : EASE_IN(interpolate(local, [peak * 0.2, peak], [0, 1], CLAMP));
+    const cover = swapped
+      ? interpolate(local, [peak, peak + 2.2], [1, 0], CLAMP)
+      : interpolate(local, [peak - 1.6, peak], [0, 1], CLAMP);
 
-  // Camera: push into the outgoing shot, the incoming one lands from a touch closer.
-  const push = swapped
-    ? 1 +
-      0.05 *
-        (1 - EASE_OUT(interpolate(local, [peak, peak + SETTLE], [0, 1], CLAMP)))
-    : 1 + 0.045 * EASE_IN(interpolate(local, [0, peak], [0, 1], CLAMP));
-  // Slow drift across a shot's whole life, so holds are never frozen.
-  const born = j === 0 ? -hold : hold + (j - 1) * (hold + D) + peak;
-  const drift =
-    1 + 0.02 * interpolate(t - born, [0, hold * 2 + D], [0, 1], CLAMP);
+    // Camera: push into the outgoing shot, the incoming one lands from a touch closer.
+    const push = swapped
+      ? 1 +
+        0.05 *
+          (1 -
+            EASE_OUT(interpolate(local, [peak, peak + SETTLE], [0, 1], CLAMP)))
+      : 1 + 0.045 * EASE_IN(interpolate(local, [0, peak], [0, 1], CLAMP));
+    // Slow drift across a shot's whole life, so holds are never frozen.
+    const born = j === 0 ? -hold : hold + (j - 1) * (hold + D) + peak;
+    const drift =
+      1 + 0.02 * interpolate(at - born, [0, hold * 2 + D], [0, 1], CLAMP);
+    return { local, j, exposure, cover, zoom: push * drift };
+  };
+  const { local, j, exposure, cover, zoom } = camera(t);
+  // The shot tilts while the zoom moves the far edge of the frame by more
+  // than a thousandth of a pixel per frame, and only once it overhangs the
+  // frame enough that the tilt can't show a seam at the edges (with the
+  // default hold the camera never sits under 1.008).
+  const zoomStep = (at: number) =>
+    Math.abs(camera(at).zoom - camera(at - speed).zoom) * W * 0.5;
+  const moving =
+    zoom > 1.002 && Math.max(zoomStep(t), zoomStep(t + speed)) > 1e-3;
 
   // Band travel along the sweep axis, measured from the frame centre.
   const rad = (angle * Math.PI) / 180;
@@ -886,7 +977,7 @@ export function FlashSweep({
     >
       <AbsoluteFill
         style={{
-          transform: `scale(${push * drift})`,
+          transform: `scale(${zoom})${glide(moving)}`,
           filter: inSweep || exposure > 0.001 ? sceneFilter : undefined,
         }}
       >
@@ -895,7 +986,7 @@ export function FlashSweep({
       {light && exposure > 0.01 ? (
         <AbsoluteFill
           style={{
-            transform: `scale(${push * drift})`,
+            transform: `scale(${zoom})${glide(moving)}`,
             filter: `blur(${bloomBlur}px) brightness(1.6)`,
             mixBlendMode: "screen",
             opacity: 0.85 * exposure,
@@ -925,7 +1016,7 @@ export function FlashSweep({
           }}
         />
       ) : null}
-      <Grain opacity={theme === "light" ? 0.04 : 0.055} />
+      {grain ? <Grain opacity={theme === "light" ? 0.04 : 0.055} /> : null}
     </AbsoluteFill>
   );
 }

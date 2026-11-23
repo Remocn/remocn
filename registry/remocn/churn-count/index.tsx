@@ -8,9 +8,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const urbanist = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -19,7 +19,21 @@ export interface ChurnCountProps {
   from?: number;
   label?: string;
   accent?: string;
+  /** Color the digits settle to; overrides the theme ink. Hex value expected. */
+  ink?: string;
   background?: string;
+  /** Typeface for the figure and label. Load it yourself; Urbanist by default. A variable font with a wght axis keeps the thin-to-full churn. */
+  fontFamily?: string;
+  /** Weight the digits settle to; changing digits drop to 100. */
+  fontWeight?: number;
+  /** Frames the count takes from `from` to `value`. */
+  duration?: number;
+  /** Thousands separator in the figure. */
+  separator?: string;
+  /** Size of the figure and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -38,6 +52,7 @@ const LABEL_AT = 3;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_COUNT = Easing.bezier(0.3, 0.1, 0.05, 1);
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -50,7 +65,11 @@ interface Metrics {
   cap: number;
 }
 
-function measure(): Metrics {
+function measure(
+  fontFamily: string,
+  fontWeight: number,
+  separator: string,
+): Metrics {
   const canvas = document.createElement("canvas");
   canvas.width = 600;
   canvas.height = 600;
@@ -61,15 +80,15 @@ function measure(): Metrics {
   let cap = 0.7;
   if (ctx) {
     let maxW = 0;
-    for (const w of [W_THIN, 300, W_FULL]) {
-      ctx.font = `${w} 200px "${urbanist.fontFamily}"`;
+    for (const w of [W_THIN, 300, fontWeight]) {
+      ctx.font = `${w} 200px "${fontFamily}"`;
       for (const d of "0123456789") {
         maxW = Math.max(maxW, ctx.measureText(d).width / 200);
       }
     }
     slot = maxW;
-    ctx.font = `${W_FULL} 200px "${urbanist.fontFamily}"`;
-    comma = ctx.measureText(",").width / 200;
+    ctx.font = `${fontWeight} 200px "${fontFamily}"`;
+    comma = ctx.measureText(separator).width / 200;
     const fm = ctx.measureText("0");
     const asc = fm.fontBoundingBoxAscent / 200;
     const desc = fm.fontBoundingBoxDescent / 200;
@@ -79,7 +98,7 @@ function measure(): Metrics {
   return { slot, comma, baseline, cap };
 }
 
-function useMetrics() {
+function useMetrics(fontFamily: string, fontWeight: number, separator: string) {
   const [m, setM] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("churn-count: measuring"));
   const released = useRef(false);
@@ -87,13 +106,13 @@ function useMetrics() {
     let live = true;
     Promise.all([
       urbanist.waitUntilDone(),
-      document.fonts.load(`${W_THIN} 100px "${urbanist.fontFamily}"`),
-      document.fonts.load(`${W_FULL} 100px "${urbanist.fontFamily}"`),
+      document.fonts.load(`${W_THIN} 100px "${fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setM(measure());
+        setM(measure(fontFamily, fontWeight, separator));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -102,7 +121,7 @@ function useMetrics() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, fontFamily, fontWeight, separator]);
   return m;
 }
 
@@ -124,20 +143,45 @@ function normalizeHex(c: string) {
   return null;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ChurnCount({
   value = 72960,
   from = 0,
   label = "frames played back live, straight from your props",
   accent,
+  ink,
   background,
+  fontFamily = urbanist.fontFamily,
+  fontWeight = W_FULL,
+  duration = COUNT_END - COUNT_AT,
+  separator = ",",
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ChurnCountProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const blue = normalizeHex(accent ?? "") ?? c.blue;
-  const m = useMetrics();
+  const fg = normalizeHex(ink ?? "") ?? c.ink;
+  const m = useMetrics(fontFamily, fontWeight, separator);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -147,13 +191,13 @@ export function ChurnCount({
 
   const countAt = useMemo(
     () => (f: number) => {
-      const g = interpolate(f, [COUNT_AT, COUNT_END], [0, 1], {
+      const g = interpolate(f, [COUNT_AT, COUNT_AT + duration], [0, 1], {
         ...CLAMP,
         easing: EASE_COUNT,
       });
       return Math.round(start + (target - start) * g);
     },
-    [start, target],
+    [start, target, duration],
   );
 
   if (!m) {
@@ -212,17 +256,17 @@ export function ChurnCount({
     const isComma = ch === ",";
     const w = (isComma ? m.comma : m.slot) * F;
     x -= w;
-    let weight = W_FULL;
-    let color: string = c.ink;
+    let weight = fontWeight;
+    let color: string = fg;
     if (!isComma) {
       const r = EASE_OUT(recency(placeOf[i]));
-      weight = W_THIN + (W_FULL - W_THIN) * r;
-      color = mix(blue, c.ink, r);
+      weight = W_THIN + (fontWeight - W_THIN) * r;
+      color = mix(blue, fg, r);
     } else {
       const nextPlace = placeOf[i + 1] ?? 0;
       const r = EASE_OUT(recency(nextPlace + 1));
-      weight = W_THIN + (W_FULL - W_THIN) * r;
-      color = mix(blue, c.ink, r);
+      weight = W_THIN + (fontWeight - W_THIN) * r;
+      color = mix(blue, fg, r);
     }
     nodes.push(
       <span
@@ -240,7 +284,7 @@ export function ChurnCount({
           color,
         }}
       >
-        {ch}
+        {isComma ? separator : ch}
       </span>,
     );
   }
@@ -260,41 +304,43 @@ export function ChurnCount({
       style={{
         background: stage,
         overflow: "hidden",
-        fontFamily: urbanist.fontFamily,
+        fontFamily,
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: enter,
-          fontVariantNumeric: "lining-nums",
-          letterSpacing: 0,
-          whiteSpace: "pre",
-        }}
-      >
-        {nodes}
-      </div>
-      {label ? (
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: labelLeft,
-            bottom: labelBottom,
-            width: labelW,
-            fontSize: labelFs,
-            fontWeight: 400,
-            lineHeight: 1.18,
-            letterSpacing: "-0.01em",
-            textWrap: "balance",
-            color: blue,
-            opacity: labelP,
-            transform: `translateY(${((1 - labelP) * labelFs * 0.5).toFixed(2)}px)`,
+            inset: 0,
+            opacity: enter,
+            fontVariantNumeric: "lining-nums",
+            letterSpacing: 0,
+            whiteSpace: "pre",
           }}
         >
-          {label}
+          {nodes}
         </div>
-      ) : null}
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: labelLeft,
+              bottom: labelBottom,
+              width: labelW,
+              fontSize: labelFs,
+              fontWeight: 400,
+              lineHeight: 1.18,
+              letterSpacing: "-0.01em",
+              textWrap: "balance",
+              color: blue,
+              opacity: labelP,
+              transform: `translateY(${((1 - labelP) * labelFs * 0.5).toFixed(2)}px)${glide(midway(labelP))}`,
+            }}
+          >
+            {label}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

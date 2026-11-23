@@ -1,0 +1,123 @@
+{
+  "component": "index-list",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "Warm paper background with an elegant serif and a burnt-orange highlight, like a printed magazine contents page.",
+      "askedAs": [
+        "magazine style table of contents",
+        "serif feature list on cream paper",
+        "editorial light index",
+        "редакционный стиль со шрифтом с засечками",
+        "светлый список как в журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f5f1ea",
+        "ink": "#1c1917",
+        "accent": "#c2410c",
+        "stagger": 5
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Near-black console look with monospaced type and a soft mint accent that ticks through rows quickly.",
+      "askedAs": [
+        "developer terminal style list",
+        "monospace changelog look",
+        "code style feature index",
+        "список в стиле терминала",
+        "моноширинный шрифт как в консоли"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#d1fae5",
+        "accent": "#34d399",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "swift-cascade",
+      "label": "Swift Cascade",
+      "description": "Fast, tight cascade of slightly enlarged rows in a geometric grotesk with a crimson highlight.",
+      "askedAs": [
+        "fast snappy feature list",
+        "quick energetic rows",
+        "punchy rapid reveal",
+        "быстрое появление строк",
+        "энергичный динамичный список"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "scale": 1.1,
+        "fontFamily": "Space Grotesk",
+        "accent": "#e11d48"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Unhurried, cinematic reveal with a soft serif, wide row spacing in time and a muted gold accent.",
+      "askedAs": [
+        "slow elegant reveal",
+        "calm luxurious feature list",
+        "cinematic paced index",
+        "медленное плавное появление",
+        "элегантный неспешный список"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 8,
+        "delay": 15,
+        "fontFamily": "Fraunces",
+        "accent": "#b08d57"
+      }
+    },
+    {
+      "id": "clean-paper",
+      "label": "Clean Paper",
+      "description": "Crisp grain-free light layout in Inter with a compact scale and a near-black accent.",
+      "askedAs": [
+        "minimal white list no texture",
+        "clean light corporate index",
+        "simple monochrome feature list",
+        "минималистичный светлый список",
+        "чистый белый фон без зерна"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "grain": false,
+        "accent": "#111827",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Deep indigo backdrop with lavender text, a violet highlight and larger rounded type.",
+      "askedAs": [
+        "dark purple feature list",
+        "night mode violet index",
+        "big bold dark list",
+        "тёмно-фиолетовый фон",
+        "крупный список в ночных тонах"
+      ],
+      "props": {
+        "background": "#14112b",
+        "ink": "#ede9fe",
+        "accent": "#8b5cf6",
+        "fontFamily": "Manrope",
+        "scale": 1.15
+      }
+    }
+  ]
+}

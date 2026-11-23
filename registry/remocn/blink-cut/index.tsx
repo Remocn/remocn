@@ -3,13 +3,9 @@
 import { loadFont as loadDisplay } from "@remotion/google-fonts/BricolageGrotesque";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -55,6 +51,20 @@ export interface BlinkCutProps {
   /** Replaces the default mark in the lockup. */
   logo?: React.ReactNode;
   accent?: string;
+  /** Text color; overrides the theme ink. Also fills the inverted cuts. */
+  ink?: string;
+  /** Background fill in place of the theme stage and the lockup glow; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the words and the lockup. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Weight of the big words and the wordmark. */
+  fontWeight?: number;
+  /** A slow push on each cut while it holds. */
+  drift?: boolean;
+  /** Size of the words and the lockup, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -184,6 +194,7 @@ function layoutSpec(
   text: string,
   W: number,
   H: number,
+  bold: number,
 ): Spec {
   const fit = (target: number, maxWidth: number) =>
     Math.min(target, maxWidth / Math.max(1, text.length * ADVANCE));
@@ -192,14 +203,14 @@ function layoutSpec(
     case "giant":
       return {
         size: fit(H * 0.56, W * 0.86),
-        weight: 500,
+        weight: bold,
         tracking: "-0.04em",
         style: { left: 0, right: 0, top: "50%", textAlign: "center" },
       };
     case "center":
       return {
         size: fit(H * 0.17, W * 0.7),
-        weight: 500,
+        weight: bold,
         tracking: "-0.03em",
         style: { left: 0, right: 0, top: "50%", textAlign: "center" },
       };
@@ -220,39 +231,55 @@ function layoutSpec(
     case "top-left":
       return {
         size: fit(H * 0.26, W * 0.6),
-        weight: 500,
+        weight: bold,
         tracking: "-0.035em",
         style: { left: pad * 1.1, top: pad * 0.7 },
       };
     case "low-right":
       return {
         size: fit(H * 0.13, W * 0.5),
-        weight: 500,
+        weight: bold,
         tracking: "-0.03em",
         style: { right: pad * 1.2, bottom: pad * 0.9, textAlign: "right" },
       };
     case "crop-right":
       return {
         size: H * 0.98,
-        weight: 500,
+        weight: bold,
         tracking: "-0.04em",
         style: { left: W * 0.36, top: "54%" },
       };
     case "crop-left":
       return {
         size: H * 0.98,
-        weight: 500,
+        weight: bold,
         tracking: "-0.04em",
         style: { right: W * 0.38, top: "46%", textAlign: "right" },
       };
     case "crop-bottom":
       return {
         size: fit(H * 1.05, W * 0.94),
-        weight: 500,
+        weight: bold,
         tracking: "-0.04em",
         style: { left: 0, right: 0, top: H * 0.3, textAlign: "center" },
       };
   }
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 const CENTERED: BlinkLayout[] = [
@@ -263,6 +290,8 @@ const CENTERED: BlinkLayout[] = [
   "crop-left",
 ];
 
+const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
+
 export function BlinkCut({
   words = DEFAULT_WORDS,
   framesPerWord = 6,
@@ -270,12 +299,23 @@ export function BlinkCut({
   line = "Launch films, built in Remotion.",
   logo,
   accent = "#3B5BFD",
+  ink: inkProp,
+  background: backgroundProp,
+  fontFamily = display,
+  fontWeight = 500,
+  drift: driftOn = true,
+  scale: zoom = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: BlinkCutProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = inkProp ?? c.fg;
+  const stage =
+    backgroundProp === "transparent" ? "transparent" : (backgroundProp ?? c.bg);
   const beat = Math.max(1, Math.round(framesPerWord));
 
   const cuts = words.map((w, i) => {
@@ -301,7 +341,7 @@ export function BlinkCut({
     start += cuts[i].length;
   }
   const lockupStart = start;
-  let background: string = c.bg;
+  let background: string = stage;
   let content: React.ReactNode = null;
 
   const dark = theme === "dark";
@@ -333,7 +373,7 @@ export function BlinkCut({
           `linear-gradient(${c.bg}, ${c.bg})`,
         ].join(", ");
     const isRemocn = !logo && brand.toLowerCase() === "remocn";
-    background = ground;
+    background = backgroundProp === undefined ? ground : stage;
     content = (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
         <div
@@ -345,7 +385,7 @@ export function BlinkCut({
           }}
         >
           {isRemocn ? (
-            <RemocnLogo fontSize={H * 0.17} color={c.fg} />
+            <RemocnLogo fontSize={H * 0.17} color={fg} />
           ) : (
             <div
               style={{ display: "flex", alignItems: "center", gap: H * 0.022 }}
@@ -353,12 +393,12 @@ export function BlinkCut({
               {logo}
               <div
                 style={{
-                  fontFamily: display,
-                  fontWeight: 500,
+                  fontFamily,
+                  fontWeight,
                   fontSize: H * 0.135,
                   letterSpacing: "-0.035em",
                   lineHeight: 1,
-                  color: c.fg,
+                  color: fg,
                 }}
               >
                 {brand}
@@ -368,13 +408,13 @@ export function BlinkCut({
           {line ? (
             <div
               style={{
-                fontFamily: display,
+                fontFamily,
                 fontWeight: 400,
                 fontSize: H * 0.036,
                 letterSpacing: "-0.01em",
                 color: c.muted,
                 opacity: lineIn,
-                transform: `translateY(${(1 - lineIn) * H * 0.012}px)`,
+                transform: `translateY(${(1 - lineIn) * H * 0.012}px)${glide(midway(lineIn))}`,
               }}
             >
               {line}
@@ -391,8 +431,8 @@ export function BlinkCut({
       isAccent && dark
         ? beamGround(active, p, accent)
         : cut.ground === "invert"
-          ? c.fg
-          : c.bg;
+          ? fg
+          : stage;
     const ink: React.CSSProperties =
       isAccent && !dark
         ? {
@@ -403,11 +443,19 @@ export function BlinkCut({
           }
         : {
             color:
-              cut.ground === "invert" ? c.bg : isAccent ? BEAM.colors[0] : c.fg,
+              cut.ground === "invert"
+                ? stage === "transparent"
+                  ? c.bg
+                  : stage
+                : isAccent
+                  ? BEAM.colors[0]
+                  : fg,
           };
-    const spec = layoutSpec(cut.layout, cut.text, W, H);
+    const spec = layoutSpec(cut.layout, cut.text, W, H, fontWeight);
     // A hair of drift keeps each cut alive without softening the hard edit.
-    const drift = interpolate(local, [0, activeLength], [0, 1], CLAMP);
+    const drift = driftOn
+      ? interpolate(local, [0, activeLength], [0, 1], CLAMP)
+      : 0;
     const scale = 1 + drift * (CENTERED.includes(cut.layout) ? 0.025 : 0.015);
     const vertical =
       spec.style.top !== undefined && spec.style.bottom === undefined
@@ -426,14 +474,14 @@ export function BlinkCut({
         style={{
           position: "absolute",
           ...spec.style,
-          fontFamily: display,
+          fontFamily,
           fontWeight: spec.weight,
           fontSize: spec.size,
           letterSpacing: spec.tracking,
           lineHeight: 0.9,
           ...ink,
           whiteSpace: "nowrap",
-          transform: `${vertical} scale(${scale})`,
+          transform: `${vertical} scale(${scale})${glide(drift > 0)}`,
           transformOrigin: origin,
         }}
       >
@@ -443,8 +491,13 @@ export function BlinkCut({
   }
 
   return (
-    <AbsoluteFill style={{ background, overflow: "hidden" }}>
-      {content}
+    <AbsoluteFill
+      style={{
+        background: background === "transparent" ? undefined : background,
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={zoom}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

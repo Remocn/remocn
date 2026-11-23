@@ -2,13 +2,10 @@
 
 import { loadFont } from "@remotion/google-fonts/BarlowCondensed";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: condensed } = loadFont("normal", {
   weights: ["500"],
@@ -66,6 +63,20 @@ export interface ScoreBugProps {
   finalLabel?: string;
   /** The live marker in the tab and the scorer ticks. */
   accent?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the scores and labels. Load it yourself; Barlow Condensed by default. */
+  fontFamily?: string;
+  /** Frame of the first goal. */
+  firstGoal?: number;
+  /** Frames between goals. */
+  goalGap?: number;
+  /** Replaces the remocn mark on the home block. */
+  logo?: React.ReactNode;
+  /** Size of the panel and band, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -140,6 +151,24 @@ function kick(d: number) {
   return k * k;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ScoreBug({
   away = "Old way",
   score = 2,
@@ -149,21 +178,31 @@ export function ScoreBug({
   liveLabel = "Live · 2nd half",
   finalLabel = "Full time",
   accent = "#3B5BFD",
+  background,
+  fontFamily = condensed,
+  firstGoal = GOAL_AT,
+  goalGap = GOAL_GAP,
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: ScoreBugProps) {
+  const glide = useGlide();
   // Starts two frames in, so frame 0 already shows the core opening.
-  const t = useCurrentFrame() * speed + 2;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + 2;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
   const goals = Math.max(0, Math.floor(score));
   const goalAt = Array.from(
     { length: goals },
-    (_, i) => GOAL_AT + i * GOAL_GAP,
+    (_, i) => firstGoal + i * goalGap,
   );
-  const bandAt = (goalAt[goals - 1] ?? GOAL_AT - GOAL_GAP) + BAND_DELAY;
+  const bandAt = (goalAt[goals - 1] ?? firstGoal - goalGap) + BAND_DELAY;
   const fullTimeAt = bandAt + BAND_IN + 4;
   const fullTime = t >= fullTimeAt;
 
@@ -188,8 +227,14 @@ export function ScoreBug({
 
   // Every hit nudges the panel up in scale for a beat.
   const hits = [5, ...goalAt.map((g) => g + 2)];
-  const bump = hits.reduce((a, h) => Math.max(a, kick(t - h)), 0);
-  const panelScale = 1 + 0.022 * bump;
+  const bumpAt = (at: number) =>
+    hits.reduce((a, h) => Math.max(a, kick(at - h)), 0);
+  const panelScale = 1 + 0.022 * bumpAt(t);
+  // The kick has no clean progress, so the panel counts as moving whenever
+  // its edge steps against either neighbouring frame.
+  const bumping =
+    Math.abs(bumpAt(t + speed) - bumpAt(t)) * 0.022 * W > 1e-3 ||
+    Math.abs(bumpAt(t) - bumpAt(t - speed)) * 0.022 * W > 1e-3;
 
   // Home digit: which goal is flipping, and how far.
   let home = 0;
@@ -241,7 +286,7 @@ export function ScoreBug({
   const bandVisible = t >= bandAt && bandOut < 1;
   const bandY = bandTop;
 
-  const digit = (n: number, y: number, key: string) => (
+  const digit = (n: number, y: number, moving: boolean, key: string) => (
     <div
       key={key}
       style={{
@@ -250,11 +295,11 @@ export function ScoreBug({
         right: 0,
         top: 0,
         height: panelH,
-        transform: `translateY(${y}px)`,
+        transform: `translateY(${y}px)${glide(moving && !bumping)}`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: condensed,
+        fontFamily,
         fontWeight: 500,
         fontSize: digitFs,
         lineHeight: 1,
@@ -271,285 +316,287 @@ export function ScoreBug({
   const dropIn = -(1 - digitIn) * panelH * 1.05;
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `scale(${panelScale})`,
-          transformOrigin: `${W / 2}px ${panelY + panelH / 2}px`,
-        }}
-      >
-        {/* Tab, rising from behind the panel. */}
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: panelX + blockW + gap,
-            top: panelY - tabH - gap,
-            width: coreW,
-            height: tabH + gap,
-            overflow: "hidden",
+            inset: 0,
+            transform: `scale(${panelScale})${glide(bumping)}`,
+            transformOrigin: `${W / 2}px ${panelY + panelH / 2}px`,
           }}
         >
+          {/* Tab, rising from behind the panel. */}
           <div
             style={{
               position: "absolute",
-              left: 0,
-              top: 0,
+              left: panelX + blockW + gap,
+              top: panelY - tabH - gap,
               width: coreW,
-              height: tabH,
-              transform: `translateY(${(1 - tabUp) * (tabH + gap)}px)`,
-              background: c.tab,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 12 * u,
-              fontFamily: condensed,
-              fontWeight: 500,
-              fontSize: 28 * u,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: c.tabInk,
+              height: tabH + gap,
+              overflow: "hidden",
             }}
           >
-            {fullTime ? null : (
-              <div
-                style={{
-                  width: 11 * u,
-                  height: 11 * u,
-                  background: accent,
-                  opacity: Math.floor(t / 15) % 2 === 0 ? 1 : 0.35,
-                }}
-              />
-            )}
-            <span style={{ paddingTop: 2 * u }}>
-              {fullTime ? finalLabel : liveLabel}
-            </span>
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                width: coreW,
+                height: tabH,
+                transform: `translateY(${(1 - tabUp) * (tabH + gap)}px)${glide(midway(tabUp) && !bumping)}`,
+                background: c.tab,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12 * u,
+                fontFamily,
+                fontWeight: 500,
+                fontSize: 28 * u,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: c.tabInk,
+              }}
+            >
+              {fullTime ? null : (
+                <div
+                  style={{
+                    width: 11 * u,
+                    height: 11 * u,
+                    background: accent,
+                    opacity: Math.floor(t / 15) % 2 === 0 ? 1 : 0.35,
+                  }}
+                />
+              )}
+              <span style={{ paddingTop: 2 * u }}>
+                {fullTime ? finalLabel : liveLabel}
+              </span>
+            </div>
           </div>
-        </div>
 
-        {/* Home block: emerges from behind the core to the left. */}
-        <div
-          style={{
-            position: "absolute",
-            left: panelX,
-            top: panelY,
-            width: blockW,
-            height: panelH,
-            overflow: "hidden",
-          }}
-        >
+          {/* Home block: emerges from behind the core to the left. */}
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              transform: `translateX(${(1 - blockOut) * (blockW + gap)}px)`,
-              background: homeGround,
+              left: panelX,
+              top: panelY,
+              width: blockW,
+              height: panelH,
+              overflow: "hidden",
             }}
           >
             <div
               style={{
                 position: "absolute",
                 inset: 0,
-                background: "#FFFFFF",
-                opacity: 0.4 * blockFlash,
+                transform: `translateX(${(1 - blockOut) * (blockW + gap)}px)`,
+                background: homeGround,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "#FFFFFF",
+                  opacity: 0.4 * blockFlash,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: `translateX(${(1 - nameIn) * 60 * u}px)`,
+                  opacity: nameIn,
+                }}
+              >
+                {logo ?? <RemocnLogo fontSize={86 * u} color="#FFFFFF" />}
+              </div>
+            </div>
+          </div>
+
+          {/* Away block: emerges from behind the core to the right. */}
+          <div
+            style={{
+              position: "absolute",
+              left: panelX + blockW + coreW + 2 * gap,
+              top: panelY,
+              width: blockW,
+              height: panelH,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                transform: `translateX(${-(1 - blockOut) * (blockW + gap)}px)`,
+                background: awayBg,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: `translateX(${-(1 - nameIn) * 60 * u}px)`,
+                  opacity: nameIn,
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: 116 * u,
+                  lineHeight: 1,
+                  letterSpacing: "0.005em",
+                  textTransform: "uppercase",
+                  color: awayInk,
+                  paddingTop: 6 * u,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {away}
+              </div>
+            </div>
+          </div>
+
+          {/* Core: the score itself. */}
+          <div
+            style={{
+              position: "absolute",
+              left: panelX + blockW + gap,
+              top: panelY,
+              width: coreW,
+              height: panelH,
+              background: c.core,
+              clipPath: `inset(${50 * (1 - coreOpen)}% 0 ${50 * (1 - coreOpen)}% 0)`,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                left: coreW / 2 - 22 * u - cellW,
+                top: 0,
+                width: cellW,
+                height: panelH,
+                overflow: "hidden",
+              }}
+            >
+              {flipP < 1 && prev >= 0
+                ? [
+                    digit(prev, -flipP * panelH, midway(flipP), "out"),
+                    digit(home, (1 - flipP) * panelH, midway(flipP), "in"),
+                  ]
+                : digit(home, dropIn, midway(digitIn), "now")}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: coreW / 2 - 15 * u,
+                top: panelH / 2 - 4 * u,
+                width: 30 * u,
+                height: 9 * u,
+                background: c.coreRule,
+                opacity: digitIn,
               }}
             />
             <div
               style={{
                 position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transform: `translateX(${(1 - nameIn) * 60 * u}px)`,
-                opacity: nameIn,
-              }}
-            >
-              <RemocnLogo fontSize={86 * u} color="#FFFFFF" />
-            </div>
-          </div>
-        </div>
-
-        {/* Away block: emerges from behind the core to the right. */}
-        <div
-          style={{
-            position: "absolute",
-            left: panelX + blockW + coreW + 2 * gap,
-            top: panelY,
-            width: blockW,
-            height: panelH,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              transform: `translateX(${-(1 - blockOut) * (blockW + gap)}px)`,
-              background: awayBg,
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transform: `translateX(${-(1 - nameIn) * 60 * u}px)`,
-                opacity: nameIn,
-                fontFamily: condensed,
-                fontWeight: 500,
-                fontSize: 116 * u,
-                lineHeight: 1,
-                letterSpacing: "0.005em",
-                textTransform: "uppercase",
-                color: awayInk,
-                paddingTop: 6 * u,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {away}
-            </div>
-          </div>
-        </div>
-
-        {/* Core: the score itself. */}
-        <div
-          style={{
-            position: "absolute",
-            left: panelX + blockW + gap,
-            top: panelY,
-            width: coreW,
-            height: panelH,
-            background: c.core,
-            clipPath: `inset(${50 * (1 - coreOpen)}% 0 ${50 * (1 - coreOpen)}% 0)`,
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              left: coreW / 2 - 22 * u - cellW,
-              top: 0,
-              width: cellW,
-              height: panelH,
-              overflow: "hidden",
-            }}
-          >
-            {flipP < 1 && prev >= 0
-              ? [
-                  digit(prev, -flipP * panelH, "out"),
-                  digit(home, (1 - flipP) * panelH, "in"),
-                ]
-              : digit(home, dropIn, "now")}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: coreW / 2 - 15 * u,
-              top: panelH / 2 - 4 * u,
-              width: 30 * u,
-              height: 9 * u,
-              background: c.coreRule,
-              opacity: digitIn,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: coreW / 2 + 22 * u,
-              top: 0,
-              width: cellW,
-              height: panelH,
-              overflow: "hidden",
-            }}
-          >
-            {digit(awayScore, dropIn, "away")}
-          </div>
-        </div>
-
-        {/* Scorer lines under the home block. */}
-        {scorers.slice(0, goals).map((line, i) => {
-          const p = SLAM(ramp(t, goalAt[i] + 4, 8));
-          return (
-            <div
-              key={`${i}-${line}`}
-              style={{
-                position: "absolute",
-                left: panelX,
-                top: panelY + panelH + 14 * u + i * rowH,
-                width: blockW,
-                height: rowH,
+                left: coreW / 2 + 22 * u,
+                top: 0,
+                width: cellW,
+                height: panelH,
                 overflow: "hidden",
               }}
             >
+              {digit(awayScore, dropIn, midway(digitIn), "away")}
+            </div>
+          </div>
+
+          {/* Scorer lines under the home block. */}
+          {scorers.slice(0, goals).map((line, i) => {
+            const p = SLAM(ramp(t, goalAt[i] + 4, 8));
+            return (
               <div
+                key={`${i}-${line}`}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12 * u,
+                  position: "absolute",
+                  left: panelX,
+                  top: panelY + panelH + 14 * u + i * rowH,
+                  width: blockW,
                   height: rowH,
-                  transform: `translateY(${-(1 - p) * rowH}px)`,
-                  fontFamily: condensed,
-                  fontWeight: 500,
-                  fontSize: 30 * u,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  color: c.dim,
+                  overflow: "hidden",
                 }}
               >
                 <div
                   style={{
-                    width: 4 * u,
-                    height: 20 * u,
-                    background: accent,
-                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12 * u,
+                    height: rowH,
+                    transform: `translateY(${-(1 - p) * rowH}px)${glide(midway(p))}`,
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: 30 * u,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    color: c.dim,
                   }}
-                />
-                <span style={{ paddingTop: 2 * u }}>{line}</span>
+                >
+                  <div
+                    style={{
+                      width: 4 * u,
+                      height: 20 * u,
+                      background: accent,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ paddingTop: 2 * u }}>{line}</span>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
 
-      {/* The flash band. */}
-      {bandVisible ? (
-        <div
-          style={{
-            position: "absolute",
-            left: bandX - slant,
-            top: bandY,
-            width: span,
-            height: bandH,
-            clipPath: `polygon(${slant}px 0, 100% 0, calc(100% - ${slant}px) 100%, 0 100%)`,
-            background: `linear-gradient(90deg, ${BEAM[3]} 0%, #2A3BD8 40%, ${BEAM[2]} 72%, ${BEAM[1]} 93%, ${BEAM[0]} 100%)`,
-          }}
-        >
+        {/* The flash band. */}
+        {bandVisible ? (
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transform: `translateX(${textLag}px)`,
-              fontFamily: condensed,
-              fontWeight: 500,
-              fontSize: 340 * u,
-              lineHeight: 1,
-              letterSpacing: "0.01em",
-              textTransform: "uppercase",
-              color: "#FFFFFF",
-              paddingTop: 10 * u,
-              whiteSpace: "nowrap",
+              left: bandX - slant,
+              top: bandY,
+              width: span,
+              height: bandH,
+              clipPath: `polygon(${slant}px 0, 100% 0, calc(100% - ${slant}px) 100%, 0 100%)`,
+              background: `linear-gradient(90deg, ${BEAM[3]} 0%, #2A3BD8 40%, ${BEAM[2]} 72%, ${BEAM[1]} 93%, ${BEAM[0]} 100%)`,
             }}
           >
-            {flash}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transform: `translateX(${textLag}px)`,
+                fontFamily,
+                fontWeight: 500,
+                fontSize: 340 * u,
+                lineHeight: 1,
+                letterSpacing: "0.01em",
+                textTransform: "uppercase",
+                color: "#FFFFFF",
+                paddingTop: 10 * u,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {flash}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

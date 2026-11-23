@@ -7,6 +7,7 @@ import type {
 import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { ShaderSwirl } from "@/components/remocn/shader-swirl";
+import { useGlide } from "@/lib/remocn/glide";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
@@ -31,6 +32,7 @@ const SwirlDissolvePresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
+  const glide = useGlide();
   const {
     colors = DEFAULT_COLORS,
     colorBack = "#141318",
@@ -46,13 +48,18 @@ const SwirlDissolvePresentation: React.FC<
     easing: Easing.bezier(0.42, 0, 0.58, 1),
   });
 
+  const grow = interpolate(p, [0.77, 1], [0, 1], {
+    ...clampOpts,
+    easing: Easing.out(Easing.cubic),
+  });
+
   const childStyle: React.CSSProperties = entering
     ? {
         opacity: interpolate(p, [0.77, 0.87], [0, 1], clampOpts),
-        scale: `${interpolate(p, [0.77, 1], [0.3, 1], {
-          ...clampOpts,
-          easing: Easing.out(Easing.cubic),
-        })}`,
+        // Chrome parks a glyph raster on a whole pixel vertically for as long
+        // as the matrix is axis-aligned, so text in the scene clicks as it
+        // grows in; the mark lets it lean off that grid while it grows.
+        transform: `scale(${0.3 + 0.7 * grow})${glide(grow > 0 && grow < 1)}`,
         filter: `blur(${interpolate(p, [0.77, 0.93], [10, 0], clampOpts)}px)`,
       }
     : { opacity: interpolate(p, [0.06, 0.13], [1, 0], clampOpts) };

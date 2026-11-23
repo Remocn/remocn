@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const lexend = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -25,7 +25,17 @@ export interface YourNameHereProps {
   end?: string;
   note?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Lexend by default. */
+  fontFamily?: string;
+  /** Frames between words as the lead builds. */
+  stagger?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -51,8 +61,8 @@ interface Spec {
   weight: number;
 }
 
-function useWidths(specs: Spec[]) {
-  const key = specs.map((s) => `${s.weight}|${s.text}`).join("\u0001");
+function useWidths(specs: Spec[], fontFamily: string) {
+  const key = `${fontFamily}\u0002${specs.map((s) => `${s.weight}|${s.text}`).join("\u0001")}`;
   const [state, setState] = useState<{
     key: string;
     w: Record<string, number>;
@@ -67,7 +77,7 @@ function useWidths(specs: Spec[]) {
     Promise.all([
       lexend.waitUntilDone(),
       ...weights.map((wt) =>
-        document.fonts.load(`${wt} 100px "${lexend.fontFamily}"`),
+        document.fonts.load(`${wt} 100px "${fontFamily}"`),
       ),
     ])
       .catch(() => undefined)
@@ -78,7 +88,7 @@ function useWidths(specs: Spec[]) {
         for (const s of ref.current) {
           const k = `${s.weight}|${s.text}`;
           if (ctx) {
-            ctx.font = `${s.weight} 100px "${lexend.fontFamily}"`;
+            ctx.font = `${s.weight} 100px "${fontFamily}"`;
             w[k] = ctx.measureText(s.text).width / 100;
           } else {
             w[k] = s.text.length * 0.56;
@@ -93,7 +103,7 @@ function useWidths(specs: Spec[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.w : null;
 }
 
@@ -141,6 +151,24 @@ function balanced(
 
 const splitWords = (s: string) => s.split(/\s+/).filter(Boolean);
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function YourNameHere({
   lead = "A launch film for",
   brand = "remocn",
@@ -148,29 +176,39 @@ export function YourNameHere({
   end = ".",
   note = "Swap one prop. The film is yours.",
   accent,
+  ink,
   background,
+  fontFamily = lexend.fontFamily,
+  stagger = 3,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: YourNameHereProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
-  const Tt = durationInFrames * speed;
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const Tt = Math.max(0, durationInFrames - delay) * speed;
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const hi = accent ?? c.accent;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const leadWords = splitWords(lead);
-  const w = useWidths([
-    { text: " ", weight: 500 },
-    ...leadWords.map((text) => ({ text, weight: 500 })),
-    { text: brand, weight: 500 },
-    { text: slot, weight: 500 },
-    { text: "{", weight: 400 },
-    { text: "}", weight: 400 },
-    { text: end, weight: 500 },
-    { text: note, weight: 300 },
-  ]);
+  const w = useWidths(
+    [
+      { text: " ", weight: 500 },
+      ...leadWords.map((text) => ({ text, weight: 500 })),
+      { text: brand, weight: 500 },
+      { text: slot, weight: 500 },
+      { text: "{", weight: 400 },
+      { text: "}", weight: 400 },
+      { text: end, weight: 500 },
+      { text: note, weight: 300 },
+    ],
+    fontFamily,
+  );
 
   if (!w) {
     return (
@@ -266,11 +304,11 @@ export function YourNameHere({
         fontWeight: 500,
         whiteSpace: "pre",
         letterSpacing: `${TRACK}em`,
-        color: c.ink,
+        color: fg,
       }}
     >
       {line.map((word, wi) => {
-        const s = 3 + wordIndex * 3;
+        const s = 3 + wordIndex * stagger;
         wordIndex++;
         const e = interpolate(t, [s, s + 18], [0, 1], {
           ...CLAMP,
@@ -283,7 +321,7 @@ export function YourNameHere({
               style={{
                 display: "inline-block",
                 opacity: e,
-                transform: `translateY(${((1 - e) * fs * 0.28).toFixed(2)}px)`,
+                transform: `translateY(${((1 - e) * fs * 0.28).toFixed(2)}px)${glide(midway(e))}`,
               }}
             >
               {word}
@@ -296,7 +334,7 @@ export function YourNameHere({
 
   const brandIn = interpolate(
     t,
-    [3 + wordIndex * 3 + 2, 3 + wordIndex * 3 + 22],
+    [3 + wordIndex * stagger + 2, 3 + wordIndex * stagger + 22],
     [0, 1],
     { ...CLAMP, easing: EASE_OUT },
   );
@@ -328,96 +366,108 @@ export function YourNameHere({
       style={{
         background: stage,
         overflow: "hidden",
-        fontFamily: lexend.fontFamily,
+        fontFamily,
       }}
     >
-      {leadNodes}
-      <div
-        style={{
-          position: "absolute",
-          left: mx,
-          top: slotTop,
-          height: lineH,
-          width: availW,
-          fontSize: fs,
-          fontWeight: 500,
-          letterSpacing: `${TRACK}em`,
-          opacity: brandIn,
-          transform: `translateY(${((1 - brandIn) * fs * 0.28).toFixed(2)}px)`,
-        }}
-      >
-        {glyph("{", 0, {
-          color: hi,
-          fontWeight: 400,
-          opacity: p1,
-          transform: `translateX(${((1 - p1) * fs * 0.25).toFixed(2)}px)`,
-        })}
-        <div
-          style={{
-            position: "absolute",
-            left: brandX * fs,
-            top: -clipPad,
-            width: (inner + 0.03) * fs,
-            height: lineH + clipPad + fs * 0.14,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: clipPad + out * fs * 0.55,
-              height: lineH,
-              lineHeight: `${lineH}px`,
-              whiteSpace: "pre",
-              color: c.ink,
-              opacity: 1 - out,
-            }}
-          >
-            {brand}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: clipPad + (1 - rise) * fs * 0.45,
-              height: lineH,
-              lineHeight: `${lineH}px`,
-              whiteSpace: "pre",
-              color: hi,
-              opacity: rise,
-            }}
-          >
-            {slot}
-          </div>
-        </div>
-        {glyph("}", closeX, {
-          color: hi,
-          fontWeight: 400,
-          opacity: p1,
-          transform: `translateX(${((1 - p1) * -fs * 0.25).toFixed(2)}px)`,
-        })}
-        {glyph(end, endX, { color: c.ink })}
-      </div>
-      {note ? (
+      <ScaleLayer scale={scale}>
+        {leadNodes}
         <div
           style={{
             position: "absolute",
             left: mx,
-            top: noteTop,
-            fontSize: fN,
-            lineHeight: `${fN * 1.3}px`,
-            fontWeight: 300,
-            whiteSpace: "pre",
-            letterSpacing: `${NOTE_TRACK}em`,
-            color: c.ink,
-            opacity: noteE,
-            transform: `translateY(${((1 - noteE) * fN * 0.6).toFixed(2)}px)`,
+            top: slotTop,
+            height: lineH,
+            width: availW,
+            fontSize: fs,
+            fontWeight: 500,
+            letterSpacing: `${TRACK}em`,
+            opacity: brandIn,
+            transform: `translateY(${((1 - brandIn) * fs * 0.28).toFixed(2)}px)${glide(midway(brandIn))}`,
           }}
         >
-          {note}
+          {glyph("{", 0, {
+            color: hi,
+            fontWeight: 400,
+            opacity: p1,
+            transform: `translateX(${((1 - p1) * fs * 0.25).toFixed(2)}px)`,
+          })}
+          <div
+            style={{
+              position: "absolute",
+              left: brandX * fs,
+              top: -clipPad,
+              width: (inner + 0.03) * fs,
+              height: lineH + clipPad + fs * 0.14,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                // Both words travel by transform, not `top`: layout rounds a
+                // baseline to whole pixels, so a word eased by `top` clicks.
+                top: clipPad,
+                transform:
+                  out > 0
+                    ? `translateY(${out * fs * 0.55}px)${glide(midway(out))}`
+                    : undefined,
+                height: lineH,
+                lineHeight: `${lineH}px`,
+                whiteSpace: "pre",
+                color: fg,
+                opacity: 1 - out,
+              }}
+            >
+              {brand}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: clipPad,
+                transform:
+                  rise < 1
+                    ? `translateY(${(1 - rise) * fs * 0.45}px)${glide(midway(rise))}`
+                    : undefined,
+                height: lineH,
+                lineHeight: `${lineH}px`,
+                whiteSpace: "pre",
+                color: hi,
+                opacity: rise,
+              }}
+            >
+              {slot}
+            </div>
+          </div>
+          {glyph("}", closeX, {
+            color: hi,
+            fontWeight: 400,
+            opacity: p1,
+            transform: `translateX(${((1 - p1) * -fs * 0.25).toFixed(2)}px)`,
+          })}
+          {glyph(end, endX, { color: fg })}
         </div>
-      ) : null}
+        {note ? (
+          <div
+            style={{
+              position: "absolute",
+              left: mx,
+              top: noteTop,
+              fontSize: fN,
+              lineHeight: `${fN * 1.3}px`,
+              fontWeight: 300,
+              whiteSpace: "pre",
+              letterSpacing: `${NOTE_TRACK}em`,
+              color: fg,
+              opacity: noteE,
+              transform: `translateY(${((1 - noteE) * fN * 0.6).toFixed(2)}px)${glide(midway(noteE))}`,
+            }}
+          >
+            {note}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

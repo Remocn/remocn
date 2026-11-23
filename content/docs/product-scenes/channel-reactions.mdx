@@ -40,8 +40,8 @@ export const RemotionRoot = () => (
   <Composition
     id="ChannelReactions"
     component={ChannelReactionsScene}
-    durationInFrames={220}
-    fps={30}
+    durationInFrames={440}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -113,6 +113,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Large line above the window in the 9:16 layout.",
     },
     {
+      name: "time",
+      type: "string",
+      default: "\"10:30 AM\"",
+      description: "Timestamp on the launch message.",
+    },
+    {
+      name: "lastReplyLabel",
+      type: "string",
+      default: "\"Last reply just now\"",
+      description: "Muted note after the reply count on the thread line (16:9 only).",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "6",
+      description: "Frames between reaction chips popping in.",
+    },
+    {
       name: "theme",
       type: "\"light\" | \"dark\"",
       default: "\"light\"",
@@ -125,6 +143,29 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Accent color for highlights and controls.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Onest\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
       name: "speed",
       type: "number",
       default: "1",
@@ -134,6 +175,11 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "ground",
       type: "GshPresetId",
       description: "Preset id for the gradients.sh background shader.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
     },
     {
       name: "groundParams",

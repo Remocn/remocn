@@ -2,14 +2,9 @@
 
 import { loadFont } from "@remotion/google-fonts/SchibstedGrotesk";
 import { type ReactNode, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -27,6 +22,21 @@ export interface FractionSplitProps {
   highlight?: string;
   accentPiece?: number;
   accent?: string;
+  /** Color of the line and the bar; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line and labels. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  /** Frames between words as the line rises in. */
+  stagger?: number;
+  /** Corner radius of the bar pieces, in pixels at 1280×720. */
+  radius?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -98,18 +108,44 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FractionSplit({
   line = "Renders in 1/8 the time.",
   highlight = "1/8",
   accentPiece = 0,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  stagger = 3,
+  radius = 8,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: FractionSplitProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
   const ap = Math.max(0, Math.min(SEGS - 1, Math.round(accentPiece)));
 
   const cx = width / 2;
@@ -117,7 +153,7 @@ export function FractionSplit({
   const barW = Math.min(width * 0.8, 1040 * u);
   const barH = 116 * u;
   const G = 14 * u;
-  const R = 8 * u;
+  const R = radius * u;
   const E = 3 * G;
   const textSize = 96 * u;
   const textLines = line.length * 0.43 * textSize > barW * 0.98 ? 2 : 1;
@@ -125,21 +161,41 @@ export function FractionSplit({
   const textGap = 58 * u;
   const finalTop = cy - (barH + textGap + textH) / 2;
 
-  const open: number[] = [0];
-  for (let b = 1; b < SEGS; b++) {
-    const lv = LEVELS[boundaryLevel(b)];
-    const stagger = boundaryLevel(b) === 2 ? Math.abs(b - 4) * 0.6 : 0;
-    open.push(
-      spring({ frame: t - lv.at - stagger, fps, config: SPLIT_SPRING }),
-    );
-  }
-  const totalGap = open.reduce((s, x) => s + x, 0) * G;
-  const segW = (barW - totalGap) / SEGS;
-
-  const reg = interpolate(t, [REG, REG + REG_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  // The bar's geometry at any time; `settled` is where every piece lands.
+  const geometry = (tt: number, settled = false) => {
+    const open: number[] = [0];
+    for (let b = 1; b < SEGS; b++) {
+      const lv = LEVELS[boundaryLevel(b)];
+      const stagger = boundaryLevel(b) === 2 ? Math.abs(b - 4) * 0.6 : 0;
+      open.push(
+        settled
+          ? 1
+          : spring({ frame: tt - lv.at - stagger, fps, config: SPLIT_SPRING }),
+      );
+    }
+    const totalGap = open.reduce((s, x) => s + x, 0) * G;
+    const segW = (barW - totalGap) / SEGS;
+    const reg = settled
+      ? 1
+      : interpolate(tt, [REG, REG + REG_LEN], [0, 1], {
+          ...CLAMP,
+          easing: EASE_IO,
+        });
+    const left = cx - barW / 2 - (E / 2) * reg;
+    const xs: number[] = [];
+    let acc = left;
+    for (let j = 0; j < SEGS; j++) {
+      if (j > 0) acc += open[j] * G;
+      xs.push(acc + (j > ap ? E * reg : 0));
+      acc += segW;
+    }
+    const top = cy - barH / 2 + (finalTop - (cy - barH / 2)) * reg;
+    return { open, segW, reg, xs, top };
+  };
+  const { open, segW, reg, xs, top } = geometry(t);
+  const before = geometry(t - speed);
+  const after = geometry(t + speed);
+  const landed = geometry(t, true);
   const rise = interpolate(t, [REG, REG + 16], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -153,15 +209,6 @@ export function FractionSplit({
       { ...CLAMP, easing: EASE_IO },
     );
   };
-  const left = cx - barW / 2 - (E / 2) * reg;
-  const xs: number[] = [];
-  let acc = left;
-  for (let j = 0; j < SEGS; j++) {
-    if (j > 0) acc += open[j] * G;
-    xs.push(acc + (j > ap ? E * reg : 0));
-    acc += segW;
-  }
-  const top = cy - barH / 2 + (finalTop - (cy - barH / 2)) * reg;
 
   const wipe = interpolate(t, [2, 22], [0, 1], {
     ...CLAMP,
@@ -181,7 +228,7 @@ export function FractionSplit({
   const labelStyle = {
     position: "absolute",
     left: 14 * u,
-    fontFamily: sans,
+    fontFamily,
     fontWeight: 500,
     fontSize: 20 * u,
     lineHeight: 1.2,
@@ -204,10 +251,22 @@ export function FractionSplit({
     const w = xs[j1] + segW - x;
     const rl = cornerAt(j0);
     const rr = cornerAt(j1 + 1);
+    // While a piece travels it is laid out where it lands and the way there
+    // is a transform: layout rounds a box to whole pixels, so a piece eased
+    // by `left`/`top` clicks along pixel by pixel. At rest it keeps its plain
+    // layout.
+    const moving =
+      Math.abs(after.xs[j0] - x) > 1e-3 ||
+      Math.abs(x - before.xs[j0]) > 1e-3 ||
+      Math.abs(after.top - top) > 1e-3 ||
+      Math.abs(top - before.top) > 1e-3;
     const box = {
       position: "absolute",
-      left: x,
-      top,
+      left: moving ? landed.xs[j0] : x,
+      top: moving ? landed.top : top,
+      transform: moving
+        ? `translate(${x - landed.xs[j0]}px, ${top - landed.top}px)`
+        : undefined,
       width: w,
       height: barH,
       borderTopLeftRadius: rl,
@@ -216,7 +275,7 @@ export function FractionSplit({
       borderBottomRightRadius: rr,
     } as const;
     if (reg <= 0) {
-      return <div key={`p${j0}-${j1}`} style={{ ...box, background: p.fg }} />;
+      return <div key={`p${j0}-${j1}`} style={{ ...box, background: fg }} />;
     }
     const isAccent = j0 === ap;
     const fillH = barH * (isAccent ? rise : 1 - drainOf(j0));
@@ -235,7 +294,7 @@ export function FractionSplit({
           style={{
             ...box,
             overflow: "hidden",
-            background: isAccent ? p.fg : "transparent",
+            background: isAccent ? fg : "transparent",
           }}
         >
           {isAccent ? (
@@ -251,7 +310,7 @@ export function FractionSplit({
               bottom: 0,
               height: fillH,
               overflow: "hidden",
-              backgroundColor: p.fg,
+              backgroundColor: fg,
               backgroundImage: isAccent ? flute(20) : undefined,
               backgroundSize: isAccent ? `${w}px ${barH}px` : undefined,
               backgroundPosition: "left bottom",
@@ -326,76 +385,96 @@ export function FractionSplit({
     } else pushWords(rest, false);
   } else pushWords(line, false);
 
-  const push = interpolate(t, [0, REG + REG_LEN + 40], [0.985, 1.01], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const pushAt = (tt: number) =>
+    interpolate(tt, [0, REG + REG_LEN + 40], [0.985, 1.01], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const push = pushAt(t);
+  // The push carries the bar and the line; weighed by the ~1000px from the
+  // centre to the furthest text. It runs past every piece's travel, so its
+  // tilt covers the labels inside the pieces too.
+  const pushing =
+    Math.abs(pushAt(t + speed) - push) > 1e-6 ||
+    Math.abs(push - pushAt(t - speed)) > 1e-6;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
-      >
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? p.bg),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            clipPath: `inset(0 ${(1 - wipe) * 100}% 0 0)`,
+            transform: `scale(${push})${glide(pushing)}`,
+            transformOrigin: "50% 50%",
           }}
         >
-          {pieces}
-          {labels}
-        </AbsoluteFill>
+          <AbsoluteFill
+            style={{
+              clipPath: `inset(0 ${(1 - wipe) * 100}% 0 0)`,
+            }}
+          >
+            {pieces}
+            {labels}
+          </AbsoluteFill>
 
-        <div
-          style={{
-            position: "absolute",
-            left: cx - barW * 0.5,
-            width: barW,
-            top: finalTop + barH + textGap,
-            textAlign: "center",
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: textSize,
-            lineHeight: 1.02,
-            letterSpacing: "-0.035em",
-            color: p.fg,
-            textWrap: "balance",
-          }}
-        >
-          {words.map((w, i) => {
-            const k = interpolate(
-              t,
-              [TEXT_IN + i * 3, TEXT_IN + i * 3 + 18],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            return (
-              <span key={`w${i.toString()}`}>
-                <span
-                  style={{
-                    display: "inline-block",
-                    color: w.hl ? "transparent" : p.fg,
-                    ...(w.hl
-                      ? {
-                          fontWeight: 500,
-                          paddingRight: "0.04em",
-                          backgroundImage: `linear-gradient(${172 + 10 * drift}deg, ${p.hl[0]} 8%, ${blue} 32%, ${p.hl[1]} 70%, ${p.hl[2]} 94%)`,
-                          WebkitBackgroundClip: "text",
-                          backgroundClip: "text",
-                        }
-                      : null),
-                    opacity: k,
-                    filter: k < 0.99 ? `blur(${(1 - k) * 8 * u}px)` : undefined,
-                    transform: `translateY(${(1 - k) * 18 * u}px)`,
-                  }}
-                >
-                  {w.text}
+          <div
+            style={{
+              position: "absolute",
+              left: cx - barW * 0.5,
+              width: barW,
+              top: finalTop + barH + textGap,
+              textAlign: "center",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: textSize,
+              lineHeight: 1.02,
+              letterSpacing: "-0.035em",
+              color: fg,
+              textWrap: "balance",
+            }}
+          >
+            {words.map((w, i) => {
+              const k = interpolate(
+                t,
+                [TEXT_IN + i * stagger, TEXT_IN + i * stagger + 18],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              return (
+                <span key={`w${i.toString()}`}>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      color: w.hl ? "transparent" : fg,
+                      ...(w.hl
+                        ? {
+                            fontWeight: 500,
+                            paddingRight: "0.04em",
+                            backgroundImage: `linear-gradient(${172 + 10 * drift}deg, ${p.hl[0]} 8%, ${blue} 32%, ${p.hl[1]} 70%, ${p.hl[2]} 94%)`,
+                            WebkitBackgroundClip: "text",
+                            backgroundClip: "text",
+                          }
+                        : null),
+                      opacity: k,
+                      filter:
+                        k < 0.99 ? `blur(${(1 - k) * 8 * u}px)` : undefined,
+                      transform: `translateY(${(1 - k) * 18 * u}px)`,
+                    }}
+                  >
+                    {w.text}
+                  </span>
+                  {i < words.length - 1 ? " " : null}
                 </span>
-                {i < words.length - 1 ? " " : null}
-              </span>
-            );
-          })}
-        </div>
-      </AbsoluteFill>
+              );
+            })}
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
@@ -403,7 +482,7 @@ export function FractionSplit({
           opacity: 0.55,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -36,8 +36,8 @@ export const RemotionRoot = () => (
   <Composition
     id="UnmaskLine"
     component={UnmaskLineScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -61,14 +61,49 @@ Dots appear for each letter, breathe, then open into monospace characters line b
       description: "Index of the line tinted green; -1 is the last line.",
     },
     {
+      name: "openAt",
+      type: "number",
+      default: "38",
+      description: "Frame the dots start opening into letters.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "2.2",
+      description: "Frames between letters opening.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Accent colour (any CSS colour).",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Overrides the theme background colour.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"IBM Plex Mono\"",
+      description: "Typeface for the copy; keep it monospaced so letters sit on the dot grid. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

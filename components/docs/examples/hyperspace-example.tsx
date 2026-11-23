@@ -5,6 +5,7 @@ import {
   CanvasSceneA,
   CanvasSceneB,
 } from "@/components/docs/examples/canvas-scenes";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { hyperspace } from "@/registry/remocn/hyperspace";
 
 interface HyperspaceExampleProps {
@@ -24,13 +25,14 @@ export function HyperspaceExampleScene({
   flash,
   flashColor,
 }: HyperspaceExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={90}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(90)}>
         <CanvasSceneA />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 56 })}
+        timing={linearTiming({ durationInFrames: toFrames(56) })}
         presentation={hyperspace({
           stars,
           streakColor,
@@ -40,7 +42,7 @@ export function HyperspaceExampleScene({
           flashColor,
         })}
       />
-      <TransitionSeries.Sequence durationInFrames={90}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(90)}>
         <CanvasSceneB />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -61,11 +63,11 @@ import { hyperspace } from "@/components/remocn/hyperspace";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={90}>
+    <TransitionSeries.Sequence durationInFrames={180}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 56 })}
+      timing={linearTiming({ durationInFrames: 112 })}
       presentation={hyperspace({
         stars: ${stars},
         streakColor: "${streakColor}",
@@ -75,7 +77,7 @@ export const MyVideo = () => (
         flashColor: "${flashColor}",
       })}
     />
-    <TransitionSeries.Sequence durationInFrames={90}>
+    <TransitionSeries.Sequence durationInFrames={180}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

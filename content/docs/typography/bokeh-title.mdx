@@ -43,8 +43,8 @@ export const RemotionRoot = () => (
   <Composition
     id="BokehTitle"
     component={BokehTitleScene}
-    durationInFrames={190}
-    fps={30}
+    durationInFrames={380}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -82,10 +82,61 @@ Out-of-focus bokeh lights drift, a focus pull snaps them into a mark or grid pat
       description: "Shape of each bokeh light: circle or hexagon",
     },
     {
+      name: "hold",
+      type: "number",
+      default: "24",
+      description: "Frames the pattern stays sharp before focus racks back to the title.",
+    },
+    {
+      name: "ambient",
+      type: "number",
+      default: "24",
+      description: "Number of out-of-focus lights drifting in front of the pattern.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Serif\"",
+      description: "Typeface for the title. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

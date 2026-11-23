@@ -2,14 +2,9 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { createContext, useContext } from "react";
-import {
-  AbsoluteFill,
-  interpolate,
-  interpolateColors,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, interpolateColors, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import { CLAMP, FADE, stagger } from "@/lib/remocn/scene-motion";
 
 export type SpringSettleConfig = {
@@ -121,6 +116,8 @@ export const springSettleExitStyle = (
   local: number,
   dwellFrames: number,
   config?: Partial<SpringSettleConfig>,
+  /** `useGlide()` of the caller, to mark the text this layer carries. */
+  glide: (moving: boolean) => string = () => "",
 ): CSSProperties => {
   const cfg = resolveConfig(config);
   const tExit = interpolate(
@@ -132,9 +129,8 @@ export const springSettleExitStyle = (
   if (tExit <= 0) return {};
   const eExit = tExit ** cfg.exitPower;
   return {
-    scale: `${1 - (1 - cfg.exitScale) * eExit}`,
+    transform: `scale(${1 - (1 - cfg.exitScale) * eExit})${glide(tExit < 1)}`,
     opacity: 1 - eExit,
-    willChange: "transform, opacity",
   };
 };
 
@@ -149,7 +145,7 @@ export function SpringSettleEnter({
   config,
   children,
 }: SpringSettleEnterProps) {
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   return (
     <SceneCtx.Provider value={{ local, cfg: resolveConfig(config), fps }}>
       {children}
@@ -169,6 +165,7 @@ export function SpringSettleItem({
   children,
 }: SpringSettleItemProps) {
   const clock = useContext(SceneCtx);
+  const glide = useGlide();
   if (!clock) {
     return <div style={style}>{children}</div>;
   }
@@ -181,16 +178,26 @@ export function SpringSettleItem({
       cfg.enterStaggerPower,
       cfg.enterStaggerJitter,
     );
-  const enterP = spring({
-    frame: tEnter,
-    fps,
-    config: {
-      damping: cfg.springDamping,
-      stiffness: cfg.springStiffness,
-      mass: cfg.springMass,
-    },
-  });
-  const scaleEnter = interpolate(enterP, [0, 1], [cfg.enterScale, 1]);
+  const scaleAt = (f: number) =>
+    interpolate(
+      spring({
+        frame: f,
+        fps,
+        config: {
+          damping: cfg.springDamping,
+          stiffness: cfg.springStiffness,
+          mass: cfg.springMass,
+        },
+      }),
+      [0, 1],
+      [cfg.enterScale, 1],
+    );
+  const scaleEnter = scaleAt(tEnter);
+  // The spring overshoots and has no end frame, so the item counts as moving
+  // while its scale differs from a neighbouring frame.
+  const moving =
+    Math.abs(scaleAt(tEnter + 1) - scaleEnter) > 2e-6 ||
+    Math.abs(scaleEnter - scaleAt(tEnter - 1)) > 2e-6;
   const opacityEnter = interpolate(tEnter, [0, cfg.enterFadeFrames], [0, 1], {
     ...CLAMP,
     easing: FADE,
@@ -199,9 +206,10 @@ export function SpringSettleItem({
     <div
       style={{
         ...style,
-        scale: `${scaleEnter}`,
+        // Same order as the `scale` property it replaces: before any
+        // transform the caller passes in.
+        transform: `scale(${scaleEnter})${style?.transform && style.transform !== "none" ? ` ${style.transform}` : ""}${glide(moving)}`,
         opacity: opacityEnter,
-        willChange: "transform, opacity",
       }}
     >
       {children}
@@ -225,7 +233,8 @@ export function SpringSettleScenes({
   loop = false,
   style,
 }: SpringSettleScenesProps) {
-  const frame = useCurrentFrame();
+  const glide = useGlide();
+  const frame = useSceneFrame();
   const cfg = resolveConfig(config);
 
   const lens = scenes.map((s) => dwellOf(s, cfg) + cfg.gapFrames);
@@ -264,7 +273,9 @@ export function SpringSettleScenes({
   return (
     <AbsoluteFill style={{ background: bg, ...style }}>
       {local < dwellFrames ? (
-        <AbsoluteFill style={springSettleExitStyle(local, dwellFrames, cfg)}>
+        <AbsoluteFill
+          style={springSettleExitStyle(local, dwellFrames, cfg, glide)}
+        >
           <SpringSettleEnter local={local} config={cfg}>
             {cur.content}
           </SpringSettleEnter>

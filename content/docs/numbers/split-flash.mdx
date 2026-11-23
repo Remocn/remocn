@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="SplitFlash"
     component={SplitFlashScene}
-    durationInFrames={96}
-    fps={30}
+    durationInFrames={192}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -81,10 +81,44 @@ A lap clock runs with rolling tenths while an accent sector line draws under it.
       description: "Label once the clock freezes.",
     },
     {
+      name: "freezeAt",
+      type: "number",
+      default: "42",
+      description: "Frame the clock freezes on the final time.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Colour of the sector line and the live marker.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

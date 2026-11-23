@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const versusSplitConfig: ComponentConfig = {
   componentName: "VersusSplit",
@@ -33,6 +39,21 @@ export const versusSplitConfig: ComponentConfig = {
       default: "Title holder",
       description: "Away label",
     },
+    versus: {
+      type: "text-content",
+      default: "VS",
+      description: "Versus",
+    },
+    stagger: {
+      type: "number",
+      default: 7,
+      min: 0,
+      max: 20,
+      step: 1,
+      description: "Row stagger",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Barlow Condensed" }),
     speed: {
       type: "number",
       default: 1,

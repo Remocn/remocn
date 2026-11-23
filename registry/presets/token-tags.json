@@ -1,0 +1,105 @@
+{
+  "component": "token-tags",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "blueprint-blue",
+      "label": "Blueprint Blue",
+      "description": "Cool blue leader lines over a pale blue-grey canvas, like an annotated spec sheet.",
+      "askedAs": [
+        "blue annotation lines",
+        "spec sheet look",
+        "blueprint style tags",
+        "синие линии выносок",
+        "как чертёж"
+      ],
+      "props": {
+        "lineColor": "#1f5fd6",
+        "background": "#e8eef7"
+      }
+    },
+    {
+      "id": "quick-callouts",
+      "label": "Quick Callouts",
+      "description": "Tags snap in fast with tight spacing for a brisk, punchy reveal.",
+      "askedAs": [
+        "faster token labels",
+        "snappy callouts",
+        "quick reveal of tags",
+        "быстрые подписи",
+        "метки появляются быстро"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 2
+      }
+    },
+    {
+      "id": "slow-walkthrough",
+      "label": "Slow Walkthrough",
+      "description": "Leaders draw in one by one at a calm, deliberate pace for careful explanation.",
+      "askedAs": [
+        "slow step by step labels",
+        "calm token walkthrough",
+        "one tag at a time slowly",
+        "медленное появление меток",
+        "по одной подписи спокойно"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 11
+      }
+    },
+    {
+      "id": "warm-paper",
+      "label": "Warm Paper",
+      "description": "Soft cream background with deep brown leaders for an editorial, print-like feel.",
+      "askedAs": [
+        "warm beige background",
+        "editorial paper look",
+        "cream and brown callouts",
+        "тёплый бежевый фон",
+        "как на бумаге"
+      ],
+      "props": {
+        "background": "#f4efe6",
+        "lineColor": "#4a3426"
+      }
+    },
+    {
+      "id": "brand-accent",
+      "label": "Brand Accent",
+      "description": "Violet leader lines on a neutral light grey that highlight tokens with a confident accent.",
+      "askedAs": [
+        "purple leader lines",
+        "accent colored callouts",
+        "violet token tags",
+        "фиолетовые линии",
+        "акцентный цвет выносок"
+      ],
+      "props": {
+        "lineColor": "#6d4ae0",
+        "background": "#f1f0f5",
+        "stagger": 4
+      }
+    },
+    {
+      "id": "slate-studio",
+      "label": "Slate Studio",
+      "description": "Muted slate backdrop with crisp near-white leaders for a moody, high-contrast presentation.",
+      "askedAs": [
+        "dark background tags",
+        "moody slate look",
+        "white lines on grey",
+        "тёмный фон с метками",
+        "контрастные белые линии"
+      ],
+      "props": {
+        "background": "#2b3038",
+        "lineColor": "#f2f3f5",
+        "speed": 0.75
+      }
+    }
+  ]
+}

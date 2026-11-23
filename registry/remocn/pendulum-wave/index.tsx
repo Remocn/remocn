@@ -1,6 +1,7 @@
 "use client";
 
-import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type PendulumWaveProps = {
   /** Number of pendulums. */
@@ -69,8 +70,8 @@ export function PendulumWave({
   accent = pendulumWaveDefaults.accent,
   showGuides = pendulumWaveDefaults.showGuides,
 }: PendulumWaveProps) {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
   const n = Math.max(2, Math.round(count));
   const loop = Math.max(1, loopFrames);
   const time = frame * speed;

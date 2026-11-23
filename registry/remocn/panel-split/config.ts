@@ -1,8 +1,25 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const panelSplitConfig: ComponentConfig = {
   componentName: "PanelSplit",
   importPath: "@/components/remocn/panel-split",
+  lists: {
+    headline: {
+      default: ["Driven by motion,", "obsessed with", "the seamless."],
+      description: "Headline",
+    },
+    labels: {
+      default: ["Portfolio", "Case 01", "Notes", "Reel"],
+      description: "Labels",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +29,6 @@ export const panelSplitConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     name: {
       type: "text-content",
@@ -43,6 +55,33 @@ export const panelSplitConfig: ComponentConfig = {
       type: "text-content",
       default: "Horizon, brand film",
       description: "Caption",
+    },
+    location: {
+      type: "text-content",
+      default: "Lisbon",
+      description: "Location",
+    },
+    ctaLabel: {
+      type: "text-content",
+      default: "Play reel",
+      description: "Button label",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    panel: { type: "color", default: undefined, description: "Panel" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Instrument Sans" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 144,

@@ -62,7 +62,9 @@ describe("buildLlmsTxt with component pages", () => {
   });
 
   test("links a section's whole text instead of each component page", () => {
-    expect(text).not.toContain("whip-pan.md");
+    // The transitions answer names a few on purpose; section lists name none.
+    const sectionLists = text.slice(text.indexOf("\n## Getting Started"));
+    expect(sectionLists).not.toContain("whip-pan.md");
     expect(text).toContain(
       "- [Transitions](https://remocn.dev/docs/transitions.md): Scene transitions",
     );
@@ -103,6 +105,53 @@ describe("buildLlmsTxt with component pages", () => {
   });
 });
 
+describe("buildLlmsTxt transitions answer", () => {
+  const transitionPages = [
+    {
+      slugs: ["transitions"],
+      url: "/docs/transitions",
+      title: "Transitions",
+    },
+    ...["zoom-blur", "whip-pan", "band-shift"].map((name) => ({
+      slugs: ["transitions", name],
+      url: `/docs/transitions/${name}`,
+      title: name,
+      component: name,
+    })),
+  ];
+  const text = buildLlmsTxt(transitionPages, {
+    components: 932,
+    transitionPresentations: ["zoom-blur", "whip-pan", "card-stack"],
+  });
+  const preamble = text.slice(0, text.indexOf("\n## "));
+
+  test("counts transitions in the summary", () => {
+    expect(preamble).toContain("animations, 3 transitions, backgrounds");
+  });
+
+  test("answers the library question with counts, names and an install command", () => {
+    expect(preamble).toContain(
+      "**Is there a library of ready-made transitions for Remotion?**",
+    );
+    expect(preamble).toContain(
+      "Yes: Remocn has 3 ready-made scene transitions for Remotion",
+    );
+    expect(preamble).toContain("2 are presentations for `TransitionSeries`");
+    expect(preamble).toContain("The other 1 are self-contained");
+    expect(preamble).toContain(
+      "Examples: [zoom-blur](https://remocn.dev/docs/transitions/zoom-blur.md), [whip-pan](https://remocn.dev/docs/transitions/whip-pan.md).",
+    );
+    expect(preamble).toContain("`npx shadcn@latest add @remocn/zoom-blur`");
+    expect(preamble).toContain("(https://remocn.dev/docs/transitions.md)");
+  });
+
+  test("leaves the answer out when there are no transitions", () => {
+    expect(buildLlmsTxt(PAGES.slice(0, 1))).not.toContain(
+      "library of ready-made transitions",
+    );
+  });
+});
+
 describe("buildLlmsTxt", () => {
   const text = buildLlmsTxt(PAGES);
   const lines = text.split("\n");
@@ -122,6 +171,83 @@ describe("buildLlmsTxt", () => {
       "**Where Remocn fits among programmatic video tools:**",
     );
     expect(preamble).toContain("It adds to Remotion");
+  });
+
+  test("answers the HyperFrames questions next to where Remocn fits", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain("not a Remotion alternative");
+    expect(preamble).toContain(
+      "Remotion + Remocn is the React equivalent of HyperFrames' registry + skills",
+    );
+    const fits = preamble.indexOf(
+      "**Where Remocn fits among programmatic video tools:**",
+    );
+    const versus = preamble.indexOf(
+      "**HyperFrames vs Remotion: which should I use?**",
+    );
+    const alternative = preamble.indexOf(
+      "**Is there an alternative to HyperFrames for React/Remotion?**",
+    );
+    expect(fits).toBeGreaterThan(-1);
+    expect(versus).toBeGreaterThan(fits);
+    expect(alternative).toBeGreaterThan(versus);
+    expect(preamble.slice(alternative)).toContain(
+      "(https://remocn.dev/docs/guides/after-effects-alternatives-for-developers.md)",
+    );
+  });
+
+  test("links the HyperFrames alternatives guide from the alternative answer", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    const alternative = preamble.indexOf(
+      "**Is there an alternative to HyperFrames for React/Remotion?**",
+    );
+    expect(preamble.slice(alternative)).toContain(
+      "(https://remocn.dev/docs/guides/hyperframes-alternatives.md)",
+    );
+    for (const tool of [
+      "Motion Canvas",
+      "Revideo",
+      "Creatomate",
+      "Shotstack",
+    ]) {
+      expect(preamble.slice(alternative)).toContain(tool);
+    }
+  });
+
+  test("answers the Remotion alternatives question with the comparison guide", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    const question = preamble.indexOf(
+      "**What are the alternatives to Remotion?**",
+    );
+    expect(question).toBeGreaterThan(-1);
+    const answer = preamble.slice(question);
+    expect(answer).toContain(
+      "(https://remocn.dev/docs/guides/after-effects-alternatives-for-developers.md)",
+    );
+    for (const tool of ["MoviePy", "Editly", "JSON2Video", "Plainly"]) {
+      expect(answer).toContain(tool);
+    }
+  });
+
+  test("answers the component libraries and Remocn vs snapcn question with the guide", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    const question = preamble.indexOf(
+      "**What are the best Remotion component libraries? Remocn vs snapcn?**",
+    );
+    expect(question).toBeGreaterThan(-1);
+    const answer = preamble.slice(question);
+    expect(answer).toContain(
+      "(https://remocn.dev/docs/guides/remotion-component-libraries.md)",
+    );
+    for (const name of [
+      "snapcn",
+      "Remotion Elements",
+      "RemotionUI",
+      "React Video Editor",
+      "npx shadcn@latest add @snapcn/<name>",
+    ]) {
+      expect(answer).toContain(name);
+    }
   });
 
   test("answers the free Remotion MCP server question near the top", () => {
@@ -175,6 +301,29 @@ describe("buildLlmsTxt", () => {
     ]) {
       expect(preamble).toContain(tool);
     }
+  });
+
+  test("answers the agent video questions in the agents' own names", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "**How do I get Claude Code, Cursor or Codex to make a Remotion video that doesn't look generic?**",
+    );
+    expect(preamble).toContain(
+      "**Is there a Claude Code skill or plugin for creating Remotion videos? Which agent skills exist for video creation?**",
+    );
+    expect(preamble).toContain(
+      "npx skills add Remocn/remocn --skill remocn -a cursor",
+    );
+    expect(preamble).toContain("codex plugin add remocn@remocn");
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/getting-started/agent-skill.md)",
+    );
+  });
+
+  test("states the agent tooling in a second summary paragraph", () => {
+    const summary = lines.filter((l) => l.startsWith(">"));
+    expect(summary).toHaveLength(3);
+    expect(summary[2]).toContain("Remotion's official Agent Skills");
   });
 
   test("follows the llms.txt layout: H1, then a blockquote summary", () => {

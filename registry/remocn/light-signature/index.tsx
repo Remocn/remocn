@@ -5,14 +5,9 @@ import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -28,7 +23,21 @@ export interface LightSignatureProps {
   tagline?: string;
   lightColor?: string;
   accent?: string;
+  /** Color of the lit name; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the tagline. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames for the light to run from the center out to the edges. */
+  sweep?: number;
+  /** Blur radius of the bloom around the line, in px at 720p (dark theme). */
+  glow?: number;
+  /** Size of the lockup, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -152,6 +161,22 @@ const CHASE_LEN = 40;
 const RETURN_START = 50;
 const RETURN_LEN = 26;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LightSignature({
   eyebrow = "The all-new",
   name = "remocn",
@@ -159,13 +184,24 @@ export function LightSignature({
   tagline = "Launch-video scenes, ready to render.",
   lightColor = CHROME[0],
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = geist.fontFamily,
+  sweep = CHASE_LEN,
+  glow = 6,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: LightSignatureProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const shift = sweep - CHASE_LEN;
+  const returnStart = RETURN_START + shift;
+  const { width, height } = useSceneConfig();
   const p = PALETTES[theme];
+  const fg = ink ?? p.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const bloomId = `bl${uid}`;
   const litId = `lt${uid}`;
@@ -233,12 +269,11 @@ export function LightSignature({
   const reach = D * 1.04;
   const CHASE_POW = 1.8;
   const chaseR = (f: number) =>
-    reach *
-    Math.min(1, Math.max(0, (f - CHASE_START) / CHASE_LEN)) ** CHASE_POW;
+    reach * Math.min(1, Math.max(0, (f - CHASE_START) / sweep)) ** CHASE_POW;
   const hitTime = (d: number) =>
-    CHASE_START + CHASE_LEN * Math.min(1, d / reach) ** (1 / CHASE_POW);
+    CHASE_START + sweep * Math.min(1, d / reach) ** (1 / CHASE_POW);
   const r = chaseR(frame);
-  const chasing = frame >= CHASE_START - 4 && frame < CHASE_START + CHASE_LEN;
+  const chasing = frame >= CHASE_START - 4 && frame < CHASE_START + sweep;
   const ignite = interpolate(
     frame,
     [CHASE_START - 4, CHASE_START + 2],
@@ -250,21 +285,20 @@ export function LightSignature({
   );
   const returnQ = (f: number) =>
     reach *
-    (1 -
-      EASE_RETURN(Math.min(1, Math.max(0, (f - RETURN_START) / RETURN_LEN))));
+    (1 - EASE_RETURN(Math.min(1, Math.max(0, (f - returnStart) / RETURN_LEN))));
   const q = returnQ(frame);
   const passTime = (d: number) => {
-    let prevF = RETURN_START;
+    let prevF = returnStart;
     let prevQ = reach;
-    for (let f = RETURN_START + 1; f <= RETURN_START + RETURN_LEN; f++) {
+    for (let f = returnStart + 1; f <= returnStart + RETURN_LEN; f++) {
       const qf = returnQ(f);
       if (qf <= d) return prevF + (prevQ - d) / Math.max(1e-6, prevQ - qf);
       prevF = f;
       prevQ = qf;
     }
-    return RETURN_START + RETURN_LEN;
+    return returnStart + RETURN_LEN;
   };
-  const returning = frame >= RETURN_START;
+  const returning = frame >= returnStart;
 
   const pitch = Math.max(6, 11 * s);
   const segOn = pitch * 0.62;
@@ -347,7 +381,7 @@ export function LightSignature({
   if (chasing && frame >= CHASE_START) {
     const fade = interpolate(
       frame,
-      [CHASE_START + CHASE_LEN - 6, CHASE_START + CHASE_LEN],
+      [CHASE_START + sweep - 6, CHASE_START + sweep],
       [1, 0],
       CLAMP,
     );
@@ -378,7 +412,7 @@ export function LightSignature({
       easing: EASE_OUT,
     });
     const flash = interpolate(frame, [t0, t0 + 4, t0 + 18], [0, 1, 0], CLAMP);
-    const tR = RETURN_START + RETURN_LEN * 0.8;
+    const tR = returnStart + RETURN_LEN * 0.8;
     const pulse = interpolate(
       frame,
       [tR, tR + 4, tR + 16],
@@ -390,24 +424,38 @@ export function LightSignature({
 
   const litFill =
     theme === "dark"
-      ? `linear-gradient(0deg, ${p.warm} 0%, ${p.hot} 22%, ${p.fg} 62%)`
-      : `linear-gradient(0deg, ${p.warm} 0%, ${p.fg} 40%)`;
+      ? `linear-gradient(0deg, ${p.warm} 0%, ${p.hot} 22%, ${fg} 62%)`
+      : `linear-gradient(0deg, ${p.warm} 0%, ${fg} 40%)`;
 
-  const eyeIn = interpolate(frame, [58, 82], [0, 1], {
+  const eyeIn = interpolate(frame, [58 + shift, 82 + shift], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const tagIn = interpolate(frame, [64, 90], [0, 1], {
+  // The eyebrow's tracking eases in, which widens the centred row; laid out
+  // that way the square's edges round to whole pixels and it clicks sideways.
+  // The row keeps its settled width in layout and the spread is a transform.
+  const eyeExtra = eyebrow
+    ? (interpolate(eyeIn, [0, 1], [0.5, 0.22]) - 0.22) * [...eyebrow].length
+    : 0;
+  const eyeSlide = eyeExtra * eyeFs > 1e-3 ? (-eyeExtra * eyeFs) / 2 : 0;
+  const tagIn = interpolate(frame, [64 + shift, 90 + shift], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const settle = interpolate(frame, [0, 110], [1.04, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const settleAt = (f: number) =>
+    interpolate(f, [0, 110], [1.04, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const settle = settleAt(frame);
+  // The ease is long and flat at the end, so the test is on the scale itself:
+  // 1e-6 of scale is about 1e-3px at the frame's far edge.
+  const settling =
+    Math.abs(settleAt(frame + 1) - settle) > 1e-6 ||
+    Math.abs(settle - settleAt(frame - 1)) > 1e-6;
 
   const hazeLevel = returning
-    ? interpolate(frame, [RETURN_START, RETURN_START + RETURN_LEN], [0.55, 1], {
+    ? interpolate(frame, [returnStart, returnStart + RETURN_LEN], [0.55, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       })
@@ -432,283 +480,295 @@ export function LightSignature({
         />
       ) : null}
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `scale(${settle})`,
-          transformOrigin: `50% ${(lineY / height) * 100}%`,
-        }}
-      >
-        {eyebrow ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: eyeTop,
-              height: eyeFs,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: eyeFs * 0.7,
-              opacity: eyeIn,
-            }}
-          >
-            <div
-              style={{
-                width: eyeFs * 0.36,
-                height: eyeFs * 0.36,
-                borderRadius: 1,
-                background: accent,
-                transform: `scale(${0.4 + 0.6 * eyeIn})`,
-              }}
-            />
-            <span
-              style={{
-                fontFamily: mono.fontFamily,
-                fontWeight: 400,
-                fontSize: eyeFs,
-                lineHeight: 1,
-                textTransform: "uppercase",
-                letterSpacing: `${interpolate(eyeIn, [0, 1], [0.5, 0.22])}em`,
-                marginRight: "-0.22em",
-                color: p.muted,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {eyebrow}
-            </span>
-          </div>
-        ) : null}
-
-        {glyphs.map((g, i) => {
-          const { fill, flash } = letterState(g);
-          const left = lockupX + g.x * nameFs;
-          const clipTop = `${(1 - fill) * 100}%`;
-          const glow =
-            flash > 0.01
-              ? `drop-shadow(0 0 ${14 * s * flash}px color-mix(in oklab, ${lightColor} ${Math.round((theme === "dark" ? 70 : 30) * flash)}%, transparent))`
-              : "none";
-          const flashColor = theme === "dark" ? p.hot : lightColor;
-          const renderGlyph = (lit: boolean) => {
-            if (g.kind === "r") {
-              return (
-                <svg
-                  viewBox="0 0 124.06 134.26"
-                  width={R_W * nameFs}
-                  height={0.76 * nameFs}
-                  style={{ display: "block" }}
-                  aria-hidden
-                >
-                  {lit ? (
-                    <defs>
-                      <linearGradient
-                        id={`${litId}r`}
-                        x1="0"
-                        x2="0"
-                        y1="1"
-                        y2="0"
-                      >
-                        {theme === "dark" ? (
-                          <>
-                            <stop offset="0" stopColor={p.warm} />
-                            <stop offset="0.22" stopColor={p.hot} />
-                            <stop offset="0.62" stopColor={p.fg} />
-                          </>
-                        ) : (
-                          <>
-                            <stop offset="0" stopColor={p.warm} />
-                            <stop offset="0.4" stopColor={p.fg} />
-                          </>
-                        )}
-                      </linearGradient>
-                    </defs>
-                  ) : null}
-                  <path
-                    d={REMOCN_R_PATH}
-                    fill={lit ? `url(#${litId}r)` : p.unlit}
-                    stroke={lit ? "none" : p.unlitEdge}
-                    strokeWidth={lit ? 0 : 1.2}
-                  />
-                </svg>
-              );
-            }
-            if (g.kind === "logo") {
-              return (
-                <div
-                  style={{
-                    width: 0.8 * nameFs,
-                    height: 0.76 * nameFs,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: lit ? 1 : 0.18,
-                  }}
-                >
-                  {logo}
-                </div>
-              );
-            }
-            return (
-              <span
-                style={{
-                  display: "block",
-                  fontFamily: manrope.fontFamily,
-                  fontWeight: wordmark ? 600 : 500,
-                  fontSize: nameFs,
-                  lineHeight: 1,
-                  whiteSpace: "pre",
-                  ...(lit
-                    ? {
-                        backgroundImage: litFill,
-                        WebkitBackgroundClip: "text",
-                        backgroundClip: "text",
-                        color: "transparent",
-                      }
-                    : {
-                        color: p.unlit,
-                        WebkitTextStroke: `1px ${p.unlitEdge}`,
-                      }),
-                }}
-              >
-                {g.ch}
-              </span>
-            );
-          };
-          const glyphTop =
-            g.kind === "char"
-              ? baselineY - MANROPE_BASELINE * nameFs
-              : baselineY - 0.76 * nameFs;
-          return (
-            <div key={i} style={{ position: "absolute", left, top: glyphTop }}>
-              <div style={{ position: "relative" }}>{renderGlyph(false)}</div>
-              {fill > 0 ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    clipPath: `inset(${clipTop} -20% -20% -20%)`,
-                    filter: glow,
-                  }}
-                >
-                  {renderGlyph(true)}
-                  {flash > 0.01 && g.kind !== "logo" ? (
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        opacity: flash * 0.85,
-                        mixBlendMode: theme === "dark" ? "screen" : "normal",
-                      }}
-                    >
-                      {g.kind === "r" ? (
-                        <svg
-                          viewBox="0 0 124.06 134.26"
-                          width={R_W * nameFs}
-                          height={0.76 * nameFs}
-                          style={{ display: "block" }}
-                          aria-hidden
-                        >
-                          <path d={REMOCN_R_PATH} fill={flashColor} />
-                        </svg>
-                      ) : (
-                        <span
-                          style={{
-                            display: "block",
-                            fontFamily: manrope.fontFamily,
-                            fontWeight: wordmark ? 600 : 500,
-                            fontSize: nameFs,
-                            lineHeight: 1,
-                            whiteSpace: "pre",
-                            color: flashColor,
-                          }}
-                        >
-                          {g.ch}
-                        </span>
-                      )}
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          );
-        })}
-
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `scale(${settle})${glide(settling)}`,
+            transformOrigin: `50% ${(lineY / height) * 100}%`,
+          }}
         >
-          <defs>
-            <filter id={bloomId} x="-10%" y="-400%" width="120%" height="900%">
-              <feGaussianBlur stdDeviation={6 * s} />
-            </filter>
-            {[
-              ["r", 0, 1],
-              ["l", 1, 0],
-            ].map(([k, a, b]) => (
-              <linearGradient
-                key={k}
-                id={`${cometId}${k}`}
-                x1={a}
-                x2={b}
-                y1="0"
-                y2="0"
-              >
-                <stop offset="0" stopColor={lightColor} stopOpacity={0} />
-                <stop offset="0.7" stopColor={lightColor} stopOpacity={0.9} />
-                <stop offset="1" stopColor={p.hot} stopOpacity={1} />
-              </linearGradient>
-            ))}
-          </defs>
-          {theme === "dark" ? (
-            <g filter={`url(#${bloomId})`} opacity={0.85}>
-              {segments}
-              {heads}
-            </g>
-          ) : null}
-          <g>{segments}</g>
-          <g opacity={theme === "dark" ? 1 : 0.6}>{heads}</g>
-        </svg>
-
-        {tagline ? (
-          <div
-            style={{
-              position: "absolute",
-              left: (width - tagMax) / 2,
-              width: tagMax,
-              top: lineY + lineH,
-              height: tagTop - lineY - lineH + tagH + tagFs * 0.3,
-              overflow: "hidden",
-            }}
-          >
+          {eyebrow ? (
             <div
               style={{
                 position: "absolute",
                 left: 0,
                 right: 0,
-                top: tagTop - lineY - lineH,
-                transform: `translateY(${-(1 - tagIn) * (tagGap + tagH)}px)`,
-                opacity: interpolate(tagIn, [0, 0.4], [0, 1], CLAMP),
-                textAlign: "center",
-                textWrap: "balance",
-                fontFamily: geist.fontFamily,
-                fontWeight: 400,
-                fontSize: tagFs,
-                lineHeight: 1.3,
-                letterSpacing: "-0.01em",
-                color: p.muted,
+                top: eyeTop,
+                height: eyeFs,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: eyeFs * 0.7,
+                opacity: eyeIn,
               }}
             >
-              {tagline}
+              <div
+                style={{
+                  width: eyeFs * 0.36,
+                  height: eyeFs * 0.36,
+                  borderRadius: 1,
+                  background: accent,
+                  transform: `${eyeSlide ? `translateX(${eyeSlide}px) ` : ""}scale(${0.4 + 0.6 * eyeIn})`,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: mono.fontFamily,
+                  fontWeight: 400,
+                  fontSize: eyeFs,
+                  lineHeight: 1,
+                  textTransform: "uppercase",
+                  letterSpacing: `${interpolate(eyeIn, [0, 1], [0.5, 0.22])}em`,
+                  marginRight: eyeSlide ? `${-0.22 - eyeExtra}em` : "-0.22em",
+                  transform: eyeSlide ? `translateX(${eyeSlide}px)` : undefined,
+                  color: p.muted,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {eyebrow}
+              </span>
             </div>
-          </div>
-        ) : null}
-      </div>
+          ) : null}
 
-      {!transparent ? <Grain opacity={p.grain} /> : null}
+          {glyphs.map((g, i) => {
+            const { fill, flash } = letterState(g);
+            const left = lockupX + g.x * nameFs;
+            const clipTop = `${(1 - fill) * 100}%`;
+            const glow =
+              flash > 0.01
+                ? `drop-shadow(0 0 ${14 * s * flash}px color-mix(in oklab, ${lightColor} ${Math.round((theme === "dark" ? 70 : 30) * flash)}%, transparent))`
+                : "none";
+            const flashColor = theme === "dark" ? p.hot : lightColor;
+            const renderGlyph = (lit: boolean) => {
+              if (g.kind === "r") {
+                return (
+                  <svg
+                    viewBox="0 0 124.06 134.26"
+                    width={R_W * nameFs}
+                    height={0.76 * nameFs}
+                    style={{ display: "block" }}
+                    aria-hidden
+                  >
+                    {lit ? (
+                      <defs>
+                        <linearGradient
+                          id={`${litId}r`}
+                          x1="0"
+                          x2="0"
+                          y1="1"
+                          y2="0"
+                        >
+                          {theme === "dark" ? (
+                            <>
+                              <stop offset="0" stopColor={p.warm} />
+                              <stop offset="0.22" stopColor={p.hot} />
+                              <stop offset="0.62" stopColor={fg} />
+                            </>
+                          ) : (
+                            <>
+                              <stop offset="0" stopColor={p.warm} />
+                              <stop offset="0.4" stopColor={fg} />
+                            </>
+                          )}
+                        </linearGradient>
+                      </defs>
+                    ) : null}
+                    <path
+                      d={REMOCN_R_PATH}
+                      fill={lit ? `url(#${litId}r)` : p.unlit}
+                      stroke={lit ? "none" : p.unlitEdge}
+                      strokeWidth={lit ? 0 : 1.2}
+                    />
+                  </svg>
+                );
+              }
+              if (g.kind === "logo") {
+                return (
+                  <div
+                    style={{
+                      width: 0.8 * nameFs,
+                      height: 0.76 * nameFs,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: lit ? 1 : 0.18,
+                    }}
+                  >
+                    {logo}
+                  </div>
+                );
+              }
+              return (
+                <span
+                  style={{
+                    display: "block",
+                    fontFamily: manrope.fontFamily,
+                    fontWeight: wordmark ? 600 : 500,
+                    fontSize: nameFs,
+                    lineHeight: 1,
+                    whiteSpace: "pre",
+                    ...(lit
+                      ? {
+                          backgroundImage: litFill,
+                          WebkitBackgroundClip: "text",
+                          backgroundClip: "text",
+                          color: "transparent",
+                        }
+                      : {
+                          color: p.unlit,
+                          WebkitTextStroke: `1px ${p.unlitEdge}`,
+                        }),
+                  }}
+                >
+                  {g.ch}
+                </span>
+              );
+            };
+            const glyphTop =
+              g.kind === "char"
+                ? baselineY - MANROPE_BASELINE * nameFs
+                : baselineY - 0.76 * nameFs;
+            return (
+              <div
+                key={i}
+                style={{ position: "absolute", left, top: glyphTop }}
+              >
+                <div style={{ position: "relative" }}>{renderGlyph(false)}</div>
+                {fill > 0 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      clipPath: `inset(${clipTop} -20% -20% -20%)`,
+                      filter: glow,
+                    }}
+                  >
+                    {renderGlyph(true)}
+                    {flash > 0.01 && g.kind !== "logo" ? (
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          opacity: flash * 0.85,
+                          mixBlendMode: theme === "dark" ? "screen" : "normal",
+                        }}
+                      >
+                        {g.kind === "r" ? (
+                          <svg
+                            viewBox="0 0 124.06 134.26"
+                            width={R_W * nameFs}
+                            height={0.76 * nameFs}
+                            style={{ display: "block" }}
+                            aria-hidden
+                          >
+                            <path d={REMOCN_R_PATH} fill={flashColor} />
+                          </svg>
+                        ) : (
+                          <span
+                            style={{
+                              display: "block",
+                              fontFamily: manrope.fontFamily,
+                              fontWeight: wordmark ? 600 : 500,
+                              fontSize: nameFs,
+                              lineHeight: 1,
+                              whiteSpace: "pre",
+                              color: flashColor,
+                            }}
+                          >
+                            {g.ch}
+                          </span>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            <defs>
+              <filter
+                id={bloomId}
+                x="-10%"
+                y="-400%"
+                width="120%"
+                height="900%"
+              >
+                <feGaussianBlur stdDeviation={glow * s} />
+              </filter>
+              {[
+                ["r", 0, 1],
+                ["l", 1, 0],
+              ].map(([k, a, b]) => (
+                <linearGradient
+                  key={k}
+                  id={`${cometId}${k}`}
+                  x1={a}
+                  x2={b}
+                  y1="0"
+                  y2="0"
+                >
+                  <stop offset="0" stopColor={lightColor} stopOpacity={0} />
+                  <stop offset="0.7" stopColor={lightColor} stopOpacity={0.9} />
+                  <stop offset="1" stopColor={p.hot} stopOpacity={1} />
+                </linearGradient>
+              ))}
+            </defs>
+            {theme === "dark" ? (
+              <g filter={`url(#${bloomId})`} opacity={0.85}>
+                {segments}
+                {heads}
+              </g>
+            ) : null}
+            <g>{segments}</g>
+            <g opacity={theme === "dark" ? 1 : 0.6}>{heads}</g>
+          </svg>
+
+          {tagline ? (
+            <div
+              style={{
+                position: "absolute",
+                left: (width - tagMax) / 2,
+                width: tagMax,
+                top: lineY + lineH,
+                height: tagTop - lineY - lineH + tagH + tagFs * 0.3,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: tagTop - lineY - lineH,
+                  transform: `translateY(${-(1 - tagIn) * (tagGap + tagH)}px)`,
+                  opacity: interpolate(tagIn, [0, 0.4], [0, 1], CLAMP),
+                  textAlign: "center",
+                  textWrap: "balance",
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: tagFs,
+                  lineHeight: 1.3,
+                  letterSpacing: "-0.01em",
+                  color: p.muted,
+                }}
+              >
+                {tagline}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
+
+      {!transparent && grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import registry from "@/lib/previews";
-import { previewManifest } from "@/registry/__manifest__";
+import { sitePreview } from "@/lib/previews/site-preview";
 import { HeroPlayer } from "./hero-player";
 
 /** Hero preview of a registry component with its manifest defaults. */
@@ -14,7 +14,7 @@ export function RegistryHeroPlayer({
   inputProps?: Record<string, unknown>;
 }) {
   const entry = registry[slug];
-  const preview = previewManifest[slug];
+  const preview = sitePreview(slug);
   if (!entry || !preview) return null;
   return (
     <HeroPlayer

@@ -1,6 +1,8 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface MicroScaleFadeProps {
   text: string;
@@ -21,7 +23,8 @@ export function MicroScaleFade({
   speed = 1,
   className,
 }: MicroScaleFadeProps) {
-  const frame = useCurrentFrame() * speed;
+  const glide = useGlide();
+  const frame = useSceneFrame() * speed;
   const easing = Easing.bezier(0.32, 0.72, 0, 1);
 
   const opacity = interpolate(frame, [0, 18], [0, 1], {
@@ -35,6 +38,7 @@ export function MicroScaleFade({
     extrapolateRight: "clamp",
     easing,
   });
+  const moving = frame > 0 && frame < 18 && scale !== 1;
 
   return (
     <div
@@ -59,7 +63,7 @@ export function MicroScaleFade({
           display: "inline-block",
           transformOrigin: "50% 50%",
           opacity,
-          scale: `${scale}`,
+          transform: `scale(${scale})${glide(moving)}`,
         }}
       >
         {text}

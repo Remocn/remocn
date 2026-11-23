@@ -12,9 +12,9 @@ import {
   random,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -31,6 +31,18 @@ export interface GlyphBlockDecodeProps {
   blockColors?: string[];
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the name and URL. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Weight of the name. */
+  fontWeight?: number;
+  /** The last URL block stretches into an underline. */
+  underline?: boolean;
+  /** Size of the text and blocks, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -122,21 +134,21 @@ const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 
 type Measure = (s: string, weight: number) => number;
 
-function buildMeasure(_version: number): Measure {
+function buildMeasure(_version: number, family: string): Measure {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   return (s: string, weight: number) => {
     const k = `${weight}|${s}`;
     if (cache[k] === undefined) {
       if (!ctx) return s.length * 0.55;
-      ctx.font = `${weight} ${FONT_PX}px "${geist.fontFamily}"`;
+      ctx.font = `${weight} ${FONT_PX}px "${family}"`;
       cache[k] = ctx.measureText(s).width / FONT_PX;
     }
     return cache[k];
   };
 }
 
-function useMeasure() {
+function useMeasure(family: string, weight: number) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("glyph-block-decode: fonts"));
   const released = useRef(false);
@@ -150,6 +162,8 @@ function useMeasure() {
       geist.waitUntilDone(),
       document.fonts.load(`400 100px "${geist.fontFamily}"`),
       document.fonts.load(`300 100px "${geist.fontFamily}"`),
+      document.fonts.load(`${weight} 100px "${family}"`),
+      document.fonts.load(`300 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -163,8 +177,8 @@ function useMeasure() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMeasure(version), [version]);
+  }, [handle, family, weight]);
+  return useMemo(() => buildMeasure(version, family), [version, family]);
 }
 
 const resolveSrc = (src: string) =>
@@ -246,6 +260,22 @@ function ChipIcon({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GlyphBlockDecode({
   name = "Remocn Studio",
   url = "remocn.dev/studio",
@@ -253,24 +283,36 @@ export function GlyphBlockDecode({
   blockColors,
   accent,
   ink,
+  background,
+  fontFamily = geist.fontFamily,
+  fontWeight = 400,
+  underline = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   ground,
   groundParams,
   speed = 1,
   seed = 7,
 }: GlyphBlockDecodeProps) {
-  const rawFrame = useCurrentFrame();
+  const glide = useGlide();
+  const rawFrame = Math.max(0, useSceneFrame() - delay);
   const frame = rawFrame * speed;
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
   const palette = blockColors ?? [hi, ...c.blocks.slice(1)];
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
-  const bg = gshParams(preset, gParams).background;
+  const bg =
+    background === undefined
+      ? gshParams(preset, gParams).background
+      : background === "transparent"
+        ? undefined
+        : background;
   const portrait = H > W * 1.1;
-  const m = useMeasure();
+  const m = useMeasure(fontFamily, fontWeight);
   const pics = (images.length > 0 ? images : DEFAULT_IMAGES).map(resolveSrc);
 
   let content: ReactNode = <div />;
@@ -279,7 +321,7 @@ export function GlyphBlockDecode({
     const lineEm = (s: string, w: number, tr: number) =>
       m(s, w) + tr * Math.max(0, Array.from(s).length - 1);
     const widest = Math.max(
-      ...nameLines.map((l) => lineEm(l, 400, NAME_TRACK)),
+      ...nameLines.map((l) => lineEm(l, fontWeight, NAME_TRACK)),
     );
     const nameSize = Math.min(
       ((portrait ? 0.82 : 0.62) * W) / widest,
@@ -331,7 +373,14 @@ export function GlyphBlockDecode({
       lineRows.push({ start, end: chars.length, url: isUrl, size });
     };
     nameLines.forEach((l, li) => {
-      place(l, top + nameLH * (li + 0.5), nameSize, 400, NAME_TRACK, false);
+      place(
+        l,
+        top + nameLH * (li + 0.5),
+        nameSize,
+        fontWeight,
+        NAME_TRACK,
+        false,
+      );
     });
     const urlY = top + nameLines.length * nameLH + gap + urlSize / 2;
     place(url, urlY, urlSize, 300, URL_TRACK, true);
@@ -432,7 +481,7 @@ export function GlyphBlockDecode({
     };
     schedule(false, BEAT.nameIn, BEAT.nameOut, BEAT.nameDone);
     const lastUrl = schedule(true, BEAT.urlIn, BEAT.urlOut, BEAT.urlDone);
-    if (lastUrl) {
+    if (lastUrl && underline) {
       const t = tiles[lastUrl.tile];
       t.kind = "color";
       t.color = hi;
@@ -506,6 +555,17 @@ export function GlyphBlockDecode({
     }
 
     const f = frame;
+    const pushAt = (rf: number) =>
+      interpolate(rf, [0, durationInFrames], [1, 1.04], {
+        ...CLAMP,
+        easing: CAMERA,
+      });
+    const push = pushAt(rawFrame);
+    // The push carries every glyph, so its tilt covers them; a glyph tilts on
+    // its own only while the push holds still.
+    const pushMoving =
+      Math.abs(pushAt(rawFrame + 1) - push) * 1000 > 1e-3 ||
+      Math.abs(push - pushAt(rawFrame - 1)) * 1000 > 1e-3;
     const ruleH = Math.max(2, urlSize * 0.07);
     const ruleY = urlY + urlSize * 0.62;
 
@@ -593,14 +653,18 @@ export function GlyphBlockDecode({
           key={`t${ti}`}
           style={{
             position: "absolute",
-            left: x - w / 2,
-            top: y - h / 2,
+            // Layout rounds a box to whole pixels, so a tile flown in by
+            // left/top clicks along; it is laid out on its home spot and
+            // the flight is a transform. Rotation and scale still pivot on
+            // the moved box's centre, as before.
+            left: t.x,
+            top: t.y,
             width: w,
             height: h,
             borderRadius: radius,
             overflow: "hidden",
             opacity: op * (t.sat ? 0.9 : 1),
-            transform: `rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(4)})`,
+            transform: `translate(${x - w / 2 - t.x}px, ${y - h / 2 - t.y}px) rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(4)})`,
             boxShadow: t.rule && d >= 0 ? "none" : `${c.shadow}, ${c.hairline}`,
             filter: t.blur > 0 ? `blur(${t.blur.toFixed(2)}px)` : undefined,
             zIndex: t.sat ? 1 : 3,
@@ -640,11 +704,11 @@ export function GlyphBlockDecode({
             display: "flex",
             alignItems: "center",
             whiteSpace: "pre",
-            fontFamily: geist.fontFamily,
+            fontFamily,
             fontWeight: ch.weight,
             color: ch.url && !flicking ? c.muted : color,
             opacity: flicking ? 0.9 : 1,
-            transform: `translateY(${((1 - settle) * ch.size * 0.03).toFixed(2)}px)`,
+            transform: `translateY(${((1 - settle) * ch.size * 0.03).toFixed(2)}px)${glide(!pushMoving && settle > 5e-4 && settle < 1 - 5e-4)}`,
             zIndex: 2,
           }}
         >
@@ -653,14 +717,10 @@ export function GlyphBlockDecode({
       );
     });
 
-    const push = interpolate(rawFrame, [0, durationInFrames], [1, 1.04], {
-      ...CLAMP,
-      easing: CAMERA,
-    });
     content = (
       <AbsoluteFill
         style={{
-          transform: `scale(${push.toFixed(5)})`,
+          transform: `scale(${push.toFixed(5)})${glide(pushMoving)}`,
           transformOrigin: "50% 50%",
         }}
       >
@@ -672,18 +732,20 @@ export function GlyphBlockDecode({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.5}
-      />
+      {background === undefined ? (
+        <GshGround
+          preset={preset}
+          params={gParams}
+          timeOffset={c.groundOffset}
+          timeScale={0.5}
+        />
+      ) : null}
       <AbsoluteFill
         style={{
           background: `radial-gradient(${portrait ? "95% 50%" : "70% 60%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
         }}
       />
-      {content}
+      <ScaleLayer scale={scale}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

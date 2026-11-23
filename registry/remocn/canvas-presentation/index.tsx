@@ -8,10 +8,9 @@ import React from "react";
 import {
   AbsoluteFill,
   isHtmlInCanvasSupported,
-  useCurrentFrame,
   useDelayRender,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const QUAD = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
 
@@ -524,8 +523,8 @@ function makeFilterComponent<Props extends Record<string, unknown>>(
   shader: SceneFilter<Props>,
 ): React.FC<Props & CanvasFilterProps> {
   return function CanvasSceneFilter(props) {
-    const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
+    const frame = useSceneFrame();
+    const { fps } = useSceneConfig();
     const { delayRender, continueRender } = useDelayRender();
 
     const layoutRef = React.useRef<HTMLCanvasElement | null>(null);

@@ -10,6 +10,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionSplitFlapProps extends CaptionBaseProps {
   tileColor?: string;
@@ -33,6 +34,8 @@ const clamp = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 interface FlapFrame {
   current: string;
@@ -168,6 +171,7 @@ export function CaptionSplitFlap({
   tileColor = "#111111",
   className,
 }: CaptionSplitFlapProps) {
+  const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -200,7 +204,7 @@ export function CaptionSplitFlap({
         lineHeight: TILE_H + 0.24,
         textAlign: "center",
         opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)`,
+        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
       }}
     >
       {groupCaptionWords(state.tokens).map((word, w) => {

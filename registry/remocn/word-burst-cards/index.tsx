@@ -13,9 +13,9 @@ import {
   random,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -64,13 +64,26 @@ export interface WordBurstCardsProps {
   images?: string[];
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line and caption. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   reverse?: boolean;
   burstAt?: number;
+  /** Frames between one word bursting and the next. */
+  stagger?: number;
   showLogo?: boolean;
+  /** Replaces the remocn mark at the end. */
+  logo?: ReactNode;
   seed?: number;
+  /** Size of the cards, line and logo, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const DEFAULT_IMAGES = [
@@ -151,15 +164,17 @@ const CLAMP = {
 const BURST = { mass: 0.9, damping: 22, stiffness: 90 };
 const LAND = { mass: 0.8, damping: 18, stiffness: 160 };
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 type Measure = (s: string) => number;
 
-function buildMeasure(_version: number): Measure {
+function buildMeasure(_version: number, fontFamily: string): Measure {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   return (s: string) => {
     if (cache[s] === undefined) {
       if (!ctx) return s.length * 0.52;
-      ctx.font = `400 ${FONT_PX}px "${hanken.fontFamily}"`;
+      ctx.font = `400 ${FONT_PX}px "${fontFamily}"`;
       cache[s] =
         ctx.measureText(s).width / FONT_PX +
         TRACK * Math.max(0, Array.from(s).length - 1);
@@ -168,7 +183,7 @@ function buildMeasure(_version: number): Measure {
   };
 }
 
-function useMeasure() {
+function useMeasure(fontFamily: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("word-burst-cards: fonts"));
   const released = useRef(false);
@@ -181,7 +196,7 @@ function useMeasure() {
     Promise.all([
       hanken.waitUntilDone(),
       manrope.waitUntilDone(),
-      document.fonts.load(`400 100px "${hanken.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -195,8 +210,11 @@ function useMeasure() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMeasure(version), [version]);
+  }, [handle, fontFamily]);
+  return useMemo(
+    () => buildMeasure(version, fontFamily),
+    [version, fontFamily],
+  );
 }
 
 const resolveSrc = (src: string) =>
@@ -439,22 +457,46 @@ function CardBody({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WordBurstCards({
   line = "Every screen you built, in motion",
   caption = "Launch films from your product",
   images = DEFAULT_IMAGES,
   accent,
   ink,
+  background,
+  fontFamily = hanken.fontFamily,
   theme = "dark",
   ground,
   groundParams,
   reverse = false,
   burstAt = BEAT.burst,
+  stagger = BEAT.wordGap,
   showLogo = true,
+  logo,
   seed = 3,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: WordBurstCardsProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -462,7 +504,7 @@ export function WordBurstCards({
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
   const bg = gshParams(preset, gParams).background;
   const portrait = H > W * 1.1;
-  const m = useMeasure();
+  const m = useMeasure(fontFamily);
   const pics = (images.length > 0 ? images : DEFAULT_IMAGES).map(resolveSrc);
   const tt = reverse ? durationInFrames - 1 - frame : frame;
   const logoAt = burstAt + (BEAT.logo - BEAT.burst);
@@ -518,7 +560,7 @@ export function WordBurstCards({
           y,
           w,
           word: wi,
-          tb: burstAt + wi * BEAT.wordGap + inWord * BEAT.letterGap,
+          tb: burstAt + wi * stagger + inWord * BEAT.letterGap,
         });
         inWord++;
       });
@@ -624,14 +666,14 @@ export function WordBurstCards({
         >
           <div
             style={{
-              fontFamily: hanken.fontFamily,
+              fontFamily,
               fontWeight: 400,
               fontSize: size,
               lineHeight: 1,
               whiteSpace: "pre",
               color: inkC,
               opacity: (1 - out) * Math.min(1, rise * 1.4),
-              transform: `translateY(${((1 - rise) * LH * 0.9).toFixed(2)}px) scale(${(1 + out * 0.15).toFixed(4)})`,
+              transform: `translateY(${((1 - rise) * LH * 0.9).toFixed(2)}px) scale(${(1 + out * 0.15).toFixed(4)})${glide(midway(rise) || midway(out))}`,
               filter:
                 out > 0.01 ? `blur(${(out * 4).toFixed(2)}px)` : undefined,
             }}
@@ -662,16 +704,21 @@ export function WordBurstCards({
         interpolate(a.d, [0, 3], [0, 1], CLAMP) *
         interpolate(a.z, [-560, -200], [0.55, 1], CLAMP);
       const tilt = 1 - a.p * 0.6;
+      // Laid out where the burst throws it; the flight there and the drift
+      // after are a transform. Layout rounds a box to whole pixels, so a card
+      // carried by `left`/`top` crawls through its slow drift pixel by pixel.
+      const homeX = cx + cs.tx * persp(cs.tz);
+      const homeY = cy + cs.ty * persp(cs.tz);
       return (
         <div
           key={`c${cs.glyph}`}
           style={{
             position: "absolute",
-            left: a.x - cs.w / 2,
-            top: a.y - cs.h / 2,
+            left: homeX - cs.w / 2,
+            top: homeY - cs.h / 2,
             width: cs.w,
             height: cs.h,
-            transform: `perspective(900px) rotateX(${(cs.rx * tilt).toFixed(2)}deg) rotateY(${(cs.ry * tilt).toFixed(2)}deg) rotateZ(${(cs.rz * a.p).toFixed(2)}deg) scale(${sc.toFixed(4)})`,
+            transform: `translate(${a.x - homeX}px, ${a.y - homeY}px) perspective(900px) rotateX(${(cs.rx * tilt).toFixed(2)}deg) rotateY(${(cs.ry * tilt).toFixed(2)}deg) rotateZ(${(cs.rz * a.p).toFixed(2)}deg) scale(${sc.toFixed(4)})`,
             opacity: op,
             filter: blur > 0.3 ? `blur(${blur.toFixed(2)}px)` : undefined,
             borderRadius: Math.min(cs.w, cs.h) * 0.1,
@@ -725,19 +772,19 @@ export function WordBurstCards({
               opacity: Math.min(1, logoP * 2),
             }}
           >
-            <RemocnLogo fontSize={logoSize} color={inkC} />
+            {logo ?? <RemocnLogo fontSize={logoSize} color={inkC} />}
           </div>
         </div>
         <div
           style={{
-            fontFamily: hanken.fontFamily,
+            fontFamily,
             fontWeight: 300,
             fontSize: capSize,
             letterSpacing: "-0.01em",
             color: c.muted,
             whiteSpace: "pre",
             opacity: capP,
-            transform: `translateY(${((1 - capP) * capSize * 0.8).toFixed(2)}px)`,
+            transform: `translateY(${((1 - capP) * capSize * 0.8).toFixed(2)}px)${glide(midway(capP))}`,
           }}
         >
           {caption}
@@ -752,7 +799,9 @@ export function WordBurstCards({
     content = (
       <AbsoluteFill
         style={{
-          transform: `scale(${push.toFixed(5)})`,
+          // The push runs the whole clip, so its tilt also carries the logo
+          // landing inside it.
+          transform: `scale(${push.toFixed(5)})${glide(midway((push - 1) / 0.035))}`,
           transformOrigin: "50% 50%",
         }}
       >
@@ -764,19 +813,32 @@ export function WordBurstCards({
   }
 
   return (
-    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.5}
-      />
+    <AbsoluteFill
+      style={{
+        background: background === undefined ? bg : undefined,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <GshGround
+          preset={preset}
+          params={gParams}
+          timeOffset={c.groundOffset}
+          timeScale={0.5}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
       <AbsoluteFill
         style={{
           background: `radial-gradient(${portrait ? "95% 50%" : "70% 60%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
         }}
       />
-      {content}
+      <ScaleLayer scale={scale}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

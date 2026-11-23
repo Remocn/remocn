@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="RewriteBars"
     component={RewriteBarsScene}
-    durationInFrames={190}
-    fps={30}
+    durationInFrames={380}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -79,15 +79,50 @@ Bars sweep over the current headline, collapse, and reflow it into the next one,
       description: "Frames the text holds before the next beat.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between lines as the bars sweep a headline in and out.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "Weight of the headlines.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent colour (any CSS colour).",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Overrides the theme background colour.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Figtree\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

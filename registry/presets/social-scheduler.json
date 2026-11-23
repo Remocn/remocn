@@ -1,0 +1,118 @@
+{
+  "component": "social-scheduler",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-creator",
+      "label": "Midnight Creator",
+      "description": "Dark interface on a deep blue-hour ground with a soft violet accent and calm, slightly slower motion.",
+      "askedAs": [
+        "dark mode scheduler",
+        "night theme social queue",
+        "moody purple dark look",
+        "тёмная тема планировщика",
+        "ночной стиль для соцсетей"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#8b7cf6",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "warm-editorial",
+      "label": "Warm Editorial",
+      "description": "Cream paper background with dark ink, terracotta accent and an elegant serif for a magazine feel.",
+      "askedAs": [
+        "editorial serif look",
+        "warm cream magazine style",
+        "classy paper background",
+        "журнальный стиль с засечками",
+        "тёплый бежевый фон"
+      ],
+      "props": {
+        "background": "#f5efe6",
+        "ink": "#2a2420",
+        "accent": "#c2573a",
+        "fontFamily": "Fraunces",
+        "ground": "paper-crease"
+      }
+    },
+    {
+      "id": "quick-launch",
+      "label": "Quick Launch",
+      "description": "Snappy double-speed playback with a punchy coral accent and bold grotesque type for fast promo cuts.",
+      "askedAs": [
+        "make it faster",
+        "snappy promo version",
+        "energetic quick animation",
+        "ускорить анимацию",
+        "быстрый динамичный вариант"
+      ],
+      "props": {
+        "speed": 2,
+        "accent": "#f2545b",
+        "fontFamily": "Bricolage Grotesque",
+        "ground": "static-sunset"
+      }
+    },
+    {
+      "id": "close-up-focus",
+      "label": "Close-Up Focus",
+      "description": "Enlarged scheduler with a fresh green accent and a short lead-in delay so the scene settles before the action.",
+      "askedAs": [
+        "zoom in on the scheduler",
+        "bigger close up view",
+        "larger ui with green accent",
+        "крупный план планировщика",
+        "увеличить масштаб"
+      ],
+      "props": {
+        "scale": 1.3,
+        "accent": "#1f9d6b",
+        "ground": "greenhouse",
+        "delay": 15,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "dev-console",
+      "label": "Dev Console",
+      "description": "Charcoal dark mode with monospace type and a muted cyan accent for a technical, tool-like tone.",
+      "askedAs": [
+        "monospace techy look",
+        "developer style dark",
+        "code font scheduler",
+        "моноширинный шрифт",
+        "технический тёмный стиль"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb6c6",
+        "ground": "charcoal-satin",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "soft-pastel",
+      "label": "Soft Pastel",
+      "description": "Airy light layout on a petal-toned ground with a dusty rose accent and gentle, unhurried pacing.",
+      "askedAs": [
+        "soft pastel pink",
+        "gentle calm light look",
+        "dreamy rose aesthetic",
+        "пастельные нежные цвета",
+        "мягкий розовый стиль"
+      ],
+      "props": {
+        "ground": "petal-arc",
+        "accent": "#d06a8c",
+        "fontFamily": "Geist",
+        "speed": 0.5
+      }
+    }
+  ]
+}

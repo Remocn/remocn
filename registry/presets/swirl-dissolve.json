@@ -1,0 +1,93 @@
+{
+  "component": "swirl-dissolve",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hypnotic-slow",
+      "label": "Hypnotic Slow",
+      "description": "Many fine, soft bands unwinding at half speed for a trance-like, cinematic reveal.",
+      "askedAs": [
+        "slow hypnotic swirl",
+        "dreamy spiral transition",
+        "gentle mesmerizing twist",
+        "медленная гипнотическая спираль",
+        "плавный завораживающий переход"
+      ],
+      "props": {
+        "bandCount": 12,
+        "softness": 0.6,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-graphic",
+      "label": "Bold Graphic",
+      "description": "Few hard-edged bands snapping around quickly for a punchy, poster-like cut.",
+      "askedAs": [
+        "sharp graphic swirl",
+        "fast bold spiral cut",
+        "crisp hard-edge twist",
+        "резкая графичная спираль",
+        "быстрый жёсткий переход"
+      ],
+      "props": {
+        "bandCount": 3,
+        "softness": 0.05,
+        "speed": 2
+      }
+    },
+    {
+      "id": "midnight-silk",
+      "label": "Midnight Silk",
+      "description": "Deep navy ground with very soft, blended bands that dissolve like silk.",
+      "askedAs": [
+        "soft silky dark swirl",
+        "navy smooth dissolve",
+        "elegant blurry twist",
+        "мягкий шёлковый переход",
+        "тёмно-синяя плавная спираль"
+      ],
+      "props": {
+        "colorBack": "#0f1a2e",
+        "softness": 0.85,
+        "bandCount": 6
+      }
+    },
+    {
+      "id": "bone-paper",
+      "label": "Bone Paper",
+      "description": "Warm off-white background with medium crisp bands for a light editorial feel.",
+      "askedAs": [
+        "light cream swirl",
+        "bright editorial twist",
+        "warm paper spiral transition",
+        "светлая кремовая спираль",
+        "бежевый лёгкий переход"
+      ],
+      "props": {
+        "colorBack": "#efe9df",
+        "softness": 0.2,
+        "bandCount": 8
+      }
+    },
+    {
+      "id": "single-vortex",
+      "label": "Single Vortex",
+      "description": "One broad, soft band twisting on a deep plum ground for a minimal, weighty act break.",
+      "askedAs": [
+        "one big vortex",
+        "minimal single swirl",
+        "deep purple twist reveal",
+        "один большой вихрь",
+        "минималистичная фиолетовая спираль"
+      ],
+      "props": {
+        "bandCount": 1,
+        "softness": 0.5,
+        "colorBack": "#2a1630",
+        "speed": 0.75
+      }
+    }
+  ]
+}

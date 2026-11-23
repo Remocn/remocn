@@ -1,0 +1,101 @@
+{
+  "component": "keep-words",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Warm off-white page with deep ink and a brick-red full stop, set in Instrument Serif.",
+      "askedAs": [
+        "light paper editorial look",
+        "cream background with serif text",
+        "magazine style manifesto",
+        "светлый редакционный стиль",
+        "кремовый фон с антиквой"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b33a2b",
+        "fontFamily": "Instrument Serif"
+      }
+    },
+    {
+      "id": "slow-ceremony",
+      "label": "Slow Ceremony",
+      "description": "Unhurried reveal with a long hold, letting each word settle like a solemn vow.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "make it calm and deliberate",
+        "longer pause on each word",
+        "медленное торжественное появление",
+        "спокойно и с паузами"
+      ],
+      "props": {
+        "speed": 0.5,
+        "hold": 70,
+        "delay": 12
+      }
+    },
+    {
+      "id": "swiss-punch",
+      "label": "Swiss Punch",
+      "description": "Fast, oversized Inter Display-style sans on near-black with a vivid red stop.",
+      "askedAs": [
+        "bold fast sans serif",
+        "punchy modern version",
+        "big quick words",
+        "быстро и крупно",
+        "современный гротеск"
+      ],
+      "props": {
+        "fontFamily": "Inter",
+        "speed": 1.75,
+        "hold": 20,
+        "scale": 1.3,
+        "background": "#0b0b0c",
+        "ink": "#f5f5f2"
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy field with ivory Fraunces type and a muted gold full stop for a luxe finish.",
+      "askedAs": [
+        "luxury navy and gold",
+        "premium dark blue look",
+        "elegant gold accent",
+        "тёмно-синий с золотом",
+        "роскошный стиль"
+      ],
+      "props": {
+        "background": "#0f1a2b",
+        "ink": "#f1ead8",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "quiet-mono",
+      "label": "Quiet Mono",
+      "description": "Small, compact JetBrains Mono lines in soft grey on light stone with a sage stop.",
+      "askedAs": [
+        "minimal monospace version",
+        "small understated text",
+        "technical calm look",
+        "минималистичный моноширинный",
+        "сдержанно и мелко"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.75,
+        "background": "#e9e7e2",
+        "ink": "#2e2e2b",
+        "accent": "#5f7a63"
+      }
+    }
+  ]
+}

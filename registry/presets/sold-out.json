@@ -1,0 +1,102 @@
+{
+  "component": "sold-out",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "flash-drop",
+      "label": "Flash Drop",
+      "description": "A fast, punchy countdown with a steep band that slams in almost instantly after zero.",
+      "askedAs": [
+        "make it faster and more aggressive",
+        "quick sold out slam",
+        "snappy urgent countdown",
+        "быстрее и резче",
+        "сделай динамичнее"
+      ],
+      "props": {
+        "speed": 2,
+        "hold": 2,
+        "angle": -18,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "A calm light-theme take with warm paper tones, serif type and a gentle band tilt.",
+      "askedAs": [
+        "elegant light version",
+        "make it look premium and editorial",
+        "serif sold out on white",
+        "светлый элегантный вариант",
+        "сделай как в журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "fontFamily": "Instrument Serif",
+        "angle": -6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "slow-burn",
+      "label": "Slow Burn",
+      "description": "A deliberate drain to zero with a long tense pause before a larger stamp lands.",
+      "askedAs": [
+        "build more suspense",
+        "slow dramatic countdown",
+        "longer pause before sold out",
+        "медленнее с напряжением",
+        "дольше пауза перед надписью"
+      ],
+      "props": {
+        "speed": 0.5,
+        "hold": 24,
+        "scale": 1.2,
+        "delay": 12
+      }
+    },
+    {
+      "id": "terminal-ops",
+      "label": "Terminal Ops",
+      "description": "A deep navy, monospaced inventory readout with a counter-tilted band for a technical feel.",
+      "askedAs": [
+        "make it look like a terminal",
+        "techy monospace stock counter",
+        "dark blue code style",
+        "в стиле терминала",
+        "моноширинный шрифт и тёмно-синий фон"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1525",
+        "ink": "#c9d6ea",
+        "angle": 8,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "street-poster",
+      "label": "Street Poster",
+      "description": "A bold oversized stamp on a muted clay background with chunky grotesque type at a hard angle.",
+      "askedAs": [
+        "streetwear drop style",
+        "big bold sneaker release look",
+        "oversized loud poster",
+        "как дроп кроссовок",
+        "крупно и дерзко"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "background": "#b5482f",
+        "ink": "#fbf3e8",
+        "scale": 1.35,
+        "angle": -24,
+        "speed": 1.5
+      }
+    }
+  ]
+}

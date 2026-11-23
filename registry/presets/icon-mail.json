@@ -1,0 +1,100 @@
+{
+  "component": "icon-mail",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin slate envelope that slowly sketches itself in without the open action.",
+      "askedAs": [
+        "thin line mail icon drawing slowly",
+        "elegant outline envelope animation",
+        "big delicate mail icon",
+        "тонкая иконка письма рисуется",
+        "медленная прорисовка конверта"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "color": "#475569",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-notify",
+      "label": "Bold Notify",
+      "description": "A chunky blue envelope that snaps through its action quickly on repeat, like a new-message alert.",
+      "askedAs": [
+        "new message notification icon",
+        "fast looping mail alert",
+        "thick blue email icon",
+        "уведомление о новом письме",
+        "быстрая иконка почты по кругу"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 2.75,
+        "color": "#1f6feb",
+        "speed": 2,
+        "size": 72
+      }
+    },
+    {
+      "id": "calm-loop",
+      "label": "Calm Loop",
+      "description": "A soft sage envelope that draws and opens at a relaxed pace in a continuous loop.",
+      "askedAs": [
+        "slow looping mail icon",
+        "gentle green envelope animation",
+        "calm background email icon",
+        "спокойная зацикленная иконка письма",
+        "зелёный конверт медленно"
+      ],
+      "props": {
+        "loop": true,
+        "speed": 0.75,
+        "color": "#4d7c63",
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "hero-terracotta",
+      "label": "Hero Terracotta",
+      "description": "An oversized warm terracotta envelope with a medium-heavy stroke for title cards.",
+      "askedAs": [
+        "huge mail icon for intro",
+        "warm orange envelope",
+        "large email icon for title screen",
+        "большая тёплая иконка письма",
+        "огромный конверт для заставки"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#c2410c",
+        "strokeWidth": 2.25,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "tiny-quick",
+      "label": "Tiny Quick",
+      "description": "A small charcoal envelope that pops its open action in a brisk instant, suited to inline UI.",
+      "askedAs": [
+        "small fast mail icon",
+        "quick inline email animation",
+        "mini envelope pop",
+        "маленькая быстрая иконка почты",
+        "мини конверт для интерфейса"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 32,
+        "speed": 3,
+        "color": "#262626"
+      }
+    }
+  ]
+}

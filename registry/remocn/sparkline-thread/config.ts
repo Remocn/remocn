@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const sparklineThreadConfig: ComponentConfig = {
   componentName: "SparklineThread",
@@ -13,11 +19,6 @@ export const sparklineThreadConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     metric: {
       type: "text-content",
       default: "+212%",
@@ -28,6 +29,30 @@ export const sparklineThreadConfig: ComponentConfig = {
       default: "weekly renders",
       description: "Label",
     },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 8,
+      step: 1,
+      description: "Point stagger",
+      hiddenFromList: false,
+    },
+    drawDuration: {
+      type: "number",
+      default: 42,
+      min: 12,
+      max: 90,
+      step: 1,
+      description: "Draw (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

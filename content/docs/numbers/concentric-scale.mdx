@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="ConcentricScale"
     component={ConcentricScaleScene}
-    durationInFrames={175}
-    fps={30}
+    durationInFrames={350}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -57,10 +57,56 @@ Dotted discs scale up one at a time as the camera pulls back, each ring labeled 
       description: "Two to seven scale steps; each has a value and an optional label.",
     },
     {
+      name: "beat",
+      type: "number",
+      default: "30",
+      description: "Frames between one ring and the next.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "300",
+      description: "Weight of the final figure.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color of the rings and glow.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Sora\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

@@ -9,9 +9,8 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -31,6 +30,19 @@ export interface FocusPanTextProps {
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   firstHold?: number;
+  /** Frames between the payoff line's words rising. */
+  stagger?: number;
+  /** Weight of the lines. */
+  fontWeight?: number;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the lines. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  /** Size of the text plane, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -108,13 +120,17 @@ export const focusPanTextLength = (
   return t + BEAT.payoffMove + BEAT.meta + BEAT.hold;
 };
 
-function buildMeasure(_version: number): (s: string) => number {
+function buildMeasure(
+  _version: number,
+  fontFamily: string,
+  fontWeight: number,
+): (s: string) => number {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   return (s: string) => {
     if (cache[s] === undefined) {
       if (!ctx) return s.length * 0.5;
-      ctx.font = `400 ${FONT_PX}px "${inter.fontFamily}"`;
+      ctx.font = `${fontWeight} ${FONT_PX}px "${fontFamily}"`;
       cache[s] =
         ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
     }
@@ -122,7 +138,7 @@ function buildMeasure(_version: number): (s: string) => number {
   };
 }
 
-function useMeasure() {
+function useMeasure(fontFamily: string, fontWeight: number) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("focus-pan-text: measuring"));
   const released = useRef(false);
@@ -134,7 +150,7 @@ function useMeasure() {
     document.fonts.addEventListener("loadingdone", bump);
     Promise.all([
       inter.waitUntilDone(),
-      document.fonts.load(`400 ${FONT_PX}px "${inter.fontFamily}"`),
+      document.fonts.load(`${fontWeight} ${FONT_PX}px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -148,8 +164,11 @@ function useMeasure() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMeasure(version), [version]);
+  }, [handle, fontFamily, fontWeight]);
+  return useMemo(
+    () => buildMeasure(version, fontFamily, fontWeight),
+    [version, fontFamily, fontWeight],
+  );
 }
 
 function Icon({
@@ -185,6 +204,22 @@ interface Row {
   first: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FocusPanText({
   lines = DEFAULT_LINES,
   accentWord,
@@ -195,9 +230,16 @@ export function FocusPanText({
   ground,
   groundParams,
   firstHold = 30,
+  stagger = BEAT.wordStagger,
+  fontWeight = 400,
+  background,
+  fontFamily = inter.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: FocusPanTextProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -206,7 +248,7 @@ export function FocusPanText({
   const bg = gshParams(preset, gParams).background;
   const portrait = H > W * 1.1;
   const u = Math.min(W, H) / 720;
-  const m = useMeasure();
+  const m = useMeasure(fontFamily, fontWeight);
 
   const safeLines = lines.length > 0 ? lines : DEFAULT_LINES;
   const last = safeLines.length - 1;
@@ -261,7 +303,18 @@ export function FocusPanText({
   const payoffAt = moves.length ? moves[moves.length - 1].at : 0;
 
   if (!m || rows.length === 0) {
-    return <AbsoluteFill style={{ background: bg }} />;
+    return (
+      <AbsoluteFill
+        style={{
+          background:
+            background === undefined
+              ? bg
+              : background === "transparent"
+                ? undefined
+                : background,
+        }}
+      />
+    );
   }
 
   const focusAt = (t: number) => {
@@ -285,6 +338,7 @@ export function FocusPanText({
     return f;
   };
   const f = focusAt(frame);
+  const fRest = focusAt(payoffAt + BEAT.payoffMove + BEAT.meta + BEAT.hold);
   const vel = Math.abs(f - focusAt(frame - 1));
   const motionBlur = Math.min(4 * u, vel * 9 * u);
 
@@ -301,9 +355,18 @@ export function FocusPanText({
   const rx = 14 - 6 * settle;
   const ry = 16 - 7 * settle;
   const rz = -2.4 + 1.2 * settle;
-  const panX = -(f / Math.max(1, rows.length - 1)) * F * 0.28;
+  const panOf = (at: number) => -(at / Math.max(1, rows.length - 1)) * F * 0.28;
+  // Layout rounds a baseline to whole pixels, so text panned by `left`/`top`
+  // clicks along as the focus eases in. The block is laid out where the focus
+  // comes to rest and the pan is a transform on top.
+  const panDx = panOf(f) - panOf(fRest);
+  const panDy = -(f - fRest) * LH;
+  const pan =
+    Math.abs(panDx) < 1e-3 && Math.abs(panDy) < 1e-3
+      ? undefined
+      : `translate(${panDx}px, ${panDy}px)`;
   const hinge = W * (portrait ? 0.1 : 0.085);
-  const scale = 1 + 0.045 * push;
+  const zoom = 1 + 0.045 * push;
 
   const payoffWords = safeLines[last].split(/\s+/).filter(Boolean);
   const accentIdx = (() => {
@@ -349,16 +412,17 @@ export function FocusPanText({
           inset: 0,
           transformStyle: "preserve-3d",
           transformOrigin: `${hinge}px 50%`,
-          transform: `scale(${scale}) rotateZ(${rz}deg) rotateY(${ry}deg) rotateX(${rx}deg)`,
+          transform: `scale(${zoom}) rotateZ(${rz}deg) rotateY(${ry}deg) rotateX(${rx}deg)`,
         }}
       >
         <div
           style={{
             position: "absolute",
-            left: hinge + panX,
-            top: H * 0.5 - (f + 0.5) * LH,
-            fontFamily: inter.fontFamily,
-            fontWeight: 400,
+            left: hinge + panOf(fRest),
+            top: H * 0.5 - (fRest + 0.5) * LH,
+            transform: pan,
+            fontFamily,
+            fontWeight,
             fontSize: F,
             lineHeight: `${LH}px`,
             letterSpacing: `${TRACK}em`,
@@ -386,7 +450,7 @@ export function FocusPanText({
                       </span>
                     );
                   }
-                  const start = payoffAt + gi * BEAT.wordStagger;
+                  const start = payoffAt + gi * stagger;
                   const p = TYPE_IN(
                     Math.min(1, Math.max(0, (frame - start) / BEAT.wordIn)),
                   );
@@ -456,36 +520,52 @@ export function FocusPanText({
   const vBlur = motionBlur > 0.1 ? `blur(${motionBlur}px)` : "";
 
   return (
-    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${portrait ? "95% 55%" : "75% 70%"} at 42% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{
-          filter: `blur(${7 * u + motionBlur}px)`,
-          WebkitMaskImage: softMask,
-          maskImage: softMask,
-        }}
-      >
-        {renderPlane("soft")}
-      </AbsoluteFill>
-      <AbsoluteFill
-        style={{
-          filter: vBlur || undefined,
-          WebkitMaskImage: sharpMask,
-          maskImage: sharpMask,
-        }}
-      >
-        {renderPlane("sharp")}
-      </AbsoluteFill>
+    <AbsoluteFill
+      style={{
+        background:
+          background === undefined
+            ? bg
+            : background === "transparent"
+              ? undefined
+              : background,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={preset}
+            params={gParams}
+            timeOffset={c.groundOffset}
+            timeScale={0.5}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${portrait ? "95% 55%" : "75% 70%"} at 42% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
+            }}
+          />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            filter: `blur(${7 * u + motionBlur}px)`,
+            WebkitMaskImage: softMask,
+            maskImage: softMask,
+          }}
+        >
+          {renderPlane("soft")}
+        </AbsoluteFill>
+        <AbsoluteFill
+          style={{
+            filter: vBlur || undefined,
+            WebkitMaskImage: sharpMask,
+            maskImage: sharpMask,
+          }}
+        >
+          {renderPlane("sharp")}
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

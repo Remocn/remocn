@@ -2,7 +2,8 @@
 
 import { TransitionSeries } from "@remotion/transitions";
 import type { ReactNode } from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
+import { useCompositionFrames, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { planTransitionTiming } from "./duration";
 import { FeatureFrame } from "./feature-frame";
 import { FlowithDemo } from "./flowith-demo";
@@ -131,7 +132,7 @@ function DefaultSnapshot({
   theme: TemplateTheme;
   speed?: number;
 }) {
-  const f = useCurrentFrame() * speed;
+  const f = useSceneFrame() * speed;
   const sidebar: Array<[string, boolean?]> = [
     ["70%", true],
     ["90%"],
@@ -196,13 +197,16 @@ export function ProductDemo({
   speed?: number;
 }) {
   const { theme, scenes } = config;
+  // Scene and transition lengths are written on the 30 fps timeline the
+  // scenes run on; a series counts in the composition's own frames.
+  const toFrames = useCompositionFrames();
 
   const nodes: ReactNode[] = [];
   scenes.forEach((scene, index) => {
     nodes.push(
       <TransitionSeries.Sequence
         key={`scene-${index}`}
-        durationInFrames={scene.durationInFrames}
+        durationInFrames={toFrames(scene.durationInFrames)}
       >
         <AbsoluteFill style={{ background: theme.background }} />
         <SceneContent scene={scene} theme={theme} speed={speed} />
@@ -211,7 +215,7 @@ export function ProductDemo({
 
     const next = scenes[index + 1];
     if (next) {
-      const timing = resolveTiming(planTransitionTiming(scene, next));
+      const timing = resolveTiming(planTransitionTiming(scene, next), toFrames);
       if (scene.type === "feature-frame" && next.type === "feature-frame") {
         const direction = next.content.side === "right" ? "left" : "right";
         nodes.push(

@@ -1,0 +1,123 @@
+{
+  "component": "radar-compare",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "A bright, grain-free light theme with a calm teal accent and crisp Inter type.",
+      "askedAs": [
+        "light version for a slide deck",
+        "clean white radar chart",
+        "minimal bright comparison",
+        "светлая версия радара",
+        "чистый белый фон"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#0f766e",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "terminal-grid",
+      "label": "Terminal Grid",
+      "description": "A dense eight-ring grid in monospace with a muted green accent on near-black, like an engineering readout.",
+      "askedAs": [
+        "technical monospace look",
+        "more grid lines like a dashboard",
+        "dev tool style radar",
+        "техничный стиль с моноширинным шрифтом",
+        "больше колец как в терминале"
+      ],
+      "props": {
+        "rings": 8,
+        "fontFamily": "JetBrains Mono",
+        "accent": "#4ade80",
+        "background": "#0b0f0c",
+        "ink": "#d9e5dc",
+        "grain": false
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm paper background with Fraunces type and a deep oxblood polygon that unfolds slowly.",
+      "askedAs": [
+        "magazine style comparison",
+        "elegant serif version",
+        "slow warm editorial look",
+        "журнальный стиль с засечками",
+        "медленно и элегантно"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#2a1e17",
+        "accent": "#8c2f39",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snap-launch",
+      "label": "Snap Launch",
+      "description": "A fast, punchy reveal where all vertices pop out together in a larger frame with Space Grotesk.",
+      "askedAs": [
+        "quick energetic reveal",
+        "make it faster and bigger",
+        "all points at once",
+        "быстрая резкая анимация",
+        "крупнее и быстрее"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 0,
+        "scale": 1.2,
+        "fontFamily": "Space Grotesk",
+        "accent": "#f97316"
+      }
+    },
+    {
+      "id": "slow-cascade",
+      "label": "Slow Cascade",
+      "description": "A deliberate, wide-stagger build where each axis extends one after another in a soft violet on deep navy.",
+      "askedAs": [
+        "slow dramatic build",
+        "each point one by one",
+        "calm cinematic radar",
+        "медленное поочередное появление",
+        "кинематографично и спокойно"
+      ],
+      "props": {
+        "stagger": 4.6,
+        "speed": 0.5,
+        "delay": 15,
+        "background": "#0e1226",
+        "ink": "#e4e6f2",
+        "accent": "#a78bfa"
+      }
+    },
+    {
+      "id": "compact-minimal",
+      "label": "Compact Minimal",
+      "description": "A smaller, quieter chart with just two rings and Geist type for use alongside other content.",
+      "askedAs": [
+        "smaller simpler chart",
+        "fewer rings less busy",
+        "subtle minimal radar",
+        "компактный минималистичный вариант",
+        "меньше колец и проще"
+      ],
+      "props": {
+        "scale": 0.8,
+        "rings": 2,
+        "fontFamily": "Geist",
+        "grain": false,
+        "accent": "#64748b"
+      }
+    }
+  ]
+}

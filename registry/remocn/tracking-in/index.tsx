@@ -1,6 +1,7 @@
 "use client";
 
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface TrackingInProps {
   text: string;
@@ -23,8 +24,8 @@ export function TrackingIn({
   speed = 1,
   className,
 }: TrackingInProps) {
-  const frame = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
 
   const t = spring({
     frame,

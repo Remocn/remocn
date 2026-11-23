@@ -5,12 +5,8 @@ import {
   type GrainGradientProps,
 } from "@paper-design/shaders-react";
 import { useCallback, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const NEUTRAL_COLORS = ["#3a3a52", "#4a4a68", "#5a5a7e"];
 
@@ -27,8 +23,8 @@ export function ShaderGrainGradient({
   className,
   ...rest
 }: ShaderGrainGradientProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
 
   const [handle] = useState(() => delayRender("shader-grain-gradient"));
   const gate = useCallback(

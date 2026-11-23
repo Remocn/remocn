@@ -1,0 +1,94 @@
+---
+title: "How to make a screen recording not look like a screen recording"
+navTitle: "My screen recording looks amateur"
+description: "Your product demo is a screen recording with a hunting cursor, tiny text, loading spinners and a stray notification. Instead of polishing the recording, rebuild the screen as a scripted scene that zooms where it matters."
+---
+
+_Last updated: November 18, 2026_
+
+A screen recording looks like a screen recording because it is one: the cursor wanders, text is too
+small to read on a phone, spinners and notifications sneak in, and zooms added afterwards blur the
+pixels. Rounded corners and a gradient behind the window help a little. The bigger fix is to stop
+recording: rebuild the screen as a scripted scene where every click is deliberate, the camera moves
+to the part that matters and the text renders sharp at any zoom. Remocn ships those scenes as
+components, and a coding agent such as Claude Code fills them with your UI and copy.
+
+## The tells that give a recording away
+
+- **The cursor hunts** for the button before clicking it.
+- **The text is unreadable** on a phone, because a 1440 px window got squeezed into a feed.
+- **Zooms go soft.** Scaling a recording 2× scales its pixels too.
+- **Real-world noise:** a loading spinner, a half-typed search, a Slack notification, your bookmarks
+  bar.
+- **No hierarchy.** Everything on screen is equally loud, so the viewer doesn't know where to look.
+
+Auto-zoom recorders (Screen Studio, Rapidemo, Camtasia and others) fix the cursor and add zooms, and
+for a quick walkthrough they are the right call. They can't remove what the recording captured.
+
+## The fix: a scripted screen, not a filmed one
+
+<ComponentPreview name="macro-click" />
+
+[Macro Click](/docs/product-scenes/macro-click) starts in a close-up of a site builder: a click
+publishes, the status flips to Live, and the camera pulls back to show the whole window. Nothing
+here was recorded. The interface is drawn by code, so the close-up is as sharp as the wide shot, the
+click lands on the exact frame you choose and there is no stray notification to cut around.
+
+If you already have a good screenshot, keep it and move the camera instead:
+
+<ComponentPreview name="screenshot-tour" />
+
+[Screenshot Tour](/docs/media/screenshot-tour) pushes in on regions of your screenshot one at a
+time, dims the rest and labels each stop. You give it the image and the rectangles:
+
+```tsx
+<ScreenshotTour
+  src="/screens/dashboard.png"
+  screenshotWidth={1440}
+  screenshotHeight={900}
+  stops={[{ x: 40, y: 120, width: 420, height: 200, label: "Every issue, grouped by status" }]}
+/>
+```
+
+Export the screenshot at 2× so close-ups stay crisp.
+
+## Do it with an agent
+
+Install the Remocn plugin in Claude Code (`/plugin install remocn --marketplace Remocn/remocn`) or
+Codex ([Setup](/docs/guides/setup) covers both), then from your product's repo:
+
+<GuidePrompt>
+
+```text
+I have a screen recording of <THE FLOW, e.g. "creating a project and inviting a teammate">.
+Instead of using the recording, rebuild that flow as a scripted scene with remocn
+components (remocn.dev). Read the source of these screens so labels and layout match:
+<FILES OR SCREENSHOTS>. Every click deliberate, typing at a human pace, the camera
+pushing in on the one element each step is about. No loading states, no notifications.
+1920×1080, 60fps, about 20 seconds.
+```
+
+</GuidePrompt>
+
+The [Product demo](/docs/guides/product-demo) guide turns this into a full ~50-second demo with a
+setup line, payoff and close.
+
+## When to keep the recording
+
+- **You need to prove it's real,** with live data, real latency or a bug report. A rebuild is a
+  depiction, not evidence.
+- **The video is internal** (a Loom for a teammate). Polish isn't worth it.
+- **Your app changes daily and the walkthrough has 40 steps.** An auto-zoom recorder is faster for
+  long tutorials.
+
+<Faq>
+
+**Is a rebuilt screen dishonest?**
+It shows your real interface with the noise removed, the same way a marketing screenshot is cleaned
+up. Keep labels and flows true to the product. If the video claims performance, show the real thing.
+
+**Can I mix both?**
+Yes. A Remotion video can play a recorded clip with `OffthreadVideo` next to scripted scenes, so you
+can open on a real recording and cut to a scripted close-up.
+
+</Faq>

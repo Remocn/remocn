@@ -1,14 +1,10 @@
 "use client";
 
 import { loadFont as loadRubik } from "@remotion/google-fonts/Rubik";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -24,6 +20,20 @@ export interface MenuPickProps {
   pick?: number;
   accent?: string;
   background?: string;
+  /** Hint next to the B key in the footer. */
+  backLabel?: string;
+  /** Hint next to the A key in the footer. */
+  selectLabel?: string;
+  /** Frames between rows as the menu builds. */
+  stagger?: number;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Typeface for the menu. Load it yourself; Rubik by default. */
+  fontFamily?: string;
+  /** Size of the menu, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
@@ -82,6 +92,8 @@ const EASE_MOVE = Easing.bezier(0.65, 0, 0.35, 1);
 const SPRING_HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const SPRING_CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const SPRING_HOP = { mass: 0.5, damping: 16, stiffness: 260 };
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -127,20 +139,45 @@ function Chevron({ size, color }: { size: number; color: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MenuPick({
   prompt = "Choose your launch",
   options = ["Keyframe every beat", "Wait on an agency", "Install the scenes"],
   pick = 2,
   accent = RED,
   background,
+  backLabel = "Back",
+  selectLabel = "Select",
+  stagger = ROW_IN,
+  ink,
+  fontFamily = rubik.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: MenuPickProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const list = options.length > 0 ? options : ["Start"];
   const n = list.length;
   const chosen = Math.max(0, Math.min(n - 1, Math.round(pick)));
@@ -186,16 +223,33 @@ export function MenuPick({
     ...CLAMP,
     easing: EASE_ENTER,
   });
-  const press =
-    spring({ frame: t - confirmAt, fps, config: SPRING_CHIP }) -
-    spring({ frame: t - confirmAt - 5, fps, config: SPRING_CHIP });
+  const pressAt = (f: number) =>
+    spring({ frame: f - confirmAt, fps, config: SPRING_CHIP }) -
+    spring({ frame: f - confirmAt - 5, fps, config: SPRING_CHIP });
+  const press = pressAt(t);
   const barScale = 1 - 0.04 * press;
   const settle = interpolate(t, [blinkEnd, blinkEnd + 10], [0, 1], {
     ...CLAMP,
     easing: EASE_MOVE,
   });
 
-  const panelIn = spring({ frame: t, fps, config: SPRING_HEAVY });
+  const panelAt = (f: number) =>
+    spring({ frame: f, fps, config: SPRING_HEAVY });
+  const panelIn = panelAt(t);
+  // The panel's spring has a long tail; weigh a step by the larger of its
+  // lift and the scale's reach to the panel's far corner.
+  const panelReach = Math.max(
+    H * 0.05,
+    (0.03 * Math.hypot(panelW, panelH)) / 2,
+  );
+  const panelMoving =
+    Math.abs(panelAt(t + 1) - panelIn) * panelReach > 1e-3 ||
+    Math.abs(panelIn - panelAt(t - 1)) * panelReach > 1e-3;
+  const barMoving =
+    !panelMoving &&
+    (midway(cursorIn) ||
+      Math.abs(pressAt(t + 1) - press) * 0.04 * rowW > 1e-3 ||
+      Math.abs(press - pressAt(t - 1)) * 0.04 * rowW > 1e-3);
   const panelO = interpolate(t, [0, 8], [0, 1], {
     ...CLAMP,
     easing: EASE_ENTER,
@@ -206,7 +260,7 @@ export function MenuPick({
   });
   const footIn = interpolate(
     t,
-    [ROWS_AT + n * ROW_IN, ROWS_AT + n * ROW_IN + 12],
+    [ROWS_AT + n * stagger, ROWS_AT + n * stagger + 12],
     [0, 1],
     {
       ...CLAMP,
@@ -215,12 +269,26 @@ export function MenuPick({
   );
 
   const rowIn = (i: number) =>
-    interpolate(t, [ROWS_AT + i * ROW_IN, ROWS_AT + i * ROW_IN + 12], [0, 1], {
-      ...CLAMP,
-      easing: EASE_ENTER,
-    });
+    interpolate(
+      t,
+      [ROWS_AT + i * stagger, ROWS_AT + i * stagger + 12],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_ENTER,
+      },
+    );
 
   const barY = rowsTop + pos * rowH;
+  // The bar hops by layout: its `top` and the counter-`top` that keeps the
+  // labels inside it in place round to whole pixels apart, so the labels
+  // stepped while it travelled. It is laid out on the picked row and travels
+  // by a transform instead; the labels cancel it exactly. Within 1/128px of
+  // that row the old layout path is kept, so a settled bar is untouched.
+  const barRest = rowsTop + chosen * rowH;
+  const barD = barY - barRest;
+  const barTravel = Math.abs(barD) >= 1 / 128;
+  const barTop = barTravel ? barRest : barY;
 
   const rowText = (onBar: boolean) =>
     list.map((label, i) => {
@@ -241,13 +309,13 @@ export function MenuPick({
             alignItems: "center",
             justifyContent: "space-between",
             opacity: p * (onBar ? 1 : dim),
-            transform: `translateY(${(1 - p) * rowH * 0.3}px)`,
-            color: onBar ? c.onAccent : c.ink,
+            transform: `translateY(${(1 - p) * rowH * 0.3}px)${glide(midway(p) && !panelMoving && !(onBar && barMoving))}`,
+            color: onBar ? c.onAccent : fg,
           }}
         >
           <span
             style={{
-              fontFamily: rubik.fontFamily,
+              fontFamily,
               fontWeight: 400,
               fontSize: F,
               lineHeight: 1,
@@ -280,7 +348,7 @@ export function MenuPick({
           alignItems: "center",
           justifyContent: "center",
           fontSize: smallFs * 0.82,
-          color: c.ink,
+          color: fg,
         }}
       >
         {k}
@@ -304,107 +372,110 @@ export function MenuPick({
           timeScale={0.5}
         />
       )}
-      <div
-        style={{
-          position: "absolute",
-          left: panelX,
-          top: panelY,
-          width: panelW,
-          height: panelH,
-          borderRadius: panelR,
-          backgroundColor: c.panel,
-          boxShadow: c.depth,
-          opacity: panelO,
-          transform: `translateY(${(1 - panelIn) * H * 0.05}px) scale(${0.97 + 0.03 * panelIn})`,
-          fontFamily: rubik.fontFamily,
-          overflow: "hidden",
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: panelPad + rowPadX,
-            right: panelPad + rowPadX,
-            top: panelPad,
-            height: headH,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            fontWeight: 400,
-            fontSize: smallFs,
-            letterSpacing: "-0.005em",
-            color: c.soft,
-            opacity: headIn,
-            transform: `translateY(${(1 - headIn) * smallFs * 0.6}px)`,
+            left: panelX,
+            top: panelY,
+            width: panelW,
+            height: panelH,
+            borderRadius: panelR,
+            backgroundColor: c.panel,
+            boxShadow: c.depth,
+            opacity: panelO,
+            transform: `translateY(${(1 - panelIn) * H * 0.05}px) scale(${0.97 + 0.03 * panelIn})${glide(panelMoving)}`,
+            fontFamily,
+            overflow: "hidden",
           }}
         >
-          <span style={{ color: c.ink }}>{prompt}</span>
-          <span style={{ fontVariantNumeric: "tabular-nums" }}>
-            {`${Math.min(n, Math.round(pos) + 1)} / ${n}`}
-          </span>
-        </div>
-        {list.slice(1).map((label, i) => (
           <div
-            key={`d-${label}`}
             style={{
               position: "absolute",
               left: panelPad + rowPadX,
               right: panelPad + rowPadX,
-              top: rowsTop + (i + 1) * rowH,
-              height: 1,
-              backgroundColor: c.faint,
-              opacity: rowIn(i + 1),
+              top: panelPad,
+              height: headH,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              fontWeight: 400,
+              fontSize: smallFs,
+              letterSpacing: "-0.005em",
+              color: c.soft,
+              opacity: headIn,
+              transform: `translateY(${(1 - headIn) * smallFs * 0.6}px)${glide(midway(headIn) && !panelMoving)}`,
             }}
-          />
-        ))}
-        {rowText(false)}
-        <div
-          style={{
-            position: "absolute",
-            left: panelPad,
-            top: barY,
-            width: rowW,
-            height: rowH,
-            borderRadius: rowR,
-            overflow: "hidden",
-            backgroundColor: accent,
-            opacity: blinkOff ? 0 : cursorIn,
-            transform: `scale(${barScale * (0.96 + 0.04 * cursorIn)})`,
-          }}
-        >
+          >
+            <span style={{ color: fg }}>{prompt}</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>
+              {`${Math.min(n, Math.round(pos) + 1)} / ${n}`}
+            </span>
+          </div>
+          {list.slice(1).map((label, i) => (
+            <div
+              key={`d-${label}`}
+              style={{
+                position: "absolute",
+                left: panelPad + rowPadX,
+                right: panelPad + rowPadX,
+                top: rowsTop + (i + 1) * rowH,
+                height: 1,
+                backgroundColor: c.faint,
+                opacity: rowIn(i + 1),
+              }}
+            />
+          ))}
+          {rowText(false)}
           <div
             style={{
               position: "absolute",
-              left: -panelPad,
-              top: -barY,
-              width: panelW,
-              height: panelH,
+              left: panelPad,
+              top: barTop,
+              width: rowW,
+              height: rowH,
+              borderRadius: rowR,
+              overflow: "hidden",
+              backgroundColor: accent,
+              opacity: blinkOff ? 0 : cursorIn,
+              transform: `${barTravel ? `translateY(${barD}px) ` : ""}scale(${barScale * (0.96 + 0.04 * cursorIn)})${glide(barMoving)}`,
             }}
           >
-            {rowText(true)}
+            <div
+              style={{
+                position: "absolute",
+                left: -panelPad,
+                top: -barTop,
+                width: panelW,
+                height: panelH,
+                transform: barTravel ? `translateY(${-barD}px)` : undefined,
+              }}
+            >
+              {rowText(true)}
+            </div>
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: panelPad + rowPadX,
+              right: panelPad + rowPadX,
+              bottom: panelPad,
+              height: footH,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              gap: smallFs * 1.6,
+              fontWeight: 400,
+              fontSize: smallFs,
+              color: c.soft,
+              opacity: footIn,
+            }}
+          >
+            <Key k="B" label={backLabel} />
+            <Key k="A" label={selectLabel} />
           </div>
         </div>
-        <div
-          style={{
-            position: "absolute",
-            left: panelPad + rowPadX,
-            right: panelPad + rowPadX,
-            bottom: panelPad,
-            height: footH,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            gap: smallFs * 1.6,
-            fontWeight: 400,
-            fontSize: smallFs,
-            color: c.soft,
-            opacity: footIn,
-          }}
-        >
-          <Key k="B" label="Back" />
-          <Key k="A" label="Select" />
-        </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

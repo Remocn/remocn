@@ -2,6 +2,7 @@
 
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -9,9 +10,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", {
   weights: ["500"],
@@ -28,7 +29,19 @@ export interface PointHopProps {
   prefixes?: string[];
   label?: string;
   accent?: string;
+  /** Color of the digits; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the digits and unit. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames for the point to hop over one digit. */
+  hop?: number;
+  /** Frames the number rests between prefix steps. */
+  rest?: number;
+  /** Size of the number and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -63,6 +76,7 @@ const STEP_REST = 12;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
+const midway = (p: number) => p > 0 && p < 1;
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -117,10 +131,10 @@ interface Metrics {
   label: number;
 }
 
-function measure(units: string[], label: string): Metrics {
+function measure(units: string[], label: string, fontFamily: string): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) throw new Error("point-hop: no 2d context");
-  ctx.font = `500 100px "${geist.fontFamily}"`;
+  ctx.font = `500 100px "${fontFamily}"`;
   const w = (s: string) => ctx.measureText(s).width / 100;
   const digit = w("0000000000") / 10;
   const point = w(".");
@@ -139,8 +153,8 @@ function measure(units: string[], label: string): Metrics {
   };
 }
 
-function useMetrics(units: string[], label: string) {
-  const key = [...units, label].join("\u0001");
+function useMetrics(units: string[], label: string, fontFamily: string) {
+  const key = [...units, label, fontFamily].join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("point-hop: measuring"));
   const released = useRef(false);
@@ -149,14 +163,17 @@ function useMetrics(units: string[], label: string) {
     Promise.all([
       geist.waitUntilDone(),
       geistMono.waitUntilDone(),
-      document.fonts.load(`500 100px "${geist.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
       document.fonts.load(`400 100px "${geistMono.fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const parts = key.split("\u0001");
-        setState({ key, m: measure(parts.slice(0, -1), parts.at(-1) ?? "") });
+        setState({
+          key,
+          m: measure(parts.slice(0, -2), parts.at(-2) ?? "", fontFamily),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -165,42 +182,42 @@ function useMetrics(units: string[], label: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.m : null;
 }
 
-function stepTimes(k: number) {
-  const stepLen = 3 * (HOP_LEN + HOP_GAP) + FOLD_LEN + STEP_REST;
+function stepTimes(k: number, hopLen: number, rest: number) {
+  const stepLen = 3 * (hopLen + HOP_GAP) + FOLD_LEN + rest;
   const at = FIRST_STEP + (k - 1) * stepLen;
-  const hopsEnd = at + 3 * (HOP_LEN + HOP_GAP) - HOP_GAP;
+  const hopsEnd = at + 3 * (hopLen + HOP_GAP) - HOP_GAP;
   return {
     at,
-    hop: (h: number) => at + h * (HOP_LEN + HOP_GAP),
+    hop: (h: number) => at + h * (hopLen + HOP_GAP),
     swapAt: hopsEnd - 6,
     foldAt: hopsEnd - 2,
   };
 }
 
-function stateAt(t: number, p: Plan, m: Metrics) {
+function stateAt(t: number, p: Plan, m: Metrics, hopLen: number, rest: number) {
   let q = p.start;
   let arc = 0;
   let land = 0;
   for (let k = 1; k <= p.steps; k++) {
-    const st = stepTimes(k);
+    const st = stepTimes(k, hopLen, rest);
     for (let h = 0; h < 3; h++) {
       const a = st.hop(h);
-      const raw = interpolate(t, [a, a + HOP_LEN], [0, 1], CLAMP);
+      const raw = interpolate(t, [a, a + hopLen], [0, 1], CLAMP);
       const e = EASE_IO(raw);
       q += e;
       if (raw > 0 && raw < 1) arc = Math.sin(Math.PI * e);
-      const after = t - (a + HOP_LEN);
+      const after = t - (a + hopLen);
       if (after >= 0 && after < 5) land = Math.sin((after / 5) * Math.PI);
     }
   }
   const fold = p.digits.map((_, i) => {
     const k = p.foldAfter[i];
     if (k < 0) return 1;
-    const st = stepTimes(k);
+    const st = stepTimes(k, hopLen, rest);
     return (
       1 -
       interpolate(t, [st.foldAt, st.foldAt + FOLD_LEN], [0, 1], {
@@ -209,7 +226,7 @@ function stateAt(t: number, p: Plan, m: Metrics) {
       })
     );
   });
-  const last = stepTimes(Math.max(1, p.steps));
+  const last = stepTimes(Math.max(1, p.steps), hopLen, rest);
   const pointAlive = p.pointLeaves
     ? 1 -
       interpolate(t, [last.foldAt, last.foldAt + FOLD_LEN], [0, 1], {
@@ -220,7 +237,7 @@ function stateAt(t: number, p: Plan, m: Metrics) {
   let unitIdx = 0;
   let swap = 1;
   for (let k = 1; k <= p.steps; k++) {
-    const st = stepTimes(k);
+    const st = stepTimes(k, hopLen, rest);
     const s = interpolate(t, [st.swapAt, st.swapAt + SWAP_LEN], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
@@ -263,27 +280,51 @@ function stateAt(t: number, p: Plan, m: Metrics) {
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PointHop({
   value = 0.0000342,
   unit = "s",
   prefixes = ["", "m", "µ", "n"],
   label = "scene refresh after a prop change",
   accent,
+  ink,
   background,
+  fontFamily = geist.fontFamily,
+  hop = HOP_LEN,
+  rest = STEP_REST,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PointHopProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.pink;
+  const fg = ink ?? c.ink;
   const pre = prefixes.length > 0 ? prefixes : [""];
   const p = useMemo(() => plan(value, pre.length - 1), [value, pre.length]);
   const units = useMemo(
     () => pre.slice(0, p.steps + 1).map((x) => x + unit),
     [pre, p.steps, unit],
   );
-  const m = useMetrics(units, label);
+  const m = useMetrics(units, label, fontFamily);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -296,8 +337,11 @@ export function PointHop({
   const portrait = H > W * 1.1;
   const margin = Math.min(W, H) * (portrait ? 0.08 : 0.085);
   const measureW = W - 2 * margin;
-  const s = stateAt(t, p, m);
-  const fin = stateAt(1e6, p, m);
+  const at = (tt: number) => stateAt(tt, p, m, hop, rest);
+  const s = at(t);
+  const sPrev = at(t - speed);
+  const sNext = at(t + speed);
+  const fin = at(1e6);
 
   const maxF = H * (portrait ? 0.2 : 0.42);
   const fitF = (em: number) => Math.min(maxF, measureW / em);
@@ -308,25 +352,57 @@ export function PointHop({
     ? Math.min(H * (portrait ? 0.022 : 0.036), measureW / m.label)
     : 0;
   const capTop = margin + (label ? labelSize * 1.2 + Fend * 0.5 : Fend * 0.3);
-  const baseY = capTop + m.cap * F;
+
+  // The number refits its font size as digits fold away, and layout rounds
+  // every baseline of a size that moves, so the whole row stepped unevenly.
+  // The row is laid out once, at its final size, and scaled to the live one
+  // about the cap line's left end, where every position below is anchored.
+  // It stays that way at rest too: a row handed back to plain layout at `F`
+  // would jump by the rounding. Once settled the scale is exactly 1.
+  const refit =
+    Math.max(
+      Math.abs(fitF(sNext.totalEm) - F),
+      Math.abs(F - fitF(sPrev.totalEm)),
+    ) *
+      s.totalEm >
+    1e-3;
+  const Fl = Fend;
+  const fitK = Math.abs(F / Fl - 1) < 1e-9 ? 1 : F / Fl;
+
+  const baseY = capTop + m.cap * Fl;
   const left = margin;
 
-  const arcH = (m.cap + 0.3) * F;
-  const maskTop = baseY - m.cap * F - arcH - F * 0.2;
-  const maskBottom = baseY + F * 0.24;
-  const glyphTop = (lift: number) => baseY - maskTop - m.base * F + lift;
+  const arcH = (m.cap + 0.3) * Fl;
+  const maskTop = baseY - m.cap * Fl - arcH - Fl * 0.2;
+  const maskBottom = baseY + Fl * 0.24;
+  const glyphTop = (lift: number) => baseY - maskTop - m.base * Fl + lift;
 
-  const rise = (i: number) =>
-    interpolate(t, [i * RISE_GAP, i * RISE_GAP + RISE_LEN], [0, 1], {
+  const riseAt = (i: number, tt: number) =>
+    interpolate(tt, [i * RISE_GAP, i * RISE_GAP + RISE_LEN], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  const rise = (i: number) => riseAt(i, t);
   const drop = (r: number) => (1 - r) * (maskBottom - maskTop);
+  // Layout rounds a baseline to whole pixels, so the rises, the hops and the
+  // unit swap travel by a transform from the resting `top`; the tilt rides on
+  // it while it moves, unless the refit above already carries one.
+  const moves = (f: (tt: number) => number) =>
+    Math.abs(f(t + speed) - f(t)) > 1e-3 ||
+    Math.abs(f(t) - f(t - speed)) > 1e-3;
+  const lift = (dy: number, rest?: string, moving = false) => {
+    const parts = [
+      Math.abs(dy) < 1e-3 ? "" : `translateY(${dy}px)`,
+      rest ?? "",
+    ].filter(Boolean);
+    const tilt = glide(moving && !refit);
+    return parts.length || tilt ? `${parts.join(" ")}${tilt}` : undefined;
+  };
 
   const text = {
     position: "absolute" as const,
     whiteSpace: "pre" as const,
-    fontFamily: geist.fontFamily,
+    fontFamily,
     fontWeight: 500,
     fontFeatureSettings: '"tnum" 1, "lnum" 1',
   };
@@ -339,13 +415,17 @@ export function PointHop({
         key={`d${i}`}
         style={{
           ...text,
-          left: left + s.xs[i] * F,
-          top: glyphTop(drop(rise(i))),
-          fontSize: F,
-          lineHeight: `${F}px`,
-          color: c.ink,
+          left: left + s.xs[i] * Fl,
+          top: glyphTop(0),
+          fontSize: Fl,
+          lineHeight: `${Fl}px`,
+          color: fg,
           opacity: interpolate(f, [0, 0.7], [0, 1], CLAMP),
-          transform: f < 1 ? `scaleX(${f.toFixed(4)})` : undefined,
+          transform: lift(
+            drop(rise(i)),
+            f < 1 ? `scaleX(${f.toFixed(4)})` : undefined,
+            moves((tt) => drop(riseAt(i, tt))),
+          ),
           transformOrigin: "0% 50%",
         }}
       >
@@ -354,19 +434,51 @@ export function PointHop({
     );
   });
 
-  const squash = 1 - 0.18 * s.land;
+  // The point's drop, hop and squash as one function of time, so its tilt
+  // can tell from the neighbouring frames whether anything of it moves.
+  const pointAt = (tt: number, st: ReturnType<typeof stateAt>) => {
+    const squash = 1 - 0.18 * st.land;
+    return {
+      dy: drop(riseAt(p.start, tt)) - st.arc * arcH,
+      sx: 1 / squash,
+      sy: squash,
+      k: 0.5 + 0.5 * st.pointAlive,
+    };
+  };
+  const pt = pointAt(t, s);
+  const pointMoves = [
+    pointAt(t - speed, sPrev),
+    pointAt(t + speed, sNext),
+  ].some(
+    (o) =>
+      Math.abs(o.dy - pt.dy) > 1e-3 ||
+      Math.max(
+        Math.abs(o.sx * o.k - pt.sx * pt.k),
+        Math.abs(o.sy * o.k - pt.sy * pt.k),
+      ) *
+        Fl >
+        1e-3,
+  );
   const pointEl =
     s.pointAlive > 0.001 ? (
       <div
         style={{
           ...text,
-          left: left + (s.pointX + TRACK * 0.5) * F,
-          top: glyphTop(drop(rise(p.start)) - s.arc * arcH),
-          fontSize: F,
-          lineHeight: `${F}px`,
+          left: left + (s.pointX + TRACK * 0.5) * Fl,
+          top: glyphTop(0),
+          fontSize: Fl,
+          lineHeight: `${Fl}px`,
           color: spot,
           opacity: s.pointAlive,
-          transform: `scale(${(1 / squash).toFixed(3)}, ${squash.toFixed(3)}) scale(${(0.5 + 0.5 * s.pointAlive).toFixed(3)})`,
+          // Rounded scales stepped the dot by a third of a pixel at a time;
+          // they are exact while it moves and the same "1" at rest.
+          transform: lift(
+            pt.dy,
+            pointMoves
+              ? `scale(${pt.sx}, ${pt.sy}) scale(${pt.k})`
+              : `scale(${pt.sx.toFixed(3)}, ${pt.sy.toFixed(3)}) scale(${pt.k.toFixed(3)})`,
+            pointMoves,
+          ),
           transformOrigin: `${(m.point * 50).toFixed(0)}% ${(m.base * 100).toFixed(0)}%`,
         }}
       >
@@ -374,42 +486,64 @@ export function PointHop({
       </div>
     ) : null;
 
-  const U = F * UNIT_SCALE;
-  const unitLeft = left + (s.digitsW + s.unitGap) * F;
-  const unitRise = rise(p.digits.length + 1);
-  const unitLine = (str: string, k: number, y: number, o: number) => (
+  const U = Fl * UNIT_SCALE;
+  const unitLeft = left + (s.digitsW + s.unitGap) * Fl;
+  const unitRiseAt = (tt: number) => riseAt(p.digits.length + 1, tt);
+  const unitRise = unitRiseAt(t);
+  const unitLine = (
+    str: string,
+    k: number,
+    y: number,
+    o: number,
+    moving: boolean,
+  ) => (
     <div
       key={`u${k}`}
       style={{
         ...text,
         left: unitLeft,
-        top: baseY - maskTop - m.base * U + y,
+        top: baseY - maskTop - m.base * U,
         fontSize: U,
         lineHeight: `${U}px`,
         letterSpacing: `${TRACK}em`,
         color: spot,
         opacity: o,
+        transform: lift(y, undefined, moving),
       }}
     >
       {str}
     </div>
   );
   const unitDrop = (maskBottom - maskTop) * 0.5;
+  const swapMoves =
+    Math.max(Math.abs(sNext.swap - s.swap), Math.abs(s.swap - sPrev.swap)) *
+      unitDrop >
+    1e-3;
   const unitEls =
     s.unitIdx === 0 || s.swap >= 1
-      ? [unitLine(units[s.unitIdx], s.unitIdx, drop(unitRise), 1)]
+      ? [
+          unitLine(
+            units[s.unitIdx],
+            s.unitIdx,
+            drop(unitRise),
+            1,
+            moves((tt) => drop(unitRiseAt(tt))) || swapMoves,
+          ),
+        ]
       : [
           unitLine(
             units[s.unitIdx - 1],
             s.unitIdx - 1,
             s.swap * unitDrop,
             1 - s.swap,
+            swapMoves,
           ),
           unitLine(
             units[s.unitIdx],
             s.unitIdx,
             (s.swap - 1) * unitDrop,
             s.swap,
+            swapMoves,
           ),
         ];
 
@@ -420,45 +554,51 @@ export function PointHop({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {label ? (
+      <ScaleLayer scale={scale}>
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: margin,
+              top: margin,
+              height: labelSize * 1.3,
+              overflow: "hidden",
+              fontFamily: geistMono.fontFamily,
+              fontWeight: 400,
+              fontSize: labelSize,
+              lineHeight: `${labelSize * 1.3}px`,
+              color: c.soft,
+              whiteSpace: "pre",
+            }}
+          >
+            <div
+              style={{
+                transform: `translateY(${((1 - labelP) * labelSize * 1.4).toFixed(2)}px)${glide(midway(labelP))}`,
+              }}
+            >
+              {label}
+            </div>
+          </div>
+        ) : null}
         <div
           style={{
             position: "absolute",
-            left: margin,
-            top: margin,
-            height: labelSize * 1.3,
+            left: 0,
+            // Widened by the inverse of the refit's scale, so its right edge
+            // still clips at the frame's.
+            width: fitK === 1 ? W : left + (W - left) / fitK,
+            top: maskTop,
+            height: maskBottom - maskTop,
             overflow: "hidden",
-            fontFamily: geistMono.fontFamily,
-            fontWeight: 400,
-            fontSize: labelSize,
-            lineHeight: `${labelSize * 1.3}px`,
-            color: c.soft,
-            whiteSpace: "pre",
+            transform: `scale(${fitK})${glide(refit)}`,
+            transformOrigin: `${left}px ${capTop - maskTop}px`,
           }}
         >
-          <div
-            style={{
-              transform: `translateY(${((1 - labelP) * labelSize * 1.4).toFixed(2)}px)`,
-            }}
-          >
-            {label}
-          </div>
+          {digitEls}
+          {pointEl}
+          {unitEls}
         </div>
-      ) : null}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: maskTop,
-          height: maskBottom - maskTop,
-          overflow: "hidden",
-        }}
-      >
-        {digitEls}
-        {pointEl}
-        {unitEls}
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

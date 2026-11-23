@@ -1,0 +1,110 @@
+{
+  "component": "layout-guides",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "blueprint-night",
+      "label": "Blueprint Night",
+      "description": "Pale cyan guides and a warm amber now line over a deep navy field, like a technical blueprint.",
+      "askedAs": [
+        "dark blueprint grid",
+        "navy background with light guides",
+        "engineering drawing look",
+        "тёмная сетка как чертёж",
+        "синий фон со светлыми направляющими"
+      ],
+      "props": {
+        "background": "#0f1b2d",
+        "color": "#7fb8e6",
+        "nowColor": "#f2a65a"
+      }
+    },
+    {
+      "id": "graphite-slow",
+      "label": "Graphite Slow",
+      "description": "Unhurried charcoal guides on warm paper with a muted red now line for a calm, editorial reveal.",
+      "askedAs": [
+        "slow minimal grey grid",
+        "calm paper style layout",
+        "understated slow reveal",
+        "медленная спокойная сетка",
+        "серые линии на светлом фоне"
+      ],
+      "props": {
+        "background": "#f5f2ec",
+        "color": "#3a3a3c",
+        "nowColor": "#c2493d",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "Default palette played at double speed for a snappy, punchy grid drop.",
+      "askedAs": [
+        "faster grid animation",
+        "snappy layout guides",
+        "quick structure reveal",
+        "быстрая анимация сетки",
+        "ускоренные направляющие"
+      ],
+      "props": {
+        "speed": 2
+      }
+    },
+    {
+      "id": "forest-calendar",
+      "label": "Forest Calendar",
+      "description": "Deep green guides on a soft sage backdrop with a coral now line, suited to scheduling products.",
+      "askedAs": [
+        "green calendar grid",
+        "natural tones schedule",
+        "sage and coral timeline",
+        "зелёная сетка календаря",
+        "спокойные природные цвета"
+      ],
+      "props": {
+        "background": "#e8eee6",
+        "color": "#2f6b4f",
+        "nowColor": "#e0694f",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Lavender guides and a mint now line glowing softly on near-black for a sleek dark-mode feel.",
+      "askedAs": [
+        "dark mode layout grid",
+        "black background purple guides",
+        "sleek night theme",
+        "тёмная тема для сетки",
+        "фиолетовые линии на чёрном"
+      ],
+      "props": {
+        "background": "#121216",
+        "color": "#a99bf5",
+        "nowColor": "#5ed6b4",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "mono-ink",
+      "label": "Mono Ink",
+      "description": "Strict black guides on pure white with a black now line for a stark, monochrome diagram.",
+      "askedAs": [
+        "black and white grid",
+        "monochrome layout lines",
+        "pure minimal diagram",
+        "чёрно-белая сетка",
+        "монохромные направляющие"
+      ],
+      "props": {
+        "background": "#ffffff",
+        "color": "#111111",
+        "nowColor": "#111111"
+      }
+    }
+  ]
+}

@@ -5,13 +5,9 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -67,8 +63,24 @@ export interface LandingConfirmedProps {
   subtitle?: string;
   /** Replaces the remocn logo under the resolve. */
   logo?: React.ReactNode;
+  /** Label over the altitude readout. */
+  altitudeLabel?: string;
+  /** Frames the altitude takes to count down to the pad. */
+  descent?: number;
   /** Gauge marker and small marks. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill in place of the theme stage and aurora; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -120,6 +132,8 @@ const THEMES = {
   },
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function ramp(t: number, from: number, len: number) {
   return interpolate(t, [from, from + len], [0, 1], CLAMP);
 }
@@ -155,27 +169,58 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LandingConfirmed({
   from = 1200,
   confirm = "Touchdown confirmed",
   title = "Shipped.",
   subtitle = "Nailed the landing.",
   logo,
+  altitudeLabel = "Altitude",
+  descent = DESCENT,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: LandingConfirmedProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
+  const flashAt = descent + FLASH_AT - DESCENT;
+  const slamAt = descent + SLAM_AT - DESCENT;
+  const resolveAt = descent + RESOLVE_AT - DESCENT;
   const u = Math.min(W / 1280, H / 720);
 
   // ── Descent ───────────────────────────────────────────────────────────────
   // Fast off the top, still moving when it hits the pad: a hard stop.
-  const p = ramp(t, 0, DESCENT);
+  const p = ramp(t, 0, descent);
   const frac = (1 - p) * (1 - 0.55 * p);
   const alt = Math.max(0, Math.round(from * frac));
-  const landed = t >= DESCENT;
+  const landed = t >= descent;
   const vel = landed ? 0 : 2 + 238 * (1 - p) ** 1.4;
 
   // ── Layout ────────────────────────────────────────────────────────────────
@@ -189,27 +234,27 @@ export function LandingConfirmed({
   const margin = 56 * u;
 
   const intro = OUT(ramp(t, -4, 10));
-  const stopKick = kick(t - DESCENT, 7);
-  const flash = t >= FLASH_AT && t < FLASH_AT + 2;
-  const glow = OUT(ramp(t, FLASH_AT, 18));
+  const stopKick = kick(t - descent, 7);
+  const flash = t >= flashAt && t < flashAt + 2;
+  const glow = OUT(ramp(t, flashAt, 18));
 
-  const slam = OUT(ramp(t, SLAM_AT - 1, 8));
-  const slamHit = kick(t - SLAM_AT - 4, 8);
-  const resolve = MOVE(ramp(t, RESOLVE_AT, 14));
-  const exit = Easing.bezier(0.55, 0, 1, 0.45)(ramp(t, RESOLVE_AT, 6));
-  const labelIn = OUT(ramp(t, RESOLVE_AT + 6, 10));
-  const titleIn = OUT(ramp(t, RESOLVE_AT + 5, 9));
-  const titleHit = kick(t - RESOLVE_AT - 8, 8);
-  const subIn = OUT(ramp(t, RESOLVE_AT + 9, 12));
-  const logoIn = OUT(ramp(t, RESOLVE_AT + 14, 12));
-  const descentOut = landed ? 1 - ramp(t, FLASH_AT, 1) : 1;
-  const gaugeOut = 1 - ramp(t, SLAM_AT, 10);
+  const slam = OUT(ramp(t, slamAt - 1, 8));
+  const slamHit = kick(t - slamAt - 4, 8);
+  const resolve = MOVE(ramp(t, resolveAt, 14));
+  const exit = Easing.bezier(0.55, 0, 1, 0.45)(ramp(t, resolveAt, 6));
+  const labelIn = OUT(ramp(t, resolveAt + 6, 10));
+  const titleIn = OUT(ramp(t, resolveAt + 5, 9));
+  const titleHit = kick(t - resolveAt - 8, 8);
+  const subIn = OUT(ramp(t, resolveAt + 9, 12));
+  const logoIn = OUT(ramp(t, resolveAt + 14, 12));
+  const descentOut = landed ? 1 - ramp(t, flashAt, 1) : 1;
+  const gaugeOut = 1 - ramp(t, slamAt, 10);
 
   const words = confirm.split(" ");
   const confirmA = words.slice(0, Math.ceil(words.length / 2)).join(" ");
   const confirmB = words.slice(Math.ceil(words.length / 2)).join(" ");
 
-  const drift = ramp(t, FLASH_AT, 120);
+  const drift = ramp(t, flashAt, 120);
   const aurora = [
     ...AURORA.map(
       (col, i) =>
@@ -219,7 +264,7 @@ export function LandingConfirmed({
   ].join(", ");
 
   const small: React.CSSProperties = {
-    fontFamily: sans,
+    fontFamily,
     fontWeight: 400,
     fontSize: 15 * u,
     letterSpacing: "0.14em",
@@ -234,299 +279,303 @@ export function LandingConfirmed({
   for (let m = 0; m <= from; m += from / 12) ticks.push(m);
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       {/* Aurora from the pad. */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: aurora,
-          opacity: c.glowOp * glow,
-          transform: `translateY(${(1 - glow) * 80 * u}px)`,
-        }}
-      />
-      <Grain opacity={c.grain} />
+      {background === undefined ? (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: aurora,
+            opacity: c.glowOp * glow,
+            transform: `translateY(${(1 - glow) * 80 * u}px)`,
+          }}
+        />
+      ) : null}
+      {grain ? <Grain opacity={c.grain} /> : null}
 
-      {/* Gauge. */}
-      <div style={{ opacity: intro * gaugeOut }}>
-        <div
-          style={{
-            position: "absolute",
-            left: gaugeX,
-            top: gaugeTop,
-            width: 2 * u,
-            height: padY - gaugeTop,
-            background: c.faint,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: gaugeX,
-            top: markerY,
-            width: 3 * u,
-            height: padY - markerY,
-            background: c.ink,
-          }}
-        />
-        {ticks.map((m, i) => {
-          const y = interpolate(m / from, [0, 1], [padY, gaugeTop]);
-          const major = i % 3 === 0;
-          return (
-            <div key={m}>
-              <div
-                style={{
-                  position: "absolute",
-                  left: gaugeX - (major ? 14 : 8) * u,
-                  top: y - 0.5 * u,
-                  width: (major ? 14 : 8) * u,
-                  height: 1.5 * u,
-                  background: y >= markerY ? c.ink : c.dim,
-                }}
-              />
-              {major ? (
+      <ScaleLayer scale={scale}>
+        {/* Gauge. */}
+        <div style={{ opacity: intro * gaugeOut }}>
+          <div
+            style={{
+              position: "absolute",
+              left: gaugeX,
+              top: gaugeTop,
+              width: 2 * u,
+              height: padY - gaugeTop,
+              background: c.faint,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: gaugeX,
+              top: markerY,
+              width: 3 * u,
+              height: padY - markerY,
+              background: fg,
+            }}
+          />
+          {ticks.map((m, i) => {
+            const y = interpolate(m / from, [0, 1], [padY, gaugeTop]);
+            const major = i % 3 === 0;
+            return (
+              <div key={m}>
                 <div
                   style={{
-                    ...small,
                     position: "absolute",
-                    right: W - gaugeX + 24 * u,
-                    top: y - 7 * u,
-                    letterSpacing: "0.04em",
+                    left: gaugeX - (major ? 14 : 8) * u,
+                    top: y - 0.5 * u,
+                    width: (major ? 14 : 8) * u,
+                    height: 1.5 * u,
+                    background: y >= markerY ? fg : c.dim,
                   }}
-                >
-                  {Math.round(m)}
-                </div>
-              ) : null}
-            </div>
-          );
-        })}
-        {/* Marker. */}
+                />
+                {major ? (
+                  <div
+                    style={{
+                      ...small,
+                      position: "absolute",
+                      right: W - gaugeX + 24 * u,
+                      top: y - 7 * u,
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {Math.round(m)}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+          {/* Marker. */}
+          <div
+            style={{
+              position: "absolute",
+              left: gaugeX + 10 * u,
+              top: markerY - 1.5 * u,
+              width: 40 * u,
+              height: 3 * u,
+              background: accent,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: gaugeX + 10 * u,
+              top: markerY - 7 * u,
+              width: 0,
+              height: 0,
+              borderTop: `${7 * u}px solid transparent`,
+              borderBottom: `${7 * u}px solid transparent`,
+              borderRight: `${10 * u}px solid ${accent}`,
+              transform: `translateX(${-10 * u}px)`,
+            }}
+          />
+        </div>
+
+        {/* Pad line. */}
         <div
           style={{
             position: "absolute",
-            left: gaugeX + 10 * u,
-            top: markerY - 1.5 * u,
-            width: 40 * u,
-            height: 3 * u,
-            background: accent,
+            left: margin,
+            right: margin,
+            top: padY,
+            height: 2 * u,
+            background: landed ? fg : c.faint,
+            opacity: intro * (1 - resolve * 0.6),
           }}
         />
-        <div
-          style={{
-            position: "absolute",
-            left: gaugeX + 10 * u,
-            top: markerY - 7 * u,
-            width: 0,
-            height: 0,
-            borderTop: `${7 * u}px solid transparent`,
-            borderBottom: `${7 * u}px solid transparent`,
-            borderRight: `${10 * u}px solid ${accent}`,
-            transform: `translateX(${-10 * u}px)`,
-          }}
-        />
-      </div>
 
-      {/* Pad line. */}
-      <div
-        style={{
-          position: "absolute",
-          left: margin,
-          right: margin,
-          top: padY,
-          height: 2 * u,
-          background: landed ? c.ink : c.faint,
-          opacity: intro * (1 - resolve * 0.6),
-        }}
-      />
-
-      {/* Telemetry. */}
-      <div
-        style={{
-          ...small,
-          position: "absolute",
-          left: margin,
-          top: margin - 6 * u,
-          opacity: intro * gaugeOut,
-        }}
-      >
-        Descent{" "}
-        <span style={{ color: c.ink }}>
-          {landed ? "Complete" : "Landing burn"}
-        </span>
-      </div>
-      <div
-        style={{
-          ...small,
-          position: "absolute",
-          right: margin,
-          top: margin - 6 * u,
-          textAlign: "right",
-          opacity: intro * gaugeOut,
-        }}
-      >
-        Vel <span style={{ color: c.ink }}>{vel.toFixed(1)}</span> m/s
-      </div>
-
-      {/* Altitude. */}
-      <div
-        style={{
-          position: "absolute",
-          left: numCX,
-          top: numCY,
-          opacity: intro * descentOut,
-          transform: `translate(-50%, -50%) translateY(${(1 - intro) * -40 * u}px) scale(${1 + 0.05 * stopKick})`,
-        }}
-      >
+        {/* Telemetry. */}
         <div
           style={{
             ...small,
-            fontSize: 18 * u,
-            marginBottom: 6 * u,
-            marginLeft: 8 * u,
+            position: "absolute",
+            left: margin,
+            top: margin - 6 * u,
+            opacity: intro * gaugeOut,
           }}
         >
-          Altitude
+          Descent{" "}
+          <span style={{ color: fg }}>
+            {landed ? "Complete" : "Landing burn"}
+          </span>
         </div>
         <div
           style={{
-            display: "flex",
-            alignItems: "baseline",
-            fontFamily: sans,
-            fontWeight: 500,
-            fontSize: numFs,
-            lineHeight: 1,
-            letterSpacing: "-0.04em",
-            fontVariantNumeric: "tabular-nums",
-            color: c.ink,
-            whiteSpace: "nowrap",
+            ...small,
+            position: "absolute",
+            right: margin,
+            top: margin - 6 * u,
+            textAlign: "right",
+            opacity: intro * gaugeOut,
           }}
         >
-          {alt.toLocaleString("en-US")}
-          <span
+          Vel <span style={{ color: fg }}>{vel.toFixed(1)}</span> m/s
+        </div>
+
+        {/* Altitude. */}
+        <div
+          style={{
+            position: "absolute",
+            left: numCX,
+            top: numCY,
+            opacity: intro * descentOut,
+            transform: `translate(-50%, -50%) translateY(${(1 - intro) * -40 * u}px) scale(${1 + 0.05 * stopKick})${glide(midway(intro) || stopKick > 0)}`,
+          }}
+        >
+          <div
             style={{
-              fontSize: numFs * 0.3,
-              letterSpacing: 0,
-              marginLeft: 0.04 * numFs,
-              color: c.dim,
-              fontWeight: 400,
+              ...small,
+              fontSize: 18 * u,
+              marginBottom: 6 * u,
+              marginLeft: 8 * u,
             }}
           >
-            m
-          </span>
+            {altitudeLabel}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              fontFamily,
+              fontWeight: 500,
+              fontSize: numFs,
+              lineHeight: 1,
+              letterSpacing: "-0.04em",
+              fontVariantNumeric: "tabular-nums",
+              color: fg,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {alt.toLocaleString("en-US")}
+            <span
+              style={{
+                fontSize: numFs * 0.3,
+                letterSpacing: 0,
+                marginLeft: 0.04 * numFs,
+                color: c.dim,
+                fontWeight: 400,
+              }}
+            >
+              m
+            </span>
+          </div>
         </div>
-      </div>
 
-      {/* TOUCHDOWN CONFIRMED: slams, then lifts away as the label fades in. */}
-      {t >= SLAM_AT - 1 && exit < 1 ? (
+        {/* TOUCHDOWN CONFIRMED: slams, then lifts away as the label fades in. */}
+        {t >= slamAt - 1 && exit < 1 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: H * 0.47,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              fontFamily,
+              fontWeight: 500,
+              fontSize: 148 * u,
+              letterSpacing: "-0.035em",
+              lineHeight: 0.96,
+              textTransform: "uppercase",
+              color: fg,
+              whiteSpace: "nowrap",
+              transform: `translateY(-50%) translateY(${-exit * 110 * u}px) scale(${(1.22 - 0.22 * slam) * (1 + 0.02 * slamHit) * (1 - 0.12 * exit)})${glide(midway(slam) || slamHit > 0 || midway(exit))}`,
+              opacity: ramp(slam, 0, 0.2) * (1 - exit),
+            }}
+          >
+            <span>{confirmA}</span>
+            <span>{confirmB}</span>
+          </div>
+        ) : null}
+        <div
+          style={{
+            ...small,
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 86 * u,
+            textAlign: "center",
+            fontSize: 20 * u,
+            letterSpacing: "0.18em",
+            opacity: labelIn,
+            transform: `translateY(${(1 - labelIn) * 14 * u}px)${glide(midway(labelIn))}`,
+          }}
+        >
+          {confirm}
+        </div>
+
+        {/* Resolve. */}
         <div
           style={{
             position: "absolute",
             left: 0,
             right: 0,
-            top: H * 0.47,
+            top: H * 0.45,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            fontFamily: sans,
-            fontWeight: 500,
-            fontSize: 148 * u,
-            letterSpacing: "-0.035em",
-            lineHeight: 0.96,
-            textTransform: "uppercase",
-            color: c.ink,
-            whiteSpace: "nowrap",
-            transform: `translateY(-50%) translateY(${-exit * 110 * u}px) scale(${(1.22 - 0.22 * slam) * (1 + 0.02 * slamHit) * (1 - 0.12 * exit)})`,
-            opacity: ramp(slam, 0, 0.2) * (1 - exit),
+            transform: "translateY(-50%)",
           }}
         >
-          <span>{confirmA}</span>
-          <span>{confirmB}</span>
+          <div
+            style={{
+              fontFamily,
+              fontWeight: 500,
+              fontSize: 196 * u,
+              lineHeight: 1,
+              letterSpacing: "-0.045em",
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+              paddingRight: "0.02em",
+              backgroundImage: c.titleFill,
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
+              opacity: ramp(titleIn, 0, 0.25),
+              transform: `scale(${(1.2 - 0.2 * titleIn) * (1 + 0.02 * titleHit)})${glide(midway(titleIn) || titleHit > 0)}`,
+            }}
+          >
+            {title}
+          </div>
+          <div
+            style={{
+              fontFamily: serif,
+              fontStyle: "italic",
+              fontWeight: 400,
+              fontSize: 84 * u,
+              lineHeight: 1.1,
+              letterSpacing: "-0.01em",
+              color: fg,
+              whiteSpace: "nowrap",
+              marginTop: 4 * u,
+              opacity: subIn,
+              transform: `translateY(${(1 - subIn) * 28 * u}px)${glide(midway(subIn))}`,
+            }}
+          >
+            {subtitle}
+          </div>
         </div>
-      ) : null}
-      <div
-        style={{
-          ...small,
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: 86 * u,
-          textAlign: "center",
-          fontSize: 20 * u,
-          letterSpacing: "0.18em",
-          opacity: labelIn,
-          transform: `translateY(${(1 - labelIn) * 14 * u}px)`,
-        }}
-      >
-        {confirm}
-      </div>
 
-      {/* Resolve. */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: H * 0.45,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          transform: "translateY(-50%)",
-        }}
-      >
+        {/* Logo on the pad. */}
         <div
           style={{
-            fontFamily: sans,
-            fontWeight: 500,
-            fontSize: 196 * u,
-            lineHeight: 1,
-            letterSpacing: "-0.045em",
-            textTransform: "uppercase",
-            whiteSpace: "nowrap",
-            paddingRight: "0.02em",
-            backgroundImage: c.titleFill,
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            color: "transparent",
-            opacity: ramp(titleIn, 0, 0.25),
-            transform: `scale(${(1.2 - 0.2 * titleIn) * (1 + 0.02 * titleHit)})`,
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: padY + 28 * u,
+            display: "flex",
+            justifyContent: "center",
+            opacity: logoIn,
+            transform: `translateY(${(1 - logoIn) * 18 * u}px)${glide(midway(logoIn))}`,
           }}
         >
-          {title}
+          {logo ?? <RemocnLogo fontSize={40 * u} color={fg} />}
         </div>
-        <div
-          style={{
-            fontFamily: serif,
-            fontStyle: "italic",
-            fontWeight: 400,
-            fontSize: 84 * u,
-            lineHeight: 1.1,
-            letterSpacing: "-0.01em",
-            color: c.ink,
-            whiteSpace: "nowrap",
-            marginTop: 4 * u,
-            opacity: subIn,
-            transform: `translateY(${(1 - subIn) * 28 * u}px)`,
-          }}
-        >
-          {subtitle}
-        </div>
-      </div>
-
-      {/* Logo on the pad. */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: padY + 28 * u,
-          display: "flex",
-          justifyContent: "center",
-          opacity: logoIn,
-          transform: `translateY(${(1 - logoIn) * 18 * u}px)`,
-        }}
-      >
-        {logo ?? <RemocnLogo fontSize={40 * u} color={c.ink} />}
-      </div>
+      </ScaleLayer>
 
       {flash ? (
         <div style={{ position: "absolute", inset: 0, background: c.flash }} />

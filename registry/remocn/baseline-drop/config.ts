@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const baselineDropConfig: ComponentConfig = {
   componentName: "BaselineDrop",
@@ -12,11 +18,6 @@ export const baselineDropConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     text: {
       type: "text-content",
@@ -32,6 +33,30 @@ export const baselineDropConfig: ComponentConfig = {
       description: "Stagger",
       hiddenFromList: false,
     },
+    fall: {
+      type: "number",
+      default: 15,
+      min: 4,
+      max: 30,
+      step: 1,
+      description: "Fall (frames)",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      default: 20,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Schibsted Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

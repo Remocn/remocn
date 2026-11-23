@@ -41,8 +41,8 @@ export const RemotionRoot = () => (
   <Composition
     id="RollingNumber"
     component={RollingNumberScene}
-    durationInFrames={150}
-    fps={30}
+    durationInFrames={300}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -114,8 +114,8 @@ import { RollingNumber } from "@/components/remocn/rolling-number";
 
 ## With Confetti
 
-Pair it with [Confetti](/docs/effects/confetti) to celebrate the moment the number lands — fire the burst on the frame the count settles (`durationInFrames × 0.8`):
+Pair it with [Confetti](/docs/effects/confetti) to celebrate the moment the number lands — fire the burst on the frame the count settles (`durationInFrames × 0.8`, counted in 30 fps frames):
 
 <BlockPreview name="rolling-number-confetti" />
 
-`Confetti` is a separate component — add it with `npx shadcn add @remocn/confetti`. Both render as full-canvas overlays, so the burst layers cleanly over the number. Keep `startFrame` equal to `durationInFrames × 0.8` (where the count settles): this 210-frame composition settles at frame 168, leaving the 42-frame `lifetime` room to play out before it loops.
+`Confetti` is a separate component — add it with `npx shadcn add @remocn/confetti`. Both render as full-canvas overlays, so the burst layers cleanly over the number. Keep `startFrame` equal to `durationInFrames × 0.8` in 30 fps frames (where the count settles): this 7-second composition, 210 frames at 30 fps, settles at frame 168, leaving the 42-frame `lifetime` room to play out before it loops.

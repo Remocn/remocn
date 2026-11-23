@@ -1,0 +1,106 @@
+{
+  "component": "wake-wipe",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm cream page with dark serif type, a slow trailing wake and a burnt-orange accent word.",
+      "askedAs": [
+        "magazine style serif reveal",
+        "warm elegant editorial wipe",
+        "slow classy text on cream",
+        "редакционный стиль с засечками",
+        "тёплый элегантный текст на светлом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#c2562b"
+      }
+    },
+    {
+      "id": "snappy-launch",
+      "label": "Snappy Launch",
+      "description": "A fast, tight wake with a short hold and slightly larger grotesque type for punchy promos.",
+      "askedAs": [
+        "fast punchy text wipe",
+        "quick energetic launch reveal",
+        "make it snappier",
+        "быстрая резкая смена текста",
+        "энергичный промо вариант"
+      ],
+      "props": {
+        "speed": 1.75,
+        "wake": 12,
+        "hold": 30,
+        "fontFamily": "Space Grotesk",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "midnight-calm",
+      "label": "Midnight Calm",
+      "description": "Deep navy background with soft blue-grey text, a long lingering wake and an unhurried pace.",
+      "askedAs": [
+        "slow calm dark reveal",
+        "navy background soft text",
+        "relaxed premium brand statement",
+        "медленный спокойный тёмный вариант",
+        "тёмно-синий фон и мягкий текст"
+      ],
+      "props": {
+        "background": "#0e1626",
+        "ink": "#d9e2f0",
+        "accent": "#7fa7ff",
+        "speed": 0.75,
+        "wake": 52,
+        "hold": 90
+      }
+    },
+    {
+      "id": "clean-mono",
+      "label": "Clean Mono",
+      "description": "A crisp white canvas with monospaced charcoal text, no grain and a teal accent for a technical feel.",
+      "askedAs": [
+        "minimal tech style monospace",
+        "clean white code look",
+        "developer product announcement",
+        "минималистичный моноширинный шрифт",
+        "чистый технический стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 400,
+        "grain": false,
+        "accent": "#0f8b8d",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "forest-luxe",
+      "label": "Forest Luxe",
+      "description": "Dark forest green with ivory Fraunces type and a muted gold accent, delayed for a composed entrance.",
+      "askedAs": [
+        "luxury green and gold",
+        "rich dark green premium look",
+        "elegant delayed entrance",
+        "роскошный зелёный с золотом",
+        "премиальный вариант с задержкой"
+      ],
+      "props": {
+        "background": "#13261e",
+        "ink": "#f2ede0",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "delay": 20,
+        "scale": 1.05
+      }
+    }
+  ]
+}

@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type SearchRevealProps = {
   text?: string;
@@ -123,8 +118,8 @@ export function SearchReveal({
   reducedMotion = false,
   className,
 }: SearchRevealProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const state = getSearchRevealState((frame * 30) / fps, {
     text,
     fieldWidth,
@@ -138,6 +133,31 @@ export function SearchReveal({
     clamp(finite(fontSize, 34), 18, 54),
     (state.fieldWidth - 120) / Math.max(1, letters(text).length * 0.65),
   );
+  // The pill grows about its centre. Its corner rides that growth as a
+  // transform from where the settled pill sits, not by `left`/`top`: layout
+  // rounds a box edge to whole pixels, so a corner eased by layout clicks.
+  const settled = getSearchRevealState(0, {
+    text,
+    fieldWidth,
+    framesPerCharacter,
+    showPanel,
+    speed,
+    reducedMotion: true,
+  });
+  const fieldDx = (settled.fieldWidth - state.fieldWidth) / 2;
+  const fieldDy = (settled.fieldHeight - state.fieldHeight) / 2;
+  const fieldShift =
+    Math.abs(fieldDx) < 1e-3 && Math.abs(fieldDy) < 1e-3
+      ? undefined
+      : `translate(${fieldDx}px, ${fieldDy}px)`;
+  // The icon is laid out against the settled pill too: pinned by `right` and
+  // centred by the flex box, it would ride the growth through layout.
+  const iconDx = state.fieldWidth - settled.fieldWidth;
+  const iconDy = (state.fieldHeight - settled.fieldHeight) / 2;
+  const iconShift =
+    Math.abs(iconDx) < 1e-3 && Math.abs(iconDy) < 1e-3
+      ? undefined
+      : `translate(${iconDx}px, ${iconDy}px)`;
   const markerWidth = showPanel ? state.panelWidth : state.fieldWidth;
   const markerHeight = showPanel ? state.panelHeight : state.fieldHeight;
 
@@ -302,8 +322,9 @@ export function SearchReveal({
             <div
               style={{
                 position: "absolute",
-                left: -state.fieldWidth / 2,
-                top: -state.fieldHeight / 2,
+                left: -settled.fieldWidth / 2,
+                top: -settled.fieldHeight / 2,
+                transform: fieldShift,
                 width: state.fieldWidth,
                 height: state.fieldHeight,
                 borderRadius: 999,
@@ -353,7 +374,13 @@ export function SearchReveal({
                 strokeLinecap="round"
                 style={{
                   position: "absolute",
-                  right: 24,
+                  ...(iconShift
+                    ? {
+                        left: settled.fieldWidth - 24 - 28,
+                        top: (settled.fieldHeight - 28) / 2,
+                        transform: iconShift,
+                      }
+                    : { right: 24 }),
                   opacity: state.iconOpacity,
                 }}
               >

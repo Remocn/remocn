@@ -1,0 +1,104 @@
+{
+  "component": "line-boil",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "frantic-scribble",
+      "label": "Frantic Scribble",
+      "description": "A jittery, fast-boiling thick line that redraws almost every frame with heavy wobble.",
+      "askedAs": [
+        "make the outline shake a lot",
+        "nervous jittery hand-drawn line",
+        "fast chaotic scribble boil",
+        "дёрганая нервная линия",
+        "сильно дрожащий контур"
+      ],
+      "props": {
+        "boilEvery": 1,
+        "drawings": 6,
+        "amplitude": 2.4,
+        "strokeWidth": 14,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "gentle-pencil",
+      "label": "Gentle Pencil",
+      "description": "A fine, slow-breathing pencil line on warm paper with a soft sage fill.",
+      "askedAs": [
+        "subtle calm hand-drawn wobble",
+        "thin pencil sketch look",
+        "soft gentle line boil",
+        "тонкий карандашный контур",
+        "спокойная мягкая анимация линии"
+      ],
+      "props": {
+        "boilEvery": 5,
+        "amplitude": 0.5,
+        "strokeWidth": 4,
+        "line": "#3a3a3a",
+        "fill": "#a8c3a0",
+        "background": "#f5f0e6"
+      }
+    },
+    {
+      "id": "chalkboard",
+      "label": "Chalkboard",
+      "description": "A chalky off-white line boiling over a dark slate board with a muted yellow fill.",
+      "askedAs": [
+        "chalk drawing on a blackboard",
+        "white line on dark background",
+        "school chalkboard doodle",
+        "рисунок мелом на доске",
+        "белая линия на тёмном фоне"
+      ],
+      "props": {
+        "line": "#f2efe6",
+        "fill": "#e8c468",
+        "background": "#2b3330",
+        "strokeWidth": 7,
+        "amplitude": 1.4
+      }
+    },
+    {
+      "id": "bold-sticker",
+      "label": "Bold Sticker",
+      "description": "A big, chunky navy outline with a sunny fill on a pale blue ground, like a cartoon sticker.",
+      "askedAs": [
+        "big chunky cartoon shape",
+        "thick outline sticker style",
+        "bold kids cartoon icon",
+        "толстый мультяшный контур",
+        "крупная наклейка в мультяшном стиле"
+      ],
+      "props": {
+        "strokeWidth": 20,
+        "size": 0.82,
+        "line": "#1c2541",
+        "fill": "#ffb627",
+        "background": "#dcebf5"
+      }
+    },
+    {
+      "id": "slow-storybook",
+      "label": "Slow Storybook",
+      "description": "A small, unhurried ink drawing with dusty rose fill that boils on twos of a slow cel cycle.",
+      "askedAs": [
+        "slow storybook illustration",
+        "calm vintage cartoon feel",
+        "small quiet hand-animated icon",
+        "медленная книжная иллюстрация",
+        "спокойная винтажная мультипликация"
+      ],
+      "props": {
+        "speed": 0.5,
+        "boilEvery": 6,
+        "size": 0.46,
+        "line": "#4a2e2a",
+        "fill": "#d98e8a",
+        "background": "#fbf3ec"
+      }
+    }
+  ]
+}

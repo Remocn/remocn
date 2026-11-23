@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const statusPageConfig: ComponentConfig = {
   componentName: "StatusPage",
@@ -12,11 +19,6 @@ export const statusPageConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     brand: {
       type: "text-content",
@@ -37,6 +39,28 @@ export const statusPageConfig: ComponentConfig = {
       description: "Year",
       hiddenFromList: false,
     },
+    ctaLabel: {
+      type: "text-content",
+      default: "Subscribe",
+      description: "Header button",
+    },
+    statusLabel: {
+      type: "text-content",
+      default: "All systems operational",
+      description: "Status headline",
+    },
+    updatedLabel: {
+      type: "text-content",
+      default: "Updated 14:02 UTC",
+      description: "Updated note",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

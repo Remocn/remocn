@@ -1,0 +1,119 @@
+{
+  "component": "feature-flag-rollout",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "night-shift-deploy",
+      "label": "Night Shift",
+      "description": "Dark theme on a deep blue-hour ground with a calm green accent and monospace type, like a late on-call console.",
+      "askedAs": [
+        "dark terminal style rollout",
+        "late night deploy look",
+        "monospace dark dashboard",
+        "тёмная тема как терминал",
+        "ночной деплой в тёмных тонах"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#3fb68b",
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "fast-ship",
+      "label": "Fast Ship",
+      "description": "A brisk rollout with tight step gaps and doubled speed for a punchy, confident release beat.",
+      "askedAs": [
+        "make the rollout quicker",
+        "snappy fast deploy",
+        "speed it up for a short clip",
+        "быстрый раскат фичи",
+        "ускорь анимацию"
+      ],
+      "props": {
+        "stepGap": 24,
+        "speed": 2,
+        "accent": "#2563eb",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "careful-canary",
+      "label": "Careful Canary",
+      "description": "Slow, deliberate pacing with long pauses between steps on a soft paper ground, emphasizing a cautious rollout.",
+      "askedAs": [
+        "slow careful rollout",
+        "calm gradual release",
+        "give each step more time",
+        "медленный осторожный раскат",
+        "спокойный темп без спешки"
+      ],
+      "props": {
+        "stepGap": 72,
+        "speed": 0.75,
+        "ground": "paper-crease",
+        "accent": "#b7791f",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "editorial-release",
+      "label": "Editorial",
+      "description": "Warm cream background with dark ink and serif type for a polished, magazine-like launch story.",
+      "askedAs": [
+        "elegant serif version",
+        "warm editorial look",
+        "classy launch video style",
+        "элегантный стиль с засечками",
+        "тёплый журнальный вид"
+      ],
+      "props": {
+        "background": "#f6f1e7",
+        "ink": "#1f1b16",
+        "accent": "#9a3b2e",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "hero-closeup",
+      "label": "Hero Close-Up",
+      "description": "Enlarged dark-mode layout on a cobalt ground with a violet accent, made for a bold keynote moment.",
+      "askedAs": [
+        "bigger bolder dashboard",
+        "keynote hero shot",
+        "zoomed in dark version",
+        "крупный план для презентации",
+        "увеличить и сделать ярче"
+      ],
+      "props": {
+        "theme": "dark",
+        "scale": 1.3,
+        "ground": "cobalt-rise",
+        "accent": "#8b7cf6",
+        "fontFamily": "Space Grotesk",
+        "delay": 12
+      }
+    },
+    {
+      "id": "frost-lab",
+      "label": "Frost Lab",
+      "description": "Cool, airy light theme on a polar ground with a teal accent and compact scale for clean product demos.",
+      "askedAs": [
+        "clean cool light look",
+        "minimal icy product demo",
+        "smaller lighter layout",
+        "холодный светлый минимализм",
+        "чистый стиль для демо продукта"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "accent": "#0e9aa7",
+        "fontFamily": "Geist",
+        "scale": 0.85
+      }
+    }
+  ]
+}

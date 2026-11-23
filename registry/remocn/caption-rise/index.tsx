@@ -9,6 +9,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionRiseProps extends CaptionBaseProps {
   shadow?: boolean;
@@ -33,6 +34,7 @@ export function CaptionRise({
   shadow = true,
   className,
 }: CaptionRiseProps) {
+  const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -90,7 +92,7 @@ export function CaptionRise({
                     style={{
                       display: "inline-block",
                       opacity: sinceMs < 0 ? 0 : 1,
-                      transform: `translateY(${(1 - p) * START_EM}em)`,
+                      transform: `translateY(${(1 - p) * START_EM}em)${glide(p > 0 && p < 1)}`,
                       textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
                     }}
                   >

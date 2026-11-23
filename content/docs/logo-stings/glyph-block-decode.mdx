@@ -44,8 +44,8 @@ export const RemotionRoot = () => (
   <Composition
     id="GlyphBlockDecode"
     component={GlyphBlockDecodeScene}
-    durationInFrames={138}
-    fps={30}
+    durationInFrames={276}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -90,6 +90,41 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "ink",
       type: "string",
       description: "Colour of the decoded text.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the name and URL. Load the font in your project first.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "Weight of the name.",
+    },
+    {
+      name: "underline",
+      type: "boolean",
+      default: "true",
+      description: "The last URL block stretches into an underline.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

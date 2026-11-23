@@ -3,19 +3,13 @@
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
   subsets: ["latin"],
 });
-const display = sans;
 
 // gradients.sh "silk" palette (bg #030308): #3b3fd8, #f3d6c0, #8a7bff.
 const SILK = ["#3b3fd8", "#f3d6c0", "#8a7bff"] as const;
@@ -36,7 +30,22 @@ const SUB_TRACK = -0.01;
 export interface ScanRevealProps {
   title?: string;
   subtitle?: string;
+  /** Frames the scan line takes to sweep down the title. */
+  scan?: number;
+  /** Baseline guides and dot grid behind the type. */
+  guides?: boolean;
   accent?: string;
+  /** Color of the halftone title before it develops; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the title and subtitle. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  grain?: boolean;
+  /** Size of the type and guides, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -161,17 +170,43 @@ function Row({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ScanReveal({
   title = "Built frame by frame",
   subtitle = "Launch films from components you own.",
+  scan = DOWN_END - DOWN_AT,
+  guides: showGuides = true,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: ScanRevealProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const c = STAGES[theme];
+  const fg = ink ?? c.fg;
+  const late = scan - (DOWN_END - DOWN_AT);
 
   const s = Math.min(150 * u, (0.84 * W) / widthEm(title, TRACK));
   const ss = Math.min(
@@ -193,15 +228,32 @@ export function ScanReveal({
   const y0 = capTop - 0.1 * H;
   const y1 = yS + 0.11 * H;
 
-  const down = SCAN(interpolate(t, [DOWN_AT, DOWN_END], [0, 1], CLAMP));
-  const up = RISE(interpolate(t, [UP_AT, UP_END], [0, 1], CLAMP));
-  const goingUp = t >= UP_AT;
+  const downAt = (f: number) =>
+    SCAN(interpolate(f, [DOWN_AT, DOWN_END + late], [0, 1], CLAMP));
+  const upAt = (f: number) =>
+    RISE(interpolate(f, [UP_AT + late, UP_END + late], [0, 1], CLAMP));
+  const down = downAt(t);
+  const up = upAt(t);
+  const goingUp = t >= UP_AT + late;
   const downY = y0 + (y1 - y0) * down;
   const upY = y1 + (yU - y1) * up;
   const lineY = goingUp ? upY : downY;
+  // Layout rounds a box edge to whole pixels, so the scan line eased by `top`
+  // clicks along pixel by pixel. While it travels, layout holds it where the
+  // pass ends and the travel is a transform, exactly 0 at that end; at rest
+  // it keeps the plain layout it always had.
+  const lineYAt = (f: number) =>
+    f >= UP_AT + late ? y1 + (yU - y1) * upAt(f) : y0 + (y1 - y0) * downAt(f);
+  const lineMoving =
+    Math.abs(lineYAt(t + speed) - lineY) > 1 / 64 ||
+    Math.abs(lineY - lineYAt(t - speed)) > 1 / 64;
+  const lineRest = goingUp ? yU : y1;
+  const lineTravel = goingUp ? (y1 - yU) * (1 - up) : (y0 - y1) * (1 - down);
 
   const lineIn = OUT(interpolate(t, [LINE_IN_AT, LINE_IN_END], [0, 1], CLAMP));
-  const park = PARK(interpolate(t, [PARK_AT, PARK_END], [0, 1], CLAMP));
+  const park = PARK(
+    interpolate(t, [PARK_AT + late, PARK_END + late], [0, 1], CLAMP),
+  );
   const guideFade = 1 - park;
   const guideIn = (i: number) =>
     OUT(interpolate(t, [GUIDE_AT + i * 2, GUIDE_END + i * 2], [0, 1], CLAMP));
@@ -221,7 +273,7 @@ export function ScanReveal({
   });
 
   const titleType: React.CSSProperties = {
-    fontFamily: display,
+    fontFamily,
     fontWeight: 500,
     fontSize: s,
     lineHeight: 1,
@@ -230,7 +282,7 @@ export function ScanReveal({
     paddingLeft: `${-TRACK}em`,
   };
   const subType: React.CSSProperties = {
-    fontFamily: sans,
+    fontFamily,
     fontWeight: 400,
     fontSize: ss,
     lineHeight: 1,
@@ -257,7 +309,7 @@ export function ScanReveal({
 
   // Silk sheen across the developed title; the bright band slides a few
   // percent over the shot, so the hold never sits perfectly still.
-  const sheen = interpolate(t, [DOWN_AT, PARK_END + 40], [0, 1], CLAMP);
+  const sheen = interpolate(t, [DOWN_AT, PARK_END + late + 40], [0, 1], CLAMP);
   const silk =
     theme === "dark"
       ? `linear-gradient(102deg, ${SILK[1]} ${-6 + 10 * sheen}%, #d9c3e6 ${26 + 10 * sheen}%, ${SILK[2]} ${62 + 8 * sheen}%, #6f6ef2 100%)`
@@ -267,144 +319,160 @@ export function ScanReveal({
   const fallOpacity = (1 - park) * lineIn;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <AbsoluteFill style={{ opacity: guideFade }}>
-        {guides.map((g, i) => {
-          const p = guideIn(i);
-          return (
-            <div
-              key={g.y}
-              style={{
-                position: "absolute",
-                left: (W - G) / 2,
-                top: g.y - 0.5,
-                width: G * p,
-                height: 1,
-                background: c.guide,
-                opacity: g.strong ? 1 : 0.7,
-              }}
-            />
-          );
-        })}
-        {guides.map((g, i) => (
-          <div
-            key={`tick-${g.y}`}
-            style={{
-              position: "absolute",
-              left: (W - G) / 2 - 0.5,
-              top: g.y - 4 * u,
-              width: 1,
-              height: 8 * u,
-              background: c.dot,
-              opacity: guideIn(i),
-            }}
-          />
-        ))}
-        <AbsoluteFill style={maskStyle(solidBelow(downY, downY + 1))}>
-          <div
-            style={{
-              position: "absolute",
-              left: (W - gridW) / 2 - gridStep / 2,
-              top: gridTop,
-              width: gridW + gridStep,
-              height: gridH,
-              opacity: guideIn(2),
-              backgroundImage: `radial-gradient(circle at 50% 50%, ${c.dot} ${1.5 * u}px, transparent ${1.5 * u + 0.7}px)`,
-              backgroundSize: `${gridStep}px ${gridStep}px`,
-            }}
-          />
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.bg),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        {showGuides ? (
+          <AbsoluteFill style={{ opacity: guideFade }}>
+            {guides.map((g, i) => {
+              const p = guideIn(i);
+              return (
+                <div
+                  key={g.y}
+                  style={{
+                    position: "absolute",
+                    left: (W - G) / 2,
+                    top: g.y - 0.5,
+                    width: G * p,
+                    height: 1,
+                    background: c.guide,
+                    opacity: g.strong ? 1 : 0.7,
+                  }}
+                />
+              );
+            })}
+            {guides.map((g, i) => (
+              <div
+                key={`tick-${g.y}`}
+                style={{
+                  position: "absolute",
+                  left: (W - G) / 2 - 0.5,
+                  top: g.y - 4 * u,
+                  width: 1,
+                  height: 8 * u,
+                  background: c.dot,
+                  opacity: guideIn(i),
+                }}
+              />
+            ))}
+            <AbsoluteFill style={maskStyle(solidBelow(downY, downY + 1))}>
+              <div
+                style={{
+                  position: "absolute",
+                  left: (W - gridW) / 2 - gridStep / 2,
+                  top: gridTop,
+                  width: gridW + gridStep,
+                  height: gridH,
+                  opacity: guideIn(2),
+                  backgroundImage: `radial-gradient(circle at 50% 50%, ${c.dot} ${1.5 * u}px, transparent ${1.5 * u + 0.7}px)`,
+                  backgroundSize: `${gridStep}px ${gridStep}px`,
+                }}
+              />
+            </AbsoluteFill>
+            <AbsoluteFill style={maskStyle(solid(upY - 1, upY))}>
+              <div
+                style={{
+                  position: "absolute",
+                  left: (W - gridW) / 2 - gridStep / 2,
+                  top: yS - subH * 1.5,
+                  width: gridW + gridStep,
+                  height: subH * 2,
+                  opacity: guideIn(4),
+                  backgroundImage: `radial-gradient(circle at 50% 50%, ${c.dot} ${1.5 * u}px, transparent ${1.5 * u + 0.7}px)`,
+                  backgroundSize: `${gridStep}px ${subH}px`,
+                }}
+              />
+            </AbsoluteFill>
+          </AbsoluteFill>
+        ) : null}
+
+        <AbsoluteFill style={maskStyle(slab(downY - band - soft - 2, downY))}>
+          <Row baseline={yB} size={s}>
+            <div style={{ ...titleType, ...dots(fg, pitch, dotR) }}>
+              {title}
+            </div>
+          </Row>
         </AbsoluteFill>
-        <AbsoluteFill style={maskStyle(solid(upY - 1, upY))}>
-          <div
-            style={{
-              position: "absolute",
-              left: (W - gridW) / 2 - gridStep / 2,
-              top: yS - subH * 1.5,
-              width: gridW + gridStep,
-              height: subH * 2,
-              opacity: guideIn(4),
-              backgroundImage: `radial-gradient(circle at 50% 50%, ${c.dot} ${1.5 * u}px, transparent ${1.5 * u + 0.7}px)`,
-              backgroundSize: `${gridStep}px ${subH}px`,
-            }}
-          />
-        </AbsoluteFill>
-      </AbsoluteFill>
-
-      <AbsoluteFill style={maskStyle(slab(downY - band - soft - 2, downY))}>
-        <Row baseline={yB} size={s}>
-          <div style={{ ...titleType, ...dots(c.fg, pitch, dotR) }}>
-            {title}
-          </div>
-        </Row>
-      </AbsoluteFill>
-      <AbsoluteFill style={maskStyle(solid(downY - band - soft, downY - band))}>
-        <Row baseline={yB} size={s}>
-          <div
-            style={{
-              ...titleType,
-              color: "transparent",
-              backgroundImage: silk,
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-            }}
-          >
-            {title}
-          </div>
-        </Row>
-      </AbsoluteFill>
-
-      <AbsoluteFill style={maskStyle(slab(upY, upY + subBand + subSoft + 2))}>
-        <Row baseline={yS} size={ss}>
-          <div
-            style={{
-              ...subType,
-              ...dots(c.muted, Math.max(2.4 * u, ss / 11), ss / 36),
-            }}
-          >
-            {subtitle}
-          </div>
-        </Row>
-      </AbsoluteFill>
-      <AbsoluteFill
-        style={maskStyle(solidBelow(upY + subBand, upY + subBand + subSoft))}
-      >
-        <Row baseline={yS} size={ss}>
-          <div style={{ ...subType, color: c.muted }}>{subtitle}</div>
-        </Row>
-      </AbsoluteFill>
-
-      <Row baseline={yB} size={s}>
-        <div style={{ ...titleType, position: "relative", height: 0 }}>
-          <div style={{ visibility: "hidden", height: 0, overflow: "hidden" }}>
-            {title}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: "50%",
-              width: lineWidth,
-              transform: "translateX(-50%)",
-              top: lineY - (yB - BASE * s) - lw / 2,
-              height: lw,
-              background: accent,
-            }}
-          >
+        <AbsoluteFill
+          style={maskStyle(solid(downY - band - soft, downY - band))}
+        >
+          <Row baseline={yB} size={s}>
             <div
               style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: goingUp ? lw : -fall,
-                height: fall,
-                opacity: 0.32 * fallOpacity,
-                background: `linear-gradient(${goingUp ? "to bottom" : "to top"}, ${accent}, transparent)`,
+                ...titleType,
+                color: "transparent",
+                backgroundImage: silk,
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
               }}
-            />
-          </div>
-        </div>
-      </Row>
+            >
+              {title}
+            </div>
+          </Row>
+        </AbsoluteFill>
 
-      <Grain opacity={theme === "light" ? 0.04 : 0.05} />
+        <AbsoluteFill style={maskStyle(slab(upY, upY + subBand + subSoft + 2))}>
+          <Row baseline={yS} size={ss}>
+            <div
+              style={{
+                ...subType,
+                ...dots(c.muted, Math.max(2.4 * u, ss / 11), ss / 36),
+              }}
+            >
+              {subtitle}
+            </div>
+          </Row>
+        </AbsoluteFill>
+        <AbsoluteFill
+          style={maskStyle(solidBelow(upY + subBand, upY + subBand + subSoft))}
+        >
+          <Row baseline={yS} size={ss}>
+            <div style={{ ...subType, color: c.muted }}>{subtitle}</div>
+          </Row>
+        </AbsoluteFill>
+
+        <Row baseline={yB} size={s}>
+          <div style={{ ...titleType, position: "relative", height: 0 }}>
+            <div
+              style={{ visibility: "hidden", height: 0, overflow: "hidden" }}
+            >
+              {title}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: "50%",
+                width: lineWidth,
+                transform: lineMoving
+                  ? `translateY(${lineTravel}px) translateX(-50%)`
+                  : "translateX(-50%)",
+                top: (lineMoving ? lineRest : lineY) - (yB - BASE * s) - lw / 2,
+                height: lw,
+                background: accent,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: goingUp ? lw : -fall,
+                  height: fall,
+                  opacity: 0.32 * fallOpacity,
+                  background: `linear-gradient(${goingUp ? "to bottom" : "to top"}, ${accent}, transparent)`,
+                }}
+              />
+            </div>
+          </div>
+        </Row>
+      </ScaleLayer>
+
+      {grain ? <Grain opacity={theme === "light" ? 0.04 : 0.05} /> : null}
     </AbsoluteFill>
   );
 }

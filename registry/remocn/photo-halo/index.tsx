@@ -3,6 +3,7 @@
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont } from "@remotion/google-fonts/InterTight";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -11,9 +12,9 @@ import {
   random,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -63,8 +64,22 @@ export interface PhotoHaloProps {
   accentWord?: number;
   images?: string[];
   theme?: "dark" | "light";
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
   background?: string;
   ink?: string;
+  /** Color of the accent word; overrides the theme. */
+  accent?: string;
+  /** Typeface for the headline. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  /** Frames between headline words as they rise. */
+  stagger?: number;
+  /** Replaces the remocn logo in the final lockup. */
+  logo?: React.ReactNode;
+  /** Size of the headline, photos and lockup, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   blooms?: string[];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -145,6 +160,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 function popTime(order: number) {
   let t = beat("pops");
@@ -227,6 +244,22 @@ function buildSlots(
   return slots;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PhotoHalo({
   words = DEFAULT_WORDS,
   accentWord = 3,
@@ -234,15 +267,24 @@ export function PhotoHalo({
   theme = "dark",
   background,
   ink,
+  accent: accentColor,
+  fontFamily = interTight.fontFamily,
+  stagger = 3,
+  logo,
+  scale: zoom = 1,
+  delay = 0,
+  speed = 1,
   blooms,
   ground,
   groundParams,
 }: PhotoHaloProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const t = THEMES[theme];
   const light = theme === "light";
-  const bg = background ?? t.background;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? t.background);
   const fg = ink ?? t.ink;
   const srcs = (
     images && images.length > 0 ? images : DEFAULT_IMAGES.map(staticFile)
@@ -306,14 +348,16 @@ export function PhotoHalo({
     config: SPRING_CHIP,
   });
   const punch = 1 + 0.05 * Math.sin(Math.min(1, landSpring) * Math.PI);
-  const lockPush = interpolate(frame, [beat("land"), beat("end")], [1, 1.03], {
+  const lockP = interpolate(frame, [beat("land"), beat("end")], [0, 1], {
     ...CLAMP,
     easing: EASE_CAMERA,
   });
-  const pushAll = interpolate(frame, [0, beat("converge")], [0, 0.08], {
+  const lockPush = 1 + 0.03 * lockP;
+  const pushP = interpolate(frame, [0, beat("converge")], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.65, 0, 0.35, 1),
   });
+  const pushAll = 0.08 * pushP;
 
   const convergeStart = (i: number) => {
     const k = rowPick.indexOf(i);
@@ -362,201 +406,214 @@ export function PhotoHalo({
 
   return (
     <AbsoluteFill style={{ backgroundColor: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={light ? 4 : 2.4}
-        timeScale={0.7}
-      />
+      {background === undefined ? (
+        <GshGround
+          preset={preset}
+          params={gParams}
+          timeOffset={light ? 4 : 2.4}
+          timeScale={0.7}
+        />
+      ) : null}
       <AbsoluteFill
         style={{
           backgroundImage: `radial-gradient(${portrait ? "70% 30%" : "44% 40%"} at 50% 50%, ${t.scrim} 0%, transparent 72%)`,
           opacity: scrimP,
         }}
       />
-      <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden>
-        {order.map((i) => {
-          const now = stateAt(i, frame);
-          const prev = stateAt(i, frame - 1);
-          const vx = Math.min(10, Math.abs(now.x - prev.x) * 0.1);
-          const vy = Math.min(10, Math.abs(now.y - prev.y) * 0.1);
-          return (
-            <filter
-              key={`f-${i}`}
-              id={`ph2-mb-${i}`}
-              x="-20%"
-              y="-20%"
-              width="140%"
-              height="140%"
-            >
-              <feGaussianBlur stdDeviation={`${vx} ${vy}`} />
-            </filter>
-          );
-        })}
-      </svg>
-      <AbsoluteFill
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            columnGap: "0.24em",
-            maxWidth: maxW,
-            fontFamily: interTight.fontFamily,
-            fontWeight: 300,
-            fontSize,
-            lineHeight: 1.04,
-            letterSpacing: "-0.04em",
-            color: fg,
-            transform: `scale(${(1 + pushAll * 0.4) * (1 - textOut * 0.1)})`,
-            opacity: 1 - textOut,
-            filter: `blur(${textOut * 10}px)`,
-          }}
-        >
-          {words.map((word, i) => {
-            const start = beat("words") + i * 3;
-            const p = interpolate(frame, [start, start + 12], [0, 1], {
-              ...CLAMP,
-              easing: EASE_ENTER,
-            });
-            const accent = i === accentWord;
+      <ScaleLayer scale={zoom}>
+        <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden>
+          {order.map((i) => {
+            const now = stateAt(i, frame);
+            const prev = stateAt(i, frame - speed);
+            const vx = Math.min(10, Math.abs(now.x - prev.x) * 0.1);
+            const vy = Math.min(10, Math.abs(now.y - prev.y) * 0.1);
             return (
-              <span
-                key={`${word}-${i}`}
-                style={{
-                  display: "inline-block",
-                  overflow: "hidden",
-                  padding: "0.04em 0.06em 0.16em",
-                  margin: "-0.04em -0.06em -0.16em",
-                }}
+              <filter
+                key={`f-${i}`}
+                id={`ph2-mb-${i}`}
+                x="-20%"
+                y="-20%"
+                width="140%"
+                height="140%"
               >
-                <span
-                  style={{
-                    display: "inline-block",
-                    transform: `translateY(${(1 - p) * 140}%)`,
-                    filter: `blur(${(1 - p) * 6}px)`,
-                    fontFamily: accent ? serif.fontFamily : undefined,
-                    fontStyle: accent ? "italic" : undefined,
-                    fontWeight: 400,
-                    letterSpacing: accent ? "-0.02em" : undefined,
-                    color: accent ? t.accent : undefined,
-                    fontSize: accent ? "1.08em" : undefined,
-                    lineHeight: accent ? 0.96 : undefined,
-                  }}
-                >
-                  {word}
-                </span>
-              </span>
+                <feGaussianBlur stdDeviation={`${vx} ${vy}`} />
+              </filter>
             );
           })}
-        </div>
-      </AbsoluteFill>
-      <AbsoluteFill style={{ perspective: portrait ? 2400 : 1600 }}>
-        {order.map((i) => {
-          const s = slots[i] as Slot;
-          if (frame < s.t) return null;
-          const now = stateAt(i, frame);
-          const prev = stateAt(i, frame - 1);
-          const moving = Math.hypot(now.x - prev.x, now.y - prev.y) > 4 ? 1 : 0;
-          const flat = 1 - now.q;
-          const depthBlur = (1 - s.z) * (portrait ? 7 : 6) * flat;
-          const dim = 1 - (1 - s.z) * (light ? 0.25 : 0.45) * flat;
-          const fade =
-            now.k >= 0
-              ? 1
-              : interpolate(
-                  frame,
-                  [convergeStart(i) + 6, convergeStart(i) + 14],
-                  [1, 0],
-                  CLAMP,
-                );
-          const locked = now.k >= 0 && frame >= beat("land");
-          const scale = locked
-            ? punch * lockPush
-            : 0.6 + 0.4 * Math.min(1.04, now.pop);
-          const rotY = ((now.x - cx) / W) * -22 * flat;
-          const rotX = ((now.y - cy) / H) * 16 * flat;
-          const rotZ = s.rot * flat;
-          const lift = (18 + 30 * s.z) * unit * flat + 4 * unit;
-          const [s1, s2, s3] = t.shadow;
-          const src = srcs[i % srcs.length] as string;
-          return (
-            <div
-              key={`ph-${i}`}
-              style={{
-                position: "absolute",
-                left: now.x - now.w / 2,
-                top: now.y - now.h / 2,
-                width: now.w,
-                height: now.h,
-                borderRadius: now.r,
-                opacity: Math.min(1, now.pop * 2.4) * fade,
-                transform: `scale(${scale}) rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`,
-                transformOrigin: locked
-                  ? `${cx - (now.x - now.w / 2)}px ${cy - (now.y - now.h / 2)}px`
-                  : "50% 50%",
-                filter: `${moving ? `url(#ph2-mb-${i}) ` : ""}blur(${depthBlur}px) brightness(${dim})`,
-                boxShadow: `0 0 0 ${ring * now.q}px ${t.ring}, 0 ${lift * 0.08}px ${lift * 0.16}px rgba(${t.shadowRgb},${s1}), 0 ${lift * 0.4}px ${lift}px rgba(${t.shadowRgb},${s2}), 0 ${lift}px ${lift * 2.6}px rgba(${t.shadowRgb},${s3})`,
-              }}
-            >
+        </svg>
+        <AbsoluteFill
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              columnGap: "0.24em",
+              maxWidth: maxW,
+              fontFamily,
+              fontWeight: 300,
+              fontSize,
+              lineHeight: 1.04,
+              letterSpacing: "-0.04em",
+              color: fg,
+              transform: `scale(${(1 + pushAll * 0.4) * (1 - textOut * 0.1)})${glide(midway(pushP) || midway(textOut))}`,
+              opacity: 1 - textOut,
+              filter: `blur(${textOut * 10}px)`,
+            }}
+          >
+            {words.map((word, i) => {
+              const start = beat("words") + i * stagger;
+              const p = interpolate(frame, [start, start + 12], [0, 1], {
+                ...CLAMP,
+                easing: EASE_ENTER,
+              });
+              const accent = i === accentWord;
+              return (
+                <span
+                  key={`${word}-${i}`}
+                  style={{
+                    display: "inline-block",
+                    overflow: "hidden",
+                    padding: "0.04em 0.06em 0.16em",
+                    margin: "-0.04em -0.06em -0.16em",
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "inline-block",
+                      transform: `translateY(${(1 - p) * 140}%)${glide(midway(p))}`,
+                      filter: `blur(${(1 - p) * 6}px)`,
+                      fontFamily: accent ? serif.fontFamily : undefined,
+                      fontStyle: accent ? "italic" : undefined,
+                      fontWeight: 400,
+                      letterSpacing: accent ? "-0.02em" : undefined,
+                      color: accent ? (accentColor ?? t.accent) : undefined,
+                      fontSize: accent ? "1.08em" : undefined,
+                      lineHeight: accent ? 0.96 : undefined,
+                    }}
+                  >
+                    {word}
+                  </span>
+                </span>
+              );
+            })}
+          </div>
+        </AbsoluteFill>
+        <AbsoluteFill style={{ perspective: portrait ? 2400 : 1600 }}>
+          {order.map((i) => {
+            const s = slots[i] as Slot;
+            if (frame < s.t) return null;
+            const now = stateAt(i, frame);
+            const prev = stateAt(i, frame - speed);
+            const moving =
+              Math.hypot(now.x - prev.x, now.y - prev.y) > 4 ? 1 : 0;
+            const flat = 1 - now.q;
+            const depthBlur = (1 - s.z) * (portrait ? 7 : 6) * flat;
+            const dim = 1 - (1 - s.z) * (light ? 0.25 : 0.45) * flat;
+            const fade =
+              now.k >= 0
+                ? 1
+                : interpolate(
+                    frame,
+                    [convergeStart(i) + 6, convergeStart(i) + 14],
+                    [1, 0],
+                    CLAMP,
+                  );
+            const locked = now.k >= 0 && frame >= beat("land");
+            const scale = locked
+              ? punch * lockPush
+              : 0.6 + 0.4 * Math.min(1.04, now.pop);
+            const rotY = ((now.x - cx) / W) * -22 * flat;
+            const rotX = ((now.y - cy) / H) * 16 * flat;
+            const rotZ = s.rot * flat;
+            const lift = (18 + 30 * s.z) * unit * flat + 4 * unit;
+            const [s1, s2, s3] = t.shadow;
+            const src = srcs[i % srcs.length] as string;
+            // Layout rounds a box to whole pixels, so a photo drifting by
+            // `left`/`top` clicks along. It is laid out where it comes to
+            // rest (its seat in the row, or its slot in the halo) and the
+            // drift is a transform.
+            const restX = now.k >= 0 ? rowFinal + d / 2 + now.k * step : s.x;
+            const restY = now.k >= 0 ? rowY : s.y;
+            return (
               <div
+                key={`ph-${i}`}
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  borderRadius: "inherit",
-                  overflow: "hidden",
+                  left: restX - now.w / 2,
+                  top: restY - now.h / 2,
+                  width: now.w,
+                  height: now.h,
+                  borderRadius: now.r,
+                  opacity: Math.min(1, now.pop * 2.4) * fade,
+                  transform: `translate(${now.x - restX}px, ${now.y - restY}px) scale(${scale}) rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`,
+                  transformOrigin: locked
+                    ? `${cx - (now.x - now.w / 2)}px ${cy - (now.y - now.h / 2)}px`
+                    : "50% 50%",
+                  filter: `${moving ? `url(#ph2-mb-${i}) ` : ""}blur(${depthBlur}px) brightness(${dim})`,
+                  boxShadow: `0 0 0 ${ring * now.q}px ${t.ring}, 0 ${lift * 0.08}px ${lift * 0.16}px rgba(${t.shadowRgb},${s1}), 0 ${lift * 0.4}px ${lift}px rgba(${t.shadowRgb},${s2}), 0 ${lift}px ${lift * 2.6}px rgba(${t.shadowRgb},${s3})`,
                 }}
               >
-                <Img
-                  src={src}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
-                />
                 <div
                   style={{
                     position: "absolute",
                     inset: 0,
                     borderRadius: "inherit",
-                    boxShadow: `inset 0 0 0 1px ${t.hairline}, inset 0 1px 0 rgba(255,255,255,0.22)`,
-                    backgroundImage:
-                      "linear-gradient(160deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 40%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.16) 100%)",
+                    overflow: "hidden",
                   }}
-                />
+                >
+                  <Img
+                    src={src}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: "inherit",
+                      boxShadow: `inset 0 0 0 1px ${t.hairline}, inset 0 1px 0 rgba(255,255,255,0.22)`,
+                      backgroundImage:
+                        "linear-gradient(160deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 40%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.16) 100%)",
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </AbsoluteFill>
-      <div
-        style={{
-          position: "absolute",
-          left: portrait ? cx - logoW / 2 : cx - groupW / 2,
-          top: portrait ? cy - d * 0.7 - logoSize * 1.25 : cy - logoSize * 0.56,
-          height: logoSize * 1.1,
-          display: "flex",
-          alignItems: "center",
-          clipPath: portrait
-            ? `inset(${(1 - logoP) * 100}% -10% -20% -10%)`
-            : `inset(-20% ${(1 - logoP) * 100}% -20% 0)`,
-          transform: portrait
-            ? `translateY(${(1 - logoP) * logoSize * 0.4}px) scale(${lockPush})`
-            : `translateX(${(1 - logoP) * logoSize * 0.5}px) scale(${lockPush})`,
-          transformOrigin: portrait ? "50% 50%" : `${groupW / 2}px 50%`,
-          opacity: logoP > 0 ? 1 : 0,
-        }}
-      >
-        <RemocnLogo fontSize={logoSize} color={fg} />
-      </div>
+            );
+          })}
+        </AbsoluteFill>
+        <div
+          style={{
+            position: "absolute",
+            left: portrait ? cx - logoW / 2 : cx - groupW / 2,
+            top: portrait
+              ? cy - d * 0.7 - logoSize * 1.25
+              : cy - logoSize * 0.56,
+            height: logoSize * 1.1,
+            display: "flex",
+            alignItems: "center",
+            clipPath: portrait
+              ? `inset(${(1 - logoP) * 100}% -10% -20% -10%)`
+              : `inset(-20% ${(1 - logoP) * 100}% -20% 0)`,
+            transform: portrait
+              ? `translateY(${(1 - logoP) * logoSize * 0.4}px) scale(${lockPush})${glide(midway(logoP) || midway(lockP))}`
+              : `translateX(${(1 - logoP) * logoSize * 0.5}px) scale(${lockPush})${glide(midway(lockP))}`,
+            transformOrigin: portrait ? "50% 50%" : `${groupW / 2}px 50%`,
+            opacity: logoP > 0 ? 1 : 0,
+          }}
+        >
+          {logo ?? <RemocnLogo fontSize={logoSize} color={fg} />}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

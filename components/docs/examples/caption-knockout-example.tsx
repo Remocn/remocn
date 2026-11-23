@@ -1,7 +1,8 @@
 "use client";
 
-import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { previewCaptions } from "@/components/docs/examples/caption-fixture";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { CaptionKnockout } from "@/registry/remocn/caption-knockout";
 
 interface CaptionKnockoutExampleProps {
@@ -26,8 +27,8 @@ export function CaptionKnockoutExampleScene({
   combineTokensWithinMilliseconds,
   holdMs,
 }: CaptionKnockoutExampleProps) {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
       <div

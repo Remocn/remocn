@@ -1,0 +1,120 @@
+{
+  "component": "ai-image-grid",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "studio-light",
+      "label": "Studio Light",
+      "description": "Clean light interface on a soft paper ground with a crisp cobalt accent and Inter type.",
+      "askedAs": [
+        "light clean version",
+        "bright minimal product look",
+        "white background ui",
+        "светлая чистая версия",
+        "минималистичный светлый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accent": "#2f4fe0",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "rapid-batch",
+      "label": "Rapid Batch",
+      "description": "A wider six-tile grid that resolves quickly with tight stagger for an energetic, high-throughput feel.",
+      "askedAs": [
+        "faster with more images",
+        "quick six tile grid",
+        "snappy energetic generation",
+        "быстрая сетка из шести картинок",
+        "больше вариантов и быстрее"
+      ],
+      "props": {
+        "layout": "3x2",
+        "stagger": 1,
+        "speed": 1.75,
+        "ground": "cyan-drift",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Unhurried cinematic pacing with wide tile stagger, a warm ember ground and a copper accent.",
+      "askedAs": [
+        "slow cinematic reveal",
+        "calm dramatic version",
+        "warm moody generation",
+        "медленное кинематографичное появление",
+        "тёплый спокойный вариант"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 9,
+        "ground": "ember",
+        "accent": "#d9824a",
+        "delay": 12
+      }
+    },
+    {
+      "id": "terminal-dev",
+      "label": "Terminal Dev",
+      "description": "Developer-flavoured dark look with monospace type, near-black background and a mint accent.",
+      "askedAs": [
+        "hacker monospace style",
+        "developer terminal look",
+        "code-style dark grid",
+        "в стиле терминала",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#e3f2ec",
+        "accent": "#3dd9a0",
+        "ground": "nightfold"
+      }
+    },
+    {
+      "id": "editorial-gallery",
+      "label": "Editorial Gallery",
+      "description": "Gallery-like light presentation with serif type, a warm off-white background and deep garnet accent.",
+      "askedAs": [
+        "elegant art gallery look",
+        "serif editorial style",
+        "magazine feel for images",
+        "элегантный галерейный стиль",
+        "редакционный вид с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f4efe8",
+        "ink": "#2a1e1c",
+        "accent": "#8c2f39",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "hero-closeup",
+      "label": "Hero Closeup",
+      "description": "Oversized grid on a violet iris ground that frames the chosen render up close.",
+      "askedAs": [
+        "bigger zoomed in grid",
+        "close up hero image",
+        "large bold framing",
+        "крупный план сетки",
+        "увеличенный вариант"
+      ],
+      "props": {
+        "scale": 1.3,
+        "ground": "iris",
+        "accent": "#8b6cf6",
+        "fontFamily": "Geist"
+      }
+    }
+  ]
+}

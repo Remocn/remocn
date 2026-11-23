@@ -12,9 +12,9 @@ import {
   random,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -65,6 +65,8 @@ const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   });
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 type CardId = "chart" | "hero" | "stat" | "icon" | "sketch" | "cover";
 const ORDER: CardId[] = ["chart", "hero", "stat", "icon", "sketch", "cover"];
@@ -250,6 +252,7 @@ function ChartCard({
   u,
   accent,
   grow,
+  title,
 }: {
   w: number;
   h: number;
@@ -257,6 +260,7 @@ function ChartCard({
   u: number;
   accent: string;
   grow: number;
+  title: string;
 }) {
   const bars = Array.from({ length: 16 }, (_, i) => {
     const a = 0.28 + 0.55 * random(`sf-bar-a-${i}`) + i * 0.012;
@@ -288,7 +292,7 @@ function ChartCard({
             justifyContent: "space-between",
           }}
         >
-          <div style={{ fontSize: 19 * u, color: "#eef1f6" }}>Signups</div>
+          <div style={{ fontSize: 19 * u, color: "#eef1f6" }}>{title}</div>
           <div
             style={{
               fontFamily: mono.fontFamily,
@@ -590,12 +594,14 @@ function IconCard({
   t,
   u,
   accent,
+  logo,
 }: {
   w: number;
   h: number;
   t: Tokens;
   u: number;
   accent: string;
+  logo?: ReactNode;
 }) {
   const tile = Math.min(w * 0.5, h * 0.4);
   return (
@@ -623,7 +629,7 @@ function IconCard({
             justifyContent: "center",
           }}
         >
-          <RemocnR height={tile * 0.48} color="#fff" />
+          {logo ?? <RemocnR height={tile * 0.48} color="#fff" />}
         </div>
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 17 * u, color: t.ink }}>App icon</div>
@@ -817,7 +823,24 @@ export interface SendFountainProps {
   stat?: number;
   statLabel?: string;
   statDelta?: string;
+  /** Title of the signups chart card. */
+  chartTitle?: string;
+  /** Button in the window's top bar. */
+  ctaLabel?: string;
   images?: string[];
+  /** Replaces the remocn mark in the top bar and on the app icon card. */
+  logo?: ReactNode;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Size of the window and cards, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 }
@@ -832,6 +855,22 @@ const LIGHT_GROUND: Partial<GradientParams> = {
   seed: 31,
 };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SendFountain({
   theme = "dark",
   accent = "#ff5a1f",
@@ -841,30 +880,55 @@ export function SendFountain({
   stat = 47200,
   statLabel = "Weekly active",
   statDelta = "+18%",
+  chartTitle = "Signups",
+  ctaLabel = "Publish",
   images = [
     staticFile("templates/launch-anything/horizon.jpg"),
     staticFile("templates/product-showcase/sculpture.jpg"),
   ],
+  logo,
+  ink,
+  background,
+  fontFamily = onest.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: SendFountainProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const rawFrame = useSceneFrame();
+  const frame = Math.max(0, rawFrame - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
+  // Whether a value of the frame is moving right now: springs overshoot and
+  // trail off, so it is read against the neighbouring frames instead of a
+  // progress. Nothing moves while `delay` holds the first frame.
+  const stirs = (at: (f: number) => number, eps = 1e-5) =>
+    rawFrame >= delay &&
+    (Math.abs(at(frame + speed) - at(frame)) > eps ||
+      Math.abs(at(frame) - at(frame - speed)) > eps);
   const dark = theme === "dark";
-  const t = tokens(dark);
+  const themeTokens = tokens(dark);
+  const t = ink ? { ...themeTokens, ink } : themeTokens;
   const portrait = height > width * 1.2;
   const L = portrait ? PORTRAIT : LANDSCAPE;
   const { u } = L;
   const sc = width / L.stageW;
 
   const camT = ramp(frame, B.rise, B.riseEnd - B.rise, MOVE);
-  const camY = camT * L.rise;
-  const push = 1 + 0.03 * ramp(frame, B.snap, B.end - B.snap, SWAY);
-  const open = ramp(frame, -4, 40, MOVE);
-  const zoom = mix(1.22, 1, open);
+  const pushAt = (f: number) =>
+    1 + 0.03 * ramp(f, B.snap, B.end - B.snap, SWAY);
+  const push = pushAt(frame);
+  const zoomAt = (f: number) => mix(1.22, 1, ramp(f, -4, 40, MOVE));
+  const zoom = zoomAt(frame);
 
   const barIn = spring({ frame: frame - B.bar, fps, config: HEAVY });
-  const barY = L.bar.cy + camY + mix(60 * u, 0, barIn);
+  // How far the bar sits below its place in the layout: the entrance, then
+  // the camera rising past it.
+  const barDropAt = (f: number) =>
+    ramp(f, B.rise, B.riseEnd - B.rise, MOVE) * L.rise +
+    mix(60 * u, 0, spring({ frame: f - B.bar, fps, config: HEAVY }));
+  const barY = L.bar.cy + barDropAt(frame);
   const btnX = L.bar.cx + L.bar.w / 2 - L.bar.h / 2 + 0;
   const btnY = barY;
 
@@ -886,7 +950,9 @@ export function SendFountain({
   const winX = L.win.x;
   const winY = L.win.y;
   const chromeIn = ramp(frame, B.chrome, 16);
-  const liveIn = spring({ frame: frame - B.live, fps, config: CHIP });
+  const liveAt = (f: number) =>
+    spring({ frame: f - B.live, fps, config: CHIP });
+  const liveIn = liveAt(frame);
   const dataT = ramp(frame, B.data, 30, MOVE);
   const statValue = Math.round(mix(stat, stat + 312, dataT));
   const heroProg = 0.18 + 0.2 * ramp(frame, B.snap, B.end - B.snap, SWAY);
@@ -926,7 +992,15 @@ export function SendFountain({
     switch (id) {
       case "chart":
         return (
-          <ChartCard w={w} h={h} t={t} u={u} accent={accent} grow={dataT} />
+          <ChartCard
+            w={w}
+            h={h}
+            t={t}
+            u={u}
+            accent={accent}
+            grow={dataT}
+            title={chartTitle}
+          />
         );
       case "hero":
         return (
@@ -954,7 +1028,7 @@ export function SendFountain({
           />
         );
       case "icon":
-        return <IconCard w={w} h={h} t={t} u={u} accent={accent} />;
+        return <IconCard w={w} h={h} t={t} u={u} accent={accent} logo={logo} />;
       case "sketch":
         return <SketchCard w={w} h={h} t={t} u={u} />;
       default:
@@ -971,415 +1045,457 @@ export function SendFountain({
   const avSlotY = winY + topH / 2;
 
   return (
-    <AbsoluteFill style={{ fontFamily: onest.fontFamily, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `translateY(${camT * 0.08 * height}px) scale(1.24)`,
-        }}
-      >
-        <GshGround
-          preset={resolvedGround}
-          params={resolvedParams}
-          timeOffset={3}
-          timeScale={0.6}
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <>
+          <AbsoluteFill
+            style={{
+              transform: `translateY(${camT * 0.08 * height}px) scale(1.24)`,
+            }}
+          >
+            <GshGround
+              preset={resolvedGround}
+              params={resolvedParams}
+              timeOffset={3}
+              timeScale={0.6}
+            />
+          </AbsoluteFill>
+          <AbsoluteFill
+            style={{
+              background: dark
+                ? `linear-gradient(180deg, rgba(2,8,9,${0.15 + 0.35 * camT}) 0%, rgba(2,8,9,0) 60%)`
+                : `linear-gradient(180deg, rgba(255,255,255,${0.1 + 0.25 * camT}) 0%, rgba(255,255,255,0) 60%)`,
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
         />
-      </AbsoluteFill>
-      <AbsoluteFill
-        style={{
-          background: dark
-            ? `linear-gradient(180deg, rgba(2,8,9,${0.15 + 0.35 * camT}) 0%, rgba(2,8,9,0) 60%)`
-            : `linear-gradient(180deg, rgba(255,255,255,${0.1 + 0.25 * camT}) 0%, rgba(255,255,255,0) 60%)`,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: L.stageW,
-          height: L.stageH,
-          transform: `scale(${sc})`,
-          transformOrigin: "0 0",
-        }}
-      >
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${zoom})`,
-            transformOrigin: `${L.bar.cx + L.bar.w * 0.2}px ${L.bar.cy}px`,
+            left: 0,
+            top: 0,
+            width: L.stageW,
+            height: L.stageH,
+            transform: `scale(${sc})`,
+            transformOrigin: "0 0",
           }}
         >
           <div
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${push})`,
-              transformOrigin: `${L.stageW / 2}px ${winY + L.win.h / 2}px`,
+              transform: `scale(${zoom})${glide(stirs(zoomAt, 1e-7))}`,
+              transformOrigin: `${L.bar.cx + L.bar.w * 0.2}px ${L.bar.cy}px`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: winX,
-                top: winY,
-                width: L.win.w,
-                height: L.win.h,
-                borderRadius: 20 * u,
-                background: t.win,
-                border: `1px solid ${t.hair}`,
-                boxShadow: surfaceShadow(t, 1),
-                opacity: chromeIn,
-                transform: `scale(${mix(1.04, 1, chromeIn)})`,
-                filter: chromeIn < 1 ? `blur(${(1 - chromeIn) * 8}px)` : "",
+                inset: 0,
+                transform: `scale(${push})${glide(stirs(pushAt, 1e-7))}`,
+                transformOrigin: `${L.stageW / 2}px ${winY + L.win.h / 2}px`,
               }}
             >
               <div
                 style={{
                   position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  height: topH,
-                  borderBottom: `1px solid ${t.hair}`,
-                  display: "flex",
-                  alignItems: "center",
-                  padding: `0 ${16 * u}px`,
-                  gap: 14 * u,
+                  left: winX,
+                  top: winY,
+                  width: L.win.w,
+                  height: L.win.h,
+                  borderRadius: 20 * u,
+                  background: t.win,
+                  border: `1px solid ${t.hair}`,
+                  boxShadow: surfaceShadow(t, 1),
+                  opacity: chromeIn,
+                  transform: `scale(${mix(1.04, 1, chromeIn)})${glide(midway(chromeIn))}`,
+                  filter: chromeIn < 1 ? `blur(${(1 - chromeIn) * 8}px)` : "",
                 }}
               >
-                <div style={{ display: "flex", gap: 7 * u }}>
-                  {["a", "b", "c"].map((k) => (
-                    <div
-                      key={k}
-                      style={{
-                        width: 11 * u,
-                        height: 11 * u,
-                        borderRadius: 99,
-                        border: `1px solid ${t.hair}`,
-                        background: dark
-                          ? "rgba(255,255,255,0.08)"
-                          : "rgba(18,23,22,0.08)",
-                      }}
-                    />
-                  ))}
-                </div>
                 <div
                   style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    height: topH,
+                    borderBottom: `1px solid ${t.hair}`,
                     display: "flex",
                     alignItems: "center",
-                    gap: 10 * u,
-                    marginLeft: 6 * u,
+                    padding: `0 ${16 * u}px`,
+                    gap: 14 * u,
                   }}
                 >
+                  <div style={{ display: "flex", gap: 7 * u }}>
+                    {["a", "b", "c"].map((k) => (
+                      <div
+                        key={k}
+                        style={{
+                          width: 11 * u,
+                          height: 11 * u,
+                          borderRadius: 99,
+                          border: `1px solid ${t.hair}`,
+                          background: dark
+                            ? "rgba(255,255,255,0.08)"
+                            : "rgba(18,23,22,0.08)",
+                        }}
+                      />
+                    ))}
+                  </div>
                   <div
                     style={{
-                      width: 24 * u,
-                      height: 24 * u,
-                      borderRadius: 7 * u,
-                      background: accent,
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
+                      gap: 10 * u,
+                      marginLeft: 6 * u,
                     }}
                   >
-                    <RemocnR height={12 * u} color="#fff" />
-                  </div>
-                  <span style={{ fontSize: 17 * u, color: t.ink }}>
-                    {appTitle}
-                  </span>
-                  {portrait ? null : (
-                    <span
+                    <div
                       style={{
-                        fontFamily: mono.fontFamily,
-                        fontSize: 16 * u,
+                        width: 24 * u,
+                        height: 24 * u,
+                        borderRadius: 7 * u,
+                        background: accent,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {logo ?? <RemocnR height={12 * u} color="#fff" />}
+                    </div>
+                    <span style={{ fontSize: 17 * u, color: t.ink }}>
+                      {appTitle}
+                    </span>
+                    {portrait ? null : (
+                      <span
+                        style={{
+                          fontFamily: mono.fontFamily,
+                          fontSize: 16 * u,
+                          color: t.muted,
+                        }}
+                      >
+                        / v2
+                      </span>
+                    )}
+                  </div>
+                  {!portrait ? (
+                    <div
+                      style={{
+                        marginLeft: "auto",
+                        marginRight: "auto",
+                        display: "flex",
+                        padding: 3,
+                        borderRadius: 9,
+                        border: `1px solid ${t.hair}`,
+                        fontSize: 16,
                         color: t.muted,
                       }}
                     >
-                      / v2
-                    </span>
+                      <div style={{ padding: "3px 12px" }}>Preview</div>
+                      <div
+                        style={{
+                          padding: "3px 12px",
+                          borderRadius: 6,
+                          color: t.ink,
+                          background: dark
+                            ? "rgba(255,255,255,0.08)"
+                            : "rgba(18,23,22,0.06)",
+                        }}
+                      >
+                        Board
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ marginLeft: "auto" }} />
                   )}
-                </div>
-                {!portrait ? (
                   <div
                     style={{
-                      marginLeft: "auto",
-                      marginRight: "auto",
                       display: "flex",
-                      padding: 3,
-                      borderRadius: 9,
-                      border: `1px solid ${t.hair}`,
-                      fontSize: 16,
-                      color: t.muted,
+                      alignItems: "center",
+                      gap: 6 * u,
+                      fontSize: 16 * u,
+                      color: dark ? "#7af0c6" : "#118a63",
+                      padding: `${3 * u}px ${10 * u}px`,
+                      borderRadius: 99,
+                      background: dark
+                        ? "rgba(122,240,198,0.12)"
+                        : "rgba(17,138,99,0.1)",
+                      transform: `scale(${liveIn})${glide(stirs(liveAt))}`,
+                      opacity: Math.min(1, liveIn * 2),
                     }}
                   >
-                    <div style={{ padding: "3px 12px" }}>Preview</div>
                     <div
                       style={{
-                        padding: "3px 12px",
-                        borderRadius: 6,
-                        color: t.ink,
-                        background: dark
-                          ? "rgba(255,255,255,0.08)"
-                          : "rgba(18,23,22,0.06)",
+                        width: 7 * u,
+                        height: 7 * u,
+                        borderRadius: 99,
+                        background: "currentColor",
                       }}
-                    >
-                      Board
-                    </div>
+                    />
+                    Live
                   </div>
-                ) : (
-                  <div style={{ marginLeft: "auto" }} />
-                )}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6 * u,
-                    fontSize: 16 * u,
-                    color: dark ? "#7af0c6" : "#118a63",
-                    padding: `${3 * u}px ${10 * u}px`,
-                    borderRadius: 99,
-                    background: dark
-                      ? "rgba(122,240,198,0.12)"
-                      : "rgba(17,138,99,0.1)",
-                    transform: `scale(${liveIn})`,
-                    opacity: Math.min(1, liveIn * 2),
-                  }}
-                >
                   <div
                     style={{
-                      width: 7 * u,
-                      height: 7 * u,
-                      borderRadius: 99,
-                      background: "currentColor",
+                      fontSize: 16 * u,
+                      color: "#fff",
+                      background: accent,
+                      padding: `${5 * u}px ${14 * u}px`,
+                      borderRadius: 8 * u,
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3)",
                     }}
-                  />
-                  Live
-                </div>
-                <div
-                  style={{
-                    fontSize: 16 * u,
-                    color: "#fff",
-                    background: accent,
-                    padding: `${5 * u}px ${14 * u}px`,
-                    borderRadius: 8 * u,
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3)",
-                  }}
-                >
-                  Publish
+                  >
+                    {ctaLabel}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div
-              style={{
-                position: "absolute",
-                left: L.bar.cx - L.bar.w / 2,
-                top: barY - L.bar.h / 2,
-                width: L.bar.w,
-                height: L.bar.h,
-                borderRadius: L.bar.h / 2,
-                background: t.bar,
-                border: `1px solid ${t.hair}`,
-                boxShadow: surfaceShadow(t, 0.4),
-                display: "flex",
-                alignItems: "center",
-                padding: `0 ${(L.bar.h - L.bar.btn) / 2}px 0 ${24 * u}px`,
-                gap: 16 * u,
-                opacity: barIn,
-              }}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                width={22 * u}
-                height={22 * u}
-                aria-hidden
-                style={{ flexShrink: 0 }}
-              >
-                <path
-                  d="M12 5v14M5 12h14"
-                  stroke={t.muted}
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                />
-              </svg>
               <div
                 style={{
-                  flex: 1,
-                  fontSize: 23 * u,
-                  color: t.ink,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
+                  position: "absolute",
+                  left: L.bar.cx - L.bar.w / 2,
+                  // Laid out where it rests and carried by a transform:
+                  // layout rounds a box and a baseline to whole pixels, so a
+                  // bar eased by `top` clicks along pixel by pixel.
+                  top: L.bar.cy - L.bar.h / 2,
+                  transform: `translateY(${barY - L.bar.cy}px)${glide(stirs(barDropAt, 1e-4))}`,
+                  width: L.bar.w,
+                  height: L.bar.h,
+                  borderRadius: L.bar.h / 2,
+                  background: t.bar,
+                  border: `1px solid ${t.hair}`,
+                  boxShadow: surfaceShadow(t, 0.4),
                   display: "flex",
                   alignItems: "center",
-                }}
-              >
-                {prompt}
-                <span
-                  style={{
-                    display: "inline-block",
-                    width: 2 * u,
-                    height: 24 * u,
-                    marginLeft: 3 * u,
-                    background: accent,
-                    opacity: caretOn ? 1 : 0,
-                  }}
-                />
-              </div>
-              <div
-                style={{
-                  width: L.bar.btn,
-                  height: L.bar.btn,
-                  flexShrink: 0,
-                  borderRadius: L.bar.btn * 0.3,
-                  background: flip > 0 ? accent : t.btn,
-                  transform: `scale(${btnScale})`,
-                  boxShadow: `0 0 0 ${flash * 18 * u}px color-mix(in oklab, ${accent} ${Math.round(flash * 30)}%, transparent), 0 ${8 * u}px ${20 * u}px color-mix(in oklab, ${flip > 0 ? accent : "#000"} ${30 + 20 * flip}%, transparent)`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  padding: `0 ${(L.bar.h - L.bar.btn) / 2}px 0 ${24 * u}px`,
+                  gap: 16 * u,
+                  opacity: barIn,
                 }}
               >
                 <svg
                   viewBox="0 0 24 24"
-                  width={L.bar.btn * 0.46}
-                  height={L.bar.btn * 0.46}
+                  width={22 * u}
+                  height={22 * u}
                   aria-hidden
+                  style={{ flexShrink: 0 }}
                 >
                   <path
-                    d="M12 19V5M6 11l6-6 6 6"
-                    fill="none"
-                    stroke={flip > 0 ? "#fff" : t.arrow}
-                    strokeWidth={2}
+                    d="M12 5v14M5 12h14"
+                    stroke={t.muted}
+                    strokeWidth={1.5}
                     strokeLinecap="round"
-                    strokeLinejoin="round"
                   />
                 </svg>
-              </div>
-            </div>
-
-            <svg
-              width={0}
-              height={0}
-              style={{ position: "absolute" }}
-              aria-hidden
-            >
-              <defs>
-                {ORDER.map((id, i) => {
-                  const a = cardPos(id, i, frame);
-                  const b = cardPos(id, i, frame - 1);
-                  const vx = Math.abs(a.x - b.x);
-                  const vy = Math.abs(a.y - b.y);
-                  return (
-                    <filter
-                      key={id}
-                      id={`sf-mb-${id}`}
-                      x="-20%"
-                      y="-30%"
-                      width="140%"
-                      height="160%"
-                    >
-                      <feGaussianBlur
-                        stdDeviation={`${Math.min(10, vx * 0.08)} ${Math.min(14, vy * 0.08)}`}
-                      />
-                    </filter>
-                  );
-                })}
-              </defs>
-            </svg>
-
-            {ORDER.map((id, i) => {
-              const pos = cardPos(id, i, frame);
-              if (!pos.on) return <div key={id} />;
-              const prev = cardPos(id, i, frame - 1);
-              const speed = Math.hypot(pos.x - prev.x, pos.y - prev.y);
-              const slot = L.slots[id];
-              const lift = 1 - pos.q;
-              return (
                 <div
-                  key={id}
                   style={{
-                    position: "absolute",
-                    left: pos.x - slot.w / 2,
-                    top: pos.y - slot.h / 2,
-                    width: slot.w,
-                    height: slot.h,
-                    transform: `rotate(${pos.r}deg) scale(${pos.s})`,
-                    borderRadius: 14 * u,
-                    boxShadow:
-                      lift > 0.02
-                        ? `0 ${20 * lift * u}px ${44 * lift * u}px ${t.far}`
-                        : "none",
-                    filter: speed > 6 ? `url(#sf-mb-${id})` : undefined,
+                    flex: 1,
+                    fontSize: 23 * u,
+                    color: t.ink,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
                   }}
                 >
-                  {renderCard(id, slot.w, slot.h)}
+                  {prompt}
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 2 * u,
+                      height: 24 * u,
+                      marginLeft: 3 * u,
+                      background: accent,
+                      opacity: caretOn ? 1 : 0,
+                    }}
+                  />
                 </div>
-              );
-            })}
-
-            {AVATARS.map((a, k) => {
-              const id = ORDER[a.card];
-              const pos = cardPos(id, a.card, frame);
-              const slot = L.slots[id];
-              const pop = spring({
-                frame: frame - B.eject[a.card] - 5,
-                fps,
-                config: CHIP,
-              });
-              const go = spring({
-                frame: frame - B.avatars - k * 3,
-                fps,
-                config: CARD,
-              });
-              const ox = (slot.w / 2) * pos.s - 6 * u;
-              const oy = (-slot.h / 2) * pos.s + 6 * u;
-              const rad = (pos.r * Math.PI) / 180;
-              const rx = ox * Math.cos(rad) - oy * Math.sin(rad);
-              const ry = ox * Math.sin(rad) + oy * Math.cos(rad);
-              const x = mix(pos.x + rx, avSlotX(k), go);
-              const y = mix(pos.y + ry, avSlotY, go);
-              return (
                 <div
-                  key={a.id}
                   style={{
-                    position: "absolute",
-                    left: x - avSize / 2,
-                    top: y - avSize / 2,
-                    width: avSize,
-                    height: avSize,
-                    borderRadius: 99,
-                    background: a.color,
-                    border: `${2 * u}px solid ${dark ? "#121819" : "#ffffff"}`,
-                    color: "#14110c",
-                    fontSize: 14 * u,
+                    width: L.bar.btn,
+                    height: L.bar.btn,
+                    flexShrink: 0,
+                    borderRadius: L.bar.btn * 0.3,
+                    background: flip > 0 ? accent : t.btn,
+                    transform: `scale(${btnScale})`,
+                    boxShadow: `0 0 0 ${flash * 18 * u}px color-mix(in oklab, ${accent} ${Math.round(flash * 30)}%, transparent), 0 ${8 * u}px ${20 * u}px color-mix(in oklab, ${flip > 0 ? accent : "#000"} ${30 + 20 * flip}%, transparent)`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    transform: `scale(${pos.on ? pop : 0})`,
-                    zIndex: 5 - k,
                   }}
                 >
-                  {a.initial}
+                  <svg
+                    viewBox="0 0 24 24"
+                    width={L.bar.btn * 0.46}
+                    height={L.bar.btn * 0.46}
+                    aria-hidden
+                  >
+                    <path
+                      d="M12 19V5M6 11l6-6 6 6"
+                      fill="none"
+                      stroke={flip > 0 ? "#fff" : t.arrow}
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </div>
-              );
-            })}
+              </div>
 
-            <div
-              style={{
-                position: "absolute",
-                left: curX,
-                top: curY,
-                transform: `scale(${1 - 0.1 * press})`,
-                transformOrigin: "4px 3px",
-                opacity: ramp(frame, B.cursor, 6),
-              }}
-            >
-              <Cursor size={30 * u} />
+              <svg
+                width={0}
+                height={0}
+                style={{ position: "absolute" }}
+                aria-hidden
+              >
+                <defs>
+                  {ORDER.map((id, i) => {
+                    const a = cardPos(id, i, frame);
+                    const b = cardPos(id, i, frame - 1);
+                    const vx = Math.abs(a.x - b.x);
+                    const vy = Math.abs(a.y - b.y);
+                    return (
+                      <filter
+                        key={id}
+                        id={`sf-mb-${id}`}
+                        x="-20%"
+                        y="-30%"
+                        width="140%"
+                        height="160%"
+                      >
+                        <feGaussianBlur
+                          stdDeviation={`${Math.min(10, vx * 0.08)} ${Math.min(14, vy * 0.08)}`}
+                        />
+                      </filter>
+                    );
+                  })}
+                </defs>
+              </svg>
+
+              {ORDER.map((id, i) => {
+                const pos = cardPos(id, i, frame);
+                if (!pos.on) return <div key={id} />;
+                const prev = cardPos(id, i, frame - 1);
+                const speed = Math.hypot(pos.x - prev.x, pos.y - prev.y);
+                const slot = L.slots[id];
+                const lift = 1 - pos.q;
+                const moving = [prev, cardPos(id, i, frame + 1)].some(
+                  (o) =>
+                    Math.abs(o.x - pos.x) > 1e-4 ||
+                    Math.abs(o.y - pos.y) > 1e-4 ||
+                    Math.abs(o.s - pos.s) > 1e-7,
+                );
+                return (
+                  <div
+                    key={id}
+                    style={{
+                      position: "absolute",
+                      // Laid out in its slot; the flight there is a
+                      // transform, since `left`/`top` would step the card
+                      // and its text a whole pixel at a time.
+                      left: winX + slot.x,
+                      top: winY + slot.y,
+                      width: slot.w,
+                      height: slot.h,
+                      transform: `translate(${pos.x - (winX + slot.x + slot.w / 2)}px, ${pos.y - (winY + slot.y + slot.h / 2)}px) rotate(${pos.r}deg) scale(${pos.s})${glide(moving)}`,
+                      borderRadius: 14 * u,
+                      boxShadow:
+                        lift > 0.02
+                          ? `0 ${20 * lift * u}px ${44 * lift * u}px ${t.far}`
+                          : "none",
+                      filter: speed > 6 ? `url(#sf-mb-${id})` : undefined,
+                    }}
+                  >
+                    {renderCard(id, slot.w, slot.h)}
+                  </div>
+                );
+              })}
+
+              {AVATARS.map((a, k) => {
+                const id = ORDER[a.card];
+                const slot = L.slots[id];
+                const at = (f: number) => {
+                  const pos = cardPos(id, a.card, f);
+                  const pop = spring({
+                    frame: f - B.eject[a.card] - 5,
+                    fps,
+                    config: CHIP,
+                  });
+                  const go = spring({
+                    frame: f - B.avatars - k * 3,
+                    fps,
+                    config: CARD,
+                  });
+                  const ox = (slot.w / 2) * pos.s - 6 * u;
+                  const oy = (-slot.h / 2) * pos.s + 6 * u;
+                  const rad = (pos.r * Math.PI) / 180;
+                  const rx = ox * Math.cos(rad) - oy * Math.sin(rad);
+                  const ry = ox * Math.sin(rad) + oy * Math.cos(rad);
+                  return {
+                    x: mix(pos.x + rx, avSlotX(k), go),
+                    y: mix(pos.y + ry, avSlotY, go),
+                    s: pos.on ? pop : 0,
+                  };
+                };
+                const now = at(frame);
+                const moving = [at(frame - 1), at(frame + 1)].some(
+                  (o) =>
+                    Math.abs(o.x - now.x) > 1e-4 ||
+                    Math.abs(o.y - now.y) > 1e-4 ||
+                    Math.abs(o.s - now.s) > 1e-6,
+                );
+                return (
+                  <div
+                    key={a.id}
+                    style={{
+                      position: "absolute",
+                      // Laid out in the top bar, where it ends up; the ride
+                      // on the card and the hop over are a transform, for
+                      // the same reason as the cards.
+                      left: avSlotX(k) - avSize / 2,
+                      top: avSlotY - avSize / 2,
+                      width: avSize,
+                      height: avSize,
+                      borderRadius: 99,
+                      background: a.color,
+                      border: `${2 * u}px solid ${dark ? "#121819" : "#ffffff"}`,
+                      color: "#14110c",
+                      fontSize: 14 * u,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transform: `translate(${now.x - avSlotX(k)}px, ${now.y - avSlotY}px) scale(${now.s})${glide(moving)}`,
+                      zIndex: 5 - k,
+                    }}
+                  >
+                    {a.initial}
+                  </div>
+                );
+              })}
+
+              <div
+                style={{
+                  position: "absolute",
+                  // Laid out on the button of the resting bar and led there
+                  // by a transform; `left`/`top` would step it pixel by pixel.
+                  left: btnX + 8 * u,
+                  top: L.bar.cy + 10 * u,
+                  transform: `translate(${curX - (btnX + 8 * u)}px, ${curY - (L.bar.cy + 10 * u)}px) scale(${1 - 0.1 * press})`,
+                  transformOrigin: "4px 3px",
+                  opacity: ramp(frame, B.cursor, 6),
+                }}
+              >
+                <Cursor size={30 * u} />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

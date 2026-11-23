@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const typoFixConfig: ComponentConfig = {
   componentName: "TypoFix",
@@ -12,11 +18,6 @@ export const typoFixConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     wrong: {
       type: "text-content",
@@ -38,6 +39,22 @@ export const typoFixConfig: ComponentConfig = {
       default: "day",
       description: "After",
     },
+    fixAt: {
+      type: "number",
+      default: 44,
+      min: 20,
+      max: 90,
+      step: 1,
+      description: "Fix at (frame)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    errorColor: { type: "color", default: undefined, description: "Squiggle" },
+    ...sceneControls({ font: "Onest", grain: true }),
     speed: {
       type: "number",
       default: 1,

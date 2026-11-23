@@ -1,12 +1,13 @@
 "use client";
 
 import type React from "react";
-import { AbsoluteFill, useCurrentFrame } from "remotion";
+import { AbsoluteFill } from "remotion";
 import {
   type CanvasFilterProps,
   makeCanvasFilter,
   makeFilterShader,
 } from "@/lib/remocn/canvas-presentation";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type TvPowerOffProps = {
   durationInFrames?: number;
@@ -181,7 +182,7 @@ const shader = makeFilterShader<TvPowerOffProps>(
 const TvPowerOffFallback: React.FC<TvPowerOffProps & CanvasFilterProps> = (
   props,
 ) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const {
     children,
     gain = DEFAULTS.gain,

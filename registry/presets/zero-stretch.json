@@ -1,0 +1,106 @@
+{
+  "component": "zero-stretch",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, warm paper look with a refined serif and a deep oxblood pill that unfolds slowly.",
+      "askedAs": [
+        "elegant magazine style number",
+        "serif on cream background",
+        "slow classy reveal",
+        "журнальный стиль с засечками",
+        "светлый элегантный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#7a2e2e"
+      }
+    },
+    {
+      "id": "snappy-launch",
+      "label": "Snappy Launch",
+      "description": "A fast, punchy stretch with bold grotesk digits and tight stagger for quick social cuts.",
+      "askedAs": [
+        "make it faster and bolder",
+        "quick punchy version",
+        "energetic launch stat",
+        "быстрее и жирнее",
+        "энергичная анимация"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy with soft ivory digits and a muted gold pill for a luxurious, unhurried feel.",
+      "askedAs": [
+        "luxury dark blue and gold",
+        "premium gold accent",
+        "rich night look",
+        "тёмно-синий с золотом",
+        "люксовый стиль"
+      ],
+      "props": {
+        "background": "#0e1424",
+        "ink": "#f2ebdd",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "speed": 0.75,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "clean-mono",
+      "label": "Clean Mono",
+      "description": "A crisp grain-free light layout in monospace with a graphite pill, suited to developer docs.",
+      "askedAs": [
+        "technical code style",
+        "monospace light version",
+        "no grain minimal",
+        "моноширинный шрифт",
+        "минималистичный без шума"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#2b2f36",
+        "grain": false,
+        "fontWeight": 400,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "forest-calm",
+      "label": "Forest Calm",
+      "description": "Dark evergreen backdrop with sage-tinted text and a slow, airy stretch in light-weight type.",
+      "askedAs": [
+        "calm green dark theme",
+        "slow gentle reveal",
+        "thin font soft mood",
+        "спокойный зелёный",
+        "медленно и легко"
+      ],
+      "props": {
+        "background": "#0f1a15",
+        "ink": "#e3ede6",
+        "accent": "#3f8f6b",
+        "fontWeight": 300,
+        "speed": 0.5,
+        "stagger": 8
+      }
+    }
+  ]
+}

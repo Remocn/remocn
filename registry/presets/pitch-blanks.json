@@ -1,0 +1,106 @@
+{
+  "component": "pitch-blanks",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "warm-paper",
+      "label": "Warm Paper",
+      "description": "Cream paper stock with dark brown serif type and a terracotta accent, filled at an unhurried pace.",
+      "askedAs": [
+        "cream paper look with serif text",
+        "warm vintage worksheet style",
+        "beige background with rust underlines",
+        "тёплая бумага с засечками",
+        "бежевый фон и терракотовый акцент"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4ecdc",
+        "ink": "#3b2a1e",
+        "accent": "#b5532c",
+        "fontFamily": "Fraunces",
+        "fillGap": 40
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Blanks snap in one after another in quick succession with a clean sans and a bright blue accent.",
+      "askedAs": [
+        "fast fill-in animation",
+        "quick punchy pitch reveal",
+        "fill the blanks rapidly",
+        "быстрое заполнение пропусков",
+        "динамичный питч"
+      ],
+      "props": {
+        "firstFill": 14,
+        "fillGap": 12,
+        "speed": 1.75,
+        "fontFamily": "Inter",
+        "accent": "#3b82f6"
+      }
+    },
+    {
+      "id": "editorial-slow",
+      "label": "Editorial Slow",
+      "description": "A large, elegant serif on deep ink background, with each phrase revealed slowly and deliberately.",
+      "askedAs": [
+        "slow elegant magazine style",
+        "big serif dramatic reveal",
+        "luxury editorial pitch",
+        "медленный элегантный стиль",
+        "крупный шрифт с засечками"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#14161c",
+        "ink": "#ece6da",
+        "accent": "#c9a96e",
+        "scale": 1.3,
+        "fillGap": 55
+      }
+    },
+    {
+      "id": "terminal-spec",
+      "label": "Terminal Spec",
+      "description": "Monospaced type on near-black with a muted green accent, like a product spec written in a code editor.",
+      "askedAs": [
+        "code editor look",
+        "monospace developer style",
+        "dark terminal fill in the blank",
+        "моноширинный шрифт как в терминале",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1110",
+        "ink": "#d4dcd6",
+        "accent": "#5fb38a",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "studio-light",
+      "label": "Studio Light",
+      "description": "Crisp white canvas with a geometric grotesk and a confident violet accent, starting after a short pause.",
+      "askedAs": [
+        "clean white modern startup look",
+        "minimal light pitch slide",
+        "bright background with purple highlights",
+        "светлый минималистичный стиль",
+        "белый фон с фиолетовым акцентом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Space Grotesk",
+        "background": "#fafafa",
+        "ink": "#18181b",
+        "accent": "#6d4aff",
+        "delay": 20
+      }
+    }
+  ]
+}

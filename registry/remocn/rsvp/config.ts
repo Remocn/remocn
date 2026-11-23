@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const rsvpConfig: ComponentConfig = {
   componentName: "Rsvp",
@@ -28,6 +34,26 @@ export const rsvpConfig: ComponentConfig = {
       default: "npx shadcn add @remocn/whip-pan",
       description: "Rsvp",
     },
+    stagger: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 300,
+      max: 700,
+      step: 100,
+      description: "Headline weight",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Lexend" }),
     speed: {
       type: "number",
       default: 1,

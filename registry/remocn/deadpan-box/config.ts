@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const deadpanBoxConfig: ComponentConfig = {
   componentName: "DeadpanBox",
@@ -33,6 +39,25 @@ export const deadpanBoxConfig: ComponentConfig = {
       default: "remocn",
       description: "Brand",
     },
+    stagger: {
+      type: "number",
+      default: 5,
+      min: 0,
+      max: 15,
+      step: 1,
+      description: "Line stagger",
+      hiddenFromList: false,
+    },
+    punchAt: {
+      type: "number",
+      default: 92,
+      min: 40,
+      max: 130,
+      step: 1,
+      description: "Punchline at (frame)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Schibsted Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

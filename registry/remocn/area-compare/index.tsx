@@ -3,15 +3,10 @@
 import { loadFont } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadDisplay } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
-import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { type ReactNode, useId } from "react";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -83,6 +78,22 @@ export interface AreaCompareProps {
   verdict?: string;
   shape?: "circle" | "square";
   accent?: string;
+  /** Frames the shape takes to shrink to the new value. */
+  shrink?: number;
+  /** Text color of the values and multiplier; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the values, multiplier and verdict. Load it yourself; Instrument Serif by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark shown when `after` is "remocn". */
+  logo?: ReactNode;
+  /** Size of the shapes and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -125,7 +136,6 @@ const THEMES = {
 const T_IN = 0;
 const T_SHRINK = 38;
 const SHRINK_LEN = 40;
-const T_LAND = T_SHRINK + SHRINK_LEN;
 
 function groupThousands(n: number) {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -144,6 +154,22 @@ function formatRatio(r: number) {
   if (r >= 10) return `${Math.round(r)}×`;
   const s = r.toFixed(1);
   return `${s.endsWith(".0") ? s.slice(0, -2) : s}×`;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 function Grain({ opacity }: { opacity: number }) {
@@ -175,11 +201,13 @@ function Hero({
   t,
   size,
   color,
+  fontFamily,
 }: {
   text: string;
   t: number;
   size: number;
   color: string;
+  fontFamily: string;
 }) {
   const chars = Array.from(text);
   return (
@@ -187,7 +215,7 @@ function Hero({
       style={{
         display: "flex",
         whiteSpace: "pre",
-        fontFamily: display,
+        fontFamily,
         fontWeight: 400,
         fontSize: size,
         lineHeight: 1,
@@ -237,13 +265,25 @@ export function AreaCompare({
   verdict = "smaller",
   shape = "circle",
   accent = "#3B5BFD",
+  shrink = SHRINK_LEN,
+  ink,
+  background,
+  fontFamily = display,
+  logo,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: AreaCompareProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const tilt = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage = background ?? p.bg;
+  const T_LAND = T_SHRINK + shrink;
 
   const big = Math.max(beforeValue, afterValue, 0.0001);
   const small = Math.max(Math.min(beforeValue, afterValue), 0.0001);
@@ -296,6 +336,7 @@ export function AreaCompare({
   );
 
   const valueSize = Math.max(30 * u, 104 * u * (r / R0));
+  const valueEnd = Math.max(30 * u, 104 * u * (Rf / R0));
   const fitsInside = Rf * 2 >= 118 * u;
   const insideAlpha = fitsInside
     ? 1
@@ -304,6 +345,13 @@ export function AreaCompare({
     ...CLAMP,
     easing: EASE_IO,
   });
+  // While the shape shrinks, the value's font size eases and the label above
+  // it folds away, which moves the value's baseline by layout, pixel by
+  // pixel. For those frames the block is laid out once at its landed size
+  // and the value scales and rides by transform; at rest it is plain layout.
+  const folding = (s > 0 && s < 1) || (eyebrowAlpha > 0 && eyebrowAlpha < 1);
+  const valueK = valueSize / valueEnd;
+  const fold = 17 * u * eyebrowAlpha;
   const afterTagIn = interpolate(t, [T_LAND - 4, T_LAND + 14], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -327,10 +375,25 @@ export function AreaCompare({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const breathe = interpolate(t, [0, T_LAND + 90], [1.025, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const breatheAt = (at: number) =>
+    interpolate(at, [0, T_LAND + 90], [1.025, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const breathe = breatheAt(t);
+  const breatheStep = (at: number) =>
+    Math.abs(breatheAt(at) - breatheAt(at - speed));
+  const breathing = Math.max(breatheStep(t), breatheStep(t + speed)) > 0;
+  // Layout rounds a box and a baseline to whole pixels, so the shape and its
+  // labels are laid out where they land and ride there by transform:
+  // `slide` is the glide across, `drop` how far the shrinking shape's
+  // centre still sits above its landed one. Both are exactly 0 at rest.
+  const slide = (width / 2 - gxEnd) * (1 - glide);
+  const drop = (R0 - Rf) * (1 - s);
+  const shift = (dx: number, dy = 0) =>
+    Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3
+      ? ""
+      : `translate(${dx}px, ${dy}px) `;
   const cornerR = (side: number) => side * 0.1;
 
   const shapePath = (cx: number, ccy: number, rad: number) =>
@@ -346,261 +409,274 @@ export function AreaCompare({
 
   const ghost = shapePath(gx, gy, R0);
   const body = shapePath(gx, cy, r);
+  const landed = shapePath(gxEnd, bottom - Rf, Rf);
   const enterScale = 0.96 + 0.04 * enter;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 60% 70% at ${(gx / width) * 100}% 40%, ${p.stage}, transparent 75%)`,
         }}
       />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${breathe})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
-        >
-          <rect
-            x={ghost.x}
-            y={ghost.y}
-            width={ghost.w}
-            height={ghost.h}
-            rx={ghost.rx}
-            fill="none"
-            stroke={p.hair}
-            strokeWidth={Math.max(1, 1.25 * u)}
-            opacity={ghostIn}
-          />
-        </svg>
-
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: body.x,
-            top: body.y,
-            width: body.w,
-            height: body.h,
-            borderRadius: body.rx,
-            overflow: "hidden",
-            opacity: enter,
-            transform: `scale(${enterScale})`,
-            transformOrigin: `${gx - body.x}px ${bottom - body.y}px`,
-            background: `linear-gradient(180deg, ${p.fillTop}, ${p.fillBottom})`,
+            transform: `scale(${breathe})${tilt(breathing)}`,
+            transformOrigin: "50% 50%",
           }}
         >
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            <rect
+              x={ghost.x}
+              y={ghost.y}
+              width={ghost.w}
+              height={ghost.h}
+              rx={ghost.rx}
+              fill="none"
+              stroke={p.hair}
+              strokeWidth={Math.max(1, 1.25 * u)}
+              opacity={ghostIn}
+            />
+          </svg>
+
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              opacity: tint,
-              background: meshFill(accent, meshDrift),
-            }}
-          />
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            left: gx,
-            top: gy - R0 + 34 * u,
-            transform: "translateX(-50%)",
-            display: "flex",
-            alignItems: "baseline",
-            gap: 10 * u,
-            whiteSpace: "nowrap",
-            fontFamily: sans,
-            fontSize: 18 * u,
-            fontWeight: 500,
-            color: p.muted,
-            opacity: tagIn,
-          }}
-        >
-          <span>{before}</span>
-          <span style={{ color: p.faint }}>·</span>
-          <span
-            style={{
-              color: p.fg,
-              fontWeight: 500,
-              fontVariantNumeric: "tabular-nums",
+              left: landed.x,
+              top: landed.y,
+              width: body.w,
+              height: body.h,
+              borderRadius: body.rx,
+              overflow: "hidden",
+              opacity: enter,
+              transform: `${shift(slide - drop, -2 * drop)}scale(${enterScale})`,
+              transformOrigin: `${gx - body.x}px ${bottom - body.y}px`,
+              background: `linear-gradient(180deg, ${p.fillTop}, ${p.fillBottom})`,
             }}
           >
-            {formatValue(beforeValue, unit)}
-          </span>
-        </div>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                opacity: tint,
+                background: meshFill(accent, meshDrift),
+              }}
+            />
+          </div>
 
-        <div
-          style={{
-            position: "absolute",
-            left: gx,
-            top: cy,
-            transform: `translate(-50%, -50%) scale(${enterScale})`,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            opacity: enter * insideAlpha,
-            whiteSpace: "nowrap",
-          }}
-        >
-          <span
+          <div
             style={{
+              position: "absolute",
+              left: gxEnd,
+              top: gy - R0 + 34 * u,
+              transform: `${shift(slide)}translateX(-50%)`,
+              display: "flex",
+              alignItems: "baseline",
+              gap: 10 * u,
+              whiteSpace: "nowrap",
               fontFamily: sans,
-              fontSize: 22 * u,
+              fontSize: 18 * u,
               fontWeight: 500,
               color: p.muted,
-              opacity: eyebrowAlpha,
-              marginBottom: 6 * u * eyebrowAlpha,
-              height: 28 * u * eyebrowAlpha,
-              overflow: "hidden",
+              opacity: tagIn,
             }}
           >
-            {label}
-          </span>
-          <span
-            style={{
-              fontFamily: display,
-              fontWeight: 400,
-              fontSize: valueSize * 1.12,
-              lineHeight: 1,
-              letterSpacing: "-0.02em",
-              fontVariantNumeric: "tabular-nums",
-              color: onFill,
-            }}
-          >
-            {formatValue(value, unit)}
-          </span>
-        </div>
+            <span>{before}</span>
+            <span style={{ color: p.faint }}>·</span>
+            <span
+              style={{
+                color: fg,
+                fontWeight: 500,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {formatValue(beforeValue, unit)}
+            </span>
+          </div>
 
-        <div
-          style={{
-            position: "absolute",
-            left: gx,
-            top: bottom - Rf * 2 - 14 * u,
-            transform: `translate(-50%, -100%) translateY(${(1 - afterTagIn) * 6 * u}px)`,
-            fontFamily: sans,
-            fontSize: 18 * u,
-            fontWeight: 500,
-            color: p.fg,
-            opacity: afterTagIn * (fitsInside ? 1 : 0),
-            whiteSpace: "nowrap",
-          }}
-        >
-          {isBrand(after) ? (
-            <RemocnLogo fontSize={22 * u} color={p.fg} />
-          ) : (
-            after
-          )}
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            left: gx + Rf + 16 * u,
-            top: bottom - Rf,
-            transform: `translateY(-50%) translateX(${(1 - outsideIn) * -6 * u}px)`,
-            display: "flex",
-            flexDirection: "column",
-            gap: 2 * u,
-            opacity: outsideIn,
-            whiteSpace: "nowrap",
-          }}
-        >
-          <span
+          <div
             style={{
-              fontFamily: display,
-              fontWeight: 400,
-              fontSize: 34 * u,
-              letterSpacing: "-0.02em",
-              fontVariantNumeric: "tabular-nums",
-              color: p.fg,
+              position: "absolute",
+              left: gxEnd,
+              top: bottom - Rf,
+              transform: `${shift(slide, -drop)}translate(-50%, -50%) scale(${enterScale})`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              opacity: enter * insideAlpha,
+              whiteSpace: "nowrap",
             }}
           >
-            {formatValue(afterValue, unit)}
-          </span>
-          {isBrand(after) ? (
-            <RemocnLogo fontSize={20 * u} color={p.fg} />
-          ) : (
             <span
               style={{
                 fontFamily: sans,
-                fontSize: 18 * u,
+                fontSize: 22 * u,
                 fontWeight: 500,
-                color: p.fg,
+                color: p.muted,
+                opacity: eyebrowAlpha,
+                marginBottom: folding ? undefined : 6 * u * eyebrowAlpha,
+                height: 28 * u * eyebrowAlpha,
+                overflow: "hidden",
+                ...(folding
+                  ? {
+                      position: "absolute" as const,
+                      left: "50%",
+                      top: "50%",
+                      transform: `translate(-50%, ${-fold - 0.56 * valueSize}px)`,
+                    }
+                  : null),
               }}
             >
-              {after}
+              {label}
             </span>
-          )}
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            left: textX,
-            top: gy,
-            width: textW,
-            transform: "translateY(-50%)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: sans,
-              fontSize: 22 * u,
-              fontWeight: 500,
-              color: p.muted,
-              opacity: eyeIn,
-              transform: `translateY(${(1 - eyeIn) * 8 * u}px)`,
-              marginBottom: 18 * u,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {label}
-          </span>
-          <div style={{ marginLeft: -heroSize * 0.05 }}>
-            <Hero
-              text={formatRatio(ratio)}
-              t={heroT}
-              size={heroSize}
-              color={p.fg}
-            />
+            <span
+              style={{
+                fontFamily,
+                fontWeight: 400,
+                fontSize: (folding ? valueEnd : valueSize) * 1.12,
+                lineHeight: 1,
+                letterSpacing: "-0.02em",
+                fontVariantNumeric: "tabular-nums",
+                color: onFill,
+                transform: folding
+                  ? `translateY(${fold}px) scale(${valueK})`
+                  : undefined,
+              }}
+            >
+              {formatValue(value, unit)}
+            </span>
           </div>
-          <span
+
+          <div
             style={{
-              fontFamily: display,
-              fontStyle: "italic",
-              fontWeight: 400,
-              fontSize: 88 * u,
-              lineHeight: 1,
-              letterSpacing: "-0.02em",
-              color: p.muted,
-              opacity: lineIn,
-              transform: `translateY(${(1 - lineIn) * 14 * u}px)`,
-              filter:
-                lineIn < 0.98 ? `blur(${(1 - lineIn) * 6 * u}px)` : undefined,
+              position: "absolute",
+              left: gxEnd,
+              top: bottom - Rf * 2 - 14 * u,
+              transform: `${shift(slide)}translate(-50%, -100%) translateY(${(1 - afterTagIn) * 6 * u}px)`,
+              fontFamily: sans,
+              fontSize: 18 * u,
+              fontWeight: 500,
+              color: fg,
+              opacity: afterTagIn * (fitsInside ? 1 : 0),
               whiteSpace: "nowrap",
             }}
           >
-            {verdict}
-          </span>
-        </div>
-      </AbsoluteFill>
+            {isBrand(after)
+              ? (logo ?? <RemocnLogo fontSize={22 * u} color={fg} />)
+              : after}
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              left: gxEnd + Rf + 16 * u,
+              top: bottom - Rf,
+              transform: `${shift(slide)}translateY(-50%) translateX(${(1 - outsideIn) * -6 * u}px)`,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2 * u,
+              opacity: outsideIn,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span
+              style={{
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 34 * u,
+                letterSpacing: "-0.02em",
+                fontVariantNumeric: "tabular-nums",
+                color: fg,
+              }}
+            >
+              {formatValue(afterValue, unit)}
+            </span>
+            {isBrand(after) ? (
+              (logo ?? <RemocnLogo fontSize={20 * u} color={fg} />)
+            ) : (
+              <span
+                style={{
+                  fontFamily: sans,
+                  fontSize: 18 * u,
+                  fontWeight: 500,
+                  color: fg,
+                }}
+              >
+                {after}
+              </span>
+            )}
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              left: textX,
+              top: gy,
+              width: textW,
+              transform: "translateY(-50%)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: sans,
+                fontSize: 22 * u,
+                fontWeight: 500,
+                color: p.muted,
+                opacity: eyeIn,
+                transform: `translateY(${(1 - eyeIn) * 8 * u}px)`,
+                marginBottom: 18 * u,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {label}
+            </span>
+            <div style={{ marginLeft: -heroSize * 0.05 }}>
+              <Hero
+                text={formatRatio(ratio)}
+                t={heroT}
+                size={heroSize}
+                color={fg}
+                fontFamily={fontFamily}
+              />
+            </div>
+            <span
+              style={{
+                fontFamily,
+                fontStyle: "italic",
+                fontWeight: 400,
+                fontSize: 88 * u,
+                lineHeight: 1,
+                letterSpacing: "-0.02em",
+                color: p.muted,
+                opacity: lineIn,
+                transform: `translateY(${(1 - lineIn) * 14 * u}px)`,
+                filter:
+                  lineIn < 0.98 ? `blur(${(1 - lineIn) * 6 * u}px)` : undefined,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {verdict}
+            </span>
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 60%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 60%, ${stage} 100%)`,
           opacity: 0.55,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

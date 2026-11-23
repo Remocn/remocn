@@ -1,0 +1,98 @@
+{
+  "component": "shader-gem-smoke",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-velvet",
+      "label": "Slow Velvet",
+      "description": "Unhurried, softly churning smoke on a deep plum-black ground for a calm luxury reveal.",
+      "askedAs": [
+        "slow luxurious smoke logo",
+        "calm premium smoke reveal",
+        "gentle smoky brand intro",
+        "медленный дым вокруг логотипа",
+        "спокойное премиальное появление логотипа"
+      ],
+      "props": {
+        "speed": 0.5,
+        "colorBack": "#120b16",
+        "innerDistortion": 0.5,
+        "outerDistortion": 0.35
+      }
+    },
+    {
+      "id": "storm-glass",
+      "label": "Storm Glass",
+      "description": "Fast, heavily warped smoke swirling hard inside and around the mark on a cold slate background.",
+      "askedAs": [
+        "turbulent energetic smoke logo",
+        "fast swirling smoke reveal",
+        "stormy dramatic logo intro",
+        "бурный дым в логотипе",
+        "быстрый вихрь дыма вокруг знака"
+      ],
+      "props": {
+        "speed": 2.5,
+        "colorBack": "#0b1118",
+        "innerDistortion": 1.6,
+        "outerDistortion": 1.4
+      }
+    },
+    {
+      "id": "still-crystal",
+      "label": "Still Crystal",
+      "description": "Nearly undistorted, clean glass silhouette with only faint drifting smoke for a crisp minimal look.",
+      "askedAs": [
+        "clean glassy logo minimal",
+        "subtle smoke crisp mark",
+        "barely moving glass logo",
+        "чистый стеклянный логотип",
+        "минималистичный логотип с лёгким дымом"
+      ],
+      "props": {
+        "speed": 0.75,
+        "innerDistortion": 0.15,
+        "outerDistortion": 0.1,
+        "colorBack": "#050507"
+      }
+    },
+    {
+      "id": "monument",
+      "label": "Monument",
+      "description": "Oversized mark filling the frame with bold outer smoke on a warm charcoal ground.",
+      "askedAs": [
+        "big logo fills screen smoke",
+        "large bold smoky emblem",
+        "huge hero logo with smoke",
+        "крупный логотип на весь экран",
+        "большой знак с дымом"
+      ],
+      "props": {
+        "size": 1.3,
+        "outerDistortion": 1.1,
+        "colorBack": "#14110e",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "jewel-box",
+      "label": "Jewel Box",
+      "description": "A small, precious mark centered in navy space with rich inner swirls and a quiet outer haze.",
+      "askedAs": [
+        "small elegant logo smoke",
+        "tiny jewel-like emblem",
+        "compact premium mark reveal",
+        "маленький элегантный логотип",
+        "логотип как драгоценность с дымом"
+      ],
+      "props": {
+        "size": 0.45,
+        "colorBack": "#0a1024",
+        "innerDistortion": 1.2,
+        "outerDistortion": 0.3,
+        "speed": 1.25
+      }
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "component": "rolodex-flip",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Short holds and snappy flips that rattle through values like a fast ticker.",
+      "askedAs": [
+        "make it flip faster",
+        "quick cycling words",
+        "snappy rapid word changes",
+        "быстрая смена слов",
+        "сделай перелистывание быстрее"
+      ],
+      "props": {
+        "interval": 12,
+        "flipDuration": 5
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Long pauses on each value with a heavy, deliberate card turn.",
+      "askedAs": [
+        "slower calmer flip",
+        "give each word more time on screen",
+        "relaxed rolodex pace",
+        "медленное спокойное перелистывание",
+        "дольше показывать каждое слово"
+      ],
+      "props": {
+        "interval": 36,
+        "flipDuration": 16
+      }
+    },
+    {
+      "id": "hard-cut",
+      "label": "Hard Cut",
+      "description": "Values hold steadily then snap over in a near-instant flip.",
+      "askedAs": [
+        "almost instant flip",
+        "quick snap between words",
+        "minimal transition time",
+        "резкая смена без долгой анимации",
+        "мгновенный переворот карточки"
+      ],
+      "props": {
+        "interval": 24,
+        "flipDuration": 4
+      }
+    },
+    {
+      "id": "lazy-tumble",
+      "label": "Lazy Tumble",
+      "description": "A languid, continuous roll where the flip fills most of each beat.",
+      "askedAs": [
+        "smooth continuous rolling",
+        "dreamy slow flip motion",
+        "flip that takes its time",
+        "плавное непрерывное вращение",
+        "ленивый мягкий переворот"
+      ],
+      "props": {
+        "interval": 22,
+        "flipDuration": 18,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "turbo",
+      "label": "Turbo",
+      "description": "The whole sequence runs double-time for an energetic, glitchy tech feel.",
+      "askedAs": [
+        "speed everything up",
+        "hyper energetic cycling",
+        "double speed rolodex",
+        "ускорь всю анимацию",
+        "очень быстрый энергичный ролодекс"
+      ],
+      "props": {
+        "speed": 2,
+        "interval": 16,
+        "flipDuration": 8
+      }
+    }
+  ]
+}

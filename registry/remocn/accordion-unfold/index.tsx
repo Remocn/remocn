@@ -1,13 +1,9 @@
 "use client";
 
 import type React from "react";
-import {
-  AbsoluteFill,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type AccordionUnfoldProps = {
   /** Lockup printed across the card. Use a color that reads on `color`. Falls back to a placeholder "remocn" lockup. */
@@ -94,8 +90,9 @@ function PlaceholderLockup({
 export function AccordionUnfold(props: AccordionUnfoldProps) {
   const { children, panels, color, shade, backgroundColor, foldAngle, speed } =
     { ...accordionUnfoldDefaults, ...props };
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const t = frame * Math.max(0, speed);
   const n = Math.max(2, Math.round(panels));
   const cardW = Math.round(Math.min(width * 0.66, height * 1.3));
@@ -114,6 +111,9 @@ export function AccordionUnfold(props: AccordionUnfoldProps) {
   const lift = interpolate(t, [0, START + 2], [0.92, 1], clamp);
   const appear = interpolate(t, [0, 3], [0, 1], clamp);
   const flat = Math.abs(theta) < 0.3;
+  // The pleats exist only while the card lifts and unfolds; once flat, the
+  // card is plain again and only a sub-pixel slide on x is left.
+  const folding = (lift < 1 && speed > 0) || (!flat && t > START);
 
   const print = (offset: number) => (
     <div
@@ -201,7 +201,9 @@ export function AccordionUnfold(props: AccordionUnfoldProps) {
           width: cardW,
           height: cardH,
           opacity: appear,
-          transform: `translateX(${shift}px) scale(${lift})`,
+          // The card carries the print: marked, so its text leans while the
+          // card lifts and unfolds.
+          transform: `translateX(${shift}px) scale(${lift})${glide(folding)}`,
           transformStyle: "preserve-3d",
         }}
       >

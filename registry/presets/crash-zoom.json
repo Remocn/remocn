@@ -1,0 +1,100 @@
+{
+  "component": "crash-zoom",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ember-slam",
+      "label": "Ember Slam",
+      "description": "A warm ember glow ground with a copper accent and dense speed lines for a fiery, aggressive punch.",
+      "askedAs": [
+        "fiery orange crash zoom",
+        "warm aggressive number reveal",
+        "hot glowing zoom punch",
+        "огненный зум с цифрой",
+        "тёплый резкий наезд камеры"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#e8743b",
+        "streaks": 120,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "A light paper-crease ground with Fraunces type and a deep ink accent for a refined magazine-style reveal.",
+      "askedAs": [
+        "light editorial zoom",
+        "magazine style big number",
+        "clean serif reveal on paper",
+        "светлый журнальный стиль",
+        "зум на бумажном фоне с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Fraunces",
+        "accent": "#1f3a5f",
+        "streaks": 40
+      }
+    },
+    {
+      "id": "slow-burn",
+      "label": "Slow Burn",
+      "description": "A long, patient windup on a blue-hour ground that lets the tease breathe before a softer, sparse-lined zoom.",
+      "askedAs": [
+        "slow dramatic build up zoom",
+        "long tease before the reveal",
+        "calm then big reveal",
+        "медленное нагнетание перед зумом",
+        "долгая пауза перед большим словом"
+      ],
+      "props": {
+        "windup": 68,
+        "speed": 0.75,
+        "ground": "blue-hour",
+        "streaks": 32,
+        "accent": "#8fa8ff"
+      }
+    },
+    {
+      "id": "mono-glitch",
+      "label": "Mono Rush",
+      "description": "A fast charcoal-satin look in JetBrains Mono with a mint accent and a quick windup for a techy, punchy hit.",
+      "askedAs": [
+        "fast tech crash zoom",
+        "monospace developer reveal",
+        "quick dark code style punch",
+        "быстрый техно зум",
+        "моноширинный шрифт и тёмный фон"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#4fd1a5",
+        "windup": 24,
+        "speed": 2
+      }
+    },
+    {
+      "id": "velvet-pop",
+      "label": "Velvet Pop",
+      "description": "A plush velvet-hour ground with a garnet-pink accent and oversized Bricolage type for a bold, playful claim.",
+      "askedAs": [
+        "big playful pink reveal",
+        "oversized bold text zoom",
+        "fun purple launch hook",
+        "яркий игривый зум",
+        "крупный текст на бархатном фоне"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "accent": "#e0577f",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.25
+      }
+    }
+  ]
+}

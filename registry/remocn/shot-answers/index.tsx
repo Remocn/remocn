@@ -12,9 +12,9 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -30,11 +30,23 @@ export interface ShotAnswersProps {
   answer?: string;
   src?: string;
   aspect?: number;
+  /** Frames between question words appearing, at the default 140-frame length. */
+  stagger?: number;
+  /** Frame the question starts turning into the answer, at the default 140-frame length. */
+  answerAt?: number;
   accent?: string;
+  /** Text color of the question and answer; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the question and answer. Load it yourself; Onest by default. */
+  fontFamily?: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   url?: string;
+  /** Size of the text and screenshot, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -86,20 +98,20 @@ const CLAMP = {
 
 type Widths = (s: string) => number;
 
-function buildWidths(_version: number): Widths {
+function buildWidths(_version: number, fontFamily: string): Widths {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   return (s: string) => {
     if (cache[s] === undefined) {
       if (!ctx) return s.length * 0.52;
-      ctx.font = `${WGHT} ${PX}px "${onest.fontFamily}"`;
+      ctx.font = `${WGHT} ${PX}px "${fontFamily}"`;
       cache[s] = ctx.measureText(s).width / PX + TRACK * Array.from(s).length;
     }
     return cache[s];
   };
 }
 
-function useWidths() {
+function useWidths(fontFamily: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("shot-answers: measuring"));
   const released = useRef(false);
@@ -111,7 +123,7 @@ function useWidths() {
     document.fonts.addEventListener("loadingdone", bump);
     Promise.all([
       onest.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${onest.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -125,8 +137,8 @@ function useWidths() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildWidths(version), [version]);
+  }, [handle, fontFamily]);
+  return useMemo(() => buildWidths(version, fontFamily), [version, fontFamily]);
 }
 
 const keyOf = (word: string) =>
@@ -196,26 +208,50 @@ function flow(
   return { placed, lines: line + 1 };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ShotAnswers({
   question = "What if your launch video were just another pull request?",
   answer = "Your launch video is just another pull request.",
   src,
   aspect = 16 / 9,
+  stagger = 1.6,
+  answerAt = 58,
   accent,
+  ink,
   background,
+  fontFamily = onest.fontFamily,
   ground,
   groundParams,
   url = "remocn.dev/studio",
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ShotAnswersProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, durationInFrames: D, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width: W, height: H, durationInFrames: D, fps } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const transparent = background === "transparent";
   const image = src ?? staticFile("studio.png");
-  const widths = useWidths();
+  const widths = useWidths(fontFamily);
 
   const qWords = question.split(/\s+/).filter(Boolean);
   const aWords = answer.split(/\s+/).filter(Boolean);
@@ -268,19 +304,36 @@ export function ShotAnswers({
   const radius = Math.min(W, H) * 0.018;
 
   const SHOT_AT = 26 * k;
-  const MORPH = 58 * k;
+  const MORPH = answerAt * k;
 
-  const shotIn = spring({
-    frame: t - SHOT_AT,
-    fps,
-    config: HEAVY,
-  });
+  // Whether `value(f)`, in px, moves by more than a thousandth of a pixel
+  // into or out of this frame: the eases and the spring here have long flat
+  // tails, so a progress threshold drops the tilt while text still moves.
+  const moves = (value: (f: number) => number) =>
+    Math.abs(value(t) - value(t - speed)) > 1e-3 ||
+    Math.abs(value(t + speed) - value(t)) > 1e-3;
+
+  const shotInAt = (f: number) =>
+    spring({
+      frame: f - SHOT_AT,
+      fps,
+      config: HEAVY,
+    });
+  const shotIn = shotInAt(t);
   const reveal = interpolate(t, [SHOT_AT, SHOT_AT + 18 * k], [0, 1], {
     ...CLAMP,
     easing: ENTER,
   });
   const drift = portrait ? 0 : (1 - shotIn) * W * 0.06;
   const rise = portrait ? (1 - shotIn) * H * 0.04 : 0;
+  // Layout rounds a box to whole pixels, so the window is laid out where it
+  // lands and the spring's drift is a transform, all its life: handing the
+  // leftover back to layout once it settled would snap the URL in its bar by
+  // that rounding.
+  const shotLeft = (f: number) =>
+    (1 - shotInAt(f)) * (Math.max(W * 0.06, H * 0.04) + 0.03 * shot.w);
+  const shotMoving = moves(shotLeft);
+  const travel = `translate(${Math.abs(drift) > 1e-3 ? drift : 0}px, ${Math.abs(rise) > 1e-3 ? rise : 0}px) `;
   const imgScale = interpolate(t, [SHOT_AT, D], [1.08, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
@@ -294,29 +347,35 @@ export function ShotAnswers({
     position: "absolute" as const,
     left: 0,
     top: 0,
-    fontFamily: onest.fontFamily,
+    fontFamily,
     fontWeight: WGHT,
     fontSize: size,
     lineHeight: 1,
     letterSpacing: `${TRACK}em`,
     whiteSpace: "pre" as const,
-    color: c.ink,
+    color: fg,
   };
 
   const spans: ReactNode[] = [];
 
   qWords.forEach((wd, i) => {
-    const enter = interpolate(t, [i * 1.6 * k, i * 1.6 * k + 12 * k], [0, 1], {
-      ...CLAMP,
-      easing: ENTER,
-    });
+    const enterAt = (f: number) =>
+      interpolate(f, [i * stagger * k, i * stagger * k + 12 * k], [0, 1], {
+        ...CLAMP,
+        easing: ENTER,
+      });
+    const enter = enterAt(t);
     const q = Q.placed[i];
     const j = aToB[i];
     if (j < 0) {
-      const out = interpolate(t, [MORPH, MORPH + 8 * k], [0, 1], {
-        ...CLAMP,
-        easing: EXIT,
-      });
+      const outAt = (f: number) =>
+        interpolate(f, [MORPH, MORPH + 8 * k], [0, 1], {
+          ...CLAMP,
+          easing: EXIT,
+        });
+      const out = outAt(t);
+      const yAt = (f: number) =>
+        qTop + q.y + (1 - enterAt(f)) * size * 0.3 - outAt(f) * size * 0.24;
       spans.push(
         <span
           key={`q${i.toString()}`}
@@ -324,7 +383,7 @@ export function ShotAnswers({
             ...base,
             opacity: enter * (1 - out),
             filter: out > 0 ? `blur(${out * size * 0.08}px)` : undefined,
-            transform: `translate(${colX + q.x}px, ${qTop + q.y + (1 - enter) * size * 0.3 - out * size * 0.24}px)`,
+            transform: `translate(${colX + q.x}px, ${yAt(t)}px)${glide(moves(yAt))}`,
           }}
         >
           {wd}
@@ -334,11 +393,18 @@ export function ShotAnswers({
     }
     const a = A.placed[j];
     const start = MORPH + 6 * k + j * 0.6 * k;
-    const g = interpolate(t, [start, start + 20 * k], [0, 1], CLAMP);
+    const gAt = (f: number) =>
+      interpolate(f, [start, start + 20 * k], [0, 1], CLAMP);
+    const g = gAt(t);
     const gx = MOVE(interpolate(g, [0, 0.72], [0, 1], CLAMP));
-    const gy = MOVE(interpolate(g, [0.28, 1], [0, 1], CLAMP));
+    const yAt = (f: number) =>
+      qTop +
+      q.y +
+      (aTop + a.y - qTop - q.y) *
+        MOVE(interpolate(gAt(f), [0.28, 1], [0, 1], CLAMP));
     const x = colX + q.x + (a.x - q.x) * gx;
-    const y = qTop + q.y + (aTop + a.y - qTop - q.y) * gy;
+    const y = yAt(t);
+    const tilt = glide(moves((f) => yAt(f) + (1 - enterAt(f)) * size * 0.3));
     const next = aWords[j];
     const same = next === wd;
     const swap = same ? 0 : interpolate(g, [0.25, 0.75], [0, 1], CLAMP);
@@ -348,7 +414,7 @@ export function ShotAnswers({
         style={{
           ...base,
           opacity: enter * (1 - swap),
-          transform: `translate(${x}px, ${y + (1 - enter) * size * 0.3}px)`,
+          transform: `translate(${x}px, ${y + (1 - enter) * size * 0.3}px)${tilt}`,
         }}
       >
         {wd}
@@ -361,7 +427,7 @@ export function ShotAnswers({
           style={{
             ...base,
             opacity: swap,
-            transform: `translate(${x}px, ${y}px)`,
+            transform: `translate(${x}px, ${y}px)${tilt}`,
           }}
         >
           {next}
@@ -374,10 +440,13 @@ export function ShotAnswers({
     if (bToA[j] >= 0) return;
     const a = A.placed[j];
     const start = MORPH + 18 * k + j * 0.8 * k;
-    const e = interpolate(t, [start, start + 14 * k], [0, 1], {
-      ...CLAMP,
-      easing: ENTER,
-    });
+    const eAt = (f: number) =>
+      interpolate(f, [start, start + 14 * k], [0, 1], {
+        ...CLAMP,
+        easing: ENTER,
+      });
+    const e = eAt(t);
+    const yAt = (f: number) => aTop + a.y + (1 - eAt(f)) * size * 0.34;
     spans.push(
       <span
         key={`a${j.toString()}`}
@@ -386,7 +455,7 @@ export function ShotAnswers({
           color: hi,
           opacity: e,
           filter: e < 1 ? `blur(${(1 - e) * size * 0.08}px)` : undefined,
-          transform: `translate(${colX + a.x}px, ${aTop + a.y + (1 - e) * size * 0.34}px)`,
+          transform: `translate(${colX + a.x}px, ${yAt(t)}px)${glide(moves(yAt))}`,
         }}
       >
         {wd}
@@ -420,86 +489,88 @@ export function ShotAnswers({
           />
         </AbsoluteFill>
       ) : null}
-      {spans}
-      <div
-        style={{
-          position: "absolute",
-          left: shot.x + drift,
-          top: shot.y + rise,
-          width: shot.w,
-          height: shot.h,
-          borderRadius: radius,
-          overflow: "hidden",
-          background: c.chrome,
-          boxShadow: c.shadow,
-          opacity: interpolate(reveal, [0, 0.25], [0, 1], CLAMP),
-          transform: `scale(${0.97 + 0.03 * shotIn})`,
-          transformOrigin: portrait ? "50% 100%" : "100% 50%",
-          clipPath: portrait
-            ? `inset(${(1 - reveal) * 100}% 0 0 0 round ${radius}px)`
-            : `inset(0 0 0 ${(1 - reveal) * 100}% round ${radius}px)`,
-        }}
-      >
+      <ScaleLayer scale={scale}>
+        {spans}
         <div
           style={{
-            height: barH,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "relative",
-            fontFamily: mono.fontFamily,
-            fontWeight: 400,
-            fontSize: Math.max(barH * 0.42, H * 0.022 * (portrait ? 0.6 : 1)),
-            color: c.chromeInk,
-            letterSpacing: "0.01em",
+            position: "absolute",
+            left: shot.x,
+            top: shot.y,
+            width: shot.w,
+            height: shot.h,
+            borderRadius: radius,
+            overflow: "hidden",
+            background: c.chrome,
+            boxShadow: c.shadow,
+            opacity: interpolate(reveal, [0, 0.25], [0, 1], CLAMP),
+            transform: `${travel}scale(${0.97 + 0.03 * shotIn})${glide(shotMoving)}`,
+            transformOrigin: portrait ? "50% 100%" : "100% 50%",
+            clipPath: portrait
+              ? `inset(${(1 - reveal) * 100}% 0 0 0 round ${radius}px)`
+              : `inset(0 0 0 ${(1 - reveal) * 100}% round ${radius}px)`,
           }}
         >
           <div
             style={{
-              position: "absolute",
-              left: barH * 0.5,
-              top: 0,
-              bottom: 0,
+              height: barH,
               display: "flex",
               alignItems: "center",
-              gap: dotD * 0.8,
+              justifyContent: "center",
+              position: "relative",
+              fontFamily: mono.fontFamily,
+              fontWeight: 400,
+              fontSize: Math.max(barH * 0.42, H * 0.022 * (portrait ? 0.6 : 1)),
+              color: c.chromeInk,
+              letterSpacing: "0.01em",
             }}
           >
-            {[0, 1, 2].map((n) => (
-              <span
-                key={n}
-                style={{
-                  width: dotD,
-                  height: dotD,
-                  borderRadius: dotD,
-                  background: c.dot,
-                }}
-              />
-            ))}
+            <div
+              style={{
+                position: "absolute",
+                left: barH * 0.5,
+                top: 0,
+                bottom: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: dotD * 0.8,
+              }}
+            >
+              {[0, 1, 2].map((n) => (
+                <span
+                  key={n}
+                  style={{
+                    width: dotD,
+                    height: dotD,
+                    borderRadius: dotD,
+                    background: c.dot,
+                  }}
+                />
+              ))}
+            </div>
+            {url}
           </div>
-          {url}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: barH,
-            bottom: 0,
-            overflow: "hidden",
-          }}
-        >
-          <Img
-            src={image}
+          <div
             style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              transform: `scale(${imgScale})`,
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: barH,
+              bottom: 0,
+              overflow: "hidden",
             }}
-          />
+          >
+            <Img
+              src={image}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                transform: `scale(${imgScale})`,
+              }}
+            />
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

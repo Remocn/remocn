@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const fuchidoriCountConfig: ComponentConfig = {
   componentName: "FuchidoriCount",
@@ -55,6 +61,26 @@ export const fuchidoriCountConfig: ComponentConfig = {
       description: "Max borders",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 300,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    countLength: {
+      type: "number",
+      default: 68,
+      min: 8,
+      max: 120,
+      step: 1,
+      description: "Count length (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Zen Kaku Gothic New" }),
     speed: {
       type: "number",
       default: 1,

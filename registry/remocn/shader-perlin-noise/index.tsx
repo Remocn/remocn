@@ -5,12 +5,8 @@ import {
   type PerlinNoiseProps,
 } from "@paper-design/shaders-react";
 import { useCallback, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface ShaderPerlinNoiseProps
   extends Omit<PerlinNoiseProps, "frame" | "ref"> {}
@@ -24,8 +20,8 @@ export function ShaderPerlinNoise({
   className,
   ...rest
 }: ShaderPerlinNoiseProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
 
   const [handle] = useState(() => delayRender("shader-perlin-noise"));
   const gate = useCallback(

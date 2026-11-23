@@ -1,0 +1,123 @@
+{
+  "component": "smash-count",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Many quick cuts that accelerate hard into a slammed final number.",
+      "askedAs": [
+        "fast flickering count up",
+        "lots of quick cuts to the number",
+        "machine gun number reveal",
+        "быстрый счётчик с кучей склеек",
+        "число мелькает очень быстро"
+      ],
+      "props": {
+        "cuts": 14,
+        "firstGap": 8,
+        "lastGap": 2,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-drama",
+      "label": "Slow Drama",
+      "description": "A few long, deliberate cuts in an elegant serif on warm paper, building suspense before the reveal.",
+      "askedAs": [
+        "slow dramatic number reveal",
+        "suspenseful stat with few cuts",
+        "elegant serif count",
+        "медленное драматичное появление числа",
+        "число с паузами и интригой"
+      ],
+      "props": {
+        "cuts": 3,
+        "firstGap": 28,
+        "lastGap": 18,
+        "fontFamily": "Instrument Serif",
+        "theme": "light",
+        "background": "#f4efe6"
+      }
+    },
+    {
+      "id": "paper-poster",
+      "label": "Paper Poster",
+      "description": "Light cream background with a deep ink-blue numeral in chunky grotesque type, like a printed poster.",
+      "askedAs": [
+        "light background blue number",
+        "poster style stat",
+        "print look count up",
+        "светлый постер с синей цифрой",
+        "число как на печатном плакате"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f2ede3",
+        "ink": "#1b1b1f",
+        "accent": "#1f3a93",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal",
+      "description": "Monospaced numerals in a muted mint on near-black, with a techy compact scale.",
+      "askedAs": [
+        "code style number count",
+        "monospace stat on dark",
+        "developer terminal look",
+        "моноширинный счётчик в стиле терминала",
+        "число как в консоли"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1110",
+        "ink": "#c9d6cf",
+        "accent": "#5fd3a1",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "giant-orange",
+      "label": "Giant Slam",
+      "description": "An oversized warm orange numeral on charcoal that fills the frame after a short pause.",
+      "askedAs": [
+        "huge number filling the screen",
+        "big orange stat slam",
+        "make the number massive",
+        "огромная цифра на весь экран",
+        "крупное оранжевое число"
+      ],
+      "props": {
+        "scale": 1.4,
+        "accent": "#ff6a2b",
+        "background": "#1c1a19",
+        "ink": "#f1ece6",
+        "delay": 12,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A smaller, calm slate numeral in Inter on soft white with half-speed cuts.",
+      "askedAs": [
+        "subtle minimal stat",
+        "calm understated number",
+        "small clean count up",
+        "минималистичный спокойный счётчик",
+        "аккуратное небольшое число"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#fafaf8",
+        "ink": "#3a3f47",
+        "accent": "#2f3a4a",
+        "fontFamily": "Inter",
+        "scale": 0.7
+      }
+    }
+  ]
+}

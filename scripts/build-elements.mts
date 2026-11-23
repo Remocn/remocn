@@ -14,6 +14,8 @@ import { resolveSchema } from "../lib/customizer-config";
 import { previewManifest } from "../registry/__manifest__";
 
 const ARTIFACTS_DIR = "registry-artifacts";
+/** The frame rate an element's clip length is written for. */
+const ELEMENT_FPS = 60;
 const ELEMENTS_DIR = join(ARTIFACTS_DIR, "elements");
 
 const INLINABLE_LIBS: Record<string, { artifact: string; importPath: string }> =
@@ -33,6 +35,14 @@ const INLINABLE_LIBS: Record<string, { artifact: string; importPath: string }> =
     "@remocn/audit-core": {
       artifact: "audit-core",
       importPath: "@/lib/remocn/audit-core",
+    },
+    "@remocn/glide": {
+      artifact: "glide",
+      importPath: "@/lib/remocn/glide",
+    },
+    "@remocn/frame-rate": {
+      artifact: "frame-rate",
+      importPath: "@/lib/remocn/frame-rate",
     },
   };
 
@@ -245,6 +255,8 @@ const IDENT = /^[A-Za-z_$][\w$]*$/;
 
 function serializeSchema(value: unknown, indent: string): string {
   if (value === null) return "null";
+  // A colour with no default is auto: the component takes it from its theme.
+  if (value === undefined) return "undefined";
   if (typeof value === "string") return JSON.stringify(value);
   if (typeof value === "number" || typeof value === "boolean") {
     return String(value);
@@ -466,13 +478,23 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
     skipped.push(`${item.name} (registry deps: ${regDeps.join(", ")})`);
     continue;
   }
-  const durationInFrames =
+  const ownFrames =
     frontmatterLengths[item.name] ??
     previewManifest[item.name]?.durationInFrames;
-  if (!durationInFrames) {
+  if (!ownFrames) {
     skipped.push(`${item.name} (no duration source)`);
     continue;
   }
+  // Studio makes the clip this many frames of the composition it lands in,
+  // whatever that composition's rate, and the element counts its own timing
+  // at 30 fps. Sized for the 60 fps the docs write compositions at: there the
+  // clip covers the motion exactly, and at 30 fps it holds the last frame
+  // longer. Sized for 30, a 60 fps composition would cut the motion in half.
+  // A docs `length` is always 30 fps frames; a config carries its own rate.
+  const ownFps = frontmatterLengths[item.name]
+    ? 30
+    : (previewManifest[item.name]?.fps ?? 30);
+  const durationInFrames = Math.round((ownFrames * ELEMENT_FPS) / ownFps);
 
   const libs = regDeps.flatMap((dep) => {
     const lib = libSources.get(dep);

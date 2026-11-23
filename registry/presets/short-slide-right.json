@@ -1,0 +1,117 @@
+{
+  "component": "short-slide-right",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "swift-push",
+      "label": "Swift Push",
+      "description": "A fast, long horizontal sweep in heavy type with tight word timing for energetic forward momentum.",
+      "askedAs": [
+        "fast slide in from left",
+        "energetic headline swipe",
+        "quick bold text push",
+        "быстрый заезд текста слева",
+        "энергичный жирный заголовок"
+      ],
+      "props": {
+        "distance": 96,
+        "staggerDelay": 1,
+        "speed": 1.75,
+        "fontWeight": "700"
+      }
+    },
+    {
+      "id": "quiet-drift",
+      "label": "Quiet Drift",
+      "description": "A slow, subtle drift in light slate type with generous word-by-word fades for a calm, editorial feel.",
+      "askedAs": [
+        "slow gentle text slide",
+        "calm subtle headline",
+        "soft elegant word fade",
+        "медленное плавное появление текста",
+        "спокойный мягкий заголовок"
+      ],
+      "props": {
+        "distance": 12,
+        "staggerDelay": 8,
+        "speed": 0.5,
+        "fontWeight": "400",
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "big-statement",
+      "label": "Big Statement",
+      "description": "Oversized bold navy headline that glides a long way in, built for a single punchy line.",
+      "askedAs": [
+        "huge bold headline sliding in",
+        "large title text entrance",
+        "big statement text",
+        "огромный жирный заголовок",
+        "крупный текст с выездом"
+      ],
+      "props": {
+        "fontSize": 140,
+        "fontWeight": "700",
+        "distance": 120,
+        "color": "#1e3a8a"
+      }
+    },
+    {
+      "id": "compact-caption",
+      "label": "Compact Caption",
+      "description": "Small medium-weight caption text with a short nudge and brisk stagger, ideal for labels and lower thirds.",
+      "askedAs": [
+        "small caption slide in",
+        "subtle lower third text",
+        "compact label animation",
+        "маленькая подпись с анимацией",
+        "компактный текст подписи"
+      ],
+      "props": {
+        "fontSize": 32,
+        "fontWeight": "500",
+        "distance": 10,
+        "staggerDelay": 2,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "progress-green",
+      "label": "Progress Green",
+      "description": "Deep forest green semibold text with a measured slide and steady cascade that reads as growth and progress.",
+      "askedAs": [
+        "green progress headline",
+        "growth text slide right",
+        "steady forward motion title",
+        "зелёный заголовок прогресса",
+        "текст про рост с движением вправо"
+      ],
+      "props": {
+        "color": "#166534",
+        "distance": 48,
+        "staggerDelay": 5,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "pure-cascade",
+      "label": "Pure Cascade",
+      "description": "No translation at all, just a rich terracotta word-by-word opacity cascade for a still, typographic reveal.",
+      "askedAs": [
+        "words fade in one by one",
+        "no movement just fade",
+        "sequential word reveal",
+        "слова появляются по очереди",
+        "проявление текста без движения"
+      ],
+      "props": {
+        "distance": 0,
+        "staggerDelay": 10,
+        "color": "#9a3412",
+        "fontWeight": "500"
+      }
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 "use client";
 
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { previewCaptions } from "@/components/docs/examples/caption-fixture";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { CaptionProsody } from "@/registry/remocn/caption-prosody";
 
 interface CaptionProsodyExampleProps {
@@ -29,7 +30,7 @@ export function CaptionProsodyExampleScene({
   holdMs,
   shadow,
 }: CaptionProsodyExampleProps) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   return (
     <AbsoluteFill
       style={{

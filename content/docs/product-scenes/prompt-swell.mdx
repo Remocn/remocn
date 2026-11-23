@@ -47,8 +47,8 @@ export const RemotionRoot = () => (
   <Composition
     id="PromptSwell"
     component={PromptSwellScene}
-    durationInFrames={156}
-    fps={30}
+    durationInFrames={312}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -102,9 +102,66 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Pricing tiers: name, price and optional features.",
     },
     {
+      name: "headline",
+      type: "string",
+      default: "\"Launch videos, built from code.\"",
+      description: "Headline of the generated page's hero.",
+    },
+    {
+      name: "pricingTitle",
+      type: "string",
+      default: "\"Simple pricing\"",
+      description: "Heading over the pricing tiers.",
+    },
+    {
+      name: "ctaLabel",
+      type: "string",
+      default: "\"Join waitlist\"",
+      description: "Label of the waitlist buttons in the nav and the form.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
       name: "ground",
       type: "GshPresetId",
       description: "Gradient shader preset for the background.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
     },
     {
       name: "groundParams",

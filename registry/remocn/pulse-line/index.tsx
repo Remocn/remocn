@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const inter = loadInterTight("normal", {
   weights: ["400", "500"],
@@ -23,7 +23,21 @@ export interface PulseLineProps {
   highlight?: string;
   caption?: string;
   beats?: number;
+  /** Height of the pulse wave as it runs through the letters; 1 is the default lift. */
+  amplitude?: number;
   accent?: string;
+  /** Text color, as a hex value; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line and caption. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Size of the line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -75,6 +89,8 @@ const FLAT_SCALE = 0.05;
 const COOL = 11;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
+
+const midway = (p: number) => p > 0 && p < 1;
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -113,7 +129,7 @@ interface Metrics {
   baseline: number;
 }
 
-function useMetrics(caption: string) {
+function useMetrics(caption: string, family: string, weight: number) {
   const [m, setM] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("pulse-line: measuring"));
   const released = useRef(false);
@@ -121,8 +137,8 @@ function useMetrics(caption: string) {
     let live = true;
     Promise.all([
       inter.waitUntilDone(),
-      document.fonts.load(`500 100px "${inter.fontFamily}"`),
-      document.fonts.load(`400 100px "${inter.fontFamily}"`),
+      document.fonts.load(`${weight} 100px "${family}"`),
+      document.fonts.load(`400 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -130,7 +146,7 @@ function useMetrics(caption: string) {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
         if (!ctx) throw new Error("pulse-line: no 2d context");
-        ctx.font = `500 ${FONT_PX}px "${inter.fontFamily}"`;
+        ctx.font = `${weight} ${FONT_PX}px "${family}"`;
         const fm = ctx.measureText("Hg");
         const asc = fm.fontBoundingBoxAscent / FONT_PX;
         const desc = fm.fontBoundingBoxDescent / FONT_PX;
@@ -143,7 +159,7 @@ function useMetrics(caption: string) {
             (_, i) => raw(chars.slice(0, i).join("")) + TRACK * i,
           );
         };
-        ctx.font = `400 ${FONT_PX}px "${inter.fontFamily}"`;
+        ctx.font = `400 ${FONT_PX}px "${family}"`;
         const cap = caption ? ctx.measureText(caption).width / FONT_PX : 0;
         setM({
           width,
@@ -159,7 +175,7 @@ function useMetrics(caption: string) {
     return () => {
       live = false;
     };
-  }, [caption, handle]);
+  }, [caption, handle, family, weight]);
   return m;
 }
 
@@ -213,24 +229,54 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PulseLine({
   text = "Every frame has a pulse.",
   highlight = "a pulse.",
   caption = "Motion components for Remotion. Copy one in, own every frame.",
   beats = 2,
+  amplitude = 1,
   accent = "#3B5BFD",
+  ink: inkProp,
+  background,
+  fontFamily = inter.fontFamily,
+  fontWeight = 500,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: PulseLineProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
-  const m = useMetrics(caption);
+  const fg = inkProp ?? c.ink;
+  const transparent = background === "transparent";
+  const stage = transparent ? "transparent" : (background ?? c.bg);
+  const m = useMetrics(caption, fontFamily, fontWeight);
 
   const words = useMemo(() => text.split(/\s+/).filter(Boolean), [text]);
 
   if (!m) {
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return (
+      <div style={{ position: "absolute", inset: 0, background: stage }} />
+    );
   }
 
   const maxW = W * 0.86;
@@ -331,14 +377,12 @@ export function PulseLine({
     const left = (W - lw * F) / 2 + g.x * F;
     const baseY = top0 + g.line * LINE_GAP * F + m.baseline * F;
 
-    let y = 0;
     let heat = 0;
     let alive = 0;
     let hlOn = 0;
     for (let b = 0; b < nBeats; b++) {
       const s = front(b) - g.strip;
       if (s < -0.5) continue;
-      y += ecg(s);
       const since = (s - R_AT) / V;
       if (since > -1.5) {
         heat = Math.max(
@@ -351,28 +395,54 @@ export function PulseLine({
       if (b === nBeats - 1 && g.hl)
         hlOn = interpolate(since, [0, 12], [0, 1], CLAMP);
     }
-    const spike = Math.max(0, y) / WAVE[2].a;
-    const sy = FLAT_SCALE + (1 - FLAT_SCALE) * alive + spike * 0.22 * alive;
-    const sx = 1 - spike * 0.06;
-    const dy = -y * F * (lines.length > 1 ? 0.8 : 1);
-    const ink = alive > 0.02 ? c.ink : c.flat;
-    const restInk = mixHex(c.flat, c.ink, alive);
+    const poseAt = (tt: number) => {
+      let py = 0;
+      let pa = 0;
+      for (let b = 0; b < nBeats; b++) {
+        const ps = -1 + (tt - beatAt(b)) * V - g.strip;
+        if (ps < -0.5) continue;
+        py += ecg(ps);
+        if (b === 0)
+          pa = interpolate(ps, [R_AT - 0.35, R_AT + 0.25], [0, 1], CLAMP);
+      }
+      const k = Math.max(0, py) / WAVE[2].a;
+      return {
+        dy: -py * F * (lines.length > 1 ? 0.8 : 1) * amplitude,
+        sx: 1 - k * 0.06,
+        sy: FLAT_SCALE + (1 - FLAT_SCALE) * pa + k * 0.22 * pa,
+      };
+    };
+    const { dy, sx, sy } = poseAt(t);
+    // The furthest glyph edge sits about F from the origin, so a scale step
+    // is weighed by F to compare it with the 1e-3px used for the lift.
+    const shifts = (o: ReturnType<typeof poseAt>) =>
+      Math.abs(o.dy - dy) > 1e-3 ||
+      Math.abs(o.sx - sx) * F > 1e-3 ||
+      Math.abs(o.sy - sy) * F > 1e-3;
+    const moving = shifts(poseAt(t + 1)) || shifts(poseAt(t - 1));
+    // Two decimals park the glyph on a 0.01px grid; while it moves the full
+    // value goes through, at rest the string is what it always was.
+    const fix = (v: number, d: number) => (moving ? `${v}` : v.toFixed(d));
+    const ink = alive > 0.02 ? fg : c.flat;
+    const restInk = mixHex(c.flat, fg, alive);
     const col =
       heat > 0.001
-        ? heatColor(c.glow, ink === c.ink ? c.ink : restInk, heat)
+        ? heatColor(c.glow, ink === fg ? fg : restInk, heat)
         : restInk;
 
     const style: React.CSSProperties = {
       position: "absolute",
       left,
       top: baseY - m.baseline * F,
-      fontFamily: inter.fontFamily,
-      fontWeight: 500,
+      fontFamily,
+      fontWeight,
       fontSize: F,
       lineHeight: `${F}px`,
       whiteSpace: "pre",
       transformOrigin: `${((g.adv / 2) * F).toFixed(2)}px ${(m.baseline * F).toFixed(2)}px`,
-      transform: `translateY(${dy.toFixed(2)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`,
+      // The tilt goes ahead of the scale: behind it, a glyph squashed to
+      // `FLAT_SCALE` squashes the lean too, and the raster snaps again.
+      transform: `translateY(${fix(dy, 2)}px)${glide(moving)} scale(${fix(sx, 4)}, ${fix(sy, 4)})`,
     };
     nodes.push(
       <div key={`g${i}`} style={{ ...style, color: col }}>
@@ -411,37 +481,41 @@ export function PulseLine({
   const settled = interpolate(t, [endT, endT + 30], [0, 1], CLAMP);
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: c.ground(Math.max(breathe, settled * 0.35)),
-        }}
-      />
-      {nodes}
-      {caption ? (
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {transparent ? null : (
         <div
           style={{
             position: "absolute",
-            left: 0,
-            width: W,
-            top: top0 + blockH + capGap,
-            textAlign: "center",
-            fontFamily: inter.fontFamily,
-            fontWeight: 400,
-            fontSize: capSize,
-            letterSpacing: "-0.01em",
-            lineHeight: 1.2,
-            color: c.muted,
-            opacity: capP,
-            transform: `translateY(${((1 - capP) * capSize * 0.7).toFixed(2)}px)`,
+            inset: 0,
+            background: c.ground(Math.max(breathe, settled * 0.35)),
           }}
-        >
-          {caption}
-        </div>
-      ) : null}
-      <Grain opacity={c.grain} />
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        {nodes}
+        {caption ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: top0 + blockH + capGap,
+              textAlign: "center",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: capSize,
+              letterSpacing: "-0.01em",
+              lineHeight: 1.2,
+              color: c.muted,
+              opacity: capP,
+              transform: `translateY(${midway(capP) ? (1 - capP) * capSize * 0.7 : ((1 - capP) * capSize * 0.7).toFixed(2)}px)${glide(midway(capP))}`,
+            }}
+          >
+            {caption}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { loadVariableFont } from "@remotion/google-fonts/Urbanist";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -8,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const urbanist = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -18,8 +19,19 @@ export interface TwoHitProps {
   before?: string;
   after?: string;
   hitAt?: number;
+  /** Frames between the first, small hit and the second, full one. */
+  hitGap?: number;
+  fontWeight?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines. Load it yourself; Urbanist by default. */
+  fontFamily?: string;
+  /** Size of the lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -48,14 +60,14 @@ interface Metrics {
   cap: number;
 }
 
-function measure(phrases: string[][]): Metrics {
+function measure(phrases: string[][], font: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   let widths = phrases.map((lines) => lines.map((l) => l.length * 0.5));
   let baseline = 0.8;
   let cap = 0.7;
   if (ctx) {
-    ctx.font = `${WGHT} 200px "${urbanist.fontFamily}"`;
+    ctx.font = font;
     widths = phrases.map((lines) =>
       lines.map((l) => ctx.measureText(l).width / 200),
     );
@@ -68,7 +80,7 @@ function measure(phrases: string[][]): Metrics {
   return { widths, baseline, cap };
 }
 
-function useMetrics(phrases: string[][]) {
+function useMetrics(phrases: string[][], fontFamily: string, weight: number) {
   const key = phrases.map((l) => l.join("\u0002")).join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("two-hit: measuring"));
@@ -78,12 +90,15 @@ function useMetrics(phrases: string[][]) {
     const list = key.split("\u0001").map((l) => l.split("\u0002"));
     Promise.all([
       urbanist.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${urbanist.fontFamily}"`),
+      document.fonts.load(`${weight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(list) });
+        setState({
+          key,
+          m: measure(list, `${weight} 200px "${fontFamily}"`),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -92,7 +107,7 @@ function useMetrics(phrases: string[][]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, fontFamily, weight, handle]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -115,23 +130,47 @@ function normalizeHex(c: string | undefined, fallback: string) {
   return fallback;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TwoHit({
   before = "Premieres Friday.",
   after = "Streaming now.",
   hitAt = 34,
+  hitGap = 24,
+  fontWeight = WGHT,
   accent,
+  ink,
   background,
+  fontFamily = urbanist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: TwoHitProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const blue = normalizeHex(accent, c.blue);
   const a = before.trim() || "Soon.";
   const b = after.trim() || "Now.";
   const phrases = useMemo(() => [splitLast(a), splitLast(b)], [a, b]);
-  const m = useMetrics(phrases);
+  const m = useMetrics(phrases, fontFamily, fontWeight);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -167,7 +206,7 @@ export function TwoHit({
     );
 
   const h1 = hitAt;
-  const h2 = hitAt + 24;
+  const h2 = hitAt + hitGap;
   const swapAt = h2 + 7;
   const e1 = FIRST_GAIN * pulse(t - h1, 4, 0, 16);
   const e2 = pulse(t - h2, 5, 4, 24);
@@ -175,11 +214,21 @@ export function TwoHit({
   const idx = t < swapAt ? 0 : 1;
   const lines = phrases[idx];
 
-  const enter = (j: number) =>
-    interpolate(t, [2 + j * 4, 20 + j * 4], [0, 1], {
+  const enterAt = (j: number, f: number) =>
+    interpolate(f, [2 + j * 4, 20 + j * 4], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  const enter = (j: number) => enterAt(j, t);
+  // The rise is a long ease-out, so its tail still crosses pixels well after
+  // the progress looks settled: test the travel itself against its neighbours.
+  const rising = (j: number) => {
+    const rise = (f: number) => (1 - enterAt(j, f)) * F * 1.05;
+    return (
+      Math.abs(rise(t + 1) - rise(t)) > 1e-3 ||
+      Math.abs(rise(t) - rise(t - 1)) > 1e-3
+    );
+  };
 
   const blockH = (m.cap + (lines.length - 1) * LEAD) * F;
   const firstBase = H * (portrait ? 0.5 : 0.53) - blockH / 2 + m.cap * F;
@@ -189,43 +238,46 @@ export function TwoHit({
       style={{
         background: stage,
         overflow: "hidden",
-        fontFamily: urbanist.fontFamily,
+        fontFamily,
       }}
     >
-      {lines.map((line, j) => {
-        const track = REST + e * (peak(idx, j) - REST);
-        const baseY = firstBase + j * LEAD * F;
-        const p = enter(j);
-        const last = j === lines.length - 1 && lines.length > 1;
-        return (
-          <div
-            key={`${idx}-${j}`}
-            style={{
-              position: "absolute",
-              right: margin,
-              top: baseY - m.baseline * F - F * 0.1,
-              height: F * 1.25,
-              overflow: "hidden",
-            }}
-          >
+      <ScaleLayer scale={scale}>
+        {lines.map((line, j) => {
+          const track = REST + e * (peak(idx, j) - REST);
+          const baseY = firstBase + j * LEAD * F;
+          const p = enter(j);
+          const last = j === lines.length - 1 && lines.length > 1;
+          return (
             <div
+              key={`${idx}-${j}`}
               style={{
-                paddingTop: F * 0.1,
-                fontSize: F,
-                lineHeight: `${F}px`,
-                fontVariationSettings: `"wght" ${WGHT}`,
-                letterSpacing: `${track.toFixed(4)}em`,
-                marginRight: `${(-track).toFixed(4)}em`,
-                whiteSpace: "pre",
-                color: last ? blue : c.ink,
-                transform: `translateY(${((1 - p) * F * 1.05).toFixed(2)}px)`,
+                position: "absolute",
+                right: margin,
+                top: baseY - m.baseline * F - F * 0.1,
+                height: F * 1.25,
+                overflow: "hidden",
               }}
             >
-              {line}
+              <div
+                style={{
+                  paddingTop: F * 0.1,
+                  fontSize: F,
+                  lineHeight: `${F}px`,
+                  fontWeight,
+                  fontVariationSettings: `"wght" ${fontWeight}`,
+                  letterSpacing: `${track.toFixed(4)}em`,
+                  marginRight: `${(-track).toFixed(4)}em`,
+                  whiteSpace: "pre",
+                  color: last ? blue : fg,
+                  transform: `translateY(${((1 - p) * F * 1.05).toFixed(2)}px)${glide(rising(j))}`,
+                }}
+              >
+                {line}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

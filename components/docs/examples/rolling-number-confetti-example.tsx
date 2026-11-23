@@ -33,8 +33,8 @@ export const RemotionRoot = () => (
   <Composition
     id="RollingNumberConfetti"
     component={RollingNumberConfetti}
-    durationInFrames={210}
-    fps={30}
+    durationInFrames={420}
+    fps={60}
     width={1280}
     height={720}
   />

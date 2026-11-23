@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const invoicePaidConfig: ComponentConfig = {
   componentName: "InvoicePaid",
@@ -12,11 +19,6 @@ export const invoicePaidConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     sender: {
       type: "text-content",
@@ -57,6 +59,56 @@ export const invoicePaidConfig: ComponentConfig = {
       type: "text-content",
       default: "Business Checking ••4821",
       description: "Payout account",
+    },
+    payoutArrival: {
+      type: "text-content",
+      default: "Oct 29",
+      description: "Payout arrival",
+    },
+    currency: {
+      type: "text-content",
+      default: "$",
+      description: "Currency",
+    },
+    sendLabel: {
+      type: "text-content",
+      default: "Send invoice",
+      description: "Send label",
+    },
+    payoutTitle: {
+      type: "text-content",
+      default: "Payout on the way",
+      description: "Payout title",
+    },
+    paidNote: {
+      type: "text-content",
+      default: "11 days early",
+      description: "Paid note",
+    },
+    payoutFee: {
+      type: "number",
+      default: 5,
+      min: 0,
+      max: 100,
+      step: 1,
+      description: "Payout fee",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 180,

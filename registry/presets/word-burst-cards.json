@@ -1,0 +1,121 @@
+{
+  "component": "word-burst-cards",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A light, magazine-like burst with a serif wordmark on warm paper and an unhurried pace.",
+      "askedAs": [
+        "light serif version",
+        "calm editorial look on paper",
+        "slower elegant burst with serif font",
+        "светлый редакционный стиль",
+        "спокойный вариант с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75,
+        "stagger": 7
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "An early, fast burst with tight word timing for a punchy, high-energy reveal.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick explosion right away",
+        "energetic fast burst",
+        "быстрый резкий взрыв",
+        "сделай динамичнее"
+      ],
+      "props": {
+        "speed": 2,
+        "burstAt": 8,
+        "stagger": 1,
+        "fontFamily": "Space Grotesk",
+        "seed": 7
+      }
+    },
+    {
+      "id": "afterhours-glow",
+      "label": "Afterhours Glow",
+      "description": "A moody night ground with a soft amber accent and a slightly larger, cinematic composition.",
+      "askedAs": [
+        "dark moody cinematic version",
+        "warm accent on night background",
+        "premium late night look",
+        "тёмный кинематографичный стиль",
+        "ночной вариант с тёплым акцентом"
+      ],
+      "props": {
+        "ground": "afterhours",
+        "accent": "#e8b46a",
+        "scale": 1.15,
+        "speed": 0.75,
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "implode-closer",
+      "label": "Implode Closer",
+      "description": "Cards rush inward and settle around the logo, playing the burst in reverse as a finale.",
+      "askedAs": [
+        "cards fly in instead of out",
+        "reverse burst for ending",
+        "closing shot where everything gathers",
+        "карточки собираются к центру",
+        "обратный взрыв для финала"
+      ],
+      "props": {
+        "reverse": true,
+        "ground": "velvet-hour",
+        "burstAt": 45,
+        "stagger": 6
+      }
+    },
+    {
+      "id": "mono-lab",
+      "label": "Mono Lab",
+      "description": "A cool, technical look with monospaced type on a cobalt ground and a crisp cyan accent.",
+      "askedAs": [
+        "developer style with mono font",
+        "technical blue look",
+        "code themed burst",
+        "технический стиль с моноширинным шрифтом",
+        "синий вариант для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "cobalt-rise",
+        "accent": "#7fd6e8",
+        "scale": 0.9,
+        "seed": 9
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "A plain light canvas with dark ink and no logo, letting the words and cards speak quietly.",
+      "askedAs": [
+        "simple white background no logo",
+        "minimal clean version",
+        "plain light layout",
+        "минималистичный белый фон",
+        "без логотипа, просто и чисто"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f5f2",
+        "ink": "#141414",
+        "showLogo": false,
+        "fontFamily": "Inter",
+        "scale": 0.85
+      }
+    }
+  ]
+}

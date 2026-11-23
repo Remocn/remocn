@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const chevronRunConfig: ComponentConfig = {
   componentName: "ChevronRun",
@@ -13,11 +19,6 @@ export const chevronRunConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     value: {
       type: "text-content",
       default: "+312%",
@@ -28,6 +29,30 @@ export const chevronRunConfig: ComponentConfig = {
       default: "growth since launch",
       description: "Caption",
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 200,
+      max: 800,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    columns: {
+      type: "number",
+      default: 13,
+      min: 5,
+      max: 25,
+      step: 1,
+      description: "Columns",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Bricolage Grotesque" }),
     speed: {
       type: "number",
       default: 1,

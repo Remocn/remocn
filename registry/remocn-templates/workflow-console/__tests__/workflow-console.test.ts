@@ -203,6 +203,8 @@ test("registry includes every local module and declares primitive dependencies",
   expect(item.registryDependencies).toEqual([
     "@remocn/typed-split-wipe",
     "@remocn/caret",
+    "@remocn/glide",
+    "@remocn/frame-rate",
   ]);
   expect(item.dependencies).toContain("@fontsource/roboto-mono");
 });

@@ -1,0 +1,103 @@
+{
+  "component": "hot-slab-morph",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "kiln-glow",
+      "label": "Kiln Glow",
+      "description": "Deep ember-to-kiln grounds with a warm orange accent and a slightly slower, heavier morph.",
+      "askedAs": [
+        "warm fiery glow version",
+        "orange heat morph dark",
+        "slower hot ember look",
+        "тёплый огненный вариант",
+        "оранжевое свечение на тёмном"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "ember",
+        "groundB": "kiln",
+        "accent": "#ff6a2b",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "paper-studio",
+      "label": "Paper Studio",
+      "description": "A light paper-toned layout with dark ink, a terracotta accent and an editorial serif.",
+      "askedAs": [
+        "light editorial version",
+        "bright paper background with serif",
+        "clean light theme morph",
+        "светлая версия с засечками",
+        "бумажный светлый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#c2532d",
+        "fontFamily": "Instrument Serif"
+      }
+    },
+    {
+      "id": "cold-terminal",
+      "label": "Cold Terminal",
+      "description": "Cool blue-hour grounds, monospace type and a cyan accent for a developer-console feel.",
+      "askedAs": [
+        "make it look like a terminal",
+        "cool blue tech version",
+        "monospace developer style",
+        "как терминал разработчика",
+        "холодный синий техно стиль"
+      ],
+      "props": {
+        "ground": "blue-hour",
+        "groundB": "coldlight",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#5cc8e0",
+        "ink": "#e6f1f5"
+      }
+    },
+    {
+      "id": "snap-launch",
+      "label": "Snap Launch",
+      "description": "A fast, punchy morph at larger scale with crisp geometric type for quick launch cuts.",
+      "askedAs": [
+        "faster snappier morph",
+        "bigger and quicker for launch",
+        "punchy fast transition",
+        "быстрее и крупнее",
+        "резкий быстрый переход"
+      ],
+      "props": {
+        "speed": 2,
+        "scale": 1.2,
+        "fontFamily": "Space Grotesk",
+        "ground": "corona"
+      }
+    },
+    {
+      "id": "velvet-slowburn",
+      "label": "Velvet Slowburn",
+      "description": "A slow, delayed reveal over velvet and garnet grounds with a rose accent and compact scale.",
+      "askedAs": [
+        "slow moody reveal",
+        "dark red velvet look",
+        "calm delayed morph smaller",
+        "медленное мрачное появление",
+        "бархатный красный вариант"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "groundB": "garnet",
+        "accent": "#e0627a",
+        "speed": 0.5,
+        "delay": 20,
+        "scale": 0.85
+      }
+    }
+  ]
+}

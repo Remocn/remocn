@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="QuoteHero"
     component={QuoteHeroScene}
-    durationInFrames={246}
-    fps={30}
+    durationInFrames={492}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -63,10 +63,56 @@ A big serif pull quote rises line by line beside an oversized opening mark, then
       description: "Frames each quote owns, including its exit.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "5",
+      description: "Frames between the lines of a quote rising in.",
+    },
+    {
+      name: "sweep",
+      type: "number",
+      default: "18",
+      description: "Frames the highlighter takes to sweep across the highlighted phrase.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the highlighter sweep behind the key phrase.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color of the quote and author; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Serif\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

@@ -9,9 +9,9 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadVariableFont("normal", {
   subsets: ["latin"],
@@ -24,7 +24,21 @@ export interface WeightWaveProps {
   peak?: number;
   settle?: number;
   waves?: number;
+  /** Frames for one wave to cross the line. */
+  waveLength?: number;
+  /** Frames between letters as they settle. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the line; needs a variable weight axis. Geist by default. */
+  fontFamily?: string;
+  /** Size of the line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -112,6 +126,24 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WeightWave({
   text = "Made to move.",
   highlight,
@@ -119,13 +151,29 @@ export function WeightWave({
   peak = 500,
   settle = 460,
   waves = 2,
+  waveLength = WAVE_LEN,
+  stagger = SETTLE_STAGGER,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: WeightWaveProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
+  // interpolateColors needs a parseable pair, so a custom ink fades via color-mix.
+  const inkAt = (tint: number) =>
+    ink === undefined
+      ? interpolateColors(tint, [0, 1], [c.fg, c.fgClear])
+      : `color-mix(in srgb, ${ink} ${((1 - tint) * 100).toFixed(2)}%, transparent)`;
 
   const chars = useMemo(() => Array.from(text), [text]);
   const n = chars.length;
@@ -142,7 +190,7 @@ export function WeightWave({
   const hi = clampW(peak);
   const rest = clampW(settle);
 
-  const settleStart = WAVE_START + (waves - 1) * WAVE_GAP + WAVE_LEN - 8;
+  const settleStart = WAVE_START + (waves - 1) * WAVE_GAP + waveLength - 8;
   const sigma = 0.12;
   const push = interpolate(t, [0, settleStart + 70], [0, 1], CLAMP);
 
@@ -183,92 +231,99 @@ export function WeightWave({
   };
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(48% 34% at 50% 60%, ${c.haze} 0%, transparent 72%)`,
           opacity: hazeIn,
         }}
       />
-      <AbsoluteFill
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transform: `scale(${1 + push * 0.025})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
             display: "flex",
-            alignItems: "baseline",
+            alignItems: "center",
             justifyContent: "center",
-            whiteSpace: "pre",
-            fontFamily: sans,
-            fontSize: F,
-            lineHeight: 1,
-            letterSpacing: `${TRACK}em`,
-            fontKerning: "normal",
+            transform: `scale(${1 + push * 0.025})${glide(midway(push))}`,
+            transformOrigin: "50% 50%",
           }}
         >
-          {group(
-            chars.map((ch, i) => {
-              const p = n > 1 ? i / (n - 1) : 0.5;
-              let bump = 0;
-              for (let k = 0; k < waves; k++) {
-                const s = WAVE_START + k * WAVE_GAP;
-                const crest = interpolate(t, [s, s + WAVE_LEN], [-0.3, 1.3], {
-                  ...CLAMP,
-                  easing: EASE_TRAVEL,
-                });
-                const live = t > s && t < s + WAVE_LEN ? 1 : 0;
-                bump = Math.max(
-                  bump,
-                  live * Math.exp(-(((p - crest) / sigma) ** 2)),
-                );
-              }
-              const wave = lo + (hi - lo) * bump;
-              const sp = spring({
-                frame: t - settleStart - i * SETTLE_STAGGER,
-                fps,
-                config: { damping: 15, stiffness: 120, mass: 0.9 },
-              });
-              const weight = clampW(wave + (rest - wave) * sp);
-              const isAccent = i >= accentRange[0] && i < accentRange[1];
-              const tint = isAccent
-                ? interpolate(
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "center",
+              whiteSpace: "pre",
+              fontFamily,
+              fontSize: F,
+              lineHeight: 1,
+              letterSpacing: `${TRACK}em`,
+              fontKerning: "normal",
+            }}
+          >
+            {group(
+              chars.map((ch, i) => {
+                const p = n > 1 ? i / (n - 1) : 0.5;
+                let bump = 0;
+                for (let k = 0; k < waves; k++) {
+                  const s = WAVE_START + k * WAVE_GAP;
+                  const crest = interpolate(
                     t,
-                    [
-                      settleStart + 14 + (i - accentRange[0]) * 2,
-                      settleStart + 30 + (i - accentRange[0]) * 2,
-                    ],
-                    [0, 1],
-                    CLAMP,
-                  )
-                : 0;
-              const o = interpolate(t, [ENTER + i, ENTER + i + 12], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
-              return (
-                <span
-                  key={`${i}-${ch}`}
-                  style={{
-                    display: "inline-block",
-                    fontWeight: weight,
-                    color: interpolateColors(tint, [0, 1], [c.fg, c.fgClear]),
-                    opacity: o,
-                  }}
-                >
-                  {ch}
-                </span>
-              );
-            }),
-          )}
-        </div>
-      </AbsoluteFill>
-      <Grain opacity={c.grain} />
+                    [s, s + waveLength],
+                    [-0.3, 1.3],
+                    {
+                      ...CLAMP,
+                      easing: EASE_TRAVEL,
+                    },
+                  );
+                  const live = t > s && t < s + waveLength ? 1 : 0;
+                  bump = Math.max(
+                    bump,
+                    live * Math.exp(-(((p - crest) / sigma) ** 2)),
+                  );
+                }
+                const wave = lo + (hi - lo) * bump;
+                const sp = spring({
+                  frame: t - settleStart - i * stagger,
+                  fps,
+                  config: { damping: 15, stiffness: 120, mass: 0.9 },
+                });
+                const weight = clampW(wave + (rest - wave) * sp);
+                const isAccent = i >= accentRange[0] && i < accentRange[1];
+                const tint = isAccent
+                  ? interpolate(
+                      t,
+                      [
+                        settleStart + 14 + (i - accentRange[0]) * 2,
+                        settleStart + 30 + (i - accentRange[0]) * 2,
+                      ],
+                      [0, 1],
+                      CLAMP,
+                    )
+                  : 0;
+                const o = interpolate(t, [ENTER + i, ENTER + i + 12], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                });
+                return (
+                  <span
+                    key={`${i}-${ch}`}
+                    style={{
+                      display: "inline-block",
+                      fontWeight: weight,
+                      color: inkAt(tint),
+                      opacity: o,
+                    }}
+                  >
+                    {ch}
+                  </span>
+                );
+              }),
+            )}
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

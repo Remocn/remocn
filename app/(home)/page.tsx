@@ -14,7 +14,7 @@ import { PauseOffscreen } from "./components/landing/ui/pause-offscreen";
 import { RevealScope } from "./components/landing/ui/reveal-scope";
 
 export const metadata: Metadata = {
-  alternates: { canonical: "/" },
+  alternates: { canonical: "/", types: { "text/markdown": "/index.md" } },
   keywords: HOME_KEYWORDS,
 };
 

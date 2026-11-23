@@ -2,15 +2,9 @@
 
 import { loadFont } from "@remotion/google-fonts/InstrumentSans";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -39,8 +33,24 @@ export interface UiCalloutProps {
   screenshotWidth?: number;
   screenshotHeight?: number;
   stagger?: number;
+  /** Button label on every card but the last. */
+  nextLabel?: string;
+  /** Button label on the last card. */
+  doneLabel?: string;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color of the callout titles; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the callouts. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark in the built-in mock's workspace switcher. */
+  logo?: React.ReactNode;
+  /** Size of the foreground around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   speed?: number;
@@ -326,6 +336,22 @@ function wipeClip(attach: Route["attach"], p: number, r: number) {
   return `inset(${hidden} ${out} ${out} ${out} round ${r}px)`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function UiCallout({
   callouts = DEFAULT_CALLOUTS,
   variant = "tooltip",
@@ -334,14 +360,23 @@ export function UiCallout({
   screenshotWidth = MOCK_W,
   screenshotHeight = MOCK_H,
   stagger = 30,
+  nextLabel = "Next",
+  doneLabel = "Got it",
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily: font = fontFamily,
+  logo,
+  scale = 1,
+  delay = 0,
   ground,
   groundParams,
   speed = 1,
 }: UiCalloutProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const tall = H > W;
   const u = tall ? W / 660 : Math.min(W / 1280, H / 720);
   const dark = theme === "dark";
@@ -369,7 +404,8 @@ export function UiCallout({
   const gapBelow = 56 * u;
   const top = tall ? (H - (winH + gapBelow + stackH)) / 2 : (H - winH) / 2;
   const radius = 12 / s;
-  const enter = spring({ frame: frame + 2, fps, config: HEAVY });
+  const enterAt = (f: number) => spring({ frame: f + 2, fps, config: HEAVY });
+  const enter = enterAt(frame);
 
   const targets = callouts.map((c) => ({
     x: left + c.x * s,
@@ -387,8 +423,15 @@ export function UiCallout({
           fps,
           config: MORPH,
         });
-  const drift =
-    1 + 0.03 * CAMERA(clamp(frame / (starts[starts.length - 1] + 70), 0, 1));
+  const driftAt = (f: number) =>
+    1 + 0.03 * CAMERA(clamp(f / (starts[starts.length - 1] + 70), 0, 1));
+  const drift = driftAt(frame);
+  const shifts = (at: (f: number) => number, eps: number) =>
+    Math.abs(at(frame + speed) - at(frame)) > eps ||
+    Math.abs(at(frame) - at(frame - speed)) > eps;
+  // The camera drift and the screenshot's rise carry everything on screen,
+  // so one tilt on the camera covers both.
+  const cameraMoving = shifts(driftAt, 1e-6) || shifts(enterAt, 1e-6);
 
   const content = src ? (
     <Img
@@ -397,7 +440,13 @@ export function UiCallout({
     />
   ) : (
     (children ?? (
-      <IssuesMock theme={theme} accent={accent} width={sw} height={sh} />
+      <IssuesMock
+        theme={theme}
+        accent={accent}
+        width={sw}
+        height={sh}
+        logo={logo}
+      />
     ))
   );
 
@@ -432,7 +481,7 @@ export function UiCallout({
         padding: `0 ${18 * u}px 0 ${15 * u}px`,
         borderRadius: 999,
         background: dark ? "#F4F4F6" : "#16171B",
-        color: dark ? "#121316" : "#F7F7F8",
+        color: ink ?? (dark ? "#121316" : "#F7F7F8"),
         fontSize: 18 * u,
         fontWeight: 400,
         letterSpacing: "-0.01em",
@@ -477,7 +526,7 @@ export function UiCallout({
             fontSize: 21 * u,
             lineHeight: 1.25,
             fontWeight: 400,
-            color: card.title,
+            color: ink ?? card.title,
             letterSpacing: "-0.02em",
           }}
         >
@@ -528,7 +577,7 @@ export function UiCallout({
               ...row,
             }}
           >
-            {i === callouts.length - 1 ? "Got it" : "Next"}
+            {i === callouts.length - 1 ? doneLabel : nextLabel}
           </span>
         </div>
       </div>
@@ -538,141 +587,148 @@ export function UiCallout({
   return (
     <AbsoluteFill
       style={{
-        fontFamily,
+        fontFamily: font,
         overflow: "hidden",
         WebkitFontSmoothing: "antialiased",
-        background: dark ? "#02040A" : "#EEECE8",
+        background: background ?? (dark ? "#02040A" : "#EEECE8"),
       }}
     >
-      <GshGround
-        preset={resolvedGround}
-        params={groundParams}
-        timeOffset={dark ? 3 : 6}
-        timeScale={0.4}
-      />
-      <AbsoluteFill style={{ transform: `scale(${drift})` }}>
-        <div
-          style={{
-            position: "absolute",
-            left,
-            top,
-            width: sw,
-            height: sh,
-            transformOrigin: "0 0",
-            transform: `translateY(${(1 - enter) * 40 * u}px) scale(${s})`,
-            opacity: clamp(enter * 2, 0, 1),
-            borderRadius: radius,
-            overflow: "hidden",
-            boxShadow: dark
-              ? `0 0 0 ${1 / s}px rgba(255,255,255,0.1), 0 ${30 / s}px ${70 / s}px -${14 / s}px rgba(0,0,0,0.7)`
-              : `0 0 0 ${1 / s}px rgba(16,24,40,0.08), 0 ${2 / s}px ${4 / s}px rgba(16,24,40,0.05), 0 ${30 / s}px ${70 / s}px -${14 / s}px rgba(16,24,40,0.24)`,
-          }}
+      {background === undefined ? (
+        <GshGround
+          preset={resolvedGround}
+          params={groundParams}
+          timeOffset={dark ? 3 : 6}
+          timeScale={0.4}
+        />
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${drift})${glide(cameraMoving)}` }}
         >
-          {content}
-        </div>
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
-        >
-          {routes.map((r, i) => {
-            const p =
-              MOVE(clamp((frame - starts[i] - 6) / 11, 0, 1)) *
-              (pill ? 1 : 1 - foldAt(i));
-            if (p <= 0) return null;
-            const k = 10 * u;
-            const a = {
-              x: r.elbow.x - Math.sign(r.elbow.x - r.start.x) * k,
-              y: r.elbow.y - Math.sign(r.elbow.y - r.start.y) * k,
-            };
-            const b = {
-              x: r.elbow.x + Math.sign(r.end.x - r.elbow.x) * k,
-              y: r.elbow.y + Math.sign(r.end.y - r.elbow.y) * k,
-            };
-            return (
-              <path
-                key={`line-${callouts[i].title}`}
-                d={`M ${r.start.x} ${r.start.y} L ${a.x} ${a.y} Q ${r.elbow.x} ${r.elbow.y} ${b.x} ${b.y} L ${r.end.x} ${r.end.y}`}
-                pathLength={1}
-                strokeDasharray="1 1"
-                strokeDashoffset={1 - p}
-                stroke={accent}
-                strokeWidth={1.75 * u}
-                strokeLinecap="round"
-                fill="none"
-              />
-            );
-          })}
-        </svg>
-        {routes.map((r, i) => {
-          const c = callouts[i];
-          const local = frame - starts[i];
-          if (local < 0) return null;
-          const wipe = spring({ frame: local - 15, fps, config: CARD });
-          const textIn = interpolate(local, [19, 31], [0, 1], {
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-            easing: ENTER,
-          });
-          const fold = pill ? 0 : foldAt(i);
-          const side = r.attach === "left" || r.attach === "right";
-          const origin = {
-            left: "0% 50%",
-            right: "100% 50%",
-            top: "50% 0%",
-            bottom: "50% 100%",
-          }[r.attach];
-          const slide = (1 - textIn) * 6 * u * (r.attach === "right" ? -1 : 1);
-          return (
-            <div key={`${c.title}-${c.x}-${c.y}`}>
-              <div
-                style={{
-                  position: "absolute",
-                  left: targets[i].x,
-                  top: targets[i].y,
-                }}
-              >
-                <Ring
-                  local={local}
-                  accent={accent}
-                  dark={dark}
-                  u={u}
-                  fps={fps}
-                  rest={fold}
+          <div
+            style={{
+              position: "absolute",
+              left,
+              top,
+              width: sw,
+              height: sh,
+              transformOrigin: "0 0",
+              transform: `translateY(${(1 - enter) * 40 * u}px) scale(${s})`,
+              opacity: clamp(enter * 2, 0, 1),
+              borderRadius: radius,
+              overflow: "hidden",
+              boxShadow: dark
+                ? `0 0 0 ${1 / s}px rgba(255,255,255,0.1), 0 ${30 / s}px ${70 / s}px -${14 / s}px rgba(0,0,0,0.7)`
+                : `0 0 0 ${1 / s}px rgba(16,24,40,0.08), 0 ${2 / s}px ${4 / s}px rgba(16,24,40,0.05), 0 ${30 / s}px ${70 / s}px -${14 / s}px rgba(16,24,40,0.24)`,
+            }}
+          >
+            {content}
+          </div>
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            {routes.map((r, i) => {
+              const p =
+                MOVE(clamp((frame - starts[i] - 6) / 11, 0, 1)) *
+                (pill ? 1 : 1 - foldAt(i));
+              if (p <= 0) return null;
+              const k = 10 * u;
+              const a = {
+                x: r.elbow.x - Math.sign(r.elbow.x - r.start.x) * k,
+                y: r.elbow.y - Math.sign(r.elbow.y - r.start.y) * k,
+              };
+              const b = {
+                x: r.elbow.x + Math.sign(r.end.x - r.elbow.x) * k,
+                y: r.elbow.y + Math.sign(r.end.y - r.elbow.y) * k,
+              };
+              return (
+                <path
+                  key={`line-${callouts[i].title}`}
+                  d={`M ${r.start.x} ${r.start.y} L ${a.x} ${a.y} Q ${r.elbow.x} ${r.elbow.y} ${b.x} ${b.y} L ${r.end.x} ${r.end.y}`}
+                  pathLength={1}
+                  strokeDasharray="1 1"
+                  strokeDashoffset={1 - p}
+                  stroke={accent}
+                  strokeWidth={1.75 * u}
+                  strokeLinecap="round"
+                  fill="none"
                 />
-              </div>
-              {wipe > 0.001 && fold < 0.999 && (
+              );
+            })}
+          </svg>
+          {routes.map((r, i) => {
+            const c = callouts[i];
+            const local = frame - starts[i];
+            if (local < 0) return null;
+            const wipe = spring({ frame: local - 15, fps, config: CARD });
+            const textIn = interpolate(local, [19, 31], [0, 1], {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+              easing: ENTER,
+            });
+            const fold = pill ? 0 : foldAt(i);
+            const side = r.attach === "left" || r.attach === "right";
+            const origin = {
+              left: "0% 50%",
+              right: "100% 50%",
+              top: "50% 0%",
+              bottom: "50% 100%",
+            }[r.attach];
+            const slide =
+              (1 - textIn) * 6 * u * (r.attach === "right" ? -1 : 1);
+            return (
+              <div key={`${c.title}-${c.x}-${c.y}`}>
                 <div
                   style={{
                     position: "absolute",
-                    left: r.card.x,
-                    top: side ? r.end.y : r.card.y,
-                    width: r.card.w,
-                    transform: side ? "translateY(-50%)" : undefined,
-                    clipPath: wipeClip(
-                      r.attach,
-                      Math.min(1, wipe),
-                      pill ? 22 * u : cardR,
-                    ),
+                    left: targets[i].x,
+                    top: targets[i].y,
                   }}
                 >
+                  <Ring
+                    local={local}
+                    accent={accent}
+                    dark={dark}
+                    u={u}
+                    fps={fps}
+                    rest={fold}
+                  />
+                </div>
+                {wipe > 0.001 && fold < 0.999 && (
                   <div
                     style={{
-                      opacity:
-                        (pill ? textIn : 1) * (1 - clamp(fold * 3, 0, 1)),
-                      transformOrigin: origin,
-                      transform: `translateX(${slide}px) scale(${1 - 0.08 * fold})`,
+                      position: "absolute",
+                      left: r.card.x,
+                      top: side ? r.end.y : r.card.y,
+                      width: r.card.w,
+                      transform: side ? "translateY(-50%)" : undefined,
+                      clipPath: wipeClip(
+                        r.attach,
+                        Math.min(1, wipe),
+                        pill ? 22 * u : cardR,
+                      ),
                     }}
                   >
-                    {pill ? pillEl(c, r.attach) : cardEl(c, i, textIn)}
+                    <div
+                      style={{
+                        opacity:
+                          (pill ? textIn : 1) * (1 - clamp(fold * 3, 0, 1)),
+                        transformOrigin: origin,
+                        transform: `translateX(${slide}px) scale(${1 - 0.08 * fold})`,
+                      }}
+                    >
+                      {pill ? pillEl(c, r.attach) : cardEl(c, i, textIn)}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </AbsoluteFill>
+                )}
+              </div>
+            );
+          })}
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -1079,6 +1135,7 @@ interface IssuesMockProps {
   width?: number;
   height?: number;
   headerExtra?: React.ReactNode;
+  logo?: React.ReactNode;
 }
 
 function IssuesMock({
@@ -1087,6 +1144,7 @@ function IssuesMock({
   width = MOCK_W,
   height = MOCK_H,
   headerExtra,
+  logo,
 }: IssuesMockProps) {
   const c = MOCK_COLORS[theme];
   const box = (size: number) => ({
@@ -1136,9 +1194,11 @@ function IssuesMock({
               background: accent,
             }}
           >
-            <svg viewBox="0 0 124.06 134.26" height={10} aria-hidden>
-              <path fill="#FFFFFF" d={REMOCN_R_PATH} />
-            </svg>
+            {logo ?? (
+              <svg viewBox="0 0 124.06 134.26" height={10} aria-hidden>
+                <path fill="#FFFFFF" d={REMOCN_R_PATH} />
+              </svg>
+            )}
           </div>
           <span style={{ fontSize: 13.5, fontWeight: 400 }}>remocn</span>
           <Glyph name="chevron" size={12} color={c.sub} />

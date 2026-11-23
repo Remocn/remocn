@@ -1,0 +1,126 @@
+{
+  "component": "tally-marks",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "cream-notebook",
+      "label": "Cream Notebook",
+      "description": "Warm cream paper with brown-black ink, fine pencil strokes and a slow, deliberate count.",
+      "askedAs": [
+        "warm paper notebook tally",
+        "slow hand-counted on cream paper",
+        "pencil marks on beige background",
+        "тёплая бумага с карандашными пометками",
+        "медленный подсчёт палочками на бумаге"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3ebdd",
+        "ink": "#2b2420",
+        "accent": "#b5502e",
+        "strokeWidth": 5,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "chalkboard",
+      "label": "Chalkboard",
+      "description": "Thick chalky strokes on a deep slate-green board with a soft sage accent.",
+      "askedAs": [
+        "chalkboard tally marks",
+        "school blackboard counting",
+        "thick chalk strokes on green",
+        "мел на школьной доске",
+        "счёт мелом на зелёной доске"
+      ],
+      "props": {
+        "background": "#1f2e2a",
+        "ink": "#ecede6",
+        "accent": "#9fc5a8",
+        "strokeWidth": 14,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Clean ivory page with an elegant Instrument Serif numeral, crimson accent and no grain.",
+      "askedAs": [
+        "elegant magazine style count",
+        "serif numeral on white page",
+        "refined editorial tally",
+        "элегантный журнальный стиль",
+        "изящная цифра с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "accent": "#a3243b",
+        "grain": false,
+        "strokeWidth": 4,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "terminal-ledger",
+      "label": "Terminal Ledger",
+      "description": "Monospaced numeral on near-black with amber accent, tight strokes and a brisk count.",
+      "askedAs": [
+        "fast tech counter tally",
+        "monospace dark ledger",
+        "quick coder style count",
+        "быстрый счётчик в стиле терминала",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e0f12",
+        "ink": "#e8e6e1",
+        "accent": "#e0a23b",
+        "speed": 2,
+        "stagger": 0
+      }
+    },
+    {
+      "id": "big-bold-punch",
+      "label": "Big Punch",
+      "description": "Oversized, heavy marks in fewer rows with a strong cascading digit reveal on a dark ground.",
+      "askedAs": [
+        "big bold tally reveal",
+        "huge marks dramatic count",
+        "punchy large number",
+        "крупные жирные палочки",
+        "эффектный большой счёт"
+      ],
+      "props": {
+        "scale": 1.4,
+        "strokeWidth": 18,
+        "rows": 3,
+        "stagger": 6,
+        "fontFamily": "Space Grotesk",
+        "accent": "#6c8cff"
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Small, airy layout in light grey with a muted slate accent and a gentle delayed start.",
+      "askedAs": [
+        "subtle minimal tally",
+        "small calm count on light background",
+        "understated clean counter",
+        "минималистичный спокойный счёт",
+        "небольшой аккуратный счётчик"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f4f2",
+        "ink": "#2a2d33",
+        "accent": "#5a6b7d",
+        "fontFamily": "Inter",
+        "scale": 0.75
+      }
+    }
+  ]
+}

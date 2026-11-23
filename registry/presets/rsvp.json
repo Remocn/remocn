@@ -1,0 +1,126 @@
+{
+  "component": "rsvp",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-invite",
+      "label": "Paper Invite",
+      "description": "A warm cream card with an elegant serif headline and a slow, gracious reveal.",
+      "askedAs": [
+        "make it look like a printed wedding invitation",
+        "elegant serif invite on cream paper",
+        "slower classy invitation card",
+        "как бумажное приглашение",
+        "элегантная открытка с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5efe4",
+        "ink": "#2b2420",
+        "accent": "#a4492f",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-rsvp",
+      "label": "Terminal",
+      "description": "A near-black console look in monospace with a green accent and quick, snappy typing.",
+      "askedAs": [
+        "make it look like a terminal",
+        "hacker style monospace invite",
+        "dev launch invite in console style",
+        "в стиле терминала",
+        "моноширинный шрифт как в консоли"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#d6dde5",
+        "accent": "#3fb950",
+        "stagger": 2,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "party-pop",
+      "label": "Party Pop",
+      "description": "A bold, chunky grotesque on a soft lilac background with a coral accent and bouncy word stagger.",
+      "askedAs": [
+        "fun colorful party invite",
+        "bold playful launch party look",
+        "make it feel festive and loud",
+        "весёлое приглашение на вечеринку",
+        "яркий праздничный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 700,
+        "background": "#ece6fb",
+        "ink": "#1e1638",
+        "accent": "#ff5a4e"
+      }
+    },
+    {
+      "id": "midnight-gala",
+      "label": "Midnight Gala",
+      "description": "Deep navy with a gold accent, light Fraunces type and a long, dramatic word stagger.",
+      "askedAs": [
+        "formal evening gala invite",
+        "dark navy and gold invitation",
+        "dramatic slow luxury reveal",
+        "вечернее приглашение тёмно-синее с золотом",
+        "торжественный медленный вариант"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "fontWeight": 300,
+        "background": "#0f1a2e",
+        "ink": "#f1ead8",
+        "accent": "#d4a64a",
+        "stagger": 9
+      }
+    },
+    {
+      "id": "quick-ping",
+      "label": "Quick Ping",
+      "description": "A compact, fast Space Grotesk version in electric blue that lands the details in a flash.",
+      "askedAs": [
+        "fast short invite for social",
+        "make it quicker and smaller",
+        "punchy rapid announcement",
+        "быстрое короткое приглашение",
+        "сделай компактнее и быстрее"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "accent": "#4c8dff",
+        "scale": 0.85,
+        "speed": 2,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "A crisp white Inter layout with no word stagger and a big, calm scale.",
+      "askedAs": [
+        "simple clean white invite",
+        "minimal corporate event card",
+        "no fancy animation just clean",
+        "минималистичное белое приглашение",
+        "простой чистый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 600,
+        "stagger": 0,
+        "scale": 1.2,
+        "accent": "#111111"
+      }
+    }
+  ]
+}

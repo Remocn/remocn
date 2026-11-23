@@ -11,9 +11,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -41,6 +41,22 @@ export interface BracketIndexProps {
   /** Final word the brackets close on. */
   product?: string;
   accent?: string;
+  /** Text color of the words and prefix; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the indexed words. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Weight of the indexed words. */
+  fontWeight?: number;
+  /** Frames each word holds in the brackets before the next rolls in. */
+  hold?: number;
+  /** Replaces the remocn mark when `product` is "remocn". */
+  logo?: React.ReactNode;
+  /** Size of the brackets and words, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -90,7 +106,7 @@ function isLogo(word: string) {
 }
 
 /** Widths in em: [prefix (serif italic), ...items (Manrope, or the logo)]. */
-function useWidths(strings: string[]) {
+function useWidths(strings: string[], family: string, weight: number) {
   const [widths, setWidths] = useState<number[] | null>(null);
   const [handle] = useState(() => delayRender("bracket-index: measuring"));
   const released = useRef(false);
@@ -98,7 +114,7 @@ function useWidths(strings: string[]) {
 
   useEffect(() => {
     let live = true;
-    const sans = `${WEIGHT} 100px "${manrope.fontFamily}"`;
+    const sans = `${weight} 100px "${family}"`;
     const logo = `600 100px "${manrope.fontFamily}"`;
     const italic = `italic 400 100px "${serif.fontFamily}"`;
     Promise.all([
@@ -136,7 +152,7 @@ function useWidths(strings: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, family, weight]);
 
   return widths;
 }
@@ -145,34 +161,76 @@ function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BracketIndex({
   prefix = "Motion for",
   words = ["launches", "changelogs", "demos"],
   product = "remocn",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = manrope.fontFamily,
+  fontWeight = WEIGHT,
+  hold = HOLD,
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: BracketIndexProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const now = useSceneFrame();
+  const fAt = (n: number) => Math.max(0, n - delay) * speed;
+  const frame = fAt(now);
+  /** Whether a value in px, as a function of time, moves on this frame. */
+  const stirs = (v: (f: number) => number) => {
+    const here = v(frame);
+    return (
+      Math.abs(v(fAt(now + 1)) - here) > 1e-3 ||
+      Math.abs(here - v(fAt(now - 1))) > 1e-3
+    );
+  };
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
+  const fg = ink ?? t.fg;
+  const stage = background ?? t.bg;
+  const fill = stage === "transparent" ? undefined : stage;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const beam = t.beam.map((c) => c || accent);
 
   const items = useMemo(() => [...words, product], [words, product]);
-  const widths = useWidths(useMemo(() => [prefix, ...items], [prefix, items]));
+  const widths = useWidths(
+    useMemo(() => [prefix, ...items], [prefix, items]),
+    fontFamily,
+    fontWeight,
+  );
 
   // Swap i brings items[i] in. Swap 0 is the bracket opening.
   const starts = useMemo(() => {
     const s = [OPEN_AT];
     for (let i = 1; i < items.length; i++) {
-      s.push(s[i - 1] + (i === 1 ? OPEN_LEN : SWAP) + HOLD);
+      s.push(s[i - 1] + (i === 1 ? OPEN_LEN : SWAP) + hold);
     }
     return s;
-  }, [items.length]);
+  }, [items.length, hold]);
 
   if (!widths)
-    return <div style={{ position: "absolute", inset: 0, background: t.bg }} />;
+    return <div style={{ position: "absolute", inset: 0, background: fill }} />;
 
   const prefixW = widths[0];
   const itemW = widths.slice(1);
@@ -209,17 +267,18 @@ export function BracketIndex({
     slot = from + (itemW[i] - from) * p;
   }
 
-  const finalP = interpolate(
-    frame,
-    [starts[last], starts[last] + FINAL_SWAP],
-    [0, 1],
-    { ...CLAMP, easing: EASE_IO },
-  );
+  const finalAt = (f: number) =>
+    interpolate(f, [starts[last], starts[last] + FINAL_SWAP], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const finalP = finalAt(frame);
   const presence = 1 - finalP;
   // The product name lands bigger than the indexed words: a poster frame.
   const sizeA = Math.min(height * 0.15, (width * 0.84) / widest);
   const sizeB = Math.min(height * 0.27, (width * 0.6) / boxOf(itemW[last]));
-  const size = sizeA + (sizeB - sizeA) * finalP;
+  const sizeOf = (p: number) => sizeA + (sizeB - sizeA) * p;
+  const size = sizeOf(finalP);
   const box = boxOf(slot);
   const total = presence * (prefixW + GAP) + box;
 
@@ -231,10 +290,12 @@ export function BracketIndex({
   const bracketR = bracketL + em(box);
   const slotCenter = (bracketL + bracketR) / 2;
 
-  const intro = interpolate(frame, [0, 10], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const introAt = (f: number) =>
+    interpolate(f, [0, 10], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const intro = introAt(frame);
   const half = em(0.8) * (0.7 + 0.3 * intro);
   const arm = em(0.2) * intro;
   const sw = Math.max(1.5, sizeA * stroke);
@@ -251,28 +312,40 @@ export function BracketIndex({
   const prefixOpacity =
     interpolate(frame, [0, 10], [0.15, 1], CLAMP) *
     interpolate(presence, [0.45, 1], [0, 1], CLAMP);
-  const prefixRise = interpolate(frame, [0, 12], [em(0.14), 0], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const riseAt = (f: number) =>
+    interpolate(f, [0, 12], [sizeOf(finalAt(f)) * 0.14, 0], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const prefixRise = riseAt(frame);
+  // While the product name lands, the type grows. Layout rounds a box and a
+  // baseline to whole pixels, so the line rode `top` and the font size in
+  // uneven steps. The prefix and the words are laid out once, at the size
+  // each rests at longest, and placed and grown by a transform; the word strip
+  // is laid out where the product name rests and rides a transform too. One
+  // layout for their whole life: a frame that hands text from a transform to
+  // layout snaps it to a whole pixel.
+  const growing = stirs((f) => sizeOf(finalAt(f)) * (prefixW + GAP + 1.14));
+  const lineTopA = height / 2 - sizeA * 0.5;
+  const stripRest = height / 2 - sizeB * 0.5 - sizeB * 0.02;
 
   const textStyle: React.CSSProperties = {
     position: "absolute",
     top: 0,
-    fontFamily: manrope.fontFamily,
-    fontWeight: WEIGHT,
+    fontFamily,
+    fontWeight,
     fontSize: size,
     lineHeight: 1,
     letterSpacing: `${TRACK}em`,
     whiteSpace: "nowrap",
-    color: t.fg,
+    color: fg,
     fontKerning: "normal",
   };
 
   // Words ride one strip through the slit, like an odometer: the outgoing
   // word and the incoming one never share the window.
-  const roll = (i: number) =>
-    interpolate(frame, [rollAt(i), rollAt(i) + ROLL], [0, 1], {
+  const roll = (i: number, f = frame) =>
+    interpolate(f, [rollAt(i), rollAt(i) + ROLL], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -281,36 +354,75 @@ export function BracketIndex({
   const drift = interpolate(frame, [0, 180], [0, 1], CLAMP);
   const wordLayers = items.map((word, i) => {
     const s = starts[i];
-    const enter =
+    const enterAt = (f: number) =>
       i === 0
-        ? interpolate(frame, [s, s + OPEN_LEN], [0, 1], {
+        ? interpolate(f, [s, s + OPEN_LEN], [0, 1], {
             ...CLAMP,
             easing: EASE_OUT,
           })
-        : roll(i);
+        : roll(i, f);
+    const enter = enterAt(frame);
     const exit = i < last ? roll(i + 1) : 0;
     if (frame < s || exit >= 1) return null;
+    const yAt = (f: number) => {
+      const k = sizeOf(finalAt(f));
+      const out = i < last ? roll(i + 1, f) : 0;
+      return (
+        (i === 0 ? 0.1 * k : travel * k) * (1 - enterAt(f)) - travel * k * out
+      );
+    };
     const y =
       (i === 0 ? em(0.1) : em(travel)) * (1 - enter) - em(travel) * exit;
+    // The word also grows with the product name's landing, which moves its
+    // baseline even where the ride itself is over.
+    const tilt = glide(stirs(yAt) || stirs((f) => sizeOf(finalAt(f)) * 1.14));
+    // The product name rests at the landed size, every other word before it.
+    const own = i === last ? sizeB : sizeA;
+    const grow = `scale(${size / own})`;
+    // The slot's centre is still at either size, and slides between them.
+    const ownCenter = cx + (i === last ? 0 : (sizeA * (prefixW + GAP)) / 2);
+    const ride = `translate(calc(-50% + ${slotCenter - ownCenter}px), ${y}px)`;
     // Dim whichever word is leaving the slit so the stacked frames stay quiet.
     const opacity =
       (i === 0 ? 0.35 + 0.65 * enter : 0.25 + 0.75 * enter) *
       (1 - Math.min(1, exit / 0.6));
+    if (isLogo(word) && logo) {
+      return (
+        <div
+          key={word + String(i)}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: ownCenter,
+            height: own * 1.14,
+            display: "flex",
+            alignItems: "center",
+            transformOrigin: "50% 0",
+            transform: `${ride} ${grow}${tilt}`,
+            opacity,
+          }}
+        >
+          {logo}
+        </div>
+      );
+    }
     if (isLogo(word)) {
-      const lw = em(itemW[i]);
-      const rh = em(LOGO_R);
-      const base = em(BASELINE);
+      const lem = (v: number) => v * own;
+      const lw = lem(itemW[i]);
+      const rh = lem(LOGO_R);
+      const base = lem(BASELINE);
       return (
         <svg
           key={word + String(i)}
           width={lw}
-          height={em(1.14)}
+          height={lem(1.14)}
           style={{
             position: "absolute",
             top: 0,
-            left: slotCenter,
+            left: ownCenter,
             overflow: "visible",
-            transform: `translate(-50%, ${y}px)`,
+            transformOrigin: "50% 0",
+            transform: `${ride} ${grow}${tilt}`,
             opacity,
           }}
           aria-hidden
@@ -321,12 +433,12 @@ export function BracketIndex({
             transform={`translate(0 ${base - rh}) scale(${rh / R_H})`}
           />
           <text
-            x={(rh * R_W) / R_H + em(LOGO_GAP)}
+            x={(rh * R_W) / R_H + lem(LOGO_GAP)}
             y={base}
             fill={`url(#${uid}-logo)`}
             fontFamily={manrope.fontFamily}
             fontWeight={600}
-            fontSize={size}
+            fontSize={own}
             letterSpacing={`${LOGO_TRACK}em`}
             style={{ fontKerning: "normal" }}
           >
@@ -337,9 +449,9 @@ export function BracketIndex({
               id={`${uid}-logo`}
               gradientUnits="userSpaceOnUse"
               x1={lw * (0.05 + 0.1 * drift)}
-              y1={base - em(0.95)}
+              y1={base - lem(0.95)}
               x2={lw * (0.95 - 0.1 * drift)}
-              y2={base + em(0.2)}
+              y2={base + lem(0.2)}
             >
               <stop offset="0" stopColor={beam[0]} />
               <stop offset="0.5" stopColor={beam[1]} />
@@ -354,8 +466,10 @@ export function BracketIndex({
         key={word + String(i)}
         style={{
           ...textStyle,
-          left: slotCenter,
-          transform: `translate(-50%, ${y}px)`,
+          left: ownCenter,
+          fontSize: own,
+          transformOrigin: "50% 0",
+          transform: `${ride} ${grow}${tilt}`,
           opacity,
         }}
       >
@@ -369,23 +483,47 @@ export function BracketIndex({
 
   // Counter: two-digit index that rolls on every swap.
   const counterSize = Math.max(12, sizeA * 0.2);
+  const counterInAt = (f: number) =>
+    interpolate(f, [starts[0] + 8, starts[0] + 18], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const counterIn = counterInAt(frame);
+  // The counter rides the bracket's top edge, which moves as the bracket opens
+  // and as the product name grows. Layout holds where it finally rests and
+  // the ride is a transform: layout rounds a baseline to whole
+  // pixels, so a counter eased by `top` clicks along pixel by pixel.
+  const counterTop = (p: number, i: number) => {
+    const k = sizeOf(p);
+    return cy + k * 0.04 - k * 0.8 * (0.7 + 0.3 * i) - counterSize * 1.75;
+  };
+  const counterRest = counterTop(1, 1);
+  const counterLift = (f: number) =>
+    (1 - counterInAt(f)) * counterSize * 0.5 +
+    counterTop(finalAt(f), introAt(f)) -
+    counterRest;
+  const counterMoving = stirs(counterLift);
   const counterRows = items.map((_, i) => {
     const s = starts[i];
-    const into =
+    const intoAt = (f: number) =>
       i === 0
         ? 1
-        : interpolate(frame, [s + 2, s + 12], [0, 1], {
+        : interpolate(f, [s + 2, s + 12], [0, 1], {
             ...CLAMP,
             easing: EASE_OUT,
           });
-    const out =
+    const outAt = (f: number) =>
       i < last
-        ? interpolate(frame, [starts[i + 1], starts[i + 1] + 8], [0, 1], {
+        ? interpolate(f, [starts[i + 1], starts[i + 1] + 8], [0, 1], {
             ...CLAMP,
             easing: EASE_IO,
           })
         : 0;
+    const into = intoAt(frame);
+    const out = outAt(frame);
     if ((i > 0 && frame < s + 2) || out >= 1) return null;
+    const lift = (f: number) =>
+      (1 - intoAt(f)) * counterSize * 1.1 - outAt(f) * counterSize * 1.1;
     return (
       <div
         key={`c${String(i)}`}
@@ -393,7 +531,7 @@ export function BracketIndex({
           position: "absolute",
           left: 0,
           top: 0,
-          transform: `translateY(${(1 - into) * counterSize * 1.1 - out * counterSize * 1.1}px)`,
+          transform: `translateY(${(1 - into) * counterSize * 1.1 - out * counterSize * 1.1}px)${glide(stirs(lift) && !counterMoving)}`,
           opacity: into * (1 - out),
         }}
       >
@@ -401,15 +539,9 @@ export function BracketIndex({
       </div>
     );
   });
-  const counterIn = interpolate(
-    frame,
-    [starts[0] + 8, starts[0] + 18],
-    [0, 1],
-    { ...CLAMP, easing: EASE_OUT },
-  );
 
   return (
-    <AbsoluteFill style={{ background: t.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
@@ -421,113 +553,119 @@ export function BracketIndex({
               : `radial-gradient(64% 62% at ${46 + 8 * drift}% 122%, color-mix(in oklab, #8FB4FF 58%, transparent) 0%, color-mix(in oklab, #8FB4FF 22%, transparent) 50%, transparent 84%)`,
         }}
       />
-      <div
-        style={{
-          ...textStyle,
-          fontFamily: serif.fontFamily,
-          fontStyle: "italic",
-          fontWeight: 400,
-          letterSpacing: `${SERIF_TRACK}em`,
-          left: bracketL - em(GAP + prefixW),
-          top: lineTop,
-          transform: `translateY(${prefixRise}px)`,
-          opacity: prefixOpacity,
-        }}
-      >
-        {prefix}
-      </div>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            ...textStyle,
+            fontFamily: serif.fontFamily,
+            fontStyle: "italic",
+            fontWeight: 400,
+            letterSpacing: `${SERIF_TRACK}em`,
+            left: bracketL - em(GAP + prefixW),
+            top: lineTopA,
+            fontSize: sizeA,
+            transformOrigin: "0 0",
+            transform: `translateY(${lineTop - lineTopA + prefixRise}px) scale(${size / sizeA})${glide(growing || stirs(riseAt))}`,
+            opacity: prefixOpacity,
+          }}
+        >
+          {prefix}
+        </div>
 
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width,
-          top: lineTop - em(0.02),
-          height: em(1.14),
-          overflow: "hidden",
-          clipPath: `inset(0 ${width - innerR}px 0 ${innerL}px)`,
-        }}
-      >
         <div
           style={{
             position: "absolute",
             left: 0,
-            top: em(0.02),
             width,
-          }}
-        >
-          {wordLayers}
-        </div>
-      </div>
-
-      <svg
-        width={width}
-        height={height}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={`${uid}-bracket`}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={top}
-            x2={0}
-            y2={bottom}
-          >
-            <stop offset="0" stopColor={beam[0]} />
-            <stop offset="0.55" stopColor={beam[1]} />
-            <stop offset="1" stopColor={beam[2]} />
-          </linearGradient>
-        </defs>
-        <g
-          fill="none"
-          stroke={`url(#${uid}-bracket)`}
-          strokeWidth={sw}
-          strokeLinecap="butt"
-          strokeLinejoin="miter"
-          opacity={interpolate(intro, [0, 1], [0.2, 1])}
-        >
-          <path d={bracketPath(bracketL, 1)} />
-          <path d={bracketPath(bracketR, -1)} />
-        </g>
-      </svg>
-
-      <div
-        style={{
-          position: "absolute",
-          left: bracketL,
-          top: top - counterSize * 1.75,
-          height: counterSize * 1.2,
-          display: "flex",
-          alignItems: "center",
-          fontFamily: mono.fontFamily,
-          fontWeight: 400,
-          fontSize: counterSize,
-          lineHeight: 1,
-          letterSpacing: "0.02em",
-          fontVariantNumeric: "tabular-nums",
-          color: t.rest,
-          opacity: counterIn,
-          transform: `translateY(${(1 - counterIn) * counterSize * 0.5}px)`,
-          whiteSpace: "nowrap",
-        }}
-      >
-        <span>[</span>
-        <span
-          style={{
-            position: "relative",
-            display: "inline-block",
-            width: "1.2em",
-            height: counterSize * 1.2,
+            top: stripRest,
+            transform: `translateY(${lineTop - em(0.02) - stripRest}px)`,
+            height: em(1.14),
             overflow: "hidden",
-            top: counterSize * 0.1,
+            clipPath: `inset(0 ${width - innerR}px 0 ${innerL}px)`,
           }}
         >
-          {counterRows}
-        </span>
-        <span>]</span>
-      </div>
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: sizeB * 0.02,
+              transform: `translateY(${em(0.02) - sizeB * 0.02}px)`,
+              width,
+            }}
+          >
+            {wordLayers}
+          </div>
+        </div>
+
+        <svg
+          width={width}
+          height={height}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={`${uid}-bracket`}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={top}
+              x2={0}
+              y2={bottom}
+            >
+              <stop offset="0" stopColor={beam[0]} />
+              <stop offset="0.55" stopColor={beam[1]} />
+              <stop offset="1" stopColor={beam[2]} />
+            </linearGradient>
+          </defs>
+          <g
+            fill="none"
+            stroke={`url(#${uid}-bracket)`}
+            strokeWidth={sw}
+            strokeLinecap="butt"
+            strokeLinejoin="miter"
+            opacity={interpolate(intro, [0, 1], [0.2, 1])}
+          >
+            <path d={bracketPath(bracketL, 1)} />
+            <path d={bracketPath(bracketR, -1)} />
+          </g>
+        </svg>
+
+        <div
+          style={{
+            position: "absolute",
+            left: bracketL,
+            top: counterRest,
+            height: counterSize * 1.2,
+            display: "flex",
+            alignItems: "center",
+            fontFamily: mono.fontFamily,
+            fontWeight: 400,
+            fontSize: counterSize,
+            lineHeight: 1,
+            letterSpacing: "0.02em",
+            fontVariantNumeric: "tabular-nums",
+            color: t.rest,
+            opacity: counterIn,
+            transform: `translateY(${counterLift(frame)}px)${glide(counterMoving)}`,
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span>[</span>
+          <span
+            style={{
+              position: "relative",
+              display: "inline-block",
+              width: "1.2em",
+              height: counterSize * 1.2,
+              overflow: "hidden",
+              top: counterSize * 0.1,
+            }}
+          >
+            {counterRows}
+          </span>
+          <span>]</span>
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const worldSignupsConfig: ComponentConfig = {
   componentName: "WorldSignups",
@@ -12,11 +19,6 @@ export const worldSignupsConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -33,6 +35,16 @@ export const worldSignupsConfig: ComponentConfig = {
       default: "+18.2% vs. yesterday",
       description: "Delta",
     },
+    feedLabel: {
+      type: "text-content",
+      default: "Latest signups",
+      description: "Feed label",
+    },
+    rangeLabel: {
+      type: "text-content",
+      default: "Today",
+      description: "Range label",
+    },
     startCount: {
       type: "number",
       default: 12847,
@@ -42,6 +54,13 @@ export const worldSignupsConfig: ComponentConfig = {
       description: "Start count",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
     speed: {
       type: "number",
       default: 1,

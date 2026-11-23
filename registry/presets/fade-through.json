@@ -1,0 +1,95 @@
+{
+  "component": "fade-through",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quiet-caption",
+      "label": "Quiet Caption",
+      "description": "Small, light-weight slate-grey text that swaps slowly and almost unnoticed.",
+      "askedAs": [
+        "subtle small text fade",
+        "slow understated caption swap",
+        "light grey quiet transition",
+        "тихая подпись с медленным затуханием",
+        "мелкий серый текст плавно меняется"
+      ],
+      "props": {
+        "fontSize": 32,
+        "fontWeight": "400",
+        "color": "#64748b",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-headline",
+      "label": "Bold Headline",
+      "description": "Large, heavy near-black type that swaps with a crisp, quick fade.",
+      "askedAs": [
+        "big bold title swap",
+        "large heavy text quick fade",
+        "punchy headline change",
+        "крупный жирный заголовок",
+        "быстрая смена большого текста"
+      ],
+      "props": {
+        "fontSize": 128,
+        "fontWeight": "700",
+        "color": "#0a0a0a",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "material-blue",
+      "label": "Material Blue",
+      "description": "Medium-weight text in a calm Material blue with standard pacing.",
+      "askedAs": [
+        "google material style blue text",
+        "blue label fade through",
+        "brand blue content swap",
+        "синий текст в стиле material",
+        "синяя надпись плавно сменяется"
+      ],
+      "props": {
+        "color": "#1a73e8",
+        "fontWeight": "500",
+        "fontSize": 64
+      }
+    },
+    {
+      "id": "snappy-stat",
+      "label": "Snappy Stat",
+      "description": "Mid-size semibold forest-green figures that flick over at double speed.",
+      "askedAs": [
+        "fast number swap",
+        "quick stat change green",
+        "rapid metric transition",
+        "быстрая смена цифр",
+        "зелёная статистика быстро меняется"
+      ],
+      "props": {
+        "speed": 2.5,
+        "color": "#15803d",
+        "fontSize": 96
+      }
+    },
+    {
+      "id": "editorial-slow",
+      "label": "Editorial Slow",
+      "description": "Warm charcoal-brown regular-weight type that drifts between phrases at a leisurely pace.",
+      "askedAs": [
+        "elegant slow text fade",
+        "calm editorial phrase swap",
+        "warm muted slow transition",
+        "элегантная медленная смена фразы",
+        "спокойный тёплый текст"
+      ],
+      "props": {
+        "color": "#44352b",
+        "fontWeight": "400",
+        "fontSize": 84,
+        "speed": 0.75
+      }
+    }
+  ]
+}

@@ -3,13 +3,9 @@
 import { loadFont as loadDisplay } from "@remotion/google-fonts/BricolageGrotesque";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -22,6 +18,22 @@ export interface ColumnSlideProps {
   columns?: number;
   accent?: string;
   theme?: "dark" | "light";
+  /** Text color of both headlines; overrides the theme. */
+  ink?: string;
+  /** Fill of the outgoing scene and the stage; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headlines. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Weight of the headlines. */
+  fontWeight?: number;
+  /** Frames between columns starting to slide. */
+  stagger?: number;
+  /** Size of the headlines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
 }
 
@@ -39,6 +51,11 @@ const SLIDE = Easing.bezier(0.72, 0, 0.18, 1);
 const SETTLE = Easing.bezier(0.22, 1, 0.36, 1);
 
 const TRACK = -0.035;
+
+// Layout rounds a box and a baseline to whole pixels, so a scene eased by
+// `top` clicks along pixel by pixel; the slide is a transform instead, and
+// nothing at all once it sits at 0.
+const slideY = (y: number) => (y === 0 ? undefined : `translateY(${y}px)`);
 
 /** gradients.sh palettes: "beam" (dark) and "pixel-glass" (light). */
 const STAGES = {
@@ -154,6 +171,10 @@ function Scene({
   size,
   color,
   scale,
+  fontFamily,
+  fontWeight,
+  glide,
+  scaling,
 }: {
   W: number;
   H: number;
@@ -165,6 +186,10 @@ function Scene({
   size: number;
   color: string;
   scale: number;
+  fontFamily: string;
+  fontWeight: number;
+  glide: (moving: boolean) => string;
+  scaling: boolean;
 }) {
   const label: React.CSSProperties = {
     position: "absolute",
@@ -172,15 +197,17 @@ function Scene({
     width: W,
     top: H / 2 - 0.56 * size,
     textAlign: "center",
-    fontFamily: display,
-    fontWeight: 500,
+    fontFamily,
+    fontWeight,
     fontSize: size,
     letterSpacing: `${TRACK}em`,
     lineHeight: 1,
     whiteSpace: "nowrap",
     color,
     paddingBottom: 0.12 * size,
-    transform: `scale(${scale})`,
+    // The mark sits on the label, not the scene: the headline rides the
+    // slide and the drift, and the ground needs no lean.
+    transform: `scale(${scale})${glide(top !== 0 || scaling)}`,
     transformOrigin: `${W / 2}px ${0.56 * size}px`,
   };
   return (
@@ -188,7 +215,8 @@ function Scene({
       style={{
         position: "absolute",
         left,
-        top,
+        top: 0,
+        transform: slideY(top),
         width: W,
         height: H,
         background,
@@ -206,19 +234,40 @@ export function ColumnSlide({
   columns = 5,
   accent = "#3B5BFD",
   theme = "dark",
+  ink,
+  background,
+  fontFamily = display,
+  fontWeight = 500,
+  stagger = STEP,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
 }: ColumnSlideProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const stage = STAGES[theme];
+  const bg = background ?? stage.bg;
   const n = Math.min(7, Math.max(3, Math.round(columns)));
 
   const fsA = Math.min(128 * u, (0.8 * W) / widthEm(from));
   const fsB = Math.min(140 * u, (0.8 * W) / widthEm(to));
-  const driftA = 1 + 0.03 * SLIDE(interpolate(t, [0, LAND], [0, 1], CLAMP));
-  const settle = SETTLE(interpolate(t, [LAND - 14, SETTLE_END], [0, 1], CLAMP));
-  const scaleB = 1.05 - 0.05 * settle;
+  const driftAt = (f: number) =>
+    1 + 0.03 * SLIDE(interpolate(f, [0, LAND], [0, 1], CLAMP));
+  const scaleAt = (f: number) =>
+    1.05 -
+    0.05 * SETTLE(interpolate(f, [LAND - 14, SETTLE_END], [0, 1], CLAMP));
+  const driftA = driftAt(t);
+  const scaleB = scaleAt(t);
+  // Weighed by the distance from the label's centre to its far end.
+  const changes = (at: (f: number) => number) =>
+    [t - speed, t + speed].some(
+      (f) => Math.abs(at(f) - at(t)) * W * 0.5 > 1e-3,
+    );
+  const driftingA = changes(driftAt);
+  const settlingB = changes(scaleAt);
   const seam = Math.max(2, 3 * u);
 
   const lightA = `radial-gradient(ellipse 80% 90% at 24% 0%, ${stage.light}, transparent 70%)`;
@@ -231,7 +280,8 @@ export function ColumnSlide({
     const x0 = Math.round((k * W) / n);
     const x1 = Math.round(((k + 1) * W) / n);
     const order = k % 2 === 0 ? k / 2 : Math.floor(n / 2) + (k + 1) / 2;
-    const start = MOVE_AT + order * STEP;
+    // Capped so a long stagger can't push a column's start past the landing.
+    const start = Math.min(LAND - 1, MOVE_AT + order * stagger);
     const p = SLIDE(interpolate(t, [start, LAND], [0, 1], CLAMP));
     const up = k % 2 === 0;
     const yA = up ? -p * H : p * H;
@@ -242,7 +292,7 @@ export function ColumnSlide({
   });
 
   return (
-    <AbsoluteFill style={{ background: stage.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
       {cols.map((c) => (
         <div
           key={c.k}
@@ -261,12 +311,16 @@ export function ColumnSlide({
               H={H}
               left={-c.x0}
               top={c.yA}
-              background={stage.bg}
+              background={bg}
               overlay={lightA}
               text={from}
               size={fsA}
-              color={stage.fg}
-              scale={driftA}
+              color={ink ?? stage.fg}
+              scale={driftA * scale}
+              glide={glide}
+              scaling={driftingA}
+              fontFamily={fontFamily}
+              fontWeight={fontWeight}
             />
           ) : null}
           {c.p > 0 ? (
@@ -279,8 +333,12 @@ export function ColumnSlide({
               overlay={sheenB}
               text={to}
               size={fsB}
-              color={stage.toFg}
-              scale={scaleB}
+              color={ink ?? stage.toFg}
+              scale={scaleB * scale}
+              glide={glide}
+              scaling={settlingB}
+              fontFamily={fontFamily}
+              fontWeight={fontWeight}
             />
           ) : null}
           {c.moving ? (
@@ -289,7 +347,8 @@ export function ColumnSlide({
                 position: "absolute",
                 left: 0,
                 right: 0,
-                top: c.up ? c.seamY : c.seamY - seam,
+                top: 0,
+                transform: slideY(c.up ? c.seamY : c.seamY - seam),
                 height: seam,
                 background: accent,
               }}
@@ -300,7 +359,8 @@ export function ColumnSlide({
               style={{
                 position: "absolute",
                 left: 0,
-                top: c.yA,
+                top: 0,
+                transform: slideY(c.yA),
                 width: Math.max(1, u),
                 height: H,
                 background: stage.dim,
@@ -310,7 +370,7 @@ export function ColumnSlide({
           ) : null}
         </div>
       ))}
-      <Grain opacity={theme === "light" ? 0.04 : 0.055} />
+      {grain ? <Grain opacity={theme === "light" ? 0.04 : 0.055} /> : null}
     </AbsoluteFill>
   );
 }

@@ -1,0 +1,103 @@
+{
+  "component": "spell-out",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-mono",
+      "label": "Snappy Mono",
+      "description": "A fast, tight typewriter-style spell in monospace on near-black with a mint accent.",
+      "askedAs": [
+        "fast monospace spelling",
+        "quick code-style letters",
+        "snappy terminal wordmark",
+        "быстрый моноширинный текст",
+        "буквы как в терминале"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "stagger": 3,
+        "hold": 6,
+        "speed": 1.5,
+        "accent": "#5fd3a5"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, elegant serif reveal on warm paper with deep ink and a terracotta accent.",
+      "askedAs": [
+        "elegant serif name reveal",
+        "slow magazine style spelling",
+        "classy light intro",
+        "элегантный шрифт с засечками",
+        "медленное красивое появление"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#b85c38",
+        "stagger": 13
+      }
+    },
+    {
+      "id": "bold-poster",
+      "label": "Bold Poster",
+      "description": "An oversized grotesque wordmark with deliberate pacing and a long hold for punch.",
+      "askedAs": [
+        "big bold wordmark",
+        "huge letters poster style",
+        "make the name really large",
+        "крупные жирные буквы",
+        "большой логотип на весь экран"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.4,
+        "hold": 28,
+        "stagger": 10,
+        "accent": "#f2b134"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "A crisp light theme in Inter with a cobalt accent and smaller, airy scale.",
+      "askedAs": [
+        "minimal white version",
+        "clean light corporate",
+        "simple bright intro",
+        "минималистичный светлый вариант",
+        "чистый белый фон"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#1f6feb",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "midnight-calm",
+      "label": "Midnight Calm",
+      "description": "A slow, unhurried reveal in Fraunces on deep navy with soft cream text.",
+      "askedAs": [
+        "slow calm dark intro",
+        "navy background soft text",
+        "gentle relaxed spelling",
+        "спокойное медленное появление",
+        "тёмно-синий фон"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#0f1a2e",
+        "ink": "#f1ead8",
+        "accent": "#9cb4d8",
+        "speed": 0.75,
+        "delay": 12
+      }
+    }
+  ]
+}

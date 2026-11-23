@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const pricingRevealConfig: ComponentConfig = {
   componentName: "PricingReveal",
@@ -12,11 +19,6 @@ export const pricingRevealConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     currency: {
       type: "text-content",
@@ -43,6 +45,31 @@ export const pricingRevealConfig: ComponentConfig = {
       default: "Simple pricing for every launch.",
       description: "Heading",
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 15,
+      step: 1,
+      description: "Card stagger",
+      hiddenFromList: false,
+    },
+    radius: {
+      type: "number",
+      default: 18,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Corner radius",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

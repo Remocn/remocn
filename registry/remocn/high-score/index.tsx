@@ -4,13 +4,9 @@ import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont as loadPixel } from "@remotion/google-fonts/Silkscreen";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: pixel } = loadPixel("normal", {
   weights: ["400"],
@@ -72,8 +68,24 @@ export interface HighScoreProps {
   title?: string;
   /** The flash that replaces the title once the initials are in. */
   flash?: string;
+  /** Column labels over the table: rank, name, score. */
+  columns?: [string, string, string];
+  /** Frames between rows as the table slides in. */
+  stagger?: number;
   /** Small cursor block while the initials are typed. */
   accent?: string;
+  /** Text color of the table and logo; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the table. Load it yourself; Silkscreen by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark under the table. */
+  logo?: React.ReactNode;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -136,6 +148,8 @@ function ramp(t: number, from: number, len: number) {
   return interpolate(t, [from, from + len], [0, 1], CLAMP);
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function hexToRgb(h: string) {
   const n = Number.parseInt(h.slice(1), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
@@ -182,6 +196,22 @@ function shake(t: number, at: number, len: number, amp: number) {
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function HighScore({
   rows = [
     { name: "ACE", score: 870450 },
@@ -194,13 +224,23 @@ export function HighScore({
   playerScore = 999990,
   title = "HIGH SCORES",
   flash = "NEW HIGH SCORE",
+  columns = ["RANK", "NAME", "SCORE"],
+  stagger = ROW_STAGGER,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = pixel,
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: HighScoreProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const u = Math.min(W / 1280, H / 720);
 
   const table = rows.slice(0, 5);
@@ -242,6 +282,11 @@ export function HighScore({
   // Player slot: starts below the table (n + 1), one slot up per overtake.
   const climbs = passes.map((p) => OUT(ramp(t, p, MOVE)));
   const playerPos = n + 1 - climbs.reduce((a, b) => a + b, 0);
+  // Layout rounds a box and a baseline to whole pixels, so the band and its
+  // row eased by `top` click up slot by slot. Both are laid out at #1, where
+  // they end, and climb there by a translate that is exactly 0 once landed.
+  const climb = (playerPos - 1) * rowH;
+  const climbing = climbs.some(midway);
   // Row i (0 = best) is shoved one slot down when the player passes it.
   const rowPos = (i: number) => i + 1 + SLAM(ramp(t, passAt(i), MOVE));
 
@@ -259,10 +304,11 @@ export function HighScore({
   const flashOn =
     t >= FLASH_AT && !(fd >= 9 && fd < 12) && !(fd >= 15 && fd < 18);
   const logoP = OUT(ramp(t, LOGO_AT, 10));
-  const push = interpolate(t, [FLASH_AT, FLASH_AT + 60], [1, 1.05], {
+  const pushP = interpolate(t, [FLASH_AT, FLASH_AT + 60], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
+  const push = 1 + 0.05 * pushP;
 
   const pixelText = (
     text: string,
@@ -279,7 +325,7 @@ export function HighScore({
             style={{
               width: isComma ? (comma * size) / fs : (cell * size) / fs,
               textAlign: "center",
-              fontFamily: pixel,
+              fontFamily,
               fontWeight: 400,
               fontSize: size,
               lineHeight: 1,
@@ -309,252 +355,277 @@ export function HighScore({
     t >= LETTERS_AT - 6 && typed < player.length && Math.floor(t / 3) % 2 === 0;
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `translate(${sh.x}px, ${sh.y}px) scale(${push})`,
-          transformOrigin: "50% 40%",
-        }}
-      >
-        {/* Title: the small table title, swapped for the flash. */}
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.stage),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `translate(${sh.x}px, ${sh.y}px) scale(${push})${glide(
+              midway(pushP) || sh.x !== 0 || sh.y !== 0,
+            )}`,
+            transformOrigin: "50% 40%",
+          }}
+        >
+          {/* Title: the small table title, swapped for the flash. */}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: 0.12 * H,
+              display: "flex",
+              justifyContent: "center",
+              opacity: titleIn * (1 - titleOut),
+              transform: `translateY(${(1 - titleIn) * 12 * u}px) scaleY(${1 - titleOut})${glide(
+                midway(titleIn) || midway(titleOut),
+              )}`,
+            }}
+          >
+            {pixelText(title, fg, 30 * u, { letterSpacing: 0 })}
+          </div>
+          {t >= FLASH_AT ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                width: W,
+                top: 0.12 * H - 24 * u,
+                display: "flex",
+                justifyContent: "center",
+                transform: `scale(${interpolate(flashIn, [0, 1], [1.45, 1])})`,
+                opacity: flashOn ? ramp(t, FLASH_AT, 2) : 0,
+              }}
+            >
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 76 * u,
+                  lineHeight: 1,
+                  letterSpacing: "0.02em",
+                  whiteSpace: "nowrap",
+                  backgroundImage: steppedGradient(90, c.flashStops, 12),
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                }}
+              >
+                {flash}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Column labels. */}
+          <div
+            style={{
+              position: "absolute",
+              top: top - 42 * u,
+              left: x0,
+              width: tableW,
+              height: 20 * u,
+              fontFamily: geist,
+              fontWeight: 500,
+              fontSize: 14 * u,
+              letterSpacing: "0.22em",
+              color: c.dim,
+              opacity: OUT(ramp(t, 4, 8)) * (1 - 0.5 * dimRest),
+            }}
+          >
+            <span style={{ position: "absolute", left: 0 }}>{columns[0]}</span>
+            <span style={{ position: "absolute", left: nameX - x0 }}>
+              {columns[1]}
+            </span>
+            <span style={{ position: "absolute", right: 0 }}>{columns[2]}</span>
+          </div>
+
+          {/* Player band: wipes in under the table and climbs. */}
+          {t >= BAND_IN ? (
+            <div
+              style={{
+                position: "absolute",
+                top: slotY(1) - rowH / 2 + 4 * u,
+                transform: climb === 0 ? undefined : `translateY(${climb}px)`,
+                height: rowH - 8 * u,
+                left: interpolate(bleed, [0, 1], [x0 - 26 * u, 0]),
+                right: interpolate(bleed, [0, 1], [x0 - 26 * u, 0]),
+                clipPath: `inset(0 ${(1 - OUT(ramp(t, BAND_IN, 7))) * 100}% 0 0)`,
+                backgroundImage: steppedGradient(
+                  90,
+                  ["#F25A2E", "#C2456E", DITHER[0]],
+                  16,
+                ),
+                boxShadow: `inset 0 ${4 * u}px 0 rgba(255, 217, 168, 0.45), inset 0 ${-4 * u}px 0 rgba(10, 10, 30, 0.28)`,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "#FFFFFF",
+                  opacity: impact * 0.85,
+                }}
+              />
+            </div>
+          ) : null}
+
+          {/* Rank labels, fixed per slot; white where the band covers them. */}
+          {table.map((_, k) => {
+            const covered = t >= BAND_IN && Math.abs(playerPos - (k + 1)) < 0.5;
+            const p = OUT(ramp(t, ROW_IN + k * stagger, 8));
+            const dim = covered ? 0 : dimRest;
+            return (
+              <div
+                key={RANKS[k]}
+                style={{
+                  position: "absolute",
+                  left: x0,
+                  top: slotY(k + 1) - fs / 2,
+                  opacity: p * (1 - 0.6 * dim),
+                  transform: `translateX(${(1 - p) * 60 * u}px)`,
+                }}
+              >
+                {pixelText(RANKS[k], covered ? "#FFFFFF" : fg)}
+              </div>
+            );
+          })}
+
+          {/* The other rows: initials + score, shoved down one by one. */}
+          {table.map((r, i) => {
+            const pos = rowPos(i);
+            const p = OUT(ramp(t, ROW_IN + i * stagger, 8));
+            const off = OUT(ramp(t, passAt(i) + MOVE, 8));
+            const gone = i === n - 1;
+            const kickD = t - passAt(i);
+            const kick =
+              kickD >= 0 && kickD < 8 ? (1 - kickD / 8) ** 2 * 14 * u : 0;
+            const y = slotY(pos) + (gone ? off * 30 * u : 0);
+            return (
+              <div
+                key={r.name}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  width: W,
+                  top: y,
+                  height: 0,
+                  opacity: p * (gone ? 1 - off : 1) * (1 - 0.6 * dimRest),
+                  transform: `translateX(${(1 - p) * 60 * u + kick}px)`,
+                }}
+              >
+                {pixelText(r.name, fg, fs, {
+                  position: "absolute",
+                  left: nameX,
+                  top: -fs / 2,
+                })}
+                {scoreText(formatScore(r.score), fg)}
+              </div>
+            );
+          })}
+
+          {/* Player row content. */}
+          {t >= BAND_IN ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                width: W,
+                top: slotY(1),
+                height: 0,
+                opacity: ramp(t, BAND_IN + 3, 3),
+                transform:
+                  climb === 0
+                    ? undefined
+                    : `translateY(${climb}px)${glide(climbing)}`,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  left: nameX,
+                  top: -fs / 2,
+                  display: "flex",
+                }}
+              >
+                {player.split("").map((ch, k) => {
+                  const shown = k < typed;
+                  const isCursor = !shown && k === typed && cursorOn;
+                  return (
+                    <div
+                      key={k}
+                      style={{
+                        position: "relative",
+                        width: cell,
+                        height: fs,
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {isCursor ? (
+                        <div
+                          style={{
+                            position: "absolute",
+                            left: cell * 0.14,
+                            right: cell * 0.14,
+                            top: fs * 0.04,
+                            bottom: fs * 0.08,
+                            background: "#FFFFFF",
+                            boxShadow: `0 0 0 ${2 * u}px ${accent}`,
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        style={{
+                          fontFamily,
+                          fontWeight: 400,
+                          fontSize: fs,
+                          lineHeight: 1,
+                          color: "#FFFFFF",
+                          opacity: shown ? 1 : isCursor ? 0 : 0.55,
+                          transform: shown
+                            ? `scale(${interpolate(ramp(t, LETTERS_AT + k * LETTER_GAP, 3), [0, 1], [1.35, 1])})${glide(
+                                // A letter appears at 1.35 and shrinks from
+                                // the next frame on, so its first frame
+                                // already counts as moving.
+                                ramp(t, LETTERS_AT + k * LETTER_GAP, 3) <
+                                  1 - 5e-4,
+                              )}`
+                            : undefined,
+                        }}
+                      >
+                        {shown ? ch : "_"}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {scoreText(formatScore(score), "#FFFFFF")}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Logo. */}
         <div
           style={{
             position: "absolute",
             left: 0,
             width: W,
-            top: 0.12 * H,
+            top: 0.895 * H,
             display: "flex",
             justifyContent: "center",
-            opacity: titleIn * (1 - titleOut),
-            transform: `translateY(${(1 - titleIn) * 12 * u}px) scaleY(${1 - titleOut})`,
+            opacity: logoP,
+            transform: `translateY(${(1 - logoP) * 16 * u}px)${glide(midway(logoP))}`,
           }}
         >
-          {pixelText(title, c.ink, 30 * u, { letterSpacing: 0 })}
+          {logo ?? <RemocnLogo fontSize={30 * u} color={fg} />}
         </div>
-        {t >= FLASH_AT ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              width: W,
-              top: 0.12 * H - 24 * u,
-              display: "flex",
-              justifyContent: "center",
-              transform: `scale(${interpolate(flashIn, [0, 1], [1.45, 1])})`,
-              opacity: flashOn ? ramp(t, FLASH_AT, 2) : 0,
-            }}
-          >
-            <div
-              style={{
-                fontFamily: pixel,
-                fontWeight: 400,
-                fontSize: 76 * u,
-                lineHeight: 1,
-                letterSpacing: "0.02em",
-                whiteSpace: "nowrap",
-                backgroundImage: steppedGradient(90, c.flashStops, 12),
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                color: "transparent",
-              }}
-            >
-              {flash}
-            </div>
-          </div>
-        ) : null}
-
-        {/* Column labels. */}
-        <div
-          style={{
-            position: "absolute",
-            top: top - 42 * u,
-            left: x0,
-            width: tableW,
-            height: 20 * u,
-            fontFamily: geist,
-            fontWeight: 500,
-            fontSize: 14 * u,
-            letterSpacing: "0.22em",
-            color: c.dim,
-            opacity: OUT(ramp(t, 4, 8)) * (1 - 0.5 * dimRest),
-          }}
-        >
-          <span style={{ position: "absolute", left: 0 }}>RANK</span>
-          <span style={{ position: "absolute", left: nameX - x0 }}>NAME</span>
-          <span style={{ position: "absolute", right: 0 }}>SCORE</span>
-        </div>
-
-        {/* Player band: wipes in under the table and climbs. */}
-        {t >= BAND_IN ? (
-          <div
-            style={{
-              position: "absolute",
-              top: slotY(playerPos) - rowH / 2 + 4 * u,
-              height: rowH - 8 * u,
-              left: interpolate(bleed, [0, 1], [x0 - 26 * u, 0]),
-              right: interpolate(bleed, [0, 1], [x0 - 26 * u, 0]),
-              clipPath: `inset(0 ${(1 - OUT(ramp(t, BAND_IN, 7))) * 100}% 0 0)`,
-              backgroundImage: steppedGradient(
-                90,
-                ["#F25A2E", "#C2456E", DITHER[0]],
-                16,
-              ),
-              boxShadow: `inset 0 ${4 * u}px 0 rgba(255, 217, 168, 0.45), inset 0 ${-4 * u}px 0 rgba(10, 10, 30, 0.28)`,
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: "#FFFFFF",
-                opacity: impact * 0.85,
-              }}
-            />
-          </div>
-        ) : null}
-
-        {/* Rank labels, fixed per slot; white where the band covers them. */}
-        {table.map((_, k) => {
-          const covered = t >= BAND_IN && Math.abs(playerPos - (k + 1)) < 0.5;
-          const p = OUT(ramp(t, ROW_IN + k * ROW_STAGGER, 8));
-          const dim = covered ? 0 : dimRest;
-          return (
-            <div
-              key={RANKS[k]}
-              style={{
-                position: "absolute",
-                left: x0,
-                top: slotY(k + 1) - fs / 2,
-                opacity: p * (1 - 0.6 * dim),
-                transform: `translateX(${(1 - p) * 60 * u}px)`,
-              }}
-            >
-              {pixelText(RANKS[k], covered ? "#FFFFFF" : c.ink)}
-            </div>
-          );
-        })}
-
-        {/* The other rows: initials + score, shoved down one by one. */}
-        {table.map((r, i) => {
-          const pos = rowPos(i);
-          const p = OUT(ramp(t, ROW_IN + i * ROW_STAGGER, 8));
-          const off = OUT(ramp(t, passAt(i) + MOVE, 8));
-          const gone = i === n - 1;
-          const kickD = t - passAt(i);
-          const kick =
-            kickD >= 0 && kickD < 8 ? (1 - kickD / 8) ** 2 * 14 * u : 0;
-          const y = slotY(pos) + (gone ? off * 30 * u : 0);
-          return (
-            <div
-              key={r.name}
-              style={{
-                position: "absolute",
-                left: 0,
-                width: W,
-                top: y,
-                height: 0,
-                opacity: p * (gone ? 1 - off : 1) * (1 - 0.6 * dimRest),
-                transform: `translateX(${(1 - p) * 60 * u + kick}px)`,
-              }}
-            >
-              {pixelText(r.name, c.ink, fs, {
-                position: "absolute",
-                left: nameX,
-                top: -fs / 2,
-              })}
-              {scoreText(formatScore(r.score), c.ink)}
-            </div>
-          );
-        })}
-
-        {/* Player row content. */}
-        {t >= BAND_IN ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              width: W,
-              top: slotY(playerPos),
-              height: 0,
-              opacity: ramp(t, BAND_IN + 3, 3),
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                left: nameX,
-                top: -fs / 2,
-                display: "flex",
-              }}
-            >
-              {player.split("").map((ch, k) => {
-                const shown = k < typed;
-                const isCursor = !shown && k === typed && cursorOn;
-                return (
-                  <div
-                    key={k}
-                    style={{
-                      position: "relative",
-                      width: cell,
-                      height: fs,
-                      display: "flex",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {isCursor ? (
-                      <div
-                        style={{
-                          position: "absolute",
-                          left: cell * 0.14,
-                          right: cell * 0.14,
-                          top: fs * 0.04,
-                          bottom: fs * 0.08,
-                          background: "#FFFFFF",
-                          boxShadow: `0 0 0 ${2 * u}px ${accent}`,
-                        }}
-                      />
-                    ) : null}
-                    <div
-                      style={{
-                        fontFamily: pixel,
-                        fontWeight: 400,
-                        fontSize: fs,
-                        lineHeight: 1,
-                        color: "#FFFFFF",
-                        opacity: shown ? 1 : isCursor ? 0 : 0.55,
-                        transform: shown
-                          ? `scale(${interpolate(ramp(t, LETTERS_AT + k * LETTER_GAP, 3), [0, 1], [1.35, 1])})`
-                          : undefined,
-                      }}
-                    >
-                      {shown ? ch : "_"}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {scoreText(formatScore(score), "#FFFFFF")}
-          </div>
-        ) : null}
-      </div>
-
-      {/* Logo. */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: 0.895 * H,
-          display: "flex",
-          justifyContent: "center",
-          opacity: logoP,
-          transform: `translateY(${(1 - logoP) * 16 * u}px)`,
-        }}
-      >
-        <RemocnLogo fontSize={30 * u} color={c.ink} />
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

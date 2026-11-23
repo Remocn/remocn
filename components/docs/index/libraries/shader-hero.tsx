@@ -1,4 +1,4 @@
-import { previewManifest } from "@/registry/__manifest__";
+import { sitePreview } from "@/lib/previews/site-preview";
 import { loadDocsSource } from "../data";
 import { HeroPill, HeroTag } from "./hero-pill";
 import { getLibraryItems } from "./library-data";
@@ -25,7 +25,7 @@ export async function ShaderHero({
 }) {
   await loadDocsSource();
   const count = getLibraryItems("/docs/shaders").length;
-  const preview = previewManifest[name];
+  const preview = sitePreview(name);
 
   return (
     <figure className="not-prose relative mt-2 flex h-[340px] flex-col justify-between gap-7 overflow-hidden rounded-card bg-dark-surface p-3.5 sm:h-80 sm:p-5">

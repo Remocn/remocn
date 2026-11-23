@@ -10,9 +10,9 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const figtree = loadFigtree("normal", {
   weights: ["500"],
@@ -26,7 +26,17 @@ export interface PackedCountProps {
   suffix?: string;
   label?: string;
   accent?: string;
+  /** Text color of the number and label; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the number and label. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Frames the count takes to climb from `from` to `value`. */
+  countLength?: number;
+  /** Size of the number and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -46,7 +56,6 @@ const RISE_GAP = 3;
 const LABEL_AT = 10;
 const COUNT_AT = 18;
 const COUNT_LEN = 64;
-const FILL_AT = 80;
 const FILL_LEN = 20;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -109,11 +118,11 @@ interface Metrics {
   label: number;
 }
 
-function measure(slots: Slot[], label: string): Metrics {
+function measure(slots: Slot[], label: string, fontFamily: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("packed-count: no 2d context");
-  ctx.font = `500 ${FONT_PX}px "${figtree.fontFamily}"`;
+  ctx.font = `500 ${FONT_PX}px "${fontFamily}"`;
   let cell = 0;
   for (const d of "0123456789") {
     cell = Math.max(cell, ctx.measureText(d).width / FONT_PX);
@@ -136,7 +145,7 @@ function measure(slots: Slot[], label: string): Metrics {
   };
 }
 
-function useMetrics(slots: Slot[], label: string) {
+function useMetrics(slots: Slot[], label: string, fontFamily: string) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("packed-count: measuring"));
   const released = useRef(false);
@@ -144,12 +153,12 @@ function useMetrics(slots: Slot[], label: string) {
     let live = true;
     Promise.all([
       figtree.waitUntilDone(),
-      document.fonts.load(`500 100px "${figtree.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(slots, label));
+        setMetrics(measure(slots, label, fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -158,8 +167,24 @@ function useMetrics(slots: Slot[], label: string) {
     return () => {
       live = false;
     };
-  }, [slots, label, handle]);
+  }, [slots, label, fontFamily, handle]);
   return metrics;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function PackedCount({
@@ -169,13 +194,21 @@ export function PackedCount({
   suffix = "",
   label = "replays on a single launch clip",
   accent,
+  ink,
   background,
+  fontFamily = figtree.fontFamily,
+  countLength = COUNT_LEN,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PackedCountProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const fillAt = COUNT_AT + countLength - 2;
   const bg = background ?? c.bg;
   const sky = accent ?? SKY;
 
@@ -185,12 +218,12 @@ export function PackedCount({
     () => buildSlots(target, prefix, suffix),
     [target, prefix, suffix],
   );
-  const m = useMetrics(slots, label);
+  const m = useMetrics(slots, label, fontFamily);
 
   const logA = Math.log(start);
   const logB = Math.log(target);
   const countAt = (frame: number) => {
-    const p = interpolate(frame, [COUNT_AT, COUNT_AT + COUNT_LEN], [0, 1], {
+    const p = interpolate(frame, [COUNT_AT, COUNT_AT + countLength], [0, 1], {
       ...CLAMP,
       easing: EASE_COUNT,
     });
@@ -209,8 +242,8 @@ export function PackedCount({
       }
       const need = 10 ** place;
       let f = COUNT_AT;
-      while (f < COUNT_AT + COUNT_LEN) {
-        const p = interpolate(f, [COUNT_AT, COUNT_AT + COUNT_LEN], [0, 1], {
+      while (f < COUNT_AT + countLength) {
+        const p = interpolate(f, [COUNT_AT, COUNT_AT + countLength], [0, 1], {
           ...CLAMP,
           easing: EASE_COUNT,
         });
@@ -220,7 +253,7 @@ export function PackedCount({
       out.push(f);
     }
     return out;
-  }, [start, target, logA, logB]);
+  }, [start, target, logA, logB, countLength]);
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -305,7 +338,7 @@ export function PackedCount({
     const opacity = interpolate(p, [0, 0.55], [0, 1], CLAMP);
     const fillP = interpolate(
       t,
-      [FILL_AT + i * fillStep, FILL_AT + i * fillStep + FILL_LEN],
+      [fillAt + i * fillStep, fillAt + i * fillStep + FILL_LEN],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
@@ -316,14 +349,14 @@ export function PackedCount({
       top: lineTop - maskTop + (1 - intro) * maskH * 1.05,
       width: w,
       textAlign: "center",
-      fontFamily: figtree.fontFamily,
+      fontFamily,
       fontWeight: 500,
       fontSize: F,
       height: F * 1.3,
       lineHeight: `${F}px`,
       whiteSpace: "pre",
       opacity,
-      color: c.ink,
+      color: fg,
     };
     glyphs.push(
       <div key={`s${s.index}`} style={style}>
@@ -342,51 +375,63 @@ export function PackedCount({
     }
   });
 
-  const labelP = interpolate(t, [LABEL_AT, LABEL_AT + 18], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const labelRise = (f: number) =>
+    (1 -
+      interpolate(f, [LABEL_AT, LABEL_AT + 18], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      })) *
+    labelSize *
+    1.3;
+  const labelY = labelRise(t);
+  // The ease-out tail crawls well under a pixel per frame, so the label
+  // counts as moving until it has really stopped.
+  const labelMoving =
+    Math.abs(labelRise(t + speed) - labelY) > 1e-3 ||
+    Math.abs(labelY - labelRise(t - speed)) > 1e-3;
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      {label ? (
+      <ScaleLayer scale={scale}>
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: margin,
+              top: margin - labelSize * 0.1,
+              height: labelSize * 1.3,
+              overflow: "hidden",
+              fontFamily,
+              fontWeight: 500,
+              fontSize: labelSize,
+              lineHeight: `${labelSize * 1.2}px`,
+              letterSpacing: "-0.015em",
+              color: fg,
+              whiteSpace: "pre",
+            }}
+          >
+            <div
+              style={{
+                transform: `translateY(${labelY}px)${glide(labelMoving)}`,
+              }}
+            >
+              {label}
+            </div>
+          </div>
+        ) : null}
         <div
           style={{
             position: "absolute",
-            left: margin,
-            top: margin - labelSize * 0.1,
-            height: labelSize * 1.3,
+            left: 0,
+            width: W,
+            top: maskTop,
+            height: maskH,
             overflow: "hidden",
-            fontFamily: figtree.fontFamily,
-            fontWeight: 500,
-            fontSize: labelSize,
-            lineHeight: `${labelSize * 1.2}px`,
-            letterSpacing: "-0.015em",
-            color: c.ink,
-            whiteSpace: "pre",
           }}
         >
-          <div
-            style={{
-              transform: `translateY(${((1 - labelP) * labelSize * 1.3).toFixed(2)}px)`,
-            }}
-          >
-            {label}
-          </div>
+          {glyphs}
         </div>
-      ) : null}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: maskTop,
-          height: maskH,
-          overflow: "hidden",
-        }}
-      >
-        {glyphs}
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

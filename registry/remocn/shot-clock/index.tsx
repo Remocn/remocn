@@ -2,13 +2,9 @@
 
 import { loadFont } from "@remotion/google-fonts/AzeretMono";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400", "500"],
@@ -32,6 +28,20 @@ export interface ShotClockProps {
   alarm?: string;
   /** The live marker next to the period label. */
   accent?: string;
+  /** Color of the running clock, subtitle and possession bar; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the clock and copy. Load it yourself; Azeret Mono by default. */
+  fontFamily?: string;
+  /** Frames per whole-second tick. */
+  tick?: number;
+  /** Frames the 0.0 holds at the buzzer before the clock shrinks away. */
+  hold?: number;
+  /** Size of the clock and title, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -84,6 +94,14 @@ const THEMES = {
   },
 } as const;
 
+/** Whether any of the pixel values `at` returns moves around `t`. */
+function moves(at: (t: number) => number[], t: number, step: number) {
+  const [a, b, c] = [at(t - step), at(t), at(t + step)];
+  return b.some(
+    (v, i) => Math.abs(c[i] - v) > 1e-3 || Math.abs(v - a[i]) > 1e-3,
+  );
+}
+
 function ramp(t: number, from: number, len: number) {
   return interpolate(t, [from, from + len], [0, 1], CLAMP);
 }
@@ -96,6 +114,22 @@ function kick(d: number, len: number) {
   return k * k;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ShotClock({
   from = 24,
   tenthsBelow = 5,
@@ -105,24 +139,35 @@ export function ShotClock({
   period = "Q4 · 00:24",
   alarm = "#FF4433",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = mono,
+  tick = TICK,
+  hold = SHRINK_DELAY,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: ShotClockProps) {
+  const glide = useGlide();
   // Starts two frames in, so frame 0 already shows the drop.
-  const t = useCurrentFrame() * speed + 2;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + 2;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
   const start = Math.max(tenthsBelow + 1, Math.floor(from));
   const wholeTicks = start - tenthsBelow;
-  const redAt = TICK_AT + wholeTicks * TICK;
+  const redAt = TICK_AT + wholeTicks * tick;
   const buzzAt = redAt + tenthsBelow * 10 * TENTH;
 
   // Clock value in tenths of a second.
   let tenths: number;
   if (t < TICK_AT) tenths = start * 10;
-  else if (t < redAt) tenths = (start - Math.floor((t - TICK_AT) / TICK)) * 10;
+  else if (t < redAt) tenths = (start - Math.floor((t - TICK_AT) / tick)) * 10;
   else tenths = Math.max(0, tenthsBelow * 10 - Math.floor((t - redAt) / TENTH));
   const red = t >= redAt;
   const buzzed = t >= buzzAt;
@@ -147,42 +192,58 @@ export function ShotClock({
   const lightY = clockCY - 0.5 * clockFs - 34 * u;
   const barY = clockCY + 0.5 * clockFs + 18 * u;
 
-  const drop = SLAM(ramp(t, DROP_AT, 9));
+  const dropAt = (tt: number) => SLAM(ramp(tt, DROP_AT, 9));
+  const drop = dropAt(t);
   const draw = SLAM(ramp(t, DROP_AT + 2, 12));
   const labelsIn = ramp(t, 5, 8);
-  const redKick = kick(t - redAt, 8);
-  const buzzKick = kick(t - buzzAt, 10);
   const flash = buzzed ? kick(t - buzzAt, 9) : 0;
 
   // Shrink to the poster position under the light.
-  const shrink = MOVE(ramp(t, buzzAt + SHRINK_DELAY, SHRINK_LEN));
   const posterScale = 0.38;
   const posterCY = 150 * u;
-  // A slow push-in while the clock runs down builds the pressure.
-  const push = Easing.bezier(
-    0.65,
-    0,
-    0.35,
-    1,
-  )(ramp(t, TICK_AT, buzzAt - TICK_AT));
-  const groupScale =
-    interpolate(shrink, [0, 1], [1 + 0.07 * push, posterScale]) *
-    (1 + 0.03 * redKick + 0.04 * buzzKick);
-  const groupDY = interpolate(shrink, [0, 1], [0, posterCY - clockCY]);
+  const groupAt = (tt: number) => {
+    const shrink = MOVE(ramp(tt, buzzAt + hold, SHRINK_LEN));
+    // A slow push-in while the clock runs down builds the pressure.
+    const push = Easing.bezier(
+      0.65,
+      0,
+      0.35,
+      1,
+    )(ramp(tt, TICK_AT, buzzAt - TICK_AT));
+    const scale =
+      interpolate(shrink, [0, 1], [1 + 0.07 * push, posterScale]) *
+      (1 + 0.03 * kick(tt - redAt, 8) + 0.04 * kick(tt - buzzAt, 10));
+    const dy = interpolate(shrink, [0, 1], [0, posterCY - clockCY]);
+    return { shrink, scale, dy };
+  };
+  const { shrink, scale: groupScale, dy: groupDY } = groupAt(t);
   const sideFade = 1 - ramp(shrink, 0, 0.4);
+  const groupMoving = moves(
+    (tt) => {
+      const g = groupAt(tt);
+      return [g.dy, g.scale * W, (1 - dropAt(tt)) * 90 * u];
+    },
+    t,
+    speed,
+  );
 
-  const titleAt = buzzAt + SHRINK_DELAY + SHRINK_LEN - 4;
+  const titleAt = buzzAt + hold + SHRINK_LEN - 4;
+  const titleScaleAt = (tt: number) =>
+    (1.22 - 0.22 * SLAM(ramp(tt, titleAt, 7))) *
+    (1 + 0.025 * kick(tt - (titleAt + 3), 8));
+  const subAt = (tt: number) => SLAM(ramp(tt, titleAt + 4, 9));
   const titleIn = SLAM(ramp(t, titleAt, 7));
-  const subIn = SLAM(ramp(t, titleAt + 4, 9));
-  const titleHit = kick(t - (titleAt + 3), 8);
+  const subIn = subAt(t);
+  const titleMoving = moves((tt) => [titleScaleAt(tt) * W], t, speed);
+  const subMoving = moves((tt) => [(1 - subAt(tt)) * 36 * u], t, speed);
 
-  const clockColor = red ? alarm : c.ink;
+  const clockColor = red ? alarm : fg;
   const lightOn = buzzed;
 
   const chars = text.split("");
 
   const smallLabel: React.CSSProperties = {
-    fontFamily: mono,
+    fontFamily,
     fontWeight: 400,
     fontSize: 17 * u,
     letterSpacing: "0.16em",
@@ -199,7 +260,7 @@ export function ShotClock({
   const groundOp = (theme === "dark" ? 0.75 : 0.45) * ramp(t, buzzAt, 6);
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
@@ -209,179 +270,181 @@ export function ShotClock({
         }}
       />
 
-      {/* Clock group: light, labels, digits, possession bar. */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `translateY(${groupDY}px) scale(${groupScale})`,
-          transformOrigin: `${cx}px ${clockCY}px`,
-        }}
-      >
-        {/* Buzzer light. */}
+      <ScaleLayer scale={scale}>
+        {/* Clock group: light, labels, digits, possession bar. */}
         <div
           style={{
             position: "absolute",
-            left: cx - (blockW / 2) * draw,
-            top: lightY,
-            width: blockW * draw,
-            height: 14 * u,
-            background: lightOn ? alarm : c.track,
-          }}
-        />
-        <div
-          style={{
-            ...smallLabel,
-            position: "absolute",
-            left: cx - blockW / 2,
-            top: lightY - 40 * u,
-            opacity: labelsIn * sideFade,
+            inset: 0,
+            transform: `translateY(${groupDY}px) scale(${groupScale})${glide(groupMoving)}`,
+            transformOrigin: `${cx}px ${clockCY}px`,
           }}
         >
-          {label}
-        </div>
-        <div
-          style={{
-            ...smallLabel,
-            position: "absolute",
-            right: W - (cx + blockW / 2),
-            top: lightY - 40 * u,
-            opacity: labelsIn * sideFade,
-            display: "flex",
-            alignItems: "center",
-            gap: 10 * u,
-          }}
-        >
+          {/* Buzzer light. */}
           <div
             style={{
-              width: 8 * u,
-              height: 8 * u,
-              background: accent,
-              opacity: buzzed ? 0 : Math.floor(t / 15) % 2 === 0 ? 1 : 0.35,
+              position: "absolute",
+              left: cx - (blockW / 2) * draw,
+              top: lightY,
+              width: blockW * draw,
+              height: 14 * u,
+              background: lightOn ? alarm : c.track,
             }}
           />
-          {period}
+          <div
+            style={{
+              ...smallLabel,
+              position: "absolute",
+              left: cx - blockW / 2,
+              top: lightY - 40 * u,
+              opacity: labelsIn * sideFade,
+            }}
+          >
+            {label}
+          </div>
+          <div
+            style={{
+              ...smallLabel,
+              position: "absolute",
+              right: W - (cx + blockW / 2),
+              top: lightY - 40 * u,
+              opacity: labelsIn * sideFade,
+              display: "flex",
+              alignItems: "center",
+              gap: 10 * u,
+            }}
+          >
+            <div
+              style={{
+                width: 8 * u,
+                height: 8 * u,
+                background: accent,
+                opacity: buzzed ? 0 : Math.floor(t / 15) % 2 === 0 ? 1 : 0.35,
+              }}
+            />
+            {period}
+          </div>
+
+          {/* Digits. */}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: clockCY - clockFs / 2,
+              height: clockFs,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              fontFamily,
+              fontWeight: 500,
+              fontSize: clockFs,
+              lineHeight: 1,
+              letterSpacing: "-0.04em",
+              color: clockColor,
+              transform: `translateY(${-(1 - drop) * 90 * u}px)`,
+              opacity: drop,
+            }}
+          >
+            {chars.map((ch, i) =>
+              ch === "." ? (
+                <span
+                  key={i}
+                  style={{
+                    width: "0.42em",
+                    display: "inline-flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  .
+                </span>
+              ) : (
+                <span key={i} style={{ display: "inline-block" }}>
+                  {ch}
+                </span>
+              ),
+            )}
+          </div>
+
+          {/* Possession bar, running out towards the centre. */}
+          <div
+            style={{
+              position: "absolute",
+              left: cx - (blockW / 2) * draw,
+              top: barY,
+              width: blockW * draw,
+              height: 6 * u,
+              background: c.track,
+              opacity: sideFade,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: cx - (blockW / 2) * draw * barFrac,
+              top: barY,
+              width: blockW * draw * barFrac,
+              height: 6 * u,
+              background: red ? alarm : fg,
+              opacity: sideFade,
+            }}
+          />
         </div>
 
-        {/* Digits. */}
+        {/* Title. */}
         <div
           style={{
             position: "absolute",
             left: 0,
             right: 0,
-            top: clockCY - clockFs / 2,
-            height: clockFs,
+            top: H / 2 - 120 * u,
             display: "flex",
             justifyContent: "center",
-            alignItems: "center",
-            fontFamily: mono,
-            fontWeight: 500,
-            fontSize: clockFs,
-            lineHeight: 1,
-            letterSpacing: "-0.04em",
-            color: clockColor,
-            transform: `translateY(${-(1 - drop) * 90 * u}px)`,
-            opacity: drop,
+            opacity: ramp(titleIn, 0, 0.25),
+            transform: `scale(${titleScaleAt(t)})${glide(titleMoving)}`,
+            transformOrigin: `${cx}px ${100 * u}px`,
           }}
         >
-          {chars.map((ch, i) =>
-            ch === "." ? (
-              <span
-                key={i}
-                style={{
-                  width: "0.42em",
-                  display: "inline-flex",
-                  justifyContent: "center",
-                }}
-              >
-                .
-              </span>
-            ) : (
-              <span key={i} style={{ display: "inline-block" }}>
-                {ch}
-              </span>
-            ),
-          )}
+          <div
+            style={{
+              fontFamily,
+              fontWeight: 500,
+              fontSize: 176 * u,
+              lineHeight: 1.15,
+              letterSpacing: "-0.05em",
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+              backgroundImage: c.titleFill,
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
+            }}
+          >
+            {title}
+          </div>
         </div>
-
-        {/* Possession bar, running out towards the centre. */}
         <div
           style={{
             position: "absolute",
-            left: cx - (blockW / 2) * draw,
-            top: barY,
-            width: blockW * draw,
-            height: 6 * u,
-            background: c.track,
-            opacity: sideFade,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: cx - (blockW / 2) * draw * barFrac,
-            top: barY,
-            width: blockW * draw * barFrac,
-            height: 6 * u,
-            background: red ? alarm : c.ink,
-            opacity: sideFade,
-          }}
-        />
-      </div>
-
-      {/* Title. */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: H / 2 - 120 * u,
-          display: "flex",
-          justifyContent: "center",
-          opacity: ramp(titleIn, 0, 0.25),
-          transform: `scale(${(1.22 - 0.22 * titleIn) * (1 + 0.025 * titleHit)})`,
-          transformOrigin: `${cx}px ${100 * u}px`,
-        }}
-      >
-        <div
-          style={{
-            fontFamily: mono,
-            fontWeight: 500,
-            fontSize: 176 * u,
-            lineHeight: 1.15,
-            letterSpacing: "-0.05em",
+            left: 0,
+            right: 0,
+            top: H / 2 + 112 * u,
+            display: "flex",
+            justifyContent: "center",
+            fontFamily,
+            fontWeight: 400,
+            fontSize: 46 * u,
+            letterSpacing: "0.04em",
             textTransform: "uppercase",
+            color: fg,
             whiteSpace: "nowrap",
-            backgroundImage: c.titleFill,
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            color: "transparent",
+            opacity: subIn,
+            transform: `translateY(${(1 - subIn) * 36 * u}px)${glide(subMoving)}`,
           }}
         >
-          {title}
+          {subtitle}
         </div>
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: H / 2 + 112 * u,
-          display: "flex",
-          justifyContent: "center",
-          fontFamily: mono,
-          fontWeight: 400,
-          fontSize: 46 * u,
-          letterSpacing: "0.04em",
-          textTransform: "uppercase",
-          color: c.ink,
-          whiteSpace: "nowrap",
-          opacity: subIn,
-          transform: `translateY(${(1 - subIn) * 36 * u}px)`,
-        }}
-      >
-        {subtitle}
-      </div>
+      </ScaleLayer>
 
       {/* Buzzer flash. */}
       {flash > 0 ? (

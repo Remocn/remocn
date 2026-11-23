@@ -1,0 +1,115 @@
+{
+  "component": "glass-code-block",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-showcase",
+      "label": "Hero Showcase",
+      "description": "A large, wide editor panel with roomy type and an unhurried line reveal for full-screen hero shots.",
+      "askedAs": [
+        "big code window for hero section",
+        "large slow code reveal",
+        "fullscreen editor backdrop",
+        "большое окно кода для главного экрана",
+        "крупный редактор с медленным появлением"
+      ],
+      "props": {
+        "width": 1060,
+        "height": 640,
+        "fontSize": 20,
+        "staggerFrames": 8,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "instant-snap",
+      "label": "Instant Snap",
+      "description": "All lines appear together at once at double speed for a crisp, no-nonsense cut-in.",
+      "askedAs": [
+        "show all code at once",
+        "no stagger code block",
+        "fast code appear",
+        "весь код сразу без задержки",
+        "быстрое появление кода"
+      ],
+      "props": {
+        "staggerFrames": 0,
+        "speed": 2
+      }
+    },
+    {
+      "id": "compact-card",
+      "label": "Compact Card",
+      "description": "A small, chrome-free glass card with tight type that sits neatly beside other content.",
+      "askedAs": [
+        "small code snippet card",
+        "minimal code box without window buttons",
+        "compact code panel",
+        "маленькая карточка с кодом",
+        "компактный блок кода без кнопок окна"
+      ],
+      "props": {
+        "width": 460,
+        "height": 280,
+        "fontSize": 13,
+        "showTrafficLights": false,
+        "staggerFrames": 3
+      }
+    },
+    {
+      "id": "typewriter-slow",
+      "label": "Slow Cascade",
+      "description": "A deliberate, cinematic cascade where each line lands well after the last for narrated walkthroughs.",
+      "askedAs": [
+        "slow line by line code reveal",
+        "dramatic code cascade",
+        "code appearing one line at a time slowly",
+        "медленное построчное появление кода",
+        "плавный каскад строк кода"
+      ],
+      "props": {
+        "staggerFrames": 18,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "presentation-large-type",
+      "label": "Presentation Type",
+      "description": "Oversized, highly legible type in a tall, clean panel built for slides and talks.",
+      "askedAs": [
+        "big font code for presentation",
+        "readable code on slides",
+        "large text code editor",
+        "крупный шрифт кода для презентации",
+        "читаемый код для слайдов"
+      ],
+      "props": {
+        "fontSize": 26,
+        "width": 900,
+        "height": 600,
+        "showTrafficLights": false,
+        "staggerFrames": 6
+      }
+    },
+    {
+      "id": "rapid-ticker",
+      "label": "Rapid Ticker",
+      "description": "A wide, short strip with small type and a brisk ripple of lines for energetic montages.",
+      "askedAs": [
+        "quick code flash for montage",
+        "wide short code strip",
+        "energetic fast code reveal",
+        "быстрая полоска кода для монтажа",
+        "широкий низкий блок кода"
+      ],
+      "props": {
+        "width": 1000,
+        "height": 240,
+        "fontSize": 12,
+        "staggerFrames": 2,
+        "speed": 3
+      }
+    }
+  ]
+}

@@ -4,13 +4,9 @@ import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["400", "500", "600"],
@@ -59,6 +55,22 @@ export interface MeasureDimProps {
   before?: string;
   beforeLabel?: string;
   accent?: string;
+  /** Text color of the main figure; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the figures and labels. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Weight of the figures. */
+  fontWeight?: number;
+  /** Corner radius of the bars, in px at 720p. */
+  radius?: number;
+  /** Replaces the remocn mark in the bar. */
+  logo?: React.ReactNode;
+  grain?: boolean;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -172,6 +184,8 @@ interface DimProps {
   color: string;
   textColor: string;
   unitColor: string;
+  fontFamily: string;
+  fontWeight: number;
   u: number;
 }
 
@@ -213,6 +227,23 @@ function Arrow({
             background: color,
           }}
         />
+      </div>
+      {/* The head rides out on a transform across the full span: placed at
+          the edge of the growing line, layout would round it to whole
+          pixels and it would click outward. */}
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          top: "50%",
+          height: 0,
+          transform:
+            k < 1
+              ? `translateX(${(side === "left" ? 1 : -1) * (1 - k) * 100}%)`
+              : undefined,
+        }}
+      >
         <svg
           width={head}
           height={wing * 2}
@@ -245,6 +276,8 @@ function Dimension({
   color,
   textColor,
   unitColor,
+  fontFamily,
+  fontWeight,
   u,
 }: DimProps) {
   if (k <= 0) return null;
@@ -291,8 +324,8 @@ function Dimension({
       style={{
         display: "grid",
         padding: inline ? `0 ${18 * u}px` : 0,
-        fontFamily: display,
-        fontWeight: 500,
+        fontFamily,
+        fontWeight,
         fontSize: size,
         lineHeight: 1,
         letterSpacing: "-0.035em",
@@ -337,6 +370,22 @@ function Dimension({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MeasureDim({
   subject,
   label = "remocn",
@@ -344,13 +393,26 @@ export function MeasureDim({
   before = "60 fps",
   beforeLabel = "Before",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  fontWeight = 500,
+  radius = 8,
+  logo,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: MeasureDimProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
 
   const a = parse(value)?.n ?? 1;
   const b = before ? (parse(before)?.n ?? a * 0.4) : 0;
@@ -384,7 +446,19 @@ export function MeasureDim({
   const ghostLabelIn = EASE_OUT(
     interpolate(t, [GHOST_AT + 10, GHOST_AT + 24], [0, 1], CLAMP),
   );
-  const push = EASE_IO(interpolate(t, [0, ARR_B + 60], [0, 1], CLAMP));
+  const pushAt = (tt: number) =>
+    0.985 + 0.015 * EASE_IO(interpolate(tt, [0, ARR_B + 60], [0, 1], CLAMP));
+  const push = pushAt(t);
+  // The push carries everything but the background, so it takes the tilt
+  // while its scale still moves text at the frame's edge.
+  const pushMoving =
+    t > 0 &&
+    Math.max(
+      Math.abs(pushAt(t + speed) - push),
+      Math.abs(push - pushAt(t - speed)),
+    ) *
+      (W / 2) >
+      1e-3;
   const drift = interpolate(t, [0, 140], [0, 1], CLAMP);
 
   // gradients.sh "limb" (#160c3a → #4b2bd6 → #8a8bff → #e9ecff) with the accent woven in.
@@ -411,7 +485,7 @@ export function MeasureDim({
     left: 22 * u,
     display: "flex",
     alignItems: "center",
-    fontFamily: display,
+    fontFamily,
     fontWeight: 500,
     fontSize: 18 * u,
     letterSpacing: "-0.01em",
@@ -419,133 +493,137 @@ export function MeasureDim({
   };
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${0.985 + 0.015 * push})`,
-        }}
-      >
-        <div
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: x0,
-            top: heroTop,
-            width: heroW,
-            height: barH,
-            borderRadius: 8 * u,
-            overflow: "hidden",
-            backgroundImage: subject ? undefined : `${limbSheen}, ${limb}`,
-            clipPath: `inset(0 ${(1 - bar) * 100}% 0 0 round ${8 * u}px)`,
+            transform: `scale(${push})${glide(pushMoving)}`,
           }}
         >
-          {subject ?? (
-            <div
-              style={{
-                ...barLabel,
-                color: "#FFFFFF",
-                opacity: labelIn,
-                transform: `translateX(${(1 - labelIn) * -8 * u}px)`,
-              }}
-            >
-              {label === "remocn" ? (
-                <RemocnLogo fontSize={26 * u} color="#FFFFFF" />
-              ) : (
-                label
-              )}
-            </div>
-          )}
-        </div>
-
-        {hasGhost ? (
           <div
             style={{
               position: "absolute",
               left: x0,
-              top: ghostTop,
-              width: ghostW,
+              top: heroTop,
+              width: heroW,
               height: barH,
-              clipPath: `inset(-2px ${(1 - ghost) * 100}% -2px -2px)`,
+              borderRadius: radius * u,
+              overflow: "hidden",
+              backgroundImage: subject ? undefined : `${limbSheen}, ${limb}`,
+              clipPath: `inset(0 ${(1 - bar) * 100}% 0 0 round ${radius * u}px)`,
             }}
           >
-            <svg
-              width={ghostW}
-              height={barH}
-              style={{ position: "absolute", inset: 0, overflow: "visible" }}
-            >
-              <rect
-                x={stroke / 2}
-                y={stroke / 2}
-                width={ghostW - stroke}
-                height={barH - stroke}
-                rx={8 * u}
-                fill={p.ghostFill}
-                stroke={p.ghost}
-                strokeWidth={stroke}
-                strokeDasharray={`${7 * u} ${5 * u}`}
-              />
-            </svg>
+            {subject ?? (
+              <div
+                style={{
+                  ...barLabel,
+                  color: "#FFFFFF",
+                  opacity: labelIn,
+                  transform: `translateX(${(1 - labelIn) * -8 * u}px)`,
+                }}
+              >
+                {label === "remocn"
+                  ? (logo ?? <RemocnLogo fontSize={26 * u} color="#FFFFFF" />)
+                  : label}
+              </div>
+            )}
+          </div>
+
+          {hasGhost ? (
             <div
               style={{
-                ...barLabel,
-                color: p.muted,
-                opacity: ghostLabelIn,
+                position: "absolute",
+                left: x0,
+                top: ghostTop,
+                width: ghostW,
+                height: barH,
+                clipPath: `inset(-2px ${(1 - ghost) * 100}% -2px -2px)`,
               }}
             >
-              {beforeLabel}
+              <svg
+                width={ghostW}
+                height={barH}
+                style={{ position: "absolute", inset: 0, overflow: "visible" }}
+              >
+                <rect
+                  x={stroke / 2}
+                  y={stroke / 2}
+                  width={ghostW - stroke}
+                  height={barH - stroke}
+                  rx={radius * u}
+                  fill={p.ghostFill}
+                  stroke={p.ghost}
+                  strokeWidth={stroke}
+                  strokeDasharray={`${7 * u} ${5 * u}`}
+                />
+              </svg>
+              <div
+                style={{
+                  ...barLabel,
+                  color: p.muted,
+                  opacity: ghostLabelIn,
+                }}
+              >
+                {beforeLabel}
+              </div>
             </div>
-          </div>
-        ) : null}
-
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-        >
-          {ext(x0, heroTop - 8 * u, dimA - 16 * u, extA, p.line)}
-          {ext(x0 + heroW, heroTop - 8 * u, dimA - 16 * u, extA, p.line)}
-          {hasGhost ? (
-            <>
-              {ext(x0, ghostTop + barH + 8 * u, dimB + 16 * u, extB, p.ghost)}
-              {ext(
-                x0 + ghostW,
-                ghostTop + barH + 8 * u,
-                dimB + 16 * u,
-                extB,
-                p.ghost,
-              )}
-            </>
           ) : null}
-        </svg>
 
-        <Dimension
-          x0={x0}
-          x1={x0 + heroW}
-          y={dimA}
-          k={arrA}
-          value={value}
-          size={heroSize}
-          color={p.line}
-          textColor={p.fg}
-          unitColor={p.fg}
-          u={u}
-        />
-        {hasGhost ? (
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+          >
+            {ext(x0, heroTop - 8 * u, dimA - 16 * u, extA, p.line)}
+            {ext(x0 + heroW, heroTop - 8 * u, dimA - 16 * u, extA, p.line)}
+            {hasGhost ? (
+              <>
+                {ext(x0, ghostTop + barH + 8 * u, dimB + 16 * u, extB, p.ghost)}
+                {ext(
+                  x0 + ghostW,
+                  ghostTop + barH + 8 * u,
+                  dimB + 16 * u,
+                  extB,
+                  p.ghost,
+                )}
+              </>
+            ) : null}
+          </svg>
+
           <Dimension
             x0={x0}
-            x1={x0 + ghostW}
-            y={dimB}
-            k={arrB}
-            value={before}
-            size={ghostSize}
-            color={p.ghost}
-            textColor={p.muted}
-            unitColor={p.muted}
+            x1={x0 + heroW}
+            y={dimA}
+            k={arrA}
+            value={value}
+            size={heroSize}
+            color={p.line}
+            textColor={fg}
+            unitColor={fg}
+            fontFamily={fontFamily}
+            fontWeight={fontWeight}
             u={u}
           />
-        ) : null}
-      </AbsoluteFill>
+          {hasGhost ? (
+            <Dimension
+              x0={x0}
+              x1={x0 + ghostW}
+              y={dimB}
+              k={arrB}
+              value={before}
+              size={ghostSize}
+              color={p.ghost}
+              textColor={p.muted}
+              unitColor={p.muted}
+              fontFamily={fontFamily}
+              fontWeight={fontWeight}
+              u={u}
+            />
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
 
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

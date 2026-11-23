@@ -1,0 +1,124 @@
+{
+  "component": "rim-draw-card",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-cobalt",
+      "label": "Midnight Cobalt",
+      "description": "Deep cobalt ground with a cool blue rim light and crisp Geist type.",
+      "askedAs": [
+        "dark blue tech settings card",
+        "cool blue glowing edge card",
+        "sleek developer config panel",
+        "тёмно-синяя карточка настроек",
+        "холодный синий свет по краю"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "cobalt-rise",
+        "accent": "#6ea8fe",
+        "primary": "#3b6fe0",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "paper-studio",
+      "label": "Paper Studio",
+      "description": "Light paper ground with an editorial serif and a warm terracotta accent.",
+      "askedAs": [
+        "light editorial settings card",
+        "warm paper look with serif font",
+        "clean bright form reveal",
+        "светлая карточка в стиле бумаги",
+        "тёплый редакционный стиль с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "accent": "#c0613a",
+        "primary": "#2b2a28",
+        "ink": "#1e1d1b"
+      }
+    },
+    {
+      "id": "terminal-quick",
+      "label": "Terminal Quick",
+      "description": "Monospace charcoal card with a mint rim that draws and types fast.",
+      "askedAs": [
+        "fast terminal style card",
+        "monospace code settings panel",
+        "quick hacker-like typing reveal",
+        "быстрая карточка в стиле терминала",
+        "моноширинный шрифт и быстрый набор"
+      ],
+      "props": {
+        "ground": "charcoal-satin",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#5fd3a5",
+        "primary": "#2f9e78",
+        "typeRate": 4.4,
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "ember-slow",
+      "label": "Ember Glow",
+      "description": "Slow, cinematic ember-lit card with a copper rim and large scale.",
+      "askedAs": [
+        "slow dramatic warm glow card",
+        "cinematic orange edge light",
+        "big moody settings reveal",
+        "медленное драматичное тёплое свечение",
+        "крупная карточка с медным светом"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#e9a26b",
+        "primary": "#c46a35",
+        "speed": 0.5,
+        "typeRate": 1.2,
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "velvet-iris",
+      "label": "Velvet Iris",
+      "description": "Plush violet ground with a soft lilac rim and friendly Manrope type.",
+      "askedAs": [
+        "purple premium settings card",
+        "soft violet glow ui",
+        "elegant lilac product feature",
+        "фиолетовая премиальная карточка",
+        "мягкий сиреневый свет по краям"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "accent": "#b9a4f5",
+        "primary": "#7b5ce0",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "polar-compact",
+      "label": "Polar Compact",
+      "description": "Cool, airy light theme with a smaller card and an icy teal accent.",
+      "askedAs": [
+        "small light minimal card",
+        "icy clean settings form",
+        "compact white ui reveal",
+        "маленькая светлая минималистичная карточка",
+        "холодный бирюзовый светлый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "accent": "#2ba3b8",
+        "primary": "#1f7f94",
+        "ink": "#14232b",
+        "scale": 0.8
+      }
+    }
+  ]
+}

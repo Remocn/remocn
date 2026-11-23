@@ -1,0 +1,120 @@
+{
+  "component": "duet-split",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-punch",
+      "label": "Quick Punch",
+      "description": "Fast, tight row reveals with a short hold for snappy social cuts.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick reel version",
+        "snappy comparison for tiktok",
+        "быстрее и резче",
+        "динамичная версия для рилс"
+      ],
+      "props": {
+        "speed": 1.75,
+        "stagger": 7,
+        "hold": 10,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "Light paper ground with a serif face and a deep ink accent, paced calmly.",
+      "askedAs": [
+        "light magazine style",
+        "elegant serif version",
+        "clean white editorial look",
+        "светлый журнальный стиль",
+        "элегантно с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "accent": "#1f3a5f",
+        "speed": 0.75,
+        "stagger": 22
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "Warm dark ember ground with a copper accent for a cozy, premium feel.",
+      "askedAs": [
+        "warm orange dark look",
+        "cozy premium vibe",
+        "copper tones",
+        "тёплые оранжевые тона",
+        "тёмный с медным акцентом"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "ember",
+        "accent": "#e08a4b",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced type on near-black with a mint accent, for dev-tool comparisons.",
+      "askedAs": [
+        "developer style",
+        "code terminal look",
+        "monospace hacker vibe",
+        "стиль для разработчиков",
+        "как в терминале"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb68b",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "slow-statement",
+      "label": "Slow Statement",
+      "description": "Large type with slow, spaced reveals and a long hold on a cool blue-hour ground.",
+      "askedAs": [
+        "big and dramatic",
+        "slow cinematic reveal",
+        "let each row breathe",
+        "крупно и медленно",
+        "кинематографично"
+      ],
+      "props": {
+        "scale": 1.3,
+        "speed": 0.5,
+        "stagger": 34,
+        "hold": 60,
+        "ground": "blue-hour",
+        "delay": 12
+      }
+    },
+    {
+      "id": "greenhouse-fresh",
+      "label": "Fresh Green",
+      "description": "Light greenhouse ground with a forest-green accent and clean Manrope type.",
+      "askedAs": [
+        "fresh green look",
+        "eco friendly style",
+        "soft light green",
+        "свежий зелёный стиль",
+        "светлый эко вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "greenhouse",
+        "accent": "#2e7d5b",
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

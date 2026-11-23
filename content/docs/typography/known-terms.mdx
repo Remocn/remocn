@@ -45,8 +45,8 @@ export const RemotionRoot = () => (
   <Composition
     id="KnownTerms"
     component={KnownTermsScene}
-    durationInFrames={180}
-    fps={30}
+    durationInFrames={360}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -70,14 +70,43 @@ A term appears alone in the center, then slides left as its counterpart pushes i
       description: "Default connector word shown between the two halves.",
     },
     {
+      name: "hold",
+      type: "number",
+      default: "33",
+      description: "Frames the last pair holds at the end.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of the final pair; overrides the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Epilogue\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

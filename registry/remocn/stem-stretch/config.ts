@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const stemStretchConfig: ComponentConfig = {
   componentName: "StemStretch",
@@ -12,11 +18,6 @@ export const stemStretchConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     value: {
       type: "text-content",
@@ -37,6 +38,30 @@ export const stemStretchConfig: ComponentConfig = {
       description: "Steps",
       hiddenFromList: false,
     },
+    snapGap: {
+      type: "number",
+      default: 12,
+      min: 2,
+      max: 30,
+      step: 1,
+      description: "Snap gap (frames)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Instrument Sans", grain: true }),
     speed: {
       type: "number",
       default: 1,

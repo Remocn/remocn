@@ -1,0 +1,89 @@
+{
+  "component": "slider",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-drag",
+      "label": "Quick Drag",
+      "description": "A fast, snappy drag with the thumb pressed and the value readout visible.",
+      "askedAs": [
+        "fast slider drag",
+        "snappy pressed slider",
+        "quick value change",
+        "быстрый слайдер",
+        "резкое перетаскивание ползунка"
+      ],
+      "props": {
+        "speed": 2.5,
+        "thumbState": "press"
+      }
+    },
+    {
+      "id": "slow-hover",
+      "label": "Slow Hover",
+      "description": "A slow, gentle glide with the thumb in its hover state for calm walkthroughs.",
+      "askedAs": [
+        "slow smooth slider",
+        "calm hover slider",
+        "gentle slider animation",
+        "медленный плавный слайдер",
+        "спокойный ползунок при наведении"
+      ],
+      "props": {
+        "speed": 0.5,
+        "thumbState": "hover"
+      }
+    },
+    {
+      "id": "wide-minimal",
+      "label": "Wide Minimal",
+      "description": "A long, unlabeled track that reads as a clean, minimal control.",
+      "askedAs": [
+        "wide slider without number",
+        "minimal long slider",
+        "clean track no label",
+        "широкий слайдер без цифр",
+        "минималистичный длинный ползунок"
+      ],
+      "props": {
+        "width": 600,
+        "showValue": false,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "compact-chip",
+      "label": "Compact",
+      "description": "A short, compact slider with a quick idle motion suited to dense settings panels.",
+      "askedAs": [
+        "small compact slider",
+        "short slider for settings",
+        "tiny range control",
+        "компактный слайдер",
+        "маленький ползунок для настроек"
+      ],
+      "props": {
+        "width": 160,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "hero-press",
+      "label": "Hero Press",
+      "description": "A wide, slow-moving slider held in the pressed state for a deliberate hero moment.",
+      "askedAs": [
+        "big dramatic slider",
+        "wide pressed slider slow",
+        "hero slider shot",
+        "большой слайдер крупным планом",
+        "медленный нажатый ползунок"
+      ],
+      "props": {
+        "width": 520,
+        "speed": 0.25,
+        "thumbState": "press"
+      }
+    }
+  ]
+}

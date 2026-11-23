@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/DMSans";
+import type React from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -9,9 +10,9 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const face = loadFont("normal", {
   weights: ["400"],
@@ -25,7 +26,21 @@ export interface TittleDropProps {
   subline?: string;
   /** Which landing dot takes the accent (0-based, negative counts from the end). */
   accentDot?: number;
+  /** Frames between words setting in. */
+  stagger?: number;
+  /** Frames between one dot hopping out of the bubble and the next. */
+  hopGap?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; DM Sans by default. */
+  fontFamily?: string;
+  /** Size of the line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -163,17 +178,48 @@ function sameLayout(a: Layout | null, b: Layout) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  style,
+  children,
+}: {
+  scale: number;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ ...style, transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TittleDrop({
   title = "Ship it in minutes.",
   subline = "Launch videos from ready-made Remotion components.",
   accentDot = -1,
+  stagger = WORD_STAGGER,
+  hopGap = HOP_GAP,
   accent = "#3B5BFD",
+  ink: inkColor,
+  background,
+  fontFamily = face.fontFamily,
+  scale = 1,
+  delay = 0,
   theme = "light",
   speed = 1,
 }: TittleDropProps) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
+  const fg = inkColor ?? t.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? t.bg);
 
   const fontSize = Math.round(width * 0.076);
   const subSize = Math.round(width * 0.0165);
@@ -194,8 +240,11 @@ export function TittleDrop({
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-measure when the copy or size changes
   useLayoutEffect(() => {
     let live = true;
+    const family = fontFamily.includes('"') ? fontFamily : `"${fontFamily}"`;
     face
       .waitUntilDone()
+      .catch(() => undefined)
+      .then(() => document.fonts.load(`400 ${fontSize}px ${family}`))
       .catch(() => undefined)
       .then(() => document.fonts.ready)
       .then(() => {
@@ -203,9 +252,6 @@ export function TittleDrop({
         const row = rowRef.current;
         const base = baseRef.current;
         if (row && base) {
-          const family = face.fontFamily.includes('"')
-            ? face.fontFamily
-            : `"${face.fontFamily}"`;
           const rowRect = row.getBoundingClientRect();
           // Studio scales the stage; work in unscaled composition pixels.
           const scale = rowRect.width / row.offsetWidth || 1;
@@ -247,115 +293,169 @@ export function TittleDrop({
     return () => {
       live = false;
     };
-  }, [title, fontSize, handle]);
+  }, [title, fontSize, fontFamily, handle]);
 
   const targets = layout?.targets ?? [];
   const n = targets.length;
   const d = layout?.dot ?? fontSize * 0.12;
   const accentIndex = n === 0 ? -1 : ((accentDot % n) + n) % n;
 
-  // The bubble: in, alone and large, then up to its place above the line.
-  const bubbleIn = interpolate(frame, [BUBBLE_IN, BUBBLE_IN + 16], [0, 1], {
-    ...clamp,
-    easing: EASE_OUT,
-  });
-  const rise = interpolate(frame, [RISE, RISE + RISE_LEN], [0, 1], {
-    ...clamp,
-    easing: EASE_IN_OUT,
-  });
-  const rowW = layout?.rowW ?? 0;
-  const rowH = layout?.rowH ?? 0;
-  const bubbleX = rowW / 2;
-  const bubbleY = interpolate(rise, [0, 1], [rowH / 2, -fontSize * 0.42]);
-  const bubbleScale =
-    interpolate(rise, [0, 1], [SOLO_SCALE, REST_SCALE]) *
-    interpolate(bubbleIn, [0, 1], [0.86, 1]);
+  const hopStart = (k: number) => HOP0 + k * hopGap;
 
-  // Queue: three dots wait in the bubble, the front one hops, the rest shuffle
-  // forward and a new one surfaces at the back until the line is dotted.
-  const hopStart = (k: number) => HOP0 + k * HOP_GAP;
-  let departed = 0;
-  for (let k = 0; k < n; k++) {
-    departed += interpolate(
-      frame,
-      [hopStart(k) + 2, hopStart(k) + 2 + SHIFT_LEN],
-      [0, 1],
-      { ...clamp, easing: EASE_IN_OUT },
-    );
-  }
-  const waiting = n === 0 ? 3 : Math.min(3, n - departed);
-  const gap = d * 2.05;
-  const padX = d * 1.35;
-  const bubbleW = 2 * padX + Math.max(0, waiting - 1) * gap + d;
-  const bubbleH = d * 3.3;
-  // Once the last dot leaves, the empty bubble folds away.
-  const empty = Math.min(1, waiting);
-  const bubbleOpacity = bubbleIn * empty ** 3;
-  const bubbleK = bubbleScale * (0.4 + 0.6 * empty);
+  // The whole bubble-and-dots geometry is a function of the frame, so a dot
+  // can be compared with its neighbouring frames to tell motion from rest.
+  const geometry = (f: number) => {
+    // The bubble: in, alone and large, then up to its place above the line.
+    const bubbleIn = interpolate(f, [BUBBLE_IN, BUBBLE_IN + 16], [0, 1], {
+      ...clamp,
+      easing: EASE_OUT,
+    });
+    const rise = interpolate(f, [RISE, RISE + RISE_LEN], [0, 1], {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    });
+    const rowW = layout?.rowW ?? 0;
+    const rowH = layout?.rowH ?? 0;
+    const bubbleX = rowW / 2;
+    const bubbleY = interpolate(rise, [0, 1], [rowH / 2, -fontSize * 0.42]);
+    const bubbleScale =
+      interpolate(rise, [0, 1], [SOLO_SCALE, REST_SCALE]) *
+      interpolate(bubbleIn, [0, 1], [0.86, 1]);
 
-  const slotX = (slot: number) =>
-    bubbleX + (slot - (waiting - 1) / 2) * gap * bubbleScale;
-  const bounce = (slot: number) => {
-    const u = (((frame - slot * 5) % 26) + 26) % 26;
-    return u < 13 ? Math.sin((u / 13) * Math.PI) : 0;
-  };
+    // Queue: three dots wait in the bubble, the front one hops, the rest shuffle
+    // forward and a new one surfaces at the back until the line is dotted.
+    let departed = 0;
+    for (let k = 0; k < n; k++) {
+      departed += interpolate(
+        f,
+        [hopStart(k) + 2, hopStart(k) + 2 + SHIFT_LEN],
+        [0, 1],
+        { ...clamp, easing: EASE_IN_OUT },
+      );
+    }
+    const waiting = n === 0 ? 3 : Math.min(3, n - departed);
+    const gap = d * 2.05;
+    const padX = d * 1.35;
+    const bubbleW = 2 * padX + Math.max(0, waiting - 1) * gap + d;
+    const bubbleH = d * 3.3;
+    // Once the last dot leaves, the empty bubble folds away.
+    const empty = Math.min(1, waiting);
+    const bubbleOpacity = bubbleIn * empty ** 3;
+    const bubbleK = bubbleScale * (0.4 + 0.6 * empty);
 
-  let lastLand = HOP0;
-  if (n > 0) lastLand = hopStart(n - 1) + HOP_LEN;
+    const slotX = (slot: number) =>
+      bubbleX + (slot - (waiting - 1) / 2) * gap * bubbleScale;
+    const bounce = (slot: number) => {
+      const u = (((f - slot * 5) % 26) + 26) % 26;
+      return u < 13 ? Math.sin((u / 13) * Math.PI) : 0;
+    };
 
-  const dots = targets.map((target, k) => {
-    const start = hopStart(k);
-    const land = start + HOP_LEN;
-    const isAccent = k === accentIndex;
-    const ink = isAccent ? accent : t.fg;
-    if (frame < start) {
-      const slot = k - departed;
-      if (slot > 3) return null;
-      const show = interpolate(slot, [2, 3], [1, 0], clamp);
-      const b = bounce(Math.round(slot));
-      const pre = interpolate(frame, [start - 3, start], [0, 1], clamp);
+    let lastLand = HOP0;
+    if (n > 0) lastLand = hopStart(n - 1) + HOP_LEN;
+
+    const dots = targets.map((target, k) => {
+      const start = hopStart(k);
+      const land = start + HOP_LEN;
+      const isAccent = k === accentIndex;
+      const ink = isAccent ? accent : fg;
+      if (f < start) {
+        const slot = k - departed;
+        if (slot > 3) return null;
+        const show = interpolate(slot, [2, 3], [1, 0], clamp);
+        const b = bounce(Math.round(slot));
+        const pre = interpolate(f, [start - 3, start], [0, 1], clamp);
+        return {
+          key: k,
+          x: slotX(slot),
+          y: bubbleY - b * d * 0.42 * bubbleScale,
+          w: d * bubbleScale,
+          h: d * bubbleScale * (1 - pre * 0.22),
+          sx: 1 + pre * 0.12,
+          color: t.muted,
+          opacity: bubbleIn * show * (0.55 + 0.45 * b),
+        };
+      }
+      const p = interpolate(f, [start, land], [0, 1], clamp);
+      const sx0 = slotX(0);
+      const x = interpolate(p, [0, 1], [sx0, target.x]);
+      const lift = fontSize * 0.42 + Math.max(0, bubbleY - target.y) * 0.5;
+      const y =
+        interpolate(p, [0, 1], [bubbleY, target.y]) - lift * 4 * p * (1 - p);
+      const dt = f - land;
+      const squash =
+        dt >= 0 ? Math.exp(-dt / 4.5) * Math.cos(dt * 0.5) * 0.3 : 0;
+      const stretch = dt < 0 ? Math.sin(p * Math.PI) * 0.12 : 0;
+      const colorP = interpolate(p, [0, 0.6], [0, 1], clamp);
       return {
         key: k,
-        x: slotX(slot),
-        y: bubbleY - b * d * 0.42 * bubbleScale,
-        w: d * bubbleScale,
-        h: d * bubbleScale * (1 - pre * 0.22),
-        sx: 1 + pre * 0.12,
-        color: t.muted,
-        opacity: bubbleIn * show * (0.55 + 0.45 * b),
+        x,
+        y,
+        w: interpolate(p, [0, 1], [d * bubbleScale, target.w]),
+        h: interpolate(p, [0, 1], [d * bubbleScale, target.h]),
+        sx: (1 + squash * 0.8) * (1 - stretch * 0.5),
+        sy: (1 - squash) * (1 + stretch),
+        color: interpolateColors(colorP, [0, 1], [t.muted, ink]),
+        opacity: 1,
       };
-    }
-    const p = interpolate(frame, [start, land], [0, 1], clamp);
-    const sx0 = slotX(0);
-    const x = interpolate(p, [0, 1], [sx0, target.x]);
-    const lift = fontSize * 0.42 + Math.max(0, bubbleY - target.y) * 0.5;
-    const y =
-      interpolate(p, [0, 1], [bubbleY, target.y]) - lift * 4 * p * (1 - p);
-    const dt = frame - land;
-    const squash = dt >= 0 ? Math.exp(-dt / 4.5) * Math.cos(dt * 0.5) * 0.3 : 0;
-    const stretch = dt < 0 ? Math.sin(p * Math.PI) * 0.12 : 0;
-    const colorP = interpolate(p, [0, 0.6], [0, 1], clamp);
+    });
     return {
-      key: k,
-      x,
-      y,
-      w: interpolate(p, [0, 1], [d * bubbleScale, target.w]),
-      h: interpolate(p, [0, 1], [d * bubbleScale, target.h]),
-      sx: (1 + squash * 0.8) * (1 - stretch * 0.5),
-      sy: (1 - squash) * (1 + stretch),
-      color: interpolateColors(colorP, [0, 1], [t.muted, ink]),
-      opacity: 1,
+      bubbleIn,
+      bubbleX,
+      bubbleY,
+      bubbleW,
+      bubbleH,
+      bubbleOpacity,
+      bubbleK,
+      lastLand,
+      dots,
     };
-  });
+  };
+  const {
+    bubbleIn,
+    bubbleX,
+    bubbleY,
+    bubbleW,
+    bubbleH,
+    bubbleOpacity,
+    bubbleK,
+    lastLand,
+    dots,
+  } = geometry(frame);
+  const prevDots = geometry(frame - 1).dots;
+  const nextDots = geometry(frame + 1).dots;
+  const dotMoves = (k: number) => {
+    const now = dots[k];
+    if (!now) return false;
+    return [prevDots[k], nextDots[k]].some(
+      (o) =>
+        !o ||
+        Math.abs(o.x - now.x) > 1e-3 ||
+        Math.abs(o.y - now.y) > 1e-3 ||
+        Math.abs(o.w - now.w) > 1e-3 ||
+        Math.abs(o.h - now.h) > 1e-3 ||
+        Math.abs(o.sx - now.sx) > 1e-5 ||
+        Math.abs((o.sy ?? 1) - (now.sy ?? 1)) > 1e-5,
+    );
+  };
 
   // A tiny give in the stem the moment its dot lands.
-  const dip = (glyph: number) => {
+  const dip = (glyph: number, f: number) => {
     const k = targets.findIndex((x) => x.glyph === glyph);
     if (k < 0) return 0;
-    const dt = frame - (hopStart(k) + HOP_LEN);
+    const dt = f - (hopStart(k) + HOP_LEN);
     if (dt < 0 || dt > 9) return 0;
     return Math.sin((dt / 9) * Math.PI) * fontSize * 0.028;
   };
+  const setIn = (w: number, f: number) =>
+    interpolate(f, [SET + w * stagger, SET + w * stagger + SET_LEN], [0, 1], {
+      ...clamp,
+      easing: EASE_OUT,
+    });
+  const words: number[][] = [];
+  chars.forEach((_, i) => {
+    words[wordOf[i]] ??= [];
+    words[wordOf[i]].push(i);
+  });
 
   const subStart = lastLand + 8;
   const subP = interpolate(frame, [subStart, subStart + 30], [0, 1], {
@@ -366,110 +466,162 @@ export function TittleDrop({
   return (
     <AbsoluteFill
       style={{
-        background: t.bg,
+        background: stage,
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: face.fontFamily,
+        fontFamily,
       }}
     >
-      <div
-        ref={rowRef}
-        style={{
-          position: "relative",
-          whiteSpace: "pre",
-          fontSize,
-          fontWeight: 400,
-          letterSpacing: "-0.03em",
-          lineHeight: 1.2,
-          color: t.fg,
-          marginTop: height * 0.02,
-        }}
+      <ScaleLayer
+        scale={scale}
+        style={{ alignItems: "center", justifyContent: "center" }}
       >
-        {chars.map((ch, i) => {
-          const isStop = hasStop && i === chars.length - 1;
-          const p = interpolate(
-            frame,
-            [
-              SET + wordOf[i] * WORD_STAGGER,
-              SET + wordOf[i] * WORD_STAGGER + SET_LEN,
-            ],
-            [0, 1],
-            { ...clamp, easing: EASE_OUT },
-          );
-          return (
-            <span
-              key={i}
-              ref={(el) => {
-                glyphRefs.current[i] = el;
-              }}
-              style={{
-                position: "relative",
-                top: (1 - p) * fontSize * 0.2 + dip(i),
-                opacity: isStop ? 0 : p,
-                filter: p < 1 ? `blur(${(1 - p) * 9}px)` : undefined,
-              }}
-            >
-              {DOTLESS[ch] ?? ch}
-            </span>
-          );
-        })}
-        <span
-          ref={baseRef}
-          style={{ display: "inline-block", width: 0, height: 0 }}
-        />
         <div
+          ref={rowRef}
           style={{
-            position: "absolute",
-            left: bubbleX - (bubbleW * bubbleK) / 2,
-            top: bubbleY - (bubbleH * bubbleK) / 2,
-            width: bubbleW * bubbleK,
-            height: bubbleH * bubbleK,
-            borderRadius: (bubbleH * bubbleK) / 2,
-            background: t.bubble,
-            opacity: layout ? bubbleOpacity : 0,
-            filter: bubbleIn < 1 ? `blur(${(1 - bubbleIn) * 8}px)` : undefined,
-          }}
-        />
-        {layout
-          ? dots.map((dot) =>
-              dot ? (
-                <div
-                  key={dot.key}
-                  style={{
-                    position: "absolute",
-                    left: dot.x - dot.w / 2,
-                    top: dot.y - dot.h / 2,
-                    width: dot.w,
-                    height: dot.h,
-                    borderRadius: "50%",
-                    background: dot.color,
-                    opacity: dot.opacity,
-                    transformOrigin: "50% 100%",
-                    transform: `scale(${dot.sx}, ${dot.sy ?? 1})`,
-                  }}
-                />
-              ) : null,
-            )
-          : null}
-        <div
-          style={{
-            position: "absolute",
-            left: "50%",
-            top: "100%",
-            marginTop: fontSize * 0.36,
-            transform: `translate(-50%, ${(1 - subP) * 12}px)`,
-            whiteSpace: "nowrap",
-            fontSize: subSize,
-            letterSpacing: "-0.005em",
-            lineHeight: 1.4,
-            color: t.muted,
-            opacity: subP,
-            filter: `blur(${(1 - subP) * 8}px)`,
+            position: "relative",
+            whiteSpace: "pre",
+            fontSize,
+            fontWeight: 400,
+            letterSpacing: "-0.03em",
+            lineHeight: 1.2,
+            color: fg,
+            marginTop: height * 0.02,
           }}
         >
-          {subline}
+          {words.map((word, w) => {
+            const p = setIn(w, frame);
+            const y = (1 - p) * fontSize * 0.2;
+            const moving =
+              Math.abs(setIn(w, frame + 1) - p) * fontSize * 0.2 > 1e-3 ||
+              Math.abs(p - setIn(w, frame - 1)) * fontSize * 0.2 > 1e-3;
+            return (
+              // Layout rounds a baseline to whole pixels, so a word eased by
+              // `top` clicks down pixel by pixel; the drop is a transform on
+              // the word instead. One box per word keeps the kerning inside it.
+              <span
+                key={w}
+                style={{
+                  display: "inline-block",
+                  // Kept at zero once set: the mark rides on it, and text
+                  // that lost its transform at rest would snap to the grid.
+                  transform: `translateY(${Math.abs(y) < 1e-3 ? 0 : y}px)${glide(moving)}`,
+                  opacity: p,
+                  filter: p < 1 ? `blur(${(1 - p) * 9}px)` : undefined,
+                }}
+              >
+                {word.map((i) => {
+                  const ch = chars[i];
+                  const isStop = hasStop && i === chars.length - 1;
+                  // Layout rounds a baseline to whole pixels, so a stem
+                  // dipped by `top` steps unevenly; while it gives, the dip is
+                  // a transform (an inline box takes none, hence inline-block).
+                  // At rest the glyph stays a plain inline span.
+                  const give = dip(i, frame);
+                  const giving = Math.abs(give) > 1e-3;
+                  return (
+                    <span
+                      key={i}
+                      ref={(el) => {
+                        glyphRefs.current[i] = el;
+                      }}
+                      style={{
+                        position: "relative",
+                        display: giving ? "inline-block" : undefined,
+                        transform: giving
+                          ? `translateY(${give}px)${glide(!moving)}`
+                          : undefined,
+                        opacity: isStop ? 0 : 1,
+                      }}
+                    >
+                      {DOTLESS[ch] ?? ch}
+                    </span>
+                  );
+                })}
+              </span>
+            );
+          })}
+          <span
+            ref={baseRef}
+            style={{ display: "inline-block", width: 0, height: 0 }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: bubbleX - (bubbleW * bubbleK) / 2,
+              top: bubbleY - (bubbleH * bubbleK) / 2,
+              width: bubbleW * bubbleK,
+              height: bubbleH * bubbleK,
+              borderRadius: (bubbleH * bubbleK) / 2,
+              background: t.bubble,
+              opacity: layout ? bubbleOpacity : 0,
+              filter:
+                bubbleIn < 1 ? `blur(${(1 - bubbleIn) * 8}px)` : undefined,
+            }}
+          />
+          {layout
+            ? dots.map((dot) =>
+                dot ? (
+                  dotMoves(dot.key) ? (
+                    // Layout rounds a box's edges to whole pixels, so a dot
+                    // carried by left/top/width/height steps a pixel at a
+                    // time. While it moves, a unit dot is placed and sized by
+                    // transform instead; at rest it keeps the original box.
+                    <div
+                      key={dot.key}
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        width: d,
+                        height: d,
+                        borderRadius: "50%",
+                        background: dot.color,
+                        opacity: dot.opacity,
+                        transformOrigin: "0 0",
+                        transform: `translate(${dot.x}px, ${dot.y + dot.h / 2}px) scale(${(dot.sx * dot.w) / d}, ${((dot.sy ?? 1) * dot.h) / d}) translate(${-d / 2}px, ${-d}px)`,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      key={dot.key}
+                      style={{
+                        position: "absolute",
+                        left: dot.x - dot.w / 2,
+                        top: dot.y - dot.h / 2,
+                        width: dot.w,
+                        height: dot.h,
+                        borderRadius: "50%",
+                        background: dot.color,
+                        opacity: dot.opacity,
+                        transformOrigin: "50% 100%",
+                        transform: `scale(${dot.sx}, ${dot.sy ?? 1})`,
+                      }}
+                    />
+                  )
+                ) : null,
+              )
+            : null}
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "100%",
+              marginTop: fontSize * 0.36,
+              transform: `translate(-50%, ${(1 - subP) * 12}px)${glide(midway(subP))}`,
+              whiteSpace: "nowrap",
+              fontSize: subSize,
+              letterSpacing: "-0.005em",
+              lineHeight: 1.4,
+              color: t.muted,
+              opacity: subP,
+              filter: `blur(${(1 - subP) * 8}px)`,
+            }}
+          >
+            {subline}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

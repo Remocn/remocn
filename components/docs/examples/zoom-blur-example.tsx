@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { zoomBlur } from "@/registry/remocn/zoom-blur";
 
 const FONT_FAMILY =
@@ -37,16 +38,17 @@ interface ZoomBlurExampleProps {
 }
 
 export function ZoomBlurExampleScene({ blur, rise }: ZoomBlurExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <Scene label="Scene A" background="#141318" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 18 })}
+        timing={linearTiming({ durationInFrames: toFrames(18) })}
         presentation={zoomBlur({ blur, rise })}
       />
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <Scene label="Zoom Blur" background="#1a1922" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -63,14 +65,14 @@ import { zoomBlur } from "@/components/remocn/zoom-blur";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 18 })}
+      timing={linearTiming({ durationInFrames: 36 })}
       presentation={zoomBlur({ blur: ${blur}, rise: ${rise} })}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

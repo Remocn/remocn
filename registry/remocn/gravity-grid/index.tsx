@@ -4,14 +4,9 @@ import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -59,6 +54,22 @@ export interface GravityGridProps {
   /** Small line under the name. Pass an empty string to hide it. */
   caption?: string;
   accent?: string;
+  /** Color of the name and logo; overrides the theme ink. */
+  ink?: string;
+  /** Background fill under the grid; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the name and caption. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Frame the mass lands at the bottom of the well. */
+  impactAt?: number;
+  /** How deep the mass pulls the grid. */
+  wellDepth?: number;
+  /** Size of the name lockup, around the frame's center; the grid stays put. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -144,32 +155,58 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GravityGrid({
   logo,
   name = "remocn",
   caption = "Launch videos, in components.",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  impactAt: impact = IMPACT,
+  wellDepth = DEPTH,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: GravityGridProps) {
-  const t = useCurrentFrame() * speed;
-  const { width, height } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const pal = THEMES[theme];
+  const fg = ink ?? pal.fg;
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   // ---- the mass: accelerates down, lands, the well overshoots and settles ----
-  const fallP = interpolate(t, [14, IMPACT], [0, 1], CLAMP);
+  const fallP = interpolate(t, [14, impact], [0, 1], CLAMP);
   const fall = fallP ** 2.2;
-  const after = Math.max(0, t - IMPACT);
+  const after = Math.max(0, t - impact);
   const bounce =
-    t > IMPACT ? 0.12 * Math.exp(-after / 9) * Math.sin(after / 3.2) : 0;
-  const depth = DEPTH * (fall + bounce);
-  const massY = interpolate(fall, [0, 1], [7, -DEPTH + 0.9]);
+    t > impact ? 0.12 * Math.exp(-after / 9) * Math.sin(after / 3.2) : 0;
+  const depth = wellDepth * (fall + bounce);
+  const massY = interpolate(fall, [0, 1], [7, -wellDepth + 0.9]);
 
   // ---- one ripple from the impact ----
   const ripR = after * 0.42;
-  const ripAmp = t > IMPACT ? 0.55 * Math.exp(-after / 34) : 0;
+  const ripAmp = t > impact ? 0.55 * Math.exp(-after / 34) : 0;
   const rippleAt = (r: number) => {
     if (ripAmp <= 0.001) return 0;
     const dr = r - ripR;
@@ -189,7 +226,7 @@ export function GravityGrid({
   };
 
   // ---- camera: slow push in, tilting down to follow the mass ----
-  const follow = interpolate(t, [10, IMPACT + 18], [0, 1], {
+  const follow = interpolate(t, [10, impact + 18], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -200,7 +237,7 @@ export function GravityGrid({
   });
   const f = height * 1.3;
   // look at the rim first, then down into the well as the mass sinks
-  const lookY = -DEPTH * 0.92 * follow;
+  const lookY = -wellDepth * 0.92 * follow;
   const pitch =
     Math.atan2(camH - lookY, WELL_Z - camZ) -
     Math.atan((0.03 * height) / f) * (1 - follow);
@@ -221,11 +258,11 @@ export function GravityGrid({
   };
 
   // ---- lockup at the bottom of the well ----
-  const lockIn = interpolate(t, [IMPACT + 6, IMPACT + 32], [0, 1], {
+  const lockIn = interpolate(t, [impact + 6, impact + 32], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const capIn = interpolate(t, [IMPACT + 18, IMPACT + 40], [0, 1], {
+  const capIn = interpolate(t, [impact + 18, impact + 40], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -296,7 +333,14 @@ export function GravityGrid({
   const horizonY = height / 2 - f * Math.tan(pitch);
   const scaleAtBottom = f / bottom.zc / (height * 0.072);
   const lift = (1 - lockIn) * 14 * u;
-  const markSize = 62 * u * scaleAtBottom;
+  // The lockup grows with the camera the whole time. Its font sizes and gaps
+  // would reflow it frame by frame, and layout rounds every baseline to whole
+  // pixels, so it is laid out once at the camera's unit size and grown by a
+  // transform instead. A logo you pass in keeps its own size, so that lockup
+  // keeps the original layout.
+  const lockK = logo ? 1 : scaleAtBottom;
+  const lockS = logo ? scaleAtBottom : 1;
+  const markSize = 62 * u * lockS;
   const glowR = height * 0.34;
   const ringRx = height * 0.42 * (0.9 + 0.1 * lockIn) * (1 + ripAmp * 0.25);
   const ringRy = ringRx * Math.max(0.2, Math.sin(pitch) * 0.62);
@@ -304,13 +348,19 @@ export function GravityGrid({
   const massR = (6 * u * f) / Math.max(1, massS.zc) / (height * 0.072);
   const massO =
     interpolate(t, [10, 22], [0, 1], CLAMP) *
-    (1 - interpolate(t, [IMPACT - 2, IMPACT + 10], [0, 1], CLAMP));
+    (1 - interpolate(t, [impact - 2, impact + 10], [0, 1], CLAMP));
   const mixA = (c: string, a: number) =>
     `color-mix(in oklab, ${c} ${Math.round(Math.max(0, Math.min(1, a)) * 100)}%, transparent)`;
   const glowO = pal.glow * (0.35 * fall + 0.65 * lockIn) * (1 + ripAmp * 0.6);
 
   return (
-    <AbsoluteFill style={{ background: pal.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? pal.bg),
+        overflow: "hidden",
+      }}
+    >
       {/* the light at the bottom of the well */}
       <AbsoluteFill
         style={{
@@ -369,105 +419,124 @@ export function GravityGrid({
       {/* the mass: a bright accent bead that sinks and becomes the light */}
       <div
         style={{
+          // The bead falls and shrinks the whole time it shows. A box on
+          // left/top/width/height snaps its edges to whole pixels, so it is
+          // laid out once at a unit size and carried by a transform.
           position: "absolute",
-          left: massS.x - massR,
-          top: massS.y - massR,
-          width: massR * 2,
-          height: massR * 2,
+          left: 0,
+          top: 0,
+          width: 2 * u,
+          height: 2 * u,
           borderRadius: "50%",
           background: accent,
-          boxShadow: `0 0 ${massR * 3}px ${massR}px ${mixA(accent, 0.45)}`,
+          boxShadow: `0 0 ${3 * u}px ${u}px ${mixA(accent, 0.45)}`,
+          transformOrigin: "0 0",
+          transform: `translate(${massS.x - massR}px, ${massS.y - massR}px) scale(${massR / u})`,
           opacity: massO,
         }}
       />
 
       {/* the name settles where the mass came to rest */}
-      <div
-        style={{
-          position: "absolute",
-          left: bottom.x,
-          top: bottom.y,
-          transform: `translate(-50%, -50%) translateY(${lift}px)`,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 14 * u * scaleAtBottom,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
+            // The camera carries the name the whole time. Layout rounds a box
+            // and a baseline to whole pixels, so riding on left/top it clicks
+            // pixel by pixel; the ride is a transform, tilted while it shows.
             position: "absolute",
-            left: "50%",
-            top: "50%",
-            width: markSize * 6.2,
-            height: markSize * 3.4,
-            transform: "translate(-50%, -50%)",
-            background: `radial-gradient(ellipse closest-side, ${pal.pool}, transparent)`,
-            opacity: lockIn * 0.95,
-          }}
-        />
-        <div
-          style={{
-            position: "relative",
+            left: 0,
+            top: 0,
+            transformOrigin: "0 0",
+            transform: `translate(${bottom.x}px, ${bottom.y + lift}px) scale(${lockK})${glide(lockIn > 0)} translate(-50%, -50%)`,
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
-            gap: 10 * u * scaleAtBottom,
-            opacity: lockIn,
-            filter: `blur(${(1 - lockIn) * 6 * u}px)`,
-            transform: `scale(${0.94 + lockIn * 0.06})`,
+            gap: 14 * u * lockS,
           }}
         >
-          {logo ? (
-            <>
-              {logo}
-              <div
-                style={{
-                  fontFamily: sans,
-                  fontWeight: 500,
-                  fontSize: markSize * 0.95,
-                  lineHeight: 1,
-                  letterSpacing: "-0.035em",
-                  color: pal.fg,
-                }}
-              >
-                {name}
-              </div>
-            </>
-          ) : (
-            <RemocnLogo fontSize={markSize * 1.02} color={pal.fg} />
-          )}
-        </div>
-        {caption ? (
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              width: markSize * 6.2,
+              height: markSize * 3.4,
+              transform: "translate(-50%, -50%)",
+              background: `radial-gradient(ellipse closest-side, ${pal.pool}, transparent)`,
+              opacity: lockIn * 0.95,
+            }}
+          />
           <div
             style={{
               position: "relative",
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 18 * u * scaleAtBottom,
-              letterSpacing: "0em",
-              color: pal.muted,
-              opacity: capIn,
-              transform: `translateY(${(1 - capIn) * 8 * u}px)`,
-              whiteSpace: "nowrap",
+              display: "flex",
+              alignItems: "center",
+              gap: 10 * u * lockS,
+              opacity: lockIn,
+              filter: `blur(${((1 - lockIn) * 6 * u) / lockK}px)`,
+              transform: `scale(${0.94 + lockIn * 0.06})`,
             }}
           >
-            {caption}
+            {logo ? (
+              <>
+                {logo}
+                <div
+                  style={{
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: markSize * 0.95,
+                    lineHeight: 1,
+                    letterSpacing: "-0.035em",
+                    color: fg,
+                  }}
+                >
+                  {name}
+                </div>
+              </>
+            ) : (
+              <RemocnLogo fontSize={markSize * 1.02} color={fg} />
+            )}
           </div>
-        ) : null}
-      </div>
+          {caption ? (
+            <div
+              style={{
+                position: "relative",
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 18 * u * lockS,
+                letterSpacing: "0em",
+                color: pal.muted,
+                opacity: capIn,
+                transform: `translateY(${((1 - capIn) * 8 * u) / lockK}px)`,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {caption}
+            </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
 
       {/* atmospheric falloff toward the horizon */}
-      <AbsoluteFill
-        style={{
-          background: `linear-gradient(to bottom, ${pal.bg} ${Math.max(0, horizonY + height * 0.03)}px, ${pal.bg}00 ${horizonY + height * 0.38}px)`,
-        }}
-      />
+      {background === undefined ? (
+        <AbsoluteFill
+          style={{
+            background: `linear-gradient(to bottom, ${pal.bg} ${Math.max(0, horizonY + height * 0.03)}px, ${pal.bg}00 ${horizonY + height * 0.38}px)`,
+          }}
+        />
+      ) : background === "transparent" ? null : (
+        <AbsoluteFill
+          style={{
+            background: `linear-gradient(to bottom, ${background} ${Math.max(0, horizonY + height * 0.03)}px, transparent ${horizonY + height * 0.38}px)`,
+          }}
+        />
+      )}
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 80% 75% at 50% 50%, transparent 50%, ${pal.vignette} 100%)`,
         }}
       />
-      <Grain opacity={pal.grain} />
+      {grain ? <Grain opacity={pal.grain} /> : null}
     </AbsoluteFill>
   );
 }

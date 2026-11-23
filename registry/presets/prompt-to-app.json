@@ -1,0 +1,119 @@
+{
+  "component": "prompt-to-app",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-ship",
+      "label": "Midnight Ship",
+      "description": "Dark interface on a deep blue-hour ground with a cool violet accent and a confident, slightly quicker build.",
+      "askedAs": [
+        "dark mode version for a launch video",
+        "night themed AI builder demo",
+        "moody dark tech look",
+        "тёмная тема для запуска продукта",
+        "ночной стиль демо"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#8b7cff",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal",
+      "description": "Monospace type on a near-black charcoal ground with a muted green accent that reads like a coding agent at work.",
+      "askedAs": [
+        "make it look like a terminal",
+        "hacker style coding agent",
+        "monospace developer vibe",
+        "стиль терминала для разработчиков",
+        "моноширинный шрифт как в консоли"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#3fb950"
+      }
+    },
+    {
+      "id": "paper-studio",
+      "label": "Paper Studio",
+      "description": "Warm off-white paper ground with editorial serif type and a terracotta accent, played slow and calm.",
+      "askedAs": [
+        "warm editorial light look",
+        "calm slow elegant version",
+        "serif paper style",
+        "тёплый светлый стиль с засечками",
+        "спокойный медленный вариант"
+      ],
+      "props": {
+        "ground": "paper-crease",
+        "fontFamily": "Fraunces",
+        "accent": "#c2562e",
+        "background": "#f6f1e8",
+        "ink": "#2a2420",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rapid-deploy",
+      "label": "Rapid Deploy",
+      "description": "Fast double-speed build with a crisp cobalt ground and bold grotesk type for punchy social cuts.",
+      "askedAs": [
+        "fast energetic version",
+        "speed it up for a short reel",
+        "quick punchy deploy demo",
+        "быстрая динамичная версия",
+        "ускоренный ролик для соцсетей"
+      ],
+      "props": {
+        "speed": 2,
+        "ground": "cobalt-rise",
+        "fontFamily": "Space Grotesk",
+        "accent": "#1f6feb"
+      }
+    },
+    {
+      "id": "close-up",
+      "label": "Close Up",
+      "description": "Zoomed-in framing on a cool polar ground with a teal accent and a short lead-in pause.",
+      "askedAs": [
+        "bigger zoomed in view",
+        "larger text for mobile",
+        "close-up of the chat and preview",
+        "крупный план интерфейса",
+        "увеличить масштаб для телефона"
+      ],
+      "props": {
+        "scale": 1.3,
+        "ground": "polar",
+        "accent": "#0e9f8e",
+        "delay": 15,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "ember-launch",
+      "label": "Ember Launch",
+      "description": "Dark warm ember ground with an amber accent and slightly smaller framing for a cinematic launch feel.",
+      "askedAs": [
+        "warm dark cinematic look",
+        "orange glow launch video",
+        "dramatic product reveal",
+        "тёплый тёмный кинематографичный стиль",
+        "драматичный запуск с оранжевым"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "ember",
+        "accent": "#f59e0b",
+        "scale": 0.9,
+        "fontFamily": "Inter"
+      }
+    }
+  ]
+}

@@ -9,9 +9,9 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const nunito = loadFont("normal", {
   weights: ["500"],
@@ -22,7 +22,18 @@ export interface ChunkStackProps {
   text?: string;
   highlight?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the words. Load it yourself; Nunito by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between words as they drop into the stack. */
+  stagger?: number;
+  /** Size of the words, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -70,11 +81,15 @@ interface Metrics {
   xh: number;
 }
 
-function measure(words: string[]): Metrics {
+function measure(
+  words: string[],
+  fontFamily: string,
+  fontWeight: number,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("chunk-stack: no 2d context");
-  ctx.font = `500 ${FONT_PX}px "${nunito.fontFamily}"`;
+  ctx.font = `${fontWeight} ${FONT_PX}px "${fontFamily}"`;
   const w = (s: string) =>
     ctx.measureText(s).width / FONT_PX +
     TRACK * Math.max(0, Array.from(s).length - 1);
@@ -96,7 +111,7 @@ function measure(words: string[]): Metrics {
   };
 }
 
-function useMetrics(words: string[]) {
+function useMetrics(words: string[], fontFamily: string, fontWeight: number) {
   const key = words.join(" ");
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("chunk-stack: measuring"));
@@ -105,12 +120,12 @@ function useMetrics(words: string[]) {
     let live = true;
     Promise.all([
       nunito.waitUntilDone(),
-      document.fonts.load(`500 100px "${nunito.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(key.split(" ")));
+        setMetrics(measure(key.split(" "), fontFamily, fontWeight));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -119,8 +134,26 @@ function useMetrics(words: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
   return metrics;
+}
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 function impact(u: number) {
@@ -132,17 +165,25 @@ export function ChunkStack({
   text = "learn motion by making it",
   highlight = "making",
   accent,
+  ink,
   background,
+  fontFamily = nunito.fontFamily,
+  fontWeight = 500,
+  stagger = DROP_GAP,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ChunkStackProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const pill = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const words = useMemo(() => text.trim().split(/\s+/).filter(Boolean), [text]);
-  const m = useMetrics(words);
+  const m = useMetrics(words, fontFamily, fontWeight);
 
   if (!m || words.length === 0) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -211,7 +252,7 @@ export function ChunkStack({
   const nodes: React.ReactNode[] = [];
   let pillNode: React.ReactNode = null;
   for (let k = 0; k < n; k++) {
-    const start = DROP_AT + k * DROP_GAP;
+    const start = DROP_AT + k * stagger;
     const dv = interpolate(t, [DROP_AT + k * 2, DROP_AT + k * 2 + 12], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
@@ -225,14 +266,30 @@ export function ChunkStack({
     const x1 = W / 2;
     const y1 = stackTop + k * LEAD * stackSize;
     const size = lineSize + (stackSize - lineSize) * d;
-    const cx = x0 + (x1 - x0) * d;
-    const by = y0 + (y1 - y0) * dv;
+    // Layout rounds a box and a baseline to whole pixels, so a word carried
+    // by `left`/`top` clicks along. Each word is laid out on its stack line
+    // and the whole trip there is a transform. While the sentence sits still
+    // as one line, it keeps the line's own layout, which is where it rested.
+    const parked = rise === 1 && openAll === 0 && d === 0 && dv === 0;
+    const ax = parked ? x0 : x1;
+    const ay = parked ? y0 : y1;
+    const dx = parked ? 0 : (x0 - x1) * (1 - d);
     const q = impact(t - start - DROP_LEN);
+    const squashing =
+      Math.abs(impact(t - start - DROP_LEN + speed) - q) * lh > 1e-2 ||
+      Math.abs(q - impact(t - start - DROP_LEN - speed)) * lh > 1e-2;
     const sx = 1 + 0.08 * q;
     const sy = 1 - 0.12 * q;
     const s = size / R;
     const wpx = m.words[k] * R;
     const risePx = (1 - rise) * lineSize * 1.3;
+    const dy = parked ? 0 : (y0 - y1) * (1 - dv) + risePx;
+    const travel =
+      Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3
+        ? ""
+        : `translate(${dx}px, ${dy}px) `;
+    const moving =
+      midway(rise) || midway(openAll) || midway(dv) || midway(d) || squashing;
 
     if (k === hlIndex) {
       const pp = interpolate(
@@ -280,18 +337,18 @@ export function ChunkStack({
         key={`w${k}`}
         style={{
           position: "absolute",
-          left: cx - wpx / 2,
-          top: by - bo + risePx,
+          left: ax - wpx / 2,
+          top: ay - bo,
           width: wpx,
           height: lh,
-          fontFamily: nunito.fontFamily,
-          fontWeight: 500,
+          fontFamily,
+          fontWeight,
           fontSize: R,
           lineHeight: `${lh}px`,
           letterSpacing: `${TRACK}em`,
           whiteSpace: "pre",
-          color: hlOn > 0.5 ? c.pillInk : c.ink,
-          transform: `scale(${(s * sx).toFixed(4)}, ${(s * sy).toFixed(4)})`,
+          color: hlOn > 0.5 ? c.pillInk : fg,
+          transform: `${travel}scale(${(s * sx).toFixed(4)}, ${(s * sy).toFixed(4)})${glide(moving)}`,
           transformOrigin: `50% ${bo.toFixed(1)}px`,
         }}
       >
@@ -302,19 +359,21 @@ export function ChunkStack({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          clipPath:
-            t < RISE_LEN
-              ? `inset(0 0 ${(H - lineBase - m.desc * lineSize * 0.9).toFixed(1)}px 0)`
-              : undefined,
-        }}
-      >
-        {pillNode}
-        {nodes}
-      </div>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            clipPath:
+              t < RISE_LEN
+                ? `inset(0 0 ${(H - lineBase - m.desc * lineSize * 0.9).toFixed(1)}px 0)`
+                : undefined,
+          }}
+        >
+          {pillNode}
+          {nodes}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

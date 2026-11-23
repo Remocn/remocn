@@ -1,0 +1,102 @@
+{
+  "component": "device-grows-around",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "studio-light",
+      "label": "Studio Light",
+      "description": "A clean light card on a soft paper ground with crisp Inter type and a calm cobalt accent.",
+      "askedAs": [
+        "light clean analytics card",
+        "white minimal dashboard reveal",
+        "bright product screenshot look",
+        "светлая чистая версия",
+        "минималистичный белый дашборд"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Inter",
+        "accent": "#2f54eb",
+        "grain": false
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal Mono",
+      "description": "A near-black developer look with JetBrains Mono numerals and a muted mint accent.",
+      "askedAs": [
+        "code style monospace stats",
+        "hacker terminal counter",
+        "dark dev dashboard",
+        "моноширинный шрифт как в терминале",
+        "тёмный стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#e6efea",
+        "accent": "#4fbf8f",
+        "ground": "charcoal-satin"
+      }
+    },
+    {
+      "id": "editorial-ember",
+      "label": "Editorial Ember",
+      "description": "A warm, magazine-like reveal in Fraunces with a copper accent over an ember glow.",
+      "askedAs": [
+        "warm serif analytics",
+        "elegant editorial stats card",
+        "cozy orange creator recap",
+        "тёплый стиль с засечками",
+        "журнальный вид статистики"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "ground": "ember",
+        "accent": "#d9774a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-launch",
+      "label": "Quick Launch",
+      "description": "A fast, punchy zoom-out in Space Grotesk with a vivid violet accent and larger framing.",
+      "askedAs": [
+        "fast energetic reveal",
+        "snappy launch promo counter",
+        "quick zoom out for social",
+        "быстрая динамичная анимация",
+        "энергичный промо для запуска"
+      ],
+      "props": {
+        "speed": 1.75,
+        "scale": 1.15,
+        "fontFamily": "Space Grotesk",
+        "accent": "#7c5cff",
+        "ground": "iris"
+      }
+    },
+    {
+      "id": "slow-orbit",
+      "label": "Slow Orbit",
+      "description": "An unhurried cinematic pull-back on a deep blue-hour ground with a cool cyan accent.",
+      "askedAs": [
+        "slow cinematic reveal",
+        "calm dark blue dashboard",
+        "moody space themed stats",
+        "медленный кинематографичный отъезд камеры",
+        "спокойный синий тёмный стиль"
+      ],
+      "props": {
+        "speed": 0.5,
+        "ground": "blue-hour",
+        "accent": "#5cc8e0",
+        "fontFamily": "Manrope",
+        "delay": 12,
+        "scale": 0.9
+      }
+    }
+  ]
+}

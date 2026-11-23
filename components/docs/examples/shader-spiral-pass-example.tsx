@@ -1,14 +1,15 @@
 "use client";
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
+import { useCompositionFrames, useSceneConfig } from "@/lib/remocn/frame-rate";
 import {
   type ShaderSpiralPassProps,
   shaderSpiralPass,
 } from "@/registry/remocn/shader-spiral-pass";
 
 function Scene({ next = false }: { next?: boolean }) {
-  const { width } = useVideoConfig();
+  const { width } = useSceneConfig();
   return (
     <AbsoluteFill
       style={{
@@ -59,16 +60,17 @@ function Scene({ next = false }: { next?: boolean }) {
 }
 
 export function ShaderSpiralPassExampleScene(props: ShaderSpiralPassProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={120}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(120)}>
         <Scene />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 72 })}
+        timing={linearTiming({ durationInFrames: toFrames(72) })}
         presentation={shaderSpiralPass(props)}
       />
-      <TransitionSeries.Sequence durationInFrames={120}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(120)}>
         <Scene next />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -89,14 +91,14 @@ import { shaderSpiralPass } from "@/components/remocn/shader-spiral-pass";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={120}>
+    <TransitionSeries.Sequence durationInFrames={240}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 72 })}
+      timing={linearTiming({ durationInFrames: 144 })}
       presentation={shaderSpiralPass(${JSON.stringify(props, null, 2).replace(/\n/g, "\n      ")})}
     />
-    <TransitionSeries.Sequence durationInFrames={120}>
+    <TransitionSeries.Sequence durationInFrames={240}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

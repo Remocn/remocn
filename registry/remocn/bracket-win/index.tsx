@@ -2,14 +2,11 @@
 
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/Tektur";
+import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: tektur } = loadFont("normal", {
   weights: ["400", "500"],
@@ -63,8 +60,21 @@ export interface BracketWinProps {
   caption?: string;
   /** Round labels over the columns: quarterfinal, semifinal, final. */
   rounds?: [string, string, string];
+  /** Frames between one round resolving and the next. */
+  roundLength?: number;
+  /** Replaces the remocn mark in the bracket and on the plate. */
+  logo?: React.ReactNode;
   /** Winner ticks on the non-remocn matches. */
   accent?: string;
+  /** Color of team names, scores and winner lines; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Tektur by default. */
+  fontFamily?: string;
+  /** Size of the bracket, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -163,6 +173,22 @@ interface Link {
   at: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BracketWin({
   opponents = [
     "Keyframes",
@@ -176,13 +202,27 @@ export function BracketWin({
   title = "Champion",
   caption = "Playoffs 2026 · 8 teams · 0 maps dropped",
   rounds = ["Quarterfinal", "Semifinal", "Grand final"],
+  roundLength = 20,
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = tektur,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: BracketWinProps) {
-  const t = useCurrentFrame() * speed + 1;
-  const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + 1;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
+  const extra = roundLength - 20;
+  const roundAt = ROUND_AT.map((r, k) => r + k * extra);
+  const burstAt = BURST_AT + 2 * extra;
   const u = Math.min(W / 1280, H / 720);
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const names = ["remocn", ...opponents];
@@ -222,7 +262,7 @@ export function BracketWin({
       arrive,
     });
   };
-  const winAt = (round: number) => ROUND_AT[round] + DIM_DELAY;
+  const winAt = (round: number) => roundAt[round] + DIM_DELAY;
   const landAt = (round: number) => winAt(round) + LINE_LEN - 1;
 
   addPair(0, qfX[0], qfCy[0], 0);
@@ -269,16 +309,25 @@ export function BracketWin({
   // ── Global beats ──────────────────────────────────────────────────────────
   const baseDraw = OUT(ramp(t, 4, 12));
   const labelsIn = OUT(ramp(t, 6, 10));
-  const burst = SLAM(ramp(t, BURST_AT, 10));
-  const sinkP = OUT(ramp(t, BURST_AT, 12));
-  const titleIn = SLAM(ramp(t, BURST_AT + 2, 8));
-  const logoIn = OUT(ramp(t, BURST_AT + 5, 10));
-  const capIn = OUT(ramp(t, BURST_AT + 12, 10));
-  const push = 1 + 0.035 * INOUT(ramp(t, 0, BURST_AT + 20));
-  const hit = Math.max(
-    ...ROUND_AT.map((r) => kick(t - r, 7) * 0.6),
-    kick(t - BURST_AT - 4, 10),
-  );
+  const burst = SLAM(ramp(t, burstAt, 10));
+  const sinkP = OUT(ramp(t, burstAt, 12));
+  const titleIn = SLAM(ramp(t, burstAt + 2, 8));
+  const logoIn = OUT(ramp(t, burstAt + 5, 10));
+  const capIn = OUT(ramp(t, burstAt + 12, 10));
+  // The camera: a slow push with a kick on every round. The kicks overlap the
+  // push, so whether it moves is read off the neighbouring frames.
+  const camAt = (f: number) =>
+    (1 + 0.035 * INOUT(ramp(f, 0, burstAt + 20))) *
+    (1 +
+      0.01 *
+        Math.max(
+          ...roundAt.map((r) => kick(f - r, 7) * 0.6),
+          kick(f - burstAt - 4, 10),
+        ));
+  const cam = camAt(t);
+  const camMoving =
+    Math.abs(camAt(t + speed) - cam) > 1e-6 ||
+    Math.abs(cam - camAt(t - speed)) > 1e-6;
 
   // Final champion plate: grows out of the final node.
   const plateW0 = finalW;
@@ -293,7 +342,7 @@ export function BracketWin({
 
   const slotEl = (s: Slot, i: number) => {
     const m = MATCHES[s.match];
-    const resolveAt = ROUND_AT[m.round];
+    const resolveAt = roundAt[m.round];
     const isFinal = m.round === 2;
     const w = isFinal ? finalW : slotW;
     const enter =
@@ -312,7 +361,7 @@ export function BracketWin({
     const isRemocn = s.team === 0;
     const lit = isRemocn && named;
     const winFlash = won ? kick(t - resolveAt - DIM_DELAY, 9) : 0;
-    const hideInBurst = isFinal && t >= BURST_AT;
+    const hideInBurst = isFinal && t >= burstAt;
     if (hideInBurst) return null;
     return (
       <div
@@ -365,15 +414,15 @@ export function BracketWin({
               }}
             >
               {isRemocn ? (
-                <RemocnLogo fontSize={25 * u} color="#FFFFFF" />
+                (logo ?? <RemocnLogo fontSize={25 * u} color="#FFFFFF" />)
               ) : (
                 <span
                   style={{
-                    fontFamily: tektur,
+                    fontFamily,
                     fontWeight: 500,
                     fontSize: 21 * u,
                     letterSpacing: "0.01em",
-                    color: c.ink,
+                    color: fg,
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -398,10 +447,10 @@ export function BracketWin({
             alignItems: "center",
             justifyContent: "center",
             background: lit ? "rgba(255,255,255,0.12)" : c.score,
-            fontFamily: tektur,
+            fontFamily,
             fontWeight: 500,
             fontSize: 22 * u,
-            color: lit ? "#FFFFFF" : c.ink,
+            color: lit ? "#FFFFFF" : fg,
             fontVariantNumeric: "tabular-nums",
             overflow: "hidden",
           }}
@@ -437,218 +486,220 @@ export function BracketWin({
   ];
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `scale(${push * (1 + 0.01 * hit)})`,
-          transformOrigin: `${cx}px ${cy}px`,
-        }}
-      >
-        <div style={{ position: "absolute", inset: 0 }}>
-          {/* Round labels. */}
-          {labelCols.map((l, i) => (
-            <div
-              key={`label-${i}-${l.text}`}
-              style={{
-                position: "absolute",
-                left: l.x,
-                width: l.w,
-                top: qfCy[0] - slotH - 70 * u,
-                textAlign: i === 2 ? "center" : i < 2 ? "left" : "right",
-                fontFamily: tektur,
-                fontWeight: 400,
-                fontSize: 17 * u,
-                letterSpacing: "0.24em",
-                textTransform: "uppercase",
-                color: c.dim,
-                opacity: labelsIn * sunk,
-                transform: `translateY(${(1 - labelsIn) * 10 * u}px)`,
-              }}
-            >
-              {l.text}
-            </div>
-          ))}
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `scale(${cam})${glide(camMoving)}`,
+            transformOrigin: `${cx}px ${cy}px`,
+          }}
+        >
+          <div style={{ position: "absolute", inset: 0 }}>
+            {/* Round labels. */}
+            {labelCols.map((l, i) => (
+              <div
+                key={`label-${i}-${l.text}`}
+                style={{
+                  position: "absolute",
+                  left: l.x,
+                  width: l.w,
+                  top: qfCy[0] - slotH - 70 * u,
+                  textAlign: i === 2 ? "center" : i < 2 ? "left" : "right",
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 17 * u,
+                  letterSpacing: "0.24em",
+                  textTransform: "uppercase",
+                  color: c.dim,
+                  opacity: labelsIn * sunk,
+                  transform: `translateY(${(1 - labelsIn) * 10 * u}px)`,
+                }}
+              >
+                {l.text}
+              </div>
+            ))}
 
-          {/* Connectors: base lines, then each winner's advance. */}
+            {/* Connectors: base lines, then each winner's advance. */}
+            <svg
+              width={W}
+              height={H}
+              style={{ position: "absolute", inset: 0, opacity: sunk }}
+              aria-hidden
+            >
+              <defs>
+                <linearGradient
+                  id={`${id}-path`}
+                  gradientUnits="userSpaceOnUse"
+                  x1={qfX[0]}
+                  y1={0}
+                  x2={cx}
+                  y2={0}
+                >
+                  <stop offset="0" stopColor={GLOW[1]} />
+                  <stop offset="0.55" stopColor="#7C6CF0" />
+                  <stop offset="1" stopColor={GLOW[0]} />
+                </linearGradient>
+              </defs>
+              {links.map((l, i) => (
+                <path
+                  key={`base-${i}`}
+                  d={l.d}
+                  fill="none"
+                  stroke={c.line}
+                  strokeWidth={2 * u}
+                  strokeDasharray={l.len}
+                  strokeDashoffset={l.len * (1 - baseDraw)}
+                />
+              ))}
+              {links.map((l, i) => {
+                const p = SLAM(ramp(t, l.at, LINE_LEN));
+                if (p <= 0) return null;
+                const mine = l.team === 0;
+                return (
+                  <path
+                    key={`win-${i}`}
+                    d={l.d}
+                    fill="none"
+                    stroke={mine ? `url(#${id}-path)` : fg}
+                    strokeOpacity={mine ? 1 : 0.5}
+                    strokeWidth={(mine ? 4 : 2) * u}
+                    strokeDasharray={l.len}
+                    strokeDashoffset={l.len * (1 - p)}
+                  />
+                );
+              })}
+            </svg>
+
+            {slots.map(slotEl)}
+          </div>
+
+          {/* remocn's lit path stays on top of the sunk bracket. */}
           <svg
             width={W}
             height={H}
-            style={{ position: "absolute", inset: 0, opacity: sunk }}
+            style={{ position: "absolute", inset: 0, opacity: sinkP }}
             aria-hidden
           >
-            <defs>
-              <linearGradient
-                id={`${id}-path`}
-                gradientUnits="userSpaceOnUse"
-                x1={qfX[0]}
-                y1={0}
-                x2={cx}
-                y2={0}
-              >
-                <stop offset="0" stopColor={GLOW[1]} />
-                <stop offset="0.55" stopColor="#7C6CF0" />
-                <stop offset="1" stopColor={GLOW[0]} />
-              </linearGradient>
-            </defs>
-            {links.map((l, i) => (
-              <path
-                key={`base-${i}`}
-                d={l.d}
-                fill="none"
-                stroke={c.line}
-                strokeWidth={2 * u}
-                strokeDasharray={l.len}
-                strokeDashoffset={l.len * (1 - baseDraw)}
-              />
-            ))}
-            {links.map((l, i) => {
-              const p = SLAM(ramp(t, l.at, LINE_LEN));
-              if (p <= 0) return null;
-              const mine = l.team === 0;
-              return (
+            {links
+              .filter((l) => l.team === 0)
+              .map((l, i) => (
                 <path
-                  key={`win-${i}`}
+                  key={`lit-${i}`}
                   d={l.d}
                   fill="none"
-                  stroke={mine ? `url(#${id}-path)` : c.ink}
-                  strokeOpacity={mine ? 1 : 0.5}
-                  strokeWidth={(mine ? 4 : 2) * u}
-                  strokeDasharray={l.len}
-                  strokeDashoffset={l.len * (1 - p)}
+                  stroke={`url(#${id}-path)`}
+                  strokeWidth={4 * u}
                 />
-              );
-            })}
+              ))}
           </svg>
 
-          {slots.map(slotEl)}
-        </div>
+          {/* Burst: two crisp rings racing out of the final node. */}
+          {t >= burstAt
+            ? [0, 4].map((delay) => {
+                const p = OUT(ramp(t, burstAt + delay, 26));
+                const r = (120 + 560 * p) * u;
+                return (
+                  <div
+                    key={`ring-${delay}`}
+                    style={{
+                      position: "absolute",
+                      left: cx - r,
+                      top: cy - r,
+                      width: 2 * r,
+                      height: 2 * r,
+                      borderRadius: "50%",
+                      boxShadow: `inset 0 0 0 ${(delay === 0 ? 4 : 2) * u}px ${delay === 0 ? GLOW[1] : GLOW[2]}`,
+                      opacity: (1 - p) * (p > 0 ? 1 : 0),
+                    }}
+                  />
+                );
+              })
+            : null}
 
-        {/* remocn's lit path stays on top of the sunk bracket. */}
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0, opacity: sinkP }}
-          aria-hidden
-        >
-          {links
-            .filter((l) => l.team === 0)
-            .map((l, i) => (
-              <path
-                key={`lit-${i}`}
-                d={l.d}
-                fill="none"
-                stroke={`url(#${id}-path)`}
-                strokeWidth={4 * u}
-              />
-            ))}
-        </svg>
-
-        {/* Burst: two crisp rings racing out of the final node. */}
-        {t >= BURST_AT
-          ? [0, 4].map((delay) => {
-              const p = OUT(ramp(t, BURST_AT + delay, 26));
-              const r = (120 + 560 * p) * u;
-              return (
-                <div
-                  key={`ring-${delay}`}
-                  style={{
-                    position: "absolute",
-                    left: cx - r,
-                    top: cy - r,
-                    width: 2 * r,
-                    height: 2 * r,
-                    borderRadius: "50%",
-                    boxShadow: `inset 0 0 0 ${(delay === 0 ? 4 : 2) * u}px ${delay === 0 ? GLOW[1] : GLOW[2]}`,
-                    opacity: (1 - p) * (p > 0 ? 1 : 0),
-                  }}
-                />
-              );
-            })
-          : null}
-
-        {/* Champion plate. */}
-        {t >= BURST_AT ? (
-          <div
-            style={{
-              position: "absolute",
-              left: cx - plateW / 2,
-              top: cy - plateH / 2,
-              width: plateW,
-              height: plateH,
-              clipPath: `polygon(${plateCut}px 0, 100% 0, 100% calc(100% - ${plateCut}px), calc(100% - ${plateCut}px) 100%, 0 100%, 0 ${plateCut}px)`,
-              background: [
-                `radial-gradient(70% 90% at 50% 115%, ${GLOW[1]} 0%, transparent 70%)`,
-                `radial-gradient(60% 80% at 50% 0%, ${GLOW[3]} 0%, transparent 80%)`,
-                `linear-gradient(180deg, ${GLOW[3]} 0%, ${GLOW[2]} 70%, #7D73E6 100%)`,
-              ].join(", "),
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6 * u,
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                opacity: logoIn,
-                transform: `translateY(${(1 - logoIn) * 14 * u}px)`,
-              }}
-            >
-              <RemocnLogo fontSize={50 * u} color="#FFFFFF" />
-            </div>
-            <div
-              style={{
-                fontFamily: tektur,
-                fontWeight: 500,
-                fontSize: 128 * u,
-                lineHeight: 1,
-                letterSpacing: "0.02em",
-                textTransform: "uppercase",
-                color: "#FFFFFF",
-                opacity: Math.min(1, titleIn * 1.5),
-                transform: `scale(${1 + 0.16 * (1 - titleIn)})`,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {title}
-            </div>
+          {/* Champion plate. */}
+          {t >= burstAt ? (
             <div
               style={{
                 position: "absolute",
-                inset: 0,
-                background: "#FFFFFF",
-                opacity: 0.3 * kick(t - BURST_AT - 1, 7),
+                left: cx - plateW / 2,
+                top: cy - plateH / 2,
+                width: plateW,
+                height: plateH,
+                clipPath: `polygon(${plateCut}px 0, 100% 0, 100% calc(100% - ${plateCut}px), calc(100% - ${plateCut}px) 100%, 0 100%, 0 ${plateCut}px)`,
+                background: [
+                  `radial-gradient(70% 90% at 50% 115%, ${GLOW[1]} 0%, transparent 70%)`,
+                  `radial-gradient(60% 80% at 50% 0%, ${GLOW[3]} 0%, transparent 80%)`,
+                  `linear-gradient(180deg, ${GLOW[3]} 0%, ${GLOW[2]} 70%, #7D73E6 100%)`,
+                ].join(", "),
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6 * u,
+                overflow: "hidden",
               }}
-            />
-          </div>
-        ) : null}
+            >
+              <div
+                style={{
+                  opacity: logoIn,
+                  transform: `translateY(${(1 - logoIn) * 14 * u}px)`,
+                }}
+              >
+                {logo ?? <RemocnLogo fontSize={50 * u} color="#FFFFFF" />}
+              </div>
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: 128 * u,
+                  lineHeight: 1,
+                  letterSpacing: "0.02em",
+                  textTransform: "uppercase",
+                  color: "#FFFFFF",
+                  opacity: Math.min(1, titleIn * 1.5),
+                  transform: `scale(${1 + 0.16 * (1 - titleIn)})`,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {title}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "#FFFFFF",
+                  opacity: 0.3 * kick(t - burstAt - 1, 7),
+                }}
+              />
+            </div>
+          ) : null}
 
-        {/* Caption under the plate. */}
-        {capIn > 0 ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: cy + plateH1 / 2 + 26 * u,
-              textAlign: "center",
-              fontFamily: tektur,
-              fontWeight: 400,
-              fontSize: 20 * u,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              color: c.dim,
-              opacity: capIn,
-              transform: `translateY(${(1 - capIn) * 10 * u}px)`,
-            }}
-          >
-            {caption}
-          </div>
-        ) : null}
-      </div>
+          {/* Caption under the plate. */}
+          {capIn > 0 ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: cy + plateH1 / 2 + 26 * u,
+                textAlign: "center",
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 20 * u,
+                letterSpacing: "0.22em",
+                textTransform: "uppercase",
+                color: c.dim,
+                opacity: capIn,
+                transform: `translateY(${(1 - capIn) * 10 * u}px)`,
+              }}
+            >
+              {caption}
+            </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

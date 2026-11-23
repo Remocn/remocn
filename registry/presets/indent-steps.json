@@ -1,0 +1,121 @@
+{
+  "component": "indent-steps",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A true editor feel with monospace type, a near-black background and a soft green accent.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace code editor style",
+        "green on black hacker look",
+        "как в терминале",
+        "моноширинный шрифт как в редакторе"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "grain": false
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A calm light editor theme on warm off-white with an indigo accent and no grain.",
+      "askedAs": [
+        "light mode version",
+        "clean white background",
+        "bright minimal editor look",
+        "светлая тема",
+        "белый фон без шума"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#faf8f4",
+        "ink": "#1b1f2a",
+        "accent": "#4f46e5",
+        "grain": false
+      }
+    },
+    {
+      "id": "rapid-ship",
+      "label": "Rapid Ship",
+      "description": "Lines snap in fast with tight stagger and a punchy orange payoff before exiting.",
+      "askedAs": [
+        "make it faster and snappier",
+        "quick energetic reveal",
+        "fast lines with exit",
+        "быстрее и энергичнее",
+        "быстрое появление строк"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 8,
+        "accent": "#f97316",
+        "exit": true,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "editorial-slow",
+      "label": "Editorial Slow",
+      "description": "A slow, elegant serif reveal without line numbers, set larger like a magazine pull quote.",
+      "askedAs": [
+        "elegant serif version",
+        "slow and classy",
+        "no line numbers, bigger text",
+        "элегантный шрифт с засечками",
+        "медленно и красиво"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "lineNumbers": false,
+        "speed": 0.5,
+        "stagger": 36,
+        "scale": 1.2,
+        "accent": "#c2410c"
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Deep navy backdrop with lavender text and a violet gradient payoff in Geist.",
+      "askedAs": [
+        "dark purple vibe",
+        "night mode with violet accent",
+        "moody navy background",
+        "тёмно-синий с фиолетовым",
+        "ночная фиолетовая тема"
+      ],
+      "props": {
+        "background": "#0f1226",
+        "ink": "#e4e2f5",
+        "accent": "#8b5cf6",
+        "fontFamily": "Geist",
+        "delay": 12
+      }
+    },
+    {
+      "id": "compact-inset",
+      "label": "Compact Inset",
+      "description": "A smaller, centered Inter block with a cyan accent that sits neatly as an overlay.",
+      "askedAs": [
+        "make it smaller",
+        "compact overlay size",
+        "small text in the corner style",
+        "сделай поменьше",
+        "компактный вариант"
+      ],
+      "props": {
+        "scale": 0.7,
+        "fontFamily": "Inter",
+        "accent": "#0ea5e9",
+        "grain": false
+      }
+    }
+  ]
+}

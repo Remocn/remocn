@@ -1,0 +1,117 @@
+{
+  "component": "icon-cloud",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-lined cloud that slowly sketches itself in a soft slate tone.",
+      "askedAs": [
+        "thin slow drawing cloud",
+        "elegant line art cloud icon",
+        "big delicate cloud outline",
+        "тонкое облако рисуется медленно",
+        "изящная линия облака"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-bounce",
+      "label": "Bold Bounce",
+      "description": "A chunky, heavy-stroked cloud that plays its action motion quickly on repeat.",
+      "askedAs": [
+        "thick bouncy cloud icon",
+        "fast looping cloud animation",
+        "heavy cartoon cloud",
+        "жирное прыгающее облако",
+        "быстрая анимация облака по кругу"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 96
+      }
+    },
+    {
+      "id": "sky-loop",
+      "label": "Sky Loop",
+      "description": "A calm sky-blue cloud that draws and drifts in a gentle continuous loop.",
+      "askedAs": [
+        "blue weather cloud looping",
+        "calm sky cloud animation",
+        "soft blue cloud icon",
+        "голубое облако в цикле",
+        "спокойная анимация неба"
+      ],
+      "props": {
+        "color": "#3b82f6",
+        "loop": true,
+        "speed": 0.75,
+        "size": 72
+      }
+    },
+    {
+      "id": "storm-grey",
+      "label": "Storm Grey",
+      "description": "A medium charcoal-grey cloud with a firm stroke and brisk, moody motion.",
+      "askedAs": [
+        "dark stormy cloud icon",
+        "grey rain cloud animation",
+        "moody weather cloud",
+        "грозовое серое облако",
+        "тёмная туча иконка"
+      ],
+      "props": {
+        "color": "#374151",
+        "strokeWidth": 2.5,
+        "speed": 1.5,
+        "size": 64
+      }
+    },
+    {
+      "id": "tiny-ui",
+      "label": "Tiny UI",
+      "description": "A small, crisp cloud glyph with a quick single action, suited to interface accents.",
+      "askedAs": [
+        "small cloud icon for ui",
+        "quick little cloud animation",
+        "minimal app cloud badge",
+        "маленькая иконка облака",
+        "мини облако для интерфейса"
+      ],
+      "props": {
+        "size": 28,
+        "strokeWidth": 1.5,
+        "animation": "action",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "sunset-hero",
+      "label": "Sunset Hero",
+      "description": "An oversized warm terracotta cloud that unfolds slowly as a hero illustration.",
+      "askedAs": [
+        "huge warm colored cloud",
+        "big orange cloud for intro",
+        "slow hero cloud animation",
+        "большое тёплое облако",
+        "оранжевое облако крупно"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#c2410c",
+        "strokeWidth": 1.75,
+        "speed": 0.5
+      }
+    }
+  ]
+}

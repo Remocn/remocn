@@ -1,0 +1,123 @@
+{
+  "component": "filler-cut",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm off-white page with a refined serif headline and an oxblood accent, cut at an unhurried pace.",
+      "askedAs": [
+        "serif magazine look on cream paper",
+        "elegant editorial light version",
+        "slower classy print style",
+        "светлый журнальный стиль с засечками",
+        "элегантная бумага, медленнее"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#9a3b2e",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snap-edit",
+      "label": "Snap Edit",
+      "description": "Fast, near-simultaneous cuts in a tight grotesk for a punchy, high-energy beat.",
+      "askedAs": [
+        "make the cuts quick and punchy",
+        "all filler words removed at once",
+        "fast snappy cleanup",
+        "быстрые резкие вырезы",
+        "всё вырезается сразу, энергично"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "fontFamily": "Space Grotesk",
+        "accent": "#ff5a36",
+        "showTime": false
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Deep graphite background with monospace type and a muted green accent, like a developer tool log.",
+      "askedAs": [
+        "code editor style transcript",
+        "monospace dev tool look",
+        "terminal green on dark",
+        "моноширинный шрифт как в терминале",
+        "стиль консоли разработчика"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1110",
+        "ink": "#d7e3dc",
+        "accent": "#4fbf8b",
+        "fontWeight": 400,
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A large, deliberate clean-up with wide staggering between cuts and a short lead-in.",
+      "askedAs": [
+        "slow dramatic word removal",
+        "bigger text, one cut at a time",
+        "calm cinematic cleanup",
+        "медленно и крупно",
+        "вырезать слова по одному, плавно"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 14,
+        "scale": 1.25,
+        "delay": 15,
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "clean-studio",
+      "label": "Clean Studio",
+      "description": "Crisp light UI with Inter, no grain and a calm slate-blue accent for product demos.",
+      "askedAs": [
+        "clean light product demo",
+        "minimal white UI without grain",
+        "simple SaaS look",
+        "минималистичный светлый интерфейс",
+        "чистый стиль без зерна"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "grain": false,
+        "accent": "#4a6fa5",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "midnight-plum",
+      "label": "Midnight Plum",
+      "description": "Inky aubergine backdrop with Fraunces type and a soft rose-gold accent for a luxe feel.",
+      "askedAs": [
+        "luxury dark purple style",
+        "premium moody serif",
+        "rich dark with gold accent",
+        "роскошный тёмный фиолетовый",
+        "премиальный стиль с золотым акцентом"
+      ],
+      "props": {
+        "background": "#1a1320",
+        "ink": "#f2e9ee",
+        "accent": "#d4a373",
+        "fontFamily": "Fraunces",
+        "scale": 1.1
+      }
+    }
+  ]
+}

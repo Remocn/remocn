@@ -38,8 +38,8 @@ export const RemotionRoot = () => (
   <Composition
     id="LumenCount"
     component={LumenCountScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -81,10 +81,56 @@ A big number counts up on a dark stage while its fill brightens from dim to a gl
       description: "Small line above the number; hidden when empty.",
     },
     {
+      name: "countFrames",
+      type: "number",
+      default: "52",
+      description: "Frames the count takes to climb to the value; the flare and label follow it.",
+    },
+    {
+      name: "glow",
+      type: "number",
+      default: "1",
+      description: "Strength of the bloom around the number; 0 turns it off.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Base color of the glow gradient.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

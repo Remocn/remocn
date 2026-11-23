@@ -1,6 +1,8 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface SheenSlideInProps {
   text: string;
@@ -38,6 +40,7 @@ function travelEm(frame: number): number {
 }
 
 const exitEasing = Easing.out(Easing.quad);
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 export function SheenSlideIn({
   text,
@@ -49,7 +52,8 @@ export function SheenSlideIn({
   speed = 1,
   className,
 }: SheenSlideInProps) {
-  const frame = useCurrentFrame() * speed;
+  const glide = useGlide();
+  const frame = useSceneFrame() * speed;
 
   const x = fontSize * travelEm(frame);
 
@@ -115,8 +119,9 @@ export function SheenSlideIn({
           position: "relative",
           display: "inline-block",
           opacity,
-          translate: `${x}px 0`,
-          scale: `${1 - (1 - EXIT_SCALE) * exit}`,
+          // The slide is horizontal and needs no mark of its own; the exit
+          // scale carries the text vertically.
+          transform: `translate(${x}px, 0px) scale(${1 - (1 - EXIT_SCALE) * exit})${glide(midway(exit))}`,
         }}
       >
         <span className={className} style={{ ...textStyle, color: baseColor }}>
