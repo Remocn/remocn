@@ -851,10 +851,19 @@
         {
           "path": "rgb-glitch-text/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/rgb-glitch-text.tsx"
+          "target": "components/remocn/rgb-glitch-text/index.tsx"
+        },
+        {
+          "path": "rgb-glitch-text/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/rgb-glitch-text/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "infinite-marquee",

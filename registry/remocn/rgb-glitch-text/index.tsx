@@ -1,8 +1,10 @@
 "use client";
 
 import { random } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type RGBGlitchTextElementId, rgbGlitchTextTimeline } from "./timeline";
 
 export interface RGBGlitchTextProps {
   text: string;
@@ -15,24 +17,37 @@ export interface RGBGlitchTextProps {
   seed?: string;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the glitch, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<RGBGlitchTextElementId>;
 }
 
-export function RGBGlitchText({
-  text,
-  fontSize = 96,
-  color = "#171717",
-  fontWeight = 700,
-  glitchAt = 20,
-  glitchDuration = 8,
-  intensity = 6,
-  seed = "glitch",
-  speed = 1,
-  className,
-}: RGBGlitchTextProps) {
+export function RGBGlitchText(props: RGBGlitchTextProps) {
+  const {
+    text,
+    fontSize = 96,
+    color = "#171717",
+    fontWeight = 700,
+    intensity = 6,
+    seed = "glitch",
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    rgbGlitchTextTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const glitch = tl.get("glitch");
 
-  const isGlitching = frame >= glitchAt && frame < glitchAt + glitchDuration;
+  const isGlitching = frame >= glitch.start && frame < glitch.end;
 
   const offset = (axisSeed: string, scale: number) =>
     (random(`${seed}-${axisSeed}-${frame}`) * 2 - 1) * scale;
