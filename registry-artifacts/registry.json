@@ -6827,12 +6827,21 @@
       "title": "Free As in",
       "description": "A big \"Free\" is glossed line by line: as in beer, speech, no seats, yours.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/free-as-in/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/free-as-in.tsx"
+          "target": "components/remocn/free-as-in/index.tsx"
+        },
+        {
+          "path": "registry/remocn/free-as-in/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/free-as-in/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_GLOSSES,
+  type FreeAsInElementId,
+  freeAsInTimeline,
+  glossesOf,
+} from "./timeline";
 
 const albert = loadFont("normal", {
   weights: ["400", "500"],
@@ -37,19 +44,17 @@ export interface FreeAsInProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the word and each gloss, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FreeAsInElementId>;
 }
 
 const THEMES = {
   dark: { bg: "#141414", ink: "#FFFFFF", accent: "#3DD9FF" },
   light: { bg: "#FFFFFF", ink: "#000000", accent: "#0077B6" },
 } as const;
-
-const DEFAULT_GLOSSES = [
-  "as in beer.",
-  "as in speech.",
-  "as in no seats.",
-  "as in yours.",
-];
 
 const TRACK_WORD = -0.045;
 const TRACK_GLOSS = -0.015;
@@ -120,31 +125,34 @@ function ScaleLayer({
   );
 }
 
-export function FreeAsIn({
-  word = "Free",
-  glosses = DEFAULT_GLOSSES,
-  accent,
-  ink,
-  background,
-  fontFamily = albert.fontFamily,
-  fontWeight = 500,
-  hold = 46,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: FreeAsInProps) {
+export function FreeAsIn(props: FreeAsInProps) {
+  const {
+    word = "Free",
+    glosses = DEFAULT_GLOSSES,
+    accent,
+    ink,
+    background,
+    fontFamily = albert.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The glosses share out the clip after `delay`, as before.
   const T = (durationInFrames - delay) * speed;
+  const tl = useTimeline(freeAsInTimeline, props, T, timing);
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const hi = accent ?? c.accent;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = glosses.filter((s) => s.trim().length > 0);
+  const list = glossesOf(glosses);
   const keys = [`${fontWeight}|${word}`, ...list.map((s) => `400|${s}`)];
   const w = useWidths(keys, fontFamily, fontWeight);
 
@@ -186,26 +194,25 @@ export function FreeAsIn({
   const gLine = Fg * GLH;
   const wordBase = portrait ? H * 0.5 + Fw * 0.15 : slotY;
 
+  const wordEl = tl.get("word");
   const wordInAt = (tt: number) =>
-    interpolate(tt, [0, 20], [0, 1], {
+    interpolate(tt, [wordEl.start, wordEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
   const wordIn = wordInAt(t);
-  const first = 22;
-  const tail = hold;
-  const step =
-    n > 0 ? Math.max(12, Math.min(30, (T - first - tail) / Math.max(1, n))) : 0;
-  const startOf = (k: number) => first + k * step;
-  const push = (k: number, tt: number) =>
-    interpolate(tt, [startOf(k), startOf(k) + 12], [0, 1], {
+  const glossEls = list.map((_, k) => tl.get(`gloss:${k}`));
+  const push = (k: number, tt: number) => {
+    const e = glossEls[k];
+    return interpolate(tt, [e.start, e.start + e.beat("push")], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
+  };
   const enterAt = (k: number, tt: number) =>
     interpolate(
       tt,
-      [startOf(k) + (k > 0 ? 5 : 0), startOf(k) + (k > 0 ? 21 : 16)],
+      [glossEls[k].start + glossEls[k].beat("in"), glossEls[k].end],
       [0, 1],
       {
         ...CLAMP,
