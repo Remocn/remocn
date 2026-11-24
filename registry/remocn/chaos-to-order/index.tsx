@@ -5,6 +5,12 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ChaosToOrderElementId,
+  chaosToOrderTimeline,
+  DEFAULT_ITEMS,
+} from "./timeline";
 
 const inter = loadFont("normal", {
   weights: ["400", "500", "600", "700"],
@@ -32,24 +38,13 @@ export interface ChaosToOrderProps {
   delay?: number;
   speed?: number;
   theme?: "light" | "dark";
+  /**
+   * Moves, trims or stretches the pieces dropping, the unread count, the
+   * pull and the app springing up, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ChaosToOrderElementId>;
 }
-
-const DEFAULT_ITEMS = [
-  "#launch-war-room",
-  "Q4 roadmap v7 FINAL.xlsx",
-  "Inbox",
-  "Launch plan (draft 3)",
-  "Pricing · Kitebase",
-  "fix onboarding!!",
-  "Payment failed",
-  "who owns billing??",
-  "Standup in 2 min",
-  "14 new comments",
-  "ship by Fri???",
-  "Build #482 failed",
-  "call Maya re: assets",
-  "3 unread in #design",
-];
 
 type ToastIcon = "alert" | "cal" | "chat" | "x";
 type Kind = "chat" | "sheet" | "mail" | "doc" | "browser" | "sticky" | "toast";
@@ -60,7 +55,6 @@ type Piece = {
   w: number;
   h: number;
   r: number;
-  d: number;
   tint?: string;
   sub?: string;
   app?: string;
@@ -70,7 +64,6 @@ const toast = (
   x: number,
   y: number,
   r: number,
-  d: number,
   tint: string,
   app: string,
   sub: string,
@@ -82,7 +75,6 @@ const toast = (
   w: 272,
   h: 62,
   r,
-  d,
   tint,
   app,
   sub,
@@ -93,48 +85,36 @@ const sticky = (
   y: number,
   s: number,
   r: number,
-  d: number,
   tint: string,
-): Piece => ({ kind: "sticky", x, y, w: s, h: s, r, d, tint });
+): Piece => ({ kind: "sticky", x, y, w: s, h: s, r, tint });
 
-// x/y = centre in a 1280×720 design space, r = resting angle, d = drop frame.
+// x/y = centre in a 1280×720 design space, r = resting angle. The frame
+// each piece drops in is in `./timeline`.
 const PIECES: Piece[] = [
-  { kind: "chat", x: 318, y: 236, w: 400, h: 254, r: -5, d: -3 },
-  { kind: "sheet", x: 930, y: 214, w: 360, h: 232, r: 4, d: 6 },
-  { kind: "mail", x: 960, y: 505, w: 350, h: 240, r: -3.5, d: 11 },
-  { kind: "doc", x: 560, y: 470, w: 280, h: 300, r: 3, d: 16 },
-  { kind: "browser", x: 650, y: 200, w: 390, h: 244, r: -2.5, d: 20 },
-  sticky(190, 520, 148, -8, 24, "#FCE38A"),
+  { kind: "chat", x: 318, y: 236, w: 400, h: 254, r: -5 },
+  { kind: "sheet", x: 930, y: 214, w: 360, h: 232, r: 4 },
+  { kind: "mail", x: 960, y: 505, w: 350, h: 240, r: -3.5 },
+  { kind: "doc", x: 560, y: 470, w: 280, h: 300, r: 3 },
+  { kind: "browser", x: 650, y: 200, w: 390, h: 244, r: -2.5 },
+  sticky(190, 520, 148, -8, "#FCE38A"),
   toast(
     1060,
     88,
     4,
-    27,
     "#E5484D",
     "Kitebase",
     "Card ending 4242 was declined",
     "alert",
   ),
-  sticky(1135, 330, 136, 7, 30, "#F9C9DE"),
-  toast(
-    330,
-    645,
-    -3,
-    32,
-    "#3E63DD",
-    "Calendar",
-    "Product sync · Room 4B",
-    "cal",
-  ),
-  toast(770, 650, 4, 34, "#8E4EC6", "Docs", "on Launch plan (draft 3)", "chat"),
-  sticky(430, 104, 128, 9, 36, "#BFE3F7"),
-  toast(150, 330, -6, 37.5, "#F76B15", "CI", "main · exited with code 1", "x"),
-  sticky(820, 405, 136, -10, 39, "#C4EBCB"),
-  toast(610, 340, 5, 40, "#30A46C", "Chat", "Priya, Leo and 1 other", "chat"),
+  sticky(1135, 330, 136, 7, "#F9C9DE"),
+  toast(330, 645, -3, "#3E63DD", "Calendar", "Product sync · Room 4B", "cal"),
+  toast(770, 650, 4, "#8E4EC6", "Docs", "on Launch plan (draft 3)", "chat"),
+  sticky(430, 104, 128, 9, "#BFE3F7"),
+  toast(150, 330, -6, "#F76B15", "CI", "main · exited with code 1", "x"),
+  sticky(820, 405, 136, -10, "#C4EBCB"),
+  toast(610, 340, 5, "#30A46C", "Chat", "Priya, Leo and 1 other", "chat"),
 ];
 
-const PULL = 56;
-const PULL_LEN = 18;
 const WIN_W = 880;
 const WIN_H = 530;
 
@@ -1321,6 +1301,8 @@ function IssuesWindow({
   fps,
   dark,
   winIn,
+  rowsAt,
+  rowStagger,
   workspace,
   ink,
   tilted,
@@ -1330,6 +1312,9 @@ function IssuesWindow({
   fps: number;
   dark: boolean;
   winIn: number;
+  /** Frames after `winIn` the first row enters, and between rows. */
+  rowsAt: number;
+  rowStagger: number;
   workspace: string;
   ink?: string;
   /** The camera above already carries the tilt this frame. */
@@ -1340,7 +1325,7 @@ function IssuesWindow({
   const p = ink === undefined ? base : { ...base, text: ink };
   let n = 0;
   const rowIn = (): React.CSSProperties => {
-    const at = f - winIn - 3 - n++ * 1.3;
+    const at = f - winIn - rowsAt - n++ * rowStagger;
     const sp = (fr: number) =>
       spring({ frame: fr, fps, config: { damping: 30, stiffness: 260 } });
     const s = sp(at);
@@ -1630,39 +1615,54 @@ function ScaleLayer({
   );
 }
 
-export function ChaosToOrder({
-  items = DEFAULT_ITEMS,
-  children,
-  workspace = "remocn",
-  hold = PULL,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = inter.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ChaosToOrderProps) {
+export function ChaosToOrder(props: ChaosToOrderProps) {
+  const {
+    items = DEFAULT_ITEMS,
+    children,
+    workspace = "remocn",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = inter.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const f = frame * speed;
+  const tl = useTimeline(
+    chaosToOrderTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pullEl = tl.get("pull");
+  const app = tl.get("app");
+  const unreadEl = tl.get("unread");
+  const hold = pullEl.start;
+  const PULL_LEN = pullEl.beat("pull");
   const dark = theme === "dark";
   const u = Math.min(width / 1280, height / 720);
   const label = (i: number) => items[i] ?? DEFAULT_ITEMS[i];
-  const winIn = hold + 10;
+  const winIn = app.start;
 
   // the unread counter on the chat rail climbs faster and faster
   const unread = Math.round(
-    2 + 110 * interpolate(f, [6, Math.max(7, hold - 4)], [0, 1], clamp) ** 2.2,
+    2 +
+      110 *
+        interpolate(f, [unreadEl.start, unreadEl.end], [0, 1], clamp) ** 2.2,
   );
   const badge = unread > 99 ? "99+" : String(unread);
 
   // slow push-in while the pile builds, then the camera settles on the window
   // interpolate needs a strictly increasing range, so a hold of 0 still starts at 1
   const camAt = Math.max(1, hold);
-  const cam = interpolate(f, [0, camAt, camAt + PULL_LEN + 10], [1, 1.04, 1], {
+  const camSettle = camAt + pullEl.beat("settle");
+  const cam = interpolate(f, [0, camAt, camSettle], [1, 1.04, 1], {
     ...clamp,
     easing: IN_OUT,
   });
@@ -1676,7 +1676,7 @@ export function ChaosToOrder({
   // The window spring never lands exactly and the camera eases through a
   // turn, so both are read off the neighbouring frames, not a progress.
   const camOf = (fr: number) =>
-    interpolate(fr, [0, camAt, camAt + PULL_LEN + 10], [1, 1.04, 1], {
+    interpolate(fr, [0, camAt, camSettle], [1, 1.04, 1], {
       ...clamp,
       easing: IN_OUT,
     });
@@ -1688,12 +1688,12 @@ export function ChaosToOrder({
 
   const pieces = PIECES.map((p, i) => {
     const drop = spring({
-      frame: f - p.d,
+      frame: f - tl.get(`piece:${i}`).start,
       fps,
       config: { damping: 14, stiffness: 200, mass: 0.8 },
     });
     const order = Math.hypot(p.x - 640, p.y - 360) / 700; // far pieces leave first
-    const start = hold + (1 - order) * 5;
+    const start = hold + (1 - order) * pullEl.beat("spread");
     const pull = interpolate(f, [start, start + PULL_LEN], [0, 1], {
       ...clamp,
       easing: IN_OUT,
@@ -1804,13 +1804,15 @@ export function ChaosToOrder({
                 fps={fps}
                 dark={dark}
                 winIn={winIn}
+                rowsAt={app.beat("rows")}
+                rowStagger={app.beat("stagger")}
                 workspace={workspace}
                 ink={ink}
                 tilted={tilted}
               />
             )}
           </div>
-          {f < hold + PULL_LEN + 6 ? pieces : null}
+          {f < pullEl.end ? pieces : null}
         </div>
       </ScaleLayer>
     </AbsoluteFill>

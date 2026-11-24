@@ -15224,10 +15224,19 @@
         {
           "path": "chaos-to-order/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/chaos-to-order.tsx"
+          "target": "components/remocn/chaos-to-order/index.tsx"
+        },
+        {
+          "path": "chaos-to-order/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/chaos-to-order/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "notification-avalanche",
