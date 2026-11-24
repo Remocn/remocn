@@ -7,6 +7,16 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ROUTES,
+  type DotGlobeElementId,
+  dotGlobeTimeline,
+  type GlobeCity,
+  type GlobeRoute,
+} from "./timeline";
+
+export type { GlobeCity, GlobeRoute };
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -32,17 +42,6 @@ const LIMB = ["#e9ecff", "#8a8bff", "#4b2bd6", "#160c3a"] as const;
  *          country counter ticks up by one.
  * 170–210  last landing settles, the counter holds on the final number.
  */
-
-export interface GlobeCity {
-  name: string;
-  lat: number;
-  lon: number;
-}
-
-export interface GlobeRoute {
-  from: GlobeCity;
-  to: GlobeCity;
-}
 
 export interface DotGlobeProps {
   /** Final counter value; it ticks up once per landed route. */
@@ -70,33 +69,13 @@ export interface DotGlobeProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the globe, the copy lines and single routes,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<DotGlobeElementId>;
 }
-
-const C = {
-  london: { name: "London", lat: 51.5, lon: -0.13 },
-  lagos: { name: "Lagos", lat: 6.52, lon: 3.38 },
-  berlin: { name: "Berlin", lat: 52.52, lon: 13.4 },
-  nairobi: { name: "Nairobi", lat: -1.29, lon: 36.82 },
-  lisbon: { name: "Lisbon", lat: 38.72, lon: -9.14 },
-  newYork: { name: "New York", lat: 40.71, lon: -74.0 },
-  saoPaulo: { name: "São Paulo", lat: -23.55, lon: -46.63 },
-  madrid: { name: "Madrid", lat: 40.42, lon: -3.7 },
-  mexico: { name: "Mexico City", lat: 19.43, lon: -99.13 },
-  dakar: { name: "Dakar", lat: 14.7, lon: -17.44 },
-  bogota: { name: "Bogotá", lat: 4.71, lon: -74.07 },
-  toronto: { name: "Toronto", lat: 43.65, lon: -79.38 },
-  cairo: { name: "Cairo", lat: 30.04, lon: 31.24 },
-} satisfies Record<string, GlobeCity>;
-
-const DEFAULT_ROUTES: GlobeRoute[] = [
-  { from: C.london, to: C.lagos },
-  { from: C.berlin, to: C.cairo },
-  { from: C.lisbon, to: C.newYork },
-  { from: C.madrid, to: C.saoPaulo },
-  { from: C.london, to: C.toronto },
-  { from: C.dakar, to: C.bogota },
-  { from: C.newYork, to: C.mexico },
-];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -104,10 +83,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const ROUTE_START = 18;
-const ROUTE_GAP = 20;
-const FLIGHT = 32;
 
 /**
  * Land mask, 3° cells, longitude −180→180 left to right, latitude 78→−54
@@ -281,19 +256,25 @@ const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 function Counter({
   value,
   since,
+  roll,
   fontSize,
   fill,
   fontFamily,
 }: {
   value: number;
   since: number;
+  /** Frames the digits take to roll over. */
+  roll: number;
   fontSize: number;
   fontFamily: string;
   /** Top → bottom stops painted through the digits. */
   fill: readonly string[];
 }) {
   const glide = useGlide();
-  const p = interpolate(since, [0, 12], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const p = interpolate(since, [0, roll], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
   const prev = String(value - 1);
   const next = String(value);
   const width = Math.max(prev.length, next.length);
@@ -385,26 +366,33 @@ function ScaleLayer({
   );
 }
 
-export function DotGlobe({
-  count = 142,
-  prefix = "Live in",
-  suffix = "countries",
-  routes = DEFAULT_ROUTES,
-  stagger = ROUTE_GAP,
-  flight = FLIGHT,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: DotGlobeProps) {
+export function DotGlobe(props: DotGlobeProps) {
+  const {
+    count = 142,
+    prefix = "Live in",
+    suffix = "countries",
+    routes = DEFAULT_ROUTES,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    dotGlobeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const globe = tl.get("globe");
   const u = height / 720;
   const th: Theme = THEMES[theme];
   const fg = ink ?? th.fg;
@@ -412,11 +400,16 @@ export function DotGlobe({
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   // camera
-  const settle = interpolate(t, [0, 60], [0, 1], {
+  const settle = interpolate(t, [globe.start, globe.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const tiltP = interpolate(t, [0, 210], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const tiltP = interpolate(
+    t,
+    [globe.start, globe.start + globe.beat("tilt")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_IO },
+  );
   const tilt = (6 + 14 * tiltP) * DEG;
   const lon0 = (8 - t * 0.24) * DEG;
   const R = height * 0.42 * (0.94 + 0.06 * settle);
@@ -447,7 +440,8 @@ export function DotGlobe({
   const baseR = 2.15 * u * (R / (height * 0.42));
   for (let i = 0; i < DOTS.length; i++) {
     const d = DOTS[i];
-    const appear = interpolate(t, [d.h * 18, d.h * 18 + 12], [0, 1], CLAMP);
+    const at = globe.start + d.h * globe.beat("dots");
+    const appear = interpolate(t, [at, at + globe.beat("dot")], [0, 1], CLAMP);
     if (appear <= 0) continue;
     const lon = d.lon;
     const v: V3 = [d.cl * Math.sin(lon), d.sl, d.cl * Math.cos(lon)];
@@ -484,13 +478,15 @@ export function DotGlobe({
   // routes
   let landed = 0;
   let lastLanding = -999;
+  let lastTick = 12;
   const arcs: React.ReactNode[] = [];
   const pins: React.ReactNode[] = [];
   const labels: React.ReactNode[] = [];
   routes.forEach((route, ri) => {
-    const start = ROUTE_START + ri * stagger;
-    const lt = t - start;
-    if (lt < -4) return;
+    const e = tl.get(`route:${ri}`);
+    const flight = e.length;
+    const lt = t - e.start;
+    if (lt < -e.beat("origin")) return;
     const a = toVec(route.from);
     const b = toVec(route.to);
     const ang = Math.acos(
@@ -501,20 +497,31 @@ export function DotGlobe({
       ...CLAMP,
       easing: EASE_IO,
     });
-    const tail = interpolate(lt, [flight * 0.55, flight + 26], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
-    const landAt = start + flight;
+    const tail = interpolate(
+      lt,
+      [e.beat("tailAt"), e.beat("tailEnd")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
+    const landAt = e.end;
     if (t >= landAt) {
       landed += 1;
       lastLanding = landAt;
+      lastTick = e.beat("tick");
     }
 
     // origin pin
     const pa = rot(a);
     const [ax, ay] = proj(pa);
-    const originO = interpolate(lt, [-4, 4], [0, 1], CLAMP);
+    const originO = interpolate(
+      lt,
+      [-e.beat("origin"), e.beat("origin")],
+      [0, 1],
+      CLAMP,
+    );
     if (!hidden(pa)) {
       pins.push(
         <circle
@@ -595,8 +602,8 @@ export function DotGlobe({
         b[2] * e1[0] - b[0] * e1[2],
         b[0] * e1[1] - b[1] * e1[0],
       ];
-      [0, 7].forEach((delay, k) => {
-        const rp = interpolate(since - delay, [0, 30], [0, 1], {
+      [0, e.beat("echo")].forEach((delay, k) => {
+        const rp = interpolate(since - delay, [0, e.beat("ring")], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
         });
@@ -627,7 +634,7 @@ export function DotGlobe({
         );
       });
       const [bx, by] = proj(pb);
-      const pinP = interpolate(since, [0, 8], [0, 1], {
+      const pinP = interpolate(since, [0, e.beat("pin")], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
@@ -644,8 +651,18 @@ export function DotGlobe({
         />,
       );
       const labelO =
-        interpolate(since, [2, 12], [0, 1], CLAMP) *
-        interpolate(since, [44, 58], [1, 0], CLAMP);
+        interpolate(
+          since,
+          [e.beat("labelAt"), e.beat("labelIn")],
+          [0, 1],
+          CLAMP,
+        ) *
+        interpolate(
+          since,
+          [e.beat("labelOutAt"), e.beat("labelOut")],
+          [1, 0],
+          CLAMP,
+        );
       if (labelO > 0) {
         labels.push(
           <div
@@ -677,8 +694,12 @@ export function DotGlobe({
   });
 
   const value = count - routes.length + landed;
-  const textP = (d: number, at = t) =>
-    interpolate(at, [6 + d, 34 + d], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const copy = [tl.get("prefix"), tl.get("count"), tl.get("suffix")];
+  const textP = (k: number, at = t) =>
+    interpolate(at, [copy[k].start, copy[k].end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
   const marginX = width * 0.094;
   const bigSize = Math.min(168 * u, width * 0.13);
   const smallSize = 40 * u;
@@ -789,13 +810,29 @@ export function DotGlobe({
             fill={`url(#air${uid})`}
             opacity={
               th.air *
-              interpolate(t, [0, 40, 210], [0, 0.85, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              })
+              interpolate(
+                t,
+                [
+                  globe.start,
+                  globe.start + globe.beat("air"),
+                  globe.start + globe.beat("tilt"),
+                ],
+                [0, 0.85, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                },
+              )
             }
           />
-          <g opacity={interpolate(t, [0, 16], [0, 1], CLAMP)}>
+          <g
+            opacity={interpolate(
+              t,
+              [globe.start, globe.start + globe.beat("body")],
+              [0, 1],
+              CLAMP,
+            )}
+          >
             <circle cx={cx} cy={cy} r={R} fill={`url(#body${uid})`} />
           </g>
           <g fill={dotFill}>{back}</g>
@@ -806,7 +843,15 @@ export function DotGlobe({
             r={R}
             fill={`url(#rim${uid})`}
             mask={`url(#rm${uid})`}
-            opacity={interpolate(t, [4, 30], [0, 1], CLAMP)}
+            opacity={interpolate(
+              t,
+              [
+                globe.start + globe.beat("rimAt"),
+                globe.start + globe.beat("rim"),
+              ],
+              [0, 1],
+              CLAMP,
+            )}
           />
           {arcs}
           {pins}
@@ -837,10 +882,11 @@ export function DotGlobe({
           >
             {prefix}
           </div>
-          <div style={{ ...textItem(3), marginLeft: -bigSize * 0.04 }}>
+          <div style={{ ...textItem(1), marginLeft: -bigSize * 0.04 }}>
             <Counter
               value={value}
               since={t - lastLanding}
+              roll={lastTick}
               fontSize={bigSize}
               fill={th.count}
               fontFamily={fontFamily}
@@ -848,7 +894,7 @@ export function DotGlobe({
           </div>
           <div
             style={{
-              ...textItem(6),
+              ...textItem(2),
               fontFamily: serif,
               fontStyle: "italic",
               fontWeight: 400,

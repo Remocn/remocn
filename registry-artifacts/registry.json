@@ -14486,12 +14486,21 @@
       "title": "Dot Globe",
       "description": "A dotted globe spins up while Live in 142 countries counts in beside it.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/dot-globe/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/dot-globe.tsx"
+          "target": "components/remocn/dot-globe/index.tsx"
+        },
+        {
+          "path": "registry/remocn/dot-globe/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/dot-globe/timeline.ts"
         }
       ],
       "type": "registry:component"
