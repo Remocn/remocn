@@ -15850,12 +15850,21 @@
       "title": "Audit Boxes",
       "description": "Off-spec elements of a UI get traced with red boxes, each with the fix it needs, while an issue counter ticks up.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/audit-core", "@remocn/glide"],
+      "registryDependencies": [
+        "@remocn/audit-core",
+        "@remocn/glide",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "audit-boxes/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/audit-boxes.tsx"
+          "target": "components/remocn/audit-boxes/index.tsx"
+        },
+        {
+          "path": "audit-boxes/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/audit-boxes/timeline.ts"
         }
       ]
     },
