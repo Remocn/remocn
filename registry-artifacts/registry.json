@@ -13104,12 +13104,21 @@
       "title": "Crosshair Lock",
       "description": "A crosshair locks onto the peak of a dot plot and calls out 2.4k per minute.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/crosshair-lock/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/crosshair-lock.tsx"
+          "target": "components/remocn/crosshair-lock/index.tsx"
+        },
+        {
+          "path": "registry/remocn/crosshair-lock/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/crosshair-lock/timeline.ts"
         }
       ],
       "type": "registry:component"
