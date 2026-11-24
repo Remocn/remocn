@@ -8169,12 +8169,21 @@
       "title": "Spell Out",
       "description": "\"remocn\" spells out in big lowercase letters with \"Say it once. Remember it.\" beneath.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/spell-out/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/spell-out.tsx"
+          "target": "components/remocn/spell-out/index.tsx"
+        },
+        {
+          "path": "registry/remocn/spell-out/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/spell-out/timeline.ts"
         }
       ],
       "type": "registry:component"

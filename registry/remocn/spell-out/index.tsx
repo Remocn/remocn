@@ -12,6 +12,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINE,
+  DEFAULT_NAME,
+  lettersOf,
+  type SpellOutElementId,
+  spellOutTimeline,
+} from "./timeline";
 
 const nunito = loadFont("normal", {
   weights: ["400", "500"],
@@ -37,6 +45,12 @@ export interface SpellOutProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches each letter, the close-up and the line, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<SpellOutElementId>;
 }
 
 const THEMES = {
@@ -57,12 +71,6 @@ const THEMES = {
 const FONT_PX = 200;
 const TRACK = -0.03;
 const LINE_TRACK = -0.01;
-const SPELL_AT = 4;
-const LETTER_GAP = 8;
-const FALL = 7;
-const HOLD_SPELLED = 14;
-const CLOSE_LEN = 20;
-const LINE_DELAY = 14;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN = Easing.bezier(0.55, 0, 0.85, 0.35);
@@ -173,28 +181,34 @@ function ScaleLayer({
   );
 }
 
-export function SpellOut({
-  name = "remocn",
-  line = "Say it once. Remember it.",
-  accent,
-  ink,
-  background,
-  fontFamily = nunito.fontFamily,
-  stagger = LETTER_GAP,
-  hold = HOLD_SPELLED,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: SpellOutProps) {
+export function SpellOut(props: SpellOutProps) {
+  const {
+    name = DEFAULT_NAME,
+    line = DEFAULT_LINE,
+    accent,
+    ink,
+    background,
+    fontFamily = nunito.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    spellOutTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
   const dash = accent ?? c.accent;
-  const chars = useMemo(() => Array.from(name.replace(/\s+/g, "")), [name]);
+  const chars = useMemo(() => lettersOf(name), [name]);
   const m = useMetrics(chars, line, fontFamily);
 
   if (!m || chars.length === 0) {
@@ -223,10 +237,10 @@ export function SpellOut({
   const lh = R * 1.4;
   const bo = (lh - (m.asc + m.desc) * R) / 2 + m.asc * R;
 
-  const lastLand = SPELL_AT + (n - 1) * stagger + FALL;
-  const closeAt = lastLand + hold;
+  const closeEl = tl.get("close");
+  const closeAt = closeEl.start;
   const closeOf = (tt: number) =>
-    interpolate(tt, [closeAt, closeAt + CLOSE_LEN], [0, 1], {
+    interpolate(tt, [closeAt, closeEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
     });
@@ -238,15 +252,18 @@ export function SpellOut({
 
   const nodes: React.ReactNode[] = [];
   for (let i = 0; i < n; i++) {
-    const landAt = SPELL_AT + i * stagger + FALL;
-    if (t < landAt - FALL) continue;
+    const letter = tl.get(`letter:${i}`);
+    const fallLen = letter.beat("fall");
+    const landAt = letter.start + fallLen;
+    if (t < landAt - fallLen) continue;
     const centre = (n - 1) / 2;
-    const settleAt = closeAt + CLOSE_LEN - 2 + Math.abs(i - centre) * 1.5;
+    const settleAt =
+      closeEl.end + closeEl.beat("settle") + Math.abs(i - centre) * 1.5;
     // The letter is laid out on the closed word's baseline; the fall and the
     // climb there are a transform, since layout rounds a baseline to whole
     // pixels and a letter eased by `top` clicks down pixel by pixel.
     const letterAt = (tt: number) => {
-      const fall = interpolate(tt, [landAt - FALL, landAt], [0, 1], {
+      const fall = interpolate(tt, [landAt - fallLen, landAt], [0, 1], {
         ...CLAMP,
         easing: EASE_IN,
       });
@@ -303,11 +320,16 @@ export function SpellOut({
       </div>,
     );
     if (i < n - 1) {
-      const born = landAt + 1;
-      const hp = interpolate(t, [born, born + 7], [0, 1], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      });
+      const born = landAt + letter.beat("dash");
+      const hp = interpolate(
+        t,
+        [born, born + letter.beat("dashLength")],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: EASE_OUT,
+        },
+      );
       const shrink = 1 - close;
       if (hp > 0 && shrink > 0.001) {
         const nextX0 = spellLeft + spelled[i + 1] * S;
@@ -338,11 +360,13 @@ export function SpellOut({
     }
   }
 
-  const lineAt = closeAt + CLOSE_LEN - 4 + LINE_DELAY - 10;
-  const lp = interpolate(t, [lineAt, lineAt + 18], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const lineEl = line ? tl.get("line") : undefined;
+  const lp = lineEl
+    ? interpolate(t, [lineEl.start, lineEl.end], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      })
+    : 0;
   const lineBase = finalBase + lineGap + m.lineCap * lineSize0;
   const llh = lineSize0 * 1.45;
   const lbo = (llh - (m.asc + m.desc) * lineSize0) / 2 + m.asc * lineSize0;
