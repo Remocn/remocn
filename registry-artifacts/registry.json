@@ -3454,12 +3454,21 @@
       "title": "Type Fossil",
       "description": "A readable word carries layers of fine contours, revises itself, then compresses into a clean typographic imprint.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/type-fossil/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/type-fossil.tsx"
+          "target": "components/remocn/type-fossil/index.tsx"
+        },
+        {
+          "path": "registry/remocn/type-fossil/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/type-fossil/timeline.ts"
         }
       ],
       "type": "registry:component"
