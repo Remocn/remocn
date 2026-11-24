@@ -10447,10 +10447,19 @@
         {
           "path": "liquid-word/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/liquid-word.tsx"
+          "target": "components/remocn/liquid-word/index.tsx"
+        },
+        {
+          "path": "liquid-word/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/liquid-word/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "oval-type",

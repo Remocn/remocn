@@ -10442,12 +10442,21 @@
       "title": "Liquid Word",
       "description": "A word melts into a gradient pool, then a new word rises out of it.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/liquid-word/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/liquid-word.tsx"
+          "target": "components/remocn/liquid-word/index.tsx"
+        },
+        {
+          "path": "registry/remocn/liquid-word/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/liquid-word/timeline.ts"
         }
       ],
       "type": "registry:component"
