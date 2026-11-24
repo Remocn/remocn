@@ -14985,13 +14985,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/keycap-press/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/keycap-press.tsx"
+          "target": "components/remocn/keycap-press/index.tsx"
+        },
+        {
+          "path": "registry/remocn/keycap-press/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/keycap-press/timeline.ts"
         }
       ],
       "type": "registry:component"
