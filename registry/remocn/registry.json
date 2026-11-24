@@ -15538,13 +15538,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "invite-team/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/invite-team.tsx"
+          "target": "components/remocn/invite-team/index.tsx"
+        },
+        {
+          "path": "invite-team/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/invite-team/timeline.ts"
         }
       ]
     },

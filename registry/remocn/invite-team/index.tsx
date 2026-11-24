@@ -15,6 +15,16 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_EMAILS,
+  type InviteTeamElementId,
+  inviteTeamTimeline,
+} from "./timeline";
 
 const hanken = loadFont("normal", {
   weights: ["300", "400"],
@@ -50,6 +60,12 @@ export interface InviteTeamProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the window and modal, the cursor's clicks,
+   * single emails, the chips flying out and the toast, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<InviteTeamElementId>;
 }
 
 const SPR = {
@@ -77,8 +93,6 @@ const tween = (
 /** Whether `px(f)`, a value in pixels, moves at frame `f`. */
 const stirs = (px: (f: number) => number, f: number, eps = 1e-3) =>
   Math.abs(px(f + 1) - px(f)) > eps || Math.abs(px(f) - px(f - 1)) > eps;
-
-const BEAT = { window: 0, modal: 6, cursor: 8, focus: 24, type: 28 };
 
 const AV_TONES = ["#D9C6B0", "#B5C8D6", "#C6D3B4", "#DDBBB8", "#C3BEDD"];
 const EXISTING = [
@@ -261,28 +275,36 @@ function Avatar({
   );
 }
 
-export function InviteTeam({
-  emails = ["maya@kitebase.io", "leo@kitebase.io", "priya@kitebase.io"],
-  role = "Editor",
-  workspace = "Kitebase",
-  images = DEFAULT_IMAGES,
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken.fontFamily,
-  pageTitle = "Projects",
-  fieldLabel = "Email addresses",
-  doneLabel = "Invites sent",
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: InviteTeamProps) {
+export function InviteTeam(props: InviteTeamProps) {
+  const {
+    emails = DEFAULT_EMAILS,
+    role = "Editor",
+    workspace = "Kitebase",
+    images = DEFAULT_IMAGES,
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken.fontFamily,
+    pageTitle = "Projects",
+    fieldLabel = "Email addresses",
+    doneLabel = "Invites sent",
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    inviteTeamTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const tall = height > width;
   const SW = tall ? 600 : 1280;
   const SH = tall ? (600 * height) / width : 720;
@@ -323,62 +345,85 @@ export function InviteTeam({
     : ["Admin", role, "Member", "Viewer"];
   const roleIdx = Math.max(0, roles.indexOf(role));
 
-  const typeStart: number[] = [];
-  const chipAt: number[] = [];
-  list.forEach((e, i) => {
-    typeStart.push(i === 0 ? BEAT.type : chipAt[i - 1] + 4);
-    chipAt.push(typeStart[i] + Math.ceil(e.length / 2) + 2);
-  });
-  const typedEnd = chipAt[n - 1] ?? BEAT.type + 6;
-  const selClick = typedEnd + 14;
-  const optClick = selClick + 14;
-  const btnClick = optClick + 16;
-  const doneAt = btnClick + 18;
-  const outAt = doneAt + 8;
-  const flyAt = list.map((_, j) => outAt - 2 + j * 3);
-  const landAt = flyAt.map((f) => f + 12);
-  const toastAt = (landAt[n - 1] ?? outAt) + 4;
+  const windowEl = tl.get("app");
+  const modalEl = tl.get("modal");
+  const cameraEl = tl.get("camera");
+  const cursorEl = tl.get("cursor");
+  const focusEl = tl.get("focus");
+  const selectEl = tl.get("select");
+  const roleEl = tl.get("role");
+  const sendEl = tl.get("send");
+  const outEl = tl.get("out");
+  const toastEl = tl.get("toast");
+  const emailEls = list.map((_, i) => tl.get(`email:${i}`));
+  const typeStart = emailEls.map((e) => e.start);
+  const chipAt = emailEls.map((e) => e.end);
+  const typeAt = emailEls[0]?.start ?? focusEl.end;
+  const typedEnd = chipAt[n - 1] ?? focusEl.start + focusEl.beat("empty");
+  const selClick = selectEl.start;
+  const optClick = roleEl.start;
+  const btnClick = sendEl.start;
+  const doneAt = tl.get("done").start;
+  const outAt = outEl.start;
+  const flyAt = list.map((_, j) => tl.get(`fly:${j}`).start);
+  const landAt = list.map((_, j) => tl.get(`fly:${j}`).end);
+  const toastAt = toastEl.start;
 
-  const winIn = sp(BEAT.window, SPR.heavy);
-  const winOp = tween(frame, BEAT.window, 10, EASE.enter);
-  const modalIn = sp(BEAT.modal, SPR.card);
-  const modalOp = tween(frame, BEAT.modal, 8, EASE.enter);
-  const modalOut = tween(frame, outAt, 7, EASE.exit);
+  const winIn = sp(windowEl.start, SPR.heavy);
+  const winOp = tween(frame, windowEl.start, windowEl.length, EASE.enter);
+  const modalIn = sp(modalEl.start, SPR.card);
+  const modalOp = tween(frame, modalEl.start, modalEl.beat("fade"), EASE.enter);
+  const modalOut = tween(frame, outAt, outEl.length, EASE.exit);
   const dim =
-    tween(frame, BEAT.modal, 12, EASE.soft) *
-    (1 - tween(frame, outAt, 10, EASE.soft));
+    tween(frame, modalEl.start, modalEl.length, EASE.soft) *
+    (1 - tween(frame, outAt, outEl.beat("dim"), EASE.soft));
   const focus =
-    tween(frame, BEAT.focus, 4, EASE.enter) *
-    (1 - tween(frame, selClick - 2, 4, EASE.enter));
+    tween(frame, focusEl.start, focusEl.beat("ring"), EASE.enter) *
+    (1 -
+      tween(
+        frame,
+        selClick + selectEl.beat("ringOutAt"),
+        selectEl.beat("ringOut"),
+        EASE.enter,
+      ));
+  const closeAt = optClick + roleEl.beat("closeAt");
   const dropInAt = (f: number) =>
-    clamp01(spAt(f, selClick + 1, SPR.card)) *
-    (1 - tween(f, optClick + 1, 6, EASE.exit));
+    clamp01(spAt(f, selClick + selectEl.beat("openAt"), SPR.card)) *
+    (1 - tween(f, closeAt, roleEl.beat("close"), EASE.exit));
   const dropIn = dropInAt(frame);
-  const roleNow = frame >= optClick + 1 ? role : "Member";
-  const loading = frame >= btnClick + 2 && frame < doneAt;
+  const roleNow = frame >= closeAt ? role : "Member";
+  const loading =
+    frame >= btnClick + sendEl.beat("loadingAt") && frame < doneAt;
   const done = frame >= doneAt;
   const shownChips = chipAt.filter((c) => frame >= c).length;
-  const pressAt = (f: number, at: number) =>
-    clamp01(spAt(f, at - 2, SPR.chip) - spAt(f, at + 3, SPR.chip));
-  const pressOf = (at: number) => pressAt(frame, at);
+  /** How far a click's element has the button pressed, at frame `f`. */
+  const pressAt = (f: number, e: ResolvedElement<InviteTeamElementId>) =>
+    clamp01(
+      spAt(f, e.start + e.beat("pressIn"), SPR.chip) -
+        spAt(f, e.start + e.beat("pressOut"), SPR.chip),
+    );
+  const pressOf = (e: ResolvedElement<InviteTeamElementId>) =>
+    pressAt(frame, e);
   const toast = sp(toastAt, SPR.card);
-  const toastOp = tween(frame, toastAt, 6, EASE.enter);
+  const toastOp = tween(frame, toastAt, toastEl.length, EASE.enter);
   const camAt = (f: number) =>
     1 +
-    0.03 * tween(f, 8, 70, EASE.camera) -
-    0.03 * tween(f, outAt - 4, 28, EASE.camera);
+    0.03 * tween(f, cameraEl.start, cameraEl.length, EASE.camera) -
+    0.03 *
+      tween(f, outAt + outEl.beat("camAt"), outEl.beat("cam"), EASE.camera);
   const cam = camAt(frame);
   // The camera carries every piece below, so its tilt covers their text; an
   // inner mover tilts only while the camera holds still.
   const camMoving = stirs((f) => camAt(f) * 1000, frame);
   const inner = (px: (f: number) => number, eps?: number) =>
     !camMoving && stirs(px, frame, eps);
-  const winMoving = inner((f) => spAt(f, BEAT.window, SPR.heavy) * 40);
+  const winMoving = inner((f) => spAt(f, windowEl.start, SPR.heavy) * 40);
   const modalTy = (f: number) =>
-    spAt(f, BEAT.modal, SPR.card) * 18 + tween(f, outAt, 7, EASE.exit) * 10;
+    spAt(f, modalEl.start, SPR.card) * 18 +
+    tween(f, outAt, outEl.length, EASE.exit) * 10;
   const modalK = (f: number) =>
-    (0.97 + 0.03 * spAt(f, BEAT.modal, SPR.card)) *
-    (1 - 0.03 * tween(f, outAt, 7, EASE.exit));
+    (0.97 + 0.03 * spAt(f, modalEl.start, SPR.card)) *
+    (1 - 0.03 * tween(f, outAt, outEl.length, EASE.exit));
   const modalMoving = inner(modalTy) || inner((f) => (modalK(f) * MW) / 2);
   // Pieces inside the modal leave the tilt to it while it moves.
   const inModal = (px: (f: number) => number) => !modalMoving && inner(px);
@@ -392,12 +437,12 @@ export function InviteTeam({
   const btn = { x: MX + BUTTON.x + 130, y: MY + BUTTON.y + 28 };
   const start = tall ? { x: 660, y: 1120 } : { x: 1360, y: 800 };
   const legs = [
-    { at: BEAT.cursor, from: start, to: field, arc: 1 },
-    { at: selClick - 16, from: field, to: sel, arc: -1 },
-    { at: optClick - 13, from: sel, to: opt, arc: 1 },
-    { at: btnClick - 15, from: opt, to: btn, arc: -1 },
+    { at: cursorEl.start, from: start, to: field, arc: 1 },
+    { at: selClick + selectEl.beat("legAt"), from: field, to: sel, arc: -1 },
+    { at: optClick + roleEl.beat("legAt"), from: sel, to: opt, arc: 1 },
+    { at: btnClick + sendEl.beat("legAt"), from: opt, to: btn, arc: -1 },
     {
-      at: outAt + 2,
+      at: outAt + outEl.beat("exitAt"),
       from: btn,
       to: { x: btn.x + 90, y: btn.y + 120 },
       arc: 1,
@@ -420,15 +465,26 @@ export function InviteTeam({
   const curDx = Math.abs(curX - curRest.x) < 1e-3 ? 0 : curX - curRest.x;
   const curDy = Math.abs(curY - curRest.y) < 1e-3 ? 0 : curY - curRest.y;
   const curPress = Math.max(
-    pressOf(BEAT.focus),
-    pressOf(selClick),
-    pressOf(optClick),
-    pressOf(btnClick),
+    pressOf(focusEl),
+    pressOf(selectEl),
+    pressOf(roleEl),
+    pressOf(sendEl),
   );
   const curOp =
-    tween(frame, BEAT.cursor, 5, EASE.enter) *
-      (1 - tween(frame, BEAT.type + 2, 4, EASE.exit)) +
-    tween(frame, typedEnd + 2, 5, EASE.enter);
+    tween(frame, cursorEl.start, cursorEl.beat("fadeIn"), EASE.enter) *
+      (1 -
+        tween(
+          frame,
+          focusEl.start + focusEl.beat("hideAt"),
+          focusEl.beat("hide"),
+          EASE.exit,
+        )) +
+    tween(
+      frame,
+      selClick + selectEl.beat("showAt"),
+      selectEl.beat("show"),
+      EASE.enter,
+    );
   const optTop = MY + SELECT.y + SELECT.h + 6 + 6;
   const hovered = Math.floor((curY - optTop) / OPT_H);
 
@@ -440,7 +496,7 @@ export function InviteTeam({
     (_, i) => frame >= typeStart[i] && frame < chipAt[i],
   );
   const caretOn =
-    Math.floor(frame / 8) % 2 === 0 || (frame >= BEAT.type && frame < typedEnd);
+    Math.floor(frame / 8) % 2 === 0 || (frame >= typeAt && frame < typedEnd);
   const caretSlot =
     typingIdx >= 0
       ? chips[typingIdx]
@@ -754,9 +810,8 @@ export function InviteTeam({
                   const pop = sp(chipAt[i], SPR.chip);
                   const typing = frame >= typeStart[i] && frame < chipAt[i] + 1;
                   const typed = Math.floor(
-                    clamp01(
-                      (frame - typeStart[i]) / (chipAt[i] - 2 - typeStart[i]),
-                    ) * e.length,
+                    clamp01((frame - typeStart[i]) / emailEls[i].beat("type")) *
+                      e.length,
                   );
                   const flying = frame >= flyAt[i];
                   return (
@@ -865,7 +920,7 @@ export function InviteTeam({
                   padding: "0 12px 0 14px",
                   fontSize: 17,
                   color: fg,
-                  transform: `scale(${1 - 0.04 * pressOf(selClick)})${glide(inModal((f) => pressAt(f, selClick) * 0.04 * SELECT.w))}`,
+                  transform: `scale(${1 - 0.04 * pressOf(selectEl)})${glide(inModal((f) => pressAt(f, selectEl) * 0.04 * SELECT.w))}`,
                 }}
               >
                 {roleNow}
@@ -917,7 +972,7 @@ export function InviteTeam({
                   fontSize: 16,
                   color: "#FFFFFF",
                   opacity: shownChips === 0 ? 0.5 : 1,
-                  transform: `scale(${1 - 0.04 * pressOf(btnClick)})${glide(inModal((f) => pressAt(f, btnClick) * 0.04 * BUTTON.w))}`,
+                  transform: `scale(${1 - 0.04 * pressOf(sendEl)})${glide(inModal((f) => pressAt(f, sendEl) * 0.04 * BUTTON.w))}`,
                 }}
               >
                 {loading ? (
