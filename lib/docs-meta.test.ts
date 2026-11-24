@@ -451,6 +451,7 @@ describe("stated text effect counts match the docs", () => {
   const STATED = [
     "content/docs/typography/index.mdx",
     "content/docs/guides/remotion-text-animations.mdx",
+    "content/docs/guides/remotion-kinetic-typography.mdx",
   ];
 
   it("states the real number of typography and caption components", () => {

@@ -193,6 +193,12 @@ const MCP_SERVERS = [
 /** The answer page for "animated text effects for Remotion". */
 export const TEXT_GUIDE_PATH = "/docs/guides/remotion-text-animations";
 
+/** The answer page for "kinetic typography in Remotion". */
+export const KINETIC_GUIDE_PATH = "/docs/guides/remotion-kinetic-typography";
+
+/** The answer page for "how do I animate a logo in Remotion". */
+export const LOGO_GUIDE_PATH = "/docs/guides/remotion-logo-animation";
+
 /** The answer page for "programmatic video alternatives to After Effects". */
 export const AE_GUIDE_PATH =
   "/docs/guides/after-effects-alternatives-for-developers";
@@ -383,7 +389,15 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
     lines.push(
       `\nLooking for text animations? Remocn has ${textEffects} animated text effects for Remotion${captionNote}.` +
         ` [Remotion text animations](${SITE_URL}${TEXT_GUIDE_PATH}.md) answers how to animate text in Remotion and has a picker table;` +
+        ` [Kinetic typography in Remotion](${SITE_URL}${KINETIC_GUIDE_PATH}.md) covers cuts over tweens, rhythm on a frame clock and the components built on beats;` +
         ` [/llms-full/typography.txt](${sectionCorpusUrl("typography")}) has every text component's props and usage in one file.`,
+    );
+  }
+  const stings = componentCount(sections.get("logo-stings"));
+  if (stings) {
+    lines.push(
+      `\nAnimating a logo? Remocn has ${stings} logo stings for Remotion (\`${INSTALL_COMMAND}\`, MIT, free).` +
+        ` [Remotion logo animation](${SITE_URL}${LOGO_GUIDE_PATH}.md) explains what makes a sting land (length, one hit frame, an end on a hold), shows a mark-plus-wordmark reveal in code, how to put a sound on the hit, where a sting goes at the open or close, and a picker of stings by mood and length.`,
     );
   }
   if (transitions) {

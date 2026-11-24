@@ -1,0 +1,268 @@
+---
+title: "Remotion logo animation: how to build a logo sting in React, plus 45 ready-made ones"
+navTitle: Logo animation
+description: "How to animate a logo in Remotion: what makes a logo sting land (length, one hit, an end on a hold), a mark-plus-wordmark reveal in code, sound on the hit, and a picker of Remocn's free logo stings by mood and length."
+lastModified: "2026-11-24"
+---
+
+_Last updated: November 24, 2026._
+
+To animate a logo in Remotion, build a short composition where the mark arrives, the wordmark
+reveals beside it, one frame lands as the hit, and the finished logo holds still until the cut.
+Every value comes from `useCurrentFrame()` through `spring()` or `interpolate()`. Or install a
+finished one: Remocn has 45 free, MIT-licensed logo stings for Remotion, added with
+`npx shadcn@latest add @remocn/<name>`.
+
+Each sting is copied into your project as source, so you can edit it. There is no runtime package
+besides Remotion.
+
+## What makes a logo sting land
+
+A logo sting is punctuation, not a scene. Three things decide whether it reads as a brand moment
+or as a slow fade nobody remembers.
+
+- **Length: one to three seconds of motion.** Most Remocn stings finish their own movement in 26
+  to 150 frames at 30 fps (about 1 to 5 seconds). Past that, the viewer is waiting for the logo
+  instead of seeing it.
+- **A hit: one frame where the logo is finished.** Everything before it is build-up, everything
+  after it is settle. The hit is where a sound goes and where the eye locks on. Spread the arrival
+  over a long ease and there is no hit, only drift.
+- **An end on a hold.** Leave the lockup still for at least half a second, and a full second on
+  the last shot of a video. A logo that is still moving when the video cuts never registers.
+
+Two smaller rules follow from those three:
+
+- **Keep the final frame plain.** Mark, name, maybe one short line. Particles, rings and light
+  are lead-in, and they should be gone or quiet by the hold.
+- **Don't scale the wordmark text.** A mark (an SVG or image) scales cleanly. Text under a moving
+  `scale` steps from pixel to pixel in Chrome and shimmers. Reveal the name with a clip and a
+  short horizontal slide instead.
+
+## How to animate a logo in Remotion: mark plus wordmark
+
+A minimal reveal: the mark springs in, the wordmark wipes out from behind it, a sound plays on the
+hit, and the lockup holds. Timings are written in seconds and converted with the composition's
+`fps`, so the sting runs the same length at 30 or 60 fps.
+
+```tsx
+import {
+  AbsoluteFill,
+  Audio,
+  Easing,
+  Img,
+  Sequence,
+  interpolate,
+  spring,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
+
+export const LogoSting = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const s = (seconds: number) => Math.round(seconds * fps);
+
+  // The mark lands without overshoot: damping 200 stops the wobble.
+  const mark = spring({ frame, fps, config: { damping: 200 }, durationInFrames: s(0.6) });
+
+  // The wordmark starts once the mark is nearly settled, and finishes on the hit.
+  const hit = s(1.1);
+  const reveal = interpolate(frame, [s(0.45), hit], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.out(Easing.cubic),
+  });
+
+  return (
+    <AbsoluteFill
+      style={{ alignItems: "center", justifyContent: "center", background: "#0B0B0C" }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+        <Img
+          src={staticFile("mark.svg")}
+          style={{ height: 120, scale: String(0.6 + 0.4 * mark), opacity: mark }}
+        />
+        <span
+          style={{
+            fontSize: 112,
+            fontWeight: 700,
+            color: "#FFFFFF",
+            // Clip from the right and slide horizontally: no scale on the text.
+            clipPath: `inset(0 ${(1 - reveal) * 100}% 0 0)`,
+            translate: `${(1 - reveal) * -32}px 0`,
+          }}
+        >
+          acme
+        </span>
+      </div>
+      {/* The sound starts on the hit frame. */}
+      <Sequence from={hit}>
+        <Audio src={staticFile("hit.wav")} />
+      </Sequence>
+    </AbsoluteFill>
+  );
+};
+```
+
+Register it for 2.5 seconds: 1.1 seconds to the hit and 1.4 seconds of hold.
+
+```tsx
+<Composition
+  id="LogoSting"
+  component={LogoSting}
+  durationInFrames={150}
+  fps={60}
+  width={1920}
+  height={1080}
+/>
+```
+
+Why it is built this way:
+
+- **The layout never moves.** The mark and the name sit where they end up from frame 0, and only
+  `scale`, `clip-path` and `translate` change. Animating `margin`, `gap` or `left` reflows the
+  line and makes text jump by whole pixels.
+- **The wordmark move is horizontal only.** A slow vertical slide on text steps unevenly in
+  Chrome; a horizontal one does not.
+- **The hit is a named frame.** The sound, and any flash or shake you add later, hang off `hit`,
+  so changing the timing moves them together.
+- **No CSS transitions, no `Math.random()`.** Remotion renders frames out of order and in
+  parallel, so every value has to come from the frame.
+
+## Ready-made logo stings in Remocn
+
+The same job from Remocn, with the hit and the hold already timed. Install one:
+
+```bash
+npx shadcn@latest add @remocn/orbit-lock
+```
+
+```tsx
+import { Img, staticFile } from "remotion";
+import { OrbitLock } from "@/components/remocn/orbit-lock";
+
+export const LogoSting = () => (
+  <OrbitLock moons={3} tilt={64}>
+    <Img src={staticFile("logo.svg")} style={{ height: 120 }} />
+  </OrbitLock>
+);
+```
+
+Moons collapse into a core that bursts into a ring flash at frame 30 (30 fps), and your logo
+springs in. Give the sequence about a second after frame 50 so the logo holds.
+
+## Which Remocn logo sting to use
+
+Picked by mood and length. **Length** is the sting's own motion in 30 fps frames: the minimum for
+its `Sequence`. In a 60 fps composition double it, then add the hold on top. **Your brand** says
+what you pass in: `children` (your logo as an image or component), a `name` / `logo` prop, or a
+wordmark beside a mark the sting draws itself. The [Logo stings](/docs/logo-stings) page lists
+all 45.
+
+| Mood | Component | What happens | Length | Your brand | Install |
+|---|---|---|---|---|---|
+| Fast, crisp | [Accordion Unfold](/docs/logo-stings/accordion-unfold) | A paper zigzag unfolds into a flat card with the logo printed across it | 26f | `children` | `npx shadcn@latest add @remocn/accordion-unfold` |
+| Playful, fast | [Puzzle Snap](/docs/logo-stings/puzzle-snap) | Pieces spin in and snap into a mark with sparks, then the wordmark slides out | 38f | Wordmark as `children`; the mark is drawn | `npx shadcn@latest add @remocn/puzzle-snap` |
+| Cinematic | [Anamorphic Flare](/docs/logo-stings/anamorphic-flare) | A point of light stretches into a horizontal streak and reveals the logo | 40f | `children` | `npx shadcn@latest add @remocn/anamorphic-flare` |
+| Playful, retro | [Neon Sign](/docs/logo-stings/neon-sign) | Glass neon tubes stutter on, buzz off once, then hold lit | 40f | Monoline SVG `path` | `npx shadcn@latest add @remocn/neon-sign` |
+| Clean, tactile | [Snap Click](/docs/logo-stings/snap-click) | Two halves of the lockup slam together at a seam, a label types beneath | 45f | `text`, `label` | `npx shadcn@latest add @remocn/snap-click` |
+| Clean, friendly | [Liquid Fill](/docs/logo-stings/liquid-fill) | Liquid rises inside an outlined mark until it is solid | 49f | Wordmark as `children`; mark `shape` path | `npx shadcn@latest add @remocn/liquid-fill` |
+| Energetic, with a clear hit | [Orbit Lock](/docs/logo-stings/orbit-lock) | Moons collapse into a core that bursts, and the logo springs in | 50f | `children` | `npx shadcn@latest add @remocn/orbit-lock` |
+| Theatrical | [Spotlight](/docs/logo-stings/spotlight) | A stage spotlight searches the dark, overshoots and lands on the logo | 50f | `children` | `npx shadcn@latest add @remocn/spotlight` |
+| Partnership | [Collab Lockup](/docs/logo-stings/collab-lockup) | Two logos glide together and join with a × under a glowing arc | 78f | `left` / `right` or `leftLogo` / `rightLogo` | `npx shadcn@latest add @remocn/collab-lockup` |
+| Launch, premium | [Introducing](/docs/logo-stings/introducing) | An eyebrow lifts as the name lands with a sweep of light and a tagline | 86f | `name` or `logo`, `tagline` | `npx shadcn@latest add @remocn/introducing` |
+| Calm, premium | [First Light](/docs/logo-stings/first-light) | A band of light climbs a baseline and lights the wordmark | 86f | `name`, `logo`, `tagline` | `npx shadcn@latest add @remocn/first-light` |
+| Trailer | [Bass Drop](/docs/logo-stings/bass-drop) | A build breathes in, goes silent, then drops into the big gradient logo | 96f | `title`, `logo`, `line` | `npx shadcn@latest add @remocn/bass-drop` |
+| Spelled out | [Spell Out](/docs/logo-stings/spell-out) | Letters drop in one at a time, then close up into the word | 103f | `name`, `line` | `npx shadcn@latest add @remocn/spell-out` |
+| Kinetic type into logo | [Blink Cut](/docs/logo-stings/blink-cut) | Words blink in a fixed rhythm across layouts, then cut to the logo | 108f | `brand`, `line` | `npx shadcn@latest add @remocn/blink-cut` |
+| Tech | [Gravity Grid](/docs/logo-stings/gravity-grid) | A grid bends into a gravity well and the logo lands at the bottom | 112f | `logo`, `name` | `npx shadcn@latest add @remocn/gravity-grid` |
+| Editorial | [Title Converge](/docs/logo-stings/title-converge) | Letters drift in on their own paths and converge between two rules | 147f | `word` | `npx shadcn@latest add @remocn/title-converge` |
+| Nostalgic, funny | [Bounce Logo](/docs/logo-stings/bounce-logo) | The wordmark bounces around like an old DVD logo until it hits the corner | 150f | `brand`, `line` | `npx shadcn@latest add @remocn/bounce-logo` |
+| Handmade, paper | [Ink Bloom](/docs/logo-stings/ink-bloom) | A drop of ink blooms across the page and settles into the logo | 150f | `name` or `logo` | `npx shadcn@latest add @remocn/ink-bloom` |
+| Brand film | [Logo Construct](/docs/logo-stings/logo-construct) | A blueprint grid draws construction lines, then the logo inks in | 232f | `logo`, `name` | `npx shadcn@latest add @remocn/logo-construct` |
+
+Some stings in the full list, such as Quadtree Mark and Ripple Mark, are built around the Remocn R
+mark. Check a sting's props table before you pick it for your own brand.
+
+## Where a logo sting goes: the open or the close
+
+Put the sting in the first or last `Sequence` of the video. Most Remocn stings fill the frame and
+play their own lead-in, so they don't need a transition into them.
+
+```tsx
+import { Img, Series, staticFile } from "remotion";
+import { Spotlight } from "@/components/remocn/spotlight";
+
+// fps={60}: Spotlight moves for 50 frames at 30 fps, so 100 here, plus a 1-second hold.
+export const Video = () => (
+  <Series>
+    <Series.Sequence durationInFrames={160}>
+      <Spotlight>
+        <Img src={staticFile("logo.svg")} style={{ height: 120 }} />
+      </Spotlight>
+    </Series.Sequence>
+    <Series.Sequence durationInFrames={600}>{/* the product */}</Series.Sequence>
+  </Series>
+);
+```
+
+- **At the open:** keep it short (under about 2 seconds with the hold). The viewer came for the
+  product, so a fast sting like Accordion Unfold or Puzzle Snap fits.
+- **At the close:** this is where the logo should be remembered. A longer sting with a tagline or
+  URL, such as Introducing or First Light, and a longer hold of 1.5 to 2 seconds.
+- **Both:** use the same sting at both ends, or a short one first and the full lockup last. Two
+  different long stings make the video feel like two videos.
+
+The [launch video](/docs/guides/launch-video) and [teaser](/docs/guides/teaser) guides show a sting
+inside a full video.
+
+## Using Remocn logo stings from an AI agent
+
+- **Agent skill:** `npx skills add Remocn/remocn`. The agent reads the live component index from
+  remocn.dev and picks a sting by its use and avoid notes.
+- **Plugin for Claude Code and Codex:** `/plugin install remocn --marketplace Remocn/remocn`, then
+  `/remocn:video <brief>`.
+- **MCP server:** add `https://remocn.dev/mcp` to any MCP client. No auth. Ask for "a logo reveal
+  with a sound hit" and `search_components` returns matching stings. See
+  [MCP server](/docs/getting-started/mcp-server).
+- **Plain text:** every logo sting page in one file at
+  [/llms-full/logo-stings.txt](https://remocn.dev/llms-full/logo-stings.txt). Any docs URL returns
+  Markdown when you append `.md`.
+
+## FAQ
+
+<Faq>
+
+**How do I animate a logo in Remotion?**
+Compute the mark's scale and opacity from `useCurrentFrame()` with `spring()`, reveal the wordmark with a `clip-path` driven by `interpolate()`, pick one frame as the hit, and hold the finished lockup for at least half a second. Or install a ready-made sting with `npx shadcn@latest add @remocn/<name>`.
+
+**How long should a logo sting be?**
+One to three seconds of motion plus a hold of half a second to two seconds. Remocn stings state their motion length in 30 fps frames on each page; that number is the minimum for the `Sequence`.
+
+**How do I add a sound to a logo animation in Remotion?**
+Put an `<Audio>` inside a `<Sequence from={hit}>`, where `hit` is the frame the logo is finished. For a Remocn sting, the hit frame is in the Timing table on its docs page (Orbit Lock bursts at frame 30 at 30 fps, so frame 60 in a 60 fps composition). Remocn stings ship without sound, so bring your own sound effect and check that its license allows commercial use.
+
+**Should a logo sting go at the start or the end of the video?**
+Either, or both. At the open keep it short so the product starts fast; at the close give it a tagline or URL and a longer hold, since that is the frame people remember. See [the section above](#where-a-logo-sting-goes-the-open-or-the-close).
+
+**Can I use my own logo with Remocn stings?**
+Yes. Most stings take your logo as `children` (an `<Img>`, an SVG or any React node) or as a `logo` / `name` prop. A few draw their own mark and take only your wordmark. Each component page lists its props.
+
+**Should I scale text in a logo animation?**
+Scale the mark, not the wordmark. Text under a moving `scale` or slow vertical `translate` steps from pixel to pixel in Chrome. Reveal the name with a clip and a horizontal slide.
+
+**Are Remocn logo stings free?**
+Yes. Every Remocn component is free and MIT-licensed, and the source is copied into your project. Remotion keeps [its own license](https://www.remotion.dev/docs/license).
+
+**Is Remocn made by Remotion or shadcn?**
+No. Remocn is an independent open-source project, not affiliated with Remotion or shadcn. It is listed on Remotion's resources page.
+
+</Faq>
+
+## What's next
+
+- [Logo stings](/docs/logo-stings): all 45 stings with live previews
+- [Kinetic typography in Remotion](/docs/guides/remotion-kinetic-typography): cuts, punches and rhythm for the words before the logo
+- [Your brand](/docs/guides/your-brand): colors, fonts and logo across a whole video
+- [Music and sound](/docs/guides/music-and-sound): a music bed under the video
