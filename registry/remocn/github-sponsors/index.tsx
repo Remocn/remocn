@@ -11,11 +11,20 @@ import {
   useSceneFrame,
 } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_SPONSORS,
+  type GitHubSponsorsElementId,
+  gitHubSponsorsTimeline,
+  type SponsorEntry,
+} from "./timeline";
 
-export interface Sponsor {
-  login: string;
-  avatarUrl: string;
-}
+export type Sponsor = SponsorEntry;
 
 export interface GitHubSponsorsProps {
   account?: string;
@@ -23,103 +32,15 @@ export interface GitHubSponsorsProps {
   accentColor?: string;
   speed?: number;
   theme?: "light" | "dark";
+  /**
+   * Moves, trims or stretches the heart, its dock, each avatar, the copy and
+   * the call to action, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `speed`.
+   */
+  timing?: Timing<GitHubSponsorsElementId>;
 }
 
-export const SAMPLE_SPONSORS: Sponsor[] = [
-  {
-    login: "mojombo",
-    avatarUrl: "https://avatars.githubusercontent.com/u/1?v=4",
-  },
-  {
-    login: "defunkt",
-    avatarUrl: "https://avatars.githubusercontent.com/u/2?v=4",
-  },
-  {
-    login: "pjhyett",
-    avatarUrl: "https://avatars.githubusercontent.com/u/3?v=4",
-  },
-  {
-    login: "wycats",
-    avatarUrl: "https://avatars.githubusercontent.com/u/4?v=4",
-  },
-  {
-    login: "schacon",
-    avatarUrl: "https://avatars.githubusercontent.com/u/70?v=4",
-  },
-  {
-    login: "rtomayko",
-    avatarUrl: "https://avatars.githubusercontent.com/u/5?v=4",
-  },
-  {
-    login: "bmizerany",
-    avatarUrl: "https://avatars.githubusercontent.com/u/6?v=4",
-  },
-  {
-    login: "atmos",
-    avatarUrl: "https://avatars.githubusercontent.com/u/38?v=4",
-  },
-  {
-    login: "ezmobius",
-    avatarUrl: "https://avatars.githubusercontent.com/u/14?v=4",
-  },
-  {
-    login: "macournoyer",
-    avatarUrl: "https://avatars.githubusercontent.com/u/15?v=4",
-  },
-  {
-    login: "ivey",
-    avatarUrl: "https://avatars.githubusercontent.com/u/18?v=4",
-  },
-  {
-    login: "uggedal",
-    avatarUrl: "https://avatars.githubusercontent.com/u/16?v=4",
-  },
-  {
-    login: "anotherjesse",
-    avatarUrl: "https://avatars.githubusercontent.com/u/9?v=4",
-  },
-  {
-    login: "technoweenie",
-    avatarUrl: "https://avatars.githubusercontent.com/u/21?v=4",
-  },
-  {
-    login: "takeo",
-    avatarUrl: "https://avatars.githubusercontent.com/u/22?v=4",
-  },
-  {
-    login: "evanphx",
-    avatarUrl: "https://avatars.githubusercontent.com/u/25?v=4",
-  },
-  {
-    login: "vanpelt",
-    avatarUrl: "https://avatars.githubusercontent.com/u/26?v=4",
-  },
-  {
-    login: "wayneeseguin",
-    avatarUrl: "https://avatars.githubusercontent.com/u/28?v=4",
-  },
-  {
-    login: "brynary",
-    avatarUrl: "https://avatars.githubusercontent.com/u/30?v=4",
-  },
-  {
-    login: "kevinclark",
-    avatarUrl: "https://avatars.githubusercontent.com/u/31?v=4",
-  },
-  {
-    login: "kballard",
-    avatarUrl: "https://avatars.githubusercontent.com/u/7?v=4",
-  },
-  {
-    login: "jnewland",
-    avatarUrl: "https://avatars.githubusercontent.com/u/12?v=4",
-  },
-  {
-    login: "caged",
-    avatarUrl: "https://avatars.githubusercontent.com/u/13?v=4",
-  },
-  { login: "sr", avatarUrl: "https://avatars.githubusercontent.com/u/19?v=4" },
-];
+export const SAMPLE_SPONSORS: Sponsor[] = DEFAULT_SPONSORS;
 
 const { fontFamily: SANS_FAMILY } = loadSans();
 const FONT_FAMILY = SANS_FAMILY;
@@ -136,18 +57,12 @@ const GRID_BOX_H = 236;
 const HEART_START_Y = 286;
 const HEART_HEADER_Y = 120;
 
-const DRAW_END = 40;
-const PULSE_END = 62;
-const HEART_DOCK_START = 52;
-const HEART_DOCK_END = 84;
-const AVATAR_START = 70;
-const AVATAR_STEP = 3;
-const AVATAR_DUR = 22;
-const AVATAR_WINDOW = 56;
-const THANK_START = 150;
-const SUB_START = 166;
-const CTA_START = 182;
-const CTA_DUR = 22;
+type HeartElement = ResolvedElement<GitHubSponsorsElementId>;
+
+/** The heart as the schedule lays it out without `timing`. */
+const DEFAULT_HEART: HeartElement = resolve(
+  gitHubSponsorsTimeline({}, { length: 0 }),
+).get("heart");
 
 interface Theme {
   bg: string;
@@ -215,18 +130,31 @@ export function gridLayout(
   return out;
 }
 
-export function heartDrawProgress(frame: number, speed = 1): number {
-  return interpolate(frame * speed, [0, DRAW_END], [0, 1], {
+export function heartDrawProgress(
+  frame: number,
+  speed = 1,
+  heart: HeartElement = DEFAULT_HEART,
+): number {
+  return interpolate(frame * speed, [heart.start, heart.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
 }
 
-export function heartPulseScale(frame: number, speed = 1): number {
+export function heartPulseScale(
+  frame: number,
+  speed = 1,
+  heart: HeartElement = DEFAULT_HEART,
+): number {
   return interpolate(
     frame * speed,
-    [DRAW_END - 2, DRAW_END + 6, DRAW_END + 17, PULSE_END],
+    [
+      heart.start + heart.beat("pulseAt"),
+      heart.start + heart.beat("squeeze"),
+      heart.start + heart.beat("bounce"),
+      heart.start + heart.beat("pulseEnd"),
+    ],
     [1, 0.9, 1.06, 1],
     {
       extrapolateLeft: "clamp",
@@ -383,24 +311,33 @@ function HeartGlyph({
   );
 }
 
-export function GitHubSponsors({
-  account = "remocn",
-  sponsors = SAMPLE_SPONSORS,
-  accentColor = "#db61a2",
-  speed = 1,
-  theme = "light",
-}: GitHubSponsorsProps) {
+export function GitHubSponsors(props: GitHubSponsorsProps) {
+  const {
+    account = "remocn",
+    sponsors = SAMPLE_SPONSORS,
+    accentColor = "#db61a2",
+    speed = 1,
+    theme = "light",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    gitHubSponsorsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const heart = tl.get("heart");
+  const dockEl = tl.get("dock");
+  const cta = tl.get("cta");
   // A `<Sequence>` starts on one of the composition's own frames.
   const toFrames = useCompositionFrames();
   const t = THEMES[theme] ?? THEMES.light;
   const stageScale = Math.min(width / REF_W, height / REF_H);
 
   const count = sponsors.length;
-  const avatarStep =
-    count > 1 ? Math.min(AVATAR_STEP, AVATAR_WINDOW / (count - 1)) : 0;
   const cols = gridColumns(count);
   const rows = Math.max(1, Math.ceil(count / Math.max(1, cols)));
   const cellW = GRID_BOX_W / Math.max(1, cols);
@@ -412,23 +349,29 @@ export function GitHubSponsors({
     [count, cols, cellW, cellH],
   );
 
-  const draw = heartDrawProgress(frame, speed);
-  const fillO = ramp(frame, speed, DRAW_END - 8, PULSE_END, Easing.linear);
-  const pulse = heartPulseScale(frame, speed);
-  const dock = ramp(frame, speed, HEART_DOCK_START, HEART_DOCK_END);
+  const draw = heartDrawProgress(frame, speed, heart);
+  const fillO = ramp(
+    frame,
+    speed,
+    heart.start + heart.beat("fillAt"),
+    heart.start + heart.beat("fillEnd"),
+    Easing.linear,
+  );
+  const pulse = heartPulseScale(frame, speed, heart);
+  const dock = ramp(frame, speed, dockEl.start, dockEl.end);
 
   const heartBase = 168;
   const heartScale = (1 - 0.62 * dock) * pulse;
   const heartDy = (HEART_HEADER_Y - HEART_START_Y) * dock;
 
-  const ctaProgress = ramp(frame, speed, CTA_START, CTA_START + CTA_DUR);
+  const ctaProgress = ramp(frame, speed, cta.start, cta.end);
   const ctaBlur = (1 - ctaProgress) * 10;
   const ctaY = (1 - ctaProgress) * 12;
   const accountOpacity = ramp(
     frame,
     speed,
-    CTA_START + 8,
-    CTA_START + CTA_DUR + 8,
+    cta.start + cta.beat("account"),
+    cta.end + cta.beat("account"),
   );
 
   return (
@@ -452,8 +395,8 @@ export function GitHubSponsors({
             progress={ramp(
               frame,
               speed,
-              AVATAR_START + i * avatarStep,
-              AVATAR_START + i * avatarStep + AVATAR_DUR,
+              tl.get(`avatar:${i}`).start,
+              tl.get(`avatar:${i}`).end,
             )}
             size={avatarSize}
             theme={t}
@@ -492,7 +435,10 @@ export function GitHubSponsors({
             height: 84,
           }}
         >
-          <Sequence from={toFrames(THANK_START / speed)} layout="none">
+          <Sequence
+            from={toFrames(tl.get("thanks").start / speed)}
+            layout="none"
+          >
             <SoftBlurIn
               text="Thank you"
               fontSize={54}
@@ -512,7 +458,10 @@ export function GitHubSponsors({
             height: 36,
           }}
         >
-          <Sequence from={toFrames(SUB_START / speed)} layout="none">
+          <Sequence
+            from={toFrames(tl.get("count").start / speed)}
+            layout="none"
+          >
             <BlurOutUp
               text={`Powered by ${count} sponsors`}
               fontSize={24}

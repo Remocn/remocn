@@ -2462,13 +2462,19 @@
         "@remocn/soft-blur-in",
         "@remocn/blur-out-up",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/github-sponsors/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/github-sponsors.tsx"
+          "target": "components/remocn/github-sponsors/index.tsx"
+        },
+        {
+          "path": "registry/remocn/github-sponsors/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/github-sponsors/timeline.ts"
         }
       ],
       "type": "registry:component"
