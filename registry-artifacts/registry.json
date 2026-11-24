@@ -7725,12 +7725,21 @@
       "title": "Idea Set",
       "description": "Two ruled lines set like a ledger, the second in an accent color: 'Napkin sketch. Keynote opener.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/idea-set/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/idea-set.tsx"
+          "target": "components/remocn/idea-set/index.tsx"
+        },
+        {
+          "path": "registry/remocn/idea-set/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/idea-set/timeline.ts"
         }
       ],
       "type": "registry:component"

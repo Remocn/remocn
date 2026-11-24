@@ -7730,10 +7730,19 @@
         {
           "path": "idea-set/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/idea-set.tsx"
+          "target": "components/remocn/idea-set/index.tsx"
+        },
+        {
+          "path": "idea-set/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/idea-set/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "row-count",
