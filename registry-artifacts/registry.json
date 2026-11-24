@@ -13867,12 +13867,21 @@
       "title": "Version Hero",
       "description": "A chrome 2.0 version numeral rises inside a glowing ring with Now available beneath.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/version-hero/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/version-hero.tsx"
+          "target": "components/remocn/version-hero/index.tsx"
+        },
+        {
+          "path": "registry/remocn/version-hero/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/version-hero/timeline.ts"
         }
       ],
       "type": "registry:component"

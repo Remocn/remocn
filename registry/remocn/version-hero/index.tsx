@@ -6,6 +6,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  SLICES,
+  type VersionHeroElementId,
+  versionHeroTimeline,
+} from "./timeline";
 
 const { fontFamily: bricolage } = loadFont("normal", {
   weights: ["400", "500"],
@@ -48,9 +54,15 @@ export interface VersionHeroProps {
   speed?: number;
   /** Dark = brushed aluminium; light = matte paper stock. */
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the slices appearing and docking, the camera,
+   * the shadow, the glow, the sweep, the name, the divider and the label, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<VersionHeroElementId>;
 }
 
-const SLICES = 10;
 const SUB = 4;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -230,26 +242,40 @@ function ScaleLayer({
   );
 }
 
-export function VersionHero({
-  version = "2.0",
-  name = "remocn",
-  label = "Now available",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background: backdrop,
-  fontFamily = bricolage,
-  depth: extrude = 0.2,
-  stagger = 2.2,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: VersionHeroProps) {
+export function VersionHero(props: VersionHeroProps) {
+  const {
+    version = "2.0",
+    name = "remocn",
+    label = "Now available",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background: backdrop,
+    fontFamily = bricolage,
+    depth: extrude = 0.2,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    versionHeroTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const appearEl = tl.get("appear");
+  const orbitEl = tl.get("orbit");
+  const dollyEl = tl.get("dolly");
+  const dockEl = tl.get("dock");
+  const shadowEl = tl.get("shadow");
+  const glowEl = tl.get("glow");
+  const sweepEl = tl.get("sweep");
   const u = height / 720;
   const m: Material = MATERIALS[theme];
   const fg = ink ?? m.fg;
@@ -265,35 +291,43 @@ export function VersionHero({
   const cy = height * 0.43;
 
   // camera: a slow eased orbit plus a gentle dolly-in
-  const orbit = interpolate(t, [0, 150], [0, 1], {
+  const orbit = interpolate(t, [orbitEl.start, orbitEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const rotY = -24 + orbit * 16;
   const rotX = 10 - orbit * 4;
-  const dolly = interpolate(t, [0, 70], [-220 * u, 0], {
+  const dolly = interpolate(t, [dollyEl.start, dollyEl.end], [-220 * u, 0], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
   // specular sweep across the faces once the stack has docked
-  const sweep = interpolate(t, [44, 92], [-0.3, 1.35], {
+  const sweep = interpolate(t, [sweepEl.start, sweepEl.end], [-0.3, 1.35], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const restSheen = interpolate(t, [44, 92], [0, 1], CLAMP);
+  const restSheen = interpolate(t, [sweepEl.start, sweepEl.end], [0, 1], CLAMP);
   // the disc of light rises behind the object as it docks
-  const glowP = interpolate(t, [20, 96], [0, 1], {
+  const glowP = interpolate(t, [glowEl.start, glowEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const glowY = 136 - 16 * glowP;
 
   const sliceP = (k: number) =>
-    interpolate(t, [4 + k * stagger, 4 + k * stagger + 34], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    interpolate(
+      t,
+      [
+        dockEl.start + k * dockEl.beat("stagger"),
+        dockEl.start + k * dockEl.beat("stagger") + dockEl.beat("each"),
+      ],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
 
   const textStyle: React.CSSProperties = {
     position: "absolute",
@@ -320,7 +354,15 @@ export function VersionHero({
   for (let k = SLICES - 1; k >= 0; k--) {
     const p = sliceP(k);
     const zSlice = -k * SUB * dz - k * spreadMax * (1 - p);
-    const appear = interpolate(t, [-6 + k * 1.6, 8 + k * 1.6], [0, 1], CLAMP);
+    const appear = interpolate(
+      t,
+      [
+        appearEl.start + k * appearEl.beat("step"),
+        appearEl.start + appearEl.beat("each") + k * appearEl.beat("step"),
+      ],
+      [0, 1],
+      CLAMP,
+    );
     const blur = ((k * spreadMax * (1 - p)) / (spreadMax * SLICES)) * 7 * u;
     const subs: React.ReactNode[] = [];
     for (let s = SUB - 1; s >= 0; s--) {
@@ -406,11 +448,21 @@ export function VersionHero({
   }
 
   // label under the object
-  const labelP = (d: number) =>
-    interpolate(t, [62 + d, 86 + d], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const labelP = (id: "name" | "divider" | "label") => {
+    const e = tl.get(id);
+    return interpolate(t, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  };
   const labelTop = cy + fontSize * 0.4 + 44 * u;
 
-  const shadowO = interpolate(t, [10, 60], [0.35, 1], CLAMP);
+  const shadowO = interpolate(
+    t,
+    [shadowEl.start, shadowEl.end],
+    [0.35, 1],
+    CLAMP,
+  );
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -490,8 +542,8 @@ export function VersionHero({
               display: "flex",
               alignItems: "center",
               gap: 9 * u,
-              opacity: labelP(0),
-              transform: `translateY(${(1 - labelP(0)) * 14 * u}px)${glide(midway(labelP(0)))}`,
+              opacity: labelP("name"),
+              transform: `translateY(${(1 - labelP("name")) * 14 * u}px)${glide(midway(labelP("name")))}`,
             }}
           >
             {logo ??
@@ -515,7 +567,7 @@ export function VersionHero({
               width: Math.max(1, u),
               height: 22 * u,
               background: accent,
-              transform: `scaleY(${labelP(3)})`,
+              transform: `scaleY(${labelP("divider")})`,
             }}
           />
           <span
@@ -523,8 +575,8 @@ export function VersionHero({
               color: m.muted,
               fontWeight: 400,
               letterSpacing: "-0.01em",
-              opacity: labelP(6),
-              transform: `translateY(${(1 - labelP(6)) * 14 * u}px)${glide(midway(labelP(6)))}`,
+              opacity: labelP("label"),
+              transform: `translateY(${(1 - labelP("label")) * 14 * u}px)${glide(midway(labelP("label")))}`,
             }}
           >
             {label}
