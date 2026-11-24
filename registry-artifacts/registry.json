@@ -3701,12 +3701,21 @@
       "title": "Selection Snap",
       "description": "A thin word in a loose viewfinder snaps into a design-tool selection while it goes from Thin to Black, pops its handles and counts up a size badge.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/selection-snap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/selection-snap.tsx"
+          "target": "components/remocn/selection-snap/index.tsx"
+        },
+        {
+          "path": "registry/remocn/selection-snap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/selection-snap/timeline.ts"
         }
       ],
       "type": "registry:component"
