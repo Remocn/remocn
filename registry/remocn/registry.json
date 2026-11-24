@@ -5206,12 +5206,17 @@
       "title": "X-Ray Scan",
       "description": "A glowing scanner bar sweeps across a device, turning the shell dark and revealing white-line internals with one part in red.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "x-ray-scan/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/x-ray-scan.tsx"
+          "target": "components/remocn/x-ray-scan/index.tsx"
+        },
+        {
+          "path": "x-ray-scan/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/x-ray-scan/timeline.ts"
         }
       ]
     },
