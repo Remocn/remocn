@@ -2298,13 +2298,19 @@
       "dependencies": ["remotion"],
       "registryDependencies": [
         "@remocn/terminal-simulator",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/terminal-cursor-zoom/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/terminal-cursor-zoom.tsx"
+          "target": "components/remocn/terminal-cursor-zoom/index.tsx"
+        },
+        {
+          "path": "registry/remocn/terminal-cursor-zoom/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/terminal-cursor-zoom/timeline.ts"
         }
       ],
       "type": "registry:component"
