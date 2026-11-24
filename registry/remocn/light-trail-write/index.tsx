@@ -10,6 +10,11 @@ import type React from "react";
 import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type LightTrailWriteElementId,
+  lightTrailWriteTimeline,
+} from "./timeline";
 
 /**
  * Beat sheet (30fps, speed 1):
@@ -51,6 +56,12 @@ export interface LightTrailWriteProps {
   grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
+  /**
+   * Moves, trims or stretches the ignition, the writing, the burn-out and the
+   * sweep to the logo, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LightTrailWriteElementId>;
 }
 
 /** Monoline script "remocn", baseline y=0, x-height 100, written upright. */
@@ -108,8 +119,6 @@ const HOT = [255, 255, 255];
 const SILK = ["#3b3fd8", "#f3d6c0", "#8a7bff"] as const;
 /** The cooling ramp of the trail, by age: hot → peach → violet → indigo. */
 const COOL = [HOT, rgb(SILK[1]), rgb(SILK[2]), rgb(SILK[0])];
-const WRITE_START = 6;
-const WRITE_END = 86;
 const TRAIL = 20;
 const STEPS = 2;
 
@@ -224,25 +233,36 @@ function ScaleLayer({
   );
 }
 
-export function LightTrailWrite({
-  path = DEFAULT_PATH,
-  strokeWidth,
-  finish = "solid",
-  accent = "#3B5BFD",
-  logo,
-  background = BG,
-  write = WRITE_END - WRITE_START,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-}: LightTrailWriteProps) {
+export function LightTrailWrite(props: LightTrailWriteProps) {
+  const {
+    path = DEFAULT_PATH,
+    strokeWidth,
+    finish = "solid",
+    accent = "#3B5BFD",
+    logo,
+    background = BG,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const transparent = background === "transparent";
-  const writeEnd = WRITE_START + write;
-  const sweepStart = writeEnd + 12;
-  const sweepEnd = sweepStart + 24;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    lightTrailWriteTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const igniteEl = tl.get("ignite");
+  const writeEl = tl.get("write");
+  const revealEl = tl.get("reveal");
+  const sweepEl = tl.get("sweep");
+  const writeEnd = writeEl.end;
+  const sweepStart = sweepEl.start;
+  const sweepEnd = sweepEl.end;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const ids = {
     wide: `w${uid}`,
@@ -269,7 +289,7 @@ export function LightTrailWrite({
   const vbY = (box.y1 + box.y2) / 2 - vbH / 2 - vbH * 0.02;
 
   const writeAt = (frame: number) =>
-    interpolate(frame, [WRITE_START, writeEnd], [0, len], {
+    interpolate(frame, [writeEl.start, writeEnd], [0, len], {
       ...CLAMP,
       easing: EASE_WRITE,
     });
@@ -280,18 +300,23 @@ export function LightTrailWrite({
   };
 
   // light levels
-  const ignite = interpolate(t, [0, 10], [0, 1], {
+  const ignite = interpolate(t, [igniteEl.start, igniteEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const burnOut = interpolate(t, [writeEnd - 2, writeEnd + 10], [1, 0], CLAMP);
+  const burnOut = interpolate(
+    t,
+    [revealEl.start + revealEl.beat("burnAt"), revealEl.end],
+    [1, 0],
+    CLAMP,
+  );
   const headOn = ignite * burnOut;
-  const memory = interpolate(t, [WRITE_START, writeEnd], [0.06, 0.11], CLAMP);
-  const reveal = interpolate(t, [writeEnd, writeEnd + 10], [0, 1], {
+  const memory = interpolate(t, [writeEl.start, writeEnd], [0.06, 0.11], CLAMP);
+  const reveal = interpolate(t, [revealEl.start, revealEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const drain = interpolate(t, [writeEnd + 10, sweepEnd], [0, 1], {
+  const drain = interpolate(t, [revealEl.end, sweepEnd], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -331,11 +356,21 @@ export function LightTrailWrite({
     interpolate(sweep, [0, 0.12, 0.85, 1], [0, 1, 1, 0], CLAMP) *
     (sweeping ? 1 : 0);
   // the finished logo: a silk sheen drifting slowly through it
-  const sheen = interpolate(t, [sweepStart, sweepEnd + 60], [0, 1], CLAMP);
-  const bloom = interpolate(t, [sweepStart + 6, sweepEnd + 14], [1, 0], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const sheen = interpolate(
+    t,
+    [sweepStart, sweepEnd + sweepEl.beat("sheen")],
+    [0, 1],
+    CLAMP,
+  );
+  const bloom = interpolate(
+    t,
+    [sweepStart + sweepEl.beat("bloomAt"), sweepEnd + sweepEl.beat("bloomOut")],
+    [1, 0],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const logoStops =
     finish === "accent"
       ? [SILK[2], accent, accent, SILK[0]]
@@ -356,7 +391,8 @@ export function LightTrailWrite({
         a,
         b,
         color,
-        alpha: alpha * burnOutTrail(t, age0, writeEnd),
+        alpha:
+          alpha * burnOutTrail(t, age0, writeEnd, revealEl.beat("trailFade")),
       });
     }
   }
@@ -632,6 +668,6 @@ export function LightTrailWrite({
 }
 
 /** Once the head has stopped, the remaining trail drains a little faster. */
-function burnOutTrail(t: number, age: number, writeEnd: number) {
-  return interpolate(t - age, [writeEnd, writeEnd + 8], [1, 0.6], CLAMP);
+function burnOutTrail(t: number, age: number, writeEnd: number, fade: number) {
+  return interpolate(t - age, [writeEnd, writeEnd + fade], [1, 0.6], CLAMP);
 }

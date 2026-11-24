@@ -14747,12 +14747,17 @@
       "title": "Light Trail Write",
       "description": "A point of light writes the Remocn wordmark path with a cooling trail.",
       "dependencies": ["remotion", "@remotion/paths"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/light-trail-write/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/light-trail-write.tsx"
+          "target": "components/remocn/light-trail-write/index.tsx"
+        },
+        {
+          "path": "registry/remocn/light-trail-write/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/light-trail-write/timeline.ts"
         }
       ],
       "type": "registry:component"
