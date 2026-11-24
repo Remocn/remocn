@@ -4,6 +4,14 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  EXPLODED_LABELS,
+  EXPLODED_LAYERS,
+  type ExplodedViewElementId,
+  explodedLayerCount,
+  explodedViewTimeline,
+} from "./timeline";
 
 export type ExplodedViewColors = {
   background: string;
@@ -30,11 +38,16 @@ export type ExplodedViewProps = {
   /** Label text color. Overrides `colors.label`. */
   labelColor?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the slabs opening, the labels and the close,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<ExplodedViewElementId>;
 };
 
 export const explodedViewDefaults = {
-  layers: 4,
-  labels: ["Interface", "Engine", "Storage", "Hardware"],
+  layers: EXPLODED_LAYERS,
+  labels: EXPLODED_LABELS,
   highlight: 1,
   colors: {
     background: "#111111",
@@ -51,33 +64,41 @@ export const explodedViewDefaults = {
 };
 
 const FONT = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-const OPEN = 3;
-const CLOSE = 38;
 const COS30 = Math.cos(Math.PI / 6);
 const clamp = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
 };
 
-export function ExplodedView({
-  layers = explodedViewDefaults.layers,
-  labels = explodedViewDefaults.labels,
-  highlight = explodedViewDefaults.highlight,
-  colors: colorOverrides,
-  backgroundColor,
-  labelColor,
-  speed = explodedViewDefaults.speed,
-}: ExplodedViewProps) {
+export function ExplodedView(props: ExplodedViewProps) {
+  const {
+    layers = explodedViewDefaults.layers,
+    labels = explodedViewDefaults.labels,
+    highlight = explodedViewDefaults.highlight,
+    colors: colorOverrides,
+    backgroundColor,
+    labelColor,
+    speed = explodedViewDefaults.speed,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    explodedViewTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const closeEl = tl.get("close");
+  const closeAt = closeEl.start;
   const baseColors = { ...explodedViewDefaults.colors, ...colorOverrides };
   const colors = {
     ...baseColors,
     background: backgroundColor ?? baseColors.background,
     label: labelColor ?? baseColors.label,
   };
-  const n = Math.round(Math.min(6, Math.max(2, layers)));
+  const n = explodedLayerCount(layers);
   const tAt = (f: number) => (f * speed * 30) / fps;
   const t = tAt(frame);
 
@@ -95,7 +116,7 @@ export function ExplodedView({
   // The stack at time `tt`, so a label can tell motion from rest.
   const stack = (tt: number) => {
     const close = spring({
-      frame: tt - CLOSE,
+      frame: tt - closeAt,
       fps: 30,
       config: { damping: 26, stiffness: 320, mass: 0.8 },
     });
@@ -103,7 +124,7 @@ export function ExplodedView({
     const spread = Array.from({ length: n }, (_, i) => {
       const fromTop = n - 1 - i;
       const open = spring({
-        frame: tt - OPEN - fromTop * 1.5,
+        frame: tt - tl.get(`slab:${fromTop}`).start,
         fps: 30,
         config: { damping: 12, stiffness: 110 },
       });
@@ -118,10 +139,19 @@ export function ExplodedView({
     const total = z;
     // The click: a short downward knock once the slabs meet again.
     const knock =
-      interpolate(tt, [CLOSE + 5, CLOSE + 7, CLOSE + 12], [0, 1, 0], {
-        ...clamp,
-        easing: Easing.out(Easing.quad),
-      }) *
+      interpolate(
+        tt,
+        [
+          closeAt + closeEl.beat("knock"),
+          closeAt + closeEl.beat("peak"),
+          closeEl.end,
+        ],
+        [0, 1, 0],
+        {
+          ...clamp,
+          easing: Easing.out(Easing.quad),
+        },
+      ) *
       height *
       0.008;
     return { offsets, baseY: cy + side * 0.02 + total / 2 + knock };
@@ -129,7 +159,12 @@ export function ExplodedView({
   const { offsets, baseY } = stack(t);
   const prev = stack(tAt(frame - 1));
   const next = stack(tAt(frame + 1));
-  const labelOut = interpolate(t, [CLOSE - 5, CLOSE], [1, 0], clamp);
+  const labelOut = interpolate(
+    t,
+    [closeAt + closeEl.beat("labelsOut"), closeAt],
+    [1, 0],
+    clamp,
+  );
   const labelX = width * 0.66;
   const fontSize = height * 0.042;
 
@@ -208,18 +243,15 @@ export function ExplodedView({
 
     const label = labels[fromTop];
     if (!label) continue;
+    const labelEl = tl.get(`label:${fromTop}`);
+    const showAt = labelEl.start + labelEl.beat("show");
     const anchor = iso(h, -h, (z0 + z1) / 2);
-    const draw = interpolate(
-      t,
-      [14 + fromTop * 2.5, 24 + fromTop * 2.5],
-      [0, 1],
-      {
-        ...clamp,
-        easing: Easing.inOut(Easing.cubic),
-      },
-    );
+    const draw = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
+      ...clamp,
+      easing: Easing.inOut(Easing.cubic),
+    });
     const show =
-      interpolate(t, [19 + fromTop * 2.5, 27 + fromTop * 2.5], [0, 1], {
+      interpolate(t, [showAt, showAt + labelEl.beat("slide")], [0, 1], {
         ...clamp,
         easing: Easing.out(Easing.cubic),
       }) * labelOut;

@@ -5109,10 +5109,19 @@
         {
           "path": "exploded-view/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/exploded-view.tsx"
+          "target": "components/remocn/exploded-view/index.tsx"
+        },
+        {
+          "path": "exploded-view/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/exploded-view/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "tiny-planet",

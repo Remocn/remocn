@@ -5104,12 +5104,21 @@
       "title": "Exploded View",
       "description": "An isometric stack of slabs springs apart with leader lines and labels, holds, then clicks back together.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/exploded-view/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/exploded-view.tsx"
+          "target": "components/remocn/exploded-view/index.tsx"
+        },
+        {
+          "path": "registry/remocn/exploded-view/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/exploded-view/timeline.ts"
         }
       ],
       "type": "registry:component"
