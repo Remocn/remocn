@@ -13327,10 +13327,19 @@
         {
           "path": "sparkline-thread/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/sparkline-thread.tsx"
+          "target": "components/remocn/sparkline-thread/index.tsx"
+        },
+        {
+          "path": "sparkline-thread/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/sparkline-thread/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "area-compare",

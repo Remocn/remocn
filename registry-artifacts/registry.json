@@ -13322,12 +13322,21 @@
       "title": "Sparkline Thread",
       "description": "A glowing sparkline climbs to a point while +212% counts up beside it.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/sparkline-thread/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/sparkline-thread.tsx"
+          "target": "components/remocn/sparkline-thread/index.tsx"
+        },
+        {
+          "path": "registry/remocn/sparkline-thread/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/sparkline-thread/timeline.ts"
         }
       ],
       "type": "registry:component"
