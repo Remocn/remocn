@@ -13846,12 +13846,21 @@
       "title": "Share Donut",
       "description": "A gradient donut sweeps around to 38% with competitor shares labeled outside.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/share-donut/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/share-donut.tsx"
+          "target": "components/remocn/share-donut/index.tsx"
+        },
+        {
+          "path": "registry/remocn/share-donut/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/share-donut/timeline.ts"
         }
       ],
       "type": "registry:component"
