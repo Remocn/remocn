@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_PAIRS,
+  type EditRippleElementId,
+  editRippleTimeline,
+  pairsOf,
+} from "./timeline";
 
 const epilogue = loadFont("normal", {
   weights: ["400", "500"],
@@ -41,18 +48,17 @@ export interface EditRippleProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single pairs, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<EditRippleElementId>;
 }
 
 const THEMES = {
   dark: { bg: "#111418", ink: "#FFFFFF", accent: "#5CF2B5" },
   light: { bg: "#F4F6F5", ink: "#111418", accent: "#12A06B" },
 } as const;
-
-const DEFAULT_PAIRS: EditRipplePair[] = [
-  { cause: "Change one word,", effect: "every scene follows." },
-  { cause: "Swap the color,", effect: "every shot repaints." },
-  { cause: "Change your mind,", effect: "render it again." },
-];
 
 const WGHT = 500;
 const TRACK = -0.03;
@@ -66,15 +72,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-const ENTER = 18;
-const EXIT = 10;
-const HANDOFF = 6;
 const CAUSE_PER_EM = 0.5;
-const LAG = 14;
 const EFFECT_PER_EM = 1.1;
-const COOL = 18;
-const PAIR_MOTION = 56;
-const TAIL = 34;
 
 type Metrics = Record<string, number>;
 
@@ -180,29 +179,36 @@ function ScaleLayer({
   );
 }
 
-export function EditRipple({
-  pairs = DEFAULT_PAIRS,
-  accent,
-  ink,
-  background,
-  fontFamily = epilogue.fontFamily,
-  fontWeight = WGHT,
-  lag = LAG,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: EditRippleProps) {
+export function EditRipple(props: EditRippleProps) {
+  const {
+    pairs = DEFAULT_PAIRS,
+    accent,
+    ink,
+    background,
+    fontFamily = epilogue.fontFamily,
+    fontWeight = WGHT,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    editRippleTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = pairs.length > 0 ? pairs : DEFAULT_PAIRS;
+  const list = pairsOf(pairs);
   const causes = list.map((p) => splitWords(p.cause));
   const effects = list.map((p) => splitWords(p.effect));
   const m = useMetrics(
@@ -224,15 +230,7 @@ export function EditRipple({
   }
 
   const n = list.length;
-  const span = durationInFrames * speed;
-  const period =
-    n > 1
-      ? Math.min(
-          96,
-          Math.max(PAIR_MOTION + 12, (span - PAIR_MOTION - TAIL) / (n - 1)),
-        )
-      : 0;
-  const startOf = (k: number) => k * period;
+  const pairEls = list.map((_, k) => tl.get(`pair:${k}`));
 
   const portrait = H > W * 1.1;
   const marginX = W * (portrait ? 0.08 : 0.07);
@@ -314,16 +312,16 @@ export function EditRipple({
     );
   };
 
-  const enter = (d: number, tt = t) =>
-    interpolate(tt, [d, d + ENTER], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const exit = (d: number, tt = t) =>
-    interpolate(tt, [d, d + EXIT], [0, 1], { ...CLAMP, easing: EASE_IN });
-  const cool = (land: number, keep: boolean) =>
+  const enter = (d: number, len: number, tt = t) =>
+    interpolate(tt, [d, d + len], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const exit = (d: number, len: number, tt = t) =>
+    interpolate(tt, [d, d + len], [0, 1], { ...CLAMP, easing: EASE_IN });
+  const cool = (land: number, len: number, keep: boolean) =>
     keep
       ? hi
       : interpolateColors(
-          Math.min(Math.max(t, land), land + COOL),
-          [land, land + COOL],
+          Math.min(Math.max(t, land), land + len),
+          [land, land + len],
           [hi, fg],
         );
 
@@ -337,15 +335,22 @@ export function EditRipple({
   ) => {
     const first = k === 0;
     const hasNext = k + 1 < n;
+    const e = pairEls[k];
+    const enterLen = e.beat("enter");
+    const exitLen = e.beat("exit");
     for (let i = 0; i < words.length; i++) {
       const p = words[i];
       const along = ((p.x - marginX) / F + p.row * 2) * perEm;
-      const dIn = startOf(k) + lag + along + (first ? 0 : HANDOFF);
+      const dIn = e.start + lag + along + (first ? 0 : e.beat("handoff"));
       if (t < dIn - 1) continue;
-      const dOut = startOf(k + 1) + lag + along;
+      const dOut = hasNext ? pairEls[k + 1].start + lag + along : 0;
       const yAt = (tt: number) =>
-        (1 - enter(dIn, tt) - (hasNext ? exit(dOut, tt) : 0)) * F * 1.4;
-      const pout = hasNext ? exit(dOut) : 0;
+        (1 -
+          enter(dIn, enterLen, tt) -
+          (hasNext ? exit(dOut, exitLen, tt) : 0)) *
+        F *
+        1.4;
+      const pout = hasNext ? exit(dOut, exitLen) : 0;
       if (pout >= 1) continue;
       const y = yAt(t);
       word(
@@ -354,7 +359,7 @@ export function EditRipple({
         p.x,
         p.top,
         y,
-        cool(dIn + ENTER * 0.6, keep),
+        cool(dIn + enterLen * 0.6, e.beat("cool"), keep),
         Math.abs(yAt(t + 1) - y) > 1e-3 || Math.abs(y - yAt(t - 1)) > 1e-3,
       );
     }
@@ -374,7 +379,7 @@ export function EditRipple({
     );
 
   for (let k = 0; k < n; k++) {
-    if (t < startOf(k) - 1) continue;
+    if (t < pairEls[k].start - 1) continue;
     const cl = causeLines[k];
     drawLine(
       k,
@@ -395,7 +400,7 @@ export function EditRipple({
         (line) => W - marginX - lineW(line, m) * F,
         effectTop,
       ),
-      lag,
+      pairEls[k].beat("lag"),
       EFFECT_PER_EM,
       k === n - 1,
       "e",

@@ -7094,12 +7094,21 @@
       "title": "Edit Ripple",
       "description": "\"Change your mind, render it again.\" with the second line indented and ripple-coloured.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/edit-ripple/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/edit-ripple.tsx"
+          "target": "components/remocn/edit-ripple/index.tsx"
+        },
+        {
+          "path": "registry/remocn/edit-ripple/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/edit-ripple/timeline.ts"
         }
       ],
       "type": "registry:component"
