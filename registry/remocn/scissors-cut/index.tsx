@@ -12,6 +12,15 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_AFTER,
+  DEFAULT_BEFORE,
+  DEFAULT_CUT,
+  DEFAULT_REPLACEMENT,
+  type ScissorsCutElementId,
+  scissorsCutTimeline,
+} from "./timeline";
 
 const face = loadFont("normal", { weights: ["300"], subsets: ["latin"] });
 
@@ -41,6 +50,12 @@ export interface ScissorsCutProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the line's entry, the cut, the scissors, the
+   * slip, the reflow and the replacement, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ScissorsCutElementId>;
 }
 
 const THEMES = {
@@ -67,29 +82,6 @@ const EASE_IN = Easing.bezier(0.55, 0, 0.85, 0.35);
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
-
-// Beats, in frames at 30fps (before `speed`).
-const IN = 0;
-const IN_STAGGER = 1.5;
-const ROOM = 14;
-const ROOM_LEN = 20;
-const DASH = 24;
-const DASH_LEN = 24;
-const SC_IN = 30;
-const SC_IN_LEN = 24;
-const CUT = 56;
-const CUT_LEN = 62;
-const SC_OUT = 120;
-const SC_OUT_LEN = 22;
-const LIFT = 120;
-const LIFT_LEN = 8;
-const FALL_LEN = 26;
-const REFLOW = 142;
-const REFLOW_LEN = 22;
-const REPL = 152;
-const REPL_LEN = 24;
-const CLOSE = 180;
-const CLOSE_LEN = 22;
 
 const LINE_HEIGHT = 1.2;
 /** Scissor blade length, in em. */
@@ -219,25 +211,43 @@ function ScaleLayer({
   );
 }
 
-export function ScissorsCut({
-  before = "Launch ",
-  cut = "next month",
-  after = ".",
-  replacement = "today",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = face.fontFamily,
-  fontWeight = 300,
-  stagger = IN_STAGGER,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: ScissorsCutProps) {
+export function ScissorsCut(props: ScissorsCutProps) {
+  const {
+    before = DEFAULT_BEFORE,
+    cut = DEFAULT_CUT,
+    after = DEFAULT_AFTER,
+    replacement = DEFAULT_REPLACEMENT,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = face.fontFamily,
+    fontWeight = 300,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    scissorsCutTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const roomEl = tl.get("room");
+  const dashEl = tl.get("dash");
+  const scIn = tl.get("scissorsIn");
+  const cutEl = tl.get("cut");
+  const scOut = tl.get("scissorsOut");
+  const liftEl = tl.get("lift");
+  const reflowEl = tl.get("reflow");
+  const replEl = tl.get("replacement");
+  const closeEl = tl.get("close");
+  const CUT = cutEl.start;
   const t = THEMES[theme];
   const fg = ink ?? t.fg;
   const solid =
@@ -321,7 +331,7 @@ export function ScissorsCut({
   const baseY = height / 2 + em * 0.3;
   const rowTop = baseY - (L?.baseline ?? em);
 
-  const reflow = interpolate(frame, [REFLOW, REFLOW + REFLOW_LEN], [0, 1], {
+  const reflow = interpolate(frame, [reflowEl.start, reflowEl.end], [0, 1], {
     ...clamp,
     easing: EASE_IN_OUT,
   });
@@ -353,12 +363,12 @@ export function ScissorsCut({
   const roomA = room(L?.a, rowA, iZ);
   const roomB = room(L?.b, rowB, jZ);
   const roomP =
-    interpolate(frame, [ROOM, ROOM + ROOM_LEN], [0, 1], {
+    interpolate(frame, [roomEl.start, roomEl.end], [0, 1], {
       ...clamp,
       easing: EASE_IN_OUT,
     }) *
     (1 -
-      interpolate(frame, [CLOSE, CLOSE + CLOSE_LEN], [0, 1], {
+      interpolate(frame, [closeEl.start, closeEl.end], [0, 1], {
         ...clamp,
         easing: EASE_IN_OUT,
       }));
@@ -387,11 +397,11 @@ export function ScissorsCut({
   // Dashed cut line, drawn clockwise.
   const dashLen = em * 0.09;
   const dashGap = em * 0.075;
-  const drawP = interpolate(frame, [DASH, DASH + DASH_LEN], [0, 1], {
+  const drawP = interpolate(frame, [dashEl.start, dashEl.end], [0, 1], {
     ...clamp,
     easing: EASE_OUT,
   });
-  const cutP = interpolate(frame, [CUT, CUT + CUT_LEN], [0, 1], {
+  const cutP = interpolate(frame, [CUT, cutEl.end], [0, 1], {
     ...clamp,
     easing: EASE_CUT,
   });
@@ -408,11 +418,11 @@ export function ScissorsCut({
 
   // Scissors: fly in to the top-left corner, cut once round, pull away.
   const turn = em * 0.5;
-  const inP = interpolate(frame, [SC_IN, SC_IN + SC_IN_LEN], [0, 1], {
+  const inP = interpolate(frame, [scIn.start, scIn.end], [0, 1], {
     ...clamp,
     easing: EASE_OUT,
   });
-  const outP = interpolate(frame, [SC_OUT, SC_OUT + SC_OUT_LEN], [0, 1], {
+  const outP = interpolate(frame, [scOut.start, scOut.end], [0, 1], {
     ...clamp,
     easing: EASE_IN,
   });
@@ -433,23 +443,37 @@ export function ScissorsCut({
   const pivotX = tipX - Math.cos((angle * Math.PI) / 180) * S * 0.22;
   const pivotY = tipY - Math.sin((angle * Math.PI) / 180) * S * 0.22;
   const travel = frame < CUT ? 0 : cutS;
-  const snipping = frame >= CUT && frame <= CUT + CUT_LEN;
+  const snipping = frame >= CUT && frame <= cutEl.end;
   const open = snipping
     ? 5 + 13 * (0.5 + 0.5 * Math.cos((2 * Math.PI * travel) / (SNIP * em)))
-    : interpolate(frame, [SC_IN, SC_IN + 14], [3, 18], clamp) * (1 - outP) +
+    : interpolate(
+        frame,
+        [scIn.start, scIn.start + scIn.beat("open")],
+        [3, 18],
+        clamp,
+      ) *
+        (1 - outP) +
       3 * outP;
   const scOpacity =
-    interpolate(frame, [SC_IN, SC_IN + 8], [0, 1], clamp) *
+    interpolate(
+      frame,
+      [scIn.start, scIn.start + scIn.beat("fade")],
+      [0, 1],
+      clamp,
+    ) *
     (1 - interpolate(outP, [0.4, 1], [0, 1], clamp));
 
   // The cut slip lifts, then falls away and dissolves.
-  const lift = interpolate(frame, [LIFT, LIFT + LIFT_LEN], [0, 1], {
+  const lift = interpolate(frame, [liftEl.start, liftEl.end], [0, 1], {
     ...clamp,
     easing: EASE_OUT,
   });
   const fall = interpolate(
     frame,
-    [LIFT + LIFT_LEN - 2, LIFT + LIFT_LEN - 2 + FALL_LEN],
+    [
+      liftEl.start + liftEl.beat("fallAt"),
+      liftEl.start + liftEl.beat("fallAt") + liftEl.beat("fall"),
+    ],
     [0, 1],
     { ...clamp, easing: EASE_IN },
   );
@@ -467,14 +491,36 @@ export function ScissorsCut({
     h: slipA.h,
   };
   const slotOpacity =
-    interpolate(frame, [LIFT, LIFT + 4], [0, 1], clamp) *
-    (1 - interpolate(frame, [REPL + 6, REPL + REPL_LEN], [0, 1], clamp));
+    interpolate(
+      frame,
+      [liftEl.start, liftEl.start + liftEl.beat("slot")],
+      [0, 1],
+      clamp,
+    ) *
+    (1 -
+      interpolate(
+        frame,
+        [
+          replEl.start + replEl.beat("slotOutAt"),
+          replEl.start + replEl.beat("rise"),
+        ],
+        [0, 1],
+        clamp,
+      ));
   const hair = Math.max(1.5, width / 720);
   const fadeIn = (i: number) =>
-    interpolate(frame, [IN + i * stagger, IN + i * stagger + 18], [0, 1], {
-      ...clamp,
-      easing: EASE_OUT,
-    });
+    interpolate(
+      frame,
+      [
+        enterEl.start + i * enterEl.beat("stagger"),
+        enterEl.start + i * enterEl.beat("stagger") + enterEl.beat("rise"),
+      ],
+      [0, 1],
+      {
+        ...clamp,
+        easing: EASE_OUT,
+      },
+    );
   const glyph = (
     ch: string,
     key: string,
@@ -584,7 +630,10 @@ export function ScissorsCut({
           {repl.map((ch, i) => {
             const p = interpolate(
               frame,
-              [REPL + i * 2, REPL + i * 2 + REPL_LEN],
+              [
+                replEl.start + i * replEl.beat("stagger"),
+                replEl.start + i * replEl.beat("stagger") + replEl.beat("rise"),
+              ],
               [0, 1],
               { ...clamp, easing: EASE_OUT },
             );

@@ -9645,10 +9645,19 @@
         {
           "path": "scissors-cut/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/scissors-cut.tsx"
+          "target": "components/remocn/scissors-cut/index.tsx"
+        },
+        {
+          "path": "scissors-cut/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/scissors-cut/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "tittle-drop",

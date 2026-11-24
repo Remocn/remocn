@@ -9640,12 +9640,21 @@
       "title": "Scissors Cut",
       "description": "Scissors cut a word out of a line and another slides into the gap: 'Launch today.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/scissors-cut/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/scissors-cut.tsx"
+          "target": "components/remocn/scissors-cut/index.tsx"
+        },
+        {
+          "path": "registry/remocn/scissors-cut/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/scissors-cut/timeline.ts"
         }
       ],
       "type": "registry:component"
