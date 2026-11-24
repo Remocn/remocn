@@ -9092,12 +9092,21 @@
       "title": "Feature Headline",
       "description": "A tag pill opens from the left, then a headline rises: 'Captions that move with every word.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/feature-headline/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/feature-headline.tsx"
+          "target": "components/remocn/feature-headline/index.tsx"
+        },
+        {
+          "path": "registry/remocn/feature-headline/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/feature-headline/timeline.ts"
         }
       ],
       "type": "registry:component"

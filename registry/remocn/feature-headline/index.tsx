@@ -7,6 +7,12 @@ import { Fragment } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_HEADLINE,
+  type FeatureHeadlineElementId,
+  featureHeadlineTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["400", "500"],
@@ -59,6 +65,12 @@ export interface FeatureHeadlineProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the pill, single headline words and the
+   * subhead, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`. The exit stays on the composition's last frames.
+   */
+  timing?: Timing<FeatureHeadlineElementId>;
 }
 
 /** gradients.sh "mesh": bg #0a0d24, [#ecdcf2, #8796ee, #2e45b7, #0e1645]. */
@@ -204,30 +216,37 @@ function ScaleLayer({
   );
 }
 
-export function FeatureHeadline({
-  tag = "New",
-  label = "Captions",
-  headline = "Captions that move with every word.",
-  highlight = "every word",
-  subhead = "31 transcript-driven caption styles, ready to drop into any video.",
-  align = "left",
-  exit = true,
-  stagger = 2,
-  fontWeight = 500,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: FeatureHeadlineProps) {
+export function FeatureHeadline(props: FeatureHeadlineProps) {
+  const {
+    tag = "New",
+    label = "Captions",
+    headline = DEFAULT_HEADLINE,
+    highlight = "every word",
+    subhead = "31 transcript-driven caption styles, ready to drop into any video.",
+    align = "left",
+    exit = true,
+    fontWeight = 500,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const now = useSceneFrame();
   const raw = Math.max(0, now - delay);
   const frame = raw * speed;
   const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    featureHeadlineTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
   const centre = align === "center";
@@ -251,17 +270,20 @@ export function FeatureHeadline({
       : Math.max(baseFs * 0.72, (maxW * 2) / Math.max(est, 1));
 
   // ---- timing ----------------------------------------------------------------
-  const pillT = interpolate(frame, [0, 14], [0, 1], {
+  const pillEl = tl.get("pill");
+  const pillT = interpolate(frame, [pillEl.start, pillEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const wordT = (i: number) =>
-    interpolate(frame, [4 + i * stagger, 20 + i * stagger], [0, 1], {
+  const wordT = (i: number) => {
+    const wordEl = tl.get(`word:${i}`);
+    return interpolate(frame, [wordEl.start, wordEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-  const subStart = 12 + Math.min(words.length, 8) * 1.5;
-  const subT = interpolate(frame, [subStart, subStart + 18], [0, 1], {
+  };
+  const subEl = tl.get("subhead");
+  const subT = interpolate(frame, [subEl.start, subEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
