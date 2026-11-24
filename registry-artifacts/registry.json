@@ -15946,13 +15946,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/browser-extension/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/browser-extension.tsx"
+          "target": "components/remocn/browser-extension/index.tsx"
+        },
+        {
+          "path": "registry/remocn/browser-extension/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/browser-extension/timeline.ts"
         }
       ],
       "type": "registry:component"
