@@ -5,6 +5,18 @@ import { type Font, parse } from "opentype.js";
 import { useEffect, useState } from "react";
 import { continueRender, delayRender, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  anatomyTiming,
+  type GlyphAnatomyElementId,
+  GUIDE_LABELS,
+  glyphAnatomyTimeline,
+  type LetterSpans,
+} from "./timeline";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["500"],
@@ -21,6 +33,11 @@ export interface GlyphAnatomyProps {
   keepPoints?: boolean;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single guides and letters, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<GlyphAnatomyElementId>;
 }
 
 /** Static Inter ExtraBold (800) from Google Fonts. */
@@ -36,21 +53,23 @@ export const glyphAnatomyDefaults = {
   guides: true,
   keepPoints: false,
   speed: 1,
-} satisfies Required<Omit<GlyphAnatomyProps, "className">>;
+} satisfies Required<Omit<GlyphAnatomyProps, "className" | "timing">>;
 
 /** Beats on the 30 fps clock. Letter beats shift by `letterStagger × i`. */
-export const glyphAnatomyTiming = {
-  guideStart: 0,
-  guideStagger: 3,
-  guideDraw: 10,
-  anchors: [8, 22],
-  anchorPop: 4,
-  pull: [18, 40],
-  pullDuration: 8,
-  fill: [40, 50],
-  fade: [46, 58],
-  letterStagger: 2,
-} as const;
+export const glyphAnatomyTiming = anatomyTiming;
+
+/** A letter's moments, read from its element in the schedule. */
+function letterSpans(e: ResolvedElement<GlyphAnatomyElementId>): LetterSpans {
+  return {
+    anchors: [e.beat("anchors"), e.beat("anchorsEnd")],
+    anchorPop: e.beat("anchorPop"),
+    outline: e.beat("outline"),
+    pull: [e.beat("pull"), e.beat("pullEnd")],
+    pullDuration: e.beat("pullDuration"),
+    fill: [e.beat("fill"), e.beat("fillEnd")],
+    fade: [e.beat("fade"), e.length],
+  };
+}
 
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -164,8 +183,13 @@ export function getAnatomyContours(
  * How far each handle has travelled from its anchor to its place, 0 → 1 with
  * overshoot. At 0 the curve is its chord.
  */
-export function getGlyphAnatomyPull(t: number, order: number, total: number) {
-  const { pull, pullDuration } = glyphAnatomyTiming;
+export function getGlyphAnatomyPull(
+  t: number,
+  order: number,
+  total: number,
+  spans: Pick<LetterSpans, "pull" | "pullDuration"> = glyphAnatomyTiming,
+) {
+  const { pull, pullDuration } = spans;
   const span = pull[1] - pull[0] - pullDuration;
   const start = pull[0] + (total > 1 ? (span * order) / (total - 1) : 0);
   return interpolate(t, [start, start + pullDuration], [0, 1], {
@@ -175,8 +199,13 @@ export function getGlyphAnatomyPull(t: number, order: number, total: number) {
 }
 
 /** Scale of anchor `order` of `total` popping in along the letter's path. */
-export function getGlyphAnatomyAnchor(t: number, order: number, total: number) {
-  const { anchors, anchorPop } = glyphAnatomyTiming;
+export function getGlyphAnatomyAnchor(
+  t: number,
+  order: number,
+  total: number,
+  spans: Pick<LetterSpans, "anchors" | "anchorPop"> = glyphAnatomyTiming,
+) {
+  const { anchors, anchorPop } = spans;
   const span = anchors[1] - anchors[0] - anchorPop;
   const start = anchors[0] + (total > 1 ? (span * order) / (total - 1) : 0);
   return Math.max(
@@ -189,10 +218,16 @@ export function getGlyphAnatomyAnchor(t: number, order: number, total: number) {
 }
 
 /** Letter-level fades: outline in, fill in, scaffolding out. */
-export function getGlyphAnatomyLetter(t: number) {
-  const { anchors, fill, fade } = glyphAnatomyTiming;
+export function getGlyphAnatomyLetter(
+  t: number,
+  spans: Pick<
+    LetterSpans,
+    "anchors" | "outline" | "fill" | "fade"
+  > = glyphAnatomyTiming,
+) {
+  const { anchors, outline, fill, fade } = spans;
   return {
-    outline: interpolate(t, [anchors[0], anchors[0] + 4], [0, 1], CLAMP),
+    outline: interpolate(t, [anchors[0], anchors[0] + outline], [0, 1], CLAMP),
     fill: interpolate(t, [...fill], [0, 1], {
       ...CLAMP,
       easing: easeInOutCubic,
@@ -204,11 +239,16 @@ export function getGlyphAnatomyLetter(t: number) {
   };
 }
 
-/** Draw progress of guide `index`, 0..1. */
-export function getGlyphAnatomyGuide(t: number, index: number) {
+/** Draw progress of guide `index`, 0..1; `span` is its element. */
+export function getGlyphAnatomyGuide(
+  t: number,
+  index: number,
+  span?: { start: number; end: number },
+) {
   const { guideStart, guideStagger, guideDraw } = glyphAnatomyTiming;
-  const start = guideStart + guideStagger * index;
-  return interpolate(t, [start, start + guideDraw], [0, 1], {
+  const start = span ? span.start : guideStart + guideStagger * index;
+  const end = span ? span.end : start + guideDraw;
+  return interpolate(t, [start, end], [0, 1], {
     ...CLAMP,
     easing: easeOutCubic,
   });
@@ -304,19 +344,27 @@ function useAnatomyFont(url: string) {
   return font;
 }
 
-export function GlyphAnatomy({
-  text = glyphAnatomyDefaults.text,
-  fontUrl = glyphAnatomyDefaults.fontUrl,
-  fontSize = glyphAnatomyDefaults.fontSize,
-  color = glyphAnatomyDefaults.color,
-  guideColor = glyphAnatomyDefaults.guideColor,
-  guides = glyphAnatomyDefaults.guides,
-  keepPoints = glyphAnatomyDefaults.keepPoints,
-  speed = glyphAnatomyDefaults.speed,
-  className,
-}: GlyphAnatomyProps) {
+export function GlyphAnatomy(props: GlyphAnatomyProps) {
+  const {
+    text = glyphAnatomyDefaults.text,
+    fontUrl = glyphAnatomyDefaults.fontUrl,
+    fontSize = glyphAnatomyDefaults.fontSize,
+    color = glyphAnatomyDefaults.color,
+    guideColor = glyphAnatomyDefaults.guideColor,
+    guides = glyphAnatomyDefaults.guides,
+    keepPoints = glyphAnatomyDefaults.keepPoints,
+    speed = glyphAnatomyDefaults.speed,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    glyphAnatomyTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const font = useAnatomyFont(fontUrl);
   if (!font) return null;
 
@@ -329,19 +377,17 @@ export function GlyphAnatomy({
   const anchorSize = 6;
   const handleRadius = 2.6;
   const margin = 0.3 * fontSize;
+  const letterEls = word.letters.map((_, i) => tl.get(`letter:${i}`));
   // Guides fade with the last letter's scaffolding.
-  const lastStart =
-    glyphAnatomyTiming.letterStagger * Math.max(0, word.letters.length - 1);
+  const lastEl = letterEls[letterEls.length - 1];
   const scaffoldAll = keepPoints
     ? 1
-    : getGlyphAnatomyLetter(t - lastStart).scaffold;
+    : lastEl
+      ? getGlyphAnatomyLetter(t - lastEl.start, letterSpans(lastEl)).scaffold
+      : getGlyphAnatomyLetter(t).scaffold;
 
-  const guideLines = [
-    { label: "Cap height", y: -word.capHeight },
-    { label: "x-height", y: -word.xHeight },
-    { label: "Baseline", y: 0 },
-    { label: "Descender", y: word.descender },
-  ];
+  const guideYs = [-word.capHeight, -word.xHeight, 0, word.descender];
+  const guideLines = GUIDE_LABELS.map((label, i) => ({ label, y: guideYs[i] }));
 
   return (
     <div
@@ -357,7 +403,7 @@ export function GlyphAnatomy({
         <g transform={`translate(${originX} ${baseline}) scale(${unit})`}>
           {guides
             ? guideLines.map((guide, i) => {
-                const draw = getGlyphAnatomyGuide(t, i);
+                const draw = getGlyphAnatomyGuide(t, i, tl.get(`guide:${i}`));
                 if (draw <= 0) return null;
                 const length = word.width + 2 * margin;
                 return (
@@ -386,8 +432,10 @@ export function GlyphAnatomy({
               })
             : null}
           {word.letters.map((letter, i) => {
-            const lt = t - glyphAnatomyTiming.letterStagger * i;
-            const state = getGlyphAnatomyLetter(lt);
+            const letterEl = letterEls[i];
+            const spans = letterSpans(letterEl);
+            const lt = t - letterEl.start;
+            const state = getGlyphAnatomyLetter(lt, spans);
             const scaffold = keepPoints ? 1 : state.scaffold;
             const curves = letter.contours.flatMap((segments, c) =>
               segments.flatMap((s, k) => (s.c1 ? [`${c}:${k}`] : [])),
@@ -401,6 +449,7 @@ export function GlyphAnatomy({
                 lt,
                 curveOrder.get(`${c}:${k}`) ?? 0,
                 curves.length,
+                spans,
               );
             const paths = letter.contours.map((segments, c) =>
               getAnatomyPath(segments, pullOf(c)),
@@ -470,6 +519,7 @@ export function GlyphAnatomy({
                           lt,
                           anchorIndex++,
                           anchors.length,
+                          spans,
                         );
                         if (scale <= 0) return null;
                         const size = anchorSize * scale;

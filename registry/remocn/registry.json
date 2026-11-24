@@ -3834,12 +3834,17 @@
       "title": "Glyph Anatomy",
       "description": "A word builds as in a font editor, with metric guides, anchors along each contour and Bézier handles that pull straight segments into curves before the glyphs fill.",
       "dependencies": ["remotion", "opentype.js", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "glyph-anatomy/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/glyph-anatomy.tsx"
+          "target": "components/remocn/glyph-anatomy/index.tsx"
+        },
+        {
+          "path": "glyph-anatomy/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/glyph-anatomy/timeline.ts"
         }
       ]
     },
