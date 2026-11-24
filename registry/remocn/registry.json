@@ -10835,12 +10835,17 @@
       "title": "Ndot Resolve",
       "description": "A headline scans in as a dot-matrix face, then refreshes letter by letter into solid type.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "ndot-resolve/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ndot-resolve.tsx"
+          "target": "components/remocn/ndot-resolve/index.tsx"
+        },
+        {
+          "path": "ndot-resolve/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ndot-resolve/timeline.ts"
         }
       ]
     },
