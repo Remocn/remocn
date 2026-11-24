@@ -16008,13 +16008,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/live-activity/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/live-activity.tsx"
+          "target": "components/remocn/live-activity/index.tsx"
+        },
+        {
+          "path": "registry/remocn/live-activity/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/live-activity/timeline.ts"
         }
       ],
       "type": "registry:component"

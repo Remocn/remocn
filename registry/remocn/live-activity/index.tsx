@@ -9,6 +9,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type LiveActivityElementId, liveActivityTimeline } from "./timeline";
 
 const hanken = loadFont("normal", {
   weights: ["300", "400"],
@@ -50,6 +52,12 @@ export interface LiveActivityProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the countdown, the camera's moves, single copy
+   * lines and each gesture of the finger, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LiveActivityElementId>;
 }
 
 export const LIVE_ACTIVITY_RENDER: LiveActivityStatus = {
@@ -101,14 +109,6 @@ const EXP_H = 188;
 const EXP_R = 44;
 const CARD_Y = 584;
 
-const T_START = 14;
-const T_PRESS = 54;
-const T_EXP = 62;
-const T_COL = 150;
-const T_SWIPE = 190;
-const T_RELEASE = 202;
-const T_FIN = 240;
-
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
 /** Whether `at` changes between this frame and either neighbour. */
@@ -136,7 +136,6 @@ const HEAVY: SpringCfg = { mass: 1, damping: 26, stiffness: 120 };
 const CARD: SpringCfg = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP: SpringCfg = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH: SpringCfg = { damping: 200 };
-const LINE_AT = [0, T_EXP, T_SWIPE];
 
 const DARK = {
   stage: "#03050B",
@@ -858,26 +857,52 @@ function ScaleLayer({
   );
 }
 
-export function LiveActivity({
-  status = LIVE_ACTIVITY_RENDER,
-  date = "Tuesday, October 24",
-  time = "9:41",
-  remainingLabel = "remaining",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: LiveActivityProps) {
+export function LiveActivity(props: LiveActivityProps) {
+  const {
+    status = LIVE_ACTIVITY_RENDER,
+    date = "Tuesday, October 24",
+    time = "9:41",
+    remainingLabel = "remaining",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const f = frame * speed;
+  const tl = useTimeline(
+    liveActivityTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const phoneEl = tl.get("phone");
+  const countdown = tl.get("countdown");
+  const reach = tl.get("reach");
+  const pressEl = tl.get("press");
+  const expandEl = tl.get("expand");
+  const collapseEl = tl.get("collapse");
+  const swipeEl = tl.get("swipe");
+  const releaseEl = tl.get("release");
+  const finish = tl.get("finish");
+  const zoomIn = tl.get("zoom-in");
+  const zoomOut = tl.get("zoom-out");
+  const push = tl.get("push");
+  const startAt = countdown.start;
+  const pressAt = pressEl.start;
+  const expandAt = expandEl.start;
+  const collapseAt = collapseEl.start;
+  const swipeAt = swipeEl.start;
+  const releaseAt = releaseEl.start;
   const c: Palette = theme === "light" ? LIGHT : DARK;
   const fg = ink ?? c.copy;
   const tall = height > width;
@@ -900,9 +925,9 @@ export function LiveActivity({
     spAt(ff, at - 2, MORPH, 3) - spAt(ff, at + 2, CHIP);
   const bump = (at: number) => bumpAt(f, at);
 
-  const span = T_FIN - T_START;
+  const span = countdown.length;
   const tickLen = span / status.seconds;
-  const live = Math.max(0, Math.min(span, f - T_START));
+  const live = Math.max(0, Math.min(span, f - startAt));
   const tick = Math.floor(live / tickLen);
   const remaining = status.seconds - tick;
   const timeText = fmtTime(remaining, format);
@@ -912,7 +937,7 @@ export function LiveActivity({
   const progress = interpolate(live, [0, span], [0.04, 1], clamp);
   const step = progress < 0.18 ? 0 : progress < 0.82 ? 1 : 2;
   const pct = `${Math.round(progress * 100)}%`;
-  const done = Math.min(1, sp(T_FIN + 2, CHIP));
+  const done = Math.min(1, sp(finish.start + finish.beat("doneAt"), CHIP));
   const act: ActivityState = {
     timeText,
     prevText,
@@ -924,21 +949,26 @@ export function LiveActivity({
   };
 
   const coverAt = (ff: number) => {
-    const pull = interpolate(ff, [T_SWIPE, T_RELEASE], [0, 0.42], {
+    const pull = interpolate(ff, [swipeAt, swipeEl.end], [0, 0.42], {
       ...clamp,
       easing: moveE,
     });
-    const rest = interpolate(ff, [T_RELEASE, T_RELEASE + 11], [0, 0.58], {
-      ...clamp,
-      easing: sheet,
-    });
+    const rest = interpolate(
+      ff,
+      [releaseAt, releaseAt + releaseEl.beat("rest")],
+      [0, 0.58],
+      {
+        ...clamp,
+        easing: sheet,
+      },
+    );
     return pull + rest;
   };
   const cover = coverAt(f);
   const island = (ff: number) => {
     const ios = (at: number) => spAt(ff, at, CARD);
-    const bloom = ios(T_START) * (1 - ios(T_SWIPE + 4));
-    const m = ios(T_EXP) - ios(T_COL);
+    const bloom = ios(startAt) * (1 - ios(swipeAt + swipeEl.beat("unbloomAt")));
+    const m = ios(expandAt) - ios(collapseAt);
     const islW = ISL_W + (CMP_W - ISL_W) * bloom + (EXP_W - CMP_W) * m;
     const expandOp = interpolate(m, [0.2, 0.6], [0, 1], clamp);
     return {
@@ -946,7 +976,7 @@ export function LiveActivity({
       m,
       islW,
       expandOp,
-      press: 1 - 0.04 * bumpAt(ff, T_PRESS + 2),
+      press: 1 - 0.04 * bumpAt(ff, pressAt + pressEl.beat("bumpAt")),
       expK: (islW / EXP_W) * (0.96 + expandOp * 0.04),
     };
   };
@@ -959,7 +989,15 @@ export function LiveActivity({
   const compactOp =
     interpolate(m, [0.05, 0.35], [1, 0], clamp) * Math.min(1, bloom * 1.6);
 
-  const camT = [0, 22, 46, 160, 182, 204, 226];
+  const camT = [
+    phoneEl.start,
+    zoomIn.start,
+    zoomIn.end,
+    zoomOut.start,
+    zoomOut.end,
+    push.start,
+    push.end,
+  ];
   const camEase = { ...clamp, easing: camE };
   const camera = (ff: number) => {
     const camS = interpolate(
@@ -988,7 +1026,7 @@ export function LiveActivity({
       [0.5, 0.5, 0.36, 0.36, 0.5, 0.5, 0.5].map((v) => v + yOff),
       camEase,
     );
-    const rise = spring({ frame: ff, fps, config: HEAVY });
+    const rise = spring({ frame: ff - phoneEl.start, fps, config: HEAVY });
     const S = k * camS;
     return {
       rise,
@@ -1006,18 +1044,18 @@ export function LiveActivity({
     moves((ff) => camera(ff).S * BH, f, speed);
 
   const touches = [
-    { t: 40, x: 250, y: 230 },
-    { t: T_PRESS, x: SW / 2 + 4, y: 30 },
-    { t: T_COL - 1, x: 296, y: 398 },
-    { t: T_SWIPE - 10, x: 70, y: 90 },
-    { t: T_SWIPE, x: 64, y: 14 },
-    { t: T_RELEASE, x: 74, y: 380 },
+    { t: reach.start, x: 250, y: 230 },
+    { t: pressAt, x: SW / 2 + 4, y: 30 },
+    { t: collapseAt + collapseEl.beat("tapAt"), x: 296, y: 398 },
+    { t: swipeAt + swipeEl.beat("approachAt"), x: 70, y: 90 },
+    { t: swipeAt, x: 64, y: 14 },
+    { t: releaseAt, x: 74, y: 380 },
   ];
   let touch = { x: touches[0].x, y: touches[0].y };
   for (let i = 0; i < touches.length - 1; i++) {
     const a = touches[i];
     const b = touches[i + 1];
-    const dragging = a.t === T_SWIPE;
+    const dragging = a.t === swipeAt;
     const start = dragging ? a.t : a.t + 3;
     const end = dragging ? b.t : b.t - 2;
     if (f >= start) {
@@ -1034,14 +1072,24 @@ export function LiveActivity({
     1,
     interpolate(
       f,
-      [T_PRESS, T_PRESS + 2, T_EXP + 2, T_EXP + 4],
+      [
+        pressAt,
+        pressAt + pressEl.beat("down"),
+        expandAt + expandEl.beat("upAt"),
+        expandAt + expandEl.beat("upEnd"),
+      ],
       [0, 1, 1, 0],
       clamp,
     ) +
-      bump(T_COL - 1) +
+      bump(collapseAt + collapseEl.beat("tapAt")) +
       interpolate(
         f,
-        [T_SWIPE - 2, T_SWIPE, T_RELEASE, T_RELEASE + 2],
+        [
+          swipeAt + swipeEl.beat("downAt"),
+          swipeAt,
+          releaseAt,
+          releaseAt + releaseEl.beat("upEnd"),
+        ],
         [0, 1, 1, 0],
         clamp,
       ),
@@ -1049,30 +1097,28 @@ export function LiveActivity({
   const touchOpacity = interpolate(
     f,
     [
-      40,
-      46,
-      T_EXP + 4,
-      T_EXP + 9,
-      T_COL - 10,
-      T_COL - 5,
-      T_COL + 3,
-      T_COL + 8,
-      T_SWIPE - 10,
-      T_SWIPE - 5,
-      T_RELEASE + 2,
-      T_RELEASE + 7,
+      reach.start,
+      reach.start + reach.beat("fadeIn"),
+      expandAt + expandEl.beat("fadeAt"),
+      expandAt + expandEl.beat("fadeEnd"),
+      collapseAt + collapseEl.beat("showAt"),
+      collapseAt + collapseEl.beat("showEnd"),
+      collapseAt + collapseEl.beat("fadeAt"),
+      collapseAt + collapseEl.beat("fadeEnd"),
+      swipeAt + swipeEl.beat("approachAt"),
+      swipeAt + swipeEl.beat("showEnd"),
+      releaseAt + releaseEl.beat("fadeAt"),
+      releaseAt + releaseEl.beat("fadeEnd"),
     ],
     [0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0],
     clamp,
   );
 
-  const cardIn = sp(T_RELEASE - 2, CARD);
-  const cardMoving = moves(
-    (ff) => spAt(ff, T_RELEASE - 2, CARD) * 14,
-    f,
-    speed,
-  );
+  const cardAt = releaseAt + releaseEl.beat("cardAt");
+  const cardIn = sp(cardAt, CARD);
+  const cardMoving = moves((ff) => spAt(ff, cardAt, CARD) * 14, f, speed);
   const coverMoving = moves((ff) => coverAt(ff) * SH, f, speed);
+  const copyLines = tl.lane("Copy");
 
   return (
     <AbsoluteFill
@@ -1110,12 +1156,15 @@ export function LiveActivity({
             overflow: "hidden",
           }}
         >
-          {lines.slice(0, LINE_AT.length).map((line, i) => {
-            const at = LINE_AT[i];
-            const next = LINE_AT[i + 1] ?? 100000;
+          {lines.slice(0, copyLines.length).map((line, i) => {
+            const copy = copyLines[i];
+            const at = copy.start;
+            // The last line stays.
+            const next = i < copyLines.length - 1 ? copy.end : 100000;
             const pinAt = (ff: number) =>
-              i === 0 ? camera(ff).rise : tween(ff, at, at + 12);
-            const poutAt = (ff: number) => tween(ff, next - 7, next, exitE);
+              i === 0 ? camera(ff).rise : tween(ff, at, at + copy.beat("rise"));
+            const poutAt = (ff: number) =>
+              tween(ff, next - copy.beat("outLead"), next, exitE);
             const pin = pinAt(f);
             const pout = poutAt(f);
             const lineMoving = moves(
