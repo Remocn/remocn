@@ -5495,13 +5495,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/toolbar-unfurl/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/toolbar-unfurl.tsx"
+          "target": "components/remocn/toolbar-unfurl/index.tsx"
+        },
+        {
+          "path": "registry/remocn/toolbar-unfurl/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/toolbar-unfurl/timeline.ts"
         }
       ],
       "type": "registry:component"
