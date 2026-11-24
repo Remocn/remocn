@@ -1200,11 +1200,15 @@ export function CardCreate(props: CardCreateProps) {
                     `Printed on the front as ${holder.toUpperCase()}`,
                     "Only you can see the full number",
                   ].map((hint, i) => {
-                    const [onEl, offEl] = [
+                    const spans: [
+                      typeof printEl,
+                      typeof printEl | undefined,
+                    ][] = [
                       [printEl, nameEl],
                       [nameEl, detailsEl],
                       [detailsEl, undefined],
-                    ][i];
+                    ];
+                    const [onEl, offEl] = spans[i];
                     const on = onEl.start + onEl.beat("hintAt");
                     // The last hint stays.
                     const off = offEl
