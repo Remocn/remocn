@@ -5627,13 +5627,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "send-fountain/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/send-fountain.tsx"
+          "target": "components/remocn/send-fountain/index.tsx"
+        },
+        {
+          "path": "send-fountain/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/send-fountain/timeline.ts"
         }
       ]
     },

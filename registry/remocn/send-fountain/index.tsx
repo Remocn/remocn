@@ -18,6 +18,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  FOUNTAIN_END,
+  type SendFountainElementId,
+  sendFountainTimeline,
+} from "./timeline";
 
 const onest = loadOnest("normal", {
   weights: ["300", "400"],
@@ -39,23 +45,7 @@ const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 
-const B = {
-  bar: -6,
-  cursor: -4,
-  press: 14,
-  flip: 16,
-  eject: [19, 24, 28, 32, 35, 38],
-  rise: 22,
-  riseEnd: 76,
-  snap: 68,
-  chrome: 72,
-  avatars: 80,
-  data: 86,
-  live: 100,
-  end: 144,
-};
-
-export const SEND_FOUNTAIN_DURATION = B.end;
+export const SEND_FOUNTAIN_DURATION = FOUNTAIN_END;
 
 const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   interpolate(f, [start, start + dur], [0, 1], {
@@ -843,6 +833,12 @@ export interface SendFountainProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the bar and cursor, the send, single cards
+   * bursting out, the snap into the window and what follows, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SendFountainElementId>;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -871,35 +867,55 @@ function ScaleLayer({
   );
 }
 
-export function SendFountain({
-  theme = "dark",
-  accent = "#ff5a1f",
-  prompt = "Build a launch dashboard for the v2 release",
-  appTitle = "Launch board",
-  heroTitle = "Launch film",
-  stat = 47200,
-  statLabel = "Weekly active",
-  statDelta = "+18%",
-  chartTitle = "Signups",
-  ctaLabel = "Publish",
-  images = [
-    staticFile("templates/launch-anything/horizon.jpg"),
-    staticFile("templates/product-showcase/sculpture.jpg"),
-  ],
-  logo,
-  ink,
-  background,
-  fontFamily = onest.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: SendFountainProps) {
+export function SendFountain(props: SendFountainProps) {
+  const {
+    theme = "dark",
+    accent = "#ff5a1f",
+    prompt = "Build a launch dashboard for the v2 release",
+    appTitle = "Launch board",
+    heroTitle = "Launch film",
+    stat = 47200,
+    statLabel = "Weekly active",
+    statDelta = "+18%",
+    chartTitle = "Signups",
+    ctaLabel = "Publish",
+    images = [
+      staticFile("templates/launch-anything/horizon.jpg"),
+      staticFile("templates/product-showcase/sculpture.jpg"),
+    ],
+    logo,
+    ink,
+    background,
+    fontFamily = onest.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const rawFrame = useSceneFrame();
   const frame = Math.max(0, rawFrame - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    sendFountainTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const barEl = tl.get("bar");
+  const cursorEl = tl.get("cursor");
+  const zoomEl = tl.get("zoom");
+  const pressEl = tl.get("press");
+  const flipEl = tl.get("flip");
+  const riseEl = tl.get("rise");
+  const snapEl = tl.get("snap");
+  const chromeEl = tl.get("chrome");
+  const avatarsEl = tl.get("avatars");
+  const dataEl = tl.get("data");
+  const liveEl = tl.get("live");
+  const cards = ORDER.map((_, i) => tl.get(`card:${i}`));
   // Whether a value of the frame is moving right now: springs overshoot and
   // trail off, so it is read against the neighbouring frames instead of a
   // progress. Nothing moves while `delay` holds the first frame.
@@ -915,66 +931,83 @@ export function SendFountain({
   const { u } = L;
   const sc = width / L.stageW;
 
-  const camT = ramp(frame, B.rise, B.riseEnd - B.rise, MOVE);
+  const camT = ramp(frame, riseEl.start, riseEl.length, MOVE);
   const pushAt = (f: number) =>
-    1 + 0.03 * ramp(f, B.snap, B.end - B.snap, SWAY);
+    1 + 0.03 * ramp(f, snapEl.start, snapEl.length, SWAY);
   const push = pushAt(frame);
-  const zoomAt = (f: number) => mix(1.22, 1, ramp(f, -4, 40, MOVE));
+  const zoomAt = (f: number) =>
+    mix(1.22, 1, ramp(f, zoomEl.start, zoomEl.length, MOVE));
   const zoom = zoomAt(frame);
 
-  const barIn = spring({ frame: frame - B.bar, fps, config: HEAVY });
+  const barIn = spring({ frame: frame - barEl.start, fps, config: HEAVY });
   // How far the bar sits below its place in the layout: the entrance, then
   // the camera rising past it.
   const barDropAt = (f: number) =>
-    ramp(f, B.rise, B.riseEnd - B.rise, MOVE) * L.rise +
-    mix(60 * u, 0, spring({ frame: f - B.bar, fps, config: HEAVY }));
+    ramp(f, riseEl.start, riseEl.length, MOVE) * L.rise +
+    mix(60 * u, 0, spring({ frame: f - barEl.start, fps, config: HEAVY }));
   const barY = L.bar.cy + barDropAt(frame);
   const btnX = L.bar.cx + L.bar.w / 2 - L.bar.h / 2 + 0;
   const btnY = barY;
 
   const curIn = spring({
-    frame: frame - B.cursor,
+    frame: frame - cursorEl.start,
     fps,
     config: HEAVY,
-    durationInFrames: 20,
+    durationInFrames: cursorEl.length,
   });
-  const press = ramp(frame, B.press, 3) * (1 - ramp(frame, B.press + 3, 6));
-  const flip = ramp(frame, B.flip, 4);
-  const flash = ramp(frame, B.flip, 3) * (1 - ramp(frame, B.flip + 4, 14));
-  const release = spring({ frame: frame - B.press - 4, fps, config: CHIP });
+  const press =
+    ramp(frame, pressEl.start, pressEl.beat("down")) *
+    (1 -
+      ramp(frame, pressEl.start + pressEl.beat("up"), pressEl.beat("upLen")));
+  const flip = ramp(frame, flipEl.start, flipEl.length);
+  const flash =
+    ramp(frame, flipEl.start, flipEl.beat("flash")) *
+    (1 -
+      ramp(frame, flipEl.start + flipEl.beat("fade"), flipEl.beat("fadeLen")));
+  const release = spring({
+    frame: frame - pressEl.start - pressEl.beat("release"),
+    fps,
+    config: CHIP,
+  });
   const btnScale = 1 - 0.12 * press + 0.06 * Math.sin(Math.PI * release) * flip;
   const curX = mix(btnX + 190 * u, btnX + 8 * u, curIn);
   const curY = mix(btnY + 150 * u, btnY + 10 * u, curIn) + 3 * u * press;
-  const caretOn = Math.floor(frame / 9) % 2 === 0 && frame < B.press;
+  const caretOn = Math.floor(frame / 9) % 2 === 0 && frame < pressEl.start;
 
   const winX = L.win.x;
   const winY = L.win.y;
-  const chromeIn = ramp(frame, B.chrome, 16);
+  const chromeIn = ramp(frame, chromeEl.start, chromeEl.length);
   const liveAt = (f: number) =>
-    spring({ frame: f - B.live, fps, config: CHIP });
+    spring({ frame: f - liveEl.start, fps, config: CHIP });
   const liveIn = liveAt(frame);
-  const dataT = ramp(frame, B.data, 30, MOVE);
+  const dataT = ramp(frame, dataEl.start, dataEl.length, MOVE);
   const statValue = Math.round(mix(stat, stat + 312, dataT));
-  const heroProg = 0.18 + 0.2 * ramp(frame, B.snap, B.end - B.snap, SWAY);
+  const heroProg = 0.18 + 0.2 * ramp(frame, snapEl.start, snapEl.length, SWAY);
 
   const cardPos = (id: CardId, i: number, f: number) => {
-    const e = B.eject[i];
+    const card = cards[i];
+    const e = card.start;
     const c = L.cloud[id];
     const slot = L.slots[id];
     const sx = btnX;
-    const sy = L.bar.cy + ramp(e, B.rise, B.riseEnd - B.rise, MOVE) * L.rise;
+    const sy = L.bar.cy + ramp(e, riseEl.start, riseEl.length, MOVE) * L.rise;
     const p = spring({ frame: f - e, fps, config: CARD });
     const ps = spring({ frame: f - e, fps, config: CHIP });
     const cx = sx + (c.x - sx) * 0.2;
     const cy = Math.min(sy, c.y) - 170 * u;
     const bz = (a: number, m: number, b: number, k: number) =>
       (1 - k) * (1 - k) * a + 2 * (1 - k) * k * m + k * k * b;
-    const drift = 22 * u * ramp(f, e + 8, B.snap - e, SWAY);
+    const drift =
+      22 * u * ramp(f, e + card.beat("drift"), snapEl.start - e, SWAY);
     let x = bz(sx, cx, c.x, p);
     let y = bz(sy, cy, c.y, p) - drift;
     let s = mix(0.16, c.s, ps);
     let r = mix(i % 2 === 0 ? -22 : 22, c.r, p);
-    const q = spring({ frame: f - B.snap - i * 2, fps, config: CARD });
+    const q = spring({
+      frame: f - snapEl.start - i * snapEl.beat("stagger"),
+      fps,
+      config: CARD,
+    });
     const tx = winX + slot.x + slot.w / 2;
     const ty = winY + slot.y + slot.h / 2;
     x = mix(x, tx, q);
@@ -1422,12 +1455,12 @@ export function SendFountain({
                 const at = (f: number) => {
                   const pos = cardPos(id, a.card, f);
                   const pop = spring({
-                    frame: f - B.eject[a.card] - 5,
+                    frame: f - cards[a.card].start - cards[a.card].beat("pop"),
                     fps,
                     config: CHIP,
                   });
                   const go = spring({
-                    frame: f - B.avatars - k * 3,
+                    frame: f - avatarsEl.start - k * avatarsEl.beat("stagger"),
                     fps,
                     config: CARD,
                   });
@@ -1487,7 +1520,7 @@ export function SendFountain({
                   top: L.bar.cy + 10 * u,
                   transform: `translate(${curX - (btnX + 8 * u)}px, ${curY - (L.bar.cy + 10 * u)}px) scale(${1 - 0.1 * press})`,
                   transformOrigin: "4px 3px",
-                  opacity: ramp(frame, B.cursor, 6),
+                  opacity: ramp(frame, cursorEl.start, cursorEl.beat("fade")),
                 }}
               >
                 <Cursor size={30 * u} />
