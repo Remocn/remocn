@@ -14432,12 +14432,21 @@
       "title": "Wireframe to Final",
       "description": "A gray wireframe dashboard resolves into the finished product UI.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/wireframe-to-final/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/wireframe-to-final.tsx"
+          "target": "components/remocn/wireframe-to-final/index.tsx"
+        },
+        {
+          "path": "registry/remocn/wireframe-to-final/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/wireframe-to-final/timeline.ts"
         }
       ],
       "type": "registry:component"

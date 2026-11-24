@@ -14437,10 +14437,19 @@
         {
           "path": "wireframe-to-final/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/wireframe-to-final.tsx"
+          "target": "components/remocn/wireframe-to-final/index.tsx"
+        },
+        {
+          "path": "wireframe-to-final/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/wireframe-to-final/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "dot-field-morph",

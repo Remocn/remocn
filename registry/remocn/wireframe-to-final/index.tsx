@@ -7,6 +7,11 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type WireframeToFinalElementId,
+  wireframeToFinalTimeline,
+} from "./timeline";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400", "500"],
@@ -53,6 +58,12 @@ export interface WireframeToFinalProps {
   captions?: [string, string];
   /** Numbers on the measurement lines: [width, height, sidebar]. */
   measurements?: [string, string, string];
+  /**
+   * Moves, trims or stretches the blueprint's drawing, the caption, the push
+   * and the fill sweep, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WireframeToFinalElementId>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -295,19 +306,10 @@ const OUT = Easing.bezier(0.22, 1, 0.36, 1);
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-// Timeline (frames at speed 1).
-const FRAME_DRAW = [2, 28];
-const DIM_DRAW = [12, 36];
-const STRUCT_DRAW = 22;
-const BOX_DRAW = [30, 62];
-const CONTENT_DRAW = [42, 90];
-const SWEEP = [104, 152];
 const EDGE = 0.045;
 
 type Drawn = El & {
   kind: "struct" | "box" | "content" | "bg";
-  start: number;
-  dur: number;
   /** Position along the sweep axis, 0..1. */
   at: number;
 };
@@ -340,24 +342,10 @@ function choreograph(): Drawn[] {
     const at = diag(e);
     const long =
       e.t === "l" && Math.abs(e.x2 - e.x) + Math.abs(e.y2 - e.y) > 600;
-    if (e.t === "r" && e.f === "side")
-      return { ...e, kind: "bg", start: 0, dur: 1, at };
-    if (long) return { ...e, kind: "struct", start: STRUCT_DRAW, dur: 18, at };
-    if (e.t === "r" && e.f === "card")
-      return {
-        ...e,
-        kind: "box",
-        start: BOX_DRAW[0] + at * (BOX_DRAW[1] - BOX_DRAW[0] - 16),
-        dur: 16,
-        at,
-      };
-    return {
-      ...e,
-      kind: "content",
-      start: CONTENT_DRAW[0] + at * (CONTENT_DRAW[1] - CONTENT_DRAW[0] - 10),
-      dur: e.t === "p" ? 22 : 10,
-      at,
-    };
+    if (e.t === "r" && e.f === "side") return { ...e, kind: "bg", at };
+    if (long) return { ...e, kind: "struct", at };
+    if (e.t === "r" && e.f === "card") return { ...e, kind: "box", at };
+    return { ...e, kind: "content", at };
   });
 }
 
@@ -379,24 +367,40 @@ function ScaleLayer({
   );
 }
 
-export function WireframeToFinal({
-  src,
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = mono,
-  sweep = SWEEP[1] - SWEEP[0],
-  glow = 1,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  captions = ["Idea", "Product"],
-  measurements = ["1440", "900", "288"],
-}: WireframeToFinalProps) {
+export function WireframeToFinal(props: WireframeToFinalProps) {
+  const {
+    src,
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = mono,
+    glow = 1,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    captions = ["Idea", "Product"],
+    measurements = ["1440", "900", "288"],
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    wireframeToFinalTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const gridEl = tl.get("grid");
+  const outline = tl.get("outline");
+  const dims = tl.get("dims");
+  const structure = tl.get("structure");
+  const boxes = tl.get("boxes");
+  const content = tl.get("content");
+  const captionEl = tl.get("caption");
+  const pushEl = tl.get("push");
+  const sweepEl = tl.get("sweep");
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const P = PALETTE[theme];
   const stage =
@@ -405,7 +409,8 @@ export function WireframeToFinal({
     background === undefined || background === "transparent"
       ? P.stage
       : background;
-  const sweepEnd = SWEEP[0] + sweep;
+  const sweepAt = sweepEl.start;
+  const sweepEnd = sweepEl.end;
   const dark = theme === "dark";
   const k = width / 1280;
   const W = Math.round(width * 0.64);
@@ -425,7 +430,7 @@ export function WireframeToFinal({
   // Fill sweep front along the "to bottom right" axis.
   const front = interpolate(
     frame,
-    [SWEEP[0], sweepEnd],
+    [sweepAt, sweepEnd],
     [-0.02, 1 + EDGE + 0.02],
     {
       ...clamp,
@@ -434,37 +439,55 @@ export function WireframeToFinal({
   );
   const sweepLife = interpolate(
     frame,
-    [SWEEP[0], SWEEP[0] + 6, sweepEnd - 6, sweepEnd],
+    [
+      sweepAt,
+      sweepAt + sweepEl.beat("fade"),
+      sweepEnd - sweepEl.beat("fade"),
+      sweepEnd,
+    ],
     [0, 1, 1, 0],
     clamp,
   );
-  const after = interpolate(frame, [sweepEnd - 14, sweepEnd + 16], [0, 1], {
-    ...clamp,
-    easing: INOUT,
-  });
+  const after = interpolate(
+    frame,
+    [sweepEnd - sweepEl.beat("lead"), sweepEnd + sweepEl.beat("tail")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: INOUT,
+    },
+  );
   const pushAt = (f: number) =>
-    interpolate(f, [96, 230], [1, 1.05], { ...clamp, easing: INOUT });
+    interpolate(f, [pushEl.start, pushEl.end], [1, 1.05], {
+      ...clamp,
+      easing: INOUT,
+    });
   const push = pushAt(frame);
   // The slow in-out push creeps at its start; weigh each step by how far
   // the furthest text sits from the origin.
   const pushing =
     Math.abs(pushAt(frame + speed) - push) * width * 0.6 > 1e-3 ||
     Math.abs(push - pushAt(frame - speed)) * width * 0.6 > 1e-3;
-  const gridIn = interpolate(frame, [0, 14], [0.55, 1], clamp);
-  const drift = interpolate(frame, [SWEEP[0], 230], [0, 1], clamp);
+  const gridIn = interpolate(
+    frame,
+    [gridEl.start, gridEl.end],
+    [0.55, 1],
+    clamp,
+  );
+  const drift = interpolate(frame, [sweepAt, pushEl.end], [0, 1], clamp);
   const gridOp = gridIn * (1 - after * 0.55);
   const guides = 1 - after;
 
-  const cropIn = interpolate(frame, [0, 14], [0.45, 1], {
+  const cropIn = interpolate(frame, [gridEl.start, gridEl.end], [0.45, 1], {
     ...clamp,
     easing: OUT,
   });
   const filled = (t: number) => Math.min(1, Math.max(0, (front - t) / EDGE));
-  const frameDraw = draw(FRAME_DRAW[0], FRAME_DRAW[1] - FRAME_DRAW[0]);
-  const dimDraw = draw(DIM_DRAW[0], DIM_DRAW[1] - DIM_DRAW[0]);
+  const frameDraw = draw(outline.start, outline.length);
+  const dimDraw = draw(dims.start, dims.length);
   const labelIn = interpolate(
     frame,
-    [DIM_DRAW[0] + 12, DIM_DRAW[1] + 4],
+    [dims.start + dims.beat("labelAt"), dims.start + dims.beat("labelEnd")],
     [0, 1],
     clamp,
   );
@@ -484,11 +507,38 @@ export function WireframeToFinal({
   const fx2 = fl * W - 2 * W;
   const fy2 = 2 * H;
 
-  const capSwap = interpolate(frame, [SWEEP[0] + 18, SWEEP[0] + 34], [0, 1], {
-    ...clamp,
-    easing: INOUT,
-  });
-  const capIn = interpolate(frame, [26, 40], [0, 1], clamp);
+  const capSwap = interpolate(
+    frame,
+    [
+      sweepAt + sweepEl.beat("capAt"),
+      sweepAt + sweepEl.beat("capAt") + sweepEl.beat("cap"),
+    ],
+    [0, 1],
+    {
+      ...clamp,
+      easing: INOUT,
+    },
+  );
+  const capIn = interpolate(
+    frame,
+    [captionEl.start, captionEl.end],
+    [0, 1],
+    clamp,
+  );
+  // Each drawn piece's window: cards and content spread across their element
+  // by their place along the diagonal.
+  const spanOf = (e: Drawn) => {
+    if (e.kind === "struct") return [structure.start, structure.length];
+    if (e.kind === "box")
+      return [
+        boxes.start + e.at * (boxes.length - boxes.beat("box")),
+        boxes.beat("box"),
+      ];
+    return [
+      content.start + e.at * (content.length - content.beat("item")),
+      e.t === "p" ? content.beat("path") : content.beat("item"),
+    ];
+  };
 
   const tick = 6 * k;
   const gap = 26 * k;
@@ -703,7 +753,8 @@ export function WireframeToFinal({
               />
               {ELS.map((e, i) => {
                 if (e.kind === "bg") return null;
-                const p = draw(e.start, e.dur);
+                const [start, dur] = spanOf(e);
+                const p = draw(start, dur);
                 if (p <= 0) return null;
                 const op =
                   (e.kind === "content" ? 0.75 : 0.9) *
@@ -845,7 +896,10 @@ export function WireframeToFinal({
               </g>
               {Array.from({ length: 13 }, (_, c) => {
                 const x = (288 + (c * (VW - 288)) / 12) * s;
-                const on = draw(DIM_DRAW[0] + 4 + c * 1.2, 8);
+                const on = draw(
+                  dims.start + dims.beat("tickAt") + c * dims.beat("tick"),
+                  dims.beat("tickDraw"),
+                );
                 return (
                   <line
                     key={`col-${c}`}
