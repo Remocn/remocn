@@ -2742,12 +2742,17 @@
       "title": "Confetti",
       "description": "Deterministic confetti burst for Remotion — seeded particles with gravity, spin, and flutter so every render is identical. Fire it on any frame as a celebratory overlay.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/confetti/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/confetti.tsx"
+          "target": "components/remocn/confetti/index.tsx"
+        },
+        {
+          "path": "registry/remocn/confetti/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/confetti/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -2,6 +2,8 @@
 
 import { AbsoluteFill, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ConfettiElementId, confettiTimeline } from "./timeline";
 
 export interface ConfettiProps {
   /** Number of confetti pieces. */
@@ -22,6 +24,11 @@ export interface ConfettiProps {
   size?: number;
   /** PRNG seed — same seed renders an identical burst every time. */
   seed?: number;
+  /**
+   * Moves or trims the burst, by the ids in `./timeline`. Frames on the
+   * scene timeline.
+   */
+  timing?: Timing<ConfettiElementId>;
 }
 
 export interface Particle {
@@ -101,22 +108,26 @@ export function particleOpacity(tt: number, lifetime: number): number {
 
 // --- Component -------------------------------------------------------------
 
-export function Confetti({
-  particleCount = 140,
-  colors = DEFAULT_COLORS,
-  originX = 0.5,
-  originY = 0.5,
-  startFrame = 0,
-  lifetime = 90,
-  power = 17,
-  gravity = 0.45,
-  size = 13,
-  seed = 1,
-}: ConfettiProps) {
+export function Confetti(props: ConfettiProps) {
+  const {
+    particleCount = 140,
+    colors = DEFAULT_COLORS,
+    originX = 0.5,
+    originY = 0.5,
+    power = 17,
+    gravity = 0.45,
+    size = 13,
+    seed = 1,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  // No `speed`: the schedule spans the composition as it is.
+  const tl = useTimeline(confettiTimeline, props, durationInFrames, timing);
+  const burst = tl.get("burst");
+  const lifetime = burst.length;
 
-  const tt = frame - startFrame;
+  const tt = frame - burst.start;
   if (tt < 0 || tt > lifetime) return null;
 
   const sc = height / 720;
