@@ -2956,13 +2956,19 @@
       "registryDependencies": [
         "@remocn/stop-motion",
         "@remocn/brush",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/ink-arrow/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ink-arrow.tsx"
+          "target": "components/remocn/ink-arrow/index.tsx"
+        },
+        {
+          "path": "registry/remocn/ink-arrow/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ink-arrow/timeline.ts"
         }
       ],
       "type": "registry:component"

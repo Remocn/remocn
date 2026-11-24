@@ -8,8 +8,10 @@ import {
   sampleCubic,
   sampleLine,
 } from "@/components/remocn/brush";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { DEFAULT_STEP, hashRange, steppedRamp } from "@/lib/remocn/stop-motion";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type InkArrowElementId, inkArrowTimeline } from "./timeline";
 
 const HEAD_ANGLE = 0.72;
 const SHAFT_SAMPLES = 40;
@@ -128,38 +130,42 @@ export interface InkArrowProps {
   headDur?: number;
   seed?: string;
   step?: number;
+  /**
+   * Moves, trims or stretches the shaft and the head, by the ids in
+   * `./timeline`. Frames on the scene timeline.
+   */
+  timing?: Timing<InkArrowElementId>;
 }
 
-export function InkArrow({
-  from,
-  to,
-  curvature = 0.35,
-  color = "#26242c",
-  strokeWidth = 8,
-  pressure = 0.2,
-  release = 1,
-  grain = 1,
-  delay = 0,
-  drawDur = 36,
-  headSize = 24,
-  headDur,
-  seed = "arrow",
-  step = DEFAULT_STEP,
-}: InkArrowProps) {
+export function InkArrow(props: InkArrowProps) {
+  const {
+    from,
+    to,
+    curvature = 0.35,
+    color = "#26242c",
+    strokeWidth = 8,
+    pressure = 0.2,
+    release = 1,
+    grain = 1,
+    headSize = 24,
+    seed = "arrow",
+    step = DEFAULT_STEP,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const progress = steppedRamp(frame, delay, delay + drawDur, { step });
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(inkArrowTimeline, props, durationInFrames, timing);
+  const shaft = tl.get("shaft");
+  const headEl = tl.get("head");
+  const progress = steppedRamp(frame, shaft.start, shaft.end, { step });
   const { c1, c2 } = inkArrowControls(from, to, curvature, seed);
   const headReach = inkArrowHeadReach(headSize, strokeWidth);
   const head = inkArrowHead(c2, to, headReach);
   const apex = inkArrowApex(c2, to, headReach);
 
-  const headFrames = headDur ?? step * 4;
-  const headStart = delay + drawDur;
-  const headMid = headStart + headFrames / 2;
-  const leftArm = steppedRamp(frame, headStart, headMid, { step });
-  const rightArm = steppedRamp(frame, headMid, headStart + headFrames, {
-    step,
-  });
+  const headMid = headEl.start + headEl.beat("mid");
+  const leftArm = steppedRamp(frame, headEl.start, headMid, { step });
+  const rightArm = steppedRamp(frame, headMid, headEl.end, { step });
 
   const { width, height } = inkArrowViewport(
     from,
