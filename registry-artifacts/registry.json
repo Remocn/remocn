@@ -10879,12 +10879,21 @@
       "title": "Versus Split",
       "description": "A diagonal split frames remocn against the old way with stat rows for time, cost and rounds.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/versus-split/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/versus-split.tsx"
+          "target": "components/remocn/versus-split/index.tsx"
+        },
+        {
+          "path": "registry/remocn/versus-split/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/versus-split/timeline.ts"
         }
       ],
       "type": "registry:component"

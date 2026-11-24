@@ -6,6 +6,14 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_STATS,
+  PREROLL,
+  type VersusSplitElementId,
+  type VersusStat,
+  versusSplitTimeline,
+} from "./timeline";
 
 const { fontFamily: condensed } = loadFont("normal", {
   weights: ["500"],
@@ -51,14 +59,7 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
   );
 }
 
-export interface VersusStat {
-  /** Small caps label on the seam: "Time to ship". */
-  label: string;
-  /** remocn's value, left side. */
-  home: string;
-  /** The opponent's value, right side. */
-  away: string;
-}
+export type { VersusStat };
 
 export interface VersusSplitProps {
   /** The opponent, set in condensed caps on the right half. The left half is always the remocn logo. */
@@ -89,6 +90,12 @@ export interface VersusSplitProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the split, the "VS", single stat rows and the
+   * light, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<VersusSplitElementId>;
 }
 
 // Beat sheet (internal clock = frame + 2, 30fps, speed 1):
@@ -100,14 +107,7 @@ export interface VersusSplitProps {
 //  56–64   the remocn half lights up: a "halo" gradient wipes across it from
 //          the left edge; the opponent half and its numbers dim
 //  64–     fight-poster hold
-const SPLIT_LEN = 10;
-const VS_AT = 12;
-const VS_LEN = 7;
-const ROWS_AT = 26;
-const ROW_GAP = 7;
-const ROW_LEN = 9;
-const LIGHT_DELAY = 10;
-const LIGHT_LEN = 9;
+// The frames live in `./timeline`, on the scene timeline (clock - PREROLL).
 
 const SLAM = Easing.bezier(0.22, 1, 0.36, 1);
 const WIPE = Easing.bezier(0.55, 0, 0.25, 1);
@@ -176,30 +176,41 @@ function ScaleLayer({
   );
 }
 
-export function VersusSplit({
-  away = "The old way",
-  homeLabel = "Challenger",
-  awayLabel = "Title holder",
-  stats = [
-    { label: "Time to ship", home: "1 day", away: "3 weeks" },
-    { label: "Cost", home: "$0", away: "$12K" },
-    { label: "Revisions", home: "1 round", away: "7 rounds" },
-  ],
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = condensed,
-  versus = "VS",
-  stagger = ROW_GAP,
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: VersusSplitProps) {
+export function VersusSplit(props: VersusSplitProps) {
+  const {
+    away = "The old way",
+    homeLabel = "Challenger",
+    awayLabel = "Title holder",
+    stats = DEFAULT_STATS,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = condensed,
+    versus = "VS",
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
-  const t = Math.max(0, useSceneFrame() - delay) * speed + 2;
-  const { width: W, height: H } = useSceneConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + PREROLL;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    versusSplitTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  // The schedule counts scene frames; `t` runs `PREROLL` ahead of them.
+  const splitEl = tl.get("split");
+  const splitAt = splitEl.start + PREROLL;
+  const splitEnd = splitAt + splitEl.length;
+  const vsEl = tl.get("versus");
+  const vsAt = vsEl.start + PREROLL;
+  const lightEl = tl.get("light");
+  const lightAt = lightEl.start + PREROLL;
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
@@ -210,28 +221,28 @@ export function VersusSplit({
   const lean = 0.14 * H;
   const seamX = (y: number) => W / 2 + lean * (1 - (2 * y) / H);
 
-  const split = SLAM(ramp(t, 0, SPLIT_LEN));
+  const split = SLAM(ramp(t, splitAt, splitEl.length));
   const leftDx = -(1 - split) * 0.75 * W;
   const rightDx = (1 - split) * 0.75 * W;
   const seamFlash =
-    t >= SPLIT_LEN - 1 ? Math.max(0, 1 - (t - SPLIT_LEN + 1) / 8) : 0;
+    t >= splitEnd - 1
+      ? Math.max(0, 1 - (t - splitEnd + 1) / splitEl.beat("flash"))
+      : 0;
 
-  const vs = SLAM(ramp(t, VS_AT, VS_LEN));
+  const vs = SLAM(ramp(t, vsAt, vsEl.length));
   const vsScale = 1.7 - 0.7 * vs;
-  const vsOpacity = ramp(t, VS_AT, 3);
+  const vsOpacity = ramp(t, vsAt, vsEl.beat("fade"));
 
-  const rowsEnd = ROWS_AT + (stats.length - 1) * stagger + ROW_LEN;
-  const lightAt = rowsEnd + LIGHT_DELAY;
-  const light = WIPE(ramp(t, lightAt, LIGHT_LEN));
-  const dimP = ramp(t, lightAt + 3, 6);
+  const light = WIPE(ramp(t, lightAt, lightEl.length));
+  const dimP = ramp(t, lightAt + lightEl.beat("dimAt"), lightEl.beat("dim"));
 
   const camAt = (at: number) =>
     1 +
     0.02 *
       Math.max(
-        kick(at - SPLIT_LEN + 1),
-        kick(at - VS_AT - 4),
-        0.6 * kick(at - lightAt - LIGHT_LEN + 2),
+        kick(at - splitEnd + 1),
+        kick(at - vsAt - 4),
+        0.6 * kick(at - lightAt - lightEl.length + 2),
       );
   const camScale = camAt(t);
   // The camera kick carries the whole frame, and the halves paint up to its
@@ -256,7 +267,12 @@ export function VersusSplit({
   const lightPoly = `polygon(0 0, ${f0}px 0, ${fH}px ${H}px, 0 ${H}px)`;
   const edgePoly = `polygon(${f0 - edgeW}px 0, ${f0}px 0, ${fH}px ${H}px, ${fH - edgeW}px ${H}px)`;
 
-  const drift = interpolate(t, [lightAt, lightAt + 60], [0, 8], CLAMP);
+  const drift = interpolate(
+    t,
+    [lightAt, lightAt + lightEl.beat("drift")],
+    [0, 8],
+    CLAMP,
+  );
   const haloGround = [
     `radial-gradient(70% 55% at ${8 + drift}% 104%, ${HALO[1]}f0 0%, transparent 70%)`,
     `radial-gradient(60% 60% at ${58 - drift}% 78%, ${HALO[2]}e6 0%, transparent 72%)`,
@@ -429,10 +445,11 @@ export function VersusSplit({
 
           {/* Stat rows. */}
           {stats.map((s, i) => {
-            const at = ROWS_AT + i * stagger;
-            const p = SLAM(ramp(t, at, ROW_LEN));
-            const op = ramp(t, at, 3);
-            const plate = SLAM(ramp(t, at, 5));
+            const row = tl.get(`row:${i}`);
+            const at = row.start + PREROLL;
+            const p = SLAM(ramp(t, at, row.length));
+            const op = ramp(t, at, row.beat("fade"));
+            const plate = SLAM(ramp(t, at, row.beat("plate")));
             const y = rowTop + (i + 0.5) * rowStep;
             const sx = seamX(y);
             const homeX = sx - valueGap;
