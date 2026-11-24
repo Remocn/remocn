@@ -10778,12 +10778,21 @@
       "title": "Combo Counter",
       "description": "A gradient hit counter climbs to '12 HIT COMBO' with rating words like 'PERFECT'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/combo-counter/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/combo-counter.tsx"
+          "target": "components/remocn/combo-counter/index.tsx"
+        },
+        {
+          "path": "registry/remocn/combo-counter/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/combo-counter/timeline.ts"
         }
       ],
       "type": "registry:component"
