@@ -6,6 +6,8 @@ import { useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type RowCountElementId, rowCountTimeline } from "./timeline";
 
 const plex = loadPlexSans("normal", {
   weights: ["400", "500"],
@@ -31,6 +33,12 @@ export interface RowCountProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the rule, the first row, the label and the
+   * count, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<RowCountElementId>;
 }
 
 const THEMES = {
@@ -56,9 +64,6 @@ const FIG = 0.6;
 const COMMA = 0.26;
 const ROW = 1.0;
 const TRACK = -0.02;
-
-const COUNT_AT = 6;
-const COUNT_LEN = 78;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_COUNT = Easing.bezier(0.3, 0.1, 0.2, 1);
@@ -94,24 +99,32 @@ function ScaleLayer({
   );
 }
 
-export function RowCount({
-  value = 27300000,
-  from = 1,
-  prefix = "",
-  label = "frames rendered in every region, every night",
-  accent,
-  ink,
-  background,
-  fontFamily = plex.fontFamily,
-  countLength = COUNT_LEN,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: RowCountProps) {
+export function RowCount(props: RowCountProps) {
+  const {
+    value = 27300000,
+    from = 1,
+    prefix = "",
+    label = "frames rendered in every region, every night",
+    accent,
+    ink,
+    background,
+    fontFamily = plex.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    rowCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const count = tl.get("count");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const transparent = background === "transparent";
@@ -121,7 +134,7 @@ export function RowCount({
   const start = Math.min(target, Math.max(1, Math.floor(from)));
   const finalRows = groups(target).length;
 
-  const p = interpolate(t, [COUNT_AT, COUNT_AT + countLength], [0, 1], {
+  const p = interpolate(t, [count.start, count.end], [0, 1], {
     ...CLAMP,
     easing: EASE_COUNT,
   });
@@ -140,19 +153,14 @@ export function RowCount({
         born.push(-100);
         continue;
       }
-      let lo = COUNT_AT;
-      let hi = COUNT_AT + countLength;
+      let lo = count.start;
+      let hi = count.end;
       for (let i = 0; i < 24; i++) {
         const mid = (lo + hi) / 2;
-        const pm = interpolate(
-          mid,
-          [COUNT_AT, COUNT_AT + countLength],
-          [0, 1],
-          {
-            ...CLAMP,
-            easing: EASE_COUNT,
-          },
-        );
+        const pm = interpolate(mid, [count.start, count.end], [0, 1], {
+          ...CLAMP,
+          easing: EASE_COUNT,
+        });
         const v = start * (target / start) ** pm;
         if (v >= thresh) hi = mid;
         else lo = mid;
@@ -160,13 +168,13 @@ export function RowCount({
       born.push(hi);
     }
     return born;
-  }, [finalRows, start, target, countLength]);
+  }, [finalRows, start, target, count]);
 
   const shift = (k: number, at = t) => {
     let s = 0;
     for (let j = k + 1; j < finalRows; j++) {
       s += spring({
-        frame: at - rowBorn[j] + 4,
+        frame: at - rowBorn[j] + count.beat("pushLead"),
         fps,
         config: { damping: 16, stiffness: 140, mass: 0.8 },
       });
@@ -176,7 +184,7 @@ export function RowCount({
   let rowsAnim = 1;
   for (let k = 1; k < finalRows; k++) {
     rowsAnim += spring({
-      frame: t - rowBorn[k] + 4,
+      frame: t - rowBorn[k] + count.beat("pushLead"),
       fps,
       config: { damping: 16, stiffness: 140, mass: 0.8 },
     });
@@ -204,19 +212,33 @@ export function RowCount({
   const colRight = W - margin - COMMA * F;
   const firstTop = ruleY + labelBlock + margin * 0.3;
 
-  const ruleP = interpolate(t, [0, 16], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const enter = interpolate(t, [0, 14], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const labelP = interpolate(t, [6, 24], [0, 1], {
+  const ruleEl = tl.get("rule");
+  const enterEl = tl.get("enter");
+  const labelEl0 = tl.get("label");
+  const ruleP = interpolate(t, [ruleEl.start, ruleEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const labelP = interpolate(t, [labelEl0.start, labelEl0.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
   const rowEls = g.map((grp, idx) => {
     const k = rows - 1 - idx;
-    const born = interpolate(t, [rowBorn[k], rowBorn[k] + 10], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    const born = interpolate(
+      t,
+      [rowBorn[k], rowBorn[k] + count.beat("rise")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
     const isNew = k === 0 ? enter : born;
     // A row pushed down by the rows born above it is laid out in its final
     // slot and travels there by transform all its life: layout rounds a box
