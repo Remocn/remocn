@@ -10476,10 +10476,19 @@
         {
           "path": "play-of-the-game/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/play-of-the-game.tsx"
+          "target": "components/remocn/play-of-the-game/index.tsx"
+        },
+        {
+          "path": "play-of-the-game/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/play-of-the-game/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "t-minus",

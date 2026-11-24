@@ -6,6 +6,12 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type PlayOfTheGameElementId,
+  PREROLL,
+  playOfTheGameTimeline,
+} from "./timeline";
 
 const { fontFamily: saira } = loadFont("normal", {
   weights: ["500"],
@@ -101,6 +107,12 @@ export interface PlayOfTheGameProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the bars, the banner, the player's slam, the
+   * badge, the role, the stat plate and the sweep, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PlayOfTheGameElementId>;
 }
 
 // Beat sheet (internal clock = frame + 4, 30fps, speed 1):
@@ -113,16 +125,6 @@ export interface PlayOfTheGameProps {
 //  28–36   role label wipes in under the player
 //  38–45   the stat plate flashes twice, then holds with the gradient word
 //  44–62   wide light bars sweep across behind everything; poster hold
-const BARS_LEN = 12;
-const BANNER_AT = 3;
-const BANNER_LEN = 7;
-const NAME_AT = 18;
-const NAME_LEN = 5;
-const GLYPH_AT = 20;
-const ROLE_AT = 28;
-const STAT_AT = 38;
-const SWEEP_AT = 44;
-const SWEEP_LEN = 18;
 
 const SLAM = Easing.bezier(0.12, 0.9, 0.25, 1);
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -209,26 +211,49 @@ function ScaleLayer({
   );
 }
 
-export function PlayOfTheGame({
-  title = "Play of the game",
-  role = "Solo builder",
-  stat = "Shipped in 6 hours",
-  highlight = "6 hours",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = saira,
-  logo,
-  impact = 14,
-  badge = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: PlayOfTheGameProps) {
+export function PlayOfTheGame(props: PlayOfTheGameProps) {
+  const {
+    title = "Play of the game",
+    role = "Solo builder",
+    stat = "Shipped in 6 hours",
+    highlight = "6 hours",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = saira,
+    logo,
+    impact = 14,
+    badge = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
-  const t = Math.max(0, useSceneFrame() - delay) * speed + 4;
-  const { width: W, height: H } = useSceneConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + PREROLL;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    playOfTheGameTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  // The schedule counts scene frames; `t` runs `PREROLL` ahead of them.
+  const barsEl = tl.get("bars");
+  const bannerEl = tl.get("banner");
+  const player = tl.get("player");
+  const badgeEl = tl.get("badge");
+  const roleEl = tl.get("role");
+  const statEl = tl.get("stat");
+  const sweepEl = tl.get("sweep");
+  const BARS_AT = barsEl.start + PREROLL;
+  const BANNER_AT = bannerEl.start + PREROLL;
+  const NAME_AT = player.start + PREROLL;
+  const GLYPH_AT = badgeEl.start + PREROLL;
+  const ROLE_AT = roleEl.start + PREROLL;
+  const STAT_AT = statEl.start + PREROLL;
+  const SWEEP_AT = sweepEl.start + PREROLL;
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
@@ -243,9 +268,14 @@ export function PlayOfTheGame({
   };
 
   // ── Impact ────────────────────────────────────────────────────────────────
-  const hitAt = NAME_AT + NAME_LEN;
-  const sh = shake(t, hitAt, 11, impact * u);
-  const sh2 = shake(t, STAT_AT + 6, 6, 5 * u * (impact / 14));
+  const hitAt = NAME_AT + player.length;
+  const sh = shake(t, hitAt, player.beat("shake"), impact * u);
+  const sh2 = shake(
+    t,
+    STAT_AT + statEl.beat("shakeAt"),
+    statEl.beat("shake"),
+    5 * u * (impact / 14),
+  );
   const flash = t >= hitAt && t < hitAt + speed ? 1 : 0;
 
   // ── Banner ────────────────────────────────────────────────────────────────
@@ -254,8 +284,10 @@ export function PlayOfTheGame({
   const banX = (W - banW) / 2;
   const banY = 0.12 * H;
   const banLean = banH * SLANT;
-  const banP = OUT(ramp(t, BANNER_AT, BANNER_LEN));
-  const titleP = OUT(ramp(t, BANNER_AT + 2, 14));
+  const banP = OUT(ramp(t, BANNER_AT, bannerEl.length));
+  const titleP = OUT(
+    ramp(t, BANNER_AT + bannerEl.beat("titleAt"), bannerEl.beat("title")),
+  );
   const banEdge = banX - banLean + banP * (banW + 2 * banLean);
   const banTitleFs = 94 * u;
 
@@ -263,9 +295,10 @@ export function PlayOfTheGame({
   const logoFs = 204 * u;
   const rowCy = 0.465 * H;
   const glyphSize = 150 * u;
-  const nameScale = (d: number) => 1.5 - 0.5 * SLAM(ramp(d, NAME_AT, NAME_LEN));
-  const glyphP = SLAM(ramp(t, GLYPH_AT, NAME_LEN));
-  const roleP = OUT(ramp(t, ROLE_AT, 9));
+  const nameScale = (d: number) =>
+    1.5 - 0.5 * SLAM(ramp(d, NAME_AT, player.length));
+  const glyphP = SLAM(ramp(t, GLYPH_AT, badgeEl.length));
+  const roleP = OUT(ramp(t, ROLE_AT, roleEl.length));
 
   // ── Stat plate ────────────────────────────────────────────────────────────
   const statFs = 64 * u;
@@ -282,7 +315,7 @@ export function PlayOfTheGame({
           : sd < 6
             ? "flash"
             : "on";
-  const statP = OUT(ramp(t, STAT_AT, 12));
+  const statP = OUT(ramp(t, STAT_AT, statEl.length));
   const hiAt = stat.toLowerCase().indexOf(highlight.toLowerCase());
   const before = hiAt >= 0 ? stat.slice(0, hiAt) : stat;
   const hi = hiAt >= 0 ? stat.slice(hiAt, hiAt + highlight.length) : "";
@@ -290,7 +323,7 @@ export function PlayOfTheGame({
   const plateW = Math.min(0.8 * W, (stat.length * 0.62 + 2.6) * statFs);
   const plateLean = plateH * SLANT;
 
-  const sweep = INOUT(ramp(t, SWEEP_AT, SWEEP_LEN));
+  const sweep = INOUT(ramp(t, SWEEP_AT, sweepEl.length));
   const shaking = sh.x !== 0 || sh.y !== 0 || sh2.x !== 0 || sh2.y !== 0;
 
   return (
@@ -329,7 +362,7 @@ export function PlayOfTheGame({
 
         {/* Parked bars at the frame edges, streaking in at the start. */}
         {BARS.map((b) => {
-          const p = OUT(ramp(t, b.delay, BARS_LEN - 2));
+          const p = OUT(ramp(t, BARS_AT + b.delay, barsEl.beat("streak")));
           const x = interpolate(p, [0, 1], [-0.3 * W, b.x * W]);
           return (
             <div
@@ -419,7 +452,7 @@ export function PlayOfTheGame({
                 style={{
                   width: glyphSize,
                   height: glyphSize,
-                  opacity: ramp(t, GLYPH_AT, 2),
+                  opacity: ramp(t, GLYPH_AT, badgeEl.beat("fade")),
                   transform: `rotate(${(1 - glyphP) * -40}deg) scale(${1.4 - 0.4 * glyphP})`,
                 }}
               >
@@ -431,7 +464,9 @@ export function PlayOfTheGame({
                 const ghost = lag > 0;
                 if (ghost && t >= hitAt + lag) return null;
                 const tt = t - lag;
-                const op = ramp(tt, NAME_AT, 2) * (ghost ? 0.2 / lag : 1);
+                const op =
+                  ramp(tt, NAME_AT, player.beat("fade")) *
+                  (ghost ? 0.2 / lag : 1);
                 return (
                   <div
                     key={lag}

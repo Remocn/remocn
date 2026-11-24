@@ -10471,12 +10471,21 @@
       "title": "Play of The Game",
       "description": "A 'Play of the Game' banner slices in over the remocn logo with a role label and stat.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/play-of-the-game/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/play-of-the-game.tsx"
+          "target": "components/remocn/play-of-the-game/index.tsx"
+        },
+        {
+          "path": "registry/remocn/play-of-the-game/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/play-of-the-game/timeline.ts"
         }
       ],
       "type": "registry:component"
