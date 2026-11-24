@@ -488,12 +488,17 @@
       "title": "Gradient Scale Cut Text",
       "description": "An oversized gradient reveal snaps to a separate compact blurred line that settles left while the reveal continues.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/gradient-scale-cut-text/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/gradient-scale-cut-text.tsx"
+          "target": "components/remocn/gradient-scale-cut-text/index.tsx"
+        },
+        {
+          "path": "registry/remocn/gradient-scale-cut-text/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/gradient-scale-cut-text/timeline.ts"
         }
       ],
       "type": "registry:component"

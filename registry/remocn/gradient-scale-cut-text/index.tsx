@@ -1,7 +1,12 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type GradientScaleCutTextElementId,
+  gradientScaleCutTextTimeline,
+} from "./timeline";
 
 export interface GradientScaleCutTextProps {
   text?: string;
@@ -20,12 +25,16 @@ export interface GradientScaleCutTextProps {
   compactBlur?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the gradient wipe, the giant word and the
+   * compact word, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `speed`.
+   */
+  timing?: Timing<GradientScaleCutTextElementId>;
 }
 
 export const gradientScaleCutTextLength = 36;
 
-const REVEAL_END = 33;
-const SETTLE_FRAMES = 8;
 const GIANT_Y = -28;
 const GIANT_X_CORRECTION = -48;
 const COMPACT_Y = 5;
@@ -91,50 +100,61 @@ function TextLayer({
   );
 }
 
-export function GradientScaleCutText({
-  text = "Introducing",
-  giantFontSize = 520,
-  compactFontSize = 132,
-  fontWeight = 700,
-  gradientStart = "#f04a14",
-  gradientEnd = "#f3f1f1",
-  ghostColor = "#170b0a",
-  backgroundColor = "#000000",
-  anchorOffsetX = -16,
-  giantTravel = 400,
-  settleTravel = 160,
-  cutFrame = 13,
-  revealSoftness = 14,
-  compactBlur = 12,
-  speed = 1,
-  className,
-}: GradientScaleCutTextProps) {
+export function GradientScaleCutText(props: GradientScaleCutTextProps) {
+  const {
+    text = "Introducing",
+    giantFontSize = 520,
+    compactFontSize = 132,
+    fontWeight = 700,
+    gradientStart = "#f04a14",
+    gradientEnd = "#f3f1f1",
+    ghostColor = "#170b0a",
+    backgroundColor = "#000000",
+    anchorOffsetX = -16,
+    giantTravel = 400,
+    settleTravel = 160,
+    revealSoftness = 14,
+    compactBlur = 12,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * Math.max(speed, 0);
-  const safeCutFrame = Math.max(cutFrame, 1);
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    gradientScaleCutTextTimeline,
+    props,
+    durationInFrames * Math.max(speed, 0),
+    timing,
+  );
+  const reveal = tl.get("reveal");
+  const giant = tl.get("giant");
+  const compact = tl.get("compact");
+  const cutAt = compact.start;
   const safeGiantFontSize = Math.max(giantFontSize, 1);
   const safeCompactFontSize = Math.max(compactFontSize, 1);
   const safeSoftness = Math.max(revealSoftness, 0);
   const safeBlur = Math.max(compactBlur, 0);
-  const revealProgress = interpolate(frame, [0, REVEAL_END], [0.02, 1], {
-    ...clamp,
-    easing: Easing.bezier(0.22, 0.74, 0.24, 1),
-  });
+  const revealProgress = interpolate(
+    frame,
+    [reveal.start, reveal.end],
+    [0.02, 1],
+    {
+      ...clamp,
+      easing: Easing.bezier(0.22, 0.74, 0.24, 1),
+    },
+  );
   const revealEdge = revealProgress * (100 + safeSoftness / 2);
   const revealSolid = Math.max(0, revealEdge - safeSoftness / 2);
   const revealFade = revealEdge + safeSoftness / 2;
   const maskImage = `linear-gradient(90deg, #000 0%, #000 ${revealSolid}%, transparent ${revealFade}%, transparent ${revealFade}%)`;
-  const giantProgress = interpolate(
-    frame,
-    [0, Math.max(safeCutFrame - 1, 1)],
-    [0, 1],
-    {
-      ...clamp,
-      easing: Easing.out(Easing.cubic),
-    },
-  );
+  const giantProgress = interpolate(frame, [giant.start, giant.end], [0, 1], {
+    ...clamp,
+    easing: Easing.out(Easing.cubic),
+  });
   const settleProgress = interpolate(
     frame,
-    [safeCutFrame, safeCutFrame + SETTLE_FRAMES],
+    [compact.start, compact.end],
     [0, 1],
     {
       ...clamp,
@@ -144,15 +164,15 @@ export function GradientScaleCutText({
   const moveProgress = interpolate(
     frame,
     [
-      safeCutFrame + 1,
-      safeCutFrame + 2,
-      safeCutFrame + 4,
-      safeCutFrame + SETTLE_FRAMES,
+      cutAt + compact.beat("moveAt"),
+      cutAt + compact.beat("moveMid"),
+      cutAt + compact.beat("moveLate"),
+      compact.end,
     ],
     [0, 0.58, 0.875, 1],
     clamp,
   );
-  const showGiant = frame < safeCutFrame;
+  const showGiant = frame < cutAt;
   const compactX =
     interpolate(moveProgress, [0, 1], [settleTravel, 0], clamp) +
     COMPACT_START_X_CORRECTION * (1 - moveProgress);
