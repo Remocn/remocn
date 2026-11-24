@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BetaThanksElementId,
+  betaThanksTimeline,
+  words,
+} from "./timeline";
 
 const shoulders = loadFont("normal", {
   weights: ["400", "500"],
@@ -73,6 +79,12 @@ export interface BetaThanksProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the logo, the tag's fade and travel and single
+   * words, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<BetaThanksElementId>;
 }
 
 const THEMES = {
@@ -85,15 +97,6 @@ const TAG_EM = 0.3;
 const LINE2_EM = 0.36;
 const STATUS_GAP = 0.2;
 const LINE_GAP = 0.16;
-
-const T_TAG = 10;
-const T_LIFT = 40;
-const T_TURN = 58;
-const T_LAND = 78;
-const T_STATUS = 58;
-const T_BEFORE = 64;
-const T_AFTER = 78;
-const NATURAL_END = 94;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_TRAVEL = Easing.bezier(0.65, 0, 0.25, 1);
@@ -125,10 +128,6 @@ function offsetIn(el: HTMLElement, root: HTMLElement) {
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-function words(s: string) {
-  return s.split(/\s+/).filter(Boolean);
-}
-
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -145,33 +144,36 @@ function ScaleLayer({
   );
 }
 
-export function BetaThanks({
-  logo,
-  tag = "beta",
-  status = "is out.",
-  before = "Thank you,",
-  after = "testers.",
-  accent,
-  ink,
-  background,
-  fontFamily = shoulders.fontFamily,
-  fontWeight = 500,
-  stagger = 4,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: BetaThanksProps) {
+export function BetaThanks(props: BetaThanksProps) {
+  const {
+    logo,
+    tag = "beta",
+    status = "is out.",
+    before = "Thank you,",
+    after = "testers.",
+    accent,
+    ink,
+    background,
+    fontFamily = shoulders.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The pace that fits the schedule into a short clip counts the clip
+  // without `speed`, so the schedule gets `durationInFrames`.
+  const tl = useTimeline(betaThanksTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const pace = Math.max(1, (NATURAL_END + 30) / Math.max(1, durationInFrames));
-  const t = frame * speed * pace;
+  const t = frame * speed;
 
   const rootRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
@@ -244,28 +246,37 @@ export function BetaThanks({
       )
     : 1;
 
-  const rise = (start: number, dur = 16) =>
-    interpolate(t, [start, start + dur], [0, 1], {
+  const rise = (id: BetaThanksElementId) => {
+    const e = tl.get(id);
+    return interpolate(t, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
 
-  const logoIn = rise(0, 22);
-  const tagIn = rise(T_TAG, 14);
-  const drop = interpolate(t, [T_LIFT, T_TURN + 2], [0, 1], {
-    ...CLAMP,
-    easing: EASE_TRAVEL,
-  });
-  const slide = interpolate(t, [T_TURN - 2, T_LAND], [0, 1], {
-    ...CLAMP,
-    easing: EASE_TRAVEL,
-  });
+  const logoIn = rise("logo");
+  const tagIn = rise("tag");
+  const move = tl.get("travel");
+  const drop = interpolate(
+    t,
+    [move.start + move.beat("drop"), move.start + move.beat("dropEnd")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_TRAVEL },
+  );
+  const slide = interpolate(
+    t,
+    [move.start + move.beat("slide"), move.end],
+    [0, 1],
+    { ...CLAMP, easing: EASE_TRAVEL },
+  );
   const travel = (drop + slide) / 2;
-  const lift = interpolate(t, [T_LIFT - 4, T_LIFT + 8], [0, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.65, 0, 0.35, 1),
-  });
-  const landed = t >= T_LAND;
+  const lift = interpolate(
+    t,
+    [move.start, move.start + move.beat("lift")],
+    [0, 1],
+    { ...CLAMP, easing: Easing.bezier(0.65, 0, 0.35, 1) },
+  );
+  const landed = t >= move.end;
 
   const tagScale0 = TAG_EM / LINE2_EM;
   const tagX = m ? m.fromX + (m.toX - m.fromX) * slide : 0;
@@ -304,9 +315,7 @@ export function BetaThanks({
     nodes.flatMap((n, i) => (i === 0 ? [n] : [" ", n]));
 
   const line2Nodes: React.ReactNode[] = [
-    ...beforeWords.map((w, i) =>
-      riser(`b${i}`, w, rise(T_BEFORE + i * stagger), fg),
-    ),
+    ...beforeWords.map((w, i) => riser(`b${i}`, w, rise(`before:${i}`), fg)),
     <span
       key="slot"
       ref={slotRef}
@@ -318,9 +327,7 @@ export function BetaThanks({
     >
       {tag}
     </span>,
-    ...afterWords.map((w, i) =>
-      riser(`a${i}`, w, rise(T_AFTER + i * stagger), fg),
-    ),
+    ...afterWords.map((w, i) => riser(`a${i}`, w, rise(`after:${i}`), fg)),
   ];
 
   return (
@@ -373,7 +380,7 @@ export function BetaThanks({
               >
                 {joinSpaced(
                   statusWords.map((w, i) =>
-                    riser(`s${i}`, w, rise(T_STATUS + i * 5, 18), hi),
+                    riser(`s${i}`, w, rise(`status:${i}`), hi),
                   ),
                 )}
               </div>

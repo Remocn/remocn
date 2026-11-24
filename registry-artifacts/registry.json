@@ -7238,12 +7238,21 @@
       "title": "Beta Thanks",
       "description": "\"Remocn is out\" with a green \"out\", thanking the beta testers below.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/beta-thanks/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/beta-thanks.tsx"
+          "target": "components/remocn/beta-thanks/index.tsx"
+        },
+        {
+          "path": "registry/remocn/beta-thanks/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/beta-thanks/timeline.ts"
         }
       ],
       "type": "registry:component"
