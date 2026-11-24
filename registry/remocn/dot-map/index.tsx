@@ -6,6 +6,13 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_CITIES,
+  type DotMapElementId,
+  dotMapTimeline,
+  hash,
+} from "./timeline";
 
 const { fontFamily: manrope } = loadManrope("normal", {
   weights: ["400", "500"],
@@ -40,6 +47,12 @@ export interface DotMapProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the push, the map's fade-in, the count, its
+   * label and each city's light, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DotMapElementId>;
 }
 
 type Poly = number[];
@@ -187,64 +200,6 @@ const WATER: Poly[] = [
   ],
 ];
 
-const DEFAULT_CITIES: DotMapCity[] = [
-  { lon: -122.4, lat: 37.8 },
-  { lon: -118.2, lat: 34.1 },
-  { lon: -123.1, lat: 49.3 },
-  { lon: -104.9, lat: 39.7 },
-  { lon: -99.1, lat: 19.4 },
-  { lon: -87.6, lat: 41.9 },
-  { lon: -79.4, lat: 43.7 },
-  { lon: -74, lat: 40.7 },
-  { lon: -84.4, lat: 33.7 },
-  { lon: -74.1, lat: 4.7 },
-  { lon: -77, lat: -12 },
-  { lon: -70.7, lat: -33.4 },
-  { lon: -58.4, lat: -34.6 },
-  { lon: -46.6, lat: -23.5 },
-  { lon: -43.2, lat: -22.9 },
-  { lon: -21.9, lat: 64.1 },
-  { lon: -9.1, lat: 38.7 },
-  { lon: -3.7, lat: 40.4 },
-  { lon: -0.1, lat: 51.5 },
-  { lon: -6.3, lat: 53.3 },
-  { lon: 2.4, lat: 48.9 },
-  { lon: 4.9, lat: 52.4 },
-  { lon: -7.6, lat: 33.6 },
-  { lon: 3.4, lat: 6.5 },
-  { lon: 13.4, lat: 52.5 },
-  { lon: 12.5, lat: 41.9 },
-  { lon: 18.1, lat: 59.3 },
-  { lon: 21, lat: 52.2 },
-  { lon: 18.4, lat: -33.9 },
-  { lon: 28, lat: -26.2 },
-  { lon: 31.2, lat: 30 },
-  { lon: 29, lat: 41 },
-  { lon: 36.8, lat: -1.3 },
-  { lon: 30.5, lat: 50.5 },
-  { lon: 46.7, lat: 24.7 },
-  { lon: 55.3, lat: 25.2 },
-  { lon: 72.9, lat: 19.1 },
-  { lon: 77.2, lat: 28.6 },
-  { lon: 77.6, lat: 13 },
-  { lon: 90.4, lat: 23.8 },
-  { lon: 100.5, lat: 13.8 },
-  { lon: 103.8, lat: 1.4 },
-  { lon: 106.8, lat: -6.2 },
-  { lon: 106.7, lat: 10.8 },
-  { lon: 114.2, lat: 22.3 },
-  { lon: 121.5, lat: 31.2 },
-  { lon: 116.4, lat: 39.9 },
-  { lon: 121, lat: 14.6 },
-  { lon: 127, lat: 37.6 },
-  { lon: 139.7, lat: 35.7 },
-  { lon: 135.5, lat: 34.7 },
-  { lon: 115.9, lat: -31.9 },
-  { lon: 151.2, lat: -33.9 },
-  { lon: 145, lat: -37.8 },
-  { lon: 174.8, lat: -36.8 },
-];
-
 const STEP = 2.5;
 const LAT_TOP = 80;
 const LAT_BOTTOM = -57.5;
@@ -336,17 +291,6 @@ function meshAt(
     ];
   }
   return c;
-}
-
-const MAP_IN = -6;
-const MAP_DUR = 26;
-const LIGHT_AT = 20;
-const LIGHT_SPAN = 66;
-const RIPPLE = 26;
-
-function hash(n: number) {
-  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
-  return x - Math.floor(x);
 }
 
 function inside(lon: number, lat: number, poly: Poly) {
@@ -446,30 +390,39 @@ function ScaleLayer({
   );
 }
 
-export function DotMap({
-  count = 142,
-  label = "countries",
-  cities = DEFAULT_CITIES,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = manrope,
-  fontWeight = 400,
-  sweep = LIGHT_SPAN,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: DotMapProps) {
+export function DotMap(props: DotMapProps) {
+  const {
+    count = 142,
+    label = "countries",
+    cities = DEFAULT_CITIES,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = manrope,
+    fontWeight = 400,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    dotMapTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const span = (e: { start: number; end: number }) => [e.start, e.end];
+  const mapEl = tl.get("map");
+  const pushEl = tl.get("push");
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const bg = background ?? p.bg;
-  const done = LIGHT_AT + sweep + 6;
 
   const mapW = Math.min(W * 0.84, (H * 0.6 * COLS) / ROWS);
   const pitch = mapW / COLS;
@@ -483,22 +436,19 @@ export function DotMap({
 
   const lit = useMemo(() => {
     const seen = new Set<number>();
-    const out: { cell: number; at: number }[] = [];
+    const out: { cell: number; at: number; pop: number; ripple: number }[] = [];
     cities.forEach((city, i) => {
       const cell = snap(city.lon, city.lat);
       if (cell < 0 || seen.has(cell)) return;
       seen.add(cell);
-      const x = (city.lon + 180) / 360;
-      out.push({
-        cell,
-        at: LIGHT_AT + x * sweep + (hash(i + 0.7) - 0.5) * 8,
-      });
+      const e = tl.get(`city:${i}`);
+      out.push({ cell, at: e.start, pop: e.beat("pop"), ripple: e.length });
     });
     return out.sort((a, b) => a.at - b.at);
-  }, [cities, sweep]);
+  }, [cities, tl]);
   const litAt = useMemo(() => {
-    const m = new Map<number, number>();
-    for (const l of lit) m.set(l.cell, l.at);
+    const m = new Map<number, (typeof lit)[number]>();
+    for (const l of lit) m.set(l.cell, l);
     return m;
   }, [lit]);
 
@@ -508,8 +458,7 @@ export function DotMap({
 
   const zoomAt = (tt: number) =>
     0.975 +
-    0.03 *
-      interpolate(tt, [0, done + 40], [0, 1], { ...CLAMP, easing: EASE_IO });
+    0.03 * interpolate(tt, span(pushEl), [0, 1], { ...CLAMP, easing: EASE_IO });
   const zoom = zoomAt(t);
   // The push is a slow in-out ease, so it is weighed in px at the frame edge
   // rather than by progress: the tilt stays on while the counter under it
@@ -527,15 +476,19 @@ export function DotMap({
       if (!MASK[idx]) continue;
       const x = mapX + (c + 0.5) * pitch;
       const y = mapY + (r0 + 0.5) * pitch;
-      const delay = MAP_IN + (c / COLS) * 16 + hash(idx * 0.37) * 6;
-      const a = interpolate(t, [delay, delay + MAP_DUR - 16], [0, 1], {
+      const delay =
+        mapEl.start +
+        (c / COLS) * mapEl.beat("spread") +
+        hash(idx * 0.37) * mapEl.beat("jitter");
+      const a = interpolate(t, [delay, delay + mapEl.beat("fade")], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
       if (a <= 0) continue;
-      const at = litAt.get(idx);
-      if (at !== undefined && t >= at) {
-        const k = interpolate(t, [at, at + 10], [0, 1], {
+      const light = litAt.get(idx);
+      if (light !== undefined && t >= light.at) {
+        const at = light.at;
+        const k = interpolate(t, [at, at + light.pop], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
         });
@@ -548,7 +501,7 @@ export function DotMap({
             fill={p.city}
           />,
         );
-        const w = (t - at) / RIPPLE;
+        const w = (t - at) / light.ripple;
         if (w < 1) {
           const e = Easing.bezier(0.22, 1, 0.36, 1)(w);
           accents.push(
@@ -597,11 +550,11 @@ export function DotMap({
   const value = lit.length
     ? Math.round((count * shown) / lit.length)
     : Math.round(count);
-  const numIn = interpolate(t, [LIGHT_AT - 8, LIGHT_AT + 8], [0, 1], {
+  const numIn = interpolate(t, span(tl.get("count")), [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const labIn = interpolate(t, [LIGHT_AT, LIGHT_AT + 16], [0, 1], {
+  const labIn = interpolate(t, span(tl.get("label")), [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

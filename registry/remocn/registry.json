@@ -13019,10 +13019,19 @@
         {
           "path": "dot-map/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/dot-map.tsx"
+          "target": "components/remocn/dot-map/index.tsx"
+        },
+        {
+          "path": "dot-map/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/dot-map/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "sankey-flow",

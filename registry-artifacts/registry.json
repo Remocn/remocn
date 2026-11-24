@@ -13014,12 +13014,21 @@
       "title": "Dot Map",
       "description": "A dotted world map lights up city by city, ending on 142 countries.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/dot-map/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/dot-map.tsx"
+          "target": "components/remocn/dot-map/index.tsx"
+        },
+        {
+          "path": "registry/remocn/dot-map/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/dot-map/timeline.ts"
         }
       ],
       "type": "registry:component"
