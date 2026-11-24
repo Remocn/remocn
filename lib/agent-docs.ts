@@ -152,6 +152,7 @@ const USE_CASES = [
   `- [Launch video](${SITE_URL}/docs/guides/launch-video.md): SaaS launch video template, ~35 seconds in eight scenes, made with Claude Code from one prompt`,
   `- [Changelog video](${SITE_URL}/docs/guides/changelog-video.md): a ~25-second release update for several small changes. The plugin's \`/remocn:changelog\` command builds one from git tags, commits or merged pull requests`,
   `- [How to make a feature announcement video without a video editor](${SITE_URL}${FEATURE_ANNOUNCEMENT_GUIDE_PATH}.md): Claude Code or Codex builds a ~40-second release video that shows one new feature working, from ten lines of copy or from the user's release notes, with no timeline editor`,
+  `- [Remotion iPhone mockup and App Store preview video](${SITE_URL}/docs/guides/app-store-preview-video.md): put a screen recording (\`OffthreadVideo\`) or screenshot inside a phone frame, Remocn's phone-scroll, phone-trio, device-morph and app-store-listing scenes, Apple's preview specs (886×1920, 15–30 s, 30 fps) and Google Play's YouTube rules, with a ready Remotion composition`,
 ];
 
 const ABOUT_LINKS = [
