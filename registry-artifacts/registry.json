@@ -8306,12 +8306,21 @@
       "title": "Mono Settle",
       "description": "Two lines set in monospace settle into proportional type: 'From your editor to the edit.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/mono-settle/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/mono-settle.tsx"
+          "target": "components/remocn/mono-settle/index.tsx"
+        },
+        {
+          "path": "registry/remocn/mono-settle/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/mono-settle/timeline.ts"
         }
       ],
       "type": "registry:component"

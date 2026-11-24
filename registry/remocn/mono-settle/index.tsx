@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  linesOf,
+  type MonoSettleElementId,
+  monoSettleTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["500"],
@@ -42,6 +49,12 @@ export interface MonoSettleProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches each line's rise, the settle wave and the
+   * highlight, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<MonoSettleElementId>;
 }
 
 const THEMES = {
@@ -61,15 +74,6 @@ const THEMES = {
 
 const TRACK = -0.035;
 const LEADING = 1.04;
-
-const RISE_GAP = 0.9;
-const RISE_LEN = 16;
-const LINE_LAG = 4;
-const WAVE_AT = 36;
-const WAVE_SPAN = 26;
-const MORPH_LEN = 14;
-const HL_AT = 72;
-const HL_LEN = 14;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -196,31 +200,33 @@ function ScaleLayer({
   );
 }
 
-export function MonoSettle({
-  lines = ["From your editor", "to the edit."],
-  highlight = "the edit.",
-  settleAt = WAVE_AT,
-  sweep = WAVE_SPAN,
-  accent,
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: MonoSettleProps) {
+export function MonoSettle(props: MonoSettleProps) {
+  const {
+    lines = DEFAULT_LINES,
+    highlight = "the edit.",
+    accent,
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    monoSettleTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const spot = accent ?? c.pink;
   const fg = ink ?? c.ink;
-  const list = useMemo(
-    () =>
-      (lines.length > 0 ? lines : ["From your editor"]).map((l) => l || " "),
-    [lines],
-  );
+  const list = useMemo(() => linesOf(lines), [lines]);
   const m = useMetrics(list, fontFamily);
   const hlMask = useMemo(
     () => highlightMask(list, highlight),
@@ -240,11 +246,14 @@ export function MonoSettle({
   const measureW = W - 2 * margin;
   const maxMono = Math.max(...m.lines.map((l) => l.wm));
 
+  const wave = tl.get("settle");
   const prog = m.lines.map((l, li) =>
     l.xm.map((x) => {
       const at =
-        settleAt + (x / Math.max(0.001, maxMono)) * sweep + li * LINE_LAG;
-      return interpolate(t, [at, at + MORPH_LEN], [0, 1], CLAMP);
+        wave.start +
+        (x / Math.max(0.001, maxMono)) * wave.beat("sweep") +
+        li * wave.beat("lag");
+      return interpolate(t, [at, at + wave.beat("morph")], [0, 1], CLAMP);
     }),
   );
   const capF = H * (portrait ? 0.12 : 0.24) * (list.length > 2 ? 0.75 : 1);
@@ -275,7 +284,8 @@ export function MonoSettle({
   const morphing = prog.some((l) => l.some((p) => p > 0 && p < 1));
   const settled = layoutAt(prog.map((l) => l.map(() => 1)));
 
-  const hlP = interpolate(t, [HL_AT, HL_AT + HL_LEN], [0, 1], {
+  const hl = tl.get("highlight");
+  const hlP = interpolate(t, [hl.start, hl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -283,6 +293,7 @@ export function MonoSettle({
   const glyphs = list.flatMap((line, li) => {
     const chars = Array.from(line);
     const baseY = firstBase + li * lineH;
+    const riseEl = tl.get(`rise:${li}`);
     return chars.map((ch, i) => {
       if (ch === " ") return null;
       const e = EASE_IO(prog[li][i]);
@@ -292,8 +303,8 @@ export function MonoSettle({
           interpolate(
             tt,
             [
-              li * LINE_LAG + i * RISE_GAP,
-              li * LINE_LAG + i * RISE_GAP + RISE_LEN,
+              riseEl.start + i * riseEl.beat("gap"),
+              riseEl.start + i * riseEl.beat("gap") + riseEl.beat("rise"),
             ],
             [0, 1],
             { ...CLAMP, easing: EASE_OUT },
