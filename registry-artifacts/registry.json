@@ -11038,12 +11038,21 @@
       "title": "Score Bug",
       "description": "A broadcast score bug counts a 2-0 full-time result between remocn and the old way.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/score-bug/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/score-bug.tsx"
+          "target": "components/remocn/score-bug/index.tsx"
+        },
+        {
+          "path": "registry/remocn/score-bug/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/score-bug/timeline.ts"
         }
       ],
       "type": "registry:component"
