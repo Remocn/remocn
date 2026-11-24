@@ -5219,12 +5219,21 @@
       "title": "Comic Panels",
       "description": "The frame cracks into a three-panel comic page with speed lines, red halftone and a starburst, then the action panel bursts into a full-frame POW.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/comic-panels/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/comic-panels.tsx"
+          "target": "components/remocn/comic-panels/index.tsx"
+        },
+        {
+          "path": "registry/remocn/comic-panels/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/comic-panels/timeline.ts"
         }
       ],
       "type": "registry:component"

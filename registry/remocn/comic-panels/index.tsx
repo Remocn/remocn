@@ -4,6 +4,8 @@ import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate, random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ComicPanelsElementId, comicPanelsTimeline } from "./timeline";
 
 export type ComicPanelsColors = {
   ink: string;
@@ -26,6 +28,12 @@ export type ComicPanelsProps = {
   /** Scale of `children` inside the top panel. */
   heroScale?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the border, the gutters, the panels, the
+   * shake and the starburst, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `speed`.
+   */
+  timing?: Timing<ComicPanelsElementId>;
 };
 
 export const comicPanelsDefaults = {
@@ -113,19 +121,27 @@ function starburst(spikes: number, outer: number, inner: number, seed: string) {
   return poly(points);
 }
 
-export function ComicPanels({
-  children,
-  word,
-  colors,
-  ink,
-  paper,
-  accent,
-  heroScale = comicPanelsDefaults.heroScale,
-  speed = comicPanelsDefaults.speed,
-}: ComicPanelsProps) {
+export function ComicPanels(props: ComicPanelsProps) {
+  const {
+    children,
+    word,
+    colors,
+    ink,
+    paper,
+    accent,
+    heroScale = comicPanelsDefaults.heroScale,
+    speed = comicPanelsDefaults.speed,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    comicPanelsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const merged = { ...comicPanelsDefaults.colors, ...colors };
   const c: ComicPanelsColors = {
@@ -145,14 +161,27 @@ export function ComicPanels({
   const gutter = 16 * u;
   const border = 5 * u;
 
-  const margin = ease(t, 0, 8) * 22 * u;
-  const crackA = ease(t, 2, 10, Easing.out(Easing.cubic));
-  const crackB = ease(t, 8, 14, Easing.out(Easing.cubic));
-  const slide2 = ease(t, 10, 18, Easing.out(Easing.exp));
-  const slide3 = ease(t, 13, 21, Easing.out(Easing.exp));
-  const burst = ease(t, 23, 34, Easing.in(Easing.cubic));
-  const settle = ease(t, 30, 36, Easing.out(Easing.cubic));
-  const shaking = t >= 22 && t < 31;
+  const span = (id: ComicPanelsElementId) => {
+    const e = tl.get(id);
+    return [e.start, e.end] as const;
+  };
+  const burstEl = tl.get("burst");
+  const settleAt = burstEl.start + burstEl.beat("settleAt");
+  const shakeEl = tl.get("shake");
+
+  const margin = ease(t, ...span("border")) * 22 * u;
+  const crackA = ease(t, ...span("gutter:0"), Easing.out(Easing.cubic));
+  const crackB = ease(t, ...span("gutter:1"), Easing.out(Easing.cubic));
+  const slide2 = ease(t, ...span("panel:0"), Easing.out(Easing.exp));
+  const slide3 = ease(t, ...span("panel:1"), Easing.out(Easing.exp));
+  const burst = ease(t, burstEl.start, burstEl.end, Easing.in(Easing.cubic));
+  const settle = ease(
+    t,
+    settleAt,
+    settleAt + burstEl.beat("settle"),
+    Easing.out(Easing.cubic),
+  );
+  const shaking = t >= shakeEl.start && t < shakeEl.end;
   const step = Math.floor(t / 2);
   const shake = shaking
     ? [
