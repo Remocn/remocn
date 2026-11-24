@@ -2418,10 +2418,19 @@
         {
           "path": "ecosystem-constellation/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ecosystem-constellation.tsx"
+          "target": "components/remocn/ecosystem-constellation/index.tsx"
+        },
+        {
+          "path": "ecosystem-constellation/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ecosystem-constellation/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "live-code-compilation",

@@ -2413,12 +2413,21 @@
       "title": "Ecosystem Constellation",
       "description": "A central logo orbited by integration satellites with pulsing data lines.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/ecosystem-constellation/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ecosystem-constellation.tsx"
+          "target": "components/remocn/ecosystem-constellation/index.tsx"
+        },
+        {
+          "path": "registry/remocn/ecosystem-constellation/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ecosystem-constellation/timeline.ts"
         }
       ],
       "type": "registry:component"
