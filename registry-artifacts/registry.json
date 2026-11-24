@@ -10683,12 +10683,21 @@
       "title": "Bracket Win",
       "description": "A tournament bracket resolves match by match until remocn is crowned 'CHAMPION'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/bracket-win/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bracket-win.tsx"
+          "target": "components/remocn/bracket-win/index.tsx"
+        },
+        {
+          "path": "registry/remocn/bracket-win/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bracket-win/timeline.ts"
         }
       ],
       "type": "registry:component"
