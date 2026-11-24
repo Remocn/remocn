@@ -6466,12 +6466,21 @@
       "title": "Leaderboard Climb",
       "description": "A launch leaderboard ranks ten products and the highlighted row climbs the table.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/gsh", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/gsh",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/leaderboard-climb/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/leaderboard-climb.tsx"
+          "target": "components/remocn/leaderboard-climb/index.tsx"
+        },
+        {
+          "path": "registry/remocn/leaderboard-climb/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/leaderboard-climb/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -8,6 +8,16 @@ import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  boardOf,
+  DEFAULT_ENTRIES,
+  type LeaderboardClimbElementId,
+  type LeaderboardEntry,
+  leaderboardClimbTimeline,
+} from "./timeline";
+
+export type { LeaderboardEntry };
 
 const onest = loadOnest("normal", {
   weights: ["300", "400"],
@@ -21,13 +31,6 @@ const CAM = Easing.bezier(0.87, 0, 0.13, 1);
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const LIFT = { mass: 0.6, damping: 15, stiffness: 230 };
-
-const B = {
-  self: -6,
-  steps: [16, 28, 38, 46, 53, 59],
-  payoff: 68,
-  end: 120,
-};
 
 const REMOCN_R_PATH =
   "M 0.01 0.81 C 0.01 1.73, 0.36 2.79, 1.09 4.13 C 4.91 11.04, 13.45 17.16, 21.7 18.9 C 22.94 19.16, 23.18 19.16, 51.39 19.27 C 76.07 19.36, 80.02 19.4, 81.32 19.57 C 89.89 20.69, 96.2 24.68, 99.38 31.01 C 103.19 38.56, 102.53 50.1, 97.91 57.07 C 94.66 61.96, 89.68 64.99, 83.26 66 C 82.81 66.07, 70.18 66.83, 55.2 67.69 C 24.82 69.43, 27.03 69.23, 24.18 70.4 C 19.9 72.15, 14.84 75.7, 10.65 79.89 C 4.86 85.68, 1.3 91.91, 0.25 98.13 C 0.12 98.85, 0.08 103.13, 0.04 116.66 L 0 134.26 9.5 134.26 L 19 134.26 19.05 119.41 C 19.1 103.27, 19.08 103.82, 19.82 101.04 C 21.79 93.65, 27.86 88.75, 36.45 87.63 C 37.23 87.53, 39.41 87.5, 43.57 87.53 C 50.12 87.59, 50.75 87.65, 53.22 88.45 C 56.61 89.56, 59.67 91.86, 62.02 95.07 C 62.52 95.76, 69.35 103.85, 77.2 113.07 C 85.04 122.28, 91.63 130.04, 91.85 130.32 C 92.07 130.59, 92.5 131.34, 92.82 131.97 C 93.52 133.35, 94.11 133.93, 95.06 134.13 C 95.5 134.23, 98.97 134.26, 106.36 134.23 L 117.01 134.19 100.82 113.07 C 91.91 101.45, 84.52 91.78, 84.39 91.57 C 83.36 89.89, 83.66 87.53, 85.09 86 C 85.79 85.25, 86.36 84.94, 88.07 84.38 C 96.18 81.72, 104.15 76.62, 109.97 70.36 C 120.59 58.93, 124.06 44.32, 119.44 30.43 C 114.59 15.81, 101.93 4.02, 87.64 0.83 C 83.93 0.01, 88.09 0.08, 41.85 0.04 L 0.01 0 0.01 0.81 Z";
@@ -76,12 +79,6 @@ const TINTS = [
   "#8f9bb3",
 ];
 
-export interface LeaderboardEntry {
-  name: string;
-  tagline: string;
-  score: number;
-}
-
 export interface LeaderboardClimbProps {
   theme?: "dark" | "light";
   accent?: string;
@@ -111,6 +108,12 @@ export interface LeaderboardClimbProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches your row coming in, single steps up and the
+   * payoff, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<LeaderboardClimbElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -129,43 +132,42 @@ function ScaleLayer({
   );
 }
 
-export function LeaderboardClimb({
-  theme = "dark",
-  accent = "#3B5BFD",
-  title = "Top launches",
-  subtitle = "Today · Launch league",
-  entries = [
-    { name: "Fieldnote", tagline: "Notes that write back", score: 2140 },
-    { name: "Parcel", tagline: "Ship docs as sites", score: 1866 },
-    { name: "Nightjar", tagline: "A calm inbox for teams", score: 1210 },
-    { name: "Orbitdesk", tagline: "Async standups", score: 1098 },
-    { name: "Lumen", tagline: "Analytics without SQL", score: 964 },
-    { name: "Tally Run", tagline: "Budgets for builders", score: 880 },
-    { name: "Stackbird", tagline: "Previews for every branch", score: 742 },
-    { name: "Coda Room", tagline: "Rooms for pair coding", score: 655 },
-  ],
-  self = {
-    name: "remocn",
-    tagline: "Launch videos from code",
-    from: 598,
-    to: 1284,
-  },
-  toRank = 3,
-  productLabel = "PRODUCT",
-  scoreLabel = "UPVOTES",
-  gainLabel = "today",
-  ink,
-  background,
-  fontFamily = onest.fontFamily,
-  logo,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: LeaderboardClimbProps) {
+export function LeaderboardClimb(props: LeaderboardClimbProps) {
+  const {
+    theme = "dark",
+    accent = "#3B5BFD",
+    title = "Top launches",
+    subtitle = "Today · Launch league",
+    entries = DEFAULT_ENTRIES,
+    self = {
+      name: "remocn",
+      tagline: "Launch videos from code",
+      from: 598,
+      to: 1284,
+    },
+    toRank = 3,
+    productLabel = "PRODUCT",
+    scoreLabel = "UPVOTES",
+    gainLabel = "today",
+    ink,
+    background,
+    fontFamily = onest.fontFamily,
+    logo,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    leaderboardClimbTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 720 : 1280;
@@ -184,12 +186,12 @@ export function LeaderboardClimb({
     ? "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.5), 0 20px 44px rgba(0,0,0,0.4), 0 70px 140px rgba(0,4,30,0.6)"
     : "inset 0 1px 0 #ffffff, 0 1px 2px rgba(20,30,80,0.06), 0 18px 40px rgba(20,30,80,0.08), 0 60px 130px rgba(20,30,80,0.16)";
 
-  const n = Math.min(8, entries.length);
+  const { n, fromIdx, toIdx, stepCount } = boardOf(entries, toRank);
   const others = entries.slice(0, n);
-  const fromIdx = n;
-  const toIdx = Math.max(0, Math.min(n, toRank - 1));
-  const stepCount = fromIdx - toIdx;
-  const steps = B.steps.slice(0, stepCount);
+  const stepEls = tl.lane("Climb").filter((e) => e.id.startsWith("step:"));
+  const steps = stepEls.map((e) => e.start);
+  const selfEl = tl.get("self");
+  const payoffEl = tl.get("payoff");
 
   const fs = portrait ? 1.12 : 1;
   const panelW = portrait ? 660 : 1040;
@@ -231,7 +233,12 @@ export function LeaderboardClimb({
   scoreStops[scoreStops.length - 1] = self.to;
   let score = self.from;
   steps.forEach((t, i) => {
-    const p = ramp(frame, t - 2, 9, MOVE);
+    const p = ramp(
+      frame,
+      t + stepEls[i].beat("scoreAt"),
+      stepEls[i].beat("score"),
+      MOVE,
+    );
     score = mix(score, scoreStops[i + 1] ?? self.to, p);
   });
   const selfRank = Math.round(selfSlot) + 1;
@@ -242,20 +249,34 @@ export function LeaderboardClimb({
       ? undefined
       : [`translateX(${-spread}px)`, `translateX(${spread}px)`];
 
-  const payoff = spring({ frame: frame - B.payoff, fps, config: CHIP });
+  const payoffAt = payoffEl.start;
+  const payoff = spring({ frame: frame - payoffAt, fps, config: CHIP });
   const flash =
-    ramp(frame, B.payoff, 4, MOVE) * (1 - ramp(frame, B.payoff + 4, 22, ENTER));
-  const selfIn = ramp(frame, B.self, 12);
+    ramp(frame, payoffAt, payoffEl.beat("flash"), MOVE) *
+    (1 -
+      ramp(
+        frame,
+        payoffAt + payoffEl.beat("flash"),
+        payoffEl.beat("fade"),
+        ENTER,
+      ));
+  const selfIn = ramp(frame, selfEl.start, selfEl.length);
 
-  const camPull = ramp(frame, steps[0] - 6, B.payoff + 4 - (steps[0] - 6), CAM);
+  const camAt = steps[0] + stepEls[0]?.beat("camAt");
+  const camPull = ramp(
+    frame,
+    camAt,
+    payoffAt + payoffEl.beat("camEnd") - camAt,
+    CAM,
+  );
   const panelCy = panelH / 2;
   const selfCenter = slotY(selfSlot) + rowH / 2;
   const z0 = portrait ? 1.08 : 1.2;
   const z1 = portrait ? 0.98 : 0.95;
   const z =
     mix(z0, z1, camPull) +
-    0.02 * ramp(frame, -6, steps[0], Easing.linear) * (1 - camPull) +
-    0.025 * ramp(frame, B.payoff, B.end - B.payoff, Easing.linear);
+    0.02 * ramp(frame, selfEl.start, steps[0], Easing.linear) * (1 - camPull) +
+    0.025 * ramp(frame, payoffAt, payoffEl.beat("driftEnd"), Easing.linear);
   const fy = mix(selfCenter - panelCy - (portrait ? 220 : 120), 0, camPull);
   const fx = 0;
   const rotX = mix(10, 4, camPull) + Math.sin(frame / 40) * 0.4;
@@ -711,7 +732,7 @@ export function LeaderboardClimb({
                       display: "flex",
                       alignItems: "center",
                       gap: 4,
-                      opacity: frame >= B.payoff ? Math.min(1, payoff * 2) : 0,
+                      opacity: frame >= payoffAt ? Math.min(1, payoff * 2) : 0,
                       transform: `scale(${mix(0.5, 1, payoff)})`,
                     }}
                   >
