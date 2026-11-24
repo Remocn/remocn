@@ -7692,12 +7692,21 @@
       "title": "Cool Down",
       "description": "A short statement, 'Runs cool.', settles in large over a faint grid with a mono caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/cool-down/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/cool-down.tsx"
+          "target": "components/remocn/cool-down/index.tsx"
+        },
+        {
+          "path": "registry/remocn/cool-down/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/cool-down/timeline.ts"
         }
       ],
       "type": "registry:component"

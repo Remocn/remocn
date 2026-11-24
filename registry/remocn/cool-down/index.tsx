@@ -12,6 +12,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type CoolDownElementId, coolDownTimeline } from "./timeline";
 
 const saira = loadSaira("normal", {
   weights: ["400", "500"],
@@ -37,6 +39,12 @@ export interface CoolDownProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the title's rise, the label and the cool down,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<CoolDownElementId>;
 }
 
 const THEMES = {
@@ -56,12 +64,6 @@ const THEMES = {
 
 const FONT_PX = 200;
 const TRACK = -0.035;
-const RISE_LEN = 14;
-const COOL_AT = 16;
-const COOL_END = 86;
-const LABEL_AT = 4;
-const LABEL_LEN = 16;
-const STILL_AT = 92;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 
@@ -161,23 +163,30 @@ function ScaleLayer({
   );
 }
 
-export function CoolDown({
-  title = "Runs cool.",
-  label = "a full launch film rendered, fans silent",
-  accent,
-  ink,
-  background,
-  fontFamily = saira.fontFamily,
-  cooldown = COOL_END - COOL_AT,
-  haze = 1,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: CoolDownProps) {
+export function CoolDown(props: CoolDownProps) {
+  const {
+    title = "Runs cool.",
+    label = "a full launch film rendered, fans silent",
+    accent,
+    ink,
+    background,
+    fontFamily = saira.fontFamily,
+    haze = 1,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    coolDownTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const hot = accent ?? c.accent;
@@ -196,22 +205,24 @@ export function CoolDown({
   const lead = F * 0.96;
   const blockH = lead * (lines.length - 1) + m.cap * F;
 
-  const rise = interpolate(t, [0, RISE_LEN], [0, 1], {
+  const riseEl = tl.get("rise");
+  const cool = tl.get("cool");
+  const labelEl = tl.get("label");
+  const rise = interpolate(t, [riseEl.start, riseEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const coolEnd = COOL_AT + cooldown;
-  const heat = interpolate(t, [COOL_AT, coolEnd], [1, 0], {
+  const heat = interpolate(t, [cool.start, cool.end], [1, 0], {
     ...CLAMP,
     easing: Easing.bezier(0.33, 0, 0.2, 1),
   });
   const shimmer = heat ** 1.4;
   const warp = shimmer * F * 0.075 * haze;
-  const still = t >= STILL_AT + (coolEnd - COOL_END) || warp < 0.05;
+  const still = t >= cool.start + cool.beat("still") || warp < 0.05;
   const color = `color-mix(in oklab, ${hot} ${(heat * 100).toFixed(1)}%, ${fg})`;
   const climb = t * F * 0.035;
 
-  const labelP = interpolate(t, [LABEL_AT, LABEL_AT + LABEL_LEN], [0, 1], {
+  const labelP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
