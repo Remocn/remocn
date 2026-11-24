@@ -5,6 +5,16 @@ import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { AbsoluteFill, continueRender, delayRender, Easing } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_WORDS,
+  type DotTypeElementId,
+  dotTypeTimeline,
+  FINAL_HOLD,
+  HOLD,
+  windows,
+  wordsOf,
+} from "./timeline";
 
 const DISPLAY = loadDisplay("normal", {
   weights: ["500"],
@@ -32,30 +42,17 @@ export interface DotTypeProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the flight into each word, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DotTypeElementId>;
 }
 
-const DEFAULT_WORDS = ["Think.", "Make.", "Ship."];
-
-const FIELD = 14;
-const FIRST = 32;
-const STREAM = 34;
-const HOLD = 22;
-const FINAL_HOLD = 32;
 const FLIGHT = 0.66;
 
 const INOUT = Easing.bezier(0.65, 0, 0.35, 1);
 const SOFT = Easing.bezier(0.45, 0, 0.2, 1);
-
-function windows(wordCount: number, hold = HOLD) {
-  const out: { start: number; len: number }[] = [];
-  let t = FIELD;
-  for (let i = 0; i < wordCount; i++) {
-    const len = i === 0 ? FIRST : STREAM;
-    out.push({ start: t, len });
-    t += len + hold;
-  }
-  return out;
-}
 
 export const dotTypeLength = (
   wordCount = DEFAULT_WORDS.length,
@@ -313,29 +310,36 @@ function ScaleLayer({
   );
 }
 
-export function DotType({
-  words = DEFAULT_WORDS,
-  accentLast = true,
-  count = 1500,
-  accent = "#3B5BFD",
-  ink: inkProp,
-  background,
-  fontFamily = DISPLAY.fontFamily,
-  fontWeight = 500,
-  hold = HOLD,
-  scale = 1,
-  delay: wait = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: DotTypeProps) {
+export function DotType(props: DotTypeProps) {
+  const {
+    words = DEFAULT_WORDS,
+    accentLast = true,
+    count = 1500,
+    accent = "#3B5BFD",
+    ink: inkProp,
+    background,
+    fontFamily = DISPLAY.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay: wait = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const frame = Math.max(0, useSceneFrame() - wait) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    dotTypeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const isLight = theme === "light";
   const bg = isLight ? "#F5F4F0" : "#0A0A0B";
   const ink = inkProp ?? (isLight ? "#141416" : "#EEEEF0");
   const n = Math.max(300, Math.round(count));
-  const list = words.length ? words : DEFAULT_WORDS;
+  const list = wordsOf(words);
   const key = list.join("\u0000");
 
   const [ready, setReady] = useState(false);
@@ -415,8 +419,11 @@ export function DotType({
     };
   }, [ready, key, n, W, H, fontFamily, fontWeight]);
 
-  const wins = windows(list.length, hold);
-  const total = dotTypeLength(list.length, hold);
+  const wins = list.map((_, i) => tl.get(`word:${i}`));
+  const lastWin = wins[wins.length - 1];
+  const total = lastWin.end + lastWin.beat("rest");
+  // The field drifts until the first flight takes off.
+  const takeoff = wins[0].start;
   const cx = W / 2;
   const cy = H / 2;
 
@@ -436,7 +443,7 @@ export function DotType({
     const from = states[Math.max(0, k - 1)];
     const to = states[k];
     const win = wins[Math.max(0, k - 1)];
-    const u = k === 0 ? 0 : (frame - win.start) / win.len;
+    const u = k === 0 ? 0 : (frame - win.start) / win.length;
     const lastK = list.length;
     const unit = Math.min(W, H) / 720;
     const rField = 1.7 * unit;
@@ -458,8 +465,10 @@ export function DotType({
         bright = fieldB[i];
       } else if (k === 1) {
         const ax =
-          a.x + Math.sin(FIELD * 0.028 + i) * 2 * unit + FIELD * 0.35 * unit;
-        const ay = a.y + Math.cos(FIELD * 0.022 + i * 1.3) * 2 * unit;
+          a.x +
+          Math.sin(takeoff * 0.028 + i) * 2 * unit +
+          takeoff * 0.35 * unit;
+        const ay = a.y + Math.cos(takeoff * 0.022 + i * 1.3) * 2 * unit;
         const d = Math.hypot(ax - cx, ay - cy) / maxD;
         const delay = Math.min(1, d * 0.8 + hash(i * 9.1) * 0.2) * (1 - FLIGHT);
         const t = Math.max(0, Math.min(1, (u - delay) / FLIGHT));

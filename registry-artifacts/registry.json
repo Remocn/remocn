@@ -11740,12 +11740,17 @@
       "title": "Dot Type",
       "description": "Words are drawn from a field of round dots in a gradient, the last one in accent.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/dot-type/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/dot-type.tsx"
+          "target": "components/remocn/dot-type/index.tsx"
+        },
+        {
+          "path": "registry/remocn/dot-type/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/dot-type/timeline.ts"
         }
       ],
       "type": "registry:component"
