@@ -250,6 +250,17 @@ describe("buildLlmsTxt", () => {
     }
   });
 
+  test("answers the best way to have Claude Code make a video near the top", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "**What's the best way to have Claude Code make a video?**",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/claude-code-video.md)",
+    );
+    expect(preamble).toContain("claude plugin install remotion@remotion");
+  });
+
   test("answers the free Remotion MCP server question near the top", () => {
     const preamble = text.slice(0, text.indexOf("\n## "));
     expect(preamble).toContain(
