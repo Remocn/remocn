@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_REST,
+  type OutOfContextElementId,
+  outOfContextTimeline,
+  splitWords,
+} from "./timeline";
 
 const outfit = loadFont("normal", {
   weights: ["400", "500"],
@@ -37,6 +44,12 @@ export interface OutOfContextProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the claim, the full stop's drop, the pull-back
+   * and single words of the rest, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<OutOfContextElementId>;
 }
 
 const THEMES = {
@@ -58,18 +71,6 @@ const CLAMP = {
 } as const;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
-
-const IN_LEN = 14;
-const IN_STAGGER = 4;
-const DROP_AT = 40;
-const DROP_LEN = 9;
-const PULL_AT = 46;
-const PULL_LEN = 40;
-const REST_AT = 0.42;
-const REST_LEN = 14;
-const REST_STAGGER = 3;
-const MOTION_END = 100;
-const MIN_HOLD = 24;
 
 let measureCtx: CanvasRenderingContext2D | null = null;
 // Set by buildLayout before it measures; layout runs synchronously, so em()
@@ -137,10 +138,6 @@ interface Layout {
   finalF: number;
 }
 
-function split(s: string) {
-  return s.split(/\s+/).filter(Boolean);
-}
-
 function balanced(words: string[], n: number): string[][] {
   if (n <= 1) return [words];
   let best: string[][] = [words];
@@ -175,7 +172,7 @@ function buildLayout(
   const clean = claim.trim().replace(/[.!?…,;:]+$/u, "");
   const explicit = clean
     .split("\n")
-    .map((l) => split(l))
+    .map((l) => splitWords(l))
     .filter((l) => l.length > 0);
   const flat = explicit.flat();
 
@@ -215,7 +212,7 @@ function buildLayout(
     }
   });
 
-  const restWords = split(rest);
+  const restWords = splitWords(rest);
   const measure = Math.max(claimW * 1.3, ...restWords.map((w) => em(w)));
   const greedy: string[][] = [];
   for (const w of restWords) {
@@ -285,23 +282,29 @@ function ScaleLayer({
   );
 }
 
-export function OutOfContext({
-  claim = "Stop making\nlaunch videos",
-  rest = "by hand.",
-  dropAt = DROP_AT,
-  pullLen = PULL_LEN,
-  accent,
-  ink,
-  background,
-  fontFamily = outfit.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: OutOfContextProps) {
+export function OutOfContext(props: OutOfContextProps) {
+  const {
+    claim = "Stop making\nlaunch videos",
+    rest = DEFAULT_REST,
+    accent,
+    ink,
+    background,
+    fontFamily = outfit.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    outOfContextTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -320,9 +323,10 @@ export function OutOfContext({
     );
   }
 
-  const room = durationInFrames * speed - MIN_HOLD;
-  const k = Math.max(0.55, Math.min(1, room / MOTION_END));
-  const t = (frame * speed) / k;
+  const t = frame * speed;
+  const claimEl = tl.get("claim");
+  const dropEl = tl.get("drop");
+  const pull = tl.get("pull");
 
   const R = layout.zoomF;
   const sEnd = layout.finalF / layout.zoomF;
@@ -336,11 +340,11 @@ export function OutOfContext({
   const f1 = visual(layout.lineCount, layout.blockW);
 
   const cameraAt = (tt: number) => {
-    const p = interpolate(tt, [PULL_AT, PULL_AT + pullLen], [0, 1], {
+    const p = interpolate(tt, [pull.start, pull.end], [0, 1], {
       ...CLAMP,
       easing: EASE_CAM,
     });
-    const creep = interpolate(tt, [IN_LEN, PULL_AT], [0, 0.018], CLAMP);
+    const creep = interpolate(tt, [claimEl.end, pull.start], [0, 0.018], CLAMP);
     return {
       s: Math.exp(Math.log(sEnd) * p) * (1 + creep * (1 - p)),
       fx: f0.x + (f1.x - f0.x) * p,
@@ -350,7 +354,8 @@ export function OutOfContext({
   const { s, fx, fy } = cameraAt(t);
   // A step of the camera, weighed by the ~1000px from the frame's centre to
   // the furthest text.
-  const dt = speed / k;
+  // One composition frame, on the scene timeline.
+  const dt = speed;
   const step = (a: { s: number; fx: number; fy: number }) =>
     Math.abs(a.s - s) * 1000 + Math.abs(a.fx - fx) + Math.abs(a.fy - fy);
   const cameraMoving =
@@ -367,20 +372,24 @@ export function OutOfContext({
   // weighed in px.
   const rising = (r: number) => r > 0 && (1 - r) * travel > 1e-3;
 
-  const lineIn = (li: number) =>
-    interpolate(t, [li * IN_STAGGER, li * IN_STAGGER + IN_LEN], [0, 1], {
+  // Which line of the claim a word sits on is measured, so the line offset
+  // is added here.
+  const lineIn = (li: number) => {
+    const at = claimEl.start + li * claimEl.beat("line");
+    return interpolate(t, [at, at + claimEl.length], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
   const restIn = (i: number) => {
-    const at = PULL_AT + pullLen * REST_AT + i * REST_STAGGER;
-    return interpolate(t, [at, at + REST_LEN], [0, 1], {
+    const e = tl.get(`rest:${i}`);
+    return interpolate(t, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
   };
 
-  const drop = interpolate(t, [dropAt, dropAt + DROP_LEN], [0, 1], {
+  const drop = interpolate(t, [dropEl.start, dropEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_DROP,
   });

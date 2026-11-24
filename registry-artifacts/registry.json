@@ -7019,12 +7019,21 @@
       "title": "Out of Context",
       "description": "\"Stop making launch videos by hand.\" with the last words in pink on a blue ground.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/out-of-context/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/out-of-context.tsx"
+          "target": "components/remocn/out-of-context/index.tsx"
+        },
+        {
+          "path": "registry/remocn/out-of-context/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/out-of-context/timeline.ts"
         }
       ],
       "type": "registry:component"

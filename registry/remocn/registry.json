@@ -7024,10 +7024,19 @@
         {
           "path": "out-of-context/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/out-of-context.tsx"
+          "target": "components/remocn/out-of-context/index.tsx"
+        },
+        {
+          "path": "out-of-context/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/out-of-context/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "answer-first",
