@@ -8681,12 +8681,21 @@
       "title": "Lean Count",
       "description": "A heavy italic figure leans into place as it counts up to 3.2 followed by a red cross.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/lean-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/lean-count.tsx"
+          "target": "components/remocn/lean-count/index.tsx"
+        },
+        {
+          "path": "registry/remocn/lean-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/lean-count/timeline.ts"
         }
       ],
       "type": "registry:component"
