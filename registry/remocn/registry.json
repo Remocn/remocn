@@ -5794,12 +5794,21 @@
       "title": "Multi File Drop",
       "description": "Files drop into a prompt box as chips, then a cursor presses send.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/gsh", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/gsh",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "multi-file-drop/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/multi-file-drop.tsx"
+          "target": "components/remocn/multi-file-drop/index.tsx"
+        },
+        {
+          "path": "multi-file-drop/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/multi-file-drop/timeline.ts"
         }
       ]
     },
