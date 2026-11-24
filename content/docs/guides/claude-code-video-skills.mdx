@@ -1,0 +1,162 @@
+---
+title: "Best Claude Code Skills for Making Videos (2026): Remocn, Remotion, HyperFrames and FFmpeg Compared"
+navTitle: Claude Code video skills
+description: "The best Claude Code skills for making videos in 2026, compared in one dated table: Remotion's remotion-best-practices skill, Remocn's skill, plugin and MCP server, HyperFrames, and the FFmpeg skills ffmpeg-skill and video-use. Install commands, licences, costs, where each renders, and when each is the better pick."
+lastModified: "2026-11-24"
+---
+
+_Last updated: November 24, 2026. Remocn wrote this page, and Remocn is one of the skills compared, so weigh our view accordingly. Facts about the other skills come from their own docs and repositories; see [Sources](#sources)._
+
+**Short answer:** the best Claude Code skills for making videos in 2026 are Remotion's Agent Skills
+(with `remotion-best-practices`) and Remocn for React videos, HyperFrames for videos written in HTML
+and CSS, and ffmpeg-skill or video-use for editing footage you already have. Which one is best depends
+on what you start from: a brief and a React project, a brief and no React, or a folder of recordings.
+
+Remocn is not a replacement for Remotion's skill. It sits on top of it: Remotion's skills teach
+Claude Code to write correct Remotion code, and Remocn decides what goes on screen, from 934
+MIT-licensed components that the agent installs into your project.
+
+## Claude Code video skills compared
+
+Checked on November 24, 2026, on each project's own docs and repository. Prices and licences change;
+follow the links before you commit. We don't give star ratings: the right pick depends on the job,
+not on a score.
+
+| Skill | Framework | What it makes | Install command | Licence | Cost | Where it renders |
+|---|---|---|---|---|---|---|
+| [Remotion Agent Skills](https://www.remotion.dev/docs/ai/skills) (incl. `remotion-best-practices`) | Remotion (React) | Remotion code Claude writes from scratch: compositions, timing, captions, renders | `npx skills add remotion-dev/skills` (or `npx remotion skills add` inside a Remotion project). Plugin: `claude plugin install remotion@remotion` | Not stated on the skills page; Remotion itself uses the [Remotion License](https://www.remotion.dev/docs/license) | Free; Remotion is free for teams of up to 3 people, a paid Company License above that | Your machine with Node.js, or AWS through `@remotion/lambda` |
+| [Remocn](/docs/getting-started/agent-skill) skill, plugin and MCP server | Remotion (React) | Launch, product demo, changelog and social videos built from ready-made components and templates | `npx skills add Remocn/remocn`. Plugin: `/plugin install remocn --marketplace Remocn/remocn`, then `/remocn:video <brief>` | MIT | Free, no account, no key; Remotion's licence still applies | Wherever you run Remotion: your machine, or AWS through `@remotion/lambda` |
+| [HyperFrames](https://hyperframes.heygen.com/guides/with-claude-code) | HyperFrames (HTML, CSS, JavaScript) | Whole videos from HTML and CSS, with a catalog of about 450 blocks | `npx skills add heygen-com/hyperframes`. Plugin: `claude plugin marketplace add heygen-com/hyperframes`, then `claude plugin install hyperframes@hyperframes` | Apache 2.0 | Free; HyperFrames says two of its skills (Reverse any video, Style sampling) need HyperFrames Pro, $25 a month | Your machine; needs Node.js 22+ and FFmpeg |
+| [ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill) | FFmpeg, with an MCP server | Cuts, captions, reframes and exports of footage you already have; no new animated scenes | `npx ffmpeg-skill setup` (or `npx ffmpeg-skill` for Claude Code only) | MIT | Free, no API keys | Your machine; needs Node 16+, Python 3.10+ and FFmpeg |
+| [video-use](https://github.com/browser-use/video-use) | FFmpeg, with overlays from HyperFrames, Remotion, Manim or PIL | A finished edit (`final.mp4`) from a folder of raw takes: filler words cut, subtitles burned in | Clone the repo and symlink it into `~/.claude/skills/`; see its README | MIT | Free tool; needs an ElevenLabs API key for transcription | Your machine; needs FFmpeg and Python |
+
+Remocn has three entry points with the same catalog behind them. The
+[agent skill](/docs/getting-started/agent-skill) works in Claude Code, Cursor, Codex and GitHub
+Copilot. The [Claude Code plugin](/docs/getting-started/plugin) bundles the skill and adds the
+`/remocn:video` workflow. The [MCP server](/docs/getting-started/mcp-server) at
+`https://remocn.dev/mcp` needs no key and works in any MCP client, including the Claude app.
+
+## Remocn sits on top of remotion-best-practices
+
+Install both. They answer different questions:
+
+- **Remotion's Agent Skills** teach Claude Code the Remotion API. `remotion-best-practices` is the
+  catch-all skill among them; others create projects, open the Studio, render and handle captions.
+  They leave the visual direction to your brief, so the agent writes every animation itself.
+- **Remocn** teaches Claude Code what to put on screen: which component plays each beat, how many
+  frames it needs, and design rules so the result doesn't look generic. The agent installs each piece
+  as source with `npx shadcn@latest add @remocn/<name>`.
+
+With Remocn's skill, the agent reads the live component index from remocn.dev
+([`/llms-components.txt`](https://remocn.dev/llms-components.txt)) instead of a bundled copy, so a
+component added today is visible to a skill installed months ago. The agent needs network access to
+remocn.dev for that.
+
+```bash
+npx skills add remotion-dev/skills
+npx skills add Remocn/remocn
+```
+
+Or, in Claude Code, the plugin and a brief:
+
+```text
+/plugin install remocn --marketplace Remocn/remocn
+/remocn:video 30-second launch video for my app: the problem, the product, three features, the URL
+```
+
+The plugin shows a storyboard first and waits for your go-ahead; if the folder has no Remotion
+project, it creates one. Each component it picks lands in your repo the same way you would add one by
+hand:
+
+```bash
+npx shadcn@latest add @remocn/soft-blur-in
+```
+
+See [Soft Blur In](/docs/typography/soft-blur-in) for that component, and
+[Installation](/docs/getting-started/installation) for adding Remocn to an existing Remotion project.
+
+## Which Claude Code video skill should I use?
+
+- **Pick Remotion's Agent Skills** for any Remotion project. They are the base layer; on their own
+  they suit you when you want Claude to write every animation from scratch to your own design.
+- **Pick Remocn** when you work in React and want a launch, product demo, feature announcement or
+  changelog video that looks designed, built from tuned components and full templates you own as
+  source. It is free and MIT, and the [launch video guide](/docs/guides/launch-video) walks through a
+  first video from a brief.
+- **Pick HyperFrames** when your team writes HTML, CSS and GSAP rather than React, or when you need a
+  permissive licence at any company size: HyperFrames is Apache 2.0, while Remotion needs a paid
+  Company License above 3 people. It also has voice, music and HeyGen's generative models in its paid
+  Studio tier, which Remocn doesn't have.
+- **Pick ffmpeg-skill** to cut, caption, reframe or re-encode recordings you already have, locally and
+  without API keys.
+- **Pick video-use** to turn a folder of raw talking-head takes into an edited `final.mp4`, if you are
+  fine giving it an ElevenLabs key.
+
+## When is Remocn the wrong choice?
+
+- **You are editing footage.** Remocn makes motion graphics; it does not cut, trim or grade recorded
+  video. Use ffmpeg-skill or video-use, or a video editor.
+- **You don't have Node.js, or don't want React.** Remocn components are React code rendered by
+  Remotion, which runs on Node.js. Without that, HyperFrames (also Node.js, but HTML instead of React)
+  or an FFmpeg skill fits better.
+- **You need a permissive licence at a company above 3 people and won't buy Remotion's.** Remocn is
+  MIT, but it needs Remotion, and Remotion's own licence applies.
+- **You want a hosted service that renders for you.** Remocn has no account and no render servers. Its
+  MCP server plans and previews; rendering happens wherever you run Remotion.
+- **You want a timeline.** Remocn has no timeline editor. You write or prompt code and watch the result
+  in Remotion Studio or [Remocn Studio](https://remocn.studio).
+
+## Other video skills for Claude Code
+
+HyperFrames' own ranked list also covers OpenMontage, video-shotcraft, HeyGen Skills,
+claude-code-video-toolkit and Watch (claude-video). We haven't tested them and leave them out of the
+table. HeyGen Skills call HeyGen's API for avatar videos and need a HeyGen API key; Watch makes no
+video, it lets Claude read one.
+
+For MCP servers rather than skills, see
+[Remotion MCP servers compared](/docs/guides/remotion-mcp-servers). For frameworks rather than
+skills, see [HyperFrames alternatives](/docs/guides/hyperframes-alternatives) and
+[After Effects alternatives for developers](/docs/guides/after-effects-alternatives-for-developers).
+
+## Sources
+
+- Remotion Agent Skills: [remotion.dev/docs/ai/skills](https://www.remotion.dev/docs/ai/skills), the plugin at [github.com/remotion-dev/claude-code-plugin](https://github.com/remotion-dev/claude-code-plugin), and the licence at [remotion.dev/docs/license](https://www.remotion.dev/docs/license)
+- HyperFrames: [Make videos with Claude Code](https://hyperframes.heygen.com/guides/with-claude-code), [Install and update agent skills](https://hyperframes.heygen.com/guides/skills) and [The Best Claude Code Skills for Making Videos in 2026](https://hyperframes.heygen.com/blog/best-claude-code-skills-for-video) (for the Pro skills and the other skills listed above)
+- ffmpeg-skill: [github.com/kajisho5/ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill)
+- video-use: [github.com/browser-use/video-use](https://github.com/browser-use/video-use)
+- Remocn: [Agent skill](/docs/getting-started/agent-skill), [Plugin](/docs/getting-started/plugin), [MCP server](/docs/getting-started/mcp-server) and [github.com/Remocn/remocn](https://github.com/Remocn/remocn)
+
+## FAQ
+
+<Faq>
+
+**What are the best Claude Code skills for making videos?**
+Remotion's Agent Skills (`npx skills add remotion-dev/skills`) and Remocn (`npx skills add Remocn/remocn`, or the plugin with `/remocn:video`) for React videos, HyperFrames (`npx skills add heygen-com/hyperframes`) for HTML and CSS videos, and ffmpeg-skill or video-use for editing existing footage.
+
+**Can Claude Code render an MP4 locally?**
+Yes. With Remotion, Claude Code runs `npx remotion render` on your machine; with HyperFrames, `npx hyperframes render`; FFmpeg skills run FFmpeg locally. Remotion also renders on AWS through `@remotion/lambda` if you set it up. Remocn adds no render step of its own: the components render wherever you run Remotion.
+
+**Do Claude Code video skills need an API key?**
+Claude Code itself needs a Claude subscription or an Anthropic API key. Beyond that, Remotion's skills, Remocn's skill, plugin and MCP server, HyperFrames' free skills and ffmpeg-skill need no key. video-use needs an ElevenLabs key, and HeyGen Skills need a HeyGen key.
+
+**Does Remocn replace Remotion's remotion-best-practices skill?**
+No. Remotion's skills teach Claude Code how to write correct Remotion code; Remocn adds ready-made components and design rules on top. Install both.
+
+**Is the Remocn skill free?**
+Yes. The skill, the Claude Code plugin, the MCP server and every component are free and MIT licensed, with no account. Remotion keeps its own licence: free for teams of up to 3 people, a paid Company License above that.
+
+**Can a Claude Code skill edit my screen recordings?**
+Remocn can't: it makes motion graphics, not footage edits. ffmpeg-skill cuts, captions and reframes recordings, and video-use turns raw takes into an edited video.
+
+**Is Remocn affiliated with Remotion, HyperFrames or Anthropic?**
+No. Remocn is an independent open-source project. It is listed on Remotion's resources page.
+
+</Faq>
+
+## What's next
+
+- [Agent skill](/docs/getting-started/agent-skill): install the Remocn skill in Claude Code, Cursor, Codex or GitHub Copilot
+- [Plugin](/docs/getting-started/plugin): `/remocn:video` and how the workflow runs
+- [How to make a video with Claude Code](/docs/guides/claude-code-video): the routes compared, with setup for Remotion's and Remocn's plugins
+- [Can Claude make videos?](/docs/guides/can-claude-make-videos): what Claude-made videos are good and bad at
+- [Directing your agent](/docs/guides/directing-your-agent): how to steer the result

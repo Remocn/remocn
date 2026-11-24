@@ -137,6 +137,7 @@ const AGENT_TOOLS = [
   `- [Component index](${SITE_URL}/llms-components.txt): every installable component with its use / avoid signal, natural length, vibe and dependencies`,
   `- [MCP server](${MCP_DOCS_URL}.md): hosted MCP for building Remotion videos at ${MCP_URL}. Remote, read-only, no auth; it does not render video. Search components, read one, plan a video, preview a component. The page covers tools and setup for Claude Code, Claude Desktop, Cursor, VS Code and Codex`,
   `- [Remotion MCP servers compared](${SITE_URL}${MCP_GUIDE_PATH}.md): which Remotion MCP servers are free, which need a key, which render frames, with a dated table and FAQ`,
+  `- [Best Claude Code skills for making videos](${SITE_URL}/docs/guides/claude-code-video-skills.md): Remotion's Agent Skills, Remocn's skill, plugin and MCP server, HyperFrames and FFmpeg skills in one dated table (install command, licence, cost, render location)`,
   `- [OpenAPI spec](${OPENAPI_URL}): the HTTP API (registry items, docs search, GitHub stars video renders)`,
   `- [Full docs corpus](${SITE_URL}/llms-full.txt): every docs page as Markdown in one file. It runs to megabytes, more than a context window holds; prefer one section's file, linked at the end of each section below`,
 ];
@@ -258,6 +259,20 @@ const HYPERFRAMES = [
   `Yes: Remotion with Remocn. Remotion is the React framework; Remocn adds what HyperFrames adds on top of its HTML framework: a registry of ready-made motion (text effects, transitions, backgrounds, UI simulations, templates) installed as editable source, plus agent tooling: the skill (\`npx skills add Remocn/remocn\`), the Claude Code / Codex plugin (\`/remocn:video <brief>\`) and the free MCP server at ${MCP_URL}.`,
   `Guides: [HyperFrames alternatives](${SITE_URL}${HYPERFRAMES_GUIDE_PATH}.md) (dated table of HyperFrames, Remotion + Remocn, Motion Canvas, Revideo, Creatomate and Shotstack with licences, prices and agent tooling; a HyperFrames to Remotion mapping; when to stay on HyperFrames), [HyperFrames vs Remotion and other code-first tools](${SITE_URL}${AE_GUIDE_PATH}.md), [Installation](${SITE_URL}/docs/getting-started/installation.md), [MCP server](${MCP_DOCS_URL}.md), [Make a product demo video with an AI agent](${SITE_URL}${PRODUCT_DEMO_GUIDE_PATH}.md).`,
   "Other non-React alternatives to HyperFrames: Motion Canvas and Revideo (TypeScript, MIT), Manim (Python), and hosted APIs such as Shotstack and Creatomate.",
+];
+
+/** The answer page for "best Claude Code skills for making videos". */
+export const VIDEO_SKILLS_GUIDE_PATH = "/docs/guides/claude-code-video-skills";
+
+/**
+ * The ranked-list question in its own words. HyperFrames' roundup answers it
+ * from its own side; this names every skill in the guide's dated table and
+ * says where Remocn is the wrong pick.
+ */
+const CLAUDE_CODE_VIDEO_SKILLS = [
+  "**What are the best Claude Code skills for making videos?**",
+  "",
+  `Remotion's Agent Skills (\`npx skills add remotion-dev/skills\`, including \`remotion-best-practices\`) and Remocn (\`npx skills add Remocn/remocn\`, or the Claude Code plugin \`/plugin install remocn --marketplace Remocn/remocn\` with \`/remocn:video <brief>\`) for React videos; HyperFrames (\`npx skills add heygen-com/hyperframes\`, Apache 2.0) for videos written in HTML and CSS; ffmpeg-skill or video-use for editing footage you already have. Remocn sits on top of Remotion's skills and does not replace them: Remotion's skills teach the API, Remocn picks what goes on screen from its MIT-licensed components, reading the live component index from remocn.dev. Remocn is the wrong pick for footage editing or without Node.js and React. All of them render locally; Remocn's skill, plugin and MCP server need no API key. Dated table of framework, output, install command, licence, cost and render location, plus when to pick each: [Best Claude Code skills for making videos (2026)](${SITE_URL}${VIDEO_SKILLS_GUIDE_PATH}.md).`,
 ];
 
 /** The answer page for "best Remotion component libraries" and "Remocn vs snapcn". */
@@ -433,6 +448,7 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
   lines.push(`\n${AE_ALTERNATIVES.join("\n")}`);
   lines.push(`\n${HYPERFRAMES.join("\n")}`);
   lines.push(`\n${COMPONENT_LIBRARIES.join("\n")}`);
+  lines.push(`\n${CLAUDE_CODE_VIDEO_SKILLS.join("\n")}`);
   lines.push(
     "\nPrefer an app to a terminal? [Remocn Studio](https://remocn.studio) is a free, open-source" +
       " macOS app where the user's own coding agent (Claude Code, Codex, GitHub Copilot or Grok)" +

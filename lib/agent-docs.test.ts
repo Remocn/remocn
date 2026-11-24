@@ -276,6 +276,27 @@ describe("buildLlmsTxt", () => {
     }
   });
 
+  test("answers the Claude Code video skills question with the guide", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    const question = preamble.indexOf(
+      "**What are the best Claude Code skills for making videos?**",
+    );
+    expect(question).toBeGreaterThan(-1);
+    const answer = preamble.slice(question);
+    expect(answer).toContain(
+      "(https://remocn.dev/docs/guides/claude-code-video-skills.md)",
+    );
+    for (const name of [
+      "remotion-best-practices",
+      "npx skills add Remocn/remocn",
+      "/remocn:video",
+      "HyperFrames",
+      "ffmpeg-skill",
+    ]) {
+      expect(answer).toContain(name);
+    }
+  });
+
   test("answers the best way to have Claude Code make a video near the top", () => {
     const preamble = text.slice(0, text.indexOf("\n## "));
     expect(preamble).toContain(

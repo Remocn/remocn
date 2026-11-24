@@ -521,6 +521,7 @@ describe("stated catalog size matches the registry", () => {
     "content/docs/guides/remotion-mcp-servers.mdx",
     "content/docs/guides/hyperframes-alternatives.mdx",
     "content/docs/guides/remotion-component-libraries.mdx",
+    "content/docs/guides/claude-code-video-skills.mdx",
     "README.md",
   ];
 

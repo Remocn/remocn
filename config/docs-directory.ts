@@ -29,6 +29,7 @@ export const CRAFT = [
 export const COMPARE = [
   "/docs/guides/after-effects-alternatives-for-developers",
   "/docs/guides/hyperframes-alternatives",
+  "/docs/guides/claude-code-video-skills",
   "/docs/guides/remotion-mcp-servers",
   "/docs/guides/remotion-component-libraries",
 ];
