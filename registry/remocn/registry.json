@@ -12440,12 +12440,17 @@
       "title": "Squircle Wave",
       "description": "A wave of squircle cells sweeps across a dot grid and leaves the R mark behind.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "squircle-wave/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/squircle-wave.tsx"
+          "target": "components/remocn/squircle-wave/index.tsx"
+        },
+        {
+          "path": "squircle-wave/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/squircle-wave/timeline.ts"
         }
       ]
     },
