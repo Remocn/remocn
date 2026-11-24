@@ -13002,12 +13002,21 @@
       "title": "Sankey Flow",
       "description": "Flows from several sources merge into one target block that reads 12.4k.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/sankey-flow/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/sankey-flow.tsx"
+          "target": "components/remocn/sankey-flow/index.tsx"
+        },
+        {
+          "path": "registry/remocn/sankey-flow/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/sankey-flow/timeline.ts"
         }
       ],
       "type": "registry:component"

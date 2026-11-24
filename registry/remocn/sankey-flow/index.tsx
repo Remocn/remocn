@@ -8,6 +8,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_SOURCES,
+  type SankeyFlowElementId,
+  sankeyFlowTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -86,15 +92,13 @@ export interface SankeyFlowProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the stage, the push, each source node, each
+   * flow, the settle, the total landing and the caption, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SankeyFlowElementId>;
 }
-
-const DEFAULT_SOURCES: SankeySource[] = [
-  { label: "Kitebase", value: 4100 },
-  { label: "Lumen", value: 3200 },
-  { label: "Fernway", value: 2400 },
-  { label: "Quarry", value: 1700 },
-  { label: "Halcyon", value: 1000 },
-];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -127,11 +131,6 @@ const THEMES = {
   },
 } as const;
 
-const NODE_START = 2;
-const NODE_STAGGER = 3;
-const FLOW_START = 16;
-const FLOW_STAGGER = 6;
-const FLOW_LEN = 34;
 const FEATHER = 0.16;
 
 function fmt(n: number) {
@@ -179,27 +178,38 @@ function ScaleLayer({
   );
 }
 
-export function SankeyFlow({
-  sources = DEFAULT_SOURCES,
-  target = "remocn",
-  total,
-  label = "videos rendered",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  stagger = FLOW_STAGGER,
-  flowLength = FLOW_LEN,
-  logo,
-  grain = true,
-  scale: size = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: SankeyFlowProps) {
+export function SankeyFlow(props: SankeyFlowProps) {
+  const {
+    sources = DEFAULT_SOURCES,
+    target = "remocn",
+    total,
+    label = "videos rendered",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    logo,
+    grain = true,
+    scale: size = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    sankeyFlowTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const stageEl = tl.get("stage");
+  const pushEl = tl.get("push");
+  const settleEl = tl.get("settle");
+  const landEl = tl.get("land");
+  const captionEl = tl.get("caption");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -231,8 +241,8 @@ export function SankeyFlow({
       y1: sy + h,
       t0: ty,
       t1: ty + h,
-      inAt: NODE_START + i * NODE_STAGGER,
-      flowAt: FLOW_START + i * stagger,
+      node: tl.get(`node:${i}`),
+      flow: tl.get(`flow:${i}`),
     };
     sy += h + gap;
     ty += h;
@@ -243,38 +253,45 @@ export function SankeyFlow({
   const xt = tgtX;
   const mx = (xs + xt) / 2;
   const L = xt - xs;
-  const lastFlow = FLOW_START + (list.length - 1) * stagger + flowLength;
-  const HIT = lastFlow - 4;
-
   const land = spring({
-    frame: t - HIT,
+    frame: t - landEl.start,
     fps,
     config: { damping: 18, stiffness: 150, mass: 0.8 },
   });
-  const landO = interpolate(t, [HIT, HIT + 8], [0, 1], CLAMP);
-  const blur = interpolate(t, [HIT, HIT + 14], [1, 0], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const count = interpolate(t, [HIT, HIT + 26], [0.82, 1], {
+  const landO = interpolate(
+    t,
+    [landEl.start, landEl.start + landEl.beat("fade")],
+    [0, 1],
+    CLAMP,
+  );
+  const blur = interpolate(
+    t,
+    [landEl.start, landEl.start + landEl.beat("blur")],
+    [1, 0],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const count = interpolate(t, [landEl.start, landEl.end], [0.82, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
-  const cap = interpolate(t, [HIT + 10, HIT + 28], [0, 1], {
+  const cap = interpolate(t, [captionEl.start, captionEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const settle = interpolate(t, [HIT - 4, HIT + 18], [0, 1], {
+  const settle = interpolate(t, [settleEl.start, settleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const push = interpolate(t, [0, 150], [0.965, 1.005], {
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0.965, 1.005], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const stage = interpolate(t, [0, 8], [0.5, 1], CLAMP);
+  const stage = interpolate(t, [stageEl.start, stageEl.end], [0.5, 1], CLAMP);
   // The push runs for the whole scene, so its text leans until it stops.
-  const pushing = t > 0 && t < 150;
+  const pushing = t > pushEl.start && t < pushEl.end;
 
   const numSize = 136 * u;
   const blockLeft = tgtX + tgtW + 40 * u;
@@ -354,7 +371,7 @@ export function SankeyFlow({
               {nodes.map((n) => {
                 const front = interpolate(
                   t,
-                  [n.flowAt, n.flowAt + flowLength],
+                  [n.flow.start, n.flow.end],
                   [0, 1 + FEATHER],
                   { ...CLAMP, easing: EASE_FLOW },
                 );
@@ -390,7 +407,7 @@ export function SankeyFlow({
             </defs>
 
             {nodes.map((n) => {
-              if (t < n.flowAt) return null;
+              if (t < n.flow.start) return null;
               const d = [
                 `M${xs} ${n.y0}`,
                 `C${mx} ${n.y0} ${mx} ${n.t0} ${xt} ${n.t0}`,
@@ -412,7 +429,7 @@ export function SankeyFlow({
             })}
 
             {nodes.map((n) => {
-              const k = interpolate(t, [n.inAt, n.inAt + 16], [0, 1], {
+              const k = interpolate(t, [n.node.start, n.node.end], [0, 1], {
                 ...CLAMP,
                 easing: EASE_OUT,
               });
@@ -435,7 +452,7 @@ export function SankeyFlow({
             {nodes.map((n) => {
               const front = interpolate(
                 t,
-                [n.flowAt, n.flowAt + flowLength],
+                [n.flow.start, n.flow.end],
                 [0, 1 + FEATHER],
                 { ...CLAMP, easing: EASE_FLOW },
               );
@@ -459,10 +476,18 @@ export function SankeyFlow({
           </svg>
 
           {nodes.map((n) => {
-            const k = interpolate(t, [n.inAt + 2, n.inAt + 18], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
+            const k = interpolate(
+              t,
+              [
+                n.node.start + n.node.beat("labelAt"),
+                n.node.start + n.node.beat("label"),
+              ],
+              [0, 1],
+              {
+                ...CLAMP,
+                easing: EASE_OUT,
+              },
+            );
             return (
               <div
                 key={n.label}
