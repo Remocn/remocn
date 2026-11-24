@@ -11497,10 +11497,19 @@
         {
           "path": "hidden-word/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/hidden-word.tsx"
+          "target": "components/remocn/hidden-word/index.tsx"
+        },
+        {
+          "path": "hidden-word/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/hidden-word/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "column-reflow",

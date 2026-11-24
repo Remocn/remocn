@@ -11492,12 +11492,21 @@
       "title": "Hidden Word",
       "description": "A word is found hidden inside a sentence and lifted out as a large italic title.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/hidden-word/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/hidden-word.tsx"
+          "target": "components/remocn/hidden-word/index.tsx"
+        },
+        {
+          "path": "registry/remocn/hidden-word/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/hidden-word/timeline.ts"
         }
       ],
       "type": "registry:component"
