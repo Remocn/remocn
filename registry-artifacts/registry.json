@@ -12759,12 +12759,21 @@
       "title": "Flow Arrow",
       "description": "A dotted gradient arrow zigzags upward beside a 3x growth stat.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/flow-arrow/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/flow-arrow.tsx"
+          "target": "components/remocn/flow-arrow/index.tsx"
+        },
+        {
+          "path": "registry/remocn/flow-arrow/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/flow-arrow/timeline.ts"
         }
       ],
       "type": "registry:component"
