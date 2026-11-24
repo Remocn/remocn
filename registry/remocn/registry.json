@@ -12794,10 +12794,19 @@
         {
           "path": "slope-chart/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/slope-chart.tsx"
+          "target": "components/remocn/slope-chart/index.tsx"
+        },
+        {
+          "path": "slope-chart/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/slope-chart/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "ridgeline",

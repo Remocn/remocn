@@ -12789,12 +12789,21 @@
       "title": "Slope Chart",
       "description": "A slope chart draws before/after lines, the hero line rising to a 6.8x stat.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/slope-chart/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/slope-chart.tsx"
+          "target": "components/remocn/slope-chart/index.tsx"
+        },
+        {
+          "path": "registry/remocn/slope-chart/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/slope-chart/timeline.ts"
         }
       ],
       "type": "registry:component"
