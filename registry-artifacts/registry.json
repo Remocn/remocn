@@ -8841,12 +8841,21 @@
       "title": "Flick Swap",
       "description": "A headline flicks into place with a gradient second line, 'Grounds that never sit still.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/flick-swap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/flick-swap.tsx"
+          "target": "components/remocn/flick-swap/index.tsx"
+        },
+        {
+          "path": "registry/remocn/flick-swap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/flick-swap/timeline.ts"
         }
       ],
       "type": "registry:component"
