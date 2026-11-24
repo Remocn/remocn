@@ -5,7 +5,16 @@ import { AbsoluteFill, interpolate, spring } from "remotion";
 import { Caret } from "@/components/remocn/caret";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
 import { useTypewriter } from "@/lib/remocn-ui";
+import {
+  DEFAULT_PROMPT,
+  TYPE_CPS,
+  TYPE_START,
+  typedFrames,
+  type V0ElementId,
+  v0Timeline,
+} from "./timeline";
 
 const { fontFamily: SANS_FAMILY } = loadFont();
 
@@ -16,6 +25,12 @@ export interface V0Props {
   modelName?: string;
   projectName?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the intro, the greeting, the box and the
+   * typing, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `speed`.
+   */
+  timing?: Timing<V0ElementId>;
 }
 
 interface Theme {
@@ -52,9 +67,9 @@ export const THEMES: Record<"light" | "dark", Theme> = {
   },
 };
 
-export const TYPING_START_FRAME = 42;
+export const TYPING_START_FRAME = TYPE_START;
 
-export const TYPING_CPS = 22;
+export const TYPING_CPS = TYPE_CPS;
 
 export function morphProgressAt(
   frame: number,
@@ -72,10 +87,11 @@ export function morphProgressAt(
 function introBounceIn(
   frame: number,
   fps: number,
+  at: number,
 ): { translateY: number; scale: number } {
   const s = spring({
     fps,
-    frame,
+    frame: frame - at,
     config: { damping: 14, stiffness: 110, mass: 0.7 },
   });
   const translateY = interpolate(s, [0, 1], [28, 0]);
@@ -97,12 +113,18 @@ function fadeUpAt(
   };
 }
 
+interface IntroSpans {
+  bounce: number;
+  heading: [number, number];
+  box: [number, number];
+}
+
 // The intro spring overshoots and never quite lands, so "moving" compares the
 // travel itself with the neighbouring frames.
-function introAt(frame: number, fps: number) {
-  const intro = introBounceIn(frame, fps);
-  const heading = fadeUpAt(frame, [4, 20]);
-  const box = fadeUpAt(frame, [10, 26]);
+function introAt(frame: number, fps: number, spans: IntroSpans) {
+  const intro = introBounceIn(frame, fps, spans.bounce);
+  const heading = fadeUpAt(frame, spans.heading);
+  const box = fadeUpAt(frame, spans.box);
   return {
     headingY: heading.translateY + intro.translateY * 0.4,
     boxY: box.translateY + intro.translateY * 0.6,
@@ -204,16 +226,33 @@ function ArrowUpIcon({ size, color }: { size: number; color: string }) {
   );
 }
 
-export function V0({
-  greeting = "What do you want to create?",
-  placeholder = "Ask v0 to build…",
-  prompt = "a landing page for my SaaS with pricing and testimonials",
-  modelName = "v0 Max",
-  projectName = "Project",
-  speed = 1,
-}: V0Props) {
+export function V0(props: V0Props) {
+  const {
+    greeting = "What do you want to create?",
+    placeholder = "Ask v0 to build…",
+    prompt = DEFAULT_PROMPT,
+    modelName = "v0 Max",
+    projectName = "Project",
+    speed = 1,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(v0Timeline, props, durationInFrames * speed, timing);
+  const headingEl = tl.get("heading");
+  const boxEl = tl.get("box");
+  const typing = tl.get("typing");
+  const spans: IntroSpans = {
+    bounce: tl.get("bounce").start,
+    heading: [headingEl.start, headingEl.end],
+    box: [boxEl.start, boxEl.end],
+  };
+  // A trimmed or stretched typing element types faster or slower; untouched,
+  // the ratio is exactly 1.
+  const cps =
+    typing.length > 0
+      ? TYPING_CPS * (typedFrames(prompt) / typing.length)
+      : TYPING_CPS;
   const glide = useGlide();
   const t = THEMES.dark;
 
@@ -222,19 +261,23 @@ export function V0({
   const stageScale = Math.min(width / refW, height / refH);
 
   const tw = useTypewriter(prompt, {
-    cps: TYPING_CPS,
+    cps,
     speed,
-    startFrame: TYPING_START_FRAME,
+    startFrame: typing.start,
   });
   const visibleText = tw.text;
   const showText = tw.count > 0;
-  const morph = morphProgressAt(frame, { fps, speed });
+  const morph = morphProgressAt(frame, {
+    fps,
+    speed,
+    startFrame: typing.start,
+  });
 
-  const headingFade = fadeUpAt(frame * speed, [4, 20]);
-  const boxFade = fadeUpAt(frame * speed, [10, 26]);
-  const now = introAt(frame * speed, fps);
-  const prev = introAt((frame - 1) * speed, fps);
-  const next = introAt((frame + 1) * speed, fps);
+  const headingFade = fadeUpAt(frame * speed, spans.heading);
+  const boxFade = fadeUpAt(frame * speed, spans.box);
+  const now = introAt(frame * speed, fps, spans);
+  const prev = introAt((frame - 1) * speed, fps, spans);
+  const next = introAt((frame + 1) * speed, fps, spans);
   const headingMoving =
     Math.abs(next.headingY - now.headingY) > 1e-3 ||
     Math.abs(now.headingY - prev.headingY) > 1e-3;

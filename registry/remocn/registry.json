@@ -2673,13 +2673,19 @@
         "@remocn/caret",
         "@remocn/remocn-ui",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "v0/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/v0.tsx"
+          "target": "components/remocn/v0/index.tsx"
+        },
+        {
+          "path": "v0/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/v0/timeline.ts"
         }
       ]
     },
