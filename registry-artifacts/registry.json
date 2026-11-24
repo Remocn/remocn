@@ -5075,12 +5075,17 @@
       "title": "Parallax Depth",
       "description": "A flat landscape built from depth layers trucks sideways with a gentle push-in, near layers sliding faster than far ones.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/parallax-depth/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/parallax-depth.tsx"
+          "target": "components/remocn/parallax-depth/index.tsx"
+        },
+        {
+          "path": "registry/remocn/parallax-depth/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/parallax-depth/timeline.ts"
         }
       ],
       "type": "registry:component"
