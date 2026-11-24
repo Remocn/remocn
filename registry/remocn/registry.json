@@ -478,10 +478,19 @@
         {
           "path": "outline-fill-track-text/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/outline-fill-track-text.tsx"
+          "target": "components/remocn/outline-fill-track-text/index.tsx"
+        },
+        {
+          "path": "outline-fill-track-text/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/outline-fill-track-text/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "gradient-scale-cut-text",
