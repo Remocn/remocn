@@ -17,6 +17,17 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_CLIPS,
+  type EditorClip,
+  type EditorScene,
+  type TimelineEditorElementId,
+  timelineEditorTimeline,
+} from "./timeline";
+
+export type { EditorClip, EditorScene };
+
 const { fontFamily: hanken } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
@@ -29,16 +40,6 @@ const manrope = loadManrope("normal", {
   weights: ["600"],
   subsets: ["latin"],
 });
-
-export type EditorScene = "logo" | "ui" | "end";
-
-export interface EditorClip {
-  name: string;
-  /** Clip length on the timeline, in seconds. */
-  seconds: number;
-  /** Which built-in animated scene the clip shows in the monitor. */
-  scene: EditorScene;
-}
 
 export interface TimelineEditorProps {
   /** Up to three video clips; they are dragged onto V1 in order. */
@@ -71,21 +72,15 @@ export interface TimelineEditorProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the window, each drag of a clip, the title and
+   * audio drops, the scrub and the export, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TimelineEditorElementId>;
 }
 
-const DEFAULT_CLIPS: EditorClip[] = [
-  { name: "intro-logo.mp4", seconds: 3.5, scene: "logo" },
-  { name: "dashboard.mov", seconds: 4, scene: "ui" },
-  { name: "end-card.mp4", seconds: 3.5, scene: "end" },
-];
-
 const TITLE_SPAN = { start: 0.5, len: 2.6 };
-const TITLE_AT = 130;
-const AUDIO_AT = 138;
-const SCRUB_AT = 156;
-const SCRUB_END = 232;
-const CLICK_AT = 258;
-const DONE_AT = 312;
 
 const ARROW =
   "M1 1 L1 18.5 L5.6 14.4 L8.7 21.6 L11.6 20.4 L8.5 13.2 L14.5 13.2 Z";
@@ -889,29 +884,55 @@ function ScaleLayer({
   );
 }
 
-export function TimelineEditor({
-  clips = DEFAULT_CLIPS,
-  projectName = "Launch video",
-  title = "Meet remocn",
-  audioName = "soundtrack.wav",
-  tagline = "Launch videos, built in code",
-  headline = "Ship your launch video",
-  url = "remocn.dev",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: TimelineEditorProps) {
+export function TimelineEditor(props: TimelineEditorProps) {
+  const {
+    clips = DEFAULT_CLIPS,
+    projectName = "Launch video",
+    title = "Meet remocn",
+    audioName = "soundtrack.wav",
+    tagline = "Launch videos, built in code",
+    headline = "Ship your launch video",
+    url = "remocn.dev",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const f = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    timelineEditorTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const editorEl = tl.get("editor");
+  const leanEl = tl.get("lean");
+  const settleEl = tl.get("settle");
+  const titleEl = tl.get("title");
+  const audioEl = tl.get("audio");
+  const scrubEl = tl.get("scrub");
+  const exportEl = tl.get("export");
+  const doneEl = tl.get("done");
+  const at = (
+    e: { start: number; beat: (name: string) => number },
+    b: string,
+  ) => e.start + e.beat(b);
+  const TITLE_AT = titleEl.start;
+  const AUDIO_AT = audioEl.start;
+  const SCRUB_AT = scrubEl.start;
+  const SCRUB_END = scrubEl.end;
+  const CLICK_AT = exportEl.start;
+  const DONE_AT = doneEl.start;
   const tall = height > width * 1.2;
   const u = tall ? width / 640 : Math.min(width / 1280, height / 720);
   const dw = width / u;
@@ -930,10 +951,15 @@ export function TimelineEditor({
   const clipH = L.v1.h - 6;
   const monH = (L.mon.w * 9) / 16;
 
-  const T = list.map((_, i) => {
-    const base = 6 + i * 40;
-    return { move: base, press: base + 18, drop: base + 38 };
-  });
+  const clipEls = list.map((_, i) => tl.get(`clip:${i}`));
+  const T = clipEls.map((e) => ({
+    move: e.start,
+    reach: at(e, "reach"),
+    press: at(e, "press"),
+    drop: at(e, "drop"),
+    flash: at(e, "flash"),
+    rest: at(e, "rest"),
+  }));
   const slot = list.map((k, i) => ({
     x: TX + starts[i] * PPS,
     y: L.v1.y + 3,
@@ -949,7 +975,9 @@ export function TimelineEditor({
   const scrubPts = [0, ...list.map((k, i) => starts[i] + k.seconds * 0.72)];
   scrubPts[scrubPts.length - 1] = total - 0.05;
   const scrubFr = scrubPts.map(
-    (_, i) => SCRUB_AT + 2 + ((SCRUB_END - SCRUB_AT - 2) * i) / list.length,
+    (_, i) =>
+      at(scrubEl, "grab") +
+      ((scrubEl.length - scrubEl.beat("grab")) * i) / list.length,
   );
   const pAt = (t: number) =>
     interpolate(t, scrubFr, scrubPts, { ...clamp, easing: MOVE });
@@ -967,25 +995,25 @@ export function TimelineEditor({
   let last = startPt;
   list.forEach((_, i) => {
     keys.push({ t: T[i].move, ...last });
-    keys.push({ t: T[i].press - 4, ...thumbC[i] });
+    keys.push({ t: T[i].reach, ...thumbC[i] });
     keys.push({ t: T[i].press, ...thumbC[i] });
     keys.push({ t: T[i].drop, ...dropC[i] });
     last = dropC[i];
   });
-  const lastDrop = list.length ? T[list.length - 1].drop : 0;
-  keys.push({ t: lastDrop + 4, ...last });
-  keys.push({ t: SCRUB_AT - 2, x: TX + 1, y: L.rulerY + 12 });
-  keys.push({ t: SCRUB_END + 6, x: TX + total * PPS, y: L.rulerY + 12 });
+  const scrubLeave = SCRUB_END + scrubEl.beat("leave");
+  keys.push({ t: list.length ? T[list.length - 1].rest : 4, ...last });
+  keys.push({ t: at(scrubEl, "arrive"), x: TX + 1, y: L.rulerY + 12 });
+  keys.push({ t: scrubLeave, x: TX + total * PPS, y: L.rulerY + 12 });
   const btnPt = { x: L.btn.x + L.btn.w / 2 + 8, y: L.btn.y + L.btn.h / 2 + 4 };
-  keys.push({ t: CLICK_AT - 4, ...btnPt });
-  keys.push({ t: CLICK_AT + 10, ...btnPt });
+  keys.push({ t: at(exportEl, "arrive"), ...btnPt });
+  keys.push({ t: at(exportEl, "leave"), ...btnPt });
   keys.push({
-    t: CLICK_AT + 36,
+    t: at(exportEl, "away"),
     x: btnPt.x - 150,
     y: btnPt.y + (tall ? 300 : 230),
   });
   const cursorAt = (t: number) => {
-    if (t >= SCRUB_AT && t <= SCRUB_END + 6)
+    if (t >= SCRUB_AT && t <= scrubLeave)
       return { x: headX + 1, y: L.rulerY + 12 };
     if (t <= keys[0].t) return keys[0];
     for (let i = 0; i < keys.length - 1; i++) {
@@ -1011,7 +1039,7 @@ export function TimelineEditor({
   };
   const press = Math.max(
     ...T.map((k) => pressAt(k.press, k.drop)),
-    pressAt(SCRUB_AT, SCRUB_END + 4),
+    pressAt(SCRUB_AT, SCRUB_END + scrubEl.beat("lift")),
     pressAt(CLICK_AT, CLICK_AT),
   );
 
@@ -1046,8 +1074,8 @@ export function TimelineEditor({
   const flashAt = (at: number) =>
     interpolate(f - at, [0, 2, 18], [0, 1, 0], { ...clamp, easing: MOVE });
   const flashes = [
-    ...T.map((k, i) => ({ v: flashAt(k.drop + 2), x: slot[i].x })),
-    { v: flashAt(TITLE_AT + 3), x: TX + TITLE_SPAN.start * PPS },
+    ...T.map((k, i) => ({ v: flashAt(k.flash), x: slot[i].x })),
+    { v: flashAt(at(titleEl, "flash")), x: TX + TITLE_SPAN.start * PPS },
   ];
   const titleFlash = flashes[flashes.length - 1].v;
   const titleIn = spring({ frame: f - TITLE_AT, fps, config: CARD });
@@ -1057,10 +1085,15 @@ export function TimelineEditor({
   // `top` clicks into place.
   const titleDrop = landed(-(1 - titleIn) * 30);
   const audioRise = landed((1 - audioIn) * 30);
-  const wave = interpolate(f, [AUDIO_AT + 2, AUDIO_AT + 30], [0, 1], {
-    ...clamp,
-    easing: ENTER,
-  });
+  const wave = interpolate(
+    f,
+    [at(audioEl, "waveAt"), at(audioEl, "waveEnd")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: ENTER,
+    },
+  );
 
   const placed = (i: number) => f >= T[i].drop;
   const active = list.findIndex(
@@ -1084,36 +1117,48 @@ export function TimelineEditor({
   const titleOn =
     f >= TITLE_AT && titleT >= 0 && titleT < TITLE_SPAN.len ? titleT : -1;
 
-  const pop = spring({ frame: f - CLICK_AT - 2, fps, config: CARD });
+  const popAfter = exportEl.beat("pop");
+  const pop = spring({ frame: f - CLICK_AT - popAfter, fps, config: CARD });
   const prog = interpolate(
     f,
-    [CLICK_AT + 8, CLICK_AT + 22, CLICK_AT + 34, DONE_AT - 4],
+    [
+      at(exportEl, "progAt"),
+      at(exportEl, "prog1"),
+      at(exportEl, "prog2"),
+      at(doneEl, "lead"),
+    ],
     [0, 0.41, 0.68, 1],
     { ...clamp, easing: MOVE },
   );
   const done = spring({ frame: f - DONE_AT, fps, config: CHIP });
-  const doneT = interpolate(f, [DONE_AT, DONE_AT + 8], [0, 1], {
+  const doneT = interpolate(f, [DONE_AT, doneEl.end], [0, 1], {
     ...clamp,
     easing: ENTER_SOFT,
   });
   const btnPress = pressAt(CLICK_AT, CLICK_AT);
   const exporting = f >= CLICK_AT && f < DONE_AT;
 
-  const enterAt = (t: number) => spring({ frame: t, fps, config: HEAVY });
+  const enterAt = (t: number) =>
+    spring({ frame: t - editorEl.start, fps, config: HEAVY });
   const enter = enterAt(f);
   const camAt = (t: number) =>
-    t > CLICK_AT - 30
-      ? interpolate(t, [CLICK_AT - 24, CLICK_AT + 4], [1, 1.05], {
-          ...clamp,
-          easing: CAMERA,
-        })
+    t > at(exportEl, "camSwitch")
+      ? interpolate(
+          t,
+          [at(exportEl, "camAt"), at(exportEl, "camEnd")],
+          [1, 1.05],
+          {
+            ...clamp,
+            easing: CAMERA,
+          },
+        )
       : interpolate(
           t,
-          [12, 42, lastDrop + 6, SCRUB_AT + 4],
+          [leanEl.start, leanEl.end, settleEl.start, settleEl.end],
           [1, 1.04, 1.04, 1],
           { ...clamp, easing: CAMERA },
         );
-  const exportPhase = f > CLICK_AT - 30;
+  const exportPhase = f > at(exportEl, "camSwitch");
   const cam = camAt(f);
   const carried = !still(camAt) || !still(enterAt);
   const origin = exportPhase
@@ -1181,10 +1226,15 @@ export function TimelineEditor({
                 backdropFilter: c.dark ? "blur(30px)" : undefined,
                 boxShadow: c.depth,
                 color: fg,
-                opacity: interpolate(f, [0, 10], [0, 1], {
-                  ...clamp,
-                  easing: ENTER_SOFT,
-                }),
+                opacity: interpolate(
+                  f,
+                  [editorEl.start, at(editorEl, "fade")],
+                  [0, 1],
+                  {
+                    ...clamp,
+                    easing: ENTER_SOFT,
+                  },
+                ),
                 transform: `translateY(${(1 - enter) * 40}px) scale(${0.97 + 0.03 * enter})${glide(!still(enterAt))}`,
               }}
             >
@@ -1686,7 +1736,7 @@ export function TimelineEditor({
                   </div>
                 ) : null,
               )}
-              {f >= SCRUB_AT - 6 ? (
+              {f >= at(scrubEl, "show") ? (
                 <div
                   style={{
                     position: "absolute",
@@ -1699,10 +1749,15 @@ export function TimelineEditor({
                       : undefined,
                     background: accent,
                     zIndex: 20,
-                    opacity: interpolate(f, [SCRUB_AT - 6, SCRUB_AT], [0, 1], {
-                      ...clamp,
-                      easing: ENTER,
-                    }),
+                    opacity: interpolate(
+                      f,
+                      [at(scrubEl, "show"), SCRUB_AT],
+                      [0, 1],
+                      {
+                        ...clamp,
+                        easing: ENTER,
+                      },
+                    ),
                   }}
                 >
                   <div
@@ -1733,7 +1788,7 @@ export function TimelineEditor({
                     boxSizing: "border-box",
                     zIndex: 35,
                     opacity: clamp01(pop * 1.4),
-                    transform: `translateY(${(1 - pop) * -10}px) scale(${0.95 + pop * 0.05})${glide(!still((t) => spring({ frame: t - CLICK_AT - 2, fps, config: CARD })))}`,
+                    transform: `translateY(${(1 - pop) * -10}px) scale(${0.95 + pop * 0.05})${glide(!still((t) => spring({ frame: t - CLICK_AT - popAfter, fps, config: CARD })))}`,
                     transformOrigin: "80% 0",
                     fontVariantNumeric: "tabular-nums",
                   }}
@@ -1857,7 +1912,7 @@ export function TimelineEditor({
                 </div>
               ) : null}
             </div>
-            {f >= 4 ? (
+            {f >= at(editorEl, "cursor") ? (
               <Cursor
                 x={L.win.x + curRest.x}
                 y={L.win.y + curRest.y}
