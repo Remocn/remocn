@@ -5,6 +5,12 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import { type RollingNumberElementId, rollingNumberTimeline } from "./timeline";
 
 const { fontFamily: MONO_FAMILY } = loadMono();
 
@@ -14,9 +20,13 @@ export interface RollingNumberProps {
   fontSize?: number;
   color?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the count, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<RollingNumberElementId>;
 }
 
-const COUNT_PORTION = 0.8;
 const COUNT_EASING = Easing.out(Easing.poly(4));
 const REVEAL_BAND = 0.4;
 const REVEAL_EASING = Easing.inOut(Easing.sin);
@@ -25,18 +35,13 @@ const REVEAL_RISE_EM = 0.32;
 function easedProgress(
   frame: number,
   speed: number,
-  durationInFrames: number,
+  count: ResolvedElement,
 ): number {
-  return interpolate(
-    frame * speed,
-    [0, durationInFrames * COUNT_PORTION],
-    [0, 1],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-      easing: COUNT_EASING,
-    },
-  );
+  return interpolate(frame * speed, [count.start, count.end], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: COUNT_EASING,
+  });
 }
 
 function placeTravel(start: number, end: number, place: number): number {
@@ -113,20 +118,30 @@ function DigitColumn({
   );
 }
 
-export function RollingNumber({
-  from = 0,
-  to = 24813,
-  fontSize = 120,
-  color = "#171717",
-  speed = 1,
-}: RollingNumberProps) {
+export function RollingNumber(props: RollingNumberProps) {
+  const {
+    from = 0,
+    to = 24813,
+    fontSize = 120,
+    color = "#171717",
+    speed = 1,
+    timing,
+  } = props;
   const frame = useSceneFrame();
   const { durationInFrames } = useSceneConfig();
+  // The count is timed against the composition length without `speed`.
+  const tl = useTimeline(
+    rollingNumberTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
+  const count = tl.get("count");
 
   const start = Math.max(0, Math.round(from));
   const end = Math.max(0, Math.round(to));
 
-  const e = easedProgress(frame, speed, durationInFrames);
+  const e = easedProgress(frame, speed, count);
   const current = start + e * (end - start);
 
   const maxVal = Math.max(start, end);
@@ -154,8 +169,7 @@ export function RollingNumber({
     // The tail of the ease still spins the low places hundreds of px a frame
     // when the progress looks done, so motion is read off the strip itself.
     const at = (f: number) =>
-      (startDigit + easedProgress(f, speed, durationInFrames) * travel) *
-      cellHeight;
+      (startDigit + easedProgress(f, speed, count) * travel) * cellHeight;
     const reveal = placeReveal(current, place);
     const moving =
       Math.abs(at(frame + 1) - at(frame)) > 1e-3 ||
