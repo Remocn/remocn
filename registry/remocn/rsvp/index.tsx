@@ -12,16 +12,25 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_FIELDS,
+  DEFAULT_HEADLINE,
+  DEFAULT_RSVP,
+  DEFAULT_RSVP_LABEL,
+  type InviteField,
+  type RsvpElementId,
+  rowsOf,
+  rsvpTimeline,
+  splitWords,
+} from "./timeline";
 
 const lexend = loadFont("normal", {
   weights: ["300", "400", "500"],
   subsets: ["latin"],
 });
 
-export interface RsvpField {
-  label: string;
-  value: string;
-}
+export type RsvpField = InviteField;
 
 export interface RsvpProps {
   headline?: string;
@@ -44,6 +53,12 @@ export interface RsvpProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single headline words, rows and the focus on
+   * the RSVP, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<RsvpElementId>;
 }
 
 const THEMES = {
@@ -155,15 +170,6 @@ function balanced(
   return greedy(words, adv, space, hi);
 }
 
-const splitWords = (s: string) => s.split(/\s+/).filter(Boolean);
-
-const DEFAULT_FIELDS: RsvpField[] = [
-  { label: "What", value: "Your launch film" },
-  { label: "When", value: "Whenever you’re ready" },
-  { label: "Where", value: "Your own repo" },
-  { label: "Bring", value: "The story. We brought the parts." },
-];
-
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -182,36 +188,34 @@ function ScaleLayer({
   );
 }
 
-export function Rsvp({
-  headline = "You’re invited.",
-  fields = DEFAULT_FIELDS,
-  rsvpLabel = "RSVP",
-  rsvp = "npx shadcn add @remocn/whip-pan",
-  accent,
-  ink,
-  background,
-  fontFamily = lexend.fontFamily,
-  fontWeight = 500,
-  stagger = 4,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: RsvpProps) {
+export function Rsvp(props: RsvpProps) {
+  const {
+    headline = DEFAULT_HEADLINE,
+    fields = DEFAULT_FIELDS,
+    rsvpLabel = DEFAULT_RSVP_LABEL,
+    rsvp = DEFAULT_RSVP,
+    accent,
+    ink,
+    background,
+    fontFamily = lexend.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
-  const Tt = durationInFrames * speed;
+  const tl = useTimeline(rsvpTimeline, props, durationInFrames * speed, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const rows = [
-    ...fields.filter((f) => f.label || f.value),
-    ...(rsvp ? [{ label: rsvpLabel, value: rsvp }] : []),
-  ];
+  const rows = rowsOf(fields, rsvpLabel, rsvp);
   const headWords = splitWords(headline);
   const rowWords = rows.map((r) => splitWords(r.value));
   const w = useWidths(
@@ -290,14 +294,9 @@ export function Rsvp({
   const rowsTop = top + B.headH + B.gapHR;
 
   const n = rows.length;
-  const rowStart = 26;
-  const span = Math.max(n * 10, Math.min(Tt * 0.5, Tt - 70) - rowStart);
-  const rowStep = Math.min(16, span / Math.max(1, n));
-  const rowAt = (k: number) =>
-    rowStart + k * rowStep + (rsvp && k === n - 1 ? 10 : 0);
-  const lastAt = rowAt(n - 1);
-  const focus = rsvp
-    ? interpolate(t, [lastAt + 12, lastAt + 30], [0, 1], {
+  const focusEl = rsvp && n > 0 ? tl.get("focus") : null;
+  const focus = focusEl
+    ? interpolate(t, [focusEl.start, focusEl.end], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       })
@@ -321,9 +320,9 @@ export function Rsvp({
       }}
     >
       {line.map((word, wi) => {
-        const s = 3 + wordIndex * stagger;
+        const hw = tl.get(`word:${wordIndex}`);
         wordIndex++;
-        const e = interpolate(t, [s, s + 20], [0, 1], {
+        const e = interpolate(t, [hw.start, hw.end], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
         });
@@ -349,8 +348,9 @@ export function Rsvp({
   const rowNodes = rows.map((row, k) => {
     const rowTop = y;
     y += B.rowHs[k] + B.rowGap;
-    const at = rowAt(k);
-    const le = interpolate(t, [at, at + 14], [0, 1], {
+    const re = tl.get(`row:${k}`);
+    const at = re.start;
+    const le = interpolate(t, [at, at + re.beat("label")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -403,8 +403,9 @@ export function Rsvp({
             return (
               <div key={`v${li}`}>
                 {line.map((word, wi) => {
-                  const s = at + 5 + (before + wi) * 2;
-                  const e = interpolate(t, [s, s + 16], [0, 1], {
+                  const s =
+                    at + re.beat("words") + (before + wi) * re.beat("wordStep");
+                  const e = interpolate(t, [s, s + re.beat("word")], [0, 1], {
                     ...CLAMP,
                     easing: EASE_OUT,
                   });

@@ -6895,12 +6895,21 @@
       "title": "Rsvp",
       "description": "\"You're invited.\" with a what/when/where table ending on an RSVP install command.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/rsvp/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/rsvp.tsx"
+          "target": "components/remocn/rsvp/index.tsx"
+        },
+        {
+          "path": "registry/remocn/rsvp/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/rsvp/timeline.ts"
         }
       ],
       "type": "registry:component"
