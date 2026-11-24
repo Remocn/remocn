@@ -2620,13 +2620,19 @@
         "@remocn/caret",
         "@remocn/remocn-ui",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/claude-chat/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/claude-chat.tsx"
+          "target": "components/remocn/claude-chat/index.tsx"
+        },
+        {
+          "path": "registry/remocn/claude-chat/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/claude-chat/timeline.ts"
         }
       ],
       "type": "registry:component"
