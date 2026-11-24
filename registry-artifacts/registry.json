@@ -7900,12 +7900,21 @@
       "title": "Uncomment Line",
       "description": "Three lines are uncommented one by one in code style: 'Fork the scenes. Change anything. Own the cut.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/uncomment-line/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/uncomment-line.tsx"
+          "target": "components/remocn/uncomment-line/index.tsx"
+        },
+        {
+          "path": "registry/remocn/uncomment-line/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/uncomment-line/timeline.ts"
         }
       ],
       "type": "registry:component"

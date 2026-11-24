@@ -7905,10 +7905,19 @@
         {
           "path": "uncomment-line/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/uncomment-line.tsx"
+          "target": "components/remocn/uncomment-line/index.tsx"
+        },
+        {
+          "path": "uncomment-line/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/uncomment-line/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "enhance-count",
