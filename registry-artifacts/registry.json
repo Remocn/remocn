@@ -15189,13 +15189,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/pricing-reveal/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/pricing-reveal.tsx"
+          "target": "components/remocn/pricing-reveal/index.tsx"
+        },
+        {
+          "path": "registry/remocn/pricing-reveal/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/pricing-reveal/timeline.ts"
         }
       ],
       "type": "registry:component"
