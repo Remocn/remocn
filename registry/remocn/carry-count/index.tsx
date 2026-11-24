@@ -12,6 +12,17 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CarryCountElementId,
+  COL_GAP,
+  carryCountTimeline,
+  carryPlan,
+  DEFAULT_FROM,
+  DEFAULT_LABEL,
+  DEFAULT_VALUE,
+  labelLines,
+} from "./timeline";
 
 const nunito = loadFont("normal", {
   weights: ["400", "500"],
@@ -39,6 +50,12 @@ export interface CarryCountProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the fade-in, the label lines and each
+   * addition step, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CarryCountElementId>;
 }
 
 const THEMES = {
@@ -59,10 +76,6 @@ const THEMES = {
 const FONT_PX = 200;
 const TRACK = -0.02;
 const LABEL_TRACK = -0.01;
-const START = 16;
-const STEP_LENS = [26, 20, 16, 14, 13, 12, 12, 12];
-const COL_GAP = 5;
-const NEW_COL_GAP = 3;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN = Easing.bezier(0.5, 0, 0.9, 0.4);
@@ -153,57 +166,6 @@ function useMetrics(
   return metrics;
 }
 
-function digitsOf(n: number) {
-  return Array.from(String(Math.max(0, Math.round(n))))
-    .reverse()
-    .map(Number);
-}
-
-interface Change {
-  col: number;
-  at: number;
-  digit: number;
-}
-
-interface Carry {
-  col: number;
-  at: number;
-  land: number;
-}
-
-function plan(from: number, value: number, steps: number) {
-  const n = Math.max(1, Math.round(steps));
-  const changes: Change[] = [];
-  const carries: Carry[] = [];
-  let cur = digitsOf(from);
-  let at = START;
-  for (let s = 0; s < n; s++) {
-    const target = Math.round(from + ((value - from) * (s + 1)) / n);
-    const prev = Math.round(from + ((value - from) * s) / n);
-    const add = digitsOf(Math.max(0, target - prev));
-    const next: number[] = [];
-    let carry = 0;
-    let time = at;
-    const len = Math.max(cur.length, add.length);
-    for (let i = 0; i < len || carry > 0; i++) {
-      const sum = (cur[i] ?? 0) + (add[i] ?? 0) + carry;
-      const d = sum % 10;
-      next.push(d);
-      if (d !== cur[i] || i >= cur.length) {
-        changes.push({ col: i, at: time, digit: d });
-      }
-      carry = sum >= 10 ? 1 : 0;
-      const gap = i + 1 >= len ? NEW_COL_GAP : COL_GAP;
-      if (carry) carries.push({ col: i, at: time, land: time + gap });
-      time += gap;
-    }
-    cur = next;
-    at += STEP_LENS[Math.min(s, STEP_LENS.length - 1)];
-  }
-  const end = changes.reduce((m, c) => Math.max(m, c.at), START);
-  return { start: digitsOf(from), changes, carries, cols: cur.length, end };
-}
-
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -227,44 +189,63 @@ function impact(u: number) {
   return Math.exp(-u / 3.2) * Math.cos(u * 0.62);
 }
 
-export function CarryCount({
-  value = 13580,
-  from = 2855,
-  steps = 5,
-  label = "scenes students\nbuilt in week one",
-  accent,
-  ink,
-  background,
-  fontFamily = nunito.fontFamily,
-  fontWeight = 500,
-  separator = ",",
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: CarryCountProps) {
+export function CarryCount(props: CarryCountProps) {
+  const {
+    value = DEFAULT_VALUE,
+    from = DEFAULT_FROM,
+    steps = 5,
+    label = DEFAULT_LABEL,
+    accent,
+    ink,
+    background,
+    fontFamily = nunito.fontFamily,
+    fontWeight = 500,
+    separator = ",",
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const tAt = (f: number) => Math.max(0, f - delay) * speed;
   const t = tAt(frame);
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    carryCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introEl = tl.get("intro");
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const disc = accent ?? c.accent;
   const fg = ink ?? c.ink;
-  const lines = useMemo(
-    () =>
-      label
-        .split("\n")
-        .map((l) => l.trim())
-        .filter(Boolean),
-    [label],
-  );
+  const lines = useMemo(() => labelLines(label), [label]);
   const m = useMetrics(lines, fontFamily, fontWeight, separator);
-  const p = useMemo(
-    () => plan(Math.min(from, value), Math.max(from, value), steps),
-    [from, value, steps],
-  );
+  const p = useMemo(() => {
+    const plan = carryPlan(Math.min(from, value), Math.max(from, value), steps);
+    // A step stretched by `timing` ripples through its columns as much
+    // slower; without it the pace is exactly 1.
+    const stepEls = plan.stepAt.map((_, s) => tl.get(`step:${s}`));
+    const atOf = (step: number, off: number) =>
+      stepEls[step].start + off * (stepEls[step].beat("ripple") / COL_GAP);
+    return {
+      start: plan.start,
+      cols: plan.cols,
+      changes: plan.changes.map((ch) => ({
+        col: ch.col,
+        at: atOf(ch.step, ch.off),
+        digit: ch.digit,
+      })),
+      carries: plan.carries.map((k) => {
+        const at = atOf(k.step, k.off);
+        return { col: k.col, at, land: atOf(k.step, k.off + k.gap) };
+      }),
+    };
+  }, [from, value, steps, tl]);
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -331,7 +312,7 @@ export function CarryCount({
     return { d, last };
   };
 
-  const intro = interpolate(t, [0, 18], [0, 1], {
+  const intro = interpolate(t, [introEl.start, introEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -474,7 +455,8 @@ export function CarryCount({
   }
 
   const labelNodes = lines.map((line, k) => {
-    const lp = interpolate(t, [6 + k * 4, 26 + k * 4], [0, 1], {
+    const lineEl = tl.get(`line:${k}`);
+    const lp = interpolate(t, [lineEl.start, lineEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });

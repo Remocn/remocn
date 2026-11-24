@@ -7934,12 +7934,21 @@
       "title": "Carry Count",
       "description": "A big counter reaches 13,580 with a small caption, \"scenes students built in week one\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/carry-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/carry-count.tsx"
+          "target": "components/remocn/carry-count/index.tsx"
+        },
+        {
+          "path": "registry/remocn/carry-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/carry-count/timeline.ts"
         }
       ],
       "type": "registry:component"
