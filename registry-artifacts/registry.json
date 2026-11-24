@@ -4652,12 +4652,17 @@
       "title": "Liquid Fill",
       "description": "A drop falls into an outlined mark and liquid rises with a sloshing, damping surface and bubbles until the mark is solid.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/liquid-fill/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/liquid-fill.tsx"
+          "target": "components/remocn/liquid-fill/index.tsx"
+        },
+        {
+          "path": "registry/remocn/liquid-fill/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/liquid-fill/timeline.ts"
         }
       ],
       "type": "registry:component"
