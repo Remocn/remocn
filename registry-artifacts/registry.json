@@ -13336,12 +13336,21 @@
       "title": "Unit Grid",
       "description": "A 10x10 dot grid lights up 33 dots next to a 33 / 100 stat line.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/unit-grid/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/unit-grid.tsx"
+          "target": "components/remocn/unit-grid/index.tsx"
+        },
+        {
+          "path": "registry/remocn/unit-grid/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/unit-grid/timeline.ts"
         }
       ],
       "type": "registry:component"
