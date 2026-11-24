@@ -11281,12 +11281,21 @@
       "title": "Word Acts",
       "description": "Short acts of one word each, with changing styles, end on a gradient word.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/word-acts/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/word-acts.tsx"
+          "target": "components/remocn/word-acts/index.tsx"
+        },
+        {
+          "path": "registry/remocn/word-acts/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/word-acts/timeline.ts"
         }
       ],
       "type": "registry:component"
