@@ -128,12 +128,21 @@
       "title": "Micro Scale Fade",
       "description": "A calm, tiny scale pop used as subtle premium polish for labels and headings.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/micro-scale-fade/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/micro-scale-fade.tsx"
+          "target": "components/remocn/micro-scale-fade/index.tsx"
+        },
+        {
+          "path": "registry/remocn/micro-scale-fade/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/micro-scale-fade/timeline.ts"
         }
       ],
       "type": "registry:component"
