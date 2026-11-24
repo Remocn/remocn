@@ -66,6 +66,10 @@ const FOR_VIDEO = [
 /** The answer page for "why do AI-made Remotion videos look generic?". */
 export const NON_GENERIC_GUIDE_PATH = "/docs/guides/non-generic-ai-video";
 
+/** The answer page for "how do I get Cursor or Codex to make a Remotion video that doesn't look generic?". */
+export const CURSOR_CODEX_GUIDE_PATH =
+  "/docs/guides/non-generic-remotion-videos-cursor-codex";
+
 export const AGENT_SKILL_PATH = "/docs/getting-started/agent-skill";
 
 export const PLUGIN_PATH = "/docs/getting-started/plugin";
@@ -91,6 +95,8 @@ const AGENT_VIDEO = [
   "- Codex: `codex plugin marketplace add Remocn/remocn`, `codex plugin add remocn@remocn`, then `/remocn:video <brief>`.",
   `- Cursor: \`npx skills add Remocn/remocn --skill remocn -a cursor\`, plus the MCP server (${MCP_URL}) in \`.cursor/mcp.json\`.`,
   "- GitHub Copilot or any other agent that loads skills: `npx skills add Remocn/remocn` and pick the agent when prompted.",
+  "",
+  `Cursor and Codex specifically: [How do I get Cursor or Codex to make a Remotion video that doesn't look generic?](${SITE_URL}${CURSOR_CODEX_GUIDE_PATH}.md) has setup steps tested with Codex CLI 0.172.0 and skills CLI 1.9.0, a causes-and-fixes table (easing, fonts, motion blur, flat layouts), three prompts with before/after clips and a Remotion Skills alone vs. plus Remocn comparison.`,
   "",
   "**Is there a Claude Code skill or plugin for creating Remotion videos? Which agent skills exist for video creation?**",
   "",
