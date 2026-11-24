@@ -14963,13 +14963,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/notification-avalanche/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/notification-avalanche.tsx"
+          "target": "components/remocn/notification-avalanche/index.tsx"
+        },
+        {
+          "path": "registry/remocn/notification-avalanche/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/notification-avalanche/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -15,6 +15,15 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  type NotificationAvalancheElementId,
+  notificationAvalancheTimeline,
+} from "./timeline";
 
 const hanken = loadFont("normal", {
   weights: ["300", "400"],
@@ -60,6 +69,12 @@ export interface NotificationAvalancheProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the phone, the counter, each notification
+   * landing, the compress, the swipe and the clear copy, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<NotificationAvalancheElementId>;
 }
 
 const DEFAULT_NOTIFICATIONS: AvalancheNotification[] = [
@@ -126,18 +141,17 @@ const SH = 852;
 const BEZEL = 11;
 const CARD_H = 72;
 const STEP = CARD_H + 8;
-const SWIPE = 66;
-const CLEAR = SWIPE + 7;
-
-const ARRIVE: number[] = (() => {
-  const out: number[] = [];
-  for (let t = 8, i = 0; t < SWIPE - 4; i++) {
-    out.push(Math.round(t));
-    t += Math.max(2.5, 14 * 0.66 ** i);
-  }
-  return out;
-})();
-const COMPRESS = ARRIVE[3] + 2;
+type El = ResolvedElement<NotificationAvalancheElementId>;
+/** The resolved schedule the parts of the scene read. */
+interface Sched {
+  /** First frame of each notification, in order. */
+  arrive: number[];
+  count: El;
+  caption: El;
+  compress: El;
+  swipe: El;
+  clear: El;
+}
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
@@ -321,6 +335,7 @@ function Stack({
   maxRows,
   from,
   lk,
+  s: sched,
 }: {
   f: number;
   fps: number;
@@ -330,16 +345,26 @@ function Stack({
   maxRows: number;
   from: "top" | "right";
   lk: Look;
+  s: Sched;
 }) {
   const glide = useGlide();
-  const c = spring({ frame: f - COMPRESS, fps, config: HEAVY });
-  const arrived = ARRIVE.filter((t) => t <= f).length;
-  const enters = ARRIVE.map((t) => spring({ frame: f - t, fps, config: CARD }));
+  const { arrive, swipe } = sched;
+  const c = spring({ frame: f - sched.compress.start, fps, config: HEAVY });
+  const arrived = arrive.filter((t) => t <= f).length;
+  const enters = arrive.map((t) => spring({ frame: f - t, fps, config: CARD }));
   const swipeT = (i: number) =>
-    interpolate(f, [SWIPE + i * 0.75, SWIPE + 8 + i * 0.75], [0, 1], {
-      ...clamp,
-      easing: EXIT,
-    });
+    interpolate(
+      f,
+      [
+        swipe.start + i * swipe.beat("stagger"),
+        swipe.start + swipe.beat("card") + i * swipe.beat("stagger"),
+      ],
+      [0, 1],
+      {
+        ...clamp,
+        easing: EXIT,
+      },
+    );
   const away = (i: number): React.CSSProperties => {
     const st = swipeT(i);
     return {
@@ -447,12 +472,27 @@ function Stack({
   );
 }
 
-function ClearMark({ f, fps, size }: { f: number; fps: number; size: number }) {
-  const pop = spring({ frame: f - CLEAR, fps, config: CHIP });
-  const draw = interpolate(f, [CLEAR + 2, CLEAR + 14], [0, 1], {
-    ...clamp,
-    easing: LIGHT,
-  });
+function ClearMark({
+  f,
+  fps,
+  size,
+  clear,
+}: {
+  f: number;
+  fps: number;
+  size: number;
+  clear: El;
+}) {
+  const pop = spring({ frame: f - clear.start, fps, config: CHIP });
+  const draw = interpolate(
+    f,
+    [clear.start + clear.beat("draw"), clear.start + clear.beat("drawEnd")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: LIGHT,
+    },
+  );
   return (
     <svg
       width={size}
@@ -522,6 +562,7 @@ function LockScreen({
   date,
   time,
   lk,
+  s: sched,
 }: {
   f: number;
   fps: number;
@@ -530,6 +571,7 @@ function LockScreen({
   date: string;
   time: string;
   lk: Look;
+  s: Sched;
 }) {
   return (
     <div
@@ -655,6 +697,7 @@ function LockScreen({
           maxRows={5}
           from="top"
           lk={lk}
+          s={sched}
         />
       </div>
       <div
@@ -667,7 +710,7 @@ function LockScreen({
           justifyContent: "center",
         }}
       >
-        <ClearMark f={f} fps={fps} size={64} />
+        <ClearMark f={f} fps={fps} size={64} clear={sched.clear} />
       </div>
       <div
         style={{
@@ -707,8 +750,10 @@ function SideCopy({
   lk,
   align,
   accent,
+  s: sched,
 }: {
   f: number;
+  s: Sched;
   accent: string;
   total: number;
   counterLabel: string;
@@ -719,40 +764,80 @@ function SideCopy({
   align: "left" | "center";
 }) {
   const glide = useGlide();
-  const arrived = ARRIVE.filter((t) => t <= f).length;
-  const countT = interpolate(f, [COMPRESS + 2, SWIPE - 4], [0, 1], clamp);
+  const { arrive, compress, swipe, clear, count: countEl, caption } = sched;
+  const arrived = arrive.filter((t) => t <= f).length;
+  const countT = interpolate(
+    f,
+    [
+      compress.start + compress.beat("count"),
+      swipe.start + swipe.beat("countEnd"),
+    ],
+    [0, 1],
+    clamp,
+  );
   const count = Math.round(Math.max(arrived, 4 + (total - 4) * countT ** 2.4));
-  const tick = arrived > 0 ? f - ARRIVE[arrived - 1] : 99;
+  const tick = arrived > 0 ? f - arrive[arrived - 1] : 99;
   const punch = 1 + 0.035 * Math.exp(-Math.max(0, tick) / 2.2);
-  const numIn = interpolate(f, [2, 14], [0, 1], { ...clamp, easing: ENTER });
-  const numOut = interpolate(f, [SWIPE - 2, SWIPE + 6], [0, 1], {
-    ...clamp,
-    easing: EXIT,
-  });
-  const capIn = interpolate(f, [6, 18], [0, 1], { ...clamp, easing: ENTER });
-  const payIn = interpolate(f, [CLEAR, CLEAR + 14], [0, 1], {
+  const numIn = interpolate(f, [countEl.start, countEl.end], [0, 1], {
     ...clamp,
     easing: ENTER,
   });
-  const subIn = interpolate(f, [CLEAR + 5, CLEAR + 19], [0, 1], {
+  const numOut = interpolate(
+    f,
+    [swipe.start + swipe.beat("out"), swipe.start + swipe.beat("outEnd")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: EXIT,
+    },
+  );
+  const capIn = interpolate(f, [caption.start, caption.end], [0, 1], {
     ...clamp,
-    easing: LIGHT,
+    easing: ENTER,
   });
-  const rule = interpolate(f, [CLEAR + 8, CLEAR + 24], [0, 1], {
-    ...clamp,
-    easing: MOVE,
-  });
-  const drift = interpolate(f, [CLEAR, CLEAR + 60], [0, 1], {
-    ...clamp,
-    easing: MOVE,
-  });
+  const payIn = interpolate(
+    f,
+    [clear.start, clear.start + clear.beat("title")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: ENTER,
+    },
+  );
+  const subIn = interpolate(
+    f,
+    [clear.start + clear.beat("sub"), clear.start + clear.beat("subEnd")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: LIGHT,
+    },
+  );
+  const rule = interpolate(
+    f,
+    [clear.start + clear.beat("rule"), clear.start + clear.beat("ruleEnd")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: MOVE,
+    },
+  );
+  const drift = interpolate(
+    f,
+    [clear.start, clear.start + clear.beat("drift")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: MOVE,
+    },
+  );
   const origin = align === "left" ? "0% 100%" : "50% 100%";
   const numMoving = midway(numIn) || midway(numOut);
   // The punch decays without ever landing, so it is tested frame to frame in
   // px at the digits' size.
   const punchAt = (ff: number) => {
-    const n = ARRIVE.filter((t) => t <= ff).length;
-    const tk = n > 0 ? ff - ARRIVE[n - 1] : 99;
+    const n = arrive.filter((t) => t <= ff).length;
+    const tk = n > 0 ? ff - arrive[n - 1] : 99;
     return 0.035 * size * Math.exp(-Math.max(0, tk) / 2.2);
   };
   const punchMoving = stirs(punchAt, f, 1, 1e-3);
@@ -881,31 +966,57 @@ function ScaleLayer({
   );
 }
 
-export function NotificationAvalanche({
-  notifications = DEFAULT_NOTIFICATIONS,
-  clearLabel = "All caught up.",
-  clearSubLabel = "remocn sorted 128 notifications",
-  total = 128,
-  counterLabel = "unread before 10 am",
-  surface = "phone",
-  wallpaper = staticFile("reel/reel-1.jpg"),
-  date = "Tuesday 9 January",
-  time = "9:41",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: NotificationAvalancheProps) {
+export function NotificationAvalanche(props: NotificationAvalancheProps) {
+  const {
+    notifications = DEFAULT_NOTIFICATIONS,
+    clearLabel = "All caught up.",
+    clearSubLabel = "remocn sorted 128 notifications",
+    total = 128,
+    counterLabel = "unread before 10 am",
+    surface = "phone",
+    wallpaper = staticFile("reel/reel-1.jpg"),
+    date = "Tuesday 9 January",
+    time = "9:41",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const f = frame * speed;
+  const tl = useTimeline(
+    notificationAvalancheTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const sched: Sched = {
+    arrive: tl.lane("Notifications").map((e) => e.start),
+    count: tl.get("count"),
+    caption: tl.get("caption"),
+    compress: tl.get("compress"),
+    swipe: tl.get("swipe"),
+    clear: tl.get("clear"),
+  };
+  const { arrive, swipe, clear } = sched;
+  const phoneEl = tl.get("phone");
+  // The camera pushes in from the second to the seventh notification and
+  // pulls back as the clear copy settles.
+  const pushKeys = [
+    arrive[1],
+    arrive[6],
+    swipe.start + swipe.beat("pullBack"),
+    clear.start + clear.beat("settle"),
+  ];
   const list = notifications.length ? notifications : DEFAULT_NOTIFICATIONS;
   const dark = theme === "dark";
   const themed = look(dark);
@@ -914,7 +1025,12 @@ export function NotificationAvalanche({
 
   const buzzAmp = interpolate(
     f,
-    [ARRIVE[4], ARRIVE[8], SWIPE - 8, SWIPE - 2],
+    [
+      arrive[4],
+      arrive[8],
+      swipe.start + swipe.beat("buzzFade"),
+      swipe.start + swipe.beat("buzzEnd"),
+    ],
     [0, 1.6, 1.6, 0],
     clamp,
   );
@@ -945,6 +1061,7 @@ export function NotificationAvalanche({
 
   const copyProps = {
     f,
+    s: sched,
     accent,
     total,
     counterLabel,
@@ -958,8 +1075,8 @@ export function NotificationAvalanche({
     const cardW = 356;
     // The stack's springs have long tails; their sum is tested frame to frame.
     const stackAt = (ff: number) =>
-      spring({ frame: ff - COMPRESS, fps, config: HEAVY }) +
-      ARRIVE.reduce(
+      spring({ frame: ff - sched.compress.start, fps, config: HEAVY }) +
+      arrive.reduce(
         (sum, t) => sum + spring({ frame: ff - t, fps, config: CARD }),
         0,
       );
@@ -987,6 +1104,7 @@ export function NotificationAvalanche({
               maxRows={6}
               from="right"
               lk={lk}
+              s={sched}
             />
           </div>
           <div
@@ -1009,25 +1127,21 @@ export function NotificationAvalanche({
     : (height * 0.92) / (SH + BEZEL * 2);
   const phoneCx = tall ? width / 2 : width * 0.69;
   const phoneCy = tall ? height * 0.6 : height / 2;
-  const enter = spring({ frame: f, fps, config: HEAVY });
-  const push = interpolate(
-    f,
-    [ARRIVE[1], ARRIVE[6], SWIPE + 2, CLEAR + 14],
-    [1, 1.18, 1.18, 1.02],
-    { ...clamp, easing: MOVE },
-  );
+  const enter = spring({ frame: f - phoneEl.start, fps, config: HEAVY });
+  const push = interpolate(f, pushKeys, [1, 1.18, 1.18, 1.02], {
+    ...clamp,
+    easing: MOVE,
+  });
   const focusY = interpolate(push, [1, 1.18], [0, 80 * k]);
   // The phone carries every card on the lock screen; it is tested frame to
   // frame in px (rise, plus scale at half its height) because the entry
   // spring has a long tail.
   const phoneAt = (ff: number) => {
-    const e = spring({ frame: ff, fps, config: HEAVY });
-    const p = interpolate(
-      ff,
-      [ARRIVE[1], ARRIVE[6], SWIPE + 2, CLEAR + 14],
-      [1, 1.18, 1.18, 1.02],
-      { ...clamp, easing: MOVE },
-    );
+    const e = spring({ frame: ff - phoneEl.start, fps, config: HEAVY });
+    const p = interpolate(ff, pushKeys, [1, 1.18, 1.18, 1.02], {
+      ...clamp,
+      easing: MOVE,
+    });
     const ty = (1 - e) * 60 + interpolate(p, [1, 1.18], [0, 80 * k]);
     return ty + k * p * interpolate(e, [0, 1], [0.94, 1]) * (SH / 2 + BEZEL);
   };
@@ -1092,6 +1206,7 @@ export function NotificationAvalanche({
               date={date}
               time={time}
               lk={lk}
+              s={sched}
             />
             <div
               style={{
