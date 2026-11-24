@@ -3,6 +3,8 @@
 import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type LineReliefElementId, lineReliefTimeline } from "./timeline";
 
 export interface LineReliefProps {
   word?: string;
@@ -22,6 +24,12 @@ export interface LineReliefProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the field's entry and spread, the rise, the
+   * settle and the word's reveal, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LineReliefElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -75,10 +83,6 @@ function mix(a: string, b: string, k: number) {
 
 const LINES = 40;
 const SAMPLES = 260;
-const GROW = [6, 40] as const;
-const SWEEP_DELAY = 16;
-const SETTLE = [84, 108] as const;
-const REVEAL = [88, 112] as const;
 const GAP = 1.7;
 const STROKE = 0.5;
 
@@ -558,21 +562,33 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
-export function LineRelief({
-  word = "LAUNCH",
-  count = LINES,
-  sweep = SWEEP_DELAY,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: LineReliefProps) {
+export function LineRelief(props: LineReliefProps) {
+  const {
+    word = "LAUNCH",
+    count = LINES,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    lineReliefTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const spreadEl = tl.get("spread");
+  const riseEl = tl.get("rise");
+  const settleEl = tl.get("settle");
+  const revealEl = tl.get("reveal");
   const u = height / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -619,9 +635,15 @@ export function LineRelief({
     return rows;
   }, [glyphs, left, fieldW, top, step, unit, wordX, wordY, count]);
 
-  const settle = interpolate(t, SETTLE, [0, 1], { ...CLAMP, easing: EASE_IO });
-  const reveal = interpolate(t, REVEAL, [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const enter = interpolate(t, [0, 12], [0.45, 1], {
+  const settle = interpolate(t, [settleEl.start, settleEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const reveal = interpolate(t, [revealEl.start, revealEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0.45, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -630,10 +652,13 @@ export function LineRelief({
   const lines = field.map((row, j) => {
     const base = top + j * step;
     const ring = Math.abs(j - (count - 1) / 2);
-    const reach = interpolate(t, [ring * 0.12, ring * 0.12 + 20], [0.2, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    const reachAt = spreadEl.start + ring * spreadEl.beat("step");
+    const reach = interpolate(
+      t,
+      [reachAt, reachAt + spreadEl.beat("reach")],
+      [0.2, 1],
+      { ...CLAMP, easing: EASE_OUT },
+    );
     let d = "";
     let hi = "";
     let inHi = false;
@@ -643,7 +668,10 @@ export function LineRelief({
       if (xn > reach + 0.0001) continue;
       const grow = interpolate(
         t,
-        [GROW[0] + xn * sweep, GROW[1] + xn * sweep],
+        [
+          riseEl.start + xn * riseEl.beat("sweep"),
+          riseEl.start + riseEl.beat("grow") + xn * riseEl.beat("sweep"),
+        ],
         [0, 1],
         {
           ...CLAMP,

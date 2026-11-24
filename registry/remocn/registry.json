@@ -12886,12 +12886,17 @@
       "title": "Line Relief",
       "description": "Huge LAUNCH lettering is relief-ruled by stacked horizontal lines over a dusk gradient.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "line-relief/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/line-relief.tsx"
+          "target": "components/remocn/line-relief/index.tsx"
+        },
+        {
+          "path": "line-relief/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/line-relief/timeline.ts"
         }
       ]
     },
