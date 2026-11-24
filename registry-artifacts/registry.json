@@ -13367,12 +13367,17 @@
       "title": "Pattern Tile",
       "description": "A quarter-disc tile is rotated, mirrored and translated into a wall of 72 tiles.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/pattern-tile/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/pattern-tile.tsx"
+          "target": "components/remocn/pattern-tile/index.tsx"
+        },
+        {
+          "path": "registry/remocn/pattern-tile/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/pattern-tile/timeline.ts"
         }
       ],
       "type": "registry:component"

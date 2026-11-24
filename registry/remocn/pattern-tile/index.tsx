@@ -5,6 +5,8 @@ import type React from "react";
 import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type PatternTileElementId, patternTileTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -33,6 +35,12 @@ export interface PatternTileProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the first tile, the camera pulls, each turn,
+   * the mirror, the two slides and the closing focus, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PatternTileElementId>;
 }
 
 // gradients.sh "fluted" palette, laid across the whole wall in grid space so
@@ -43,13 +51,6 @@ const COLS = 12;
 const ROWS = 6;
 const HERO: [number, number] = [4, 2];
 const MIRROR_X = 6;
-
-const ROT = [32, 43, 54];
-const ROT_LEN = 11;
-const MIRROR: [number, number] = [68, 92];
-const SLIDE_H: [number, number] = [98, 116];
-const SLIDE_V: [number, number] = [116, 134];
-const FOCUS = 140;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -271,23 +272,42 @@ function ScaleLayer({
   );
 }
 
-export function PatternTile({
-  steps = ["tile", "rotate 90°", "mirror", "translate"],
-  unit = "tiles",
-  accent = "#3B5BFD",
-  zoom = 2.8,
-  highlight = true,
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: PatternTileProps) {
+export function PatternTile(props: PatternTileProps) {
+  const {
+    steps = ["tile", "rotate 90°", "mirror", "translate"],
+    unit = "tiles",
+    accent = "#3B5BFD",
+    zoom = 2.8,
+    highlight = true,
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    patternTileTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const tileEl = tl.get("tile");
+  const cams = [0, 1, 2].map((k) => tl.get(`camera:${k}`));
+  const rots = [0, 1, 2].map((k) => tl.get(`rotate:${k}`));
+  const mirrorEl = tl.get("mirror");
+  const MIRROR: [number, number] = [mirrorEl.start, mirrorEl.end];
+  const slideX = tl.get("slide-x");
+  const SLIDE_H: [number, number] = [slideX.start, slideX.end];
+  const slideY = tl.get("slide-y");
+  const SLIDE_V: [number, number] = [slideY.start, slideY.end];
+  const focusEl = tl.get("focus");
+  const labelsEl = tl.get("labels");
   const u = H / 720;
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
@@ -305,7 +325,7 @@ export function PatternTile({
 
   const camAt = (k: number[], v: number[]) =>
     interpolate(t, k, v, { ...CLAMP, easing: EASE_IO });
-  const camK = [24, 64, 66, 94, 96, 124];
+  const camK = cams.flatMap((e) => [e.start, e.end]);
   const logS = camAt(camK, [
     Math.log(zoom),
     Math.log(2.05),
@@ -318,26 +338,56 @@ export function PatternTile({
   const camX = camAt(camK, [4.5, 5, 5, 6, 6, 6]);
   const camY = camAt(camK, [2.5, 3, 3, 3, 3, 3]);
 
-  const appear = interpolate(t, [0, 12], [0, 1], {
+  const tileAt = tileEl.start;
+  const appear = interpolate(
+    t,
+    [tileAt, tileAt + tileEl.beat("appear")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const sweepAt = tileAt + tileEl.beat("sweepAt");
+  const sweep = interpolate(
+    t,
+    [sweepAt, sweepAt + tileEl.beat("sweep")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const growAt = tileAt + tileEl.beat("growAt");
+  const grow = interpolate(t, [growAt, growAt + tileEl.beat("grow")], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const sweep = interpolate(t, [6, 24], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const grow = interpolate(t, [14, 28], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const edgeDraw = interpolate(t, [0, 22], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const edgeFade = interpolate(t, [28, 44], [1, 0], CLAMP);
+  const edgeDraw = interpolate(
+    t,
+    [tileAt, tileAt + tileEl.beat("edge")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const edgeFadeAt = tileAt + tileEl.beat("edgeFadeAt");
+  const edgeFade = interpolate(
+    t,
+    [edgeFadeAt, edgeFadeAt + tileEl.beat("edgeFade")],
+    [1, 0],
+    CLAMP,
+  );
 
-  const rotP = ROT.map((s) =>
-    interpolate(t, [s, s + ROT_LEN], [0, 1], { ...CLAMP, easing: EASE_TURN }),
+  const rotP = rots.map((e) =>
+    interpolate(t, [e.start, e.end], [0, 1], { ...CLAMP, easing: EASE_TURN }),
   );
   const flip = interpolate(t, MIRROR, [1, -1], { ...CLAMP, easing: EASE_IO });
   const slideH = interpolate(t, SLIDE_H, [0, 1], { ...CLAMP, easing: EASE_IO });
   const slideV = interpolate(t, SLIDE_V, [0, 1], { ...CLAMP, easing: EASE_IO });
   const focus = highlight
-    ? interpolate(t, [FOCUS, FOCUS + 16], [0, 1], {
+    ? interpolate(t, [focusEl.start, focusEl.end], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       })
@@ -415,22 +465,51 @@ export function PatternTile({
   const fdx = Math.sin(t / 48) * 0.35 * T;
 
   const pivotO =
-    interpolate(t, [ROT[0] - 4, ROT[0] + 2], [0, 1], CLAMP) *
-    interpolate(t, [ROT[2] + ROT_LEN, ROT[2] + ROT_LEN + 8], [1, 0], CLAMP);
+    interpolate(
+      t,
+      [
+        rots[0].start + rots[0].beat("pivotIn"),
+        rots[0].start + rots[0].beat("pivotOn"),
+      ],
+      [0, 1],
+      CLAMP,
+    ) *
+    interpolate(
+      t,
+      [rots[2].end, rots[2].end + rots[2].beat("pivotOut")],
+      [1, 0],
+      CLAMP,
+    );
+  const axisIn = MIRROR[0] + mirrorEl.beat("axisIn");
   const axisO =
-    interpolate(t, [MIRROR[0] - 4, MIRROR[0] + 4], [0, 1], CLAMP) *
-    interpolate(t, [MIRROR[1], MIRROR[1] + 8], [1, 0], CLAMP);
-  const axisGrow = interpolate(t, [MIRROR[0] - 4, MIRROR[0] + 8], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+    interpolate(
+      t,
+      [axisIn, MIRROR[0] + mirrorEl.beat("axisOn")],
+      [0, 1],
+      CLAMP,
+    ) *
+    interpolate(
+      t,
+      [MIRROR[1], MIRROR[1] + mirrorEl.beat("axisOut")],
+      [1, 0],
+      CLAMP,
+    );
+  const axisGrow = interpolate(
+    t,
+    [axisIn, MIRROR[0] + mirrorEl.beat("axisGrown")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
 
   const tiles =
-    t < ROT[0] + ROT_LEN
+    t < rots[0].end
       ? 1
-      : t < ROT[1] + ROT_LEN
+      : t < rots[1].end
         ? 2
-        : t < ROT[2] + ROT_LEN
+        : t < rots[2].end
           ? 3
           : t < MIRROR[1]
             ? 4
@@ -441,13 +520,13 @@ export function PatternTile({
                 : 72;
 
   const phase =
-    t < ROT[0] ? 0 : t < MIRROR[0] - 2 ? 1 : t < SLIDE_H[0] - 2 ? 2 : 3;
-  const allDone = t >= FOCUS;
+    t < rots[0].start ? 0 : t < MIRROR[0] - 2 ? 1 : t < SLIDE_H[0] - 2 ? 2 : 3;
+  const allDone = t >= focusEl.start;
 
   const tx = pcx - camX * T * S;
   const ty = pcy - camY * T * S;
   const edgeLen = 4 * T;
-  const labelIn = interpolate(t, [4, 18], [0, 1], {
+  const labelIn = interpolate(t, [labelsEl.start, labelsEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
