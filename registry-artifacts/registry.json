@@ -11655,12 +11655,21 @@
       "title": "Split Match",
       "description": "Split-flap reels lock onto each word in turn, the last one becoming the big logo.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/split-match/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/split-match.tsx"
+          "target": "components/remocn/split-match/index.tsx"
+        },
+        {
+          "path": "registry/remocn/split-match/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/split-match/timeline.ts"
         }
       ],
       "type": "registry:component"
