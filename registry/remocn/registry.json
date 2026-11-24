@@ -6995,10 +6995,19 @@
         {
           "path": "crew-of-one/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/crew-of-one.tsx"
+          "target": "components/remocn/crew-of-one/index.tsx"
+        },
+        {
+          "path": "crew-of-one/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/crew-of-one/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "they-are-you",

@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CrewOfOneElementId,
+  crewOfOneTimeline,
+  DEFAULT_ROLES,
+  rolesOf,
+} from "./timeline";
 
 const gabarito = loadFont("normal", {
   weights: ["400", "500"],
@@ -37,6 +44,12 @@ export interface CrewOfOneProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the roll, its steps, the name and the gather,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<CrewOfOneElementId>;
 }
 
 const THEMES = {
@@ -149,38 +162,34 @@ function ScaleLayer({
   );
 }
 
-export function CrewOfOne({
-  roles = [
-    "Written by",
-    "Directed by",
-    "Edited by",
-    "Motion by",
-    "Captions by",
-    "Shipped by",
-  ],
-  name = "you",
-  accent,
-  ink,
-  background,
-  fontFamily = gabarito.fontFamily,
-  fontWeight = ROLE_W,
-  nameScale = NAME_SCALE,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: CrewOfOneProps) {
+export function CrewOfOne(props: CrewOfOneProps) {
+  const {
+    roles = DEFAULT_ROLES,
+    name = "you",
+    accent,
+    ink,
+    background,
+    fontFamily = gabarito.fontFamily,
+    fontWeight = ROLE_W,
+    nameScale = NAME_SCALE,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The roll stretches to 60% of the clip length, without `speed`.
+  const tl = useTimeline(crewOfOneTimeline, props, durationInFrames, timing);
   const t = frame * speed;
-  const D = Math.max(90, durationInFrames);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const list = roles.length > 0 ? roles : ["Made by"];
+  const list = rolesOf(roles);
   const m = useMetrics(list, name, fontFamily, fontWeight);
 
   if (!m) {
@@ -209,27 +218,22 @@ export function CrewOfOne({
   const top = (base: number, size: number) =>
     base - ((1 - m.asc - m.desc) / 2 + m.asc) * size;
 
-  const introEnd = 18;
-  const rollStart = 30;
-  const rollEnd = Math.max(rollStart + (n - 1) * 10, D * 0.6);
-  const step = n > 1 ? (rollEnd - rollStart) / (n - 1) : 1;
-  const move = Math.min(13, step * 0.55);
-  const cStart = rollEnd + 12;
-  const cLen = 24;
+  const introEl = tl.get("intro");
+  const gatherEl = tl.get("gather");
+  const rolls = tl.lane("Roll").filter((e) => e.id.startsWith("roll:"));
   const drivers = (tt: number) => {
     let p = 0;
-    for (let k = 1; k < n; k++) {
-      const s = rollStart + (k - 1) * step + (step - move);
-      p += interpolate(tt, [s, s + move], [0, 1], {
+    for (const roll of rolls) {
+      p += interpolate(tt, [roll.start, roll.end], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
     }
-    const gather = interpolate(tt, [cStart, cStart + cLen], [0, 1], {
+    const gather = interpolate(tt, [gatherEl.start, gatherEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-    const intro = interpolate(tt, [0, introEnd], [0, 1], {
+    const intro = interpolate(tt, [introEl.start, introEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -238,7 +242,8 @@ export function CrewOfOne({
   const { p, gather, intro } = drivers(t);
   const before = drivers((frame - 1) * speed);
   const after = drivers((frame + 1) * speed);
-  const nameIn = interpolate(t, [8, 26], [0, 1], {
+  const nameEl = tl.get("name");
+  const nameIn = interpolate(t, [nameEl.start, nameEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

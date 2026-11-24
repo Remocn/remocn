@@ -6990,12 +6990,21 @@
       "title": "Crew of One",
       "description": "A credits roll, Written by / Directed by / Shipped by, all pointing at a big \"you\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/crew-of-one/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/crew-of-one.tsx"
+          "target": "components/remocn/crew-of-one/index.tsx"
+        },
+        {
+          "path": "registry/remocn/crew-of-one/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/crew-of-one/timeline.ts"
         }
       ],
       "type": "registry:component"
