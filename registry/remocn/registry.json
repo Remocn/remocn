@@ -564,10 +564,19 @@
         {
           "path": "shared-axis-z/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/shared-axis-z.tsx"
+          "target": "components/remocn/shared-axis-z/index.tsx"
+        },
+        {
+          "path": "shared-axis-z/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/shared-axis-z/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "short-slide-right",

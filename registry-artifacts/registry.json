@@ -559,12 +559,21 @@
       "title": "Shared Axis Z",
       "description": "Scale-based shared-axis transition for focus shifts and context depth.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/shared-axis-z/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/shared-axis-z.tsx"
+          "target": "components/remocn/shared-axis-z/index.tsx"
+        },
+        {
+          "path": "registry/remocn/shared-axis-z/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/shared-axis-z/timeline.ts"
         }
       ],
       "type": "registry:component"
