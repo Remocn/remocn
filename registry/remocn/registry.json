@@ -579,10 +579,19 @@
         {
           "path": "fade-through/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/fade-through.tsx"
+          "target": "components/remocn/fade-through/index.tsx"
+        },
+        {
+          "path": "fade-through/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/fade-through/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "shared-axis-y",

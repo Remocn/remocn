@@ -574,12 +574,21 @@
       "title": "Fade Through",
       "description": "A Material-style content transition: old fades out, new fades in with a soft delay.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/fade-through/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/fade-through.tsx"
+          "target": "components/remocn/fade-through/index.tsx"
+        },
+        {
+          "path": "registry/remocn/fade-through/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/fade-through/timeline.ts"
         }
       ],
       "type": "registry:component"
