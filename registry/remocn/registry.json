@@ -946,10 +946,19 @@
         {
           "path": "slot-machine-roll/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/slot-machine-roll.tsx"
+          "target": "components/remocn/slot-machine-roll/index.tsx"
+        },
+        {
+          "path": "slot-machine-roll/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/slot-machine-roll/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "matrix-decode",

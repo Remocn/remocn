@@ -941,12 +941,21 @@
       "title": "Slot Machine Roll",
       "description": "Vertical reel scrolls characters from one value to another.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/slot-machine-roll/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/slot-machine-roll.tsx"
+          "target": "components/remocn/slot-machine-roll/index.tsx"
+        },
+        {
+          "path": "registry/remocn/slot-machine-roll/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/slot-machine-roll/timeline.ts"
         }
       ],
       "type": "registry:component"
