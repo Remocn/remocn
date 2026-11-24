@@ -550,12 +550,21 @@
       "title": "Extrude Pop",
       "description": "A flat word pops up out of the plane on a solid colored 3D body, no camera involved.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/extrude-pop/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/extrude-pop.tsx"
+          "target": "components/remocn/extrude-pop/index.tsx"
+        },
+        {
+          "path": "registry/remocn/extrude-pop/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/extrude-pop/timeline.ts"
         }
       ],
       "type": "registry:component"
