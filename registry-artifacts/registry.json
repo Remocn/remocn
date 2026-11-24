@@ -9932,12 +9932,21 @@
       "title": "Landing Confirmed",
       "description": "A descent counts down then a big gradient 'SHIPPED.' lands over a serif 'Nailed the landing.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/landing-confirmed/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/landing-confirmed.tsx"
+          "target": "components/remocn/landing-confirmed/index.tsx"
+        },
+        {
+          "path": "registry/remocn/landing-confirmed/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/landing-confirmed/timeline.ts"
         }
       ],
       "type": "registry:component"

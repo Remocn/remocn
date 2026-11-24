@@ -9937,10 +9937,19 @@
         {
           "path": "landing-confirmed/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/landing-confirmed.tsx"
+          "target": "components/remocn/landing-confirmed/index.tsx"
+        },
+        {
+          "path": "landing-confirmed/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/landing-confirmed/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "drop-timer",
