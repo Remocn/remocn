@@ -4,6 +4,12 @@ import type React from "react";
 import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_WORD,
+  type SplitWordElementId,
+  splitWordTimeline,
+} from "./timeline";
 
 export interface SplitWordProps {
   word?: string;
@@ -25,6 +31,12 @@ export interface SplitWordProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single letters, the cut, the split and the
+   * settle, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<SplitWordElementId>;
 }
 
 // [advance, inkLeft, inkRight, inkTop, inkBottom, outline] per 1000 em,
@@ -332,22 +344,28 @@ function ScaleLayer({
   );
 }
 
-export function SplitWord({
-  word = "Now",
-  insert = "Available",
-  stagger = 3,
-  hold = 14,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: SplitWordProps) {
+export function SplitWord(props: SplitWordProps) {
+  const {
+    word = DEFAULT_WORD,
+    insert = "Available",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    splitWordTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = H / 720;
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
@@ -383,9 +401,18 @@ export function SplitWord({
   const x0 = (W - heroW) / 2;
   const cy = H / 2;
 
-  const cut = interpolate(t, [20, 30], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const open = interpolate(t, [30, 54], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const back = interpolate(t, [54 + hold, 80 + hold], [0, 1], {
+  const cutEl = tl.get("cut");
+  const openEl = tl.get("open");
+  const settle = tl.get("settle");
+  const cut = interpolate(t, [cutEl.start, cutEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const open = interpolate(t, [openEl.start, openEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const back = interpolate(t, [settle.start, settle.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -398,11 +425,13 @@ export function SplitWord({
   const topY = cy - gap / 2;
   const bottomY = cy + gap / 2;
 
-  const rise = (i: number) =>
-    interpolate(t, [i * stagger - 6, i * stagger + 12], [1, 0], {
+  const rise = (i: number) => {
+    const e = tl.get(`letter:${i}`);
+    return interpolate(t, [e.start, e.end], [1, 0], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
 
   const letters = hero.glyphs.map((g, i) => (
     <path

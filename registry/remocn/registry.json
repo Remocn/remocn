@@ -11619,12 +11619,17 @@
       "title": "Split Word",
       "description": "A huge word splits open and a second word slides into the gap with a gradient band.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "split-word/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/split-word.tsx"
+          "target": "components/remocn/split-word/index.tsx"
+        },
+        {
+          "path": "split-word/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/split-word/timeline.ts"
         }
       ]
     },
