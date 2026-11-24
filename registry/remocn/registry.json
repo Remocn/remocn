@@ -5733,13 +5733,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "flank-roll-swap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/flank-roll-swap.tsx"
+          "target": "components/remocn/flank-roll-swap/index.tsx"
+        },
+        {
+          "path": "flank-roll-swap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/flank-roll-swap/timeline.ts"
         }
       ]
     },

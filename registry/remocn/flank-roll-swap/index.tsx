@@ -18,6 +18,15 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  BEAT,
+  DEFAULT_SOURCE,
+  DEFAULT_TARGET,
+  type FlankRollSwapElementId,
+  flankRollSwapTimeline,
+  rollEnd,
+} from "./timeline";
 
 const hanken = loadFont("normal", {
   weights: ["400"],
@@ -47,6 +56,12 @@ export interface FlankRollSwapProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the card, the push, the slides, the quick cuts
+   * and each side's roll, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FlankRollSwapElementId>;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -100,19 +115,6 @@ const DEFAULT_IMAGES = [
   "templates/product-showcase/courtyard.jpg",
   "templates/brand-guidelines/chair.jpg",
 ];
-
-const BEAT = {
-  leftIn: 6,
-  rightIn: 9,
-  slide: 15,
-  leftRoll: 48,
-  rightGap: 6,
-  stagger: 1.2,
-  roll: 9,
-  accentLag: 3,
-  hold: 42,
-  fastFrom: 42,
-};
 
 const FONT_PX = 200;
 const TRACK = -0.02;
@@ -174,27 +176,20 @@ function useMetrics(fontFamily: string) {
   );
 }
 
-const rollEnd = (
-  start: number,
-  a: string,
-  b: string,
-  stagger: number = BEAT.stagger,
-) => start + Math.max(a.length, b.length) * stagger + BEAT.roll;
-
 export const flankRollSwapLength = (
-  from: [string, string] = ["Remocn", "Studio"],
-  to: [string, string] = ["Out now", "on remocn.dev"],
+  from: [string, string] = DEFAULT_SOURCE,
+  to: [string, string] = DEFAULT_TARGET,
 ) => {
   const leftEnd = rollEnd(BEAT.leftRoll, from[0], to[0]);
   const rightEnd = rollEnd(BEAT.leftRoll + BEAT.rightGap, from[1], to[1]);
   return Math.ceil(Math.max(leftEnd, rightEnd) / 6) * 6 + BEAT.hold;
 };
 
-const cutIndex = (frame: number, swapEnd: number) => {
+const cutIndex = (frame: number, fastFrom: number, swapEnd: number) => {
   let t = 0;
   let k = 0;
   while (t <= frame) {
-    const step = t < BEAT.fastFrom ? 6 : t < swapEnd ? 4 : 9;
+    const step = t < fastFrom ? 6 : t < swapEnd ? 4 : 9;
     t += step;
     if (t <= frame) k++;
   }
@@ -217,27 +212,33 @@ function ScaleLayer({
   );
 }
 
-export function FlankRollSwap({
-  from = ["Remocn", "Studio"],
-  to = ["Out now", "on remocn.dev"],
-  accentWord = "remocn.dev",
-  images,
-  swapAt = BEAT.leftRoll,
-  stagger = BEAT.stagger,
-  accent,
-  ink,
-  background,
-  fontFamily = hanken.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: FlankRollSwapProps) {
+export function FlankRollSwap(props: FlankRollSwapProps) {
+  const {
+    from = DEFAULT_SOURCE,
+    to = DEFAULT_TARGET,
+    accentWord = "remocn.dev",
+    images,
+    accent,
+    ink,
+    background,
+    fontFamily = hanken.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    flankRollSwapTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -253,11 +254,20 @@ export function FlankRollSwap({
     Boolean,
   );
 
-  const leftStart = swapAt;
-  const rightStart = swapAt + BEAT.rightGap;
-  const leftEnd = rollEnd(leftStart, from[0], to[0], stagger);
-  const rightEnd = rollEnd(rightStart, from[1], to[1], stagger);
-  const swapEnd = Math.max(leftEnd, rightEnd);
+  const pushEl = tl.get("push");
+  const card = tl.get("card");
+  const cuts = tl.get("cuts");
+  const leftRoll = tl.get("leftRoll");
+  const rightRoll = tl.get("rightRoll");
+  const leftStart = leftRoll.start;
+  // A side lands when its last letter has rolled, counted as the schedule
+  // counts it, so the landing frame matches it to the last bit.
+  const landedOf = (e: typeof leftRoll, idx: 0 | 1) =>
+    rollEnd(e.start, from[idx], to[idx], e.beat("stagger"), e.beat("roll"));
+  const leftEnd = landedOf(leftRoll, 0);
+  const rightEnd = landedOf(rightRoll, 1);
+  const fastFrom = cuts.start;
+  const swapEnd = cuts.end;
 
   const geo = useMemo(() => {
     if (portrait) {
@@ -286,17 +296,21 @@ export function FlankRollSwap({
   const { cardW, cardH, F, gap, cx } = geo;
   const cy = H / 2;
 
-  const pop = spring({ frame, fps, config: CARD });
+  const pop = spring({ frame: frame - card.start, fps, config: CARD });
   const punch = interpolate(
     frame,
-    [leftStart, leftStart + 2, leftStart + 7],
+    [
+      leftStart,
+      leftStart + leftRoll.beat("punchPeak"),
+      leftStart + leftRoll.beat("punchDone"),
+    ],
     [0, 1, 0],
     CLAMP,
   );
   const pushAt = (f: number) =>
     1 +
     0.035 *
-      interpolate(f, [0, swapEnd + BEAT.hold - 12], [0, 1], {
+      interpolate(f, [pushEl.start, pushEl.end], [0, 1], {
         ...CLAMP,
         easing: PUSH,
       });
@@ -309,14 +323,14 @@ export function FlankRollSwap({
     Math.abs(push - pushAt(frame - 1)) * reach > 1e-3;
   const cardScale = (0.55 + 0.45 * pop) * (1 + 0.035 * punch);
   const tilt = (1 - pop) * 14;
-  const cut = cutIndex(frame, swapEnd);
+  const cut = cutIndex(frame, fastFrom, swapEnd);
   const pic = pics[cut % Math.max(1, pics.length)];
   let cutStart = 0;
   {
     let t = 0;
     while (t <= frame) {
       cutStart = t;
-      t += t < BEAT.fastFrom ? 6 : t < swapEnd ? 4 : 9;
+      t += t < fastFrom ? 6 : t < swapEnd ? 4 : 9;
     }
   }
   const kb =
@@ -338,21 +352,22 @@ export function FlankRollSwap({
     side: "a" | "b",
     start: number,
     landed: number,
+    roll: (typeof leftRoll)["beat"],
   ) => {
     const chars = Array.from(text);
     const n = chars.length;
     const [a0, a1] = phase === "new" ? accentAt(text) : [-1, -1];
     const accentP =
       a0 >= 0
-        ? interpolate(frame, [landed, landed + 9], [0, 1], {
+        ? interpolate(frame, [landed, landed + roll("accent")], [0, 1], {
             ...CLAMP,
             easing: TYPE_IN,
           })
         : 0;
     return chars.map((ch, i) => {
       const fromCard = portrait ? i : side === "a" ? n - 1 - i : i;
-      const t0 = start + fromCard * stagger;
-      const p = interpolate(frame, [t0, t0 + BEAT.roll], [0, 1], {
+      const t0 = start + fromCard * roll("stagger");
+      const p = interpolate(frame, [t0, t0 + roll("roll")], [0, 1], {
         ...CLAMP,
         easing: ROLL,
       });
@@ -370,7 +385,7 @@ export function FlankRollSwap({
           : inkC;
       const velocity = Math.abs(
         p -
-          interpolate(frame - 1, [t0, t0 + BEAT.roll], [0, 1], {
+          interpolate(frame - 1, [t0, t0 + roll("roll")], [0, 1], {
             ...CLAMP,
             easing: ROLL,
           }),
@@ -396,10 +411,11 @@ export function FlankRollSwap({
 
   const renderSide = (side: "a" | "b") => {
     const idx = side === "a" ? 0 : 1;
-    const inAt = side === "a" ? BEAT.leftIn : BEAT.rightIn;
-    const rollAt = side === "a" ? leftStart : rightStart;
+    const inEl = tl.get(side === "a" ? "leftIn" : "rightIn");
+    const rollEl = side === "a" ? leftRoll : rightRoll;
+    const rollAt = rollEl.start;
     const landed = side === "a" ? leftEnd : rightEnd;
-    const slide = interpolate(frame, [inAt, inAt + BEAT.slide], [0, 1], {
+    const slide = interpolate(frame, [inEl.start, inEl.end], [0, 1], {
       ...CLAMP,
       easing: TYPE_IN,
     });
@@ -424,10 +440,17 @@ export function FlankRollSwap({
     const rows = (
       <>
         <div style={textStyle}>
-          {renderRow(from[idx], "old", side, rollAt, landed)}
+          {renderRow(from[idx], "old", side, rollAt, landed, rollEl.beat)}
         </div>
         <div style={textStyle}>
-          {renderRow(to[idx], "new", side, rollAt + 1, landed)}
+          {renderRow(
+            to[idx],
+            "new",
+            side,
+            rollAt + rollEl.beat("newLag"),
+            landed,
+            rollEl.beat,
+          )}
         </div>
       </>
     );
