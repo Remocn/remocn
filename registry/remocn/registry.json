@@ -2332,13 +2332,19 @@
       "registryDependencies": [
         "@remocn/glass-code-block",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "glass-code-walk/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/glass-code-walk.tsx"
+          "target": "components/remocn/glass-code-walk/index.tsx"
+        },
+        {
+          "path": "glass-code-walk/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/glass-code-walk/timeline.ts"
         }
       ]
     },
