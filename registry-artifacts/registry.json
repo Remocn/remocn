@@ -13888,12 +13888,21 @@
       "title": "Quadrant Plot",
       "description": "Competitors scatter on a quadrant plot and the Remocn marker lands in the best corner.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/quadrant-plot/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/quadrant-plot.tsx"
+          "target": "components/remocn/quadrant-plot/index.tsx"
+        },
+        {
+          "path": "registry/remocn/quadrant-plot/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/quadrant-plot/timeline.ts"
         }
       ],
       "type": "registry:component"

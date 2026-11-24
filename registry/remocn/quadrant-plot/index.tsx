@@ -14,6 +14,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_PLOT_POINTS,
+  type QuadrantPlotElementId,
+  quadrantPlotTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -58,16 +64,15 @@ export interface QuadrantPlotProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the axes, the end labels, each rival dot, the
+   * brand dot's arrival and landing and the camera, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<QuadrantPlotElementId>;
 }
 
-const DEFAULT_POINTS: QuadrantPoint[] = [
-  { label: "Kitebase", x: 0.71, y: 0.3 },
-  { label: "Lumen", x: 0.27, y: 0.71 },
-  { label: "Fernway", x: 0.2, y: 0.24 },
-  { label: "Quarry", x: 0.6, y: 0.4 },
-  { label: "Orbitly", x: 0.38, y: 0.58 },
-  { label: "Halcyon", x: 0.13, y: 0.42 },
-];
+const DEFAULT_POINTS: QuadrantPoint[] = DEFAULT_PLOT_POINTS;
 
 const DEFAULT_BRAND: QuadrantPoint = { label: "remocn", x: 0.74, y: 0.8 };
 
@@ -126,13 +131,6 @@ const THEMES = {
     ],
   },
 } as const;
-
-const AXIS = [-8, 22] as const;
-const DROP = 26;
-const DROP_STAGGER = 4;
-const ARRIVE = 62;
-const ARRIVE_LEN = 30;
-const LANDED = ARRIVE + ARRIVE_LEN - 8;
 
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -209,26 +207,43 @@ function ScaleLayer({
   );
 }
 
-export function QuadrantPlot({
-  xLabels = ["Slow", "Fast"],
-  yLabels = ["Hard", "Easy"],
-  points = DEFAULT_POINTS,
-  brand = DEFAULT_BRAND,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  stagger = DROP_STAGGER,
-  logo,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: QuadrantPlotProps) {
+export function QuadrantPlot(props: QuadrantPlotProps) {
+  const {
+    xLabels = ["Slow", "Fast"],
+    yLabels = ["Hard", "Easy"],
+    points = DEFAULT_POINTS,
+    brand = DEFAULT_BRAND,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    logo,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    quadrantPlotTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const axesEl = tl.get("axes");
+  const pushEl = tl.get("push");
+  const marksEl = tl.get("marks");
+  const labelsEl = tl.get("labels");
+  const driftEl = tl.get("drift");
+  const arriveEl = tl.get("arrive");
+  const swayEl = tl.get("sway");
+  const land = tl.get("land");
+  const ARRIVE = arriveEl.start;
+  const LANDED = land.start;
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -244,18 +259,23 @@ export function QuadrantPlot({
   const toY = (y: number) => cy - (clamp01(y) - 0.5) * 2 * hh;
   const sw = Math.max(1, u);
 
-  const axisK = interpolate(t, AXIS, [0, 1], { ...CLAMP, easing: EASE_IO });
-  const markK = interpolate(t, [12, 30], [0, 1], {
+  const axisK = interpolate(t, [axesEl.start, axesEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const markK = interpolate(t, [marksEl.start, marksEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const labelK = (delay: number) =>
-    interpolate(t, [14 + delay, 32 + delay], [0, 1], {
+  const labelK = (k: number) => {
+    const at = labelsEl.start + k * labelsEl.beat("stagger");
+    return interpolate(t, [at, at + labelsEl.beat("fade")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
 
-  const arrive = interpolate(t, [ARRIVE, ARRIVE + ARRIVE_LEN], [0, 1], {
+  const arrive = interpolate(t, [arriveEl.start, arriveEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_ARRIVE,
   });
@@ -272,16 +292,26 @@ export function QuadrantPlot({
     return [a * sx + b * qx + c * bx, a * sy + b * qy + c * by];
   };
   const arriveAt = (time: number) =>
-    interpolate(time, [ARRIVE, ARRIVE + ARRIVE_LEN], [0, 1], {
+    interpolate(time, [arriveEl.start, arriveEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_ARRIVE,
     });
   const [dx, dy] = along(arrive);
-  const brandO = interpolate(t, [ARRIVE, ARRIVE + 5], [0, 1], CLAMP);
-  const brandS = interpolate(t, [ARRIVE, ARRIVE + 10], [0.6, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const brandO = interpolate(
+    t,
+    [ARRIVE, ARRIVE + arriveEl.beat("fade")],
+    [0, 1],
+    CLAMP,
+  );
+  const brandS = interpolate(
+    t,
+    [ARRIVE, ARRIVE + arriveEl.beat("grow")],
+    [0.6, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const ghosts = [1.5, 3, 4.5].map((lag, i) => {
     const [gx, gy] = along(arriveAt(t - lag));
     const dist = Math.hypot(gx - dx, gy - dy);
@@ -292,30 +322,53 @@ export function QuadrantPlot({
     };
   });
 
-  const ring = interpolate(t, [LANDED, LANDED + 26], [0, 1], {
+  const ring = interpolate(t, [land.start, land.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const dim = interpolate(t, [LANDED - 4, LANDED + 14], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const wash = interpolate(t, [LANDED - 2, LANDED + 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const guide = interpolate(t, [LANDED + 4, LANDED + 22], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const brandLab = interpolate(t, [LANDED - 2, LANDED + 16], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const dim = interpolate(
+    t,
+    [LANDED + land.beat("dimAt"), LANDED + land.beat("dim")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const wash = interpolate(
+    t,
+    [LANDED + land.beat("washAt"), LANDED + land.beat("wash")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const guide = interpolate(
+    t,
+    [LANDED + land.beat("guideAt"), LANDED + land.beat("guide")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const brandLab = interpolate(
+    t,
+    [LANDED + land.beat("labelAt"), LANDED + land.beat("label")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
 
-  const push = interpolate(t, [0, 140], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
   const zoom = 0.975 + 0.04 * push;
-  const drift = interpolate(t, [ARRIVE - 10, 140], [0, 1], {
+  const drift = interpolate(t, [driftEl.start, driftEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -379,7 +432,7 @@ export function QuadrantPlot({
 
   const pad = 20 * u;
   const reveal = 0.25 + 0.75 * wash;
-  const sway = interpolate(t, [LANDED - 4, 140], [0, 1], CLAMP);
+  const sway = interpolate(t, [swayEl.start, swayEl.end], [0, 1], CLAMP);
   const mesh = [
     ...p.blobs.map(
       ([c, x, y, a], i) =>
@@ -459,13 +512,18 @@ export function QuadrantPlot({
             ))}
 
             {points.map((pt, i) => {
-              const start = DROP + i * stagger;
+              const e = tl.get(`point:${i}`);
               const s = spring({
-                frame: t - start,
+                frame: t - e.start,
                 fps,
                 config: { damping: 14, stiffness: 170, mass: 0.7 },
               });
-              const o = interpolate(t, [start, start + 6], [0, 1], CLAMP);
+              const o = interpolate(
+                t,
+                [e.start, e.start + e.beat("fade")],
+                [0, 1],
+                CLAMP,
+              );
               const x = toX(pt.x);
               const y = toY(pt.y) - (1 - s) * 34 * u;
               return (
@@ -539,8 +597,9 @@ export function QuadrantPlot({
           </svg>
 
           {points.map((pt, i) => {
-            const start = DROP + i * stagger + 5;
-            const k = interpolate(t, [start, start + 14], [0, 1], {
+            const e = tl.get(`point:${i}`);
+            const start = e.start + e.beat("labelAt");
+            const k = interpolate(t, [start, start + e.beat("label")], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });
@@ -594,9 +653,9 @@ export function QuadrantPlot({
           </div>
 
           {endLabel(xLabels[0], cx - hw - pad, cy, "left", labelK(0), false)}
-          {endLabel(xLabels[1], cx + hw + pad, cy, "right", labelK(2), true)}
-          {endLabel(yLabels[1], cx, cy - hh - pad, "top", labelK(4), true)}
-          {endLabel(yLabels[0], cx, cy + hh + pad, "bottom", labelK(6), false)}
+          {endLabel(xLabels[1], cx + hw + pad, cy, "right", labelK(1), true)}
+          {endLabel(yLabels[1], cx, cy - hh - pad, "top", labelK(2), true)}
+          {endLabel(yLabels[0], cx, cy + hh + pad, "bottom", labelK(3), false)}
         </AbsoluteFill>
       </ScaleLayer>
 
