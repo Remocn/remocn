@@ -9,6 +9,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CalendarPickElementId,
+  calendarPickTimeline,
+  DEFAULT_TIME_RANGE,
+} from "./timeline";
 
 const onest = loadOnest("normal", {
   weights: ["300", "400"],
@@ -26,22 +32,6 @@ const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH = { damping: 200 };
-
-const B = {
-  enter: -8,
-  rows: 0,
-  title: 6,
-  zoom: 24,
-  cursor: 42,
-  click: 66,
-  open: 70,
-  type: 78,
-  commit: 120,
-  flood: 122,
-  label: 130,
-  pull: 132,
-  end: 168,
-};
 
 const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   interpolate(f, [start, start + dur], [0, 1], {
@@ -129,6 +119,13 @@ export interface CalendarPickProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the card's entry, the days, the title, the
+   * camera, the pointer, the click, the input, the typing, the commit and the
+   * landing, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<CalendarPickElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -147,33 +144,53 @@ function ScaleLayer({
   );
 }
 
-export function CalendarPick({
-  theme = "dark",
-  accent = "#F26A2E",
-  title = "Launch day, booked.",
-  month = "June",
-  year = "2026",
-  firstWeekday = 0,
-  daysInMonth = 30,
-  today = 9,
-  pickDay = 18,
-  timeRange = "10:00 AM – 4:00 PM",
-  eventLabel = "Launch",
-  busyDays = [3, 11, 12, 22, 25, 29],
-  todayLabel = "Today",
-  placeholder = "Add time",
-  ink: textColor,
-  background,
-  fontFamily = onest.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: CalendarPickProps) {
+export function CalendarPick(props: CalendarPickProps) {
+  const {
+    theme = "dark",
+    accent = "#F26A2E",
+    title = "Launch day, booked.",
+    month = "June",
+    year = "2026",
+    firstWeekday = 0,
+    daysInMonth = 30,
+    today = 9,
+    pickDay = 18,
+    timeRange = DEFAULT_TIME_RANGE,
+    eventLabel = "Launch",
+    busyDays = [3, 11, 12, 22, 25, 29],
+    todayLabel = "Today",
+    placeholder = "Add time",
+    ink: textColor,
+    background,
+    fontFamily = onest.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    calendarPickTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const daysEl = tl.get("days");
+  const titleEl = tl.get("title");
+  const zoomEl = tl.get("zoom");
+  const cursorEl = tl.get("cursor");
+  const clickEl = tl.get("click");
+  const openEl = tl.get("open");
+  const typeEl = tl.get("type");
+  const commitEl = tl.get("commit");
+  const floodEl = tl.get("flood");
+  const labelEl = tl.get("label");
+  const pullEl = tl.get("pull");
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 1080 : 1280;
@@ -208,12 +225,19 @@ export function CalendarPick({
   // The camera at any frame, so a frame can tell whether it moves by comparing
   // with its neighbours.
   const camAt = (f: number) => {
-    const enter = spring({ frame: f - B.enter, fps, config: CARD });
-    const zoom = ramp(f, B.zoom, 36, CAM);
-    const pullBack = spring({ frame: f - B.pull, fps, config: HEAVY });
+    const enter = spring({ frame: f - enterEl.start, fps, config: CARD });
+    const zoom = ramp(f, zoomEl.start, zoomEl.length, CAM);
+    const pullBack = spring({ frame: f - pullEl.start, fps, config: HEAVY });
     const Z =
       mix(mix(1, zMax, zoom), zRest, pullBack) *
-      (1 + 0.025 * ramp(f, B.pull + 20, B.end - B.pull - 20, Easing.linear)) *
+      (1 +
+        0.025 *
+          ramp(
+            f,
+            pullEl.start + pullEl.beat("driftAt"),
+            pullEl.beat("drift"),
+            Easing.linear,
+          )) *
       (portrait ? 1.25 : 1);
     const focusX = mix(W / 2, cellX + colW * (0.5 + spanCols / 2), zoom);
     const focusY = mix(H / 2, cellY + rowH / 2, zoom);
@@ -234,7 +258,11 @@ export function CalendarPick({
       rotY: mix(0, -8, zoom) * (1 - pullBack) - 4 * pullBack,
     };
   };
-  const enterBlur = mix(10, 0, ramp(frame, B.enter, 15));
+  const enterBlur = mix(
+    10,
+    0,
+    ramp(frame, enterEl.start, enterEl.beat("blur")),
+  );
   const zMax = portrait ? 1.9 : 1.75;
   const zRest = portrait ? 1.06 : 1.5;
   const spanCols = Math.min(3, 6 - pick.col);
@@ -276,9 +304,9 @@ export function CalendarPick({
 
   const cStart = { x: W + 120, y: H + 80 };
   const cEnd = { x: cellX + colW * 0.56, y: cellY + rowH * 0.5 };
-  const cP = ramp(frame, B.cursor, 24, MOVE);
-  const cPrev = ramp(frame - 1, B.cursor, 24, MOVE);
-  const exitP = ramp(frame, B.commit, 18, MOVE);
+  const cP = ramp(frame, cursorEl.start, cursorEl.length, MOVE);
+  const cPrev = ramp(frame - 1, cursorEl.start, cursorEl.length, MOVE);
+  const exitP = ramp(frame, commitEl.start, commitEl.length, MOVE);
   const cursorAt = (p: number, e: number) => ({
     x: mix(cStart.x, cEnd.x, p) + 46 * e,
     y: mix(cStart.y, cEnd.y, p) - Math.sin(Math.PI * p) * 46 + 52 * e,
@@ -288,30 +316,37 @@ export function CalendarPick({
   // for the same reason as the card below.
   const cHold = cursorAt(1, 0);
   const cBlur = Math.min(3, Math.abs(cP - cPrev) * 900 * 0.03);
-  const clickDip = spring({ frame: frame - B.click, fps, config: CHIP });
-  const clickUp = spring({ frame: frame - B.click - 4, fps, config: CHIP });
+  const clickDip = spring({ frame: frame - clickEl.start, fps, config: CHIP });
+  const clickUp = spring({
+    frame: frame - clickEl.start - clickEl.beat("up"),
+    fps,
+    config: CHIP,
+  });
   const press = 1 - 0.12 * clickDip + 0.12 * clickUp;
-  const ripple = ramp(frame, B.click, 18, ENTER);
+  const ripple = ramp(frame, clickEl.start, clickEl.length, ENTER);
 
-  const openP = spring({ frame: frame - B.open, fps, config: CARD });
-  const closeP = spring({ frame: frame - B.commit, fps, config: MORPH });
+  const openP = spring({ frame: frame - openEl.start, fps, config: CARD });
+  const closeP = spring({ frame: frame - commitEl.start, fps, config: MORPH });
   const inputW = mix(
     colW - inset * 2,
     colW * (spanCols + 1) - inset * 2,
     openP * (1 - closeP),
   );
-  const inputOn = frame >= B.open && closeP < 0.98;
+  const inputOn = frame >= openEl.start && closeP < 0.98;
   const chars = Math.max(
     0,
-    Math.min(timeRange.length, Math.floor((frame - B.type) / 2)),
+    Math.min(
+      timeRange.length,
+      Math.floor((frame - typeEl.start) / typeEl.beat("step")),
+    ),
   );
   const typed = timeRange.slice(0, chars);
   const caretOn =
     Math.floor(frame / 8) % 2 === 0 ||
-    (frame >= B.type && chars < timeRange.length);
-  const flood = spring({ frame: frame - B.flood, fps, config: CHIP });
-  const labelIn = ramp(frame, B.label, 12);
-  const titleIn = ramp(frame, B.title, 15);
+    (frame >= typeEl.start && chars < timeRange.length);
+  const flood = spring({ frame: frame - floodEl.start, fps, config: CHIP });
+  const labelIn = ramp(frame, labelEl.start, labelEl.length);
+  const titleIn = ramp(frame, titleEl.start, titleEl.length);
 
   const surface = dark
     ? "linear-gradient(180deg, rgba(34,27,23,0.94) 0%, rgba(22,18,16,0.96) 100%)"
@@ -329,7 +364,11 @@ export function CalendarPick({
     const isToday = d === today;
     const weekend = col >= 5;
     const busy = busyDays.includes(d);
-    const appear = ramp(frame, B.rows + row * 2 + col * 0.5, 12);
+    const appear = ramp(
+      frame,
+      daysEl.start + row * daysEl.beat("row") + col * daysEl.beat("col"),
+      daysEl.beat("fade"),
+    );
     const cellFlood = isPick ? flood : 0;
     const scale = isPick
       ? press * (1 + 0.06 * Math.sin(Math.PI * Math.min(1, cellFlood)))
@@ -529,7 +568,11 @@ export function CalendarPick({
               height: H,
               transformOrigin: "0 0",
               transform: `translate(${cardX}px, ${cardY}px) scale(${Z})`,
-              opacity: ramp(frame, -6, 8),
+              opacity: ramp(
+                frame,
+                enterEl.start + enterEl.beat("fadeAt"),
+                enterEl.beat("fade"),
+              ),
               filter: enterBlur > 0.3 ? `blur(${enterBlur}px)` : undefined,
             }}
           >
@@ -635,7 +678,7 @@ export function CalendarPick({
                     height: 60,
                     borderRadius: 30,
                     border: `1.5px solid ${accent}`,
-                    opacity: frame >= B.click ? (1 - ripple) * 0.8 : 0,
+                    opacity: frame >= clickEl.start ? (1 - ripple) * 0.8 : 0,
                     transform: `scale(${mix(0.3, 1.4, ripple)})`,
                   }}
                 />
@@ -679,7 +722,11 @@ export function CalendarPick({
                         fontSize: 21,
                         color: ink,
                         whiteSpace: "pre",
-                        opacity: ramp(frame, B.open + 4, 8),
+                        opacity: ramp(
+                          frame,
+                          openEl.start + openEl.beat("textAt"),
+                          openEl.beat("text"),
+                        ),
                       }}
                     >
                       {chars === 0 ? (
@@ -709,7 +756,11 @@ export function CalendarPick({
                         fontFamily: mono.fontFamily,
                         fontSize: 12,
                         color: muted,
-                        opacity: ramp(frame, B.type + 30, 8),
+                        opacity: ramp(
+                          frame,
+                          typeEl.start + typeEl.beat("keyAt"),
+                          typeEl.beat("key"),
+                        ),
                       }}
                     >
                       ↵
@@ -723,12 +774,17 @@ export function CalendarPick({
                   left: cHold.x,
                   top: cHold.y,
                   opacity:
-                    ramp(frame, B.cursor, 4) *
-                    (1 - ramp(frame, B.commit + 6, 9)),
+                    ramp(frame, cursorEl.start, cursorEl.beat("fade")) *
+                    (1 -
+                      ramp(
+                        frame,
+                        commitEl.start + commitEl.beat("fadeAt"),
+                        commitEl.beat("fade"),
+                      )),
                   transform: `translate(${cNow.x - cHold.x}px, ${cNow.y - cHold.y}px) scale(${press})`,
                   transformOrigin: "20% 15%",
                   filter: cBlur > 0.3 ? `blur(${cBlur}px)` : undefined,
-                  display: frame >= B.cursor ? "block" : "none",
+                  display: frame >= cursorEl.start ? "block" : "none",
                 }}
               >
                 <Pointer size={26} dark={dark} />

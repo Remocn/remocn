@@ -6353,13 +6353,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "calendar-pick/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/calendar-pick.tsx"
+          "target": "components/remocn/calendar-pick/index.tsx"
+        },
+        {
+          "path": "calendar-pick/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/calendar-pick/timeline.ts"
         }
       ]
     },
