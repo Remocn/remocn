@@ -10513,12 +10513,21 @@
       "title": "High Score",
       "description": "A pixel arcade table inserts a new top entry, 'NEW HIGH SCORE', above four lower scores.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/high-score/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/high-score.tsx"
+          "target": "components/remocn/high-score/index.tsx"
+        },
+        {
+          "path": "registry/remocn/high-score/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/high-score/timeline.ts"
         }
       ],
       "type": "registry:component"
