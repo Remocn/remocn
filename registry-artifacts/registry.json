@@ -6051,13 +6051,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/word-burst-cards/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/word-burst-cards.tsx"
+          "target": "components/remocn/word-burst-cards/index.tsx"
+        },
+        {
+          "path": "registry/remocn/word-burst-cards/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/word-burst-cards/timeline.ts"
         }
       ],
       "type": "registry:component"
