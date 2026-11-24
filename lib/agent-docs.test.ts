@@ -101,7 +101,33 @@ describe("buildLlmsTxt with component pages", () => {
     expect(preamble).toContain(
       "(https://remocn.dev/docs/guides/remotion-text-animations.md)",
     );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/remotion-kinetic-typography.md)",
+    );
     expect(preamble).toContain("(https://remocn.dev/llms-full/typography.txt)");
+  });
+});
+
+describe("buildLlmsTxt data video answer", () => {
+  test("points chart questions at the data guide only when there are number components", () => {
+    expect(buildLlmsTxt(PAGES)).not.toContain("Looking for animated charts");
+    const withNumbers = buildLlmsTxt([
+      ...PAGES,
+      {
+        slugs: ["numbers", "share-donut"],
+        url: "/docs/numbers/share-donut",
+        title: "Share Donut",
+        component: "share-donut",
+      },
+    ]);
+    const preamble = withNumbers.slice(0, withNumbers.indexOf("\n## "));
+    expect(preamble).toContain(
+      "Remocn has 1 number, chart and map components for Remotion",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/remotion-data-video.md)",
+    );
+    expect(preamble).toContain("(https://remocn.dev/llms-full/numbers.txt)");
   });
 });
 
@@ -269,6 +295,17 @@ describe("buildLlmsTxt", () => {
     ]) {
       expect(answer).toContain(name);
     }
+  });
+
+  test("answers the best way to have Claude Code make a video near the top", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "**What's the best way to have Claude Code make a video?**",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/claude-code-video.md)",
+    );
+    expect(preamble).toContain("claude plugin install remotion@remotion");
   });
 
   test("answers the free Remotion MCP server question near the top", () => {

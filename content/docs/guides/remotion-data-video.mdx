@@ -1,0 +1,285 @@
+---
+title: "Animated charts and data videos in Remotion: drive charts from data, with code"
+navTitle: Charts and data videos
+description: "How to animate a chart, a counter or a stat in Remotion from your own data, a picker of Remocn's free chart, counter and map components with install commands, a metrics recap video built from a JSON file, and tips for readable numbers on screen."
+lastModified: "2026-11-24"
+---
+
+_Last updated: November 24, 2026._
+
+To make animated charts and data videos in Remotion, pass the data in as props and compute every
+bar height, line length and counter value from the current frame with `interpolate()` or
+`spring()`. Write the chart yourself in SVG, or install a finished one: Remocn's
+[Numbers & Stats](/docs/numbers) section has 124 free, MIT-licensed components (counters, stat
+reveals, charts, comparisons, countdowns and maps) that take their numbers as props and install
+with `npx shadcn@latest add @remocn/<name>`.
+
+Each component is copied into your project as source, so you can change how it reads your data.
+Remotion is a prerequisite; Remocn doesn't set it up for you.
+
+## How do I drive a chart from data in Remotion?
+
+A chart in Remotion is a React component whose props are the data and whose animation is a
+function of the frame. The data never changes during the render; only the frame does. A bar chart
+written by hand:
+
+```tsx
+import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+
+type Bar = { label: string; value: number };
+
+export const Bars = ({ data }: { data: Bar[] }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const max = Math.max(...data.map((d) => d.value));
+
+  return (
+    <svg viewBox="0 0 1000 500">
+      {data.map((d, i) => {
+        // Each bar starts 6 frames after the previous one and springs to its height.
+        const grow = spring({ frame: frame - i * 6, fps, config: { damping: 200 } });
+        const h = (d.value / max) * 440 * grow;
+        const w = 1000 / data.length;
+        return (
+          <rect
+            key={d.label}
+            x={i * w + 8}
+            y={480 - h}
+            width={w - 16}
+            height={h}
+            fill="#0ea5e9"
+          />
+        );
+      })}
+    </svg>
+  );
+};
+```
+
+Three rules keep a data-driven chart correct in the rendered MP4:
+
+- **Scale from the data, not from constants.** Divide by the data's own maximum (or a fixed axis
+  maximum you choose on purpose), so a new dataset still fits the frame.
+- **Load the data before the render, not during it.** Import a JSON file, pass `--props` on the
+  command line, or fetch inside `calculateMetadata()`. A `fetch()` inside the component runs once
+  per frame and per render thread.
+- **No CSS transitions and no `Math.random()`.** Remotion renders frames out of order; every value
+  has to come from the frame. Use Remotion's seeded `random()` if you need jitter.
+
+The same chart from Remocn:
+
+```bash
+npx shadcn@latest add @remocn/animated-bar-chart
+```
+
+```tsx
+import { AnimatedBarChart } from "@/components/remocn/animated-bar-chart";
+
+<AnimatedBarChart
+  data={[35, 60, 45, 80, 55]}
+  labels={["Jan", "Feb", "Mar", "Apr", "May"]}
+  barColor="#0ea5e9"
+/>;
+```
+
+## Which chart component should I use?
+
+Each component's page lists its props and its natural length in 30 fps frames. Double that length
+for a 60 fps composition, and add hold frames if the chart should stay on screen after it settles.
+
+| Chart | Component | What it does with your data | Length | Install |
+|---|---|---|---|---|
+| Bar chart | [Animated Bar Chart](/docs/ui-blocks/animated-bar-chart) | `data` (numbers) and `labels` spring up as bars, auto-scaled | 90f | `npx shadcn@latest add @remocn/animated-bar-chart` |
+| Bars with a hero stat | [Spring Bars](/docs/numbers/spring-bars) | Bars spring up with overshoot, one highlighted under a headline stat | 127f | `npx shadcn@latest add @remocn/spring-bars` |
+| Bar race (speed) | [Benchmark Race](/docs/numbers/benchmark-race) | `lanes` (label, seconds) race on one clock; the highlighted lane wins | 104f | `npx shadcn@latest add @remocn/benchmark-race` |
+| Bar race (ranking) | [Rank Climb](/docs/numbers/rank-climb) | `items` (label, value) as a ranked list; your `brand` overtakes rows from `from` to `to` | 140f | `npx shadcn@latest add @remocn/rank-climb` |
+| Line chart | [Animated Line Chart](/docs/ui-blocks/animated-line-chart) | `data` (y-values) draws left to right, auto-scaled | 90f | `npx shadcn@latest add @remocn/animated-line-chart` |
+| Growth curve | [Growth Line](/docs/numbers/growth-line) | A stylized curve through `milestones` to a `value` like "100k" | 148f | `npx shadcn@latest add @remocn/growth-line` |
+| Shares over time | [Stacked Shift](/docs/numbers/stacked-shift) | `series` of values per `years` entry, stacked, shifting year to year | 150f | `npx shadcn@latest add @remocn/stacked-shift` |
+| Donut / pie | [Share Donut](/docs/numbers/share-donut) | `segments` (label, value) sweep around; the `highlight` slice detaches | 96f | `npx shadcn@latest add @remocn/share-donut` |
+| Parts of a whole | [Treemap Split](/docs/numbers/treemap-split) | Category tiles, the biggest in gradient with its label | 130f | `npx shadcn@latest add @remocn/treemap-split` |
+| Gains and losses | [Waterfall Chart](/docs/numbers/waterfall-chart) | Steps through gains and losses into a total | 111f | `npx shadcn@latest add @remocn/waterfall-chart` |
+| Sankey | [Sankey Flow](/docs/numbers/sankey-flow) | `sources` (label, value) flow into one `target` that shows the sum | 98f | `npx shadcn@latest add @remocn/sankey-flow` |
+| Counter (odometer) | [Rolling Number](/docs/typography/rolling-number) | Counts `from` → `to` on digit columns, with a gap every three digits | 150f | `npx shadcn@latest add @remocn/rolling-number` |
+| Several stats in a row | [Stat Sequence](/docs/numbers/stat-sequence) | `stats` (value, unit, label) cut in one by one, then settle into a row | 126f | `npx shadcn@latest add @remocn/stat-sequence` |
+| Big number, short form | [Compact Stat](/docs/numbers/compact-stat) | A long number retracts into a compact figure with a K, M or B suffix | 96f | `npx shadcn@latest add @remocn/compact-stat` |
+| World map | [Dot Map](/docs/numbers/dot-map) | `cities` (`{ lon, lat }`) light up while a counter rises to `count` | 113f | `npx shadcn@latest add @remocn/dot-map` |
+| Globe with routes | [Dot Globe](/docs/numbers/dot-globe) | `routes` between cities fly as arcs; each landing ticks the counter | 210f | `npx shadcn@latest add @remocn/dot-globe` |
+
+What the table doesn't cover, honestly:
+
+- **No multi-period bar chart race.** There is no component that takes a full time series and
+  re-sorts every bar per period. Rank Climb moves one row through a ranked list; Benchmark Race
+  races finish times. For a classic "bar chart race", write it by hand on top of the bar example
+  above (sort per period, `interpolate()` each bar's y between its old and new rank).
+- **Maps are world-scale and dotted.** Dot Map and Dot Globe place cities by longitude and latitude.
+  There are no country or state shading (choropleth) maps.
+- **Some charts are stylized.** Growth Line draws a curve shaped by `steepness`, not your data
+  points; use Animated Line Chart when the line has to plot real values.
+
+The [Numbers & Stats](/docs/numbers) page lists all 124 components, grouped as stat reveals,
+counters, charts, comparisons, countdowns and prices.
+
+## Example: a metrics recap video from a JSON file
+
+A monthly or yearly recap: three headline numbers, the growth curve, where users came from, and
+your share. The data lives in one JSON file, so next month you edit numbers, not code.
+
+```bash
+npx shadcn@latest add @remocn/stat-sequence @remocn/growth-line @remocn/sankey-flow @remocn/share-donut
+```
+
+```json title="src/data/metrics.json"
+{
+  "product": "Acme",
+  "period": "2026 in numbers",
+  "stats": [
+    { "value": 48210, "unit": "+", "label": "users" },
+    { "value": 99.95, "unit": "%", "label": "uptime" },
+    { "value": 1240000, "label": "API calls a day" }
+  ],
+  "growth": { "value": "48k", "label": "users by December", "milestones": ["1k", "10k"] },
+  "sources": [
+    { "label": "Search", "value": 21400 },
+    { "label": "Referrals", "value": 15800 },
+    { "label": "Social", "value": 11010 }
+  ],
+  "share": [
+    { "label": "Acme", "value": 31 },
+    { "label": "Competitor A", "value": 27 },
+    { "label": "Other", "value": 42 }
+  ]
+}
+```
+
+```tsx
+// src/MetricsRecap.tsx
+import { AbsoluteFill, Series } from "remotion";
+import { GrowthLine } from "@/components/remocn/growth-line";
+import { SankeyFlow } from "@/components/remocn/sankey-flow";
+import { ShareDonut } from "@/components/remocn/share-donut";
+import { StatSequence } from "@/components/remocn/stat-sequence";
+import defaults from "./data/metrics.json";
+
+export type Metrics = typeof defaults;
+
+// Format once, here: components show the string they're given.
+const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
+const full = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+const show = (n: number) => (n >= 1_000_000 ? compact.format(n) : full.format(n));
+
+// Natural lengths are 30 fps frames; this composition runs at 60 fps,
+// so each is doubled, plus a hold so the final number can be read.
+const at60 = (frames30: number, holdSeconds = 1.5) => frames30 * 2 + holdSeconds * 60;
+
+export const MetricsRecap = ({ data = defaults }: { data?: Metrics }) => (
+  <AbsoluteFill>
+    <Series>
+      <Series.Sequence durationInFrames={at60(126)}>
+        <StatSequence
+          name={data.product}
+          eyebrow={data.period}
+          stats={data.stats.map((s) => ({ ...s, value: show(s.value) }))}
+        />
+      </Series.Sequence>
+      <Series.Sequence durationInFrames={at60(148)}>
+        <GrowthLine
+          value={data.growth.value}
+          label={data.growth.label}
+          milestones={data.growth.milestones.map((label) => ({ label }))}
+        />
+      </Series.Sequence>
+      <Series.Sequence durationInFrames={at60(98)}>
+        <SankeyFlow target={data.product} label="new users" sources={data.sources} />
+      </Series.Sequence>
+      <Series.Sequence durationInFrames={at60(96, 2)}>
+        <ShareDonut segments={data.share} highlight={0} />
+      </Series.Sequence>
+    </Series>
+  </AbsoluteFill>
+);
+```
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MetricsRecap } from "./MetricsRecap";
+import defaults from "./data/metrics.json";
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MetricsRecap"
+    component={MetricsRecap}
+    defaultProps={{ data: defaults }}
+    durationInFrames={1408}
+    fps={60}
+    width={1920}
+    height={1080}
+  />
+);
+```
+
+`durationInFrames` is the sum of the four sequences (342 + 386 + 286 + 312). Stat Sequence runs
+about 74 + (stats − 1) × `beat` frames, so if you change the number of stats, change its sequence
+too, or compute the total in `calculateMetadata()`.
+
+Render it with next month's numbers without touching the code: Remotion's `--props` takes a path
+to a JSON file, and its keys override `defaultProps`. Save `{ "data": { ... } }` as
+`november-props.json` and run:
+
+```bash
+npx remotion render MetricsRecap out/recap-november.mp4 --props=./november-props.json
+```
+
+All four scenes take `theme`, `accent`, `ink`, `background` and `fontFamily`, so the recap can
+match your brand; see [Your brand](/docs/guides/your-brand).
+
+## Tips for readable numbers on screen
+
+- **One number per beat.** A headline number reads at a glance; a chart takes longer. If a beat
+  needs a legend to make sense, split it into two beats.
+- **Hold the final value.** The animation ends when the number lands; the viewer needs time after
+  that. Add at least 1–2 seconds of hold on top of each component's length.
+- **Round for the screen.** "1.2M" reads faster than "1,240,000", and "99.95%" is only worth its
+  decimals if the decimals are the point. Format with `Intl.NumberFormat` (`notation: "compact"`)
+  before the value reaches the component.
+- **Keep digits from jumping.** A counter in a proportional font shifts sideways as its digits
+  change. Use `font-variant-numeric: tabular-nums` or fixed-width digit columns; Rolling Number
+  gives every digit its own column, so the number never reflows.
+- **Count with easing, and land exactly.** Ease out so the count slows before the end, and render
+  the final value as the exact number, not a rounded intermediate. Rolling Number counts over 80% of
+  its `Sequence` and settles on `to`, so the sequence length sets the count speed.
+- **Label the unit and the period.** "48k users, 2026" beats a bare "48k". Put the unit next to
+  the number (Stat Sequence's `unit`) and the context under it (`label`).
+- **Highlight one series.** Grey out the rest. Share Donut takes a `highlight` index, Benchmark
+  Race a `highlight` lane and Rank Climb a `brand` row; in your own charts, use one accent color and
+  a neutral for everything else.
+- **Size for the smallest screen.** If the video will be watched on a phone, numbers need to stay
+  large in a 1080 × 1920 frame; see [One video, three formats](/docs/guides/one-video-three-formats).
+- **Animate the data, not the axes.** Gridlines and labels that move at the same time as bars make
+  the viewer track two things. Bring the frame in first, then the values.
+
+## Let an agent build it
+
+With the [agent skill](/docs/getting-started/installation) (`npx skills add Remocn/remocn`), the
+Claude Code / Codex plugin (`/remocn:video <brief>`) or the free MCP server at
+`https://remocn.dev/mcp`, you can hand your coding agent the JSON file and a brief such as "a
+30-second recap of these metrics, dark, one number per beat". The agent searches the same
+components listed above and writes the Remotion code into your project; you render it with
+`npx remotion render`.
+
+## FAQ
+
+**Can Remotion make a chart from a CSV or an API?** Yes. Parse the CSV or call the API in
+`calculateMetadata()` or in a script before rendering, then pass the result as props. Don't fetch
+inside the component on every frame.
+
+**Do Remocn chart components need a charting library?** No. They are SVG and HTML driven by the
+frame, with no D3, Chart.js or Recharts dependency. Remotion is the only runtime.
+
+**Is there a bar chart race component?** Not a multi-period one. Remocn has Benchmark Race (a speed
+race between lanes) and Rank Climb (one entry overtaking a ranked list). A full bar chart race over
+many periods is a hand-written component; the bar chart example above is the starting point.
+
+**Are they free?** Yes. Every Remocn component is MIT-licensed and free. Remotion has its own
+license, which can require a company license for larger teams.

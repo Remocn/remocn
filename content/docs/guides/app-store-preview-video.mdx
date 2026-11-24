@@ -1,0 +1,348 @@
+---
+title: "Remotion iPhone mockup and App Store preview video (886×1920)"
+navTitle: App Store preview video
+description: "How to put a screen recording or screenshot inside an iPhone frame in Remotion, which Remocn phone components to use, and how to build an App Store preview at 886×1920 and a Google Play video from the same project."
+lastModified: 2026-11-24
+---
+
+_Last updated: November 24, 2026._
+
+To make an iPhone mockup in Remotion, put an `<OffthreadVideo>` (or an `<Img>` for a screenshot)
+inside a rounded `div` with `overflow: hidden`, wrap it in a second rounded `div` for the bezel, and
+animate the outer frame, never the video. For an App Store preview video, render a separate
+886×1920, 30 fps composition of 15 to 30 seconds that shows the recording full-screen with text on
+top, because Apple only allows screen captures of the app itself there.
+
+Remocn has the phone scenes ready-made for everything around the store: a phone that scrolls your
+screen ([Phone Scroll](/docs/product-scenes/phone-scroll)), three phones in one frame
+([Phone Trio](/docs/product-scenes/phone-trio)), a desktop-to-phone morph
+([Device Morph](/docs/media/device-morph)) and a store listing that taps Get
+([App Store Listing](/docs/product-scenes/app-store-listing)). They are free, MIT-licensed, and
+installed into your Remotion project with `npx shadcn@latest add @remocn/<name>`.
+
+## How do I put a video inside an iPhone mockup in Remotion?
+
+Two nested boxes: the body with the bezel and the shadow, and the screen that clips the video.
+
+```tsx
+// src/PhoneFrame.tsx
+import type { ReactNode } from "react";
+import {
+  AbsoluteFill,
+  OffthreadVideo,
+  spring,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
+
+// iPhone screen in points: an iPhone screen recording is exactly 3× this.
+const W = 393;
+const H = 852;
+const BEZEL = 14;
+const RADIUS = 62;
+
+export const PhoneFrame = ({ children }: { children: ReactNode }) => (
+  <div
+    style={{
+      width: W + BEZEL * 2,
+      height: H + BEZEL * 2,
+      padding: BEZEL,
+      borderRadius: RADIUS,
+      background: "#0b0b0c",
+      boxShadow: "0 40px 80px rgba(0, 0, 0, 0.35)",
+    }}
+  >
+    <div
+      style={{
+        width: W,
+        height: H,
+        // Inner radius = outer radius minus the bezel, or the corners look off.
+        borderRadius: RADIUS - BEZEL,
+        overflow: "hidden",
+        position: "relative",
+        background: "#000",
+      }}
+    >
+      {children}
+    </div>
+  </div>
+);
+
+export const RecordingInPhone = () => {
+  const frame = useCurrentFrame();
+  const { fps, height } = useVideoConfig();
+  const rise = spring({ frame, fps, config: { damping: 200 } });
+  const fit = (height * 0.8) / (H + BEZEL * 2);
+
+  return (
+    <AbsoluteFill
+      style={{ background: "#f4f2ee", alignItems: "center", justifyContent: "center" }}
+    >
+      {/* Move and scale the frame; the video inside stays untouched. */}
+      <div style={{ transform: `translateY(${(1 - rise) * height}px) scale(${fit})` }}>
+        <PhoneFrame>
+          <OffthreadVideo
+            src={staticFile("recording.mp4")}
+            muted
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </PhoneFrame>
+      </div>
+    </AbsoluteFill>
+  );
+};
+```
+
+What matters in it:
+
+- **`OffthreadVideo`, not `Video`.** Remotion extracts the exact frame with FFmpeg during the
+  render, so the recording stays in sync with your animation in the MP4.
+- **`objectFit: "cover"`** fills the screen without bars. Record at the phone's aspect (an iPhone
+  screen recording is 3× 393×852) and nothing gets cropped.
+- **Animate the frame, not the video.** Springs, rotation and scale go on the outer `div`; the
+  recording just plays.
+- **A screenshot works the same way.** Swap `<OffthreadVideo>` for
+  `<Img src={staticFile("screen.png")} />` from `remotion`.
+- **Put files in `public/`** and load them with `staticFile()`.
+
+## Which Remocn components to use for phone mockups
+
+| You want | Component | Your content goes in |
+| --- | --- | --- |
+| One phone scrolling a long app screen, a headline beside it | [Phone Scroll](/docs/product-scenes/phone-scroll) | `src` (tall screenshot) or `children` (393pt-wide screen, a video works) |
+| Three phones at once: profile, feed, a "we're live" banner | [Phone Trio](/docs/product-scenes/phone-trio) | `images`, `name`, `headline`, `liveLabel` |
+| Your layout shrinking from desktop to tablet to phone | [Device Morph](/docs/media/device-morph) | `children` (responsive UI) or `src` (screenshot) |
+| The store page: tap Get, download, button becomes Open | [App Store Listing](/docs/product-scenes/app-store-listing) | `appName`, `iconSrc`, `rating`, `screenshots` |
+| A metric card that grows a phone around it | [Device Grows Around](/docs/product-scenes/device-grows-around) | `name`, `metric`, `total` |
+| A camera tour of a desktop screenshot | [Screenshot Tour](/docs/media/screenshot-tour) | `src` and the `stops` to push in on |
+
+Install any of them with the shadcn CLI:
+
+```bash
+npx shadcn@latest add @remocn/phone-scroll
+```
+
+The source lands in `components/remocn/`, so the frame, timing and colors are yours to edit.
+Phone Scroll, Phone Trio and App Store Listing switch to a stacked layout when the composition is
+taller than it is wide, so the same component works in a 16:9 cut and a 9:16 one. Device Morph is
+built for a horizontal frame.
+
+### A screen recording inside Phone Scroll
+
+Phone Scroll takes any 393pt-wide screen as `children`, so a recording goes straight in. A single
+stop at `0` keeps the screen still and lets the video do the moving (the touch dot still taps once):
+
+```tsx
+import { OffthreadVideo, staticFile } from "remotion";
+import { PhoneScroll } from "@/components/remocn/phone-scroll";
+
+export const PhoneScene = () => (
+  <PhoneScroll stops={[0]} label="Plan your week in a minute." labelAccent="a minute.">
+    <OffthreadVideo
+      src={staticFile("recording.mp4")}
+      muted
+      style={{ width: 393, height: 852, objectFit: "cover", display: "block" }}
+    />
+  </PhoneScroll>
+);
+```
+
+<ComponentPreview name="phone-scroll" />
+
+For a tall screenshot instead, pass `src` and the scroll offsets: `stops={[930, 1840]}`.
+[How to turn app screenshots into a video](/docs/guides/screenshots-to-video) walks through it.
+
+## App Store preview video specs
+
+From Apple's [App preview specifications](https://developer.apple.com/help/app-store-connect/reference/app-preview-specifications),
+checked November 24, 2026:
+
+| | App Store app preview |
+| --- | --- |
+| iPhone, current Face ID / Dynamic Island sizes | **886×1920** portrait, 1920×886 landscape |
+| iPhone with a Home button (large) | 1080×1920 portrait, 1920×1080 landscape |
+| iPad 11" and 13" | 1200×1600 portrait, 1600×1200 landscape |
+| Mac | 1920×1080, landscape only |
+| Length | 15 to 30 seconds |
+| Frame rate | 30 fps at most |
+| File | H.264 in `.mov`, `.m4v` or `.mp4` (10–12 Mbps target), or ProRes 422 HQ in `.mov`; up to 500 MB |
+| Audio | Stereo; for H.264, AAC 256 kbps at 44.1 or 48 kHz |
+| How many | Up to 3 per device size and language |
+| Poster frame | 5 seconds in by default |
+
+If you skip a device size, App Store Connect scales the preview from the next larger size, so one
+886×1920 file covers the current iPhones.
+
+### What Apple allows inside the preview
+
+App Review Guideline [2.3.4](https://developer.apple.com/app-store/review/guidelines/) says
+previews "may only use video screen captures of the app itself", with narration and video or text
+overlays allowed. So in practice:
+
+- **The App Store preview slot:** the recording full-screen, text overlays, transitions between
+  clips. No phone frame around it, no store-page animation, no footage from outside the app.
+- **Everywhere else** (your landing page, Product Hunt, X, Reels, the Google Play video): phone
+  mockups, Phone Trio, App Store Listing and the rest are fair game.
+
+Apple's rules change; read the current guideline before you submit.
+
+## Build the 886×1920 App Store composition in Remotion
+
+The preview is its own composition: 886×1920, **30 fps** (not the 60 fps the rest of these docs
+use, since Apple caps the frame rate), 25 seconds. Captions come from any Remocn text effect that
+renders on a transparent background, like [Soft Blur In](/docs/typography/soft-blur-in):
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition, OffthreadVideo, Sequence, staticFile } from "remotion";
+import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
+
+const Caption = ({ text }: { text: string }) => (
+  <div style={{ position: "absolute", top: 160, left: 0, right: 0, height: 220 }}>
+    <SoftBlurIn text={text} fontSize={64} color="#ffffff" />
+  </div>
+);
+
+const AppPreview = () => (
+  <AbsoluteFill style={{ background: "#000" }}>
+    <OffthreadVideo
+      src={staticFile("recording.mp4")}
+      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+    />
+    <Sequence from={0} durationInFrames={210}>
+      <Caption text="Plan your week" />
+    </Sequence>
+    <Sequence from={240} durationInFrames={210}>
+      <Caption text="Share it in one tap" />
+    </Sequence>
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <>
+    <Composition
+      id="AppPreviewIPhone"
+      component={AppPreview}
+      durationInFrames={750}
+      fps={30}
+      width={886}
+      height={1920}
+    />
+    <Composition
+      id="AppPreviewIPad"
+      component={AppPreview}
+      durationInFrames={750}
+      fps={30}
+      width={1200}
+      height={1600}
+    />
+  </>
+);
+```
+
+Remocn components time themselves in seconds, so they play at the same speed in a 30 fps
+composition as in a 60 fps one. Numbers you hand to Remotion (`from`, `durationInFrames`) are in the
+composition's own frames: at 30 fps, 750 frames is 25 seconds.
+
+Render it with Remotion's CLI:
+
+```bash
+npx remotion render AppPreviewIPhone out/app-preview-iphone.mp4 \
+  --codec h264 --video-bitrate 12M --audio-bitrate 256k
+```
+
+Keep captions out of the top and bottom edges, where the status bar and the store's controls sit,
+and put the frame you want as the poster at the 5-second mark.
+
+## Google Play preview video requirements
+
+Google Play doesn't take a file. From Google's
+[Play Console help](https://support.google.com/googleplay/android-developer/answer/9866151),
+checked November 24, 2026:
+
+- **A YouTube URL** of one video, not a playlist or channel, with no extra parameters.
+- **Ads off**, **public or unlisted**, **not age-restricted**, **embeddable**.
+- **Either orientation.** Avoid black bars on a portrait video.
+- **No hard length limit**, but only the first 30 seconds autoplay, so lead with the app.
+
+Device frames are not ruled out there, so this is where a Phone Scroll or Phone Trio opening fits.
+Render a 1080×1920 or 1920×1080 composition at 60 fps and upload it to YouTube.
+
+## Re-cut one video to vertical
+
+You don't build the App Store preview, the Play video, the landing-page loop and the Reel
+separately. Finish the horizontal video first, then ask your agent for the other shapes:
+
+<GuidePrompt>
+
+```text
+Make a vertical 9:16 version of this video, keeping every beat.
+```
+
+</GuidePrompt>
+
+[One video, three formats](/docs/guides/one-video-three-formats) covers what breaks when the frame
+gets narrow: long lines, side-by-side layouts, text near the edges. For the App Store cut, add one
+more sentence: "Make an 886×1920, 30 fps version that keeps only the full-screen recording and
+captions, no phone frames."
+
+## Build it with an AI agent
+
+Set up Remocn once ([Setup](/docs/guides/setup)): the agent skill (`npx skills add Remocn/remocn`),
+the Claude Code plugin, or the [MCP server](/docs/getting-started/mcp-server). Put your screen recording
+in `public/` and ask:
+
+<GuidePrompt>
+
+```text
+Using remocn components (remocn.dev), make two videos for <APP NAME> from
+public/recording.mp4:
+1. A 25-second App Store preview: 886×1920, 30fps, the recording full-screen
+   with short captions on top: <POINT 1>, <POINT 2>, <POINT 3>. No device frames.
+2. A 30-second promo at 1080×1920, 60fps: open with phone-scroll showing the
+   recording in the phone, then app-store-listing for the install moment,
+   close on <URL>.
+```
+
+</GuidePrompt>
+
+## FAQ
+
+<Faq>
+
+**How do I put a video inside an iPhone mockup in Remotion?**
+Nest an `<OffthreadVideo>` with `objectFit: "cover"` inside a rounded `div` with `overflow: hidden`, wrap that in a second rounded `div` for the bezel, and animate the outer one. Or install [Phone Scroll](/docs/product-scenes/phone-scroll) with `npx shadcn@latest add @remocn/phone-scroll` and pass the video as `children`.
+
+**What resolution is an App Store preview video?**
+886×1920 portrait (or 1920×886 landscape) for current iPhones, 1200×1600 for 11" and 13" iPads, 1920×1080 for Mac. 15 to 30 seconds, 30 fps at most, up to 500 MB.
+
+**Can I put a device frame in my App Store preview?**
+Apple's guideline 2.3.4 says previews may only use screen captures of the app itself, with narration and text or video overlays. Keep the App Store cut to the full-screen recording, and use phone mockups in your marketing videos and the Google Play video.
+
+**Can Remotion render 886×1920?**
+Yes. Set `width={886}` and `height={1920}` on the `<Composition>`, `fps={30}`, and render with `--codec h264`. Both sides are even numbers, which H.264 needs.
+
+**Do Remocn components work at 30 fps?**
+Yes. They keep their speed at any composition frame rate; at 30 fps they just draw fewer in-between frames.
+
+**What does Google Play need for a preview video?**
+A YouTube URL of one public or unlisted video, with ads off, no age restriction and embedding allowed. Landscape or portrait both work; only the first 30 seconds autoplay.
+
+**Is Remocn free?**
+Yes. Remocn is MIT-licensed and the components are copied into your project, with no account or runtime dependency. Remotion keeps [its own license](https://www.remotion.dev/docs/license). Remocn is an independent project, not affiliated with Remotion, shadcn or Apple.
+
+</Faq>
+
+## Sources
+
+- Apple, [App preview specifications](https://developer.apple.com/help/app-store-connect/reference/app-preview-specifications) (checked November 24, 2026)
+- Apple, [App Review Guidelines, 2.3.4](https://developer.apple.com/app-store/review/guidelines/) (checked November 24, 2026)
+- Google, [Add preview assets to showcase your app](https://support.google.com/googleplay/android-developer/answer/9866151) (checked November 24, 2026)
+
+## What's next
+
+- [Product scenes](/docs/product-scenes): every phone and app scene, with live previews
+- [How to turn app screenshots into a video](/docs/guides/screenshots-to-video): Phone Scroll and Screenshot Tour from screenshots alone
+- [One video, three formats](/docs/guides/one-video-three-formats): re-cut a finished video to 9:16 and 1:1
+- [Exporting your video](/docs/guides/exporting-your-video): rendering the final file
