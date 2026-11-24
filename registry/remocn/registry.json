@@ -13100,10 +13100,19 @@
         {
           "path": "raster-paint/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/raster-paint.tsx"
+          "target": "components/remocn/raster-paint/index.tsx"
+        },
+        {
+          "path": "raster-paint/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/raster-paint/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "pixel-bars",

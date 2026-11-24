@@ -6,6 +6,8 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type RasterPaintElementId, rasterPaintTimeline } from "./timeline";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400"],
@@ -34,6 +36,12 @@ export interface RasterPaintProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the camera, the scan line, the scan and the
+   * label, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RasterPaintElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -67,12 +75,6 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
-
-const LINE_IN = 2;
-const SCAN_AT = 10;
-const SCAN_DUR = 58;
-const SWEEP = 4;
-const TRAIL = 12;
 
 const GLYPHS: Record<string, string[]> = {
   "0": [".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."],
@@ -233,31 +235,42 @@ function ScaleLayer({
   );
 }
 
-export function RasterPaint({
-  title = "10x",
-  label = "Faster renders in remocn 2.0",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = mono,
-  scanLength = SCAN_DUR,
-  trail = TRAIL,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: RasterPaintProps) {
+export function RasterPaint(props: RasterPaintProps) {
+  const {
+    title = "10x",
+    label = "Faster renders in remocn 2.0",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = mono,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    rasterPaintTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const camEl = tl.get("camera");
+  const driftEl = tl.get("drift");
+  const lineInEl = tl.get("line-in");
+  const scan = tl.get("scan");
+  const lineOutEl = tl.get("line-out");
+  const labelEl = tl.get("label");
   const u = H / 720;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];
   const fg = ink ?? pal.muted;
   const stage =
     background === "transparent" ? "transparent" : (background ?? pal.bg);
-  const labelAt = SCAN_AT + scanLength + 6;
 
   const bitmap = useMemo(() => scale2x(rasterize(title)), [title]);
   const rows = bitmap.length;
@@ -276,9 +289,14 @@ export function RasterPaint({
   const accRgb = parseHex(accent) ?? [59, 91, 253];
   const hotRgb = accRgb.map((v) => v + (255 - v) * 0.35);
   const haloRgb = pal.halo.map((c) => parseHex(c) ?? accRgb);
-  const drift = interpolate(t, [0, 120], [-0.06, 0.06], CLAMP);
+  const drift = interpolate(
+    t,
+    [driftEl.start, driftEl.end],
+    [-0.06, 0.06],
+    CLAMP,
+  );
 
-  const scanK = interpolate(t, [SCAN_AT, SCAN_AT + scanLength], [0, 1], CLAMP);
+  const scanK = interpolate(t, [scan.start, scan.end], [0, 1], CLAMP);
   const headRow = -1.5 + SCAN(scanK) * (rows + 3);
   const headY = top + headRow * p;
   const rowTime = (r: number) => {
@@ -290,7 +308,7 @@ export function RasterPaint({
       if (SCAN(mid) < target) lo = mid;
       else hi = mid;
     }
-    return SCAN_AT + lo * scanLength + 1 + hash(r * 3.17) * 2.4;
+    return scan.start + lo * scan.length + 1 + hash(r * 3.17) * 2.4;
   };
 
   const rects: React.ReactNode[] = [];
@@ -300,11 +318,20 @@ export function RasterPaint({
     const y = top + r * p + (p - sq) / 2;
     for (let c = 0; c < cols; c++) {
       if (!bitmap[r][c]) continue;
-      const tp = tr + (c / cols) * SWEEP;
+      const tp = tr + (c / cols) * scan.beat("sweep");
       const age = t - tp;
       if (age < 0) continue;
-      const on = EASE_OUT(interpolate(age, [0, 3], [0, 1], CLAMP));
-      const cool = EASE_OUT(interpolate(age, [1, trail], [0, 1], CLAMP));
+      const on = EASE_OUT(
+        interpolate(age, [0, scan.beat("on")], [0, 1], CLAMP),
+      );
+      const cool = EASE_OUT(
+        interpolate(
+          age,
+          [scan.beat("coolFrom"), scan.beat("cool")],
+          [0, 1],
+          CLAMP,
+        ),
+      );
       const settled = ramp(
         haloRgb,
         (r / rows) * 0.72 + (c / cols) * 0.28 + drift,
@@ -331,11 +358,11 @@ export function RasterPaint({
 
   const over = 40 * u;
   const lineIn = EASE_OUT(
-    interpolate(t, [LINE_IN, SCAN_AT + 4], [0, 1], CLAMP),
+    interpolate(t, [lineInEl.start, lineInEl.end], [0, 1], CLAMP),
   );
   const lineOut = interpolate(
     t,
-    [SCAN_AT + scanLength - 6, SCAN_AT + scanLength + 2],
+    [lineOutEl.start, lineOutEl.end],
     [1, 0],
     CLAMP,
   );
@@ -343,10 +370,10 @@ export function RasterPaint({
   const halfLen = (blockW / 2 + over) * lineIn;
   const bandH = p * 7;
   const labelK = EASE_OUT(
-    interpolate(t, [labelAt, labelAt + 16], [0, 1], CLAMP),
+    interpolate(t, [labelEl.start, labelEl.end], [0, 1], CLAMP),
   );
   const camAt = (f: number) =>
-    interpolate(f, [0, labelAt + 30], [1.03, 1], {
+    interpolate(f, [camEl.start, camEl.end], [1.03, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });

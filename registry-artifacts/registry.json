@@ -13095,12 +13095,21 @@
       "title": "Raster Paint",
       "description": "A pixelated 10x is painted tile by tile in warm-to-blue colours.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/raster-paint/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/raster-paint.tsx"
+          "target": "components/remocn/raster-paint/index.tsx"
+        },
+        {
+          "path": "registry/remocn/raster-paint/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/raster-paint/timeline.ts"
         }
       ],
       "type": "registry:component"
