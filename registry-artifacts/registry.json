@@ -15764,13 +15764,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/voice-agent/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/voice-agent.tsx"
+          "target": "components/remocn/voice-agent/index.tsx"
+        },
+        {
+          "path": "registry/remocn/voice-agent/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/voice-agent/timeline.ts"
         }
       ],
       "type": "registry:component"

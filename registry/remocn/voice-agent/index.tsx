@@ -17,6 +17,18 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TURNS,
+  planVoiceTurns,
+  turnWords,
+  type VoiceAgentElementId,
+  voiceAgentTimeline,
+} from "./timeline";
 
 const hankenFont = loadFont("normal", {
   weights: ["300", "400"],
@@ -87,42 +99,13 @@ export interface VoiceAgentProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the call window, each turn, word and tool
+   * call, the hang-up and the summary, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<VoiceAgentElementId>;
 }
-
-const DEFAULT_TURNS: VoiceTurn[] = [
-  {
-    speaker: "agent",
-    text: "Hi, this is Ava at Fernway. How can I help you tonight?",
-  },
-  {
-    speaker: "caller",
-    text: "Can I get a table for four this Saturday?",
-  },
-  {
-    speaker: "agent",
-    text: "Saturday works. I have 7:30 on the patio, or 8:15 inside if you would rather stay warm.",
-    interruptedAfter: 12,
-  },
-  {
-    speaker: "caller",
-    text: "7:30 on the patio. It’s a birthday, too.",
-  },
-  {
-    speaker: "agent",
-    text: "Lovely, booking that for you now.",
-    tool: {
-      name: "book_table",
-      pending: "Booking table at Fernway",
-      done: "Booked table at Fernway",
-      detail: "Sat · 7:30 pm · 4 guests",
-      result: "FW-2841",
-    },
-  },
-  {
-    speaker: "agent",
-    text: "You’re all set. Patio for four at 7:30, and I’ve added a birthday note.",
-  },
-];
 
 const DEFAULT_SUMMARY: VoiceSummaryRow[] = [
   { label: "Guest", value: "Maya Chen · party of 4" },
@@ -150,7 +133,6 @@ const ICONS = {
 type IconName = keyof typeof ICONS;
 
 const BARS = 30;
-const WPF = 2.4;
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
@@ -413,16 +395,14 @@ function contentHeight(el: Element) {
 
 function ToolRow({
   tool,
-  start,
-  done,
+  el,
   frame,
   pal,
   accent,
   held,
 }: {
   tool: VoiceToolCall;
-  start: number;
-  done: number;
+  el: El;
   frame: number;
   pal: Pal;
   accent: string;
@@ -430,8 +410,10 @@ function ToolRow({
   held: boolean;
 }) {
   const glide = useGlide();
-  const inP = tween(frame, start, start + 10);
-  const swap = tween(frame, done, done + 8, MOVE);
+  const start = el.start;
+  const done = el.end;
+  const inP = tween(frame, start, start + el.beat("in"));
+  const swap = tween(frame, done, done + el.beat("swap"), MOVE);
   const ok = spring({
     frame: frame - done,
     fps: 30,
@@ -521,7 +503,9 @@ function TurnRow({
   held: boolean;
 }) {
   const agent = p.turn.speaker === "agent";
-  const cut = p.turn.interruptedAfter ? tween(frame, p.end - 2, p.end + 6) : 0;
+  const cut = p.turn.interruptedAfter
+    ? tween(frame, p.end - p.el.beat("cut"), p.end + p.el.beat("cutIn"))
+    : 0;
   return (
     <div style={{ display: "flex", gap: 18, padding: "11px 0" }}>
       <div
@@ -564,7 +548,11 @@ function TurnRow({
           }}
         >
           {p.words.map((w, k) => {
-            const o = tween(frame, p.wordAt[k], p.wordAt[k] + 5);
+            const o = tween(
+              frame,
+              p.wordAt[k],
+              p.wordAt[k] + p.wordEls[k].beat("fade"),
+            );
             return (
               <span
                 key={k}
@@ -576,11 +564,10 @@ function TurnRow({
             );
           })}
         </div>
-        {p.turn.tool ? (
+        {p.turn.tool && p.toolEl ? (
           <ToolRow
             tool={p.turn.tool}
-            start={p.toolStart}
-            done={p.toolDone}
+            el={p.toolEl}
             frame={frame}
             pal={pal}
             accent={accent}
@@ -596,7 +583,7 @@ function SummaryCard({
   rows,
   title,
   status,
-  at,
+  el,
   frame,
   fps,
   pal,
@@ -606,7 +593,7 @@ function SummaryCard({
   rows: VoiceSummaryRow[];
   title: string;
   status: string;
-  at: number;
+  el: El;
   frame: number;
   fps: number;
   pal: Pal;
@@ -615,6 +602,7 @@ function SummaryCard({
   held: boolean;
 }) {
   const glide = useGlide();
+  const at = el.start;
   const inAt = (f: number) => spring({ frame: f - at, fps, config: CARD });
   const inP = inAt(frame);
   const settling =
@@ -646,7 +634,11 @@ function SummaryCard({
         </div>
         <div style={{ padding: "8px 20px" }}>
           {rows.map((r, i) => {
-            const a = tween(frame, at + 4 + i * 2, at + 14 + i * 2);
+            const a = tween(
+              frame,
+              at + el.beat("row") + i * el.beat("stagger"),
+              at + el.beat("rowIn") + i * el.beat("stagger"),
+            );
             return (
               <div
                 key={r.label}
@@ -681,8 +673,8 @@ function SummaryCard({
             color: pal.muted,
             opacity: tween(
               frame,
-              at + 6 + rows.length * 2,
-              at + 16 + rows.length * 2,
+              at + el.beat("foot") + rows.length * el.beat("stagger"),
+              at + el.beat("footIn") + rows.length * el.beat("stagger"),
             ),
           }}
         >
@@ -709,50 +701,88 @@ function ScaleLayer({
   );
 }
 
-export function VoiceAgent({
-  agentName = "Ava",
-  agentRole = "Fernway concierge",
-  callerName = "Maya Chen",
-  callerLine = "+1 (415) ••• 0192",
-  turns = DEFAULT_TURNS,
-  summaryTitle = "Call summary",
-  summaryStatus = "Booked",
-  summary = DEFAULT_SUMMARY,
-  startSeconds = 41,
-  endLabel = "End call",
-  stagger = WPF,
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: VoiceAgentProps) {
+export function VoiceAgent(props: VoiceAgentProps) {
+  const {
+    agentName = "Ava",
+    agentRole = "Fernway concierge",
+    callerName = "Maya Chen",
+    callerLine = "+1 (415) ••• 0192",
+    turns = DEFAULT_TURNS,
+    summaryTitle = "Call summary",
+    summaryStatus = "Booked",
+    summary = DEFAULT_SUMMARY,
+    startSeconds = 41,
+    endLabel = "End call",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    voiceAgentTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const tall = height > width;
   const DW = tall ? 720 : 1280;
   const DH = tall ? 1280 : 720;
   const u = Math.min(width / DW, height / DH);
   const themePal = palette(theme);
   const pal = ink === undefined ? themePal : { ...themePal, text: ink };
-  const tl = plan(turns, stagger);
-  const ended = tween(frame, tl.callEnd, tl.callEnd + 8, MOVE);
-  const callSec = startSeconds + Math.min(frame, tl.callEnd) / 30;
-  const winAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
+  const callEl = tl.get("call");
+  const panelEl = tl.get("panel");
+  const hangup = tl.get("hangup");
+  const summaryEl = tl.get("summary");
+  const plan = {
+    turns: turns.map((turn, i): TurnPlan => {
+      const el = tl.get(`turn:${i}`);
+      const words = turnWords(turn);
+      const wordEls = words.map((_, k) => tl.get(`word:${i}:${k}`));
+      const toolEl = turn.tool ? tl.get(`tool:${i}`) : undefined;
+      return {
+        turn,
+        words,
+        wordAt: wordEls.map((w) => w.start),
+        start: el.start,
+        end: el.end,
+        toolStart: toolEl?.start ?? -1,
+        toolDone: toolEl?.end ?? -1,
+        el,
+        wordEls,
+        toolEl,
+      };
+    }),
+    callEnd: hangup.start,
+    summaryAt: summaryEl.start,
+  };
+  const ended = tween(
+    frame,
+    plan.callEnd,
+    plan.callEnd + hangup.beat("close"),
+    MOVE,
+  );
+  const callSec = startSeconds + Math.min(frame, plan.callEnd) / 30;
+  const winAt = (f: number) =>
+    spring({ frame: f - callEl.start, fps, config: HEAVY });
   const winIn = winAt(frame);
   // Whether a value built from the frame moves into or out of this frame.
   const stirs = (at: (f: number) => number, eps: number) =>
     Math.abs(at(frame + 1) - at(frame)) > eps ||
     Math.abs(at(frame) - at(frame - 1)) > eps;
-  const agentLvl = level(tl.turns, "agent", frame) * (1 - ended);
-  const callerLvl = level(tl.turns, "caller", frame) * (1 - ended);
-  const toolLive = tl.turns.find(
+  const agentLvl = level(plan.turns, "agent", frame) * (1 - ended);
+  const callerLvl = level(plan.turns, "caller", frame) * (1 - ended);
+  const toolLive = plan.turns.find(
     (p) => p.turn.tool && frame >= p.toolStart && frame < p.toolDone,
   );
   const agentState =
@@ -767,10 +797,18 @@ export function VoiceAgent({
     ended > 0.5 ? "Ended" : callerLvl > 0.04 ? "Speaking" : "Listening";
   const latency = Math.round(380 + 90 * noise(3, frame / 18));
   const camAt = (f: number) =>
-    interpolate(f, [tl.summaryAt - 10, tl.summaryAt + 40], [1, 1.025], {
-      ...clampX,
-      easing: CAMERA,
-    });
+    interpolate(
+      f,
+      [
+        plan.summaryAt + summaryEl.beat("lean"),
+        plan.summaryAt + summaryEl.beat("leanEnd"),
+      ],
+      [1, 1.025],
+      {
+        ...clampX,
+        easing: CAMERA,
+      },
+    );
   const cam = camAt(frame);
   // The window carries the whole call, so its tilt covers everything inside
   // while it rises or the camera leans in; the movers inside tilt themselves
@@ -781,29 +819,50 @@ export function VoiceAgent({
   const held = !winMoving;
   const live = 1 - ended;
   const endPressAt = (f: number) =>
-    spring({ frame: f - tl.callEnd + 2, fps, config: CHIP }) -
-    spring({ frame: f - tl.callEnd - 3, fps, config: CHIP });
+    spring({
+      frame: f - plan.callEnd - hangup.beat("press"),
+      fps,
+      config: CHIP,
+    }) -
+    spring({
+      frame: f - plan.callEnd - hangup.beat("release"),
+      fps,
+      config: CHIP,
+    });
   const endPress = endPressAt(frame);
   const endPressing = held && stirs((f) => Math.max(0, endPressAt(f)), 1e-5);
 
   // The transcript in flow order: every row and how far open it is.
   const flowAt = (f: number) => [
-    ...tl.turns.map((p, i) => ({
+    ...plan.turns.map((p, i) => ({
       kind: "turn" as const,
       i,
-      open: tween(f, p.start - 3, p.start + 7, MOVE),
+      open: tween(
+        f,
+        p.start + p.el.beat("open"),
+        p.start + p.el.beat("opened"),
+        MOVE,
+      ),
     })),
     {
       kind: "end" as const,
       i: -1,
-      open: f >= tl.callEnd ? tween(f, tl.callEnd, tl.callEnd + 8, MOVE) : 0,
+      open:
+        f >= plan.callEnd
+          ? tween(f, plan.callEnd, plan.callEnd + hangup.beat("close"), MOVE)
+          : 0,
     },
     {
       kind: "summary" as const,
       i: -1,
       open:
-        f >= tl.summaryAt - 2
-          ? tween(f, tl.summaryAt - 2, tl.summaryAt + 10, MOVE)
+        f >= plan.summaryAt + summaryEl.beat("open")
+          ? tween(
+              f,
+              plan.summaryAt + summaryEl.beat("open"),
+              plan.summaryAt + summaryEl.beat("opened"),
+              MOVE,
+            )
           : 0,
     },
   ];
@@ -907,7 +966,7 @@ export function VoiceAgent({
         flexDirection: "column",
       }}
     >
-      <div style={rise(6)}>
+      <div style={rise(panelEl.start + 0 * panelEl.beat("stagger"))}>
         <Lane
           label={agentName}
           state={agentState}
@@ -919,8 +978,14 @@ export function VoiceAgent({
           barsH={tall ? 44 : 84}
         />
       </div>
-      <div style={{ height: 1, background: pal.hair, ...rise(8) }} />
-      <div style={rise(10)}>
+      <div
+        style={{
+          height: 1,
+          background: pal.hair,
+          ...rise(panelEl.start + 1 * panelEl.beat("stagger")),
+        }}
+      />
+      <div style={rise(panelEl.start + 2 * panelEl.beat("stagger"))}>
         <Lane
           label={callerName}
           state={callerState}
@@ -938,7 +1003,7 @@ export function VoiceAgent({
             marginTop: 8,
             paddingTop: 12,
             borderTop: `1px solid ${pal.hair}`,
-            ...rise(12),
+            ...rise(panelEl.start + 3 * panelEl.beat("stagger")),
           }}
         >
           {[
@@ -975,7 +1040,7 @@ export function VoiceAgent({
           marginTop: "auto",
           display: "flex",
           gap: 10,
-          ...rise(14),
+          ...rise(panelEl.start + 4 * panelEl.beat("stagger")),
         }}
       >
         {(["mic", "volume"] as IconName[]).map((n) => (
@@ -1202,12 +1267,16 @@ export function VoiceAgent({
                     // window and the row hold still.
                     const rowHeld = held && !riding;
                     if (row.kind === "turn") {
-                      const p = tl.turns[row.i];
+                      const p = plan.turns[row.i];
                       return (
                         <Grow key={`turn${row.i}`} {...grow}>
                           <div
                             style={{
-                              opacity: tween(frame, p.start - 1, p.start + 7),
+                              opacity: tween(
+                                frame,
+                                p.start + p.el.beat("show"),
+                                p.start + p.el.beat("shown"),
+                              ),
                             }}
                           >
                             <TurnRow
@@ -1263,7 +1332,7 @@ export function VoiceAgent({
                           rows={summary}
                           title={summaryTitle}
                           status={summaryStatus}
-                          at={tl.summaryAt}
+                          el={summaryEl}
                           frame={frame}
                           fps={fps}
                           pal={pal}
@@ -1297,6 +1366,8 @@ function noise(seed: number, t: number) {
 const clock = (s: number) =>
   `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
+type El = ResolvedElement<VoiceAgentElementId>;
+
 interface TurnPlan {
   turn: VoiceTurn;
   words: string[];
@@ -1305,45 +1376,14 @@ interface TurnPlan {
   end: number;
   toolStart: number;
   toolDone: number;
-}
-
-function plan(turns: VoiceTurn[], stagger = WPF) {
-  let t = 12;
-  const out: TurnPlan[] = [];
-  for (const turn of turns) {
-    const all = turn.text.split(" ");
-    const n = Math.min(all.length, turn.interruptedAfter ?? all.length);
-    const words = all.slice(0, n);
-    if (turn.interruptedAfter) {
-      words[n - 1] = `${words[n - 1].replace(/[,.]$/, "")}—`;
-    }
-    const wordAt: number[] = [];
-    let w = t;
-    for (const word of words) {
-      wordAt.push(w);
-      w += stagger + (/[,.?!]$/.test(word) ? 3 : 0);
-    }
-    const end = w + 2;
-    let toolStart = -1;
-    let toolDone = -1;
-    let next = end + 9;
-    if (turn.tool) {
-      toolStart = end + 3;
-      toolDone = toolStart + 30;
-      next = toolDone + 10;
-    } else if (turn.interruptedAfter) {
-      next = end - 5;
-    }
-    out.push({ turn, words, wordAt, start: t, end, toolStart, toolDone });
-    t = next;
-  }
-  const callEnd = (out[out.length - 1]?.end ?? 0) + 12;
-  return { turns: out, callEnd, summaryAt: callEnd + 10 };
+  el: El;
+  wordEls: El[];
+  toolEl?: El;
 }
 
 /** Total frames of motion for a set of turns, so a shelf can size the clip. */
 export function voiceAgentDuration(turns: VoiceTurn[] = DEFAULT_TURNS) {
-  return Math.ceil(plan(turns).summaryAt + 40);
+  return Math.ceil(planVoiceTurns(turns).summaryAt + 40);
 }
 
 function level(turns: TurnPlan[], speaker: VoiceTurn["speaker"], f: number) {
@@ -1351,8 +1391,14 @@ function level(turns: TurnPlan[], speaker: VoiceTurn["speaker"], f: number) {
   for (const p of turns) {
     if (p.turn.speaker !== speaker) continue;
     const on =
-      tween(f, p.start - 2, p.start + 2) *
-      (1 - tween(f, p.end - 3, p.end + 2, Easing.bezier(0.22, 1, 0.36, 1)));
+      tween(f, p.start + p.el.beat("voice"), p.start + p.el.beat("voiced")) *
+      (1 -
+        tween(
+          f,
+          p.end - p.el.beat("hush"),
+          p.end + p.el.beat("hushed"),
+          Easing.bezier(0.22, 1, 0.36, 1),
+        ));
     if (on <= 0) continue;
     let syl = 0;
     for (const at of p.wordAt) {
