@@ -16208,13 +16208,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "prompt-to-app/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/prompt-to-app.tsx"
+          "target": "components/remocn/prompt-to-app/index.tsx"
+        },
+        {
+          "path": "prompt-to-app/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/prompt-to-app/timeline.ts"
         }
       ]
     },
