@@ -9188,10 +9188,19 @@
         {
           "path": "sequel-numeral/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/sequel-numeral.tsx"
+          "target": "components/remocn/sequel-numeral/index.tsx"
+        },
+        {
+          "path": "sequel-numeral/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/sequel-numeral/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "menu-pick",

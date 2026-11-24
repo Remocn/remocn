@@ -9183,12 +9183,21 @@
       "title": "Sequel Numeral",
       "description": "The remocn wordmark opens beside a giant red numeral 2 with 'Part two. Out now.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/sequel-numeral/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/sequel-numeral.tsx"
+          "target": "components/remocn/sequel-numeral/index.tsx"
+        },
+        {
+          "path": "registry/remocn/sequel-numeral/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/sequel-numeral/timeline.ts"
         }
       ],
       "type": "registry:component"
