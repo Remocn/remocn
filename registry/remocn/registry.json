@@ -16032,13 +16032,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "screenshot-tour/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/screenshot-tour.tsx"
+          "target": "components/remocn/screenshot-tour/index.tsx"
+        },
+        {
+          "path": "screenshot-tour/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/screenshot-tour/timeline.ts"
         }
       ]
     },

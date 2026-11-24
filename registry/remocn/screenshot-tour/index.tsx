@@ -9,6 +9,15 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_STOPS,
+  type ScreenshotTourElementId,
+  screenshotTourTimeline,
+  type TourStop,
+} from "./timeline";
+
+export type { TourStop };
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
@@ -21,15 +30,6 @@ const { fontFamily: mono } = loadMono("normal", {
 
 const REMOCN_R_PATH =
   "M 0.01 0.81 C 0.01 1.73, 0.36 2.79, 1.09 4.13 C 4.91 11.04, 13.45 17.16, 21.7 18.9 C 22.94 19.16, 23.18 19.16, 51.39 19.27 C 76.07 19.36, 80.02 19.4, 81.32 19.57 C 89.89 20.69, 96.2 24.68, 99.38 31.01 C 103.19 38.56, 102.53 50.1, 97.91 57.07 C 94.66 61.96, 89.68 64.99, 83.26 66 C 82.81 66.07, 70.18 66.83, 55.2 67.69 C 24.82 69.43, 27.03 69.23, 24.18 70.4 C 19.9 72.15, 14.84 75.7, 10.65 79.89 C 4.86 85.68, 1.3 91.91, 0.25 98.13 C 0.12 98.85, 0.08 103.13, 0.04 116.66 L 0 134.26 9.5 134.26 L 19 134.26 19.05 119.41 C 19.1 103.27, 19.08 103.82, 19.82 101.04 C 21.79 93.65, 27.86 88.75, 36.45 87.63 C 37.23 87.53, 39.41 87.5, 43.57 87.53 C 50.12 87.59, 50.75 87.65, 53.22 88.45 C 56.61 89.56, 59.67 91.86, 62.02 95.07 C 62.52 95.76, 69.35 103.85, 77.2 113.07 C 85.04 122.28, 91.63 130.04, 91.85 130.32 C 92.07 130.59, 92.5 131.34, 92.82 131.97 C 93.52 133.35, 94.11 133.93, 95.06 134.13 C 95.5 134.23, 98.97 134.26, 106.36 134.23 L 117.01 134.19 100.82 113.07 C 91.91 101.45, 84.52 91.78, 84.39 91.57 C 83.36 89.89, 83.66 87.53, 85.09 86 C 85.79 85.25, 86.36 84.94, 88.07 84.38 C 96.18 81.72, 104.15 76.62, 109.97 70.36 C 120.59 58.93, 124.06 44.32, 119.44 30.43 C 114.59 15.81, 101.93 4.02, 87.64 0.83 C 83.93 0.01, 88.09 0.08, 41.85 0.04 L 0.01 0 0.01 0.81 Z";
-
-export interface TourStop {
-  /** Focus rect in screenshot pixel coordinates. */
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  label: string;
-}
 
 export interface ScreenshotTourProps {
   /** Screenshot URL. Falls back to `children`, then to the built-in mock. */
@@ -64,34 +64,14 @@ export interface ScreenshotTourProps {
   /** gradients.sh preset for the ground. Defaults to "earthshine" (dark) or "glasswork" (light). */
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the establishing shot, each stop and the pull
+   * back, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<ScreenshotTourElementId>;
 }
 
-const DEFAULT_STOPS: TourStop[] = [
-  {
-    x: 240,
-    y: 63,
-    width: 660,
-    height: 182,
-    label: "Every issue, grouped by status",
-  },
-  {
-    x: 1004,
-    y: 99,
-    width: 412,
-    height: 146,
-    label: "Labels, owners and due dates",
-  },
-  {
-    x: 8,
-    y: 244,
-    width: 216,
-    height: 172,
-    label: "Each team gets its own space",
-  },
-];
-
-const ESTABLISH = 18;
-const RETURN = 24;
 const DRIFT = 0.025;
 const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
 const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
@@ -137,39 +117,55 @@ function ScaleLayer({
   );
 }
 
-export function ScreenshotTour({
-  src,
-  children,
-  screenshotWidth = MOCK_W,
-  screenshotHeight = MOCK_H,
-  stops = DEFAULT_STOPS,
-  framesPerStop = 45,
-  dim = 0.55,
-  pullBack = true,
-  brand = "remocn",
-  logo,
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale: layerScale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: ScreenshotTourProps) {
+export function ScreenshotTour(props: ScreenshotTourProps) {
+  const {
+    src,
+    children,
+    screenshotWidth = MOCK_W,
+    screenshotHeight = MOCK_H,
+    stops = DEFAULT_STOPS,
+    dim = 0.55,
+    pullBack = true,
+    brand = "remocn",
+    logo,
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale: layerScale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tour = useTimeline(
+    screenshotTourTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const sw = screenshotWidth;
   const sh = screenshotHeight;
   const tall = H > W * 1.2;
   const u = Math.min(W / 1280, H / 720);
   const dark = theme === "dark";
   const n = stops.length;
-  const F = framesPerStop;
-  const T = Math.round(Math.min(20, F * 0.45));
+  const est = tour.get("establish");
+  const stopEls = stops.map((_, i) => tour.get(`stop:${i}`));
+  const ret = pullBack ? tour.get("return") : undefined;
+  // The stop the camera is on: the last one started.
+  const stopAt = (f: number) => {
+    let at = 0;
+    stopEls.forEach((e, i) => {
+      if (e.start <= f) at = i;
+    });
+    return at;
+  };
 
   const s0 = tall
     ? (W * 0.88) / sw
@@ -194,7 +190,7 @@ export function ScreenshotTour({
     s: keys[i].s * (1 + (i === 0 ? 0.012 : DRIFT)),
   });
 
-  const tourEnd = ESTABLISH + n * F;
+  const tourEnd = n > 0 ? stopEls[n - 1].end : est.end;
   // The shot as a function of the frame, so the camera can be compared with
   // its neighbours to tell a move from a hold.
   const shot = (f: number) => {
@@ -207,14 +203,19 @@ export function ScreenshotTour({
       label: "",
     };
     let spotAmount = 0;
-    if (f < ESTABLISH || n === 0) {
-      cam = { ...home, s: home.s * (1 + 0.012 * clamp(f / ESTABLISH, 0, 1)) };
+    if (n === 0 || f < stopEls[0].start) {
+      cam = {
+        ...home,
+        s: home.s * (1 + 0.012 * clamp((f - est.start) / est.length, 0, 1)),
+      };
     } else if (f < tourEnd) {
-      const i = Math.floor((f - ESTABLISH) / F);
-      const local = f - ESTABLISH - i * F;
+      const i = stopAt(f);
+      const st = stopEls[i];
+      const local = f - st.start;
+      const T = st.beat("travel");
       const p = MOVE(clamp(local / T, 0, 1));
       cam = travel(drifted(i), keys[i + 1], p, i > 0 ? 0.12 : 0);
-      cam.s *= 1 + DRIFT * clamp((local - T) / (F - T), 0, 1);
+      cam.s *= 1 + DRIFT * clamp((local - T) / (st.length - T), 0, 1);
       const prev = stops[Math.max(0, i - 1)];
       const next = stops[i];
       spotRect = {
@@ -229,10 +230,10 @@ export function ScreenshotTour({
           ? interpolate(p, [0.3, 1], [0, 1], { extrapolateLeft: "clamp" })
           : 1;
     } else {
-      const p = MOVE(clamp((f - tourEnd) / RETURN, 0, 1));
+      const p = ret ? MOVE(clamp((f - ret.start) / ret.length, 0, 1)) : 0;
       spotRect = stops[n - 1];
-      cam = pullBack ? travel(drifted(n), home, p, 0) : drifted(n);
-      spotAmount = pullBack ? 1 - p : 1;
+      cam = ret ? travel(drifted(n), home, p, 0) : drifted(n);
+      spotAmount = ret ? 1 - p : 1;
     }
     return { cam, spotRect, spotAmount };
   };
@@ -279,14 +280,21 @@ export function ScreenshotTour({
   );
 
   const pad = 12;
-  const arrivals = stops.map((_, i) =>
+  const arrivals = stopEls.map((st) =>
     spring({
-      frame: frame - (ESTABLISH + i * F + T - 5),
+      frame: frame - (st.start + st.beat("arrive")),
       fps,
       config: CARD,
     }),
   );
-  const activeIdx = clamp(Math.floor((frame - ESTABLISH) / F), 0, n - 1);
+  const activeIdx = stopAt(frame);
+  // A label leaves when the next stop starts, the last one with the pull back.
+  const exitOf = (i: number) =>
+    i < n - 1
+      ? stopEls[i + 1].start
+      : ret
+        ? ret.start
+        : Number.POSITIVE_INFINITY;
   const settle = frame >= tourEnd ? 1 : arrivals[activeIdx];
   const slack = (1 - settle) * 8 * u;
   const tl = toScreen(spotRect.x - pad / 2, spotRect.y - pad / 2);
@@ -418,12 +426,7 @@ export function ScreenshotTour({
           >
             {stops.map((st, i) => {
               const a = arrivals[i];
-              const exitAt =
-                i < n - 1
-                  ? ESTABLISH + (i + 1) * F
-                  : pullBack
-                    ? tourEnd
-                    : Number.POSITIVE_INFINITY;
+              const exitAt = exitOf(i);
               const e = EXIT(clamp((frame - exitAt) / 6, 0, 1));
               const opacity = clamp(a, 0, 1) * (1 - e);
               if (opacity <= 0.001) return null;
@@ -468,10 +471,14 @@ export function ScreenshotTour({
                 </div>
               );
             })}
-            {pullBack
+            {ret
               ? stops.map((st, i) => {
                   const a = spring({
-                    frame: frame - (tourEnd + 4 + i * 3),
+                    frame:
+                      frame -
+                      (ret.start +
+                        ret.beat("recap") +
+                        i * ret.beat("recapGap")),
                     fps,
                     config: CARD,
                   });
@@ -525,12 +532,7 @@ export function ScreenshotTour({
         {!tall &&
           stops.map((st, i) => {
             const a = arrivals[i];
-            const exitAt =
-              i < n - 1
-                ? ESTABLISH + (i + 1) * F
-                : pullBack
-                  ? tourEnd
-                  : Number.POSITIVE_INFINITY;
+            const exitAt = exitOf(i);
             const e = EXIT(clamp((frame - exitAt) / 6, 0, 1));
             const opacity = clamp(a, 0, 1) * (1 - e);
             if (opacity <= 0.001) return null;
