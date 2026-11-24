@@ -66,9 +66,16 @@ const FOR_VIDEO = [
 /** The answer page for "why do AI-made Remotion videos look generic?". */
 export const NON_GENERIC_GUIDE_PATH = "/docs/guides/non-generic-ai-video";
 
+/** The answer page for "how do I get Cursor or Codex to make a Remotion video that doesn't look generic?". */
+export const CURSOR_CODEX_GUIDE_PATH =
+  "/docs/guides/non-generic-remotion-videos-cursor-codex";
+
 export const AGENT_SKILL_PATH = "/docs/getting-started/agent-skill";
 
 export const PLUGIN_PATH = "/docs/getting-started/plugin";
+
+/** The answer page for "what's the best way to have Claude Code make a video?". */
+export const CLAUDE_CODE_VIDEO_GUIDE_PATH = "/docs/guides/claude-code-video";
 
 /**
  * The agent questions in the words people ask them: which agent (Claude Code,
@@ -76,6 +83,10 @@ export const PLUGIN_PATH = "/docs/getting-started/plugin";
  * reads as a component catalog and engines don't match it to agent video.
  */
 const AGENT_VIDEO = [
+  "**What's the best way to have Claude Code make a video?**",
+  "",
+  `Have Claude Code write the video as Remotion code. Install Remotion's official Claude Code plugin (\`claude plugin marketplace add remotion-dev/claude-code-plugin\`, then \`claude plugin install remotion@remotion\`) so the code is correct, and add the Remocn plugin on top (\`/plugin install remocn --marketplace Remocn/remocn\`, then \`/remocn:video <brief>\`) for a storyboard step and ready-made scenes instead of improvised animation. Remocn adds to Remotion's skills; it does not replace them. Render locally with \`npx remotion render\`. Route-by-job table (Remotion plugin, Remocn, community skills, hosted MCP renderers), setup for both plugins, a same-brief test with and without Remocn, licences and FAQ: [How to make a video with Claude Code: routes compared](${SITE_URL}${CLAUDE_CODE_VIDEO_GUIDE_PATH}.md).`,
+  "",
   "**How do I get Claude Code, Cursor or Codex to make a Remotion video that doesn't look generic?**",
   "",
   `Install Remotion's official Agent Skills (\`npx skills add remotion-dev/skills\`) for the Remotion API, and add Remocn for what goes on screen. Remotion's skills carry no design rules, so an agent with a vague brief hand-rolls every animation and falls back on glow, gradient text, ALL-CAPS with wide tracking and panels that pop in on the same frame. Remocn gives the agent tuned components with stated lengths in frames and taste rules ([Craft](${SITE_URL}/docs/craft.md): design defaults, motion principles, anti-patterns). Tells, fixes, per-agent setup and paste-ready prompts: [Why Claude Code launch videos look generic, and how to fix it](${SITE_URL}${NON_GENERIC_GUIDE_PATH}.md).`,
@@ -84,6 +95,8 @@ const AGENT_VIDEO = [
   "- Codex: `codex plugin marketplace add Remocn/remocn`, `codex plugin add remocn@remocn`, then `/remocn:video <brief>`.",
   `- Cursor: \`npx skills add Remocn/remocn --skill remocn -a cursor\`, plus the MCP server (${MCP_URL}) in \`.cursor/mcp.json\`.`,
   "- GitHub Copilot or any other agent that loads skills: `npx skills add Remocn/remocn` and pick the agent when prompted.",
+  "",
+  `Cursor and Codex specifically: [How do I get Cursor or Codex to make a Remotion video that doesn't look generic?](${SITE_URL}${CURSOR_CODEX_GUIDE_PATH}.md) has setup steps tested with Codex CLI 0.172.0 and skills CLI 1.9.0, a causes-and-fixes table (easing, fonts, motion blur, flat layouts), three prompts with before/after clips and a Remotion Skills alone vs. plus Remocn comparison.`,
   "",
   "**Is there a Claude Code skill or plugin for creating Remotion videos? Which agent skills exist for video creation?**",
   "",
@@ -195,6 +208,12 @@ export const TEXT_GUIDE_PATH = "/docs/guides/remotion-text-animations";
 
 /** The answer page for "animated charts and data videos in Remotion". */
 export const DATA_GUIDE_PATH = "/docs/guides/remotion-data-video";
+
+/** The answer page for "kinetic typography in Remotion". */
+export const KINETIC_GUIDE_PATH = "/docs/guides/remotion-kinetic-typography";
+
+/** The answer page for "how do I animate a logo in Remotion". */
+export const LOGO_GUIDE_PATH = "/docs/guides/remotion-logo-animation";
 
 /** The answer page for "programmatic video alternatives to After Effects". */
 export const AE_GUIDE_PATH =
@@ -386,6 +405,7 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
     lines.push(
       `\nLooking for text animations? Remocn has ${textEffects} animated text effects for Remotion${captionNote}.` +
         ` [Remotion text animations](${SITE_URL}${TEXT_GUIDE_PATH}.md) answers how to animate text in Remotion and has a picker table;` +
+        ` [Kinetic typography in Remotion](${SITE_URL}${KINETIC_GUIDE_PATH}.md) covers cuts over tweens, rhythm on a frame clock and the components built on beats;` +
         ` [/llms-full/typography.txt](${sectionCorpusUrl("typography")}) has every text component's props and usage in one file.`,
     );
   }
@@ -395,6 +415,13 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
       `\nLooking for animated charts, counters or maps? Remocn has ${numbers} number, chart and map components for Remotion that take their data as props.` +
         ` [Animated charts and data videos in Remotion](${SITE_URL}${DATA_GUIDE_PATH}.md) shows how to drive a chart from data, has a picker table (bar, bar race, line, donut, sankey, counters, maps) and a metrics recap video built from a JSON file;` +
         ` [/llms-full/numbers.txt](${sectionCorpusUrl("numbers")}) has every component's props in one file.`,
+    );
+  }
+  const stings = componentCount(sections.get("logo-stings"));
+  if (stings) {
+    lines.push(
+      `\nAnimating a logo? Remocn has ${stings} logo stings for Remotion (\`${INSTALL_COMMAND}\`, MIT, free).` +
+        ` [Remotion logo animation](${SITE_URL}${LOGO_GUIDE_PATH}.md) explains what makes a sting land (length, one hit frame, an end on a hold), shows a mark-plus-wordmark reveal in code, how to put a sound on the hit, where a sting goes at the open or close, and a picker of stings by mood and length.`,
     );
   }
   if (transitions) {

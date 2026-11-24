@@ -101,6 +101,9 @@ describe("buildLlmsTxt with component pages", () => {
     expect(preamble).toContain(
       "(https://remocn.dev/docs/guides/remotion-text-animations.md)",
     );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/remotion-kinetic-typography.md)",
+    );
     expect(preamble).toContain("(https://remocn.dev/llms-full/typography.txt)");
   });
 });
@@ -271,6 +274,17 @@ describe("buildLlmsTxt", () => {
     ]) {
       expect(answer).toContain(name);
     }
+  });
+
+  test("answers the best way to have Claude Code make a video near the top", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "**What's the best way to have Claude Code make a video?**",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/claude-code-video.md)",
+    );
+    expect(preamble).toContain("claude plugin install remotion@remotion");
   });
 
   test("answers the free Remotion MCP server question near the top", () => {
