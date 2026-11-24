@@ -15,6 +15,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  GLYPH_RELAY_END,
+  type GlyphRelayElementId,
+  glyphRelayTimeline,
+} from "./timeline";
 
 const onest = loadOnest("normal", {
   weights: ["300", "400"],
@@ -31,21 +37,7 @@ const BLOOM = { mass: 0.7, damping: 13, stiffness: 170 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const DROP = { mass: 0.7, damping: 12, stiffness: 150 };
 
-const B = {
-  l1: -8,
-  dot: 10,
-  bloom: 20,
-  l1out: 46,
-  grow: 46,
-  l2in: 52,
-  l2out: 84,
-  drop: 90,
-  hook: 90,
-  l3: 98,
-  end: 146,
-};
-
-export const GLYPH_RELAY_DURATION = B.end;
+export const GLYPH_RELAY_DURATION = GLYPH_RELAY_END;
 
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -91,6 +83,12 @@ export interface GlyphRelayProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the lines, the disc's steps, the hook and the
+   * push, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<GlyphRelayElementId>;
 }
 
 const DARK_GROUND: Partial<GradientParams> = {
@@ -196,26 +194,45 @@ function ScaleLayer({
   );
 }
 
-export function GlyphRelay({
-  theme = "dark",
-  accent = "#3B5BFD",
-  line1 = ["Building a", "product"],
-  line2 = ["is", "easy."],
-  line3 = "Launching it?",
-  push: pushBy = 0.045,
-  ink,
-  background,
-  fontFamily = onest.fontFamily,
-  logo,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: GlyphRelayProps) {
+export function GlyphRelay(props: GlyphRelayProps) {
+  const {
+    theme = "dark",
+    accent = "#3B5BFD",
+    line1 = ["Building a", "product"],
+    line2 = ["is", "easy."],
+    line3 = "Launching it?",
+    push: pushBy = 0.045,
+    ink,
+    background,
+    fontFamily = onest.fontFamily,
+    logo,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    glyphRelayTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const eLine1 = tl.get("line1");
+  const ePush = tl.get("push");
+  const eDot = tl.get("dot");
+  const eBloom = tl.get("bloom");
+  const eLine1Out = tl.get("line1-out");
+  const eGrow = tl.get("grow");
+  const eLine2 = tl.get("line2");
+  const eLine2Out = tl.get("line2-out");
+  const eDrop = tl.get("drop");
+  const eHook = tl.get("hook");
+  const eLine3 = tl.get("line3");
   const dark = theme === "dark";
   const vertical = height > width * 1.2;
   const stageW = vertical ? 1080 : 1280;
@@ -239,11 +256,11 @@ export function GlyphRelay({
   const cx = stageW / 2;
   const cy = stageH / 2;
 
-  const dotIn = spring({ frame: frame - B.dot, fps, config: CHIP });
-  const bloom = spring({ frame: frame - B.bloom, fps, config: BLOOM });
-  const grow = spring({ frame: frame - B.grow, fps, config: TILE });
-  const drop = spring({ frame: frame - B.drop, fps, config: DROP });
-  const shrink = ramp(frame, B.drop, 14, LIGHT);
+  const dotIn = spring({ frame: frame - eDot.start, fps, config: CHIP });
+  const bloom = spring({ frame: frame - eBloom.start, fps, config: BLOOM });
+  const grow = spring({ frame: frame - eGrow.start, fps, config: TILE });
+  const drop = spring({ frame: frame - eDrop.start, fps, config: DROP });
+  const shrink = ramp(frame, eDrop.start, eDrop.length, LIGHT);
 
   const rDot = fs1 * 0.14;
   const rDisc = fs1 * 0.48;
@@ -260,25 +277,37 @@ export function GlyphRelay({
 
   const sideGap = (fs: number) => fs * 0.13 + r * 0.32;
 
-  const l1Rise = (i: number) => ramp(frame, B.l1 + i * 3, 14);
-  const l1Out = 1 - ramp(frame, B.l1out, 10, EXIT);
-  const l2In = spring({ frame: frame - B.l2in, fps, config: TILE });
-  const l2Out = 1 - ramp(frame, B.l2out, 9, EXIT);
+  const l1Rise = (i: number) =>
+    ramp(frame, eLine1.start + i * eLine1.beat("stagger"), eLine1.beat("rise"));
+  const l1Out = 1 - ramp(frame, eLine1Out.start, eLine1Out.length, EXIT);
+  const l2In = spring({ frame: frame - eLine2.start, fps, config: TILE });
+  const l2Out = 1 - ramp(frame, eLine2Out.start, eLine2Out.length, EXIT);
   const l2 = Math.min(l2In, l2Out);
 
-  const discTint = ramp(frame, B.bloom, 8, LIGHT);
+  const discTint = ramp(frame, eBloom.start, eBloom.beat("tint"), LIGHT);
   const glyphColor = interpolateColors(discTint, [0, 1], [fg, accent]);
-  const markIn = ramp(frame, B.bloom + 3, 10, LIGHT);
+  const markIn = ramp(
+    frame,
+    eBloom.start + eBloom.beat("markAt"),
+    eBloom.beat("mark"),
+    LIGHT,
+  );
 
-  const hook = ramp(frame, B.hook + 2, 22, LIGHT);
-  const hookFade = ramp(frame, B.hook, 6, LIGHT);
+  const hook = ramp(
+    frame,
+    eHook.start + eHook.beat("drawAt"),
+    eHook.beat("draw"),
+    LIGHT,
+  );
+  const hookFade = ramp(frame, eHook.start, eHook.beat("fade"), LIGHT);
 
   const words3 = line3.split(" ");
   const l3Lines = vertical
     ? [words3.slice(0, -1).join(" "), words3[words3.length - 1]]
     : [line3];
 
-  const pushAt = (f: number) => 1 + pushBy * ramp(f, 0, B.end, SWAY);
+  const pushAt = (f: number) =>
+    1 + pushBy * ramp(f, ePush.start, ePush.length, SWAY);
   const push = pushAt(frame);
   // Weighed by the distance from the centre to the furthest text.
   const pushing = [frame - speed, frame + speed].some(
@@ -298,8 +327,10 @@ export function GlyphRelay({
   const edgeB = (fs: number) =>
     vertical ? gy + r + sideGap(fs) : gx + r + sideGap(fs);
 
-  const showL1 = frame < B.l1out + 12;
-  const showL2 = frame >= B.l2in - 1 && frame < B.l2out + 11;
+  const showL1 = frame < eLine1Out.start + eLine1Out.beat("hide");
+  const showL2 =
+    frame >= eLine2.start + eLine2.beat("show") &&
+    frame < eLine2Out.start + eLine2Out.beat("hide");
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
@@ -452,7 +483,11 @@ export function GlyphRelay({
               }}
             >
               {l3Lines.map((ln, i) => {
-                const p = ramp(frame, B.l3 + i * 4, 14);
+                const p = ramp(
+                  frame,
+                  eLine3.start + i * eLine3.beat("stagger"),
+                  eLine3.beat("rise"),
+                );
                 return (
                   <div
                     key={`${ln}-${i.toString()}`}
