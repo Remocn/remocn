@@ -18,6 +18,14 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_FROM,
+  DEFAULT_TO,
+  type FigureReelsElementId,
+  figureReelsTimeline,
+  rollPlan,
+} from "./timeline";
 
 const figtree = loadFont("normal", {
   weights: ["300", "400"],
@@ -84,6 +92,12 @@ export interface FigureReelsProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches each roll step, the reels, the carry, the
+   * camera pull, the label, the accent fade and the reels' step, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FigureReelsElementId>;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -141,18 +155,8 @@ const DEFAULT_IMAGES = [
   "reel/reel-3.jpg",
 ];
 
-const BEAT = {
-  steps: [[8], [-3, 17], [-3, 11, 23], [-3, 9, 19, 27]],
-  stepLen: 7,
-  carry: 40,
-  carryStep: 2,
-  pull: 48,
-  reelSpin: 30,
-  reelStart: 22,
-  label: 69,
-  accentOut: 96,
-  step: 100,
-};
+/** How far the reels spin in, in cards. */
+const REEL_SPIN = 30;
 
 const FONT_PX = 200;
 const ROLL = Easing.bezier(0.83, 0, 0.17, 1);
@@ -271,30 +275,42 @@ function ScaleLayer({
   );
 }
 
-export function FigureReels({
-  from = 396,
-  to = 400,
-  prefix = "$",
-  suffix = "M",
-  label = "Announcing",
-  images = DEFAULT_IMAGES,
-  accent,
-  ink,
-  background,
-  fontFamily = figtree.fontFamily,
-  fontWeight = 300,
-  motionBlur = true,
-  logo,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: FigureReelsProps) {
+export function FigureReels(props: FigureReelsProps) {
+  const {
+    prefix = "$",
+    suffix = "M",
+    label = "Announcing",
+    images = DEFAULT_IMAGES,
+    accent,
+    ink,
+    background,
+    fontFamily = figtree.fontFamily,
+    fontWeight = 300,
+    motionBlur = true,
+    logo,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    figureReelsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const reelsEl = tl.get("reels");
+  const carryEl = tl.get("carry");
+  const pullEl = tl.get("pull");
+  const labelEl = tl.get("label");
+  const fadeEl = tl.get("fade");
+  const advanceEl = tl.get("advance");
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -305,41 +321,26 @@ export function FigureReels({
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const portrait = H > W * 1.1;
 
-  const target = Math.max(1, Math.round(to));
-  const start = Math.max(0, Math.min(target - 1, Math.round(from)));
+  const { target, start, nSteps, deltas } = rollPlan(
+    props.from ?? DEFAULT_FROM,
+    props.to ?? DEFAULT_TO,
+  );
   const digits = String(target).length;
   const grouped = digits > 4;
-
-  const range = target - 1 - start;
-  const nSteps = Math.min(BEAT.steps.length, range);
-  const weights = [0.5, 0.25, 0.15, 0.1].slice(0, nSteps);
-  const wSum = weights.reduce((a, b) => a + b, 0);
-  const deltas: number[] = [];
-  let left = range;
-  for (let i = 0; i < nSteps; i++) {
-    const d =
-      i === nSteps - 1
-        ? left
-        : range <= BEAT.steps.length
-          ? 1
-          : Math.max(1, Math.round((range * weights[i]) / wSum));
-    deltas.push(d);
-    left -= d;
-  }
-  const stepStarts = BEAT.steps[Math.max(0, nSteps - 1)];
 
   const valueAt = (f: number, k: number) => {
     let v = start;
     for (let i = 0; i < nSteps; i++) {
+      const step = tl.get(`step:${i}`);
       v +=
         deltas[i] *
-        interpolate(f, [stepStarts[i], stepStarts[i] + BEAT.stepLen], [0, 1], {
+        interpolate(f, [step.start, step.end], [0, 1], {
           ...CLAMP,
           easing: ROLL,
         });
     }
     const carry = spring({
-      frame: f - BEAT.carry - k * BEAT.carryStep,
+      frame: f - carryEl.start - k * carryEl.beat("digitStep"),
       fps,
       config: CHIP,
     });
@@ -382,9 +383,9 @@ export function FigureReels({
     const botCy = bandBot + th / 2;
     const eyebrowCy = cy - lh * 0.5 - S * 0.14 - e / 2;
 
-    const pull = spring({ frame: frame - BEAT.pull, fps, config: HEAVY });
+    const pull = spring({ frame: frame - pullEl.start, fps, config: HEAVY });
     const pullPrev = spring({
-      frame: frame - 1 - BEAT.pull,
+      frame: frame - 1 - pullEl.start,
       fps,
       config: HEAVY,
     });
@@ -395,12 +396,17 @@ export function FigureReels({
     const zoomBlur = motionBlur ? Math.min(6, zoomVel * 40) : 0;
 
     const colorP =
-      interpolate(frame, [BEAT.carry, BEAT.carry + 6], [0, 1], {
-        ...CLAMP,
-        easing: COLOR,
-      }) *
+      interpolate(
+        frame,
+        [carryEl.start, carryEl.start + carryEl.beat("tint")],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: COLOR,
+        },
+      ) *
       (1 -
-        interpolate(frame, [BEAT.accentOut, BEAT.accentOut + 18], [0, 1], {
+        interpolate(frame, [fadeEl.start, fadeEl.end], [0, 1], {
           ...CLAMP,
           easing: COLOR,
         }));
@@ -504,11 +510,11 @@ export function FigureReels({
     if (suffix) glyph(suffix, sufW, "suf");
 
     const reelSpin = (f: number, delay: number) =>
-      spring({ frame: f - BEAT.reelStart - delay, fps, config: REEL });
+      spring({ frame: f - reelsEl.start - delay, fps, config: REEL });
     const stepSpring = (f: number) =>
-      spring({ frame: f - BEAT.step, fps, config: CARD });
+      spring({ frame: f - advanceEl.start, fps, config: CARD });
     const reelPos = (f: number, delay: number) =>
-      -BEAT.reelSpin * 0.25 * (1 - reelSpin(f, delay)) + stepSpring(f);
+      -REEL_SPIN * 0.25 * (1 - reelSpin(f, delay)) + stepSpring(f);
 
     const alpha = 32;
     const R = th / (2 * Math.sin(((alpha / 2) * Math.PI) / 180));
@@ -613,11 +619,15 @@ export function FigureReels({
       );
     };
 
-    const labelIn = interpolate(frame, [BEAT.label, BEAT.label + 15], [0, 1], {
+    const labelIn = interpolate(frame, [labelEl.start, labelEl.end], [0, 1], {
       ...CLAMP,
       easing: LABEL_IN,
     });
-    const logoIn = spring({ frame: frame - BEAT.label + 3, fps, config: CHIP });
+    const logoIn = spring({
+      frame: frame - labelEl.start - labelEl.beat("logo"),
+      fps,
+      config: CHIP,
+    });
     const logoE = Math.min(1, Math.max(0, logoIn));
     const labelPx = m.text(label, 400) * e;
     const logoW = e * 3.9;
@@ -684,7 +694,7 @@ export function FigureReels({
           }}
         >
           {reel(topImgs, topCy, -1, 0, "rt")}
-          {reel(botImgs, botCy, 1, 3, "rb")}
+          {reel(botImgs, botCy, 1, reelsEl.beat("lag"), "rb")}
           <div
             style={{
               position: "absolute",
