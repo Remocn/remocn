@@ -12519,13 +12519,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/story-text/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/story-text.tsx"
+          "target": "components/remocn/story-text/index.tsx"
+        },
+        {
+          "path": "registry/remocn/story-text/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/story-text/timeline.ts"
         }
       ],
       "type": "registry:component"
