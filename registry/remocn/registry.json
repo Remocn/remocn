@@ -15279,13 +15279,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "file-dropzone/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/file-dropzone.tsx"
+          "target": "components/remocn/file-dropzone/index.tsx"
+        },
+        {
+          "path": "file-dropzone/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/file-dropzone/timeline.ts"
         }
       ]
     },
