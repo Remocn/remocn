@@ -191,12 +191,21 @@
       "title": "Focus Blur Resolve",
       "description": "A premium focus pull from heavy blur to crisp text, then a soft blur-out exit.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/focus-blur-resolve/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/focus-blur-resolve.tsx"
+          "target": "components/remocn/focus-blur-resolve/index.tsx"
+        },
+        {
+          "path": "registry/remocn/focus-blur-resolve/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/focus-blur-resolve/timeline.ts"
         }
       ],
       "type": "registry:component"

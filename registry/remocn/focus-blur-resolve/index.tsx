@@ -3,6 +3,11 @@
 import { Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type FocusBlurResolveElementId,
+  focusBlurResolveTimeline,
+} from "./timeline";
 
 export interface FocusBlurResolveProps {
   text: string;
@@ -12,37 +17,49 @@ export interface FocusBlurResolveProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the way in and the way out, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<FocusBlurResolveElementId>;
 }
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-export function FocusBlurResolve({
-  text,
-  blur = 14,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: FocusBlurResolveProps) {
+export function FocusBlurResolve(props: FocusBlurResolveProps) {
+  const {
+    text,
+    blur = 14,
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
   const { durationInFrames } = useSceneConfig();
-
-  const enterDur = 23;
-  const exitDur = 16;
-  const exitStart = Math.max(enterDur, durationInFrames - exitDur);
+  // The exit is timed against the composition length without `speed`.
+  const tl = useTimeline(
+    focusBlurResolveTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
+  const enter = tl.get("enter");
+  const exit = tl.get("exit");
 
   const enterEasing = Easing.bezier(0.22, 1, 0.36, 1);
   const exitEasing = Easing.bezier(0.64, 0, 0.78, 0);
 
-  const enterP = interpolate(frame, [0, enterDur], [0, 1], {
+  const enterP = interpolate(frame, [enter.start, enter.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: enterEasing,
   });
 
-  const exitP = interpolate(frame, [exitStart, durationInFrames], [0, 1], {
+  const exitP = interpolate(frame, [exit.start, exit.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: exitEasing,
@@ -50,13 +67,13 @@ export function FocusBlurResolve({
 
   const opacity = enterP * (1 - exitP);
 
-  const yEnter = interpolate(frame, [0, enterDur], [14, 0], {
+  const yEnter = interpolate(frame, [enter.start, enter.end], [14, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: enterEasing,
   });
 
-  const yExit = interpolate(frame, [exitStart, durationInFrames], [0, -10], {
+  const yExit = interpolate(frame, [exit.start, exit.end], [0, -10], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: exitEasing,
@@ -64,13 +81,13 @@ export function FocusBlurResolve({
 
   const y = yEnter + yExit;
 
-  const blurEnter = interpolate(frame, [0, enterDur], [blur, 0], {
+  const blurEnter = interpolate(frame, [enter.start, enter.end], [blur, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: enterEasing,
   });
 
-  const blurExit = interpolate(frame, [exitStart, durationInFrames], [0, 10], {
+  const blurExit = interpolate(frame, [exit.start, exit.end], [0, 10], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: exitEasing,
@@ -78,7 +95,7 @@ export function FocusBlurResolve({
 
   const blurVal = blurEnter + blurExit;
 
-  const scale = interpolate(frame, [0, enterDur], [1.01, 1], {
+  const scale = interpolate(frame, [enter.start, enter.end], [1.01, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: enterEasing,
