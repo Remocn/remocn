@@ -5,6 +5,8 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type MaxQElementId, maxQTimeline } from "./timeline";
 
 const { fontFamily: condensed } = loadFont("normal", {
   weights: ["400", "500"],
@@ -44,6 +46,12 @@ export interface MaxQProps {
   theme?: "dark" | "light";
   /** Playback multiplier. */
   speed?: number;
+  /**
+   * Moves, trims or stretches the intro, the climb, the ground drift, the
+   * Max Q band, its marker and the status, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MaxQElementId>;
 }
 
 // Beat sheet (30fps):
@@ -55,12 +63,6 @@ export interface MaxQProps {
 //           drops on the trajectory; the band holds, then wipes out (88)
 //   92–104  NOMINAL settles under the numbers; values freeze at 112
 //   112–    poster hold
-const RACE_END = 112;
-const MAXQ_AT = 60;
-const BAND_IN = 6;
-const BAND_HOLD = 22;
-const BAND_OUT = 7;
-
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const MOVE = Easing.bezier(0.7, 0, 0.2, 1);
 const CLIMB = Easing.bezier(0.5, 0, 0.3, 1);
@@ -141,30 +143,38 @@ function ScaleLayer({
   );
 }
 
-export function MaxQ({
-  velocity = 1880,
-  altitude = 14.2,
-  speedLabel = "Speed",
-  speedUnit = "km/h",
-  altitudeLabel = "Altitude",
-  altitudeUnit = "km",
-  event = "Max Q",
-  eventDetail = "Maximum dynamic pressure",
-  status = "Nominal",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = condensed,
-  bandHold = BAND_HOLD,
-  clockStart = 38,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: MaxQProps) {
+export function MaxQ(props: MaxQProps) {
+  const {
+    velocity = 1880,
+    altitude = 14.2,
+    speedLabel = "Speed",
+    speedUnit = "km/h",
+    altitudeLabel = "Altitude",
+    altitudeUnit = "km",
+    event = "Max Q",
+    eventDetail = "Maximum dynamic pressure",
+    status = "Nominal",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = condensed,
+    clockStart = 38,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(maxQTimeline, props, durationInFrames * speed, timing);
+  const introEl = tl.get("intro");
+  const raceEl = tl.get("race");
+  const driftEl = tl.get("drift");
+  const band = tl.get("band");
+  const marker = tl.get("marker");
+  const statusEl = tl.get("status");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const bg =
@@ -172,8 +182,13 @@ export function MaxQ({
   const u = Math.min(W / 1280, H / 720);
 
   // ── Values ────────────────────────────────────────────────────────────────
-  const race = CLIMB(ramp(t, 0, RACE_END));
-  const altRace = Easing.bezier(0.6, 0, 0.3, 1)(ramp(t, 0, RACE_END));
+  const race = CLIMB(ramp(t, raceEl.start, raceEl.length));
+  const altRace = Easing.bezier(
+    0.6,
+    0,
+    0.3,
+    1,
+  )(ramp(t, raceEl.start, raceEl.length));
   const spd = Math.round(velocity * race);
   const alt = altitude * altRace;
   const spdText = spd.toLocaleString("en-US");
@@ -186,7 +201,7 @@ export function MaxQ({
   const numFs = 292 * u;
   const numCY = H / 2 + 62 * u;
   const labelY = numCY - numFs * 0.5 - 12 * u;
-  const intro = OUT(ramp(t, -3, 10));
+  const intro = OUT(ramp(t, introEl.start, introEl.length));
 
   // Trajectory: a gravity turn from the bottom centre to the top right.
   const P0: [number, number] = [W * 0.505, H + 10 * u];
@@ -197,30 +212,39 @@ export function MaxQ({
   const drawP = interpolate(altRace, [0, 1], [0.02, 0.86]);
   const head = bez(drawP, P0, P1, P2, P3);
   const qP = interpolate(
-    Easing.bezier(0.6, 0, 0.3, 1)(ramp(MAXQ_AT, 0, RACE_END)),
+    Easing.bezier(
+      0.6,
+      0,
+      0.3,
+      1,
+    )(ramp(marker.start, raceEl.start, raceEl.length)),
     [0, 1],
     [0.02, 0.86],
   );
   const qPt = bez(qP, P0, P1, P2, P3);
 
   // ── Event band ────────────────────────────────────────────────────────────
-  const bandIn = OUT(ramp(t, MAXQ_AT, BAND_IN));
-  const bandOut = MOVE(ramp(t, MAXQ_AT + BAND_IN + bandHold, BAND_OUT));
-  const bandOn = t >= MAXQ_AT && bandOut < 1;
+  const bandIn = OUT(ramp(t, band.start, band.beat("in")));
+  const bandOut = MOVE(
+    ramp(t, band.start + band.beat("in") + band.beat("hold"), band.beat("out")),
+  );
+  const bandOn = t >= band.start && bandOut < 1;
   const bandH = 262 * u;
   const bandY = numCY + numFs * 0.04 - bandH / 2;
-  const bandHit = kick(t - MAXQ_AT - 2, 8);
-  const textIn = OUT(ramp(t, MAXQ_AT + 2, 8));
-  const markerIn = OUT(ramp(t, MAXQ_AT, 10));
+  const bandHit = kick(t - band.start - band.beat("hitAt"), band.beat("hit"));
+  const textIn = OUT(
+    ramp(t, band.start + band.beat("textAt"), band.beat("text")),
+  );
+  const markerIn = OUT(ramp(t, marker.start, marker.length));
 
-  const statusAt = MAXQ_AT + BAND_IN + bandHold + BAND_OUT - 1;
-  const statusIn = OUT(ramp(t, statusAt, 12));
-  const settleHit = kick(t - RACE_END, 8);
+  const statusIn = OUT(ramp(t, statusEl.start, statusEl.length));
+  const settle = raceEl.beat("settle");
+  const settleHit = kick(t - raceEl.end, settle);
   const settling =
-    kick(t + 1 - RACE_END, 8) !== settleHit ||
-    kick(t - 1 - RACE_END, 8) !== settleHit;
+    kick(t + 1 - raceEl.end, settle) !== settleHit ||
+    kick(t - 1 - raceEl.end, settle) !== settleHit;
 
-  const drift = ramp(t, 0, 150);
+  const drift = ramp(t, driftEl.start, driftEl.length);
   const ground = [
     `radial-gradient(60% 55% at ${70 + drift * 6}% 0%, color-mix(in oklab, ${BEAM[2]} 45%, transparent) 0%, transparent 70%)`,
     `radial-gradient(40% 40% at 50% 115%, color-mix(in oklab, ${theme === "dark" ? BEAM[3] : BEAM[1]} 70%, transparent) 0%, transparent 75%)`,
@@ -255,7 +279,8 @@ export function MaxQ({
           position: "absolute",
           inset: 0,
           background: ground,
-          opacity: c.groundOp * (0.55 + 0.45 * ramp(t, MAXQ_AT, 20)),
+          opacity:
+            c.groundOp * (0.55 + 0.45 * ramp(t, band.start, band.beat("glow"))),
         }}
       />
 

@@ -10282,12 +10282,21 @@
       "title": "Max Q",
       "description": "Speed and altitude figures climb together beside a rising trajectory curve.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/max-q/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/max-q.tsx"
+          "target": "components/remocn/max-q/index.tsx"
+        },
+        {
+          "path": "registry/remocn/max-q/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/max-q/timeline.ts"
         }
       ],
       "type": "registry:component"

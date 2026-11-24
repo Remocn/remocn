@@ -10287,10 +10287,19 @@
         {
           "path": "max-q/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/max-q.tsx"
+          "target": "components/remocn/max-q/index.tsx"
+        },
+        {
+          "path": "max-q/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/max-q/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "landing-confirmed",
