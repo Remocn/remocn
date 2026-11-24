@@ -8421,13 +8421,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/up-close/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/up-close.tsx"
+          "target": "components/remocn/up-close/index.tsx"
+        },
+        {
+          "path": "registry/remocn/up-close/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/up-close/timeline.ts"
         }
       ],
       "type": "registry:component"
