@@ -12813,12 +12813,21 @@
       "title": "Galton Stack",
       "description": "Dots fall through a Galton board into a bell curve, marked at 95%.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/galton-stack/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/galton-stack.tsx"
+          "target": "components/remocn/galton-stack/index.tsx"
+        },
+        {
+          "path": "registry/remocn/galton-stack/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/galton-stack/timeline.ts"
         }
       ],
       "type": "registry:component"
