@@ -6935,12 +6935,21 @@
       "title": "Story Dip",
       "description": "Timestamped story lines, \"Leo's film was one render away.\", drift across the frame.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/story-dip/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/story-dip.tsx"
+          "target": "components/remocn/story-dip/index.tsx"
+        },
+        {
+          "path": "registry/remocn/story-dip/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/story-dip/timeline.ts"
         }
       ],
       "type": "registry:component"

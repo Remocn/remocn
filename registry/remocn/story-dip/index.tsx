@@ -13,6 +13,15 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_RESOLUTION,
+  DEFAULT_SETUP,
+  DEFAULT_SNAG,
+  lineWords,
+  type StoryDipElementId,
+  storyDipTimeline,
+} from "./timeline";
 
 const afacad = loadFont("normal", {
   weights: ["400", "500"],
@@ -44,25 +53,18 @@ export interface StoryDipProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the beats writing in, the snag's fall and the
+   * resolution's climb, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<StoryDipElementId>;
 }
 
 const THEMES = {
   dark: { bg: "#3A1F1A", ink: "#FBF3EA", accent: "#F2B544" },
   light: { bg: "#FBF6EE", ink: "#3B2414", accent: "#B07A00" },
 } as const;
-
-const DEFAULT_SETUP: StoryBeat = {
-  slug: "Wednesday, 4:00 PM",
-  line: "Leo’s film was one render away.",
-};
-const DEFAULT_SNAG: StoryBeat = {
-  slug: "4:05 PM",
-  line: "Then the client sent a new logo.",
-};
-const DEFAULT_RESOLUTION: StoryBeat = {
-  slug: "4:15 PM",
-  line: "One prop later, every scene had it.",
-};
 
 const LINE_TRACK = -0.02;
 const SLUG_TRACK = 0.09;
@@ -161,25 +163,29 @@ function ScaleLayer({
   );
 }
 
-export function StoryDip({
-  setup = DEFAULT_SETUP,
-  snag = DEFAULT_SNAG,
-  resolution = DEFAULT_RESOLUTION,
-  fontWeight = 400,
-  dim = 0.62,
-  accent,
-  ink: inkColor,
-  background,
-  fontFamily = afacad.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: StoryDipProps) {
+export function StoryDip(props: StoryDipProps) {
+  const {
+    setup = DEFAULT_SETUP,
+    snag = DEFAULT_SNAG,
+    resolution = DEFAULT_RESOLUTION,
+    fontWeight = 400,
+    dim = 0.62,
+    accent,
+    ink: inkColor,
+    background,
+    fontFamily = afacad.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
   const { width: W, height: H, durationInFrames: T } = useSceneConfig();
+  // The schedule stretches with the clip itself, not with `speed`.
+  const tl = useTimeline(storyDipTimeline, props, T, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = inkColor ?? c.ink;
@@ -187,7 +193,7 @@ export function StoryDip({
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const beats = [setup, snag, resolution];
-  const tokens = beats.map((b) => b.line.split(/\s+/).filter(Boolean));
+  const tokens = beats.map((b) => lineWords(b.line));
   const strings = Array.from(new Set([" ", ...tokens.flat()]));
   const w = useWidths(strings, `${fontWeight} ${PX}px "${fontFamily}"`);
 
@@ -227,13 +233,9 @@ export function StoryDip({
   const lowTop = bottom - heights[1];
   const highTop = top;
 
-  const k = Math.min(1.6, Math.max(0.75, T / 180));
-  const at = (f: number) => f * k;
-  const inAt = [at(2), at(30), at(86)];
-  const fallA = at(54);
-  const fallB = at(70);
-  const climbA = at(108);
-  const climbB = at(132);
+  const writes = [tl.get("setup"), tl.get("snag"), tl.get("resolution")];
+  const fall = tl.get("fall");
+  const climb = tl.get("climb");
 
   const snagStart = portrait
     ? Math.min(lowTop, startTop + heights[0] + gapY)
@@ -245,32 +247,41 @@ export function StoryDip({
   const travel = [
     () => 0,
     (tt: number) => {
-      const fall = interpolate(tt, [fallA, fallB], [0, 1], {
+      const fallen = interpolate(tt, [fall.start, fall.end], [0, 1], {
         ...CLAMP,
         easing: EASE_FALL,
       });
       const settle = interpolate(
         tt,
-        [fallB, fallB + 5, fallB + 12],
+        [
+          fall.end,
+          fall.end + fall.beat("bounce"),
+          fall.end + fall.beat("settle"),
+        ],
         [0, 1, 0],
         { ...CLAMP, easing: Easing.bezier(0.45, 0, 0.55, 1) },
       );
-      return (snagStart - lowTop) * (1 - fall) + unit * 0.012 * settle;
+      return (snagStart - lowTop) * (1 - fallen) + unit * 0.012 * settle;
     },
     (tt: number) => {
-      const climb = interpolate(tt, [climbA, climbB], [0, 1], {
+      const climbed = interpolate(tt, [climb.start, climb.end], [0, 1], {
         ...CLAMP,
         easing: EASE_CLIMB,
       });
-      return (lowTop - highTop) * (1 - climb);
+      return (lowTop - highTop) * (1 - climbed);
     },
   ];
 
-  const lowDim = interpolate(t, [fallA, fallB], [1, dim], CLAMP);
-  const lift = interpolate(t, [climbA + 8, climbB], [0, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.45, 0, 0.55, 1),
-  });
+  const lowDim = interpolate(t, [fall.start, fall.end], [1, dim], CLAMP);
+  const lift = interpolate(
+    t,
+    [climb.start + climb.beat("lift"), climb.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: Easing.bezier(0.45, 0, 0.55, 1),
+    },
+  );
 
   return (
     <AbsoluteFill
@@ -283,14 +294,20 @@ export function StoryDip({
       <ScaleLayer scale={scale}>
         {beats.map((b, i) => {
           const x = marginX + colOf[i] * (colW + gutter);
-          const slugE = interpolate(t, [inAt[i], inAt[i] + 14], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
+          const write = writes[i];
+          const rise = write.beat("rise");
+          const slugE = interpolate(
+            t,
+            [write.start, write.start + rise],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: EASE_OUT,
+            },
+          );
           if (slugE <= 0.001) return null;
           const lines = laid[i];
-          const count = lines.reduce((n, l) => n + l.length, 0);
-          const step = Math.min(2.4, 14 / Math.max(1, count));
+          const step = write.beat("step");
           let idx = 0;
           const ink = i === 2 ? interpolateColors(lift, [0, 1], [fg, hi]) : fg;
           const inkOpacity = i === 1 ? lowDim : 1;
@@ -341,9 +358,9 @@ export function StoryDip({
                   }}
                 >
                   {line.map((word, wi) => {
-                    const s0 = inAt[i] + 4 + idx * step;
+                    const s0 = write.start + write.beat("words") + idx * step;
                     idx++;
-                    const e = interpolate(t, [s0, s0 + 14], [0, 1], {
+                    const e = interpolate(t, [s0, s0 + rise], [0, 1], {
                       ...CLAMP,
                       easing: EASE_OUT,
                     });

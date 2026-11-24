@@ -6940,10 +6940,19 @@
         {
           "path": "story-dip/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/story-dip.tsx"
+          "target": "components/remocn/story-dip/index.tsx"
+        },
+        {
+          "path": "story-dip/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/story-dip/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "out-of-context",
