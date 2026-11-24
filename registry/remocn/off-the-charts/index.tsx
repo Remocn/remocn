@@ -5,6 +5,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_CHART_DATA,
+  type OffTheChartsElementId,
+  offTheChartsTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -42,14 +48,16 @@ export interface OffTheChartsProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the chart frame, the labels, the target, the
+   * bars, the highlighted bar's press and break, and the figure, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<OffTheChartsElementId>;
 }
 
-const DEFAULT_DATA: OffTheChartsDatum[] = [
-  { label: "Q1", value: 58 },
-  { label: "Q2", value: 74 },
-  { label: "Q3", value: 86 },
-  { label: "Q4", value: 260 },
-];
+const DEFAULT_DATA: OffTheChartsDatum[] = DEFAULT_CHART_DATA;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -84,10 +92,6 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
-
-const RISE = 40;
-const PRESS = 66;
-const BREAK = 69;
 
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -137,37 +141,58 @@ function ScaleLayer({
   );
 }
 
-export function OffTheCharts({
-  data = DEFAULT_DATA,
-  accentIndex,
-  target = 100,
-  max = 150,
-  unit = "%",
-  targetLabel = "Target",
-  value,
-  caption = "of the Q4 target",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  push = PRESS - RISE,
-  radius = 4,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: OffTheChartsProps) {
+export function OffTheCharts(props: OffTheChartsProps) {
+  const {
+    data = DEFAULT_DATA,
+    accentIndex,
+    target = 100,
+    max = 150,
+    unit = "%",
+    targetLabel = "Target",
+    value,
+    caption = "of the Q4 target",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    radius = 4,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    offTheChartsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const frameEl = tl.get("frame");
+  const gridEl = tl.get("grid");
+  const catsEl = tl.get("categories");
+  const topEl = tl.get("top");
+  const targetEl = tl.get("target");
+  const barsEl = tl.get("bars");
+  const rightEl = tl.get("right");
+  const targetLabelEl = tl.get("target-label");
+  const pressEl = tl.get("press");
+  const strainEl = tl.get("strain");
+  const breakEl = tl.get("break");
+  const heroEl = tl.get("hero");
+  const captionEl = tl.get("caption");
   const u = height / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const bg =
     background === "transparent" ? "transparent" : (background ?? p.bg);
-  const pressAt = RISE + push;
-  const breakAt = pressAt + (BREAK - PRESS);
+  const riseAt = pressEl.start;
+  const pressAt = pressEl.end;
+  const breakAt = breakEl.start;
   const heatId = `heat${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const rows = data.length > 0 ? data : DEFAULT_DATA;
@@ -191,29 +216,42 @@ export function OffTheCharts({
   const aX = barX(ai);
   const sw = Math.max(1, 1.25 * u);
 
-  const frameIn = interpolate(t, [0, 14], [0, 1], {
+  const frameIn = interpolate(t, [frameEl.start, frameEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const gridIn = interpolate(t, [6, 20], [0, 1], CLAMP);
-  const targetDraw = interpolate(t, [10, 30], [0, 1], {
+  const gridIn = interpolate(t, [gridEl.start, gridEl.end], [0, 1], CLAMP);
+  const targetDraw = interpolate(t, [targetEl.start, targetEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const targetLab = interpolate(t, [24, 36], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const targetLab = interpolate(
+    t,
+    [targetLabelEl.start, targetLabelEl.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
 
   const rest = rows.map((d, i) => {
     if (i === ai) return 0;
     const order = i < ai ? i : i - 1;
     return (
       d.value *
-      interpolate(t, [18 + order * 4, 40 + order * 4], [0, 1], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      })
+      interpolate(
+        t,
+        [
+          barsEl.start + order * barsEl.beat("stagger"),
+          barsEl.start + order * barsEl.beat("stagger") + barsEl.beat("rise"),
+        ],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: EASE_OUT,
+        },
+      )
     );
   });
 
@@ -221,12 +259,12 @@ export function OffTheCharts({
   const breaks = accentV > max;
   const pressTo = breaks ? max : accentV;
   const barAt = (f: number) => {
-    const phaseA = interpolate(f, [RISE, pressAt], [0, pressTo], {
+    const phaseA = interpolate(f, [riseAt, pressAt], [0, pressTo], {
       ...CLAMP,
       easing: PUSH,
     });
     const tension = breaks
-      ? interpolate(f, [pressAt, breakAt], [0, 7 * u], {
+      ? interpolate(f, [strainEl.start, strainEl.end], [0, 7 * u], {
           ...CLAMP,
           easing: Easing.bezier(0.55, 0, 1, 0.45),
         })
@@ -268,7 +306,7 @@ export function OffTheCharts({
   const slashLen = 16 * u;
   const slashDx = slashLen * 0.36;
 
-  const hitAt = breakAt + 14;
+  const hitAt = heroEl.start;
   const heroAt = (f: number) =>
     spring({
       frame: f - hitAt,
@@ -286,14 +324,24 @@ export function OffTheCharts({
   const heroMoving =
     Math.abs(heroLift(t + 1) - lift) > 1e-3 ||
     Math.abs(lift - heroLift(t - 1)) > 1e-3;
-  const heroO = interpolate(t, [hitAt, hitAt + 7], [0, 1], CLAMP);
-  const cap = interpolate(t, [hitAt + 8, hitAt + 24], [0, 1], {
+  const heroO = interpolate(t, [hitAt, heroEl.end], [0, 1], CLAMP);
+  const cap = interpolate(t, [captionEl.start, captionEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const counterO =
-    interpolate(t, [RISE + 4, RISE + 10], [0, 1], CLAMP) *
-    interpolate(t, [hitAt - 4, hitAt + 2], [1, 0], CLAMP);
+    interpolate(
+      t,
+      [riseAt + pressEl.beat("countFrom"), riseAt + pressEl.beat("count")],
+      [0, 1],
+      CLAMP,
+    ) *
+    interpolate(
+      t,
+      [hitAt + heroEl.beat("counterFrom"), hitAt + heroEl.beat("counterTo")],
+      [1, 0],
+      CLAMP,
+    );
 
   const ty = bottom - target * px;
   const boxStop = Math.min(0.9, max / Math.max(accentV, max));
@@ -302,11 +350,11 @@ export function OffTheCharts({
 
   const leftW = lerp(0, boxR - boxL, frameIn);
   const upH = lerp(0, bottom - boxT, frameIn);
-  const topDraw = interpolate(t, [8, 22], [0, 1], {
+  const topDraw = interpolate(t, [topEl.start, topEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const rightDraw = interpolate(t, [18, 30], [0, 1], {
+  const rightDraw = interpolate(t, [rightEl.start, rightEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -510,7 +558,17 @@ export function OffTheCharts({
               fontWeight: i === ai ? 500 : 400,
               fontSize: 16 * u,
               color: i === ai ? fg : p.muted,
-              opacity: interpolate(t, [6 + i * 2, 18 + i * 2], [0, 1], CLAMP),
+              opacity: interpolate(
+                t,
+                [
+                  catsEl.start + i * catsEl.beat("stagger"),
+                  catsEl.start +
+                    i * catsEl.beat("stagger") +
+                    catsEl.beat("fade"),
+                ],
+                [0, 1],
+                CLAMP,
+              ),
             }}
           >
             {d.label}

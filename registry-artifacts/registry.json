@@ -12504,12 +12504,21 @@
       "title": "Off The Charts",
       "description": "Quarterly bars climb until the last one breaks its axis and overshoots the target at 260%.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/off-the-charts/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/off-the-charts.tsx"
+          "target": "components/remocn/off-the-charts/index.tsx"
+        },
+        {
+          "path": "registry/remocn/off-the-charts/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/off-the-charts/timeline.ts"
         }
       ],
       "type": "registry:component"
