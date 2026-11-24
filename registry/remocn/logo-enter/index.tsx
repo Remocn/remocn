@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import { AbsoluteFill, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type LogoEnterElementId, logoEnterTimeline } from "./timeline";
 
 export interface Logo {
   mark: ReactNode;
@@ -17,6 +19,11 @@ export interface LogoEnterProps {
   orientation?: "horizontal" | "vertical";
   stagger?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches each logo's entrance, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<LogoEnterElementId>;
 }
 
 const ClaudeMark = () => (
@@ -74,17 +81,24 @@ export const SAMPLE_LOGOS: Logo[] = [
   { mark: <GrokMark />, bg: "#0A0A0A" },
 ];
 
-export function LogoEnter({
-  logos = SAMPLE_LOGOS,
-  diameter = 118,
-  overlap = 38,
-  ringColor = "#fff",
-  orientation = "horizontal",
-  stagger = 7,
-  speed = 1,
-}: LogoEnterProps) {
+export function LogoEnter(props: LogoEnterProps) {
+  const {
+    logos = SAMPLE_LOGOS,
+    diameter = 118,
+    overlap = 38,
+    ringColor = "#fff",
+    orientation = "horizontal",
+    speed = 1,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { fps } = useSceneConfig();
+  const { fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    logoEnterTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const isVertical = orientation === "vertical";
 
   return (
@@ -104,7 +118,7 @@ export function LogoEnter({
         {logos.map(({ mark, bg }, i) => {
           const s = spring({
             fps,
-            frame: frame * speed - i * stagger,
+            frame: frame * speed - tl.get(`logo:${i}`).start,
             config: { damping: 13, stiffness: 130, mass: 0.8 },
           });
           const scale = interpolate(s, [0, 1], [0.5, 1]);
