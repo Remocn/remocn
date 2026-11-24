@@ -14,6 +14,19 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_QUESTION,
+  DEFAULT_REFUSAL,
+  DEFAULT_WHEN,
+  type PeekShutElementId,
+  peekShutTimeline,
+  split,
+} from "./timeline";
 
 const funnel = loadFont("normal", {
   weights: ["400", "500"],
@@ -44,6 +57,12 @@ export interface PeekShutProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the base line, the slot opening and shutting,
+   * and single words of the question, refusal and "when" line, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PeekShutElementId>;
 }
 
 const DEFAULT_PAN: [number, number] = [0.8, 0.57];
@@ -77,18 +96,6 @@ const CLAMP = {
 } as const;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
-
-const LINE_LEN = 18;
-const Q_AT = 6;
-const STAGGER = 3;
-const WORD_LEN = 14;
-const OPEN_AT = 30;
-const OPEN_LEN = 16;
-const SHUT_AT = 80;
-const SHUT_LEN = 6;
-const R_AT = 90;
-const WHEN_AT = 102;
-const MIN_HOLD = 34;
 
 let measureCtx: CanvasRenderingContext2D | null = null;
 
@@ -131,10 +138,6 @@ function useFontsReady(family: string) {
 interface Row {
   words: { text: string; x: number }[];
   w: number;
-}
-
-function split(s: string) {
-  return s.split(/\s+/).filter(Boolean);
 }
 
 function toRow(words: string[], family: string): Row {
@@ -220,32 +223,39 @@ function ScaleLayer({
   );
 }
 
-export function PeekShut({
-  question = "Want a peek?",
-  refusal = "That’s all you get.",
-  when = "The rest, Monday.",
-  src,
-  focusY = 0.5,
-  pan = DEFAULT_PAN,
-  zoom = 3.2,
-  accent,
-  ink,
-  background,
-  fontFamily = funnel.fontFamily,
-  stagger = STAGGER,
-  shutAt = SHUT_AT,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: PeekShutProps) {
+export function PeekShut(props: PeekShutProps) {
+  const {
+    question = DEFAULT_QUESTION,
+    refusal = DEFAULT_REFUSAL,
+    when = DEFAULT_WHEN,
+    src,
+    focusY = 0.5,
+    pan = DEFAULT_PAN,
+    zoom = 3.2,
+    accent,
+    ink,
+    background,
+    fontFamily = funnel.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The clip after `delay`, in scene frames: the schedule compresses itself
+  // to fit it, as before.
+  const tl = useTimeline(
+    peekShutTimeline,
+    props,
+    (durationInFrames - delay) * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
-  const rAt = R_AT + (shutAt - SHUT_AT);
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
   const image = src ?? staticFile("hero.png");
@@ -264,16 +274,7 @@ export function PeekShut({
   }
 
   const { F, hMax, portrait } = layout;
-  const lastWords = layout.wn.reduce((a, r) => a + r.words.length, 0);
-  const rCount = layout.r.reduce((a, r) => a + r.words.length, 0);
-  const whenAt = Math.max(
-    WHEN_AT + (shutAt - SHUT_AT),
-    rAt + rCount * stagger + 4,
-  );
-  const motionEnd = whenAt + (lastWords - 1) * stagger + WORD_LEN;
-  const room = (durationInFrames - delay) * speed - MIN_HOLD;
-  const k = Math.max(0.6, Math.min(1, room / motionEnd));
-  const t = (frame * speed) / k;
+  const t = frame * speed;
 
   const mx = W * (portrait ? 0.08 : 0.065);
   const cy = H / 2;
@@ -282,20 +283,23 @@ export function PeekShut({
   const gap = F * 0.7;
   const hair = Math.max(1, Math.round(H / 720));
 
-  const drawn = interpolate(t, [0, LINE_LEN], [0, 1], {
+  const lineEl = tl.get("line");
+  const openEl = tl.get("open");
+  const shutEl = tl.get("shut");
+  const drawn = interpolate(t, [lineEl.start, lineEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const opened = interpolate(t, [OPEN_AT, OPEN_AT + OPEN_LEN], [0, 1], {
+  const opened = interpolate(t, [openEl.start, openEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const shut = interpolate(t, [shutAt, shutAt + SHUT_LEN], [0, 1], {
+  const shut = interpolate(t, [shutEl.start, shutEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_SNAP,
   });
   const h = hMax * opened * (1 - shut);
-  const drift = interpolate(t, [OPEN_AT, shutAt + SHUT_LEN], [0, 1], {
+  const drift = interpolate(t, [openEl.start, shutEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_DRIFT,
   });
@@ -332,7 +336,7 @@ export function PeekShut({
   const block = (
     rows: Row[],
     top: number,
-    at: number,
+    el: (i: number) => ResolvedElement<PeekShutElementId>,
     color: string,
     key: string,
   ) => {
@@ -351,12 +355,11 @@ export function PeekShut({
       >
         {row.words.map((w) => {
           const i = wi++;
-          const q = interpolate(
-            t,
-            [at + i * stagger, at + i * stagger + WORD_LEN],
-            [0, 1],
-            { ...CLAMP, easing: EASE_OUT },
-          );
+          const wordEl = el(i);
+          const q = interpolate(t, [wordEl.start, wordEl.end], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
           return (
             <div
               key={`${key}-w-${i}`}
@@ -386,7 +389,7 @@ export function PeekShut({
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <ScaleLayer scale={scale}>
-        {block(layout.q, lineTop, Q_AT, fg, "q")}
+        {block(layout.q, lineTop, (i) => tl.get(`question:${i}`), fg, "q")}
         {edge(0, reach, cy, "base")}
         <div
           style={{
@@ -440,11 +443,11 @@ export function PeekShut({
               ),
             ]
           : null}
-        {block(layout.r, belowTop, rAt, fg, "r")}
+        {block(layout.r, belowTop, (i) => tl.get(`refusal:${i}`), fg, "r")}
         {block(
           layout.wn,
           belowTop + layout.r.length * PITCH * F,
-          whenAt,
+          (i) => tl.get(`when:${i}`),
           hi,
           "wn",
         )}

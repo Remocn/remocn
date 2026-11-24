@@ -6530,12 +6530,21 @@
       "title": "Peek Shut",
       "description": "\"Want a peek?\" is cut off by a shutter: \"That's all you get. The rest, Monday.\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/peek-shut/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/peek-shut.tsx"
+          "target": "components/remocn/peek-shut/index.tsx"
+        },
+        {
+          "path": "registry/remocn/peek-shut/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/peek-shut/timeline.ts"
         }
       ],
       "type": "registry:component"
