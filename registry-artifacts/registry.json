@@ -13238,12 +13238,21 @@
       "title": "Bokeh Title",
       "description": "A serif headline sharpens out of drifting bokeh lights.",
       "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/bokeh-title/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bokeh-title.tsx"
+          "target": "components/remocn/bokeh-title/index.tsx"
+        },
+        {
+          "path": "registry/remocn/bokeh-title/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bokeh-title/timeline.ts"
         }
       ],
       "type": "registry:component"
