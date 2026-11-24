@@ -3786,12 +3786,17 @@
       "title": "Mondrian Split",
       "description": "Black lines cut the frame into a seeded De Stijl grid, primaries wipe into its cells, the grid reflows like rubber, and one cell pushes its own lines out past the edges to become a clean color field or the next scene.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "mondrian-split/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/mondrian-split.tsx"
+          "target": "components/remocn/mondrian-split/index.tsx"
+        },
+        {
+          "path": "mondrian-split/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/mondrian-split/timeline.ts"
         }
       ]
     },
