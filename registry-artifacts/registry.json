@@ -15606,13 +15606,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/mobile-paywall/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/mobile-paywall.tsx"
+          "target": "components/remocn/mobile-paywall/index.tsx"
+        },
+        {
+          "path": "registry/remocn/mobile-paywall/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/mobile-paywall/timeline.ts"
         }
       ],
       "type": "registry:component"
