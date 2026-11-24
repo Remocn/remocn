@@ -7033,13 +7033,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "shards-to-grid/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/shards-to-grid.tsx"
+          "target": "components/remocn/shards-to-grid/index.tsx"
+        },
+        {
+          "path": "shards-to-grid/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/shards-to-grid/timeline.ts"
         }
       ]
     },
