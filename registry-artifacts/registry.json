@@ -5334,12 +5334,17 @@
       "title": "Duotone Beat",
       "description": "A two-ink halftone portrait swaps its ink pair on every beat, with a punch-in on the downbeat and a bar indicator.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/duotone-beat/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/duotone-beat.tsx"
+          "target": "components/remocn/duotone-beat/index.tsx"
+        },
+        {
+          "path": "registry/remocn/duotone-beat/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/duotone-beat/timeline.ts"
         }
       ],
       "type": "registry:component"
