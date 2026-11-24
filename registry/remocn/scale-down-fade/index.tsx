@@ -3,6 +3,8 @@
 import { Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ScaleDownFadeElementId, scaleDownFadeTimeline } from "./timeline";
 
 export interface ScaleDownFadeProps {
   text: string;
@@ -11,36 +13,49 @@ export interface ScaleDownFadeProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the enter and the exit, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<ScaleDownFadeElementId>;
 }
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-export function ScaleDownFade({
-  text,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: ScaleDownFadeProps) {
+export function ScaleDownFade(props: ScaleDownFadeProps) {
+  const {
+    text,
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
   const { durationInFrames } = useSceneConfig();
-
-  const enterDurFrames = 16;
-  const exitDurFrames = 11;
-  const exitStart = Math.max(enterDurFrames, durationInFrames - exitDurFrames);
+  // The exit has always been pinned to the clip's end without `speed`: a
+  // faster tempo holds the text longer before it goes.
+  const tl = useTimeline(
+    scaleDownFadeTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
+  const enter = tl.get("enter");
+  const exit = tl.get("exit");
 
   const enterEasing = Easing.bezier(0.22, 1, 0.36, 1);
   const exitEasing = Easing.bezier(0.64, 0, 0.78, 0);
 
-  const enterP = interpolate(frame, [0, enterDurFrames], [0, 1], {
+  const enterP = interpolate(frame, [enter.start, enter.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: enterEasing,
   });
 
-  const exitP = interpolate(frame, [exitStart, durationInFrames], [0, 1], {
+  const exitP = interpolate(frame, [exit.start, exit.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: exitEasing,
@@ -54,16 +69,16 @@ export function ScaleDownFade({
     extrapolateRight: "clamp",
   } as const;
   const moving =
-    midway(interpolate(frame, [0, enterDurFrames], [0, 1], clamp)) ||
-    midway(interpolate(frame, [exitStart, durationInFrames], [0, 1], clamp));
+    midway(interpolate(frame, [enter.start, enter.end], [0, 1], clamp)) ||
+    midway(interpolate(frame, [exit.start, exit.end], [0, 1], clamp));
 
-  const yEnter = interpolate(frame, [0, enterDurFrames], [8, 0], {
+  const yEnter = interpolate(frame, [enter.start, enter.end], [8, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: enterEasing,
   });
 
-  const yExit = interpolate(frame, [exitStart, durationInFrames], [0, -8], {
+  const yExit = interpolate(frame, [exit.start, exit.end], [0, -8], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: exitEasing,
@@ -71,7 +86,7 @@ export function ScaleDownFade({
 
   const y = yEnter + yExit;
 
-  const scaleEnter = interpolate(frame, [0, enterDurFrames], [1.04, 1], {
+  const scaleEnter = interpolate(frame, [enter.start, enter.end], [1.04, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: enterEasing,
@@ -79,7 +94,7 @@ export function ScaleDownFade({
 
   const scaleExitDelta = interpolate(
     frame,
-    [exitStart, durationInFrames],
+    [exit.start, exit.end],
     [0, -0.06],
     {
       extrapolateLeft: "clamp",

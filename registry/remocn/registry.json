@@ -157,10 +157,19 @@
         {
           "path": "scale-down-fade/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/scale-down-fade.tsx"
+          "target": "components/remocn/scale-down-fade/index.tsx"
+        },
+        {
+          "path": "scale-down-fade/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/scale-down-fade/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "blur-out-up",

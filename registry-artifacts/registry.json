@@ -152,12 +152,21 @@
       "title": "Scale Down Fade",
       "description": "Subtle premium settle-in with a restrained scale-down fade on exit.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/scale-down-fade/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/scale-down-fade.tsx"
+          "target": "components/remocn/scale-down-fade/index.tsx"
+        },
+        {
+          "path": "registry/remocn/scale-down-fade/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/scale-down-fade/timeline.ts"
         }
       ],
       "type": "registry:component"
