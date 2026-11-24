@@ -7,6 +7,15 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_AFTER,
+  DEFAULT_BEFORE,
+  savedOf,
+  segmentsOf,
+  type TimeBreakdownElementId,
+  timeBreakdownTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -99,19 +108,14 @@ export interface TimeBreakdownProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the title, the bar's reveal, split and
+   * collapse, the heading switch, the camera drift and the hero figure, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<TimeBreakdownElementId>;
 }
-
-const DEFAULT_BEFORE: TimeSegment[] = [
-  { label: "Editing", value: 62 },
-  { label: "Rendering", value: 24 },
-  { label: "Export", value: 14 },
-];
-
-const DEFAULT_AFTER: TimeSegment[] = [
-  { label: "Editing", value: 6 },
-  { label: "Rendering", value: 24 },
-  { label: "Export", value: 14 },
-];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -149,12 +153,6 @@ const THEMES = {
   },
 } as const;
 
-const T_SPLIT = 22;
-const T_SWITCH = 66;
-const T_COLLAPSE = 74;
-const COLLAPSE_LEN = 36;
-const T_DONE = T_COLLAPSE + COLLAPSE_LEN;
-
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
@@ -186,6 +184,7 @@ function Hero({
   color,
   fontFamily,
   stagger,
+  roll,
 }: {
   text: string;
   t: number;
@@ -193,6 +192,7 @@ function Hero({
   color: string;
   fontFamily: string;
   stagger: number;
+  roll: number;
 }) {
   return (
     <div
@@ -209,7 +209,7 @@ function Hero({
       }}
     >
       {Array.from(text).map((ch, i) => {
-        const p = interpolate(t, [i * stagger, i * stagger + 22], [0, 1], {
+        const p = interpolate(t, [i * stagger, i * stagger + roll], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
         });
@@ -255,30 +255,44 @@ function ScaleLayer({
   );
 }
 
-export function TimeBreakdown({
-  before = DEFAULT_BEFORE,
-  after = DEFAULT_AFTER,
-  title = "Where the time goes",
-  beforeLabel = "Before",
-  afterLabel = "With remocn",
-  caption = "less time per video",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  radius: corner = 12,
-  stagger = 3,
-  logo,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: TimeBreakdownProps) {
+export function TimeBreakdown(props: TimeBreakdownProps) {
+  const {
+    before = DEFAULT_BEFORE,
+    after = DEFAULT_AFTER,
+    title = "Where the time goes",
+    beforeLabel = "Before",
+    afterLabel = "With remocn",
+    caption = "less time per video",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    radius: corner = 12,
+    logo,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const t = Math.max(0, frame - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    timeBreakdownTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const titleEl = tl.get("title");
+  const barEl = tl.get("bar");
+  const driftEl = tl.get("drift");
+  const splitEl = tl.get("split");
+  const switchEl = tl.get("switch");
+  const collapseEl = tl.get("collapse");
+  const heroEl = tl.get("hero");
   const u = Math.min(width / 1280, height / 720);
   const th = THEMES[theme];
   const fg = ink ?? th.fg;
@@ -286,14 +300,9 @@ export function TimeBreakdown({
   const stage = transparent ? "transparent" : (background ?? th.bg);
   const clipId = `h${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
-  const segs = before.slice(0, 5).map((b, i) => ({
-    label: b.label,
-    from: Math.max(0, b.value),
-    to: Math.max(0, after[i]?.value ?? b.value),
-  }));
+  const segs = segmentsOf(before, after);
   const totalBefore = segs.reduce((s, x) => s + x.from, 0) || 1;
-  const totalAfter = segs.reduce((s, x) => s + x.to, 0);
-  const saved = Math.max(0, Math.round((1 - totalAfter / totalBefore) * 100));
+  const saved = savedOf(segs);
   const focus = segs.reduce(
     (best, s, i) =>
       s.from - s.to > segs[best].from - segs[best].to ? i : best,
@@ -307,24 +316,33 @@ export function TimeBreakdown({
   const barTop = height * 0.52;
   const radius = corner * u;
 
-  const reveal = interpolate(t, [-4, 24], [0, 1], {
+  const reveal = interpolate(t, [barEl.start, barEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const split = interpolate(t, [T_SPLIT, T_SPLIT + 18], [0, 1], {
+  const split = interpolate(t, [splitEl.start, splitEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const gap = 6 * u * split;
-  const sw = interpolate(t, [T_SWITCH, T_SWITCH + 14], [0, 1], {
+  const sw = interpolate(t, [switchEl.start, switchEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const tint = interpolate(t, [T_COLLAPSE - 4, T_COLLAPSE + 6], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const c = interpolate(t, [T_COLLAPSE, T_DONE], [0, 1], {
+  const T_COLLAPSE = collapseEl.start;
+  const tint = interpolate(
+    t,
+    [
+      T_COLLAPSE + collapseEl.beat("tint"),
+      T_COLLAPSE + collapseEl.beat("tintEnd"),
+    ],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const c = interpolate(t, [T_COLLAPSE, collapseEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -342,10 +360,18 @@ export function TimeBreakdown({
   const usedEnd = cursor - gap;
   const freedX = usedEnd + gap;
   const freedW = Math.max(0, x0 + barW - freedX);
-  const freedIn = interpolate(t, [T_COLLAPSE + 6, T_COLLAPSE + 22], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const freedIn = interpolate(
+    t,
+    [
+      T_COLLAPSE + collapseEl.beat("freedAt"),
+      T_COLLAPSE + collapseEl.beat("freedEnd"),
+    ],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const finalFreedX =
     x0 + segs.reduce((s, x) => s + x.to * unitW, 0) + 6 * u * segs.length;
 
@@ -361,25 +387,40 @@ export function TimeBreakdown({
     return x;
   });
 
-  const heroT = t - (T_DONE - 4);
+  const heroT = t - heroEl.start;
   const heroSize = Math.min(160 * u, width * 0.125);
-  const capIn = interpolate(heroT, [12, 32], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const bracketIn = interpolate(heroT, [-6, 18], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const titleIn = interpolate(t, [-6, 16], [0, 1], {
+  const capIn = interpolate(
+    heroT,
+    [heroEl.beat("capAt"), heroEl.beat("capEnd")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const bracketIn = interpolate(
+    heroT,
+    [heroEl.beat("bracketAt"), heroEl.beat("bracketEnd")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const titleIn = interpolate(t, [titleEl.start, titleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const driftAt = (f: number) =>
-    interpolate(Math.max(0, f - delay) * speed, [0, T_DONE + 60], [1.025, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    interpolate(
+      Math.max(0, f - delay) * speed,
+      [driftEl.start, driftEl.end],
+      [1.025, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
   const drift = driftAt(frame);
   // The drift's ease is so flat at its ends that a progress test would keep
   // the tilt on while nothing visibly moves; weigh the scale step by the
@@ -392,7 +433,7 @@ export function TimeBreakdown({
   const bracketY = barTop - 22 * u;
   const auroraDrift = interpolate(
     t,
-    [T_COLLAPSE, T_DONE + 80],
+    [T_COLLAPSE, T_COLLAPSE + collapseEl.beat("auroraEnd")],
     [0, 1.6],
     CLAMP,
   );
@@ -596,18 +637,14 @@ export function TimeBreakdown({
           </svg>
 
           {geom.map((g, i) => {
-            const a = interpolate(
-              t,
-              [T_SPLIT + 6 + i * 4, T_SPLIT + 26 + i * 4],
-              [0, 1],
-              {
-                ...CLAMP,
-                easing: EASE_OUT,
-              },
-            );
+            const seg = tl.get(`segment:${i}`);
+            const a = interpolate(t, [seg.start, seg.end], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
             const countIn = interpolate(
               t,
-              [T_SPLIT + 6 + i * 4, T_SPLIT + 34 + i * 4],
+              [seg.start, seg.start + seg.beat("count")],
               [0, 1],
               { ...CLAMP, easing: Easing.bezier(0.22, 1, 0.36, 1) },
             );
@@ -674,7 +711,8 @@ export function TimeBreakdown({
                 size={heroSize}
                 color={fg}
                 fontFamily={fontFamily}
-                stagger={stagger}
+                stagger={heroEl.beat("stagger")}
+                roll={heroEl.beat("roll")}
               />
               <span
                 style={{

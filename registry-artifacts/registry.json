@@ -13817,12 +13817,21 @@
       "title": "Time Breakdown",
       "description": "A segmented time bar shrinks while 56% less time per video counts up.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/time-breakdown/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/time-breakdown.tsx"
+          "target": "components/remocn/time-breakdown/index.tsx"
+        },
+        {
+          "path": "registry/remocn/time-breakdown/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/time-breakdown/timeline.ts"
         }
       ],
       "type": "registry:component"
