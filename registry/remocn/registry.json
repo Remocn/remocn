@@ -6694,10 +6694,19 @@
         {
           "path": "not-yet/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/not-yet.tsx"
+          "target": "components/remocn/not-yet/index.tsx"
+        },
+        {
+          "path": "not-yet/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/not-yet/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "moves-up",

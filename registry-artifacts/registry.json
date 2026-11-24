@@ -6689,12 +6689,21 @@
       "title": "Not Yet",
       "description": "A stack of \"It can't ... Yet.\" lines, the last one brightest, each ending in an orange \"Yet.\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/not-yet/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/not-yet.tsx"
+          "target": "components/remocn/not-yet/index.tsx"
+        },
+        {
+          "path": "registry/remocn/not-yet/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/not-yet/timeline.ts"
         }
       ],
       "type": "registry:component"
