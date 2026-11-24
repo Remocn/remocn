@@ -5,6 +5,17 @@ import type React from "react";
 import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  BASS_DROP_LENGTH,
+  type BassDropElementId,
+  bassDropTimeline,
+  DEFAULT_BUILD,
+} from "./timeline";
 
 const { fontFamily: serif } = loadFont("normal", {
   weights: ["400"],
@@ -41,6 +52,12 @@ export interface BassDropProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the build, the silence, the hit and the line,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<BassDropElementId>;
 }
 
 // Beat sheet (30fps, speed 1):
@@ -51,12 +68,8 @@ export interface BassDropProps {
 //  74–76   the hit: the title cuts in at full size, 1.06 → 1 in two frames
 //  76–end  the title holds on a slow push; the line cuts back in under it at
 //          96 at the tracking the build ended on; poster hold
-const CUT = 66;
-const FLASH = 73;
-const HIT = 74;
-const LINE_AT = 96;
 /** Frames the demo needs: the hit plus a long poster hold. */
-export const BASS_DROP_DURATION = 150;
+export const BASS_DROP_DURATION = BASS_DROP_LENGTH;
 
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -242,7 +255,7 @@ function Build({
   c,
   fg,
   stage,
-  cut,
+  el,
   scale,
   fontFamily,
 }: {
@@ -255,16 +268,25 @@ function Build({
   c: Colors;
   fg: string;
   stage: string;
-  cut: number;
+  /** The build's element: its start, its end (the cut) and its beats. */
+  el: ResolvedElement<BassDropElementId>;
   scale: number;
   fontFamily: string;
 }) {
-  const breath = interpolate(t, [-8, 40], [0, 1], {
+  const breath = interpolate(
+    t,
+    [el.start + el.beat("breathe"), el.start + el.beat("breatheEnd")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: BREATHE,
+    },
+  );
+  const rise = interpolate(t, [el.start, el.end], [0, 1], {
     ...CLAMP,
-    easing: BREATHE,
+    easing: RISER,
   });
-  const rise = interpolate(t, [0, cut], [0, 1], { ...CLAMP, easing: RISER });
-  const lineIn = interpolate(t, [10, cut], [0, 1], {
+  const lineIn = interpolate(t, [el.start + el.beat("rule"), el.end], [0, 1], {
     ...CLAMP,
     easing: RISER,
   });
@@ -438,7 +460,8 @@ function Hit({
   caption,
   small,
   c,
-  hit,
+  hitEl,
+  lineAt,
   ink,
   logo,
   fontFamily,
@@ -450,14 +473,17 @@ function Hit({
   caption: string;
   small: number;
   c: Colors;
-  hit: number;
+  /** The hit's element: the punch is a beat, the push runs to its end. */
+  hitEl: ResolvedElement<BassDropElementId>;
+  /** Frame the line cuts back in. */
+  lineAt: number;
   ink?: string;
   logo?: React.ReactNode;
   fontFamily: string;
 }) {
-  const local = t - hit;
-  const punch = interpolate(local, [0, 2], [1.06, 1], CLAMP);
-  const hold = interpolate(local, [2, BASS_DROP_DURATION - hit], [0, 1], {
+  const local = t - hitEl.start;
+  const punch = interpolate(local, [0, hitEl.beat("punch")], [1.06, 1], CLAMP);
+  const hold = interpolate(local, [hitEl.beat("punch"), hitEl.length], [0, 1], {
     ...CLAMP,
     easing: SETTLE,
   });
@@ -480,7 +506,7 @@ function Hit({
         c={c}
         caption={caption}
         small={small}
-        showCaption={t >= hit + LINE_AT - HIT}
+        showCaption={t >= lineAt}
         logo={logo}
         fontFamily={fontFamily}
       />
@@ -503,7 +529,7 @@ function Hit({
       >
         {title}
       </Line>
-      {caption && t >= hit + LINE_AT - HIT ? (
+      {caption && t >= lineAt ? (
         <Line
           y={titleY + (size * CAP) / 2 + H * 0.1}
           size={small}
@@ -534,33 +560,45 @@ function ScaleLayer({
   );
 }
 
-export function BassDrop({
-  build = "THIS FALL",
-  title,
-  line,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = serif,
-  logo,
-  buildLength = CUT,
-  flash: flashOn = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: BassDropProps) {
+export function BassDrop(props: BassDropProps) {
+  const {
+    build = DEFAULT_BUILD,
+    title,
+    line,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = serif,
+    logo,
+    flash: flashOn = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    bassDropTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const buildEl = tl.get("build");
+  const silence = tl.get("silence");
+  const hitEl = tl.get("hit");
   const c = THEMES[theme];
   const caption = line ?? build;
   const small = H * 0.036;
   const stage = background ?? c.bg;
-  const hit = buildLength + HIT - CUT;
+  const hit = hitEl.start;
 
-  const phase = t < buildLength ? "build" : t < hit ? "silence" : "hit";
+  const phase = t < silence.start ? "build" : t < hit ? "silence" : "hit";
   const flash =
-    flashOn && phase === "silence" && t >= buildLength + FLASH - CUT;
+    flashOn &&
+    phase === "silence" &&
+    t >= silence.start + silence.beat("flash");
   const ground = flash
     ? `radial-gradient(90% 120% at 50% 110%, ${BEAM[0]} 0%, ${BEAM[1]} 28%, ${BEAM[2]} 55%, ${BEAM[3]} 100%)`
     : stage === "transparent"
@@ -580,7 +618,7 @@ export function BassDrop({
           c={c}
           fg={ink ?? c.fg}
           stage={stage}
-          cut={buildLength}
+          el={buildEl}
           scale={scale}
           fontFamily={fontFamily}
         />
@@ -595,7 +633,8 @@ export function BassDrop({
             caption={caption}
             small={small}
             c={c}
-            hit={hit}
+            hitEl={hitEl}
+            lineAt={tl.get("line").start}
             ink={ink}
             logo={logo}
             fontFamily={fontFamily}

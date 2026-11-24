@@ -11403,12 +11403,17 @@
       "title": "Bass Drop",
       "description": "A trailer build-up breathes in, then drops into the big gradient logo with a tracked tagline.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "bass-drop/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bass-drop.tsx"
+          "target": "components/remocn/bass-drop/index.tsx"
+        },
+        {
+          "path": "bass-drop/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bass-drop/timeline.ts"
         }
       ]
     },
