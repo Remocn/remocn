@@ -729,10 +729,19 @@
         {
           "path": "kinetic-center-build/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/kinetic-center-build.tsx"
+          "target": "components/remocn/kinetic-center-build/index.tsx"
+        },
+        {
+          "path": "kinetic-center-build/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/kinetic-center-build/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "short-slide-down",

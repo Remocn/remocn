@@ -2,8 +2,14 @@
 
 import { useMemo } from "react";
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type KineticCenterBuildElementId,
+  kineticCenterBuildTimeline,
+  wordsOf,
+} from "./timeline";
 
 export interface KineticCenterBuildProps {
   text: string;
@@ -13,6 +19,11 @@ export interface KineticCenterBuildProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<KineticCenterBuildElementId>;
 }
 
 const FONT_FAMILY =
@@ -37,28 +48,34 @@ function measureWidths(
   return words.map((w) => ctx.measureText(w).width);
 }
 
-export function KineticCenterBuild({
-  text,
-  entryOffset = 88,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: KineticCenterBuildProps) {
+export function KineticCenterBuild(props: KineticCenterBuildProps) {
+  const {
+    text,
+    entryOffset = 88,
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    kineticCenterBuildTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
-  const words = useMemo(() => text.split(" "), [text]);
+  const words = useMemo(() => wordsOf(text), [text]);
   const widths = useMemo(
     () => measureWidths(words, fontSize, fontWeight),
     [words, fontSize, fontWeight],
   );
 
   const gap = 10;
-  const firstDur = 10;
-  const pushDur = 13;
-  const travelDur = 7;
   const entryScale = 0.992;
   const entryBlur = 3.5;
   const reflowBlur = 0.8;
@@ -107,8 +124,9 @@ export function KineticCenterBuild({
         }}
       >
         {words.map((word, j) => {
-          const entryStart = j === 0 ? 0 : firstDur + (j - 1) * pushDur;
-          const entryEnd = entryStart + (j === 0 ? firstDur : pushDur);
+          const entry = tl.get(`word:${j}`);
+          const entryStart = entry.start;
+          const entryEnd = entry.end;
           const targetX = positionsAt[j][j];
           const xFrom = j === 0 ? 0 : targetX + entryOffset;
 
@@ -129,7 +147,7 @@ export function KineticCenterBuild({
             const range: [number, number] = [entryStart, entryEnd];
             const travelRange: [number, number] = [
               entryStart,
-              Math.min(entryStart + travelDur, entryEnd),
+              Math.min(entryStart + entry.beat("travel"), entryEnd),
             ];
             const opts = {
               extrapolateLeft: "clamp" as const,
@@ -147,8 +165,9 @@ export function KineticCenterBuild({
                 : 0;
           } else {
             for (let w = j + 1; w < n; w++) {
-              const pushStart = firstDur + (w - 1) * pushDur;
-              const pushEnd = pushStart + pushDur;
+              const push = tl.get(`word:${w}`);
+              const pushStart = push.start;
+              const pushEnd = push.end;
               const fromX = positionsAt[w - 1][j];
               const toX = positionsAt[w][j];
               if (frame >= pushEnd) {
@@ -156,7 +175,10 @@ export function KineticCenterBuild({
               } else if (frame >= pushStart) {
                 x = interpolate(
                   frame,
-                  [pushStart, Math.min(pushStart + travelDur, pushEnd)],
+                  [
+                    pushStart,
+                    Math.min(pushStart + push.beat("travel"), pushEnd),
+                  ],
                   [fromX, toX],
                   {
                     extrapolateLeft: "clamp",

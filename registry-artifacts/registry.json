@@ -724,12 +724,21 @@
       "title": "Kinetic Center Build",
       "description": "A word appears in the center; each new word enters from the right and pushes the line until the full phrase locks centered.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/kinetic-center-build/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/kinetic-center-build.tsx"
+          "target": "components/remocn/kinetic-center-build/index.tsx"
+        },
+        {
+          "path": "registry/remocn/kinetic-center-build/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/kinetic-center-build/timeline.ts"
         }
       ],
       "type": "registry:component"
