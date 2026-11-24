@@ -6126,13 +6126,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "headline-to-line/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/headline-to-line.tsx"
+          "target": "components/remocn/headline-to-line/index.tsx"
+        },
+        {
+          "path": "headline-to-line/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/headline-to-line/timeline.ts"
         }
       ]
     },
