@@ -15733,13 +15733,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/video-watch-page/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/video-watch-page.tsx"
+          "target": "components/remocn/video-watch-page/index.tsx"
+        },
+        {
+          "path": "registry/remocn/video-watch-page/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/video-watch-page/timeline.ts"
         }
       ],
       "type": "registry:component"
