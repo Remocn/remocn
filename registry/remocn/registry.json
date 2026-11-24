@@ -14372,13 +14372,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "rotary-dial/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/rotary-dial.tsx"
+          "target": "components/remocn/rotary-dial/index.tsx"
+        },
+        {
+          "path": "rotary-dial/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/rotary-dial/timeline.ts"
         }
       ]
     },
