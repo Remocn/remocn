@@ -13718,12 +13718,21 @@
       "title": "Area Compare",
       "description": "Two discs compare bundle sizes while 14x smaller settles in big type.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/area-compare/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/area-compare.tsx"
+          "target": "components/remocn/area-compare/index.tsx"
+        },
+        {
+          "path": "registry/remocn/area-compare/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/area-compare/timeline.ts"
         }
       ],
       "type": "registry:component"

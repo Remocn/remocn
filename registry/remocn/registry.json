@@ -13723,10 +13723,19 @@
         {
           "path": "area-compare/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/area-compare.tsx"
+          "target": "components/remocn/area-compare/index.tsx"
+        },
+        {
+          "path": "area-compare/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/area-compare/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "rank-climb",
