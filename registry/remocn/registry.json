@@ -5136,12 +5136,17 @@
       "title": "Gravity Pile",
       "description": "Seeded circles, squares and triangles rain down, bounce off the floor and each other, and settle into a heap.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "gravity-pile/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/gravity-pile.tsx"
+          "target": "components/remocn/gravity-pile/index.tsx"
+        },
+        {
+          "path": "gravity-pile/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/gravity-pile/timeline.ts"
         }
       ]
     },
