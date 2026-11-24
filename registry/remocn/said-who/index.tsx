@@ -13,6 +13,17 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_DETAILS,
+  DEFAULT_HIGHLIGHT,
+  DEFAULT_QUOTE,
+  quoteTokens,
+  type SaidWhoElementId,
+  saidWhoTimeline,
+  type Tok,
+  wordTokens,
+} from "./timeline";
 
 const serif = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -35,6 +46,12 @@ export interface SaidWhoProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the quote words, the name, each detail joining
+   * and the highlight, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SaidWhoElementId>;
 }
 
 const THEMES = {
@@ -52,45 +69,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-interface Tok {
-  text: string;
-  attach: boolean;
-  hot?: boolean;
-}
-
-function stripQuotes(s: string) {
-  return s
-    .trim()
-    .replace(/^["“”]+/, "")
-    .replace(/["“”]+$/, "");
-}
-
-function quoteTokens(quote: string, highlight: string): Tok[] {
-  const body = stripQuotes(quote);
-  const at = highlight ? body.indexOf(highlight) : -1;
-  const out: Tok[] = [];
-  const words = body.split(" ").filter(Boolean);
-  let cursor = 0;
-  words.forEach((word, i) => {
-    const s = body.indexOf(word, cursor);
-    const e = s + word.length;
-    cursor = e;
-    const hot = at >= 0 && s < at + highlight.length && e > at;
-    let text = word;
-    if (i === 0) text = `“${text}`;
-    if (i === words.length - 1) text = `${text}”`;
-    out.push({ text, attach: false, hot });
-  });
-  return out;
-}
-
-function wordTokens(s: string): Tok[] {
-  return s
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((text) => ({ text, attach: false }));
-}
 
 function place(
   toks: Tok[],
@@ -244,24 +222,27 @@ function ScaleLayer({
   );
 }
 
-export function SaidWho({
-  quote = "Took me one evening.",
-  highlight = "one evening",
-  name = "Tobias Lind",
-  details = ["backend engineer", "never edited a video before"],
-  stagger = 3,
-  accent,
-  ink,
-  background,
-  fontFamily = serif.fontFamily,
-  scale: layerScale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: SaidWhoProps) {
+export function SaidWho(props: SaidWhoProps) {
+  const {
+    quote = DEFAULT_QUOTE,
+    highlight = DEFAULT_HIGHLIGHT,
+    name = "Tobias Lind",
+    details = DEFAULT_DETAILS,
+    accent,
+    ink,
+    background,
+    fontFamily = serif.fontFamily,
+    scale: layerScale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const mark = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useSceneConfig();
+  // The details spread over the clip's frames, without `speed`, as before.
+  const tl = useTimeline(saidWhoTimeline, props, T, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -344,19 +325,13 @@ export function SaidWho({
   }
   const aLays = Array.from({ length: m + 1 }, (_, k) => attrLay(k, Fa));
 
-  const intro = 34;
-  const tail = Math.max(36, T * 0.25);
-  const gapC = m > 0 ? Math.max(20, (T - tail - intro) / m) : 1;
-  const TR = Math.min(20, gapC * 0.6);
-  const startOf = (k: number) => intro + gapC * k - TR;
-
   let cur = 0;
-  for (let k = 1; k <= m; k++) if (t >= startOf(k)) cur = k;
-  const lt = cur > 0 ? t - startOf(cur) : 0;
-  const glide =
-    cur > 0
-      ? interpolate(lt, [0, TR], [0, 1], { ...CLAMP, easing: EASE_IO })
-      : 1;
+  for (let k = 1; k <= m; k++) if (t >= tl.get(`detail:${k}`).start) cur = k;
+  const step = cur > 0 ? tl.get(`detail:${cur}`) : null;
+  const lt = step ? t - step.start : 0;
+  const glide = step
+    ? interpolate(lt, [0, step.length], [0, 1], { ...CLAMP, easing: EASE_IO })
+    : 1;
   const from = cur > 0 ? cur - 1 : 0;
 
   const qLineH = LH * Fq;
@@ -395,8 +370,8 @@ export function SaidWho({
   const aShift = settled(aTop - rest.aTop);
   const gliding = cur > 0 && midway(glide);
 
-  const hotAt = m > 0 ? startOf(m) + TR * 0.7 : intro;
-  const hot = interpolate(t, [hotAt, hotAt + 16], [0, 1], {
+  const hotEl = tl.get("highlight");
+  const hot = interpolate(t, [hotEl.start, hotEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -406,7 +381,8 @@ export function SaidWho({
     const lineW = qLay.widths[p.line];
     const x = W / 2 + (p.x - lineW / 2) * Fq;
     const y = rest.qTop + p.line * qLineH;
-    const e = interpolate(t, [2 + i * stagger, 20 + i * stagger], [0, 1], {
+    const wordEl = tl.get(`word:${i}`);
+    const e = interpolate(t, [wordEl.start, wordEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -441,7 +417,8 @@ export function SaidWho({
     };
   };
 
-  const nameIn = interpolate(t, [18, 34], [0, 1], {
+  const nameEl = tl.get("name");
+  const nameIn = interpolate(t, [nameEl.start, nameEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -477,14 +454,20 @@ export function SaidWho({
     let rising = midway(nameIn);
     if (i < nFrom) {
       // Already on screen: only the glide moves it.
-    } else if (tk.attach && i > 0) {
-      opacity = interpolate(lt, [TR * 0.4, TR * 0.4 + 10], [0, 1], CLAMP);
+    } else if (step && tk.attach && i > 0) {
+      const comma = step.beat("comma");
+      opacity = interpolate(
+        lt,
+        [comma, comma + step.beat("commaIn")],
+        [0, 1],
+        CLAMP,
+      );
       dy = 0;
       rising = false;
-    } else {
+    } else if (step) {
       const order = i - nFrom;
-      const s = TR * 0.55 + order * 2;
-      const v = interpolate(lt, [s, s + 16], [0, 1], {
+      const s = step.beat("words") + order * step.beat("wordStep");
+      const v = interpolate(lt, [s, s + step.beat("wordIn")], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
