@@ -9472,12 +9472,21 @@
       "title": "Acronym Expand",
       "description": "An acronym expands letter by letter into 'Model Context Protocol' with an eyebrow and subhead.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/acronym-expand/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/acronym-expand.tsx"
+          "target": "components/remocn/acronym-expand/index.tsx"
+        },
+        {
+          "path": "registry/remocn/acronym-expand/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/acronym-expand/timeline.ts"
         }
       ],
       "type": "registry:component"

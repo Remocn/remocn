@@ -9477,10 +9477,19 @@
         {
           "path": "acronym-expand/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/acronym-expand.tsx"
+          "target": "components/remocn/acronym-expand/index.tsx"
+        },
+        {
+          "path": "acronym-expand/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/acronym-expand/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "diff-swap",
