@@ -13458,12 +13458,21 @@
       "title": "Quote Hero",
       "description": "A big pull quote with an underlined italic phrase and a named founder attribution.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/quote-hero/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/quote-hero.tsx"
+          "target": "components/remocn/quote-hero/index.tsx"
+        },
+        {
+          "path": "registry/remocn/quote-hero/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/quote-hero/timeline.ts"
         }
       ],
       "type": "registry:component"

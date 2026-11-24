@@ -13463,10 +13463,19 @@
         {
           "path": "quote-hero/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/quote-hero.tsx"
+          "target": "components/remocn/quote-hero/index.tsx"
+        },
+        {
+          "path": "quote-hero/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/quote-hero/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "activity-rings",
