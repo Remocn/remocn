@@ -13425,12 +13425,21 @@
       "title": "Fourier Sum",
       "description": "Sine harmonics add up one by one into a square wave under a serif caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/fourier-sum/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/fourier-sum.tsx"
+          "target": "components/remocn/fourier-sum/index.tsx"
+        },
+        {
+          "path": "registry/remocn/fourier-sum/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/fourier-sum/timeline.ts"
         }
       ],
       "type": "registry:component"

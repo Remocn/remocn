@@ -13430,10 +13430,19 @@
         {
           "path": "fourier-sum/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/fourier-sum.tsx"
+          "target": "components/remocn/fourier-sum/index.tsx"
+        },
+        {
+          "path": "fourier-sum/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/fourier-sum/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "cell-divide",
