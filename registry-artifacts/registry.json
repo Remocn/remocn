@@ -6851,12 +6851,21 @@
       "title": "The Tab",
       "description": "A receipt of dotted lines prices every item at $0, totalling \"one Sunday morning\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/the-tab/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/the-tab.tsx"
+          "target": "components/remocn/the-tab/index.tsx"
+        },
+        {
+          "path": "registry/remocn/the-tab/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/the-tab/timeline.ts"
         }
       ],
       "type": "registry:component"
