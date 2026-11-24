@@ -12276,12 +12276,21 @@
       "title": "Thread Weave",
       "description": "A number is woven thread by thread on a loom of cream cells in blue and orange.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/thread-weave/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/thread-weave.tsx"
+          "target": "components/remocn/thread-weave/index.tsx"
+        },
+        {
+          "path": "registry/remocn/thread-weave/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/thread-weave/timeline.ts"
         }
       ],
       "type": "registry:component"

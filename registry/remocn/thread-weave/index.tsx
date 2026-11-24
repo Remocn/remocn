@@ -8,6 +8,14 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_VALUE,
+  motifBitmap,
+  PAD,
+  type ThreadWeaveElementId,
+  threadWeaveTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadSpace("normal", {
   weights: ["400", "500"],
@@ -46,6 +54,12 @@ export interface ThreadWeaveProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the warp, the counter, the camera, each pick
+   * of the weft, the settle and the caption, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ThreadWeaveElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -76,42 +90,6 @@ const THEMES = {
   },
 } as const;
 
-const FONT: Record<string, string[]> = {
-  "0": [".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."],
-  "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
-  "2": [".###.", "#...#", "....#", "...#.", "..#..", ".#...", "#####"],
-  "3": ["####.", "....#", "....#", ".###.", "....#", "....#", "####."],
-  "4": ["...#.", "..##.", ".#.#.", "#..#.", "#####", "...#.", "...#."],
-  "5": ["#####", "#....", "####.", "....#", "....#", "#...#", ".###."],
-  "6": ["..##.", ".#...", "#....", "####.", "#...#", "#...#", ".###."],
-  "7": ["#####", "....#", "...#.", "..#..", ".#...", ".#...", ".#..."],
-  "8": [".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."],
-  "9": [".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."],
-  "+": [".....", "..#..", "..#..", "#####", "..#..", "..#..", "....."],
-  "%": ["##..#", "##.#.", "...#.", "..#..", ".#...", ".#.##", "#..##"],
-  x: [".....", ".....", "#...#", ".#.#.", "..#..", ".#.#.", "#...#"],
-  k: ["#....", "#....", "#..#.", "#.#..", "##...", "#.#..", "#..#."],
-  ".": [".", ".", ".", ".", ".", ".", "#"],
-  " ": ["..", "..", "..", "..", "..", "..", ".."],
-};
-
-/** The remocn.dev R mark, rasterised from its outline (13 × 12, ≥42% coverage). */
-const MARK = [
-  "1111111111..",
-  ".1111111111.",
-  ".........11.",
-  "..........11",
-  "..........11",
-  ".........111",
-  ".....111111.",
-  ".111111111..",
-  "11111111....",
-  "11....111...",
-  "11.....11...",
-  "11......11..",
-  "11.......11.",
-];
-
 /**
  * gradients.sh "fluted" palette (#1d2a8f #2f7bff #ff7a3d #ffe2c4; the
  * accent stands in for #2f7bff on light cloth) dyes the figure threads,
@@ -122,22 +100,6 @@ function figureColor(theme: "dark" | "light", accent: string, k: number) {
   return theme === "dark"
     ? interpolateColors(k, [0, 0.45, 1], ["#1d2a8f", accent, "#ff7a3d"])
     : interpolateColors(k, [0, 0.5, 1], ["#2f7bff", "#ff7a3d", "#ffe2c4"]);
-}
-
-/** Longest the weave may take, so dense motifs still hold their poster. */
-const WEAVE_BUDGET = 108;
-
-function motifBitmap(value: string, motif: "value" | "mark") {
-  if (motif === "mark") return MARK;
-  const rows: string[] = ["", "", "", "", "", "", ""];
-  const chars = value.split("").filter((ch) => FONT[ch]);
-  chars.forEach((ch, i) => {
-    const g = FONT[ch];
-    for (let r = 0; r < 7; r++) {
-      rows[r] += g[r].replace(/#/g, "1") + (i < chars.length - 1 ? "." : "");
-    }
-  });
-  return rows;
 }
 
 const REMOCN_R_PATH =
@@ -214,30 +176,33 @@ const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-const WARP_IN = [-6, 22] as const;
-const WEAVE_START = 22;
-const PAD = { value: [3, 2], mark: [2, 1] } as const;
-
-export function ThreadWeave({
-  value = "24",
-  motif = "value",
-  caption = "frames per second",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  weave = WEAVE_BUDGET,
-  stats = true,
-  logo,
-  grain = true,
-  scale: zoom = 1,
-  delay: wait = 0,
-  speed = 1,
-  theme = "dark",
-}: ThreadWeaveProps) {
+export function ThreadWeave(props: ThreadWeaveProps) {
+  const {
+    value = DEFAULT_VALUE,
+    motif = "value",
+    caption = "frames per second",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    stats = true,
+    logo,
+    grain = true,
+    scale: zoom = 1,
+    delay: wait = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - wait) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    threadWeaveTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = height / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -274,27 +239,12 @@ export function ThreadWeave({
     return figureColor(theme, accent, 0.55 * gx + 0.45 * (1 - gy));
   };
 
-  const durs: number[] = [];
-  const starts: number[] = [];
-  const raw = Array.from({ length: rows }, (_, r) =>
-    lerp(6.6, 3.4, EASE_OUT(r / Math.max(1, rows - 1))),
-  );
-  const fit = Math.min(1, weave / raw.reduce((a, b) => a + b, 0));
-  let acc = WEAVE_START;
-  for (let r = 0; r < rows; r++) {
-    const d = raw[r] * fit;
-    starts.push(acc);
-    durs.push(d);
-    acc += d;
-  }
-  const weaveEnd = acc;
-  const beatLen = 7;
-
   const rowState = (r: number) => {
-    const s = starts[r];
-    const e = s + durs[r];
+    const pick = tl.get(`pick:${r}`);
+    const s = pick.start;
+    const e = pick.end;
     const prog = interpolate(t, [s, e], [0, 1], { ...CLAMP, easing: EASE_IO });
-    const beat = interpolate(t, [e, e + beatLen], [0, 1], {
+    const beat = interpolate(t, [e, e + pick.beat("beat")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -306,15 +256,20 @@ export function ThreadWeave({
   const states = Array.from({ length: rows }, (_, r) => rowState(r));
   const picks = states.filter((s) => s.prog >= 1).length;
 
-  const settle = interpolate(t, [weaveEnd, weaveEnd + 16], [0, 1], {
+  const settleEl = tl.get("settle");
+  const statsEl = tl.get("stats");
+  const captionEl = tl.get("caption");
+  const warpEl = tl.get("warp");
+  const cameraEl = tl.get("camera");
+  const settle = interpolate(t, [settleEl.start, settleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const footA = interpolate(t, [10, 26], [0, 1], {
+  const footA = interpolate(t, [statsEl.start, statsEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const capA = interpolate(t, [weaveEnd + 2, weaveEnd + 18], [0, 1], {
+  const capA = interpolate(t, [captionEl.start, captionEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -322,10 +277,11 @@ export function ThreadWeave({
   const warpEls = Array.from({ length: cols }, (_, c) => {
     const x = left + (c + 0.5) * sx;
     const mid = (cols - 1) / 2;
-    const delay = (Math.abs(c - mid) / Math.max(1, mid)) * 10;
+    const delay =
+      (Math.abs(c - mid) / Math.max(1, mid)) * warpEl.beat("spread");
     const g = interpolate(
       t,
-      [WARP_IN[0] + delay, WARP_IN[1] - 10 + delay],
+      [warpEl.start + delay, warpEl.start + warpEl.beat("grow") + delay],
       [0, 1],
       {
         ...CLAMP,
@@ -457,7 +413,11 @@ export function ThreadWeave({
   }
 
   const scaleAt = (f: number) =>
-    lerp(1.025, 1, EASE_IO(Math.max(0, Math.min(1, f / (weaveEnd + 16)))));
+    lerp(
+      1.025,
+      1,
+      EASE_IO(Math.max(0, Math.min(1, (f - cameraEl.start) / cameraEl.length))),
+    );
   const scale = scaleAt(t);
   // Weighed at the frame's corner, the furthest the caption can sit from the
   // camera's origin.
