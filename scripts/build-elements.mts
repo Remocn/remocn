@@ -160,6 +160,41 @@ function parseSource(source: string): ParsedSource {
   return { imports, body };
 }
 
+const TOP_LEVEL =
+  /^(export\s+)?(?:async\s+)?(?:const|let|function|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)/gm;
+
+/** Names a source declares at its top level. */
+function topLevelNames(body: string) {
+  const exported = new Set<string>();
+  const local = new Set<string>();
+  for (const [, isExported, name] of body.matchAll(TOP_LEVEL)) {
+    (isExported ? exported : local).add(name);
+  }
+  return { exported, local };
+}
+
+/**
+ * A component's own module (`timeline.ts`) is inlined into the same file as
+ * the component and its libs. Names it keeps to itself may clash with theirs
+ * (`const STAGGER` in both), so those are renamed inside the module.
+ */
+function renameClashes(module: ParsedSource, others: ParsedSource[]) {
+  const taken = new Set<string>();
+  for (const other of others) {
+    const { exported, local } = topLevelNames(other.body);
+    for (const name of [...exported, ...local]) taken.add(name);
+  }
+  let body = module.body;
+  for (const name of topLevelNames(module.body).local) {
+    if (!taken.has(name)) continue;
+    body = body.replace(
+      new RegExp(`(?<![\\w$.])${name.replace(/\$/g, "\\$")}(?![\\w$])`, "g"),
+      `${name}$own`,
+    );
+  }
+  return { ...module, body };
+}
+
 function stripExports(body: string): string {
   return body.replace(
     /^export\s+(?=(function|const|class|interface|type|let)\b)/gm,
@@ -529,6 +564,13 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
       registryDependencies: [] as string[],
     })),
   ];
+  for (const lib of libs.slice(libs.length - ownModules.length)) {
+    const others = [
+      component,
+      ...libs.filter((other) => other !== lib).map((other) => other.parsed),
+    ];
+    lib.parsed = renameClashes(lib.parsed, others);
+  }
   const { schema, dimensions } = await loadElementConfig(item.name, path);
   let sourceCode = mergeSources(
     component,
