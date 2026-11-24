@@ -2842,12 +2842,21 @@
       "title": "Stage",
       "description": "Place a screenshot, recording, or long page on a perspective studio plane and direct an integrated camera across it with timeline keyframes.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/scene-motion", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/scene-motion",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "stage/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/stage.tsx"
+          "target": "components/remocn/stage/index.tsx"
+        },
+        {
+          "path": "stage/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/stage/timeline.ts"
         }
       ]
     },
