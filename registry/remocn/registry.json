@@ -15500,13 +15500,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "sheet-formula/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/sheet-formula.tsx"
+          "target": "components/remocn/sheet-formula/index.tsx"
+        },
+        {
+          "path": "sheet-formula/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/sheet-formula/timeline.ts"
         }
       ]
     },

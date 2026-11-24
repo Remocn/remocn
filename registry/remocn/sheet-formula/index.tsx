@@ -9,6 +9,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_FORMULA,
+  DEFAULT_ROWS,
+  type SheetFormulaElementId,
+  sheetFormulaTimeline,
+} from "./timeline";
 
 const instrumentSans = loadFont("normal", {
   weights: ["400"],
@@ -54,18 +61,15 @@ export interface SheetFormulaProps {
   lines?: [string, string, string];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the sheet filling in, the click, typing and
+   * entering of the formula, the fill-down, the color scale and the chart,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<SheetFormulaElementId>;
 }
 
-const DEFAULT_ROWS: SheetRow[] = [
-  { month: "January", signups: 1240, paid: 148, revenue: 4321 },
-  { month: "February", signups: 1512, paid: 171, revenue: 5216 },
-  { month: "March", signups: 1386, paid: 166, revenue: 4712 },
-  { month: "April", signups: 1904, paid: 231, revenue: 7680 },
-  { month: "May", signups: 2318, paid: 284, revenue: 10144 },
-  { month: "June", signups: 2105, paid: 262, revenue: 8960 },
-  { month: "July", signups: 2760, paid: 338, revenue: 13305 },
-  { month: "August", signups: 3192, paid: 401, revenue: 16983 },
-];
 const HEADERS = ["Month", "Signups", "Paid", "Revenue"];
 const REF_COLORS = ["#D9822B", "#3E7CB1", "#2E9E6B", "#C2453D"];
 const SCALE_GREEN = "#57BB8A";
@@ -764,31 +768,38 @@ function ScaleLayer({
   );
 }
 
-export function SheetFormula({
-  rows = DEFAULT_ROWS,
-  formula = "=D2/C2",
-  formulaHeader = "ARPU",
-  valueFormat = "currency",
-  title = "Signups 2026",
-  chartTitle = "ARPU by month",
-  sheetName = "Signups",
-  charFrames = 3,
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = instrumentSans.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  lines = ["Type it once.", "Fill it down.", "Chart it in one click."],
-  ground,
-  groundParams,
-}: SheetFormulaProps) {
+export function SheetFormula(props: SheetFormulaProps) {
+  const {
+    rows = DEFAULT_ROWS,
+    formula = DEFAULT_FORMULA,
+    formulaHeader = "ARPU",
+    valueFormat = "currency",
+    title = "Signups 2026",
+    chartTitle = "ARPU by month",
+    sheetName = "Signups",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = instrumentSans.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    lines = ["Type it once.", "Fill it down.", "Chart it in one click."],
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const rawFrame = useSceneFrame();
   const frame = Math.max(0, rawFrame - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    sheetFormulaTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   // Whether a value of the frame is moving right now: springs overshoot and
   // trail off, so it is read against the neighbouring frames instead of a
   // progress. Nothing moves while `delay` holds the first frame.
@@ -812,21 +823,35 @@ export function SheetFormula({
   const vMax = Math.max(...values);
   const fmt = (v: number) => fmtVal(v, valueFormat);
   const refs = refTokens(formula);
-  const T = { fill: 6, cursorIn: 34, click: 56, type: 64 } as Record<
-    string,
-    number
-  >;
-  T.enter = T.type + formula.length * charFrames + 8;
-  T.grab = T.enter + 22;
-  T.release = T.grab + 28;
-  T.cf = T.release + 14;
-  T.chart = T.cf + n * 3 + 14;
+  const sheetEl = tl.get("sheet");
+  const pushEl = tl.get("push");
+  const cellsEl = tl.get("cells");
+  const cursorEl = tl.get("cursor");
+  const clickEl = tl.get("click");
+  const typeEl = tl.get("type");
+  const enterEl = tl.get("enter");
+  const dragEl = tl.get("drag");
+  const releaseEl = tl.get("release");
+  const formatEl = tl.get("format");
+  const chartEl = tl.get("chart");
+  const T = {
+    fill: cellsEl.start,
+    cursorIn: cursorEl.start,
+    click: clickEl.start,
+    type: typeEl.start,
+    enter: enterEl.start,
+    grab: dragEl.start,
+    release: releaseEl.start,
+    cf: formatEl.start,
+    chart: chartEl.start,
+  };
+  const charFrames = typeEl.beat("char");
   const typed = clamp(
     Math.floor((frame - T.type) / charFrames) + 1,
     0,
     formula.length,
   );
-  const editing = frame >= T.click + 4 && frame < T.enter;
+  const editing = frame >= T.click + clickEl.beat("edit") && frame < T.enter;
   const abs = (x: number, y: number) => ({ x: WIN.x + x, y: WIN.y + y });
   const e2 = abs(colX(4) + colW(4) / 2, rowY(2) + RH / 2);
   const handle = abs(colX(5) - 1, rowY(3) - 1);
@@ -834,34 +859,44 @@ export function SheetFormula({
   const chartBtn = abs(CHART_BTN.x + CHART_BTN.w / 2, TITLE_H + 20);
   const keys: Key[] = [
     { t: T.cursorIn, x: 1010, y: 610 },
-    { t: T.click - 3, ...e2 },
-    { t: T.click + 6, ...e2 },
-    { t: T.type + 12, x: e2.x + 46, y: e2.y + 58 },
-    { t: T.enter + 4, x: e2.x + 46, y: e2.y + 58 },
-    { t: T.grab - 3, ...handle },
-    { t: T.grab + 2, ...handle },
+    { t: T.click + clickEl.beat("reach"), ...e2 },
+    { t: T.click + clickEl.beat("leave"), ...e2 },
+    { t: T.type + typeEl.beat("away"), x: e2.x + 46, y: e2.y + 58 },
+    { t: T.enter + enterEl.beat("rest"), x: e2.x + 46, y: e2.y + 58 },
+    { t: T.grab + dragEl.beat("reach"), ...handle },
+    { t: T.grab + dragEl.beat("hold"), ...handle },
     { t: T.release, ...handleEnd, straight: true },
-    { t: T.release + 10, ...handleEnd },
-    { t: T.chart - 3, ...chartBtn },
-    { t: T.chart + 10, ...chartBtn },
-    { t: T.chart + 40, x: chartBtn.x + 300, y: chartBtn.y + 470 },
+    { t: T.release + releaseEl.beat("settle"), ...handleEnd },
+    { t: T.chart + chartEl.beat("reach"), ...chartBtn },
+    { t: T.chart + chartEl.beat("leave"), ...chartBtn },
+    {
+      t: T.chart + chartEl.beat("away"),
+      x: chartBtn.x + 300,
+      y: chartBtn.y + 470,
+    },
   ];
   const cur = pathAt(keys, frame);
-  const dragging = frame >= T.grab && frame < T.release + 2;
-  const cross = frame >= T.grab - 6 && frame < T.release + 6;
+  const dropAt = T.release + releaseEl.beat("drop");
+  const dragging = frame >= T.grab && frame < dropAt;
+  const cross =
+    frame >= T.grab + dragEl.beat("cross") &&
+    frame < T.release + releaseEl.beat("crossEnd");
   const press = Math.max(
     dragging ? 1 : 0,
     ...[T.click, T.chart, T.grab].map((c) =>
       clamp(sp(frame - c + 1, CHIP) - sp(frame - c - 5, CHIP), 0, 1),
     ),
   );
-  const cursorIn = interpolate(frame, [T.cursorIn, T.cursorIn + 8], [0, 1], {
+  const cursorIn = interpolate(frame, [cursorEl.start, cursorEl.end], [0, 1], {
     ...CL,
     easing: ENTER,
   });
-  const enter = sp(frame, HEAVY);
+  const enter = sp(frame - sheetEl.start, HEAVY);
   const cellAt = (f: number, r: number, c: number) =>
-    sp(f - (T.fill + (r - 1) * 2 + c * 0.6), CARD);
+    sp(
+      f - (T.fill + (r - 1) * cellsEl.beat("row") + c * cellsEl.beat("column")),
+      CARD,
+    );
   const cellIn = (r: number, c: number) => cellAt(frame, r, c);
   const selMove = sp(frame - T.click, CARD);
   const selGrow = sp(frame - T.release, CARD);
@@ -871,25 +906,42 @@ export function SheetFormula({
     lastRow,
   );
   const dragRows = dragging ? curRow : 2;
+  const landAt = (k: number) => T.release + k * releaseEl.beat("stagger");
   const valueAt = (f: number, k: number) =>
-    k === 0 ? sp(f - T.enter, CHIP) : sp(f - (T.release + k * 2.4), CHIP);
+    k === 0 ? sp(f - T.enter, CHIP) : sp(f - landAt(k), CHIP);
   const valueIn = (k: number) => valueAt(frame, k);
-  const cfIn = (k: number) => sp(frame - (T.cf + k * 3), MORPH);
-  const chartAt = (f: number) => sp(f - (T.chart + 3), CARD);
+  const cfIn = (k: number) =>
+    sp(frame - (T.cf + k * formatEl.beat("stagger")), MORPH);
+  const chartAt = (f: number) => sp(f - (T.chart + chartEl.beat("open")), CARD);
   const chartIn = chartAt(frame);
-  const growAt = (f: number, k: number) => sp(f - (T.chart + 10 + k * 2), CARD);
+  const growAt = (f: number, k: number) =>
+    sp(
+      f - (T.chart + chartEl.beat("bars") + k * chartEl.beat("stagger")),
+      CARD,
+    );
   const grow = values.map((_, k) => growAt(frame, k));
   const growing = values.map((_, k) => stirs((f) => growAt(f, k)));
   const chartHover = interpolate(
     frame,
-    [T.chart - 10, T.chart - 3, T.chart + 14, T.chart + 22],
+    [
+      T.chart + chartEl.beat("hover"),
+      T.chart + chartEl.beat("reach"),
+      T.chart + chartEl.beat("hoverOut"),
+      T.chart + chartEl.beat("hoverEnd"),
+    ],
     [0, 1, 1, 0],
     CL,
   );
-  const pushAt = (f: number) => interpolate(f, [0, 290], [1, 1.025], CL);
+  const pushAt = (f: number) =>
+    interpolate(f, [pushEl.start, pushEl.end], [1, 1.025], CL);
   const s = pushAt(frame);
   const avg = values.reduce((a, b) => a + b, 0) / Math.max(1, n);
-  const chartSel = interpolate(frame, [T.chart + 70, T.chart + 78], [1, 0], CL);
+  const chartSel = interpolate(
+    frame,
+    [T.chart + chartEl.beat("deselect"), T.chart + chartEl.beat("deselectEnd")],
+    [1, 0],
+    CL,
+  );
 
   const selFrom = { x: colX(0), y: rowY(1), w: colW(0) };
   const selTo = { x: colX(4), y: rowY(2), w: colW(4) };
@@ -900,7 +952,7 @@ export function SheetFormula({
     h: RH * (1 + (n - 1) * clamp(selGrow, 0, 1.05)),
   };
   const nameBox =
-    frame < T.click ? "A1" : frame < T.release + 2 ? "E2" : `E2:E${lastRow}`;
+    frame < T.click ? "A1" : frame < dropAt ? "E2" : `E2:E${lastRow}`;
   const formulaBar: React.ReactNode =
     frame < T.click ? (
       HEADERS[0]
@@ -920,7 +972,7 @@ export function SheetFormula({
   const isActiveRow = (r: number) =>
     frame < T.click
       ? r === 1
-      : frame < T.release + 2
+      : frame < dropAt
         ? r === 2
         : r >= 2 && r <= lastRow;
 
@@ -992,7 +1044,7 @@ export function SheetFormula({
     const t = vMax > vMin ? (values[k] - vMin) / (vMax - vMin) : 1;
     const flash =
       k > 0
-        ? clamp(1 - (frame - (T.release + k * 2.4)) / 14, 0, 1) *
+        ? clamp(1 - (frame - landAt(k)) / releaseEl.beat("flash"), 0, 1) *
           (v > 0.05 ? 1 : 0)
         : 0;
     dataCells.push(
@@ -1016,22 +1068,28 @@ export function SheetFormula({
     );
   });
 
-  const swap = (items: React.ReactNode[], beats: number[]) =>
+  const swap = (items: React.ReactNode[], els: (typeof chartEl)[]) =>
     items.map((node, i) => {
-      const inAt = beats[i];
-      const outAt = beats[i + 1];
+      const el = els[i];
+      const inAt = el.start;
+      const outAt = els[i + 1]?.start;
       const pinAt = (f: number) =>
-        interpolate(f, [inAt, inAt + 14], [0, 1], {
+        interpolate(f, [inAt, inAt + el.beat("in")], [0, 1], {
           ...CL,
           easing: ENTER,
         });
       const poutAt = (f: number) =>
         outAt === undefined
           ? 0
-          : interpolate(f, [outAt - 2, outAt + 6], [0, 1], {
-              ...CL,
-              easing: EXIT,
-            });
+          : interpolate(
+              f,
+              [outAt + el.beat("leave"), outAt + el.beat("gone")],
+              [0, 1],
+              {
+                ...CL,
+                easing: EXIT,
+              },
+            );
       const pin = pinAt(frame);
       const pout = poutAt(frame);
       const shiftAt = (f: number) => (1 - pinAt(f)) * 70 - poutAt(f) * 50;
@@ -1109,7 +1167,7 @@ export function SheetFormula({
           >
             {swap(
               lines.map((l) => l),
-              [8, T.grab - 6, T.chart - 8],
+              [0, 1, 2].map((i) => tl.get(`line:${i}`)),
             )}
           </div>
           <div
@@ -1141,7 +1199,7 @@ export function SheetFormula({
                   Average <span style={{ color: pal.copy }}>{fmt(avg)}</span>
                 </span>,
               ],
-              [T.type, T.grab - 6, T.chart + 14],
+              [0, 1, 2].map((i) => tl.get(`readout:${i}`)),
             )}
           </div>
           <div
