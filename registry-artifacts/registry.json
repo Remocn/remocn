@@ -6640,12 +6640,21 @@
       "title": "Exactly",
       "description": "A yellow \"Exactly.\" lands first, then \"It's just code.\" completes the answer.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/exactly/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/exactly.tsx"
+          "target": "components/remocn/exactly/index.tsx"
+        },
+        {
+          "path": "registry/remocn/exactly/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/exactly/timeline.ts"
         }
       ],
       "type": "registry:component"

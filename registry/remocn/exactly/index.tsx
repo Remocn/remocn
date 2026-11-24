@@ -13,6 +13,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ROUNDS,
+  type ExactlyElementId,
+  exactlyTimeline,
+  roundsOf,
+  wordsOf,
+} from "./timeline";
 
 const hubot = loadFont("normal", {
   weights: ["400", "500"],
@@ -42,12 +50,13 @@ export interface ExactlyProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches each round's objection, reply and exit, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<ExactlyElementId>;
 }
-
-const DEFAULT_ROUNDS: ExactlyRound[] = [
-  { objection: "There’s nothing to click.", reply: "Good." },
-  { objection: "It’s just code.", reply: "Exactly." },
-];
 
 const THEMES = {
   dark: {
@@ -66,11 +75,6 @@ const THEMES = {
 
 const TRACK = -0.03;
 const LH = 1.06;
-const WORD = 3;
-const RISE = 13;
-const DROP = 14;
-const REFLOW = 20;
-const EXIT = 12;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -223,30 +227,32 @@ function ScaleLayer({
   );
 }
 
-export function Exactly({
-  rounds = DEFAULT_ROUNDS,
-  accent,
-  ink,
-  background,
-  fontFamily = hubot.fontFamily,
-  stagger = WORD,
-  hold = 30,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ExactlyProps) {
+export function Exactly(props: ExactlyProps) {
+  const {
+    rounds = DEFAULT_ROUNDS,
+    accent,
+    ink,
+    background,
+    fontFamily = hubot.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The fit is counted from the clip without `speed`, as before.
+  const tl = useTimeline(exactlyTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = rounds.length > 0 ? rounds : DEFAULT_ROUNDS;
-  const objs = list.map((r) => r.objection.trim().split(/\s+/));
+  const list = roundsOf(rounds);
+  const objs = list.map(wordsOf);
   const replies = list.map((r) => r.reply.trim());
   const specs = Array.from(
     new Set([
@@ -313,19 +319,6 @@ export function Exactly({
   }
   const lineH = LH * F;
 
-  const startAt: number[] = [];
-  const dropAt: number[] = [];
-  let clock = 4;
-  list.forEach((_, i) => {
-    startAt.push(clock);
-    clock += objs[i].length * stagger + RISE + 16;
-    dropAt.push(clock);
-    clock += 6 + REFLOW;
-    clock += i < list.length - 1 ? hold : 0;
-  });
-  const room = Math.max(1, T - Math.max(30, T * 0.2));
-  const k = clock > room ? room / clock : 1;
-
   const textStyle = (size: number) => ({
     position: "absolute" as const,
     fontSize: size,
@@ -346,23 +339,27 @@ export function Exactly({
       <ScaleLayer scale={scale}>
         {list.map((_, i) => {
           const last = i === list.length - 1;
-          const leaveAt = last ? 1e9 : startAt[i + 1] * k - 4;
-          const leave = interpolate(t, [leaveAt, leaveAt + EXIT], [0, 1], {
-            ...CLAMP,
-            easing: EASE_IN,
-          });
-          if (t < startAt[i] * k - 1 || leave >= 1) return null;
+          const objection = tl.get(`objection:${i}`);
+          const replyEl = tl.get(`reply:${i}`);
+          const exit = last ? null : tl.get(`exit:${i}`);
+          const leave = exit
+            ? interpolate(t, [exit.start, exit.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_IN,
+              })
+            : 0;
+          if (t < objection.start - 1 || leave >= 1) return null;
           const { a, b, own, replyX, bLines } = lays[i];
           const ayTop = H / 2 - (a.lines * lineH) / 2;
           const byTop = H / 2 - (bLines * lineH) / 2;
           const cx = W / 2;
-          const d0 = dropAt[i] * k;
-          const drop = interpolate(t, [d0, d0 + DROP * k], [0, 1], {
+          const d0 = replyEl.start;
+          const drop = interpolate(t, [d0, d0 + replyEl.beat("drop")], [0, 1], {
             ...CLAMP,
             easing: EASE_IN,
           });
-          const r0 = (dropAt[i] + 6) * k;
-          const flow = interpolate(t, [r0, r0 + REFLOW * k], [0, 1], {
+          const r0 = d0 + replyEl.beat("reflow");
+          const flow = interpolate(t, [r0, replyEl.end], [0, 1], {
             ...CLAMP,
             easing: EASE_IO,
           });
@@ -389,8 +386,10 @@ export function Exactly({
             interpolate(
               t,
               [
-                (startAt[i] + j * stagger) * k,
-                (startAt[i] + j * stagger + RISE) * k,
+                objection.start + j * objection.beat("stagger"),
+                objection.start +
+                  j * objection.beat("stagger") +
+                  objection.beat("rise"),
               ],
               [0, 1],
               { ...CLAMP, easing: EASE_OUT },
