@@ -18,6 +18,11 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type GlyphBlockDecodeElementId,
+  glyphBlockDecodeTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -48,6 +53,12 @@ export interface GlyphBlockDecodeProps {
   groundParams?: Partial<GradientParams>;
   speed?: number;
   seed?: number;
+  /**
+   * Moves, trims or stretches the name, the satellite chips, the URL and
+   * the underline, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<GlyphBlockDecodeElementId>;
 }
 
 const DEFAULT_IMAGES = [
@@ -103,18 +114,6 @@ const THEMES = {
       "0 1px 2px rgba(30,24,20,0.08), 0 8px 20px rgba(30,24,20,0.09), 0 26px 60px rgba(30,24,20,0.12)",
     hairline: "inset 0 0 0 1px rgba(0,0,0,0.06)",
   },
-};
-
-const BEAT = {
-  nameIn: -8,
-  satOut: 18,
-  nameOut: 18,
-  nameDone: 60,
-  urlIn: 36,
-  urlOut: 54,
-  urlDone: 78,
-  rule: 84,
-  ruleLen: 18,
 };
 
 const FONT_PX = 200;
@@ -276,29 +275,41 @@ function ScaleLayer({
   );
 }
 
-export function GlyphBlockDecode({
-  name = "Remocn Studio",
-  url = "remocn.dev/studio",
-  images = DEFAULT_IMAGES,
-  blockColors,
-  accent,
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  fontWeight = 400,
-  underline = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  ground,
-  groundParams,
-  speed = 1,
-  seed = 7,
-}: GlyphBlockDecodeProps) {
+export function GlyphBlockDecode(props: GlyphBlockDecodeProps) {
+  const {
+    name = "Remocn Studio",
+    url = "remocn.dev/studio",
+    images = DEFAULT_IMAGES,
+    blockColors,
+    accent,
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    fontWeight = 400,
+    underline = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    ground,
+    groundParams,
+    speed = 1,
+    seed = 7,
+    timing,
+  } = props;
   const glide = useGlide();
   const rawFrame = Math.max(0, useSceneFrame() - delay);
   const frame = rawFrame * speed;
   const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    glyphBlockDecodeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const nameEl = tl.get("name");
+  const satEl = tl.get("satellites");
+  const urlEl = tl.get("url");
+  const ruleEl = tl.get("rule");
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -479,16 +490,26 @@ export function GlyphBlockDecode({
       });
       return order.length > 0 ? order[order.length - 1].g : null;
     };
-    schedule(false, BEAT.nameIn, BEAT.nameOut, BEAT.nameDone);
-    const lastUrl = schedule(true, BEAT.urlIn, BEAT.urlOut, BEAT.urlDone);
+    schedule(
+      false,
+      nameEl.start,
+      nameEl.start + nameEl.beat("out"),
+      nameEl.start + nameEl.beat("done"),
+    );
+    const lastUrl = schedule(
+      true,
+      urlEl.start,
+      urlEl.start + urlEl.beat("out"),
+      urlEl.start + urlEl.beat("done"),
+    );
     if (lastUrl && underline) {
       const t = tiles[lastUrl.tile];
       t.kind = "color";
       t.color = hi;
       t.rule = true;
-      t.tOut = BEAT.rule;
+      t.tOut = ruleEl.start;
       lastUrl.chars.forEach((ci) => {
-        chars[ci].reveal = BEAT.rule + 3;
+        chars[ci].reveal = ruleEl.start + ruleEl.beat("reveal");
       });
     }
 
@@ -543,8 +564,8 @@ export function GlyphBlockDecode({
         img: Math.floor(rnd() * pics.length),
         color: palette[Math.floor(rnd() * palette.length)],
         icon: Math.floor(rnd() * 3),
-        tIn: -6 + k * 2,
-        tOut: BEAT.satOut + k * 4 + rnd() * 3,
+        tIn: satEl.start + k * 2,
+        tOut: satEl.start + satEl.beat("out") + k * 4 + rnd() * 3,
         rot: (rnd() - 0.5) * 20,
         fromX: x + w / 2 + (cx - (x + w / 2)) * 0.7,
         fromY: y + s / 2 + (cy - (y + s / 2)) * 0.7,
@@ -595,7 +616,7 @@ export function GlyphBlockDecode({
       }
       const d = f - t.tOut;
       if (t.rule && d >= 0) {
-        const p = interpolate(d, [0, BEAT.ruleLen], [0, 1], {
+        const p = interpolate(d, [0, ruleEl.length], [0, 1], {
           ...CLAMP,
           easing: MORPH,
         });

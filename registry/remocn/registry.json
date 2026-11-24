@@ -6027,13 +6027,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "glyph-block-decode/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/glyph-block-decode.tsx"
+          "target": "components/remocn/glyph-block-decode/index.tsx"
+        },
+        {
+          "path": "glyph-block-decode/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/glyph-block-decode/timeline.ts"
         }
       ]
     },
