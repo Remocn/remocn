@@ -8,6 +8,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type IpoOpenElementId, ipoOpenTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -85,6 +87,12 @@ export interface IpoOpenProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the corner bug, the label, each letter and
+   * price glyph, the chip, the bell, the race and the land, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<IpoOpenElementId>;
 }
 
 // Schibsted Grotesk 500 advances per em for A–Z (harfbuzz, wght 500),
@@ -140,9 +148,6 @@ const CLAMP = {
 //          counting in the chip, the sunrise ground climbing with it
 //  87–99   the price lands, the chip pops into the gradient
 //  99–     poster holds
-const BELL = 34;
-const RACE_AT = 37;
-const RACE_LEN = 50;
 
 // gradients.sh "rise" (bg #030306): #fff1e2 #ff8a3d #a3301a #2a0d0a.
 const THEMES = {
@@ -202,32 +207,43 @@ function ScaleLayer({
   );
 }
 
-export function IpoOpen({
-  symbol = "RMCN",
-  label = "Listed today",
-  ipoPrice = 18,
-  openPrice = 42.6,
-  openTime = "09:30",
-  name = "remocn",
-  logo,
-  priceTag = "IPO price",
-  countLength = RACE_LEN,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: IpoOpenProps) {
+export function IpoOpen(props: IpoOpenProps) {
+  const {
+    symbol = "RMCN",
+    label = "Listed today",
+    ipoPrice = 18,
+    openPrice = 42.6,
+    openTime = "09:30",
+    name = "remocn",
+    logo,
+    priceTag = "IPO price",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    ipoOpenTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const bell = tl.get("bell");
+  const raceEl = tl.get("race");
+  const land = tl.get("land");
+  const BELL = bell.start;
+  const LAND = land.start;
   const u = H / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
-  const LAND = RACE_AT + countLength;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   // ---- symbol layout -------------------------------------------------------
@@ -274,21 +290,28 @@ export function IpoOpen({
   const ruleY = H * 0.588;
 
   // ---- timing ----------------------------------------------------------------
-  const race = EASE_RACE(Math.max(0, Math.min(1, (t - RACE_AT) / countLength)));
+  const race = EASE_RACE(
+    Math.max(0, Math.min(1, (t - raceEl.start) / raceEl.length)),
+  );
   const raceAt = (tt: number) =>
     startC +
     (endC - startC) *
-      EASE_RACE(Math.max(0, Math.min(1, (tt - RACE_AT) / countLength)));
+      EASE_RACE(Math.max(0, Math.min(1, (tt - raceEl.start) / raceEl.length)));
   const cents = raceAt(t);
   const pct = (cents / startC - 1) * 100;
-  const flash = t >= BELL && t < BELL + 2;
+  const flash = t >= BELL && t < BELL + bell.beat("flash");
   const opened = t >= BELL;
   const landed = t >= LAND;
-  const riseAt = (tt: number, a: number, len = 18) =>
-    interpolate(tt, [a, a + len], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const rise = (a: number, len = 18) => riseAt(t, a, len);
+  const riseAt = (tt: number, id: IpoOpenElementId) => {
+    const e = tl.get(id);
+    return interpolate(tt, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  };
+  const rise = (id: IpoOpenElementId) => riseAt(t, id);
   const kickAt = (tt: number) =>
-    interpolate(tt, [BELL, BELL + 14], [1.045, 1], {
+    interpolate(tt, [BELL, BELL + bell.beat("kick")], [1.045, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -296,25 +319,54 @@ export function IpoOpen({
   // Whether a value is still travelling: compared with the neighbouring frames.
   const stirs = (at: (tt: number) => number, eps = 1e-3) =>
     Math.abs(at(t + 1) - at(t)) > eps || Math.abs(at(t) - at(t - 1)) > eps;
-  const shock = interpolate(t, [BELL, BELL + 16], [0, 1], {
+  const shock = interpolate(t, [BELL, BELL + bell.beat("shock")], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.05, 0.7, 0.1, 1),
   });
-  const shock2 = interpolate(t, [BELL + 3, BELL + 22], [0, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.05, 0.7, 0.1, 1),
-  });
-  const popAt = (tt: number) =>
-    interpolate(tt, [LAND - 2, LAND + 5, LAND + 14], [0, 1.09, 1], {
+  const shock2 = interpolate(
+    t,
+    [BELL + bell.beat("shock2At"), BELL + bell.beat("shock2End")],
+    [0, 1],
+    {
       ...CLAMP,
-      easing: EASE_OUT,
-    });
+      easing: Easing.bezier(0.05, 0.7, 0.1, 1),
+    },
+  );
+  const popAt = (tt: number) =>
+    interpolate(
+      tt,
+      [
+        LAND + land.beat("popAt"),
+        LAND + land.beat("popPeak"),
+        LAND + land.beat("popEnd"),
+      ],
+      [0, 1.09, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
   const pop = popAt(t);
-  const fill = interpolate(t, [LAND - 2, LAND + 4], [0, 1], CLAMP);
+  const fill = interpolate(
+    t,
+    [LAND + land.beat("fillAt"), LAND + land.beat("fillEnd")],
+    [0, 1],
+    CLAMP,
+  );
   const groundK =
-    0.12 * rise(BELL, 10) +
+    0.12 *
+      interpolate(t, [BELL, BELL + bell.beat("glow")], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      }) +
     0.7 * race +
-    0.18 * interpolate(t, [LAND - 4, LAND + 16], [0, 1], CLAMP);
+    0.18 *
+      interpolate(
+        t,
+        [LAND + land.beat("glowAt"), LAND + land.beat("glowEnd")],
+        [0, 1],
+        CLAMP,
+      );
 
   // corner clock: one second before the bell, ticking after it
   const secs = Math.floor((t - BELL) / 30);
@@ -327,21 +379,21 @@ export function IpoOpen({
   // either group moves, and already while the letters wait below their window:
   // a lean that came on as the first one starts would snap them all.
   const symbolMoving =
-    t < 4 ||
+    (letters.length > 0 && t < tl.get("letter:0").start) ||
     stirs((tt) => kickAt(tt) * S) ||
     letters.some((_, i) =>
-      stirs((tt) => riseAt(tt, 4 + i * 3, 16) * CAP * S * 1.05),
+      stirs((tt) => riseAt(tt, `letter:${i}`) * CAP * S * 1.05),
     );
   const priceMoving =
     stirs((tt) => raceAt(tt) / 100) ||
-    glyphs.some((_, i) => stirs((tt) => riseAt(tt, 14 + i * 2, 16) * 0.3 * P));
+    glyphs.some((_, i) => stirs((tt) => riseAt(tt, `glyph:${i}`) * 0.3 * P));
 
   // ---- reels ------------------------------------------------------------------
   const step = (CAP + 0.3) * P;
   const digitOf = (n: number) => ((Math.floor(n) % 10) + 10) % 10;
   const reels = glyphs.map((g, i) => {
     const gx = rowX0 + (g.x + g.w / 2) * P;
-    const enter = rise(14 + i * 2, 16);
+    const enter = rise(`glyph:${i}`);
     if (g.kind === "$" || g.kind === ".") {
       return (
         <text
@@ -396,7 +448,12 @@ export function IpoOpen({
 
   const shockW = shock * W * 0.62;
   const shockT = (1 - shock) ** 1.5 * 14 * u + 1.5 * u;
-  const ruleSettle = interpolate(t, [BELL + 10, BELL + 26], [0, 1], CLAMP);
+  const ruleSettle = interpolate(
+    t,
+    [BELL + bell.beat("ruleAt"), BELL + bell.beat("ruleEnd")],
+    [0, 1],
+    CLAMP,
+  );
 
   return (
     <AbsoluteFill
@@ -485,7 +542,7 @@ export function IpoOpen({
                       0,
                     ) *
                     S;
-                const k = rise(4 + i * 3, 16);
+                const k = rise(`letter:${i}`);
                 return (
                   <text
                     key={`${ch}${x}`}
@@ -556,10 +613,11 @@ export function IpoOpen({
             height: chipH,
             borderRadius: chipH / 2,
             boxShadow: `inset 0 0 0 ${1.5 * u}px ${p.hair}`,
-            opacity: rise(18, 16),
-            transform: `translateY(${(1 - rise(18, 16)) * 0.2 * P}px) scale(${landed || t >= LAND - 2 ? pop : 1})${glide(
-              stirs((tt) => riseAt(tt, 18, 16) * 0.2 * P) ||
-                (t >= LAND - 3 && stirs((tt) => popAt(tt) * chipW)),
+            opacity: rise("chip"),
+            transform: `translateY(${(1 - rise("chip")) * 0.2 * P}px) scale(${landed || t >= LAND + land.beat("popAt") ? pop : 1})${glide(
+              stirs((tt) => riseAt(tt, "chip") * 0.2 * P) ||
+                (t >= LAND + land.beat("popAt") - 1 &&
+                  stirs((tt) => popAt(tt) * chipW)),
             )}`,
             overflow: "hidden",
           }}
@@ -655,8 +713,8 @@ export function IpoOpen({
             letterSpacing: "0.16em",
             textTransform: "uppercase",
             color: fg,
-            opacity: rise(0, 14),
-            transform: `translateY(${(1 - rise(0, 14)) * 8 * u}px)${glide(stirs((tt) => riseAt(tt, 0, 14) * 8 * u))}`,
+            opacity: rise("label"),
+            transform: `translateY(${(1 - rise("label")) * 8 * u}px)${glide(stirs((tt) => riseAt(tt, "label") * 8 * u))}`,
             lineHeight: 1,
           }}
         >
@@ -677,7 +735,7 @@ export function IpoOpen({
             position: "absolute",
             left: W * 0.045,
             top: H * 0.06,
-            opacity: rise(-6, 14),
+            opacity: rise("corner"),
           }}
         >
           {logo ??
@@ -708,7 +766,7 @@ export function IpoOpen({
             letterSpacing: "0.06em",
             color: opened ? fg : p.muted,
             fontVariantNumeric: "tabular-nums",
-            opacity: rise(-6, 14),
+            opacity: rise("corner"),
             lineHeight: 1,
           }}
         >

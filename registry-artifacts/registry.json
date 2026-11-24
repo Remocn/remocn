@@ -10435,12 +10435,21 @@
       "title": "Ipo Open",
       "description": "A huge ticker symbol RMCN opens over an IPO price printing $42.60 with a percent-up pill.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/ipo-open/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ipo-open.tsx"
+          "target": "components/remocn/ipo-open/index.tsx"
+        },
+        {
+          "path": "registry/remocn/ipo-open/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ipo-open/timeline.ts"
         }
       ],
       "type": "registry:component"
