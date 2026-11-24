@@ -11409,13 +11409,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/duet-split/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/duet-split.tsx"
+          "target": "components/remocn/duet-split/index.tsx"
+        },
+        {
+          "path": "registry/remocn/duet-split/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/duet-split/timeline.ts"
         }
       ],
       "type": "registry:component"
