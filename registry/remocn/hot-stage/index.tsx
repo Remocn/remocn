@@ -13,6 +13,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  DEFAULT_LOG,
+  type HotStageElementId,
+  hotStageTimeline,
+  stageLines,
+} from "./timeline";
 
 const grotesk = loadSpaceGrotesk("normal", {
   weights: ["400"],
@@ -41,6 +49,12 @@ export interface HotStageProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single lines igniting and the log entries
+   * lighting up, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<HotStageElementId>;
 }
 
 const THEMES = {
@@ -60,9 +74,6 @@ const THEMES = {
 
 const TRACK = -0.03;
 const PROBE_PX = 200;
-
-const ENTER_LEN = 16;
-const FIRST_AT = 30;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -159,31 +170,33 @@ function ScaleLayer({
   );
 }
 
-export function HotStage({
-  lines = [
-    "Storyboard the launch.",
-    "Render on your laptop.",
-    "Clear the tower.",
-  ],
-  log = ["T+00:00  Liftoff", "T+02:41  Hot staging", "T+08:32  Orbit"],
-  stage = 44,
-  accent,
-  ink,
-  background,
-  fontFamily = grotesk.fontFamily,
-  hold = FIRST_AT,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: HotStageProps) {
+export function HotStage(props: HotStageProps) {
+  const {
+    lines = DEFAULT_LINES,
+    log = DEFAULT_LOG,
+    accent,
+    ink,
+    background,
+    fontFamily = grotesk.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    hotStageTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const vent = accent ?? fg;
-  const list = lines.length > 0 ? lines : [""];
+  const list = stageLines(lines);
   const m = useMetrics(list, log, fontFamily);
 
   const transparent = background === "transparent";
@@ -211,7 +224,7 @@ export function HotStage({
   const y0 = portrait ? H * 0.56 : H / 2 + (m.cap * F) / 2;
   const n = list.length;
   const last = n - 1;
-  const ign = (i: number) => hold + (i - 1) * stage;
+  const lineEls = list.map((_, i) => tl.get(`line:${i}`));
 
   type Pose = {
     y: number;
@@ -220,28 +233,28 @@ export function HotStage({
   };
 
   const pose = (i: number, f = t): Pose | null => {
-    const start = i === 0 ? 0 : ign(i);
-    if (f < start) return null;
+    const el = lineEls[i];
+    if (f < el.start) return null;
     let y: number;
     let opacity: number;
     if (i === 0) {
-      const e = interpolate(f, [0, ENTER_LEN], [0, 1], {
+      const e = interpolate(f, [el.start, el.end], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
       y = y0 + (1 - e) * F * 0.4;
       opacity = e;
     } else {
-      const s = ign(i);
-      const e = interpolate(f, [s, s + 10], [0, 1], {
+      const s = el.start;
+      const e = interpolate(f, [s, s + el.beat("fade")], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
-      const pair = interpolate(f, [s, s + 14], [0, 1], {
+      const pair = interpolate(f, [s, s + el.beat("pair")], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
-      const settle = interpolate(f, [s + 16, s + 38], [0, 1], {
+      const settle = interpolate(f, [s + el.beat("settle"), el.end], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
@@ -250,20 +263,26 @@ export function HotStage({
     }
     let spent = 0;
     if (i < last) {
-      const s = ign(i + 1);
-      const pair = interpolate(f, [s, s + 14], [0, 1], {
+      // The next line's ignition pushes this one out.
+      const next = lineEls[i + 1];
+      const s = next.start;
+      const pair = interpolate(f, [s, s + next.beat("pair")], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
       y += (pitch / 2) * pair;
-      spent = interpolate(f, [s + 6, s + 18], [0, 1], {
-        ...CLAMP,
-        easing: EASE_IO,
-      });
-      const fall = interpolate(f, [s + 16, s + 40], [0, 1], {
-        ...CLAMP,
-        easing: EASE_FALL,
-      });
+      spent = interpolate(
+        f,
+        [s + next.beat("spent"), s + next.beat("spentEnd")],
+        [0, 1],
+        { ...CLAMP, easing: EASE_IO },
+      );
+      const fall = interpolate(
+        f,
+        [s + next.beat("fall"), s + next.beat("fallEnd")],
+        [0, 1],
+        { ...CLAMP, easing: EASE_FALL },
+      );
       y += fall * H * 0.6;
       opacity *= interpolate(fall, [0.4, 1], [1, 0], CLAMP);
       if (fall >= 1) return null;
@@ -273,13 +292,24 @@ export function HotStage({
 
   const vents = (i: number) => {
     if (i === 0) return null;
-    const s = ign(i);
+    const el = lineEls[i];
+    const s = el.start;
     const upper = pose(i);
     const lower = pose(i - 1);
     if (!upper || !lower) return null;
-    const on = interpolate(t, [s, s + 5, s + 16, s + 26], [0, 1, 1, 0], CLAMP);
+    const on = interpolate(
+      t,
+      [
+        s,
+        s + el.beat("ventOn"),
+        s + el.beat("ventBurn"),
+        s + el.beat("ventOut"),
+      ],
+      [0, 1, 1, 0],
+      CLAMP,
+    );
     if (on <= 0.001) return null;
-    const draw = interpolate(t, [s, s + 6], [0, 1], {
+    const draw = interpolate(t, [s, s + el.beat("ventDraw")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -313,7 +343,7 @@ export function HotStage({
   };
 
   let active = 0;
-  for (let i = 1; i < n; i++) if (t >= ign(i)) active = i;
+  for (let i = 1; i < n; i++) if (t >= lineEls[i].start) active = i;
   const logTop = portrait ? marginY : H - marginY - log.length * logFs * 1.9;
 
   return (
@@ -343,8 +373,8 @@ export function HotStage({
           />
         )}
         {log.map((entry, i) => {
-          const at = i === 0 ? 0 : ign(i);
-          const p = interpolate(t, [at, at + 8], [0, 1], {
+          const entryEl = tl.get(`entry:${i}`);
+          const p = interpolate(t, [entryEl.start, entryEl.end], [0, 1], {
             ...CLAMP,
             easing: EASE_OUT,
           });

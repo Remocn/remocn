@@ -8036,12 +8036,21 @@
       "title": "Hot Stage",
       "description": "A short line, 'Clear the tower.', beside a faint mono mission log of timed stage events.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/hot-stage/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/hot-stage.tsx"
+          "target": "components/remocn/hot-stage/index.tsx"
+        },
+        {
+          "path": "registry/remocn/hot-stage/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/hot-stage/timeline.ts"
         }
       ],
       "type": "registry:component"
