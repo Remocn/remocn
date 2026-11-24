@@ -5,6 +5,12 @@ import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ChartMorphElementId,
+  chartMorphTimeline,
+  DEFAULT_MORPH_DATA,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -39,15 +45,15 @@ export interface ChartMorphProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the ring, the unroll, each bar's tip, the axis,
+   * each column's collapse, the end label and the camera, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ChartMorphElementId>;
 }
 
-const DEFAULT_DATA: ChartMorphDatum[] = [
-  { label: "Jan", value: 12 },
-  { label: "Feb", value: 18 },
-  { label: "Mar", value: 23 },
-  { label: "Apr", value: 31 },
-  { label: "May", value: 46 },
-];
+const DEFAULT_DATA: ChartMorphDatum[] = DEFAULT_MORPH_DATA;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -87,16 +93,6 @@ const THEMES = {
   },
 } as const;
 
-const DRAW = [0, 24] as const;
-const SPIN = [0, 30] as const;
-const UNROLL = [30, 60] as const;
-const TIP_START = 64;
-const TIP_STAGGER = 3;
-const TIP_DUR = 24;
-const COLLAPSE_START = 100;
-const COLLAPSE_STAGGER = 2;
-const COLLAPSE_DUR = 22;
-const LABEL_IN = 131;
 const TAU = Math.PI * 2;
 const SAMPLES = 40;
 
@@ -202,25 +198,44 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
-export function ChartMorph({
-  data = DEFAULT_DATA,
-  suffix = "k",
-  caption,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  fontWeight = 400,
-  stagger = TIP_STAGGER,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: ChartMorphProps) {
+export function ChartMorph(props: ChartMorphProps) {
+  const {
+    data = DEFAULT_DATA,
+    suffix = "k",
+    caption,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    fontWeight = 400,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    chartMorphTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const stageEl = tl.get("stage");
+  const ringEl = tl.get("ring");
+  const driftEl = tl.get("drift");
+  const pushEl = tl.get("push");
+  const unrollEl = tl.get("unroll");
+  const axisEl = tl.get("axis");
+  const labelEl = tl.get("label");
+  const tips = tl.lane("Bars");
+  const collapses = tl.lane("Line");
+  const TIP_START = tips[0]?.start ?? axisEl.start;
+  const COLLAPSE_START = collapses[0]?.start ?? labelEl.start;
+  const LABEL_IN = labelEl.start;
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -288,49 +303,38 @@ export function ChartMorph({
   );
   const P = list.map((_, i) => ({ x: colB[i], y: yB - stack[i].w }));
 
-  const drawK = interpolate(t, [DRAW[0], DRAW[1]], [0, 1], {
-    ...CLAMP,
-    easing: EASE_DRAW,
-  });
-  const spin = interpolate(t, [SPIN[0], SPIN[1]], [-0.42, 0], {
+  const drawK = interpolate(
+    t,
+    [ringEl.start, ringEl.start + ringEl.beat("draw")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_DRAW,
+    },
+  );
+  const spin = interpolate(t, [ringEl.start, ringEl.end], [-0.42, 0], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const un = interpolate(t, [UNROLL[0], UNROLL[1]], [0, 1], {
+  const un = interpolate(t, [unrollEl.start, unrollEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const stageIn = interpolate(t, [0, 8], [0, 1], CLAMP);
-  const drift = interpolate(t, [0, 182], [-1, 1], {
+  const stageIn = interpolate(t, [stageEl.start, stageEl.end], [0, 1], CLAMP);
+  const drift = interpolate(t, [driftEl.start, driftEl.end], [-1, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
 
-  const tipK = list.map((_, i) =>
-    interpolate(
-      t,
-      [TIP_START + i * stagger, TIP_START + i * stagger + TIP_DUR],
-      [0, 1],
-      { ...CLAMP, easing: EASE_IO },
-    ),
+  const tipK = tips.map((e) =>
+    interpolate(t, [e.start, e.end], [0, 1], { ...CLAMP, easing: EASE_IO }),
   );
-  const colK = list.map((_, i) =>
-    interpolate(
-      t,
-      [
-        COLLAPSE_START + i * COLLAPSE_STAGGER,
-        COLLAPSE_START + i * COLLAPSE_STAGGER + COLLAPSE_DUR,
-      ],
-      [0, 1],
-      { ...CLAMP, easing: EASE_IO },
-    ),
+  const colK = collapses.map((e) =>
+    interpolate(t, [e.start, e.end], [0, 1], { ...CLAMP, easing: EASE_IO }),
   );
   const shift = interpolate(
     t,
-    [
-      COLLAPSE_START,
-      COLLAPSE_START + COLLAPSE_DUR + (n - 1) * COLLAPSE_STAGGER,
-    ],
+    [COLLAPSE_START, collapses[n - 1]?.end ?? COLLAPSE_START],
     [0, 1],
     { ...CLAMP, easing: EASE_IO },
   );
@@ -462,31 +466,54 @@ export function ChartMorph({
     return { key: d.label, d: toPath(pts), color, split };
   });
 
-  const labelsIn = interpolate(t, [TIP_START + 22, TIP_START + 40], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const baseIn = interpolate(t, [TIP_START + 14, TIP_START + 38], [0, 1], {
+  const labelsIn = interpolate(
+    t,
+    [
+      axisEl.start + axisEl.beat("labelsAt"),
+      axisEl.start + axisEl.beat("labels"),
+    ],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const baseIn = interpolate(t, [axisEl.start, axisEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const baseL = lerp(colA[0] - barT, colB[0], shift);
   const baseR = lerp(colA[n - 1] + barT, colB[n - 1], shift);
 
-  const dotsIn = interpolate(t, [LABEL_IN - 6, LABEL_IN + 10], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const labIn = interpolate(t, [LABEL_IN, LABEL_IN + 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const capIn = interpolate(t, [LABEL_IN + 6, LABEL_IN + 24], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const dotsIn = interpolate(
+    t,
+    [LABEL_IN + labelEl.beat("dotsAt"), LABEL_IN + labelEl.beat("dots")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const labIn = interpolate(
+    t,
+    [LABEL_IN, LABEL_IN + labelEl.beat("value")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const capIn = interpolate(
+    t,
+    [LABEL_IN + labelEl.beat("captionAt"), LABEL_IN + labelEl.beat("caption")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const pushAt = (tt: number) =>
-    interpolate(tt, [0, LABEL_IN + 40], [1.03, 1], {
+    interpolate(tt, [pushEl.start, pushEl.end], [1.03, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -497,10 +524,15 @@ export function ChartMorph({
     Math.abs(pushAt(t + speed) - push) * (width / 2) > 1e-3 ||
     Math.abs(push - pushAt(t - speed)) * (width / 2) > 1e-3;
   const end = P[n - 1];
-  const areaIn = interpolate(t, [LABEL_IN - 6, LABEL_IN + 22], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const areaIn = interpolate(
+    t,
+    [LABEL_IN + labelEl.beat("areaAt"), LABEL_IN + labelEl.beat("area")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const areaRise = interpolate(areaIn, [0, 1], [0.4, 1]);
   const endColor = hl === n - 1 ? p.heroDot : p.line;
   const valueText = `${Math.round(last?.value ?? 0)}${suffix}`;

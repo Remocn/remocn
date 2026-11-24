@@ -12837,12 +12837,21 @@
       "title": "Chart Morph",
       "description": "A line chart with an area fill morphs between points up to a 46k value.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/chart-morph/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/chart-morph.tsx"
+          "target": "components/remocn/chart-morph/index.tsx"
+        },
+        {
+          "path": "registry/remocn/chart-morph/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/chart-morph/timeline.ts"
         }
       ],
       "type": "registry:component"
