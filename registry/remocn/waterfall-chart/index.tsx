@@ -6,6 +6,18 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_START,
+  DEFAULT_STEPS,
+  shownSteps,
+  type WaterfallChartElementId,
+  waterfallChartTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -54,17 +66,13 @@ export interface WaterfallChartProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the axis, the title, each bar, the total and
+   * the camera, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WaterfallChartElementId>;
 }
-
-const DEFAULT_START: WaterfallStep = { label: "Start", value: 52 };
-
-const DEFAULT_STEPS: WaterfallStep[] = [
-  { label: "Churn", value: -7 },
-  { label: "Contraction", value: -3 },
-  { label: "New", value: 24 },
-  { label: "Expansion", value: 12 },
-  { label: "Reactivation", value: 6 },
-];
 
 const defaultFormat = (v: number) => `$${Math.round(v)}k`;
 
@@ -152,37 +160,43 @@ interface Column {
   from: number;
   to: number;
   delta: number;
-  start: number;
-  dur: number;
+  el: ResolvedElement<WaterfallChartElementId>;
 }
 
-export function WaterfallChart({
-  start = DEFAULT_START,
-  steps = DEFAULT_STEPS,
-  totalLabel = "MRR",
-  title = "Net revenue, Q3",
-  format = defaultFormat,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  grow = 15,
-  radius: corner = 2,
-  grain = true,
-  scale: zoom = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: WaterfallChartProps) {
+export function WaterfallChart(props: WaterfallChartProps) {
+  const {
+    start = DEFAULT_START,
+    steps = DEFAULT_STEPS,
+    totalLabel = "MRR",
+    title = "Net revenue, Q3",
+    format = defaultFormat,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    radius: corner = 2,
+    grain = true,
+    scale: zoom = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    waterfallChartTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? p.bg);
-  const list = steps.slice(0, 8);
+  const list = shownSteps(steps);
 
   const cols: Column[] = [];
   cols.push({
@@ -192,11 +206,9 @@ export function WaterfallChart({
     from: 0,
     to: start.value,
     delta: start.value,
-    start: 8,
-    dur: 22,
+    el: tl.get("base"),
   });
   let level = start.value;
-  const STAGGER = list.length > 5 ? 7 : 9;
   list.forEach((s, i) => {
     const next = level + s.value;
     cols.push({
@@ -206,13 +218,13 @@ export function WaterfallChart({
       from: level,
       to: next,
       delta: s.value,
-      start: 26 + i * STAGGER,
-      dur: grow,
+      el: tl.get(`step:${i}`),
     });
     level = next;
   });
   const total = level;
-  const TOTAL_AT = 26 + list.length * STAGGER + 6;
+  const totalEl = tl.get("total");
+  const TOTAL_AT = totalEl.start;
   cols.push({
     key: "total",
     label: totalLabel,
@@ -220,8 +232,7 @@ export function WaterfallChart({
     from: 0,
     to: total,
     delta: total,
-    start: TOTAL_AT,
-    dur: 26,
+    el: totalEl,
   });
 
   const maxLevel = Math.max(
@@ -239,8 +250,17 @@ export function WaterfallChart({
   const colW = Math.min(slot * 0.58, 92 * u);
   const xOf = (i: number) => plotL + slot * (i + 0.5);
 
-  const axisIn = interpolate(t, [0, 18], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const titleIn = interpolate(t, [4, 22], [0, 1], {
+  const axisEl = tl.get("axis");
+  const titleEl = tl.get("title");
+  const pushEl = tl.get("push");
+  const settleEl = tl.get("settle");
+  const focusEl = tl.get("focus");
+  const driftEl = tl.get("drift");
+  const axisIn = interpolate(t, [axisEl.start, axisEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const titleIn = interpolate(t, [titleEl.start, titleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -250,28 +270,40 @@ export function WaterfallChart({
     fps,
     config: { damping: 15, stiffness: 120, mass: 0.8 },
   });
-  const count = interpolate(t, [TOTAL_AT, TOTAL_AT + 24], [0, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.22, 1, 0.36, 1),
-  });
-  const land = interpolate(t, [TOTAL_AT + 2, TOTAL_AT + 22], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const unitIn = interpolate(t, [TOTAL_AT + 12, TOTAL_AT + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const focus = interpolate(t, [TOTAL_AT + 14, TOTAL_AT + 34], [0, 1], {
+  const count = interpolate(
+    t,
+    [TOTAL_AT, TOTAL_AT + totalEl.beat("count")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: Easing.bezier(0.22, 1, 0.36, 1),
+    },
+  );
+  const land = interpolate(
+    t,
+    [TOTAL_AT + totalEl.beat("landAt"), TOTAL_AT + totalEl.beat("landEnd")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const unitIn = interpolate(
+    t,
+    [TOTAL_AT + totalEl.beat("unitAt"), TOTAL_AT + totalEl.beat("unitEnd")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_OUT },
+  );
+  const focus = interpolate(t, [focusEl.start, focusEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const push = interpolate(t, [0, TOTAL_AT + 60], [0, 1], {
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const scale = 0.975 + 0.025 * push;
-  const settle = interpolate(t, [TOTAL_AT - 14, TOTAL_AT + 22], [0, 1], {
+  const settle = interpolate(t, [settleEl.start, settleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -280,7 +312,7 @@ export function WaterfallChart({
   const progress = (c: Column) =>
     c.kind === "total"
       ? Math.max(0, totalRise)
-      : interpolate(t, [c.start, c.start + c.dur], [0, 1], {
+      : interpolate(t, [c.el.start, c.el.end], [0, 1], {
           ...CLAMP,
           easing: EASE_BAR,
         });
@@ -289,7 +321,7 @@ export function WaterfallChart({
   const radius = corner * u;
   const totalK = Math.max(0, totalRise);
   const barFull = baseY - yOf(total);
-  const drift = interpolate(t, [0, TOTAL_AT + 70], [0, 1], {
+  const drift = interpolate(t, [driftEl.start, driftEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -329,10 +361,15 @@ export function WaterfallChart({
                 const y = yOf(prev.to);
                 const x0 = xOf(i - 1) + colW / 2;
                 const x1 = xOf(i) - colW / 2;
-                const k = interpolate(t, [c.start - 7, c.start + 1], [0, 1], {
-                  ...CLAMP,
-                  easing: EASE_IO,
-                });
+                const k = interpolate(
+                  t,
+                  [
+                    c.el.start + c.el.beat("connect"),
+                    c.el.start + c.el.beat("connectEnd"),
+                  ],
+                  [0, 1],
+                  { ...CLAMP, easing: EASE_IO },
+                );
                 if (k <= 0) return null;
                 const dim = c.kind === "total" ? 1 : 1 - 0.45 * focus;
                 return (
@@ -404,10 +441,12 @@ export function WaterfallChart({
             ) : null}
 
             {cols.map((c, i) => {
-              const a = interpolate(t, [c.start, c.start + 14], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
+              const a = interpolate(
+                t,
+                [c.el.start, c.el.start + c.el.beat("label")],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
               const dim = c.kind === "total" ? 1 : 1 - 0.35 * focus;
               return (
                 <div
@@ -434,7 +473,10 @@ export function WaterfallChart({
               if (c.kind === "total") return null;
               const a = interpolate(
                 t,
-                [c.start + c.dur - 8, c.start + c.dur + 6],
+                [
+                  c.el.end + c.el.beat("valueIn"),
+                  c.el.end + c.el.beat("valueEnd"),
+                ],
                 [0, 1],
                 { ...CLAMP, easing: EASE_OUT },
               );

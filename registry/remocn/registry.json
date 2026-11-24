@@ -12812,10 +12812,19 @@
         {
           "path": "waterfall-chart/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/waterfall-chart.tsx"
+          "target": "components/remocn/waterfall-chart/index.tsx"
+        },
+        {
+          "path": "waterfall-chart/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/waterfall-chart/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "galton-stack",

@@ -12807,12 +12807,21 @@
       "title": "Waterfall Chart",
       "description": "A revenue waterfall steps through gains and losses into a gradient total of $84k MRR.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/waterfall-chart/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/waterfall-chart.tsx"
+          "target": "components/remocn/waterfall-chart/index.tsx"
+        },
+        {
+          "path": "registry/remocn/waterfall-chart/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/waterfall-chart/timeline.ts"
         }
       ],
       "type": "registry:component"
