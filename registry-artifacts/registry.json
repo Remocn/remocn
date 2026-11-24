@@ -15503,12 +15503,21 @@
       "title": "Glass Lens",
       "description": "A glass lens drop magnifies a headline word, glides to a clip and flattens into a CTA pill.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/glass-lens/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/glass-lens.tsx"
+          "target": "components/remocn/glass-lens/index.tsx"
+        },
+        {
+          "path": "registry/remocn/glass-lens/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/glass-lens/timeline.ts"
         }
       ],
       "type": "registry:component"

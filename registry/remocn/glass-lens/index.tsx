@@ -15,6 +15,16 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedTimeline,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  type GlassLensElementId,
+  glassLensTimeline,
+} from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -108,7 +118,15 @@ export interface GlassLensProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the headline, the pane, each move of the
+   * lens and the pill's fill, label and arrow, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<GlassLensElementId>;
 }
+
+type GlassLensSchedule = ResolvedTimeline<GlassLensElementId>;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
@@ -297,6 +315,7 @@ function Placeholder({
   p,
   accent,
   t,
+  tl,
   previewTitle,
 }: {
   w: number;
@@ -305,8 +324,11 @@ function Placeholder({
   p: Palette;
   accent: string;
   t: number;
+  tl: GlassLensSchedule;
   previewTitle: string;
 }) {
+  const playhead = tl.get("playhead");
+  const progress = tl.get("progress");
   const pad = w * 0.05;
   const bar = (x: number, y: number, bw: number, bh: number, c: string) => (
     <div
@@ -329,12 +351,14 @@ function Placeholder({
     [0.47, 0.22, 0],
     [0.71, 0.24, 0],
   ];
-  const head = (w - pad * 2) * interpolate(t, [20, 190], [0.38, 0.62], CLAMP);
+  const head =
+    (w - pad * 2) *
+    interpolate(t, [playhead.start, playhead.end], [0.38, 0.62], CLAMP);
   // Layout rounds a box's edges to whole pixels, so a playhead eased by
   // `left` steps unevenly; while it moves it sits where it stops and travels
   // by transform. At either end it keeps the plain layout.
   const headRest = (w - pad * 2) * 0.62;
-  const headMoving = t > 20 && t < 190;
+  const headMoving = t > playhead.start && t < playhead.end;
   return (
     <>
       {bar(pad, h * 0.045, w * 0.16, 9 * u, p.blockHi)}
@@ -391,7 +415,7 @@ function Placeholder({
         >
           <div
             style={{
-              width: `${interpolate(t, [0, 210], [22, 61], CLAMP)}%`,
+              width: `${interpolate(t, [progress.start, progress.end], [22, 61], CLAMP)}%`,
               height: "100%",
               borderRadius: 2 * u,
               background: "rgba(255,248,242,0.85)",
@@ -451,6 +475,7 @@ function Placeholder({
 /** Everything under the glass. Rendered once flat and once magnified. */
 function Scene({
   t,
+  tl,
   lines,
   italicLast,
   logo,
@@ -468,6 +493,7 @@ function Scene({
   /** An ancestor already carries the tilt; one per chain is enough. */
   tilted?: boolean;
   t: number;
+  tl: GlassLensSchedule;
   lines: string[];
   italicLast: boolean;
   logo?: React.ReactNode;
@@ -484,9 +510,14 @@ function Scene({
   const glide = useGlide();
   const { width, height } = useSceneConfig();
   const { u } = L;
-  const rise = (d: number) =>
-    interpolate(t, [d - 8, d + 20], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const paneIn = rise(4);
+  const rise = (id: GlassLensElementId) => {
+    const e = tl.get(id);
+    return interpolate(t, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  };
+  const paneIn = rise("pane");
   return (
     <div
       style={{
@@ -511,7 +542,7 @@ function Scene({
           position: "absolute",
           left: L.left,
           top: L.top - 64 * u,
-          opacity: rise(0),
+          opacity: rise("logo"),
         }}
       >
         {logo ?? <RemocnLogo fontSize={26 * u} color={fg} />}
@@ -536,8 +567,8 @@ function Scene({
               lineHeight: 1,
               color: fg,
               whiteSpace: "pre",
-              opacity: rise(i * 3),
-              transform: `translateY(${(1 - rise(i * 3)) * 24 * u}px)${glide(!tilted && midway(rise(i * 3)))}`,
+              opacity: rise(`line:${i}`),
+              transform: `translateY(${(1 - rise(`line:${i}`)) * 24 * u}px)${glide(!tilted && midway(rise(`line:${i}`)))}`,
             }}
           >
             {line}
@@ -573,6 +604,7 @@ function Scene({
               p={p}
               accent={accent}
               t={t}
+              tl={tl}
               previewTitle={previewTitle}
             />
           ))}
@@ -620,29 +652,45 @@ function ScaleLayer({
   );
 }
 
-export function GlassLens({
-  lines = ["Every frame,", "composed."],
-  italicLast = true,
-  focus = { line: 0, word: 1 },
-  cta = "Start with remocn",
-  logo,
-  src,
-  children,
-  accent = "#3B5BFD",
-  previewTitle = "Launch day.",
-  magnify = 1,
-  ink,
-  background,
-  fontFamily = serif,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: GlassLensProps) {
+export function GlassLens(props: GlassLensProps) {
+  const {
+    lines = DEFAULT_LINES,
+    italicLast = true,
+    focus = { line: 0, word: 1 },
+    cta = "Start with remocn",
+    logo,
+    src,
+    children,
+    accent = "#3B5BFD",
+    previewTitle = "Launch day.",
+    magnify = 1,
+    ink,
+    background,
+    fontFamily = serif,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { fps, width } = useSceneConfig();
+  const { fps, width, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    glassLensTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const lensEl = tl.get("lens");
+  const dropEl = tl.get("drop");
+  const glideEl = tl.get("glide");
+  const travelEl = tl.get("travel");
+  const morphEl = tl.get("morph");
+  const fillEl = tl.get("fill");
+  const labelEl = tl.get("label");
+  const arrowEl = tl.get("arrow");
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const bg =
@@ -683,12 +731,12 @@ export function GlassLens({
   const ctaH = 64 * u;
   const ctaW = m.ctaEm * ctaSize + 28 * u + 64 * u;
   const stops = [
-    { t: 0, x: L.left - 60 * u, y: fy + 40 * u, arc: 0 },
-    { t: 34, x: fx, y: fy, arc: -30 },
-    { t: 62, x: fx, y: fy, arc: 0 },
-    { t: 98, x: L.clip.x, y: L.clip.y, arc: 70 },
-    { t: 124, x: L.clip.x, y: L.clip.y, arc: 0 },
-    { t: 158, x: L.left + ctaW / 2, y: L.ctaY, arc: 50 },
+    { t: dropEl.start, x: L.left - 60 * u, y: fy + 40 * u, arc: 0 },
+    { t: dropEl.end, x: fx, y: fy, arc: -30 },
+    { t: glideEl.start, x: fx, y: fy, arc: 0 },
+    { t: glideEl.end, x: L.clip.x, y: L.clip.y, arc: 70 },
+    { t: travelEl.start, x: L.clip.x, y: L.clip.y, arc: 0 },
+    { t: travelEl.end, x: L.left + ctaW / 2, y: L.ctaY, arc: 50 },
   ];
   const posAt = (tt: number) => {
     for (let i = 0; i < stops.length - 1; i++) {
@@ -720,12 +768,12 @@ export function GlassLens({
     // liquid morph into the CTA pill: the drop flattens first and bulges
     // sideways (volume kept), then the width settles onto the label
     const mH = spring({
-      frame: f - 142,
+      frame: f - morphEl.start,
       fps,
       config: { damping: 12, stiffness: 110, mass: 0.9 },
     });
     const mW = spring({
-      frame: f - 148,
+      frame: f - (morphEl.start + morphEl.beat("width")),
       fps,
       config: { damping: 13, stiffness: 100, mass: 1 },
     });
@@ -745,7 +793,7 @@ export function GlassLens({
     const radius = lh / 2;
     const morph = Math.min(1, mH);
 
-    const enter = interpolate(f, [-6, 14], [0, 1], {
+    const enter = interpolate(f, [lensEl.start, lensEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -777,15 +825,15 @@ export function GlassLens({
   const map = lensMap(Math.round(lw), Math.round(lh), edge);
   const core = coreMask(Math.round(lw), Math.round(lh), edge);
 
-  const tint = interpolate(frame, [147, 160], [0, 0.92], {
+  const tint = interpolate(frame, [fillEl.start, fillEl.end], [0, 0.92], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const label = interpolate(frame, [157, 173], [0, 1], {
+  const label = interpolate(frame, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const arrow = interpolate(frame, [163, 180], [0, 1], {
+  const arrow = interpolate(frame, [arrowEl.start, arrowEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -794,6 +842,7 @@ export function GlassLens({
 
   const sceneProps = {
     t: frame,
+    tl,
     lines,
     italicLast,
     logo,
