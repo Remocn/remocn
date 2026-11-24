@@ -696,12 +696,17 @@
       "title": "Inline Highlight",
       "description": "Animates one word inside a sentence from a base color to a brand color.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/inline-highlight/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/inline-highlight.tsx"
+          "target": "components/remocn/inline-highlight/index.tsx"
+        },
+        {
+          "path": "registry/remocn/inline-highlight/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/inline-highlight/timeline.ts"
         }
       ],
       "type": "registry:component"

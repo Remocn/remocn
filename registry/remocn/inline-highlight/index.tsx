@@ -2,6 +2,11 @@
 
 import { interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type InlineHighlightElementId,
+  inlineHighlightTimeline,
+} from "./timeline";
 
 export interface InlineHighlightProps {
   before: string;
@@ -13,28 +18,41 @@ export interface InlineHighlightProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the color shift, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<InlineHighlightElementId>;
 }
 
-export function InlineHighlight({
-  before,
-  highlight,
-  after = "",
-  baseColor = "#171717",
-  highlightColor = "#ff5e3a",
-  fontSize = 48,
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: InlineHighlightProps) {
+export function InlineHighlight(props: InlineHighlightProps) {
+  const {
+    before,
+    highlight,
+    after = "",
+    baseColor = "#171717",
+    highlightColor = "#ff5e3a",
+    fontSize = 48,
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
   const { durationInFrames } = useSceneConfig();
-
-  const progress = interpolate(
-    frame,
-    [durationInFrames * 0.2, durationInFrames * 0.7],
-    [0, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  // The shift is timed against the composition length without `speed`.
+  const tl = useTimeline(
+    inlineHighlightTimeline,
+    props,
+    durationInFrames,
+    timing,
   );
+  const shift = tl.get("highlight");
+
+  const progress = interpolate(frame, [shift.start, shift.end], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   const color = interpolateColors(
     progress,
