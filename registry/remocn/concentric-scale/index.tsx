@@ -6,6 +6,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ConcentricScaleElementId,
+  concentricScaleTimeline,
+  DEFAULT_STEPS,
+  stepsOf,
+} from "./timeline";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -41,14 +48,13 @@ export interface ConcentricScaleProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the centre, each ring, the final sweep and the
+   * hero's landing, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<ConcentricScaleElementId>;
 }
-
-const DEFAULT_STEPS: ScaleStep[] = [
-  { value: "1" },
-  { value: "10" },
-  { value: "1,000" },
-  { value: "100,000", label: "creators" },
-];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -59,8 +65,8 @@ const CLAMP = {
 } as const;
 const TAU = Math.PI * 2;
 const G = 1.9;
-const FIRST = 18;
-const STEP = 30;
+/** Frames a ring's value takes to shrink once the next ring opens. */
+const SHRINK = 20;
 const NODE_A = (-45 * Math.PI) / 180;
 
 const THEMES = {
@@ -244,57 +250,83 @@ function ScaleLayer({
   );
 }
 
-export function ConcentricScale({
-  steps = DEFAULT_STEPS,
-  accent = "#3B5BFD",
-  beat = STEP,
-  fontWeight = 300,
-  ink,
-  background,
-  fontFamily = sora,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: ConcentricScaleProps) {
+export function ConcentricScale(props: ConcentricScaleProps) {
+  const {
+    steps = DEFAULT_STEPS,
+    accent = "#3B5BFD",
+    fontWeight = 300,
+    ink,
+    background,
+    fontFamily = sora,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    concentricScaleTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const stage =
     background === "transparent" ? "transparent" : (background ?? p.bg);
-  const list = steps.length >= 2 ? steps.slice(0, 7) : DEFAULT_STEPS;
+  const list = stepsOf<ScaleStep>(steps, DEFAULT_STEPS);
   const last = list.length - 1;
 
-  const startOf = (k: number) => FIRST + (k - 1) * beat;
-  const T_FINAL = startOf(last);
-  const SWEEP = 30;
-  const HIT = T_FINAL + SWEEP;
+  const centerEl = tl.get("center");
+  const finalEl = tl.get("final");
+  const hitEl = tl.get("hit");
+  const ringEl = (k: number) => tl.get(`ring:${k}`);
+  const startOf = (k: number) => (k >= last ? finalEl : ringEl(k)).start;
+  const T_FINAL = finalEl.start;
+  const HIT = hitEl.start;
 
   const lcAt = (tt: number) => {
     let lc = 0;
     for (let k = 1; k < last; k++) {
-      lc += interpolate(tt, [startOf(k) + 12, startOf(k) + 40], [0, 1], {
-        ...CLAMP,
-        easing: EASE_IO,
-      });
+      const r = ringEl(k);
+      lc += interpolate(
+        tt,
+        [r.start + r.beat("zoomAt"), r.start + r.beat("zoomEnd")],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: EASE_IO,
+        },
+      );
     }
     return (
       lc +
-      interpolate(tt, [T_FINAL + 8, HIT + 22], [0, 0.14], {
-        ...CLAMP,
-        easing: EASE_IO,
-      })
+      interpolate(
+        tt,
+        [T_FINAL + finalEl.beat("zoomAt"), HIT + hitEl.beat("zoomEnd")],
+        [0, 0.14],
+        {
+          ...CLAMP,
+          easing: EASE_IO,
+        },
+      )
     );
   };
   const cxAt = (tt: number) => {
-    const pan = interpolate(tt, [T_FINAL + 16, HIT + 18], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    const pan = interpolate(
+      tt,
+      [T_FINAL + finalEl.beat("panAt"), HIT + hitEl.beat("panEnd")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
     return interpolate(pan, [0, 1], [width * 0.5, width * 0.34]);
   };
   const cx = cxAt(t);
@@ -305,8 +337,8 @@ export function ConcentricScale({
 
   const ringXAt = (k: number, tt: number) => {
     if (k === last) return k;
-    const s = startOf(k);
-    const e = interpolate(tt, [s, s + 28], [0, 1], {
+    const r = ringEl(k);
+    const e = interpolate(tt, [r.start, r.start + r.beat("grow")], [0, 1], {
       ...CLAMP,
       easing: EASE_RING,
     });
@@ -323,21 +355,26 @@ export function ConcentricScale({
         x: ox - 10 * u,
         y: cy - 10 * u,
         size:
-          interpolate(tt, [startOf(1), startOf(1) + 20], [40, 20], {
+          interpolate(tt, [startOf(1), startOf(1) + SHRINK], [40, 20], {
             ...CLAMP,
             easing: EASE_IO,
           }) * u,
         shift: 0,
       };
-    const s = startOf(k);
-    const a = interpolate(tt, [s + 10, s + 26], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    const ring = ringEl(k);
+    const a = interpolate(
+      tt,
+      [ring.start + ring.beat("labelAt"), ring.start + ring.beat("labelEnd")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
     const r = screenRAt(ringXAt(k, tt), tt);
     const newer = interpolate(
       tt,
-      [startOf(k + 1), startOf(k + 1) + 20],
+      [startOf(k + 1), startOf(k + 1) + SHRINK],
       [0, 1],
       {
         ...CLAMP,
@@ -367,32 +404,55 @@ export function ConcentricScale({
     settled: labelAt(k, Number.MAX_SAFE_INTEGER),
   });
 
-  const dotIn = interpolate(t, [2, 16], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const sweep = interpolate(t, [T_FINAL, HIT], [0, 1], {
+  const dotIn = interpolate(t, [centerEl.start, centerEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const sweep = interpolate(t, [T_FINAL, finalEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const lead = interpolate(t, [HIT - 4, HIT + 12], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const hero = interpolate(t, [HIT + 2, HIT + 24], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const subAt = (tt: number) =>
-    interpolate(tt, [HIT + 10, HIT + 30], [0, 1], {
+  const lead = interpolate(
+    t,
+    [HIT + hitEl.beat("lead"), HIT + hitEl.beat("leadEnd")],
+    [0, 1],
+    {
       ...CLAMP,
       easing: EASE_OUT,
-    });
+    },
+  );
+  const hero = interpolate(
+    t,
+    [HIT + hitEl.beat("heroAt"), HIT + hitEl.beat("heroEnd")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const subAt = (tt: number) =>
+    interpolate(
+      tt,
+      [HIT + hitEl.beat("subAt"), HIT + hitEl.beat("subEnd")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
   const sub = subAt(t);
   const subMoving =
     Math.abs(subAt(t + 1) - sub) * 8 * u > 1e-3 ||
     Math.abs(sub - subAt(t - 1)) * 8 * u > 1e-3;
-  const settle = interpolate(t, [T_FINAL, T_FINAL + 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const settle = interpolate(
+    t,
+    [T_FINAL, T_FINAL + finalEl.beat("settle")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
 
   const rFinal = screenR(last);
   const rInner = last > 1 ? screenR(last - 1) * 1.14 : 18 * u;
@@ -428,8 +488,14 @@ export function ConcentricScale({
           aria-hidden
         >
           {rings.map((k) => {
-            const s = startOf(k);
-            const vis = interpolate(t, [s, s + 8], [0, 1], CLAMP);
+            const ring = ringEl(k);
+            const s = ring.start;
+            const vis = interpolate(
+              t,
+              [s, s + ring.beat("fade")],
+              [0, 1],
+              CLAMP,
+            );
             if (vis <= 0) return null;
             const r = screenR(ringX(k));
             const newest = k === last - 1 || t < startOf(k + 1);
@@ -451,7 +517,10 @@ export function ConcentricScale({
                   const delay = (j / count) * 14;
                   const b = interpolate(
                     t,
-                    [s + 4 + delay, s + 12 + delay],
+                    [
+                      s + ring.beat("beadsAt") + delay,
+                      s + ring.beat("beadsEnd") + delay,
+                    ],
                     [0, 1],
                     {
                       ...CLAMP,
@@ -587,17 +656,35 @@ export function ConcentricScale({
           color={fg}
           sub={p.muted}
           fontFamily={fontFamily}
-          opacity={interpolate(t, [6, 20], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          })}
+          opacity={interpolate(
+            t,
+            [
+              centerEl.start + centerEl.beat("labelAt"),
+              centerEl.start +
+                centerEl.beat("labelAt") +
+                centerEl.beat("label"),
+            ],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: EASE_OUT,
+            },
+          )}
         />
         {rings.map((k) => {
-          const s = startOf(k);
-          const a = interpolate(t, [s + 10, s + 26], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
+          const ring = ringEl(k);
+          const a = interpolate(
+            t,
+            [
+              ring.start + ring.beat("labelAt"),
+              ring.start + ring.beat("labelEnd"),
+            ],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: EASE_OUT,
+            },
+          );
           if (a <= 0) return null;
           return (
             <RingLabel

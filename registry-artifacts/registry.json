@@ -13653,12 +13653,21 @@
       "title": "Concentric Scale",
       "description": "Concentric dotted discs scale from 1 to 1,000 while 100,000 creators lands beside the glowing last disc.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/concentric-scale/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/concentric-scale.tsx"
+          "target": "components/remocn/concentric-scale/index.tsx"
+        },
+        {
+          "path": "registry/remocn/concentric-scale/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/concentric-scale/timeline.ts"
         }
       ],
       "type": "registry:component"

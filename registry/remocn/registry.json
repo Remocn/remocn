@@ -13658,10 +13658,19 @@
         {
           "path": "concentric-scale/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/concentric-scale.tsx"
+          "target": "components/remocn/concentric-scale/index.tsx"
+        },
+        {
+          "path": "concentric-scale/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/concentric-scale/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "changelog-scroll",
