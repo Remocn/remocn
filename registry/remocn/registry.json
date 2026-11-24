@@ -655,12 +655,21 @@
       "title": "Typewriter",
       "description": "Character-by-character text reveal with a deterministic blinking cursor.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/caret"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/caret",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "typewriter/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/typewriter.tsx"
+          "target": "components/remocn/typewriter/index.tsx"
+        },
+        {
+          "path": "typewriter/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/typewriter/timeline.ts"
         }
       ]
     },
