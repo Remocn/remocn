@@ -11518,10 +11518,19 @@
         {
           "path": "word-insert/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/word-insert.tsx"
+          "target": "components/remocn/word-insert/index.tsx"
+        },
+        {
+          "path": "word-insert/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/word-insert/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "typo-fix",

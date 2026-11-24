@@ -11513,12 +11513,21 @@
       "title": "Word Insert",
       "description": "A sentence edits itself, opening a gap and inserting a new word with a gradient.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/word-insert/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/word-insert.tsx"
+          "target": "components/remocn/word-insert/index.tsx"
+        },
+        {
+          "path": "registry/remocn/word-insert/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/word-insert/timeline.ts"
         }
       ],
       "type": "registry:component"
