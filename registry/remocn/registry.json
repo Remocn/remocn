@@ -15366,13 +15366,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "table-filter/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/table-filter.tsx"
+          "target": "components/remocn/table-filter/index.tsx"
+        },
+        {
+          "path": "table-filter/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/table-filter/timeline.ts"
         }
       ]
     },
