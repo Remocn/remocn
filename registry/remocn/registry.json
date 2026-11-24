@@ -12695,10 +12695,19 @@
         {
           "path": "tally-marks/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/tally-marks.tsx"
+          "target": "components/remocn/tally-marks/index.tsx"
+        },
+        {
+          "path": "tally-marks/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/tally-marks/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "abacus-count",

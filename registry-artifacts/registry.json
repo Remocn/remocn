@@ -12690,12 +12690,21 @@
       "title": "Tally Marks",
       "description": "Hand-drawn tally marks fill rows until they resolve into the 1,240 count.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/tally-marks/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/tally-marks.tsx"
+          "target": "components/remocn/tally-marks/index.tsx"
+        },
+        {
+          "path": "registry/remocn/tally-marks/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/tally-marks/timeline.ts"
         }
       ],
       "type": "registry:component"

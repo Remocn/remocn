@@ -6,6 +6,12 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  formatNumber,
+  type TallyMarksElementId,
+  tallyMarksTimeline,
+} from "./timeline";
 
 const { fontFamily: fraunces } = loadFont("normal", {
   weights: ["300", "400"],
@@ -41,18 +47,15 @@ export interface TallyMarksProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the tally, the collapse, the tip into the
+   * rule, the total and the label, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TallyMarksElementId>;
 }
 
-const T0 = 6;
-const TALLY = 66;
 const R0 = 0.2;
-const ROW_IN = 78;
-const ROW_LEN = 18;
-const COL_IN = 90;
-const COL_LEN = 18;
-const COL_STAGGER = 4;
-const TIP = COL_IN + COL_LEN + COL_STAGGER;
-const NUM_IN = TIP + 10;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -85,12 +88,6 @@ function hash(a: number, b: number) {
   return (h >>> 0) / 4294967296;
 }
 
-function formatNumber(n: number) {
-  return Math.round(Math.abs(n))
-    .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
 function solveRate(n: number, d: number, r0: number) {
   if (r0 * d >= n) return 1e-6;
   let lo = 1e-6;
@@ -118,15 +115,16 @@ interface Stroke {
   jy: number;
 }
 
-function buildStrokes(rows: number, perRow: number): Stroke[] {
+/** The marks, each `at` frames after the tally starts, drawn over `tally`. */
+function buildStrokes(rows: number, perRow: number, tally: number): Stroke[] {
   const n = rows * perRow * 5;
-  const rate = solveRate(n, TALLY, R0);
+  const rate = solveRate(n, tally, R0);
   const list: Stroke[] = [];
   for (let i = 0; i < n; i++) {
     const g = Math.floor(i / 5);
     const k = i % 5;
     const slash = k === 4;
-    const at = T0 + Math.log(1 + (i * rate) / R0) / rate;
+    const at = Math.log(1 + (i * rate) / R0) / rate;
     const prog = i / Math.max(1, n - 1);
     list.push({
       key: `s${i}`,
@@ -185,26 +183,44 @@ function ScaleLayer({
   );
 }
 
-export function TallyMarks({
-  value = 1240,
-  label = "videos rendered on launch day",
-  rows = 4,
-  groupsPerRow = 9,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = fraunces,
-  strokeWidth = 9,
-  stagger = 2,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: TallyMarksProps) {
+export function TallyMarks(props: TallyMarksProps) {
+  const {
+    value = 1240,
+    label = "videos rendered on launch day",
+    rows = 4,
+    groupsPerRow = 9,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = fraunces,
+    strokeWidth = 9,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    tallyMarksTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pushEl = tl.get("push");
+  const tallyEl = tl.get("tally");
+  const settleEl = tl.get("settle");
+  const rowsEl = tl.get("rows");
+  const colsEl = tl.get("cols");
+  const tipEl = tl.get("tip");
+  const numEl = tl.get("number");
+  const labelEl = tl.get("label");
+  const tallyAt = tallyEl.start;
+  const tipAt = tipEl.start;
+  const numAt = numEl.start;
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -212,7 +228,11 @@ export function TallyMarks({
   const stage = background ?? p.bg;
   const nRows = Math.max(1, Math.min(6, Math.round(rows)));
   const nCols = Math.max(2, Math.min(14, Math.round(groupsPerRow)));
-  const strokes = useMemo(() => buildStrokes(nRows, nCols), [nRows, nCols]);
+  const tallyLen = tallyEl.length;
+  const strokes = useMemo(
+    () => buildStrokes(nRows, nCols, tallyLen),
+    [nRows, nCols, tallyLen],
+  );
   const gradId = `tm${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const ruleGradId = `${gradId}r`;
 
@@ -240,14 +260,14 @@ export function TallyMarks({
   const midCol = (nCols - 1) / 2;
   const midRow = (nRows - 1) / 2;
   const total = nRows * nCols * 5;
-  const rate = useMemo(() => solveRate(total, TALLY, R0), [total]);
+  const rate = useMemo(() => solveRate(total, tallyLen, R0), [total, tallyLen]);
 
   const frameAt = (tt: number) => {
     const drawn = Math.max(
       0.2,
       Math.min(
         total,
-        (R0 / rate) * (Math.exp(rate * Math.max(0, tt - T0)) - 1),
+        (R0 / rate) * (Math.exp(rate * Math.max(0, tt - tallyAt)) - 1),
       ),
     );
     const gi = drawn / 5;
@@ -275,7 +295,7 @@ export function TallyMarks({
     camX += f.fx / SAMPLES.length;
     camY += f.fy / SAMPLES.length;
   }
-  const settle = interpolate(t, [T0 + TALLY - 6, ROW_IN], [0, 1], {
+  const settle = interpolate(t, [settleEl.start, settleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -295,39 +315,48 @@ export function TallyMarks({
     numSize * (0.6 * digitCount + 0.26 * commaCount) * 0.92,
   );
 
-  const push = interpolate(t, [0, TIP + 30], [0.985, 1.01], {
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0.985, 1.01], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const pushing = t > 0 && t < TIP + 30;
-  const showStrokes = t < TIP;
+  const pushing = t > pushEl.start && t < pushEl.end;
+  const showStrokes = t < tipAt;
 
   const tip = spring({
-    frame: t - TIP,
+    frame: t - tipAt,
     fps,
     config: { damping: 22, stiffness: 140, mass: 0.8 },
   });
 
   const lines = showStrokes
     ? strokes.map((s) => {
-        const appear = interpolate(t, [s.at, s.at + s.dur], [0, 1], {
+        const at = tallyAt + s.at;
+        const appear = interpolate(t, [at, at + s.dur], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
         });
         if (appear <= 0) return null;
         const rowDelay =
-          (1 - Math.abs(s.row - midRow) / Math.max(1, midRow)) * 2;
+          (1 - Math.abs(s.row - midRow) / Math.max(1, midRow)) *
+          rowsEl.beat("spread");
         const rowK = interpolate(
           t,
-          [ROW_IN + rowDelay, ROW_IN + rowDelay + ROW_LEN],
+          [
+            rowsEl.start + rowDelay,
+            rowsEl.start + rowDelay + rowsEl.beat("move"),
+          ],
           [0, 1],
           { ...CLAMP, easing: EASE_IO },
         );
         const colDelay =
-          (1 - Math.abs(s.col - midCol) / Math.max(1, midCol)) * COL_STAGGER;
+          (1 - Math.abs(s.col - midCol) / Math.max(1, midCol)) *
+          colsEl.beat("spread");
         const colK = interpolate(
           t,
-          [COL_IN + colDelay, COL_IN + colDelay + COL_LEN],
+          [
+            colsEl.start + colDelay,
+            colsEl.start + colDelay + colsEl.beat("move"),
+          ],
           [0, 1],
           { ...CLAMP, easing: EASE_IO },
         );
@@ -385,10 +414,15 @@ export function TallyMarks({
 
   const fieldL = gx0 - groupW / 2;
   const fieldR = gx0 + (nCols - 1) * pitchX + groupW / 2;
-  const drift = interpolate(t, [0, TIP + 40], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const drift = interpolate(
+    t,
+    [pushEl.start, pushEl.start + pushEl.beat("drift")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const stops = (
     <>
       <stop offset="0" stopColor={p.stops[0]} />
@@ -399,7 +433,7 @@ export function TallyMarks({
     </>
   );
   const chars = text.split("");
-  const label1 = interpolate(t, [NUM_IN + 12, NUM_IN + 30], [0, 1], {
+  const label1 = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -455,7 +489,7 @@ export function TallyMarks({
             )}
           </svg>
 
-          {t >= NUM_IN - 1 ? (
+          {t >= numAt - 1 ? (
             <div
               style={{
                 position: "absolute",
@@ -472,7 +506,10 @@ export function TallyMarks({
               {chars.map((ch, i) => {
                 const k = interpolate(
                   t,
-                  [NUM_IN + i * stagger, NUM_IN + i * stagger + 18],
+                  [
+                    numAt + i * numEl.beat("stagger"),
+                    numAt + i * numEl.beat("stagger") + numEl.beat("rise"),
+                  ],
                   [0, 1],
                   { ...CLAMP, easing: EASE_OUT },
                 );
