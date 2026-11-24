@@ -7141,12 +7141,21 @@
       "title": "Turnabout",
       "description": "\"The video works for you.\" with the last word turned to an orange accent.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/turnabout/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/turnabout.tsx"
+          "target": "components/remocn/turnabout/index.tsx"
+        },
+        {
+          "path": "registry/remocn/turnabout/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/turnabout/timeline.ts"
         }
       ],
       "type": "registry:component"

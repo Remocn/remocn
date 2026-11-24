@@ -7146,10 +7146,19 @@
         {
           "path": "turnabout/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/turnabout.tsx"
+          "target": "components/remocn/turnabout/index.tsx"
+        },
+        {
+          "path": "turnabout/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/turnabout/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "run-on",
