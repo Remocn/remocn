@@ -11898,12 +11898,21 @@
       "title": "Blink Cut",
       "description": "Words blink in a fixed rhythm before cutting to the logo and a one-line tagline.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/blink-cut/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/blink-cut.tsx"
+          "target": "components/remocn/blink-cut/index.tsx"
+        },
+        {
+          "path": "registry/remocn/blink-cut/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/blink-cut/timeline.ts"
         }
       ],
       "type": "registry:component"
