@@ -12,6 +12,15 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_INSTALL,
+  DEFAULT_SIGNATURE,
+  DEFAULT_SIGNOFF,
+  type PostScriptElementId,
+  postScriptTimeline,
+  splitWords,
+} from "./timeline";
 
 const lexend = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -40,6 +49,12 @@ export interface PostScriptProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words of the sign-off, the signature,
+   * the P.S., the flip and the install line, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PostScriptElementId>;
 }
 
 const THEMES = {
@@ -152,8 +167,6 @@ function balanced(
   return greedy(words, adv, space, hi);
 }
 
-const splitWords = (s: string) => s.split(/\s+/).filter(Boolean);
-
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -170,27 +183,33 @@ function ScaleLayer({
   );
 }
 
-export function PostScript({
-  signoff = "Thanks for watching.",
-  signature = "— the remocn team",
-  label = "P.S.",
-  ps = "The next launch film is yours.",
-  install = "npx shadcn add @remocn/zoom-blur",
-  stagger = 3,
-  flip = 30,
-  accent,
-  ink,
-  background,
-  fontFamily = lexend.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: PostScriptProps) {
+export function PostScript(props: PostScriptProps) {
+  const {
+    signoff = DEFAULT_SIGNOFF,
+    signature = DEFAULT_SIGNATURE,
+    label = "P.S.",
+    ps = "The next launch film is yours.",
+    install = DEFAULT_INSTALL,
+    accent,
+    ink,
+    background,
+    fontFamily = lexend.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
-  const Tt = (durationInFrames - delay) * speed;
+  // The flip lands at a third of the clip after `delay`, as before.
+  const tl = useTimeline(
+    postScriptTimeline,
+    props,
+    (durationInFrames - delay) * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -274,15 +293,8 @@ export function PostScript({
   const psTopB = psBottomB - L.psH;
   const soTopB = psTopB - fB * 0.4 - L.blockH * sB;
 
-  const soStart = 4;
-  const soStagger = stagger;
-  const sigAt = soStart + soWords.length * soStagger + 8;
-  const psAt = sigAt + (signature ? 14 : 0);
-  const flipAt = Math.max(psAt + 24, Math.min(Tt * 0.36, psAt + 48));
-  const flipDur = flip;
-  const installAt = flipAt + flipDur - 2;
-
-  const p = interpolate(t, [flipAt, flipAt + flipDur], [0, 1], {
+  const flipEl = tl.get("flip");
+  const p = interpolate(t, [flipEl.start, flipEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -298,11 +310,13 @@ export function PostScript({
   // frame, so it is dropped while the flip runs; resting frames keep it.
   const fix = (v: number, d: number) => (flipping ? `${v}` : v.toFixed(d));
 
-  const rise = (start: number, dur = 18) =>
-    interpolate(t, [start, start + dur], [0, 1], {
+  const rise = (id: PostScriptElementId) => {
+    const e = tl.get(id);
+    return interpolate(t, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
 
   let soIndex = 0;
   const soNodes = soLines.map((line, li) => (
@@ -324,7 +338,7 @@ export function PostScript({
       }}
     >
       {line.map((word, wi) => {
-        const e = rise(soStart + soIndex * soStagger);
+        const e = rise(`word:${soIndex}`);
         soIndex++;
         return (
           <span key={`sw${wi}`}>
@@ -344,8 +358,8 @@ export function PostScript({
     </div>
   ));
 
-  const sigE = rise(sigAt, 16);
-  const psE = rise(psAt, 16);
+  const sigE = signature ? rise("signature") : 0;
+  const psE = rise("ps");
 
   let psIndex = 0;
   const psNodes = psLines.map((line, li) => (
@@ -385,10 +399,7 @@ export function PostScript({
     </div>
   ));
 
-  const wipe = interpolate(t, [installAt, installAt + 22], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const wipe = install ? rise("install") : 0;
 
   return (
     <AbsoluteFill

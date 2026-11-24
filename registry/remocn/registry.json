@@ -6912,10 +6912,19 @@
         {
           "path": "post-script/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/post-script.tsx"
+          "target": "components/remocn/post-script/index.tsx"
+        },
+        {
+          "path": "post-script/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/post-script/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "rsvp",
