@@ -1,8 +1,14 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  SHADOW_SWEEP_TEXT_LENGTH,
+  type ShadowSweepTextElementId,
+  shadowSweepTextTimeline,
+} from "./timeline";
 
 export interface ShadowSweepTextProps {
   text: string;
@@ -16,13 +22,15 @@ export interface ShadowSweepTextProps {
   driftLeft?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the drift and the two sweeps, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<ShadowSweepTextElementId>;
 }
 
-export const shadowSweepTextLength = 37;
+export const shadowSweepTextLength = SHADOW_SWEEP_TEXT_LENGTH;
 
-const ENTER_END = 23;
-const EXIT_START = 26;
-const EXIT_END = shadowSweepTextLength - 1;
 const REST_X = -20;
 const REST_Y = 9;
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
@@ -32,42 +40,59 @@ const clamp = {
   extrapolateRight: "clamp" as const,
 };
 
-export function ShadowSweepText({
-  text,
-  fontSize = 96,
-  color = "#aaa6b5",
-  fontWeight = 700,
-  backgroundColor = "#030012",
-  shadowColor = backgroundColor,
-  shadowSoftness = 130,
-  rise = 96,
-  driftLeft = 16,
-  speed = 1,
-  className,
-}: ShadowSweepTextProps) {
+export function ShadowSweepText(props: ShadowSweepTextProps) {
+  const {
+    text,
+    fontSize = 96,
+    color = "#aaa6b5",
+    fontWeight = 700,
+    backgroundColor = "#030012",
+    shadowColor = backgroundColor,
+    shadowSoftness = 130,
+    rise = 96,
+    driftLeft = 16,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    shadowSweepTextTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const travel = tl.get("travel");
+  const enter = tl.get("enter");
+  const exit = tl.get("exit");
   const safeSoftness = Math.max(shadowSoftness, 0);
   const travelProgress = interpolate(
     frame,
-    [0, shadowSweepTextLength - 1],
+    [travel.start, travel.end],
     [0, 1],
     {
       ...clamp,
       easing: Easing.out(Easing.cubic),
     },
   );
-  const enterProgress = interpolate(frame, [-3, ENTER_END], [0, 1], clamp);
+  const enterProgress = interpolate(
+    frame,
+    [enter.start + enter.beat("lead"), enter.end],
+    [0, 1],
+    clamp,
+  );
   const exitProgress = interpolate(
     frame,
-    [EXIT_START, EXIT_END],
+    [exit.start, exit.end],
     [0, 1],
     clamp,
   );
   const x = REST_X + driftLeft * (1 - travelProgress);
   const y = REST_Y + rise * (1 - travelProgress);
-  const isEntering = frame < ENTER_END;
-  const isExiting = frame >= EXIT_START;
+  const isEntering = frame < enter.end;
+  const isExiting = frame >= exit.start;
   const sweepProgress = isEntering
     ? enterProgress
     : isExiting

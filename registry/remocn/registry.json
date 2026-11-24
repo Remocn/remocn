@@ -499,10 +499,19 @@
         {
           "path": "shadow-sweep-text/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/shadow-sweep-text.tsx"
+          "target": "components/remocn/shadow-sweep-text/index.tsx"
+        },
+        {
+          "path": "shadow-sweep-text/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/shadow-sweep-text/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "outline-fill-track-text",

@@ -494,12 +494,21 @@
       "title": "Shadow Sweep Text",
       "description": "A line rises up and left while one dense dark shadow uncovers it and a second shadow sweeps back across it for the exit.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/shadow-sweep-text/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/shadow-sweep-text.tsx"
+          "target": "components/remocn/shadow-sweep-text/index.tsx"
+        },
+        {
+          "path": "registry/remocn/shadow-sweep-text/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/shadow-sweep-text/timeline.ts"
         }
       ],
       "type": "registry:component"
