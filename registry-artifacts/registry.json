@@ -14180,12 +14180,17 @@
       "title": "Block City",
       "description": "A 3D grid of blocks rises like a city skyline while +340% renders counts up.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/block-city/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/block-city.tsx"
+          "target": "components/remocn/block-city/index.tsx"
+        },
+        {
+          "path": "registry/remocn/block-city/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/block-city/timeline.ts"
         }
       ],
       "type": "registry:component"
