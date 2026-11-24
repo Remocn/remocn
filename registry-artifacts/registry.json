@@ -7281,12 +7281,21 @@
       "title": "Fine Print Up",
       "description": "\"No account and no watermark. Ever.\" in a big serif with tiny fine print at the bottom.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/fine-print-up/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/fine-print-up.tsx"
+          "target": "components/remocn/fine-print-up/index.tsx"
+        },
+        {
+          "path": "registry/remocn/fine-print-up/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/fine-print-up/timeline.ts"
         }
       ],
       "type": "registry:component"
