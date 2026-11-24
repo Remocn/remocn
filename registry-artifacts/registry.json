@@ -3613,12 +3613,17 @@
       "title": "Ring Text",
       "description": "Text runs around a tilted 3D band that spins, reading on the near side and mirrored on the far side.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/ring-text/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ring-text.tsx"
+          "target": "components/remocn/ring-text/index.tsx"
+        },
+        {
+          "path": "registry/remocn/ring-text/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ring-text/timeline.ts"
         }
       ],
       "type": "registry:component"
