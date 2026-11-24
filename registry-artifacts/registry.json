@@ -10048,13 +10048,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/launch-days/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/launch-days.tsx"
+          "target": "components/remocn/launch-days/index.tsx"
+        },
+        {
+          "path": "registry/remocn/launch-days/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/launch-days/timeline.ts"
         }
       ],
       "type": "registry:component"
