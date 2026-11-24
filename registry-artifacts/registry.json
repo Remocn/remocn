@@ -14014,12 +14014,21 @@
       "title": "Activity Rings",
       "description": "Concentric activity rings lap their goal while three metrics count up beside them.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/activity-rings/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/activity-rings.tsx"
+          "target": "components/remocn/activity-rings/index.tsx"
+        },
+        {
+          "path": "registry/remocn/activity-rings/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/activity-rings/timeline.ts"
         }
       ],
       "type": "registry:component"
