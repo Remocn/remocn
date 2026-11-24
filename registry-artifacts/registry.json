@@ -5373,12 +5373,17 @@
       "title": "Long Shadow",
       "description": "A flat icon casts a long shadow to the frame edge, then the light swings and the shadow sweeps around on a spring.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/long-shadow/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/long-shadow.tsx"
+          "target": "components/remocn/long-shadow/index.tsx"
+        },
+        {
+          "path": "registry/remocn/long-shadow/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/long-shadow/timeline.ts"
         }
       ],
       "type": "registry:component"
