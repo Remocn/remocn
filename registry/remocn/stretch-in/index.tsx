@@ -3,7 +3,13 @@
 import { type Font, parse } from "opentype.js";
 import { useEffect, useMemo, useState } from "react";
 import { continueRender, delayRender, Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type StretchInElementId,
+  stretchInTimeline,
+} from "./timeline";
 
 export interface StretchInProps {
   className?: string;
@@ -23,6 +29,11 @@ export interface StretchInProps {
   fill?: string;
   strokeWidth?: number;
   stroke?: string;
+  /**
+   * Moves, trims or stretches single letters, by the ids in `./timeline`.
+   * Frames on the scene timeline.
+   */
+  timing?: Timing<StretchInElementId>;
 }
 
 type Contour = [number, number][];
@@ -83,26 +94,26 @@ function flattenPath(
   return contours;
 }
 
-export function StretchIn({
-  className,
-  width = 1920,
-  height = 1080,
-  text = "REMOCN",
-  fontUrl = "https://fonts.gstatic.com/s/anton/v27/1Ptgg87LROyAm0K0.ttf",
-  fontSize = 510,
-  letterSpacing = 0,
-  baselineY,
-  entryStart = 0,
-  entryStagger = 3,
-  travelFrames = 33,
-  travelDistance = 1500,
-  vertexLagFrames = 3.5,
-  curveSteps = 8,
-  fill = "#ffffff",
-  strokeWidth = 0,
-  stroke = "#ffffff",
-}: StretchInProps) {
+export function StretchIn(props: StretchInProps) {
+  const {
+    className,
+    width = 1920,
+    height = 1080,
+    text = DEFAULT_TEXT,
+    fontUrl = "https://fonts.gstatic.com/s/anton/v27/1Ptgg87LROyAm0K0.ttf",
+    fontSize = 510,
+    letterSpacing = 0,
+    baselineY,
+    travelDistance = 1500,
+    curveSteps = 8,
+    fill = "#ffffff",
+    strokeWidth = 0,
+    stroke = "#ffffff",
+    timing,
+  } = props;
   const frame = useSceneFrame();
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(stretchInTimeline, props, durationInFrames, timing);
   const [font, setFont] = useState<Font | null>(null);
 
   useEffect(() => {
@@ -159,8 +170,12 @@ export function StretchIn({
         style={{ display: "block" }}
       >
         {letters.items.map((glyph, i) => {
-          const entry = entryStart + entryStagger * i;
-          const run = Math.max(1, travelFrames - vertexLagFrames);
+          // Ligatures can merge letters, so there may be fewer glyphs than
+          // letters in the schedule, never more.
+          const letter = tl.get(`letter:${i}`);
+          const entry = letter.start;
+          const lag = letter.beat("lag");
+          const run = letter.beat("run");
 
           const d = glyph.contours
             .map((contour) => {
@@ -169,7 +184,7 @@ export function StretchIn({
                   glyph.width === 0
                     ? 0
                     : Math.min(1, Math.max(0, (px - glyph.left) / glyph.width));
-                const start = entry + u * vertexLagFrames;
+                const start = entry + u * lag;
                 const remaining = interpolate(
                   frame,
                   [start, start + run],

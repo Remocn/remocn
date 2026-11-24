@@ -711,12 +711,17 @@
       "title": "Stretch In",
       "description": "Letters fly in from off-canvas and smear horizontally on the way — a vertex-lag deformation, not a scale.",
       "dependencies": ["remotion", "opentype.js"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/stretch-in/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/stretch-in.tsx"
+          "target": "components/remocn/stretch-in/index.tsx"
+        },
+        {
+          "path": "registry/remocn/stretch-in/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/stretch-in/timeline.ts"
         }
       ],
       "type": "registry:component"
