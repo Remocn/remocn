@@ -14412,10 +14412,19 @@
         {
           "path": "collab-lockup/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/collab-lockup.tsx"
+          "target": "components/remocn/collab-lockup/index.tsx"
+        },
+        {
+          "path": "collab-lockup/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/collab-lockup/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "tagline-justify",

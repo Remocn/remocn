@@ -14407,12 +14407,21 @@
       "title": "Collab Lockup",
       "description": "The Remocn logo and a partner logo join with an x under a glowing arc and caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/collab-lockup/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/collab-lockup.tsx"
+          "target": "components/remocn/collab-lockup/index.tsx"
+        },
+        {
+          "path": "registry/remocn/collab-lockup/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/collab-lockup/timeline.ts"
         }
       ],
       "type": "registry:component"
