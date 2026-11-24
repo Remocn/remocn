@@ -16,6 +16,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AppStoreListingElementId,
+  appStoreListingTimeline,
+  DEFAULT_LINES,
+  LINE_SLOTS,
+} from "./timeline";
 
 const { fontFamily: onest } = loadFont("normal", {
   weights: ["300", "400"],
@@ -61,6 +68,13 @@ export interface AppStoreListingProps {
   lines?: string[];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the camera moves, the tap, the download,
+   * single swipes, the button turning to Open and single lines, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<AppStoreListingElementId>;
 }
 
 const SW = 390;
@@ -84,16 +98,8 @@ const SHOT_GAP = 10;
 const PAGE = SHOT_W + SHOT_GAP;
 const TAB_H = 83;
 
-const T_TAP = 40;
-const T_SPIN = T_TAP + 9;
-const T_PROG = 64;
-const T_DONE = 150;
-const DRAG = [
-  { down: 104, up: 115, settle: 127, from: 0 },
-  { down: 131, up: 141, settle: 153, from: PAGE },
-];
-
-const LINE_AT = [0, T_TAP + 6, DRAG[0].down - 8, T_DONE];
+/** Where the strip starts each swipe from. */
+const DRAG_FROM = [0, PAGE];
 
 const tween = (f: number, a: number, b: number, easing = enterE) =>
   interpolate(f, [a, b], [0, 1], {
@@ -708,41 +714,61 @@ function ScaleLayer({
   );
 }
 
-export function AppStoreListing({
-  appName = "remocn",
-  subtitle = "Launch videos, written in React",
-  developer = "remocn Labs",
-  iconSrc,
-  rating = 4.8,
-  ratingCount = "12K",
-  ageRating = "4+",
-  category = "Developer Tools",
-  chartRank = 3,
-  award = null,
-  screenshots = DEFAULT_SHOTS,
-  getLabel = "Get",
-  openLabel = "Open",
-  backLabel = "Search",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = onest,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  lines = [
-    "Now on the App Store.",
-    "One tap to install.",
-    "Every screen, previewed.",
-    "Open it. Ship today.",
-  ],
-  ground,
-  groundParams,
-}: AppStoreListingProps) {
+export function AppStoreListing(props: AppStoreListingProps) {
+  const {
+    appName = "remocn",
+    subtitle = "Launch videos, written in React",
+    developer = "remocn Labs",
+    iconSrc,
+    rating = 4.8,
+    ratingCount = "12K",
+    ageRating = "4+",
+    category = "Developer Tools",
+    chartRank = 3,
+    award = null,
+    screenshots = DEFAULT_SHOTS,
+    getLabel = "Get",
+    openLabel = "Open",
+    backLabel = "Search",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = onest,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    lines = DEFAULT_LINES,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    appStoreListingTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const phone = tl.get("phone");
+  const zoomIn = tl.get("zoomIn");
+  const zoomOut = tl.get("zoomOut");
+  const pushEl = tl.get("push");
+  const finger = tl.get("finger");
+  const tap = tl.get("tap");
+  const download = tl.get("download");
+  const done = tl.get("done");
+  const swipes = [tl.get("swipe:0"), tl.get("swipe:1")];
+  const DRAG = swipes.map((e, i) => ({
+    down: e.start,
+    up: e.end,
+    from: DRAG_FROM[i],
+  }));
+  const T_TAP = tap.start;
+  const T_PROG = download.start;
+  const T_DONE = done.start;
   const f = frame * speed;
   const c: Palette = theme === "dark" ? DARK : LIGHT;
   const fg = ink ?? c.copy;
@@ -754,7 +780,15 @@ export function AppStoreListing({
     spring({ frame: f - at, fps, config, durationInFrames });
   const bump = (at: number) => sp(at - 2, MORPH, 3) - sp(at + 2, CHIP);
 
-  const camT = [0, 20, 38, 86, 102, 154, 172];
+  const camT = [
+    phone.start,
+    zoomIn.start,
+    zoomIn.end,
+    zoomOut.start,
+    zoomOut.end,
+    pushEl.start,
+    pushEl.end,
+  ];
   const camEase = { ...clamp, easing: camE };
   const camera = (ff: number) => {
     const camS = interpolate(ff, camT, [1, 1, 1.5, 1.5, 1, 1, 1.36], camEase);
@@ -771,7 +805,7 @@ export function AppStoreListing({
       camEase,
     );
     const S = k * camS;
-    const r = spring({ frame: ff, fps, config: HEAVY });
+    const r = spring({ frame: ff - phone.start, fps, config: HEAVY });
     return {
       S,
       r,
@@ -788,13 +822,19 @@ export function AppStoreListing({
     moves((ff) => camera(ff).S * BH, f) ||
     moves((ff) => camera(ff).x, f);
 
+  const lineEls = lines.slice(0, LINE_SLOTS).map((_, i) => tl.get(`line:${i}`));
   const press = bump(T_TAP);
   const pressMoving = moves((ff) => bump(T_TAP + f - ff), f, 1e-6);
-  const collapse = interpolate(f, [T_TAP + 2, T_TAP + 10], [0, 1], {
-    ...clamp,
-    easing: morph,
-  });
-  const expand = Math.min(1, sp(T_DONE + 1, CARD));
+  const collapse = interpolate(
+    f,
+    [T_TAP + tap.beat("collapseAt"), T_TAP + tap.beat("collapseEnd")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: morph,
+    },
+  );
+  const expand = Math.min(1, sp(T_DONE + done.beat("expandAt"), CARD));
   const btnW =
     f < T_DONE
       ? interpolate(collapse, [0, 1], [GET_W, 30])
@@ -804,16 +844,33 @@ export function AppStoreListing({
       ? interpolate(collapse, [0.5, 1], [1, 0], clamp)
       : interpolate(expand, [0, 0.3], [0, 1], clamp);
   const ringOn =
-    interpolate(f, [T_TAP + 6, T_TAP + 10], [0, 1], clamp) *
-    interpolate(f, [T_DONE + 2, T_DONE + 5], [1, 0], clamp);
+    interpolate(
+      f,
+      [T_TAP + tap.beat("ringAt"), T_TAP + tap.beat("ringEnd")],
+      [0, 1],
+      clamp,
+    ) *
+    interpolate(
+      f,
+      [T_DONE + done.beat("ringOutAt"), T_DONE + done.beat("ringOutEnd")],
+      [1, 0],
+      clamp,
+    );
   const spinning = f < T_PROG;
   const progress = interpolate(
     f,
-    [T_PROG, T_PROG + 12, T_PROG + 30, T_PROG + 48, T_PROG + 74, T_DONE - 2],
+    [
+      T_PROG,
+      T_PROG + download.beat("p1"),
+      T_PROG + download.beat("p2"),
+      T_PROG + download.beat("p3"),
+      T_PROG + download.beat("p4"),
+      T_DONE + done.beat("filled"),
+    ],
     [0, 0.08, 0.36, 0.52, 0.9, 1],
     clamp,
   );
-  const spinAngle = (f - T_SPIN) * 13;
+  const spinAngle = (f - (T_TAP + tap.beat("spinAt"))) * 13;
   const labelGet = interpolate(collapse, [0, 0.35], [1, 0], clamp);
   const labelOpen = interpolate(expand, [0.35, 0.85], [0, 1], clamp);
   const iapOpacity = 1 - collapse;
@@ -834,9 +891,13 @@ export function AppStoreListing({
   const getCenter = { x: COL_X + GET_W / 2, y: GET_Y + 15 };
   const swipeY = SHOT_Y + 200;
   const touches = [
-    { t: 22, x: 262, y: 420 },
+    { t: finger.start, x: 262, y: 420 },
     { t: T_TAP, ...getCenter },
-    { t: DRAG[0].down - 9, x: 318, y: swipeY + 40 },
+    {
+      t: DRAG[0].down + swipes[0].beat("reachAt"),
+      x: 318,
+      y: swipeY + 40,
+    },
     { t: DRAG[0].down, x: 300, y: swipeY },
     { t: DRAG[0].up, x: 300 - PAGE * 0.62, y: swipeY - 6 },
     { t: DRAG[1].down, x: 304, y: swipeY + 4 },
@@ -874,14 +935,14 @@ export function AppStoreListing({
   const touchOpacity = interpolate(
     f,
     [
-      22,
-      28,
-      T_TAP + 4,
-      T_TAP + 9,
-      DRAG[0].down - 7,
-      DRAG[0].down - 2,
-      DRAG[1].up + 2,
-      DRAG[1].up + 7,
+      finger.start,
+      finger.end,
+      T_TAP + tap.beat("liftAt"),
+      T_TAP + tap.beat("liftEnd"),
+      DRAG[0].down + swipes[0].beat("showAt"),
+      DRAG[0].down + swipes[0].beat("showEnd"),
+      DRAG[1].down + swipes[1].beat("hideAt"),
+      DRAG[1].down + swipes[1].beat("hideEnd"),
     ],
     [0, 1, 1, 0, 0, 1, 1, 0],
     clamp,
@@ -979,15 +1040,16 @@ export function AppStoreListing({
             overflow: "hidden",
           }}
         >
-          {lines.slice(0, LINE_AT.length).map((line, i) => {
-            const at = LINE_AT[i];
-            const next = LINE_AT[i + 1] ?? 100000;
+          {lineEls.map((el, i) => {
+            const line = lines[i];
+            const at = el.start;
+            const next = lineEls[i + 1]?.start ?? 100000;
             const lineOff = (ff: number) => {
               const pin =
                 i === 0
-                  ? spring({ frame: ff, fps, config: HEAVY })
-                  : tween(ff, at, at + 12, enterE);
-              const pout = tween(ff, next - 7, next, exitE);
+                  ? spring({ frame: ff - at, fps, config: HEAVY })
+                  : tween(ff, at, at + el.beat("in"), enterE);
+              const pout = tween(ff, next - el.beat("out"), next, exitE);
               return { pin, pout, y: (1 - pin) * 70 - pout * 50 };
             };
             const { pin, pout } = lineOff(f);

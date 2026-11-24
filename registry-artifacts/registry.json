@@ -15902,13 +15902,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/app-store-listing/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/app-store-listing.tsx"
+          "target": "components/remocn/app-store-listing/index.tsx"
+        },
+        {
+          "path": "registry/remocn/app-store-listing/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/app-store-listing/timeline.ts"
         }
       ],
       "type": "registry:component"
