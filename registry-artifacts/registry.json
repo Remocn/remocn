@@ -13886,12 +13886,21 @@
       "title": "Chord Ring",
       "description": "Chords link a ring of integration names around a glowing center that reads \"Connects to everything\".",
       "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/chord-ring/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/chord-ring.tsx"
+          "target": "components/remocn/chord-ring/index.tsx"
+        },
+        {
+          "path": "registry/remocn/chord-ring/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/chord-ring/timeline.ts"
         }
       ],
       "type": "registry:component"

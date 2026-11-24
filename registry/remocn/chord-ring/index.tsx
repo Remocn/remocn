@@ -9,6 +9,14 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  buildPairs,
+  type ChordRingElementId,
+  chordRingTimeline,
+  DEFAULT_SEGMENTS,
+  ringOf,
+} from "./timeline";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -105,19 +113,13 @@ export interface ChordRingProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the push, each segment, each chord, the brand
+   * lighting up and the caption, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ChordRingElementId>;
 }
-
-const DEFAULT_SEGMENTS = [
-  "remocn",
-  "Kitebase",
-  "Lumen",
-  "Fernway",
-  "Quarry",
-  "Orbitly",
-  "Halcyon",
-  "Tessel",
-  "Northwind",
-];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -147,12 +149,6 @@ const THEMES = {
   },
 } as const;
 
-const SEG_START = 2;
-const SEG_STAGGER = 2;
-const SEG_LEN = 12;
-const CHORD_START = 26;
-const CHORD_STAGGER = 2.2;
-const CHORD_LEN = 16;
 const TAU = Math.PI * 2;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
@@ -166,39 +162,6 @@ function arc(cx: number, cy: number, r: number, a0: number, a1: number) {
   const e = pt(cx, cy, r, a1);
   const large = a1 - a0 > Math.PI ? 1 : 0;
   return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
-}
-
-function buildPairs(n: number, brand: number) {
-  const brandPairs: [number, number][] = [];
-  for (let i = 0; i < n; i++) if (i !== brand) brandPairs.push([brand, i]);
-  const seen = new Set<string>();
-  const others: [number, number][] = [];
-  for (const k of [3, Math.floor(n / 2)]) {
-    for (let i = 0; i < n; i++) {
-      const j = (i + k) % n;
-      if (i === brand || j === brand || i === j) continue;
-      const key = `${Math.min(i, j)}-${Math.max(i, j)}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      others.push([i, j]);
-    }
-  }
-  const order: { a: number; b: number; brand: boolean }[] = [];
-  const len = Math.max(brandPairs.length, others.length);
-  for (let i = 0; i < len; i++) {
-    const o = others[(i * 5) % Math.max(1, others.length)];
-    if (i < others.length && o) order.push({ a: o[0], b: o[1], brand: false });
-    const bp = brandPairs[(i * 3) % Math.max(1, brandPairs.length)];
-    if (i < brandPairs.length && bp)
-      order.push({ a: bp[0], b: bp[1], brand: true });
-  }
-  const uniq = new Set<string>();
-  return order.filter((c) => {
-    const key = `${Math.min(c.a, c.b)}-${Math.max(c.a, c.b)}`;
-    if (uniq.has(key)) return false;
-    uniq.add(key);
-    return true;
-  });
 }
 
 function Grain({ opacity }: { opacity: number }) {
@@ -241,34 +204,42 @@ function ScaleLayer({
   );
 }
 
-export function ChordRing({
-  segments = DEFAULT_SEGMENTS,
-  brandIndex = 0,
-  caption = "Connects to everything",
-  accent = "#3B5BFD",
-  stagger = CHORD_STAGGER,
-  thickness = 10,
-  logo,
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: ChordRingProps) {
+export function ChordRing(props: ChordRingProps) {
+  const {
+    segments = DEFAULT_SEGMENTS,
+    brandIndex = 0,
+    caption = "Connects to everything",
+    accent = "#3B5BFD",
+    thickness = 10,
+    logo,
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    chordRingTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const camera = tl.get("camera");
+  const brandEl = tl.get("brand");
+  const captionEl = tl.get("caption");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const bg =
     background === "transparent" ? "transparent" : (background ?? p.bg);
-  const list = segments.slice(0, 12);
-  const n = list.length;
-  const brand = Math.min(Math.max(0, Math.round(brandIndex)), n - 1);
+  const { list, n, brand } = ringOf(segments, brandIndex);
 
   const cx = width / 2;
   const cy = height / 2;
@@ -279,24 +250,32 @@ export function ChordRing({
   const step = TAU / Math.max(1, n);
   const gapA = (8 * u) / R;
 
-  const spinDeg = interpolate(t, [0, 90], [-10, 0], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const spinDeg = interpolate(
+    t,
+    [camera.start, camera.start + camera.beat("spin")],
+    [-10, 0],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const rot = step / 2 + (spinDeg * Math.PI) / 180;
 
   const segs = list.map((label, i) => {
     const a0 = rot + i * step + gapA / 2;
     const a1 = rot + (i + 1) * step - gapA / 2;
-    const start = SEG_START + i * SEG_STAGGER;
+    const e = tl.get(`segment:${i}`);
+    const labelAt = e.start + e.beat("label");
     return {
       label,
       i,
       a0,
       a1,
       mid: (a0 + a1) / 2,
-      start,
-      end: start + SEG_LEN,
+      start: e.start,
+      end: e.end,
+      labelAt,
+      labelEnd: labelAt + e.beat("labelLen"),
     };
   });
 
@@ -337,37 +316,39 @@ export function ChordRing({
     const rc = 2 * rmin - half;
     const C = pt(cx, cy, rc, m);
     const d = `M${P0.x.toFixed(2)} ${P0.y.toFixed(2)} Q${C.x.toFixed(2)} ${C.y.toFixed(2)} ${P2.x.toFixed(2)} ${P2.y.toFixed(2)}`;
-    const start = CHORD_START + ci * stagger;
-    return { ...c, d, start, end: start + CHORD_LEN };
+    const e = tl.get(`chord:${ci}`);
+    return { ...c, d, start: e.start, end: e.end };
   });
 
-  const lastChord = chords.length
-    ? chords[chords.length - 1].end
-    : CHORD_START + 10;
-  const HIT = Math.round(lastChord + 6);
+  const HIT = brandEl.start;
 
   const flip = spring({
     frame: t - HIT,
     fps,
     config: { damping: 20, stiffness: 140, mass: 0.8 },
   });
-  const dim = interpolate(t, [HIT, HIT + 18], [0, 1], {
+  const dim = interpolate(t, [HIT, HIT + brandEl.beat("dim")], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const capT = HIT + 8;
+  const capT = captionEl.start;
   const land = spring({
     frame: t - capT,
     fps,
     config: { damping: 18, stiffness: 150, mass: 0.8 },
   });
-  const landO = interpolate(t, [capT, capT + 10], [0, 1], CLAMP);
-  const blur = interpolate(t, [capT, capT + 16], [1, 0], {
+  const landO = interpolate(
+    t,
+    [capT, capT + captionEl.beat("fade")],
+    [0, 1],
+    CLAMP,
+  );
+  const blur = interpolate(t, [capT, capT + captionEl.beat("blur")], [1, 0], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const pushP = interpolate(t, [0, 160], [0, 1], CLAMP);
-  const push = interpolate(t, [0, 160], [0.965, 1.005], {
+  const pushP = interpolate(t, [camera.start, camera.end], [0, 1], CLAMP);
+  const push = interpolate(t, [camera.start, camera.end], [0.965, 1.005], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -385,7 +366,12 @@ export function ChordRing({
   const landMoving =
     Math.abs(landAt(t + speed) - landAt(t)) > 1e-3 ||
     Math.abs(landAt(t) - landAt(t - speed)) > 1e-3;
-  const stage = interpolate(t, [0, 8], [0.5, 1], CLAMP);
+  const stage = interpolate(
+    t,
+    [camera.start, camera.start + camera.beat("fade")],
+    [0.5, 1],
+    CLAMP,
+  );
   const hair = Math.max(1, 1.4 * u);
   const disc = hole * 0.9;
   const discS = spring({
@@ -393,8 +379,13 @@ export function ChordRing({
     fps,
     config: { damping: 22, stiffness: 120, mass: 0.9 },
   });
-  const discO = interpolate(t, [HIT, HIT + 10], [0, 1], CLAMP);
-  const drift = interpolate(t, [HIT, HIT + 90], [0, 1], {
+  const discO = interpolate(
+    t,
+    [HIT, HIT + brandEl.beat("disc")],
+    [0, 1],
+    CLAMP,
+  );
+  const drift = interpolate(t, [HIT, HIT + brandEl.beat("drift")], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -487,7 +478,7 @@ export function ChordRing({
           </svg>
 
           {segs.map((s) => {
-            const a = interpolate(t, [s.end - 6, s.end + 10], [0, 1], {
+            const a = interpolate(t, [s.labelAt, s.labelEnd], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });
