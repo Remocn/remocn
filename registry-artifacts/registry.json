@@ -5559,13 +5559,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/graph-relayout/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/graph-relayout.tsx"
+          "target": "components/remocn/graph-relayout/index.tsx"
+        },
+        {
+          "path": "registry/remocn/graph-relayout/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/graph-relayout/timeline.ts"
         }
       ],
       "type": "registry:component"

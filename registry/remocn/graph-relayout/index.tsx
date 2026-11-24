@@ -10,6 +10,14 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LAYOUTS,
+  type GraphRelayoutElementId,
+  type LayoutSpec,
+  relayoutPlan,
+  relayoutTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -324,12 +332,7 @@ export type GraphNodeSpec = {
   input?: string;
 };
 
-export type GraphLayout = {
-  title: string;
-  nodes: Record<string, [number, number]>;
-  edges: [string, string][];
-  note?: { node: string; text: string };
-};
+export type GraphLayout = LayoutSpec;
 
 export type GraphRelayoutProps = {
   theme?: "dark" | "light";
@@ -355,6 +358,12 @@ export type GraphRelayoutProps = {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the first layout building in and single
+   * relayouts, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<GraphRelayoutElementId>;
 };
 
 const DEFAULT_CATALOG: Record<string, GraphNodeSpec> = {
@@ -372,114 +381,9 @@ const DEFAULT_CATALOG: Record<string, GraphNodeSpec> = {
   publish: { label: "Publish", icons: ["upload"], tint: "blue" },
 };
 
-const DEFAULT_LAYOUTS: GraphLayout[] = [
-  {
-    title: "A launch film",
-    nodes: {
-      prompt: [0.08, 0.5],
-      script: [0.3, 0.5],
-      scenes: [0.5, 0.5],
-      render: [0.7, 0.5],
-      wide: [0.9, 0.5],
-    },
-    edges: [
-      ["prompt", "script"],
-      ["script", "scenes"],
-      ["scenes", "render"],
-      ["render", "wide"],
-    ],
-  },
-  {
-    title: "Social cutdowns",
-    nodes: {
-      prompt: [0.08, 0.26],
-      brand: [0.08, 0.74],
-      script: [0.29, 0.5],
-      scenes: [0.5, 0.26],
-      voice: [0.5, 0.74],
-      render: [0.71, 0.5],
-      wide: [0.91, 0.26],
-      tall: [0.91, 0.74],
-    },
-    edges: [
-      ["prompt", "script"],
-      ["brand", "script"],
-      ["script", "scenes"],
-      ["script", "voice"],
-      ["scenes", "render"],
-      ["voice", "render"],
-      ["render", "wide"],
-      ["render", "tall"],
-    ],
-  },
-  {
-    title: "Captions in every language",
-    nodes: {
-      prompt: [0.08, 0.3],
-      script: [0.28, 0.3],
-      scenes: [0.49, 0.3],
-      captions: [0.49, 0.78],
-      render: [0.7, 0.3],
-      wide: [0.9, 0.3],
-    },
-    edges: [
-      ["prompt", "script"],
-      ["script", "scenes"],
-      ["script", "captions"],
-      ["scenes", "render"],
-      ["captions", "render"],
-      ["render", "wide"],
-    ],
-    note: { node: "captions", text: "12 languages, synced to voice" },
-  },
-  {
-    title: "Every format at once",
-    nodes: {
-      prompt: [0.07, 0.5],
-      scenes: [0.28, 0.16],
-      voice: [0.28, 0.5],
-      music: [0.28, 0.84],
-      render: [0.5, 0.5],
-      wide: [0.72, 0.16],
-      tall: [0.72, 0.5],
-      square: [0.72, 0.84],
-      publish: [0.93, 0.5],
-    },
-    edges: [
-      ["prompt", "scenes"],
-      ["prompt", "voice"],
-      ["prompt", "music"],
-      ["scenes", "render"],
-      ["voice", "render"],
-      ["music", "render"],
-      ["render", "wide"],
-      ["render", "tall"],
-      ["render", "square"],
-      ["wide", "publish"],
-      ["tall", "publish"],
-      ["square", "publish"],
-    ],
-  },
-];
+export const graphRelayoutTimeline = relayoutPlan;
 
-const FIRST_HOLD = 36;
-const STEP_GAPS = [34, 30, 28, 26];
-const FINAL_HOLD = 58;
-
-export function graphRelayoutTimeline(count: number, hold = FIRST_HOLD) {
-  const starts: number[] = [];
-  let t = hold;
-  for (let i = 1; i < count; i++) {
-    starts.push(t);
-    t += STEP_GAPS[Math.min(i - 1, STEP_GAPS.length - 1)];
-  }
-  const last = starts.length ? starts[starts.length - 1] : 0;
-  return { starts, end: last + FINAL_HOLD };
-}
-
-export const GRAPH_RELAYOUT_DURATION = graphRelayoutTimeline(
-  DEFAULT_LAYOUTS.length,
-).end;
+export const GRAPH_RELAYOUT_DURATION = relayoutPlan(DEFAULT_LAYOUTS.length).end;
 
 function sizeOf(spec: GraphNodeSpec) {
   if (spec.input !== undefined) {
@@ -634,27 +538,34 @@ function ScaleLayer({
   );
 }
 
-export function GraphRelayout({
-  theme = "dark",
-  accent,
-  catalog = DEFAULT_CATALOG,
-  layouts = DEFAULT_LAYOUTS,
-  kicker = "Use case",
-  cursorName = "Mia",
-  hold = FIRST_HOLD,
-  dots = true,
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: GraphRelayoutProps) {
+export function GraphRelayout(props: GraphRelayoutProps) {
+  const {
+    theme = "dark",
+    accent,
+    catalog = DEFAULT_CATALOG,
+    layouts = DEFAULT_LAYOUTS,
+    kicker = "Use case",
+    cursorName = "Mia",
+    dots = true,
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    relayoutTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const uid = useId().replace(/:/g, "");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
@@ -665,7 +576,12 @@ export function GraphRelayout({
   const u = Math.min(W, H) / 720;
   const k = tall ? 1.42 * u : 1.34 * u;
   const labelU = tall ? 17 : LABEL;
-  const { starts, end } = graphRelayoutTimeline(layouts.length, hold);
+  const shown = layouts.map((_, i) => tl.get(`layout:${i}`));
+  const intro = shown[0];
+  // Relayout `i` is the move into layout `i + 1`.
+  const rel = shown.slice(1);
+  const starts = rel.map((e) => e.start);
+  const end = shown[shown.length - 1].end;
 
   const rect = tall
     ? { x: 0.1 * W, y: 0.27 * H, w: 0.8 * W, h: 0.65 * H }
@@ -724,7 +640,8 @@ export function GraphRelayout({
     const firstIn = layouts[0].nodes[id] !== undefined;
     let vis = firstIn
       ? spring({
-          frame: f + 5 - Math.round(order(id) * 12),
+          frame:
+            f - (intro.start + intro.beat("node")) - Math.round(order(id) * 12),
           fps,
           config: CARD,
         })
@@ -741,8 +658,13 @@ export function GraphRelayout({
       y += (pts[i + 1].y - pts[i].y) * p;
       const was = layouts[i].nodes[id] !== undefined;
       const is = layouts[i + 1].nodes[id] !== undefined;
-      if (was && !is) vis -= EXIT(clamp01((f - s) / 8));
-      if (!was && is) vis += spring({ frame: f - s - 6, fps, config: CHIP });
+      if (was && !is) vis -= EXIT(clamp01((f - s) / rel[i].beat("exit")));
+      if (!was && is)
+        vis += spring({
+          frame: f - s - rel[i].beat("enter"),
+          fps,
+          config: CHIP,
+        });
     }
     return { x, y, vis: Math.max(0, vis) };
   };
@@ -773,15 +695,21 @@ export function GraphRelayout({
     let v = 0;
     if (inL(0)) {
       const [a, b] = edgeKeys.get(key) ?? ["", ""];
-      const t0 = 3 + Math.round(Math.max(order(a), order(b)) * 12);
-      v = MOVE(clamp01((f - t0) / 10));
+      const t0 =
+        intro.start +
+        intro.beat("edge") +
+        Math.round(Math.max(order(a), order(b)) * 12);
+      v = MOVE(clamp01((f - t0) / intro.beat("edgeLen")));
     }
     for (let i = 0; i < starts.length; i++) {
       const s = starts[i];
       const was = inL(i);
       const is = inL(i + 1);
-      if (was && !is) v -= MOVE(clamp01((f - s) / 7));
-      if (!was && is) v += MOVE(clamp01((f - s - 9) / 11));
+      if (was && !is) v -= MOVE(clamp01((f - s) / rel[i].beat("edgeOut")));
+      if (!was && is)
+        v += MOVE(
+          clamp01((f - s - rel[i].beat("edgeIn")) / rel[i].beat("edgeInLen")),
+        );
     }
     return clamp01(v);
   };
@@ -813,7 +741,9 @@ export function GraphRelayout({
     for (let i = 0; i < starts.length; i++) {
       const s = starts[i];
       const approach = ENTER(
-        clamp01((f - (s - (i === 0 ? 18 : 12))) / (i === 0 ? 16 : 11)),
+        clamp01(
+          (f - (s + rel[i].beat("approach"))) / rel[i].beat("approachLen"),
+        ),
       );
       const g = grabOf(i);
       pos = { x: lerp(pos.x, g.x, approach), y: lerp(pos.y, g.y, approach) };
@@ -822,15 +752,24 @@ export function GraphRelayout({
         const st = nodeState(id, f);
         const sp = specs[id];
         const live = { x: st.x + sp.w * k * 0.18, y: st.y + sp.h * k * 0.2 };
-        const rel = clamp01((f - s - 18) / 6);
+        const letGo = clamp01(
+          (f - s - rel[i].beat("release")) / rel[i].beat("releaseLen"),
+        );
         const r = restOf(i);
-        pos = { x: lerp(live.x, r.x, rel), y: lerp(live.y, r.y, rel) };
+        pos = { x: lerp(live.x, r.x, letGo), y: lerp(live.y, r.y, letGo) };
       }
-      press += clamp01((f - s + 3) / 3) - clamp01((f - s - 16) / 4);
+      press +=
+        clamp01((f - s - rel[i].beat("press")) / rel[i].beat("pressLen")) -
+        clamp01((f - s - rel[i].beat("unpress")) / rel[i].beat("unpressLen"));
     }
     const last = starts.length - 1;
     if (last >= 0) {
-      const drift = ENTER(clamp01((f - starts[last] - 24) / 30));
+      const drift = ENTER(
+        clamp01(
+          (f - starts[last] - rel[last].beat("drift")) /
+            rel[last].beat("driftLen"),
+        ),
+      );
       pos = { x: pos.x + drift * 70 * u, y: pos.y + drift * 46 * u };
     }
     return { ...pos, press: clamp01(press) };
@@ -940,14 +879,26 @@ export function GraphRelayout({
             const home = filled[id][filled[id].length - 1];
             const scale = 0.5 + 0.5 * st.vis;
             const isDrag = starts.some(
-              (s, i) => dragged[i] === id && frame >= s - 3 && frame < s + 20,
+              (s, i) =>
+                dragged[i] === id &&
+                frame >= s + rel[i].beat("press") &&
+                frame < s + rel[i].beat("dragEnd"),
             );
             const dragT = starts.reduce((acc, s, i) => {
               if (dragged[i] !== id) return acc;
               return Math.max(
                 acc,
-                spring({ frame: frame - s + 3, fps, config: CHIP }) -
-                  EXIT(clamp01((frame - s - 18) / 6)),
+                spring({
+                  frame: frame - s - rel[i].beat("press"),
+                  fps,
+                  config: CHIP,
+                }) -
+                  EXIT(
+                    clamp01(
+                      (frame - s - rel[i].beat("release")) /
+                        rel[i].beat("releaseLen"),
+                    ),
+                  ),
               );
             }, 0);
             const labelSize = labelU * k;
@@ -1144,10 +1095,17 @@ export function GraphRelayout({
 
           {layouts.map((l, li) => {
             if (!l.note || !states[l.note.node]) return null;
-            const s0 = li === 0 ? 0 : starts[li - 1];
+            const own = shown[li];
+            const s0 = own.start;
             const s1 = li < starts.length ? starts[li] : 1e9;
-            const inT = ENTER(clamp01((frame - s0 - 16) / 12));
-            const outT = EXIT(clamp01((frame - s1) / 7));
+            const inT = ENTER(
+              clamp01((frame - s0 - own.beat("noteIn")) / own.beat("noteLen")),
+            );
+            const outT = EXIT(
+              clamp01(
+                (frame - s1) / (li < rel.length ? rel[li].beat("fadeOut") : 7),
+              ),
+            );
             const v = inT * (1 - outT);
             if (v <= 0.001) return null;
             const st = states[l.note.node];
@@ -1225,10 +1183,20 @@ export function GraphRelayout({
             }}
           >
             {layouts.map((l, li) => {
-              const s0 = li === 0 ? -14 : starts[li - 1];
+              const own = shown[li];
+              const s0 = own.start + own.beat("title");
               const s1 = li < starts.length ? starts[li] : 1e9;
-              const inT = ENTER(clamp01((frame - s0 - 6) / 12));
-              const outT = EXIT(clamp01((frame - s1) / 7));
+              const inT = ENTER(
+                clamp01(
+                  (frame - s0 - own.beat("titleIn")) / own.beat("titleLen"),
+                ),
+              );
+              const outT = EXIT(
+                clamp01(
+                  (frame - s1) /
+                    (li < rel.length ? rel[li].beat("fadeOut") : 7),
+                ),
+              );
               if (inT <= 0 || outT >= 1) return null;
               return (
                 <div
