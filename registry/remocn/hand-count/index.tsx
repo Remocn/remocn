@@ -1,13 +1,19 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Caveat";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   DEFAULT_STEP,
   hashRange,
   qstep,
   steppedRamp,
 } from "@/lib/remocn/stop-motion";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_DURATION_STEPS,
+  type HandCountElementId,
+  handCountTimeline,
+} from "./timeline";
 
 const { fontFamily: HAND_FAMILY } = loadFont("normal", {
   subsets: ["latin"],
@@ -18,8 +24,6 @@ const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
 
 const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2;
-
-const DEFAULT_DURATION_STEPS = 18;
 
 export type HandCountEase = "in-out" | "out" | "linear";
 
@@ -110,26 +114,36 @@ export interface HandCountProps {
   fontFamily?: string;
   seed?: string;
   step?: number;
+  /**
+   * Moves, trims or stretches the count, by the ids in `./timeline`. Frames
+   * on the scene timeline.
+   */
+  timing?: Timing<HandCountElementId>;
 }
 
-export function HandCount({
-  to,
-  from = 0,
-  delay = 0,
-  durationSteps = DEFAULT_DURATION_STEPS,
-  decimals = 0,
-  prefix = "",
-  suffix = "",
-  fontSize = 96,
-  color = "#26242c",
-  weight = 700,
-  ease = "in-out",
-  align = "center",
-  fontFamily = HAND_FAMILY,
-  seed = "count",
-  step = DEFAULT_STEP,
-}: HandCountProps) {
+export function HandCount(props: HandCountProps) {
+  const {
+    to,
+    from = 0,
+    decimals = 0,
+    prefix = "",
+    suffix = "",
+    fontSize = 96,
+    color = "#26242c",
+    weight = 700,
+    ease = "in-out",
+    align = "center",
+    fontFamily = HAND_FAMILY,
+    seed = "count",
+    step = DEFAULT_STEP,
+    timing,
+  } = props;
   const frame = useSceneFrame();
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(handCountTimeline, props, durationInFrames, timing);
+  const count = tl.get("count");
+  const delay = count.start;
+  const durationSteps = count.length / step;
   const value = handCountValue({
     frame,
     to,
