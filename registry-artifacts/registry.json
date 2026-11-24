@@ -11182,12 +11182,21 @@
       "title": "Typo Fix",
       "description": "A misspelled word is caught and corrected in place inside a short line.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/typo-fix/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/typo-fix.tsx"
+          "target": "components/remocn/typo-fix/index.tsx"
+        },
+        {
+          "path": "registry/remocn/typo-fix/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/typo-fix/timeline.ts"
         }
       ],
       "type": "registry:component"
