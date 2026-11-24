@@ -16,7 +16,7 @@ export type SelectionSnapElementId =
   | `handle:${number}`;
 
 /** Corners first, then edge midpoints, as fractions of the box. */
-export const selectionSnapHandles = [
+export const HANDLES = [
   [0, 0],
   [1, 0],
   [1, 1],
@@ -40,7 +40,7 @@ export const selectionSnapTimeline = defineTimeline<
     { id: "tint", lane: "Colour", label: "colour", start: 18, length: 12 },
     { id: "badge", lane: "Badge", label: "badge", start: 24, length: 8 },
     { id: "count", lane: "Readout", label: "count", start: 24, length: 14 },
-    ...selectionSnapHandles.map(
+    ...HANDLES.map(
       (_, i): TimelineElement<SelectionSnapElementId> => ({
         id: `handle:${i}`,
         lane: "Handles",

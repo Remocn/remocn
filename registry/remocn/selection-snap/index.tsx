@@ -18,7 +18,7 @@ import {
   useTimeline,
 } from "@/lib/remocn/timeline";
 import {
-  selectionSnapHandles as handles,
+  HANDLES,
   type SelectionSnapElementId,
   selectionSnapTimeline,
 } from "./timeline";
@@ -71,7 +71,7 @@ export const selectionSnapPadding = {
 } as const;
 
 /** Corners first, then edge midpoints, as fractions of the box. */
-export const selectionSnapHandles = handles;
+export const selectionSnapHandles = HANDLES;
 
 const CLAMP = {
   extrapolateLeft: "clamp",
