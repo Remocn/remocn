@@ -694,12 +694,21 @@
       "title": "Kinetic Morph Text",
       "description": "Letters lift, rotate, and softly reshape into editable phrases with sampled outline trails.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/kinetic-morph-text/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/kinetic-morph-text.tsx"
+          "target": "components/remocn/kinetic-morph-text/index.tsx"
+        },
+        {
+          "path": "registry/remocn/kinetic-morph-text/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/kinetic-morph-text/timeline.ts"
         }
       ],
       "type": "registry:component"
