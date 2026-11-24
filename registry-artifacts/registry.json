@@ -1988,12 +1988,21 @@
       "title": "Value Swap",
       "description": "Swaps a value in place with a vertical slide — the old value exits up as the new one enters from below while an invisible sizer keeps the width stable.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/value-swap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/value-swap.tsx"
+          "target": "components/remocn/value-swap/index.tsx"
+        },
+        {
+          "path": "registry/remocn/value-swap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/value-swap/timeline.ts"
         }
       ],
       "type": "registry:component"
