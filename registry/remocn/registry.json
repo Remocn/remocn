@@ -4598,12 +4598,17 @@
       "title": "Spotlight",
       "description": "A soft spotlight cone searches the dark stage, overshoots, and lands on the logo before the house lights lift.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "spotlight/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/spotlight.tsx"
+          "target": "components/remocn/spotlight/index.tsx"
+        },
+        {
+          "path": "spotlight/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/spotlight/timeline.ts"
         }
       ]
     },
