@@ -13447,12 +13447,21 @@
       "title": "Uptime Strip",
       "description": "A strip of ticks fills in green while 99.99% uptime types out beside an italic word.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/uptime-strip/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/uptime-strip.tsx"
+          "target": "components/remocn/uptime-strip/index.tsx"
+        },
+        {
+          "path": "registry/remocn/uptime-strip/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/uptime-strip/timeline.ts"
         }
       ],
       "type": "registry:component"
