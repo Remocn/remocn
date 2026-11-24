@@ -3711,12 +3711,17 @@
       "title": "Trim Burst",
       "description": "A ring of short straight strokes shoots out from a point like Trim Paths: each end races ahead on a hard-braking ease-out while its start holds, then chases it on a smoother ease-in-out, so every stroke grows, travels and zips shut at its outer distance.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/trim-burst/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/trim-burst.tsx"
+          "target": "components/remocn/trim-burst/index.tsx"
+        },
+        {
+          "path": "registry/remocn/trim-burst/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/trim-burst/timeline.ts"
         }
       ],
       "type": "registry:component"
