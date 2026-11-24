@@ -4672,12 +4672,21 @@
       "title": "Accordion Unfold",
       "description": "A tight paper zigzag unfolds sideways into a flat card with the logo printed across it.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/accordion-unfold/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/accordion-unfold.tsx"
+          "target": "components/remocn/accordion-unfold/index.tsx"
+        },
+        {
+          "path": "registry/remocn/accordion-unfold/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/accordion-unfold/timeline.ts"
         }
       ],
       "type": "registry:component"
