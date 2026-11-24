@@ -9151,12 +9151,21 @@
       "title": "Magnitude Push",
       "description": "A huge 1000x pushes in with a blue gradient and a caption, '...fewer keyframes to set by hand'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/magnitude-push/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/magnitude-push.tsx"
+          "target": "components/remocn/magnitude-push/index.tsx"
+        },
+        {
+          "path": "registry/remocn/magnitude-push/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/magnitude-push/timeline.ts"
         }
       ],
       "type": "registry:component"

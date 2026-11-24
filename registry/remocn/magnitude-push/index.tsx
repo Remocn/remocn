@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LABEL,
+  DEFAULT_VALUE,
+  type MagnitudePushElementId,
+  magnitudePushTimeline,
+} from "./timeline";
 
 const schibsted = loadSchibsted("normal", {
   weights: ["400", "500"],
@@ -40,6 +47,12 @@ export interface MagnitudePushProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the first rise, each digit's push, the settle
+   * and the label words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MagnitudePushElementId>;
 }
 
 const BEAM = ["#f4f7ff", "#8fb4ff", "#3d5bff", "#1a1660"] as const;
@@ -69,14 +82,6 @@ const TRACK = -0.035;
 const LABEL_TRACK = -0.012;
 const FIT_W = 0.86;
 const CAP_H = 0.7;
-
-const RISE_AT = 2;
-const RISE_LEN = 16;
-const PUSH_AT = 30;
-const PUSH_GAP = 15;
-const CAM_LAG = 5;
-const CAM_LEN = 16;
-const LABEL_GAP = 4;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
@@ -207,25 +212,31 @@ function ScaleLayer({
   );
 }
 
-export function MagnitudePush({
-  value = "1000",
-  suffix = "×",
-  label = "fewer keyframes to set by hand",
-  pushGap = PUSH_GAP,
-  stagger = LABEL_GAP,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = schibsted.fontFamily,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: MagnitudePushProps) {
+export function MagnitudePush(props: MagnitudePushProps) {
+  const {
+    value = DEFAULT_VALUE,
+    suffix = "×",
+    label = DEFAULT_LABEL,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = schibsted.fontFamily,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    magnitudePushTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
@@ -253,7 +264,7 @@ export function MagnitudePush({
     i === 0
       ? 1
       : spring({
-          frame: t - (PUSH_AT + (i - 1) * pushGap),
+          frame: t - tl.get(`digit:${i}`).start,
           fps,
           config: { damping: 15, stiffness: 120, mass: 0.9 },
         }),
@@ -262,8 +273,9 @@ export function MagnitudePush({
   const fontAt = (f: number) => {
     let F = fitAt(0);
     for (let i = 1; i <= pushes; i++) {
-      const at = PUSH_AT + (i - 1) * pushGap + CAM_LAG;
-      const k = interpolate(f, [at, at + CAM_LEN], [0, 1], {
+      const e = tl.get(`digit:${i}`);
+      const at = e.start + e.beat("cam");
+      const k = interpolate(f, [at, at + e.beat("camLen")], [0, 1], {
         ...CLAMP,
         easing: EASE_IN_OUT,
       });
@@ -273,8 +285,7 @@ export function MagnitudePush({
   };
   const F = fontAt(t);
 
-  const endAt = PUSH_AT + Math.max(0, pushes - 1) * pushGap;
-  const labelAt = endAt + (pushes > 0 ? 18 : 6);
+  const settleEl = tl.get("settle");
   const rest = fitAt(pushes);
   const labelSize = Math.min(
     Math.max(rest * 0.2, H * 0.05),
@@ -284,7 +295,7 @@ export function MagnitudePush({
   const labelGap = Math.max(rest * 0.16, H * 0.045);
   const blockH = inkH * rest + (label ? labelGap + labelSize * 1.2 : 0);
   const midYAt = (f: number) => {
-    const settle = interpolate(f, [labelAt - 6, labelAt + 18], [0, 1], {
+    const settle = interpolate(f, [settleEl.start, settleEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
     });
@@ -302,7 +313,7 @@ export function MagnitudePush({
     Math.abs(fontAt(f) - F) * (reach / F) > 1e-3 ||
     Math.abs(midYAt(f) - midY) > 1e-3;
   const moving = stepAt(t + speed) || stepAt(t - speed);
-  const midYRest = midYAt(labelAt + 18);
+  const midYRest = midYAt(settleEl.end);
   const FL = rest;
   const midYL = midYRest;
   const grow = Math.abs(F / FL - 1) > 1e-9 ? F / FL : 1;
@@ -322,15 +333,15 @@ export function MagnitudePush({
   const maskH = maskBot - maskTop;
   const carry = `translateY(${dy}px) scale(${grow})${glide(moving)}`;
 
-  const riseAt = (at: number, f: number) =>
-    interpolate(f, [at, at + RISE_LEN], [0, 1], {
+  const riseAt = (at: number, len: number, f: number) =>
+    interpolate(f, [at, at + len], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
   // A glyph rising out of the mask: its offset, and whether it still moves
   // on this frame or a neighbour.
-  const lift = (at: number, amp: number) => {
-    const d = (f: number) => (1 - riseAt(at, f)) * amp;
+  const lift = (at: number, len: number, amp: number) => {
+    const d = (f: number) => (1 - riseAt(at, len, f)) * amp;
     const now = d(t);
     const live = d(t + speed) !== now || now !== d(t - speed);
     return `translateY(${now}px)${glide(live)}`;
@@ -362,6 +373,7 @@ export function MagnitudePush({
     whiteSpace: "pre" as const,
   };
 
+  const riseEl = tl.get("rise");
   const nodes = chars.map((ch, i) => {
     const gx = x;
     const w = m.adv[i] * open[i] * FL;
@@ -374,14 +386,14 @@ export function MagnitudePush({
             ...glyphBase,
             left: gx,
             color: fg,
-            transform: lift(RISE_AT, maskH * 1.05),
+            transform: lift(riseEl.start, riseEl.beat("rise"), maskH * 1.05),
           }}
         >
           {ch}
         </div>
       );
     }
-    const at = PUSH_AT + (i - 1) * pushGap;
+    const digitEl = tl.get(`digit:${i}`);
     const slot = Math.max(0, w);
     if (slot < 1) return null;
     const slide = gx - slotRest[i];
@@ -412,7 +424,7 @@ export function MagnitudePush({
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
             color: "transparent",
-            transform: `${Math.abs(centre) < 1e-3 ? "" : `translateX(${centre}px) `}${lift(at + 3, maskH * 1.1)}`,
+            transform: `${Math.abs(centre) < 1e-3 ? "" : `translateX(${centre}px) `}${lift(digitEl.start + digitEl.beat("digit"), digitEl.beat("rise"), maskH * 1.1)}`,
           }}
         >
           {ch}
@@ -428,7 +440,11 @@ export function MagnitudePush({
         ...glyphBase,
         left: x + sufGap * FL,
         color: fg,
-        transform: lift(RISE_AT + 3, maskH * 1.05),
+        transform: lift(
+          riseEl.start + riseEl.beat("suffix"),
+          riseEl.beat("rise"),
+          maskH * 1.05,
+        ),
       }}
     >
       {suffix}
@@ -502,12 +518,11 @@ export function MagnitudePush({
             }}
           >
             {words.map((w, k) => {
-              const p = interpolate(
-                t,
-                [labelAt + k * stagger, labelAt + k * stagger + 16],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
+              const wordEl = tl.get(`word:${k}`);
+              const p = interpolate(t, [wordEl.start, wordEl.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
               return (
                 <span
                   key={`${w}-${k}`}
