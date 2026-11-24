@@ -7015,12 +7015,21 @@
       "title": "Crunch",
       "description": "A timestamped story line, \"It shipped, with time to ...\", fades in over a dark brown ground.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/crunch/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/crunch.tsx"
+          "target": "components/remocn/crunch/index.tsx"
+        },
+        {
+          "path": "registry/remocn/crunch/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/crunch/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -12,16 +12,27 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  type CrunchElementId,
+  crunchTimeline,
+  DEFAULT_RESOLUTION,
+  DEFAULT_SETUP,
+  DEFAULT_SNAG,
+  type StoryLine,
+  words,
+} from "./timeline";
 
 const afacad = loadFont("normal", {
   weights: ["400", "500"],
   subsets: ["latin"],
 });
 
-export interface StoryBeat {
-  slug: string;
-  line: string;
-}
+export type StoryBeat = StoryLine;
 
 export interface CrunchProps {
   setup?: StoryBeat;
@@ -43,6 +54,12 @@ export interface CrunchProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the setup, its exit, the snag, the squeeze,
+   * the release and the resolution, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CrunchElementId>;
 }
 
 const THEMES = {
@@ -62,19 +79,6 @@ const THEMES = {
   },
 } as const;
 
-const DEFAULT_SETUP: StoryBeat = {
-  slug: "Monday, 10:00 AM",
-  line: "Maya had a launch on Friday.",
-};
-const DEFAULT_SNAG: StoryBeat = {
-  slug: "Thursday, 11:40 PM",
-  line: "Nine hours left, and still no video.",
-};
-const DEFAULT_RESOLUTION: StoryBeat = {
-  slug: "Friday, 9:00 AM",
-  line: "It shipped, with time to spare.",
-};
-
 const LINE_TRACK = -0.02;
 const SLUG_TRACK = 0.08;
 const LH = 1.04;
@@ -88,10 +92,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-function words(s: string) {
-  return s.split(/\s+/).filter(Boolean);
-}
 
 function useWidths(strings: string[], family: string) {
   const key = strings.join("\u0001");
@@ -196,25 +196,29 @@ function ScaleLayer({
   );
 }
 
-export function Crunch({
-  setup = DEFAULT_SETUP,
-  snag = DEFAULT_SNAG,
-  resolution = DEFAULT_RESOLUTION,
-  accent,
-  ink,
-  background,
-  wall,
-  fontFamily = afacad.fontFamily,
-  fontWeight = 400,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: CrunchProps) {
+export function Crunch(props: CrunchProps) {
+  const {
+    setup = DEFAULT_SETUP,
+    snag = DEFAULT_SNAG,
+    resolution = DEFAULT_RESOLUTION,
+    accent,
+    ink,
+    background,
+    wall,
+    fontFamily = afacad.fontFamily,
+    fontWeight = 400,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
-  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The schedule paces itself to the clip length without `speed`.
+  const tl = useTimeline(crunchTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -287,22 +291,18 @@ export function Crunch({
   }
   const tightCol = hiCol;
 
-  const k = Math.min(1.6, Math.max(0.75, T / 180));
-  const at = (f: number) => f * k;
-  const setupIn = at(4);
-  const setupOut = at(44);
-  const snagIn = at(52);
-  const squeezeA = at(74);
-  const squeezeB = at(122);
-  const release = at(134);
-  const resIn = at(140);
+  const squeezeEl = tl.get("squeeze");
+  const releaseEl = tl.get("release");
+  const squeezeA = squeezeEl.start;
+  const squeezeB = squeezeEl.end;
+  const release = releaseEl.start;
 
   const maxInset = Math.max(0, (W - tightCol) / 2 - pad);
   const squeeze = interpolate(t, [squeezeA, squeezeB], [0, 1], {
     ...CLAMP,
     easing: EASE_SQUEEZE,
   });
-  const open = interpolate(t, [release, release + 12], [0, 1], {
+  const open = interpolate(t, [release, releaseEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -378,8 +378,8 @@ export function Crunch({
     b: Block,
     pts: { x: number; y: number }[],
     key: string,
-    inAt: number,
-    outAt: number | null,
+    enter: ResolvedElement<CrunchElementId>,
+    exit: { at: number; step: number; word: number } | null,
     lineColor: string,
     slugColor: string,
     home?: { x: number; y: number }[],
@@ -389,17 +389,17 @@ export function Crunch({
     const all = [...b.slugWords, ...b.lineWords];
     return all.map((word, i) => {
       const isSlug = i < n;
-      const s0 = inAt + i * Math.min(2.2, 16 / all.length);
-      const e = interpolate(t, [s0, s0 + 16], [0, 1], {
+      const s0 = enter.start + i * enter.beat("step");
+      const e = interpolate(t, [s0, s0 + enter.beat("word")], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
       let o = e;
       let dy = (1 - e) * (isSlug ? S : F) * 0.45;
       let moving = midway(e);
-      if (outAt !== null) {
-        const x0 = outAt + i * 0.8;
-        const x = interpolate(t, [x0, x0 + 9], [0, 1], {
+      if (exit !== null) {
+        const x0 = exit.at + i * exit.step;
+        const x = interpolate(t, [x0, x0 + exit.word], [0, 1], {
           ...CLAMP,
           easing: EASE_IN,
         });
@@ -463,8 +463,12 @@ export function Crunch({
           blocks[0],
           wideFor(blocks[0]),
           "a",
-          setupIn,
-          setupOut,
+          tl.get("setup"),
+          {
+            at: tl.get("setupOut").start,
+            step: tl.get("setupOut").beat("step"),
+            word: tl.get("setupOut").beat("word"),
+          },
           fg,
           hi,
         )}
@@ -472,8 +476,12 @@ export function Crunch({
           blocks[1],
           snagPts,
           "b",
-          snagIn,
-          release - 4,
+          tl.get("snag"),
+          {
+            at: release + releaseEl.beat("snagOut"),
+            step: releaseEl.beat("step"),
+            word: releaseEl.beat("word"),
+          },
           fg,
           hi,
           snagHome,
@@ -483,7 +491,15 @@ export function Crunch({
       <div style={wallStyle("left")} />
       <div style={wallStyle("right")} />
       <ScaleLayer scale={scale}>
-        {renderBlock(blocks[2], wideFor(blocks[2]), "c", resIn, null, hi, hi)}
+        {renderBlock(
+          blocks[2],
+          wideFor(blocks[2]),
+          "c",
+          tl.get("resolution"),
+          null,
+          hi,
+          hi,
+        )}
       </ScaleLayer>
     </AbsoluteFill>
   );

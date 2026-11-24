@@ -7020,10 +7020,19 @@
         {
           "path": "crunch/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/crunch.tsx"
+          "target": "components/remocn/crunch/index.tsx"
+        },
+        {
+          "path": "crunch/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/crunch/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "overnight",
