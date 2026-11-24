@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LABEL,
+  DEFAULT_VALUE,
+  type StemStretchElementId,
+  stemStretchTimeline,
+} from "./timeline";
 
 const instrument = loadInstrument("normal", {
   weights: ["400", "500"],
@@ -42,6 +49,12 @@ export interface StemStretchProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the figure's characters, the snaps and the
+   * label words, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<StemStretchElementId>;
 }
 
 const THEMES = {
@@ -62,11 +75,6 @@ const GLOW = {
 };
 
 const TRACK = -0.035;
-const RISE_LEN = 18;
-const RISE_GAP = 3;
-const SNAP_AT = 26;
-const SNAP_GAP = 12;
-const LABEL_AT = 66;
 const SLICE = 0.5;
 const BLEED = 2;
 
@@ -217,26 +225,32 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
-export function StemStretch({
-  value = "4 hours",
-  label = "back, every week",
-  steps = 4,
-  snapGap = SNAP_GAP,
-  stagger = 3,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = instrument.fontFamily,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: StemStretchProps) {
+export function StemStretch(props: StemStretchProps) {
+  const {
+    value = DEFAULT_VALUE,
+    label = DEFAULT_LABEL,
+    steps = 4,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = instrument.fontFamily,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const t = Math.max(0, frame - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    stemStretchTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
@@ -263,7 +277,7 @@ export function StemStretch({
     let snapped = 0;
     for (let k = 0; k < n; k++) {
       snapped += spring({
-        frame: tt - (SNAP_AT + k * snapGap),
+        frame: tt - tl.get(`snap:${k}`).start,
         fps,
         config: { damping: 13, stiffness: 210, mass: 0.7 },
       });
@@ -308,12 +322,11 @@ export function StemStretch({
     return chars.map((ch, i) => {
       const gx = x;
       x += m.adv[i] * F;
-      const p = interpolate(
-        t,
-        [i * RISE_GAP - 2, i * RISE_GAP - 2 + RISE_LEN],
-        [0, 1],
-        { ...CLAMP, easing: EASE_OUT },
-      );
+      const e = tl.get(`char:${i}`);
+      const p = interpolate(t, [e.start, e.end], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      });
       return (
         <span
           key={`${keyPrefix}-${i}-${ch}`}
@@ -493,12 +506,11 @@ export function StemStretch({
           }}
         >
           {labelWords.map((w, i) => {
-            const p = interpolate(
-              t,
-              [LABEL_AT + i * stagger, LABEL_AT + i * stagger + 16],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
+            const e = tl.get(`word:${i}`);
+            const p = interpolate(t, [e.start, e.end], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
             return (
               <span
                 key={`${w}-${i}`}

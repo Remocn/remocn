@@ -9385,12 +9385,21 @@
       "title": "Stem Stretch",
       "description": "The stems of '4 hours' stretch into vertical stripes with a gradient glow, small caption below.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/stem-stretch/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/stem-stretch.tsx"
+          "target": "components/remocn/stem-stretch/index.tsx"
+        },
+        {
+          "path": "registry/remocn/stem-stretch/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/stem-stretch/timeline.ts"
         }
       ],
       "type": "registry:component"
