@@ -795,7 +795,8 @@
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/caret",
-        "@remocn/timeline"
+        "@remocn/timeline",
+        "@remocn/frame-rate"
       ],
       "files": [
         {
@@ -15982,7 +15983,11 @@
       "title": "Redline Measure",
       "description": "Spacing and size redlines draw over a UI one by one: ticks snap in, the line grows from its middle and the value pops on.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/audit-core", "@remocn/timeline"],
+      "registryDependencies": [
+        "@remocn/audit-core",
+        "@remocn/timeline",
+        "@remocn/frame-rate"
+      ],
       "files": [
         {
           "path": "redline-measure/index.tsx",
@@ -16005,7 +16010,8 @@
       "registryDependencies": [
         "@remocn/audit-core",
         "@remocn/glide",
-        "@remocn/timeline"
+        "@remocn/timeline",
+        "@remocn/frame-rate"
       ],
       "files": [
         {
@@ -16026,7 +16032,11 @@
       "title": "Scan Fix",
       "description": "A scan band sweeps down a screen: below it the old build with red redlines, above it the fixed build with blue ones, and the version chip flips.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/audit-core", "@remocn/timeline"],
+      "registryDependencies": [
+        "@remocn/audit-core",
+        "@remocn/timeline",
+        "@remocn/frame-rate"
+      ],
       "files": [
         {
           "path": "scan-fix/index.tsx",
@@ -16061,7 +16071,11 @@
       "title": "Layout Guides",
       "description": "Dashed column guides drop over a grid, one column fills and gets a label, a gutter is measured and a now line slides across.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/audit-core", "@remocn/timeline"],
+      "registryDependencies": [
+        "@remocn/audit-core",
+        "@remocn/timeline",
+        "@remocn/frame-rate"
+      ],
       "files": [
         {
           "path": "layout-guides/index.tsx",
@@ -16081,7 +16095,11 @@
       "title": "Design Audit",
       "description": "A full design review in one scene: redlines and issue boxes, a scan that ships the fix, a camera push into one card with specs and tokens, then layout guides.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/audit-core", "@remocn/glide"],
+      "registryDependencies": [
+        "@remocn/audit-core",
+        "@remocn/glide",
+        "@remocn/frame-rate"
+      ],
       "files": [
         {
           "path": "design-audit/index.tsx",

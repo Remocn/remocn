@@ -56,7 +56,7 @@ export const auditBoxesDefaults = {
 
 export const auditBoxesLength = 56;
 
-type Schedule = ResolvedTimeline<AuditBoxesElementId>;
+type BoxesSchedule = ResolvedTimeline<AuditBoxesElementId>;
 
 export function AuditBoxes(props: AuditBoxesProps) {
   const { speed = 1, timing } = props;
@@ -75,7 +75,7 @@ export function AuditBoxes(props: AuditBoxesProps) {
 }
 
 /** Where an issue's note sits against its box. */
-const NOTE_SPOT = {
+const BOX_NOTE_SPOT = {
   start: (r: Rect) => ({
     x: r.x - 3,
     y: r.y - 3,
@@ -100,7 +100,7 @@ function Scene({
   background = auditBoxesDefaults.background,
   counterLabel = auditBoxesDefaults.counterLabel,
   tl,
-}: AuditBoxesProps & { tl: Schedule }) {
+}: AuditBoxesProps & { tl: BoxesSchedule }) {
   const boxes = issues.map((_, i) => tl.get(`box:${i}`));
   return (
     <AbsoluteFill style={{ background, fontFamily: FONT }}>
@@ -110,7 +110,7 @@ function Scene({
         <div key={`${issue.rect.x}-${issue.rect.y}-${issue.note}`}>
           <OutlineBox rect={issue.rect} color={color} delay={boxes[i].start} />
           <Pill
-            {...NOTE_SPOT[issue.side ?? "start"](issue.rect)}
+            {...BOX_NOTE_SPOT[issue.side ?? "start"](issue.rect)}
             text={issue.note}
             color={color}
             delay={boxes[i].start + boxes[i].beat("note")}
@@ -137,7 +137,7 @@ function Counter({
   label,
 }: {
   starts: number[];
-  tl: Schedule;
+  tl: BoxesSchedule;
   color: string;
   label: string;
 }) {

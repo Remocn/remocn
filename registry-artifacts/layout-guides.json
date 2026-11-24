@@ -4,7 +4,11 @@
   "title": "Layout Guides",
   "description": "Dashed column guides drop over a grid, one column fills and gets a label, a gutter is measured and a now line slides across.",
   "dependencies": ["remotion"],
-  "registryDependencies": ["@remocn/audit-core", "@remocn/timeline"],
+  "registryDependencies": [
+    "@remocn/audit-core",
+    "@remocn/timeline",
+    "@remocn/frame-rate"
+  ],
   "files": [
     {
       "path": "registry/remocn/layout-guides/index.tsx",

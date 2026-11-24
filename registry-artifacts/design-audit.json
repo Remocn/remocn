@@ -4,7 +4,11 @@
   "title": "Design Audit",
   "description": "A full design review in one scene: redlines and issue boxes, a scan that ships the fix, a camera push into one card with specs and tokens, then layout guides.",
   "dependencies": ["remotion"],
-  "registryDependencies": ["@remocn/audit-core", "@remocn/glide"],
+  "registryDependencies": [
+    "@remocn/audit-core",
+    "@remocn/glide",
+    "@remocn/frame-rate"
+  ],
   "files": [
     {
       "path": "registry/remocn/design-audit/index.tsx",
