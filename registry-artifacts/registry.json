@@ -3508,12 +3508,21 @@
       "title": "Inline Word Roll",
       "description": "Roll through words beside a fixed prefix with accelerating timing and smoothly centered width.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/inline-word-roll/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/inline-word-roll.tsx"
+          "target": "components/remocn/inline-word-roll/index.tsx"
+        },
+        {
+          "path": "registry/remocn/inline-word-roll/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/inline-word-roll/timeline.ts"
         }
       ],
       "type": "registry:component"

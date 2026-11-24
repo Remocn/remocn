@@ -4,6 +4,19 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { Easing, useDelayRender } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedTimeline,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type InlineWordRollElementId,
+  inlineWordRollTimeline,
+  parseWords,
+  rollElements,
+} from "./timeline";
 
 export interface InlineWordRollProps {
   prefix?: string;
@@ -19,45 +32,50 @@ export interface InlineWordRollProps {
   /** Each following interval is multiplied by this number; 1 keeps a steady pace. */
   acceleration?: number;
   transitionFrames?: number;
+  /**
+   * Moves, trims or stretches single rolls, by the ids in `./timeline`.
+   * Frames on the scene timeline.
+   */
+  timing?: Timing<InlineWordRollElementId>;
 }
 
-export const inlineWordRollDefaultText =
-  "leads | customers | subscribers | appointments | demos | quotes | registrants | trials | conversions";
+export const inlineWordRollDefaultText = DEFAULT_TEXT;
 
-export const parseInlineWords = (text: string) =>
-  text
-    .split(/[|\n\r]+/)
-    .map((word) => word.trim())
-    .filter(Boolean);
+export const parseInlineWords = parseWords;
 
 const finite = (value: number, fallback: number) =>
   Number.isFinite(value) ? value : fallback;
 const clamp = (n: number) => Math.max(0, Math.min(1, n));
 const ease = Easing.bezier(0.22, 0.75, 0.25, 1);
 
+/**
+ * Which word shows at `frame` and how far the roll to the next has gone.
+ * `schedule` is the component's resolved timeline; without it the default
+ * schedule for `count` words is used.
+ */
 export function getInlineWordRollState(
   frame: number,
   count: number,
   interval = 12,
   acceleration = 0.9,
   transitionFrames = 6,
+  schedule: ResolvedTimeline<InlineWordRollElementId> = resolve(
+    rollElements(count, interval, acceleration, transitionFrames),
+  ),
 ) {
-  const transition = Math.max(1, finite(transitionFrames, 6));
-  const gap = Math.max(transition, finite(interval, 12));
-  const rate = Math.min(1, Math.max(0.5, finite(acceleration, 0.9)));
   const f = Math.max(0, finite(frame, 0));
-  let start = 0;
-  for (let index = 1; index < count; index++) {
-    start += Math.max(transition, gap * rate ** (index - 1));
-    if (f < start) return { from: index - 1, to: index - 1, progress: 1 };
-    if (f < start + transition)
+  const rolls = schedule.elements;
+  for (let index = 1; index <= rolls.length; index++) {
+    const roll = rolls[index - 1];
+    if (f < roll.start) return { from: index - 1, to: index - 1, progress: 1 };
+    if (f < roll.end)
       return {
         from: index - 1,
         to: index,
-        progress: clamp((f - start) / transition),
+        progress: clamp((f - roll.start) / roll.length),
       };
   }
-  const last = Math.max(0, count - 1);
+  const last = rolls.length;
   return { from: last, to: last, progress: 1 };
 }
 
@@ -80,21 +98,29 @@ export function getInlineWordRollDuration({
   return count < 2 ? 0 : Math.ceil(total + transition);
 }
 
-export function InlineWordRoll({
-  prefix = "Looking for",
-  text = inlineWordRollDefaultText,
-  suffix = "?",
-  fontSize = 60,
-  fontFamily = "Arial, Helvetica, sans-serif",
-  fontWeight = 400,
-  color = "#f5f5f5",
-  interval = 12,
-  acceleration = 0.9,
-  transitionFrames = 6,
-}: InlineWordRollProps) {
+export function InlineWordRoll(props: InlineWordRollProps) {
+  const {
+    prefix = "Looking for",
+    text = inlineWordRollDefaultText,
+    suffix = "?",
+    fontSize = 60,
+    fontFamily = "Arial, Helvetica, sans-serif",
+    fontWeight = 400,
+    color = "#f5f5f5",
+    interval = 12,
+    acceleration = 0.9,
+    transitionFrames = 6,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    inlineWordRollTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const words = parseInlineWords(text);
   const measurement = useRef<HTMLDivElement>(null);
@@ -170,6 +196,7 @@ export function InlineWordRoll({
     interval,
     acceleration,
     transitionFrames,
+    tl,
   );
   const moving = state.from !== state.to;
   const p = ease(state.progress);
