@@ -6502,10 +6502,19 @@
         {
           "path": "riddle-clues/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/riddle-clues.tsx"
+          "target": "components/remocn/riddle-clues/index.tsx"
+        },
+        {
+          "path": "riddle-clues/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/riddle-clues/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "coy-denial",

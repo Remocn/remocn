@@ -6497,12 +6497,21 @@
       "title": "Riddle Clues",
       "description": "A tiny teaser line, \"Give up? Answer on the 14th.\", sits low in an empty dark frame.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/riddle-clues/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/riddle-clues.tsx"
+          "target": "components/remocn/riddle-clues/index.tsx"
+        },
+        {
+          "path": "registry/remocn/riddle-clues/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/riddle-clues/timeline.ts"
         }
       ],
       "type": "registry:component"
