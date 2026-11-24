@@ -7,6 +7,14 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_NAME,
+  levelsOf,
+  MAX_DEPTH,
+  type QuadtreeMarkElementId,
+  quadtreeMarkTimeline,
+} from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["600"],
@@ -34,6 +42,12 @@ export interface QuadtreeMarkProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the guides, the camera, each split level, the
+   * glow, each letter and the merge, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<QuadtreeMarkElementId>;
 }
 
 const REMOCN_R_PATH =
@@ -82,16 +96,8 @@ const THEMES = {
   },
 } as const;
 
-const DEPTH = 6;
-const APPEAR = 10;
-const SPLIT_STEPS = [14, 9, 7, 6, 5, 5];
 const OPEN = 6;
 const RESOLVE = 7;
-const PAN_AT = 64;
-const PAN_DUR = 30;
-const WORD_AT = 74;
-const MERGE_AT = 82;
-const MERGE_DUR = 16;
 const TRACKING = -0.025;
 
 // Manrope 600 advance widths (per 1000 em), lowercase. Measured with HarfBuzz.
@@ -201,7 +207,8 @@ interface QNode {
   kids: QNode[];
 }
 
-function buildTree(filled: Uint8Array, n: number) {
+/** `levelAt[d]`: when the cells at depth `d` split, before their jitter. */
+function buildTree(filled: Uint8Array, n: number, levelAt: number[]) {
   const sum = new Int32Array((n + 1) * (n + 1));
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
@@ -217,10 +224,6 @@ function buildTree(filled: Uint8Array, n: number) {
     sum[r * (n + 1) + c + s] -
     sum[(r + s) * (n + 1) + c] +
     sum[r * (n + 1) + c];
-
-  const levelAt: number[] = [APPEAR];
-  for (const step of SPLIT_STEPS)
-    levelAt.push(levelAt[levelAt.length - 1] + step);
 
   let seq = 0;
   const make = (
@@ -279,23 +282,35 @@ function ScaleLayer({
   );
 }
 
-export function QuadtreeMark({
-  logo,
-  name = "emocn",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  stagger = 2.5,
-  depth = DEPTH,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: QuadtreeMarkProps) {
+export function QuadtreeMark(props: QuadtreeMarkProps) {
+  const {
+    logo,
+    name = DEFAULT_NAME,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    depth = MAX_DEPTH,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    quadtreeMarkTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const guides = tl.get("guides");
+  const appearEl = tl.get("appear");
+  const glowEl = tl.get("glow");
+  const pan = tl.get("pan");
+  const mergeEl = tl.get("merge");
   const u = H / 720;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];
@@ -310,9 +325,10 @@ export function QuadtreeMark({
     [logo],
   );
   const shape = useMemo(() => flattenLogo(paths), [paths]);
-  const N = 2 ** Math.max(1, Math.min(DEPTH, Math.round(depth)));
+  const levels = levelsOf(depth);
+  const N = 2 ** levels;
 
-  const tree = useMemo(() => {
+  const raster = useMemo(() => {
     const side = Math.max(shape.w, shape.h);
     const x0 = shape.minX - (side - shape.w) / 2;
     const y0 = shape.minY - (side - shape.h) / 2;
@@ -332,8 +348,15 @@ export function QuadtreeMark({
         filled[r * N + c] = hits * 2 > S * S ? 1 : 0;
       }
     }
-    return { ...buildTree(filled, N), side };
+    return { filled, side };
   }, [shape, N]);
+  const tree = useMemo(() => {
+    const levelAt = Array.from(
+      { length: levels },
+      (_, d) => tl.get(`split:${d}`).start,
+    );
+    return { ...buildTree(raster.filled, N, levelAt), side: raster.side };
+  }, [raster, N, levels, tl]);
 
   const markH = H * 0.46;
   const pxPerUnit = markH / shape.h;
@@ -361,16 +384,18 @@ export function QuadtreeMark({
   const fit = name ? Math.min(1, (W * 0.74) / groupW) : 1;
 
   const camAt = (tt: number) => {
-    const panE = EASE_IO(
-      interpolate(tt, [PAN_AT, PAN_AT + PAN_DUR], [0, 1], CLAMP),
+    const panE = EASE_IO(interpolate(tt, [pan.start, pan.end], [0, 1], CLAMP));
+    const appear = EASE_OUT(
+      interpolate(tt, [appearEl.start, appearEl.end], [0, 1], CLAMP),
     );
-    const appear = EASE_OUT(interpolate(tt, [0, APPEAR + 4], [0, 1], CLAMP));
     return {
       focusX: W / 2 + (markLeft + groupW / 2 - W / 2) * panE,
       k: (1 + (fit - 1) * panE) * ((1 - appear) * 0.05 + 1),
     };
   };
-  const appear = EASE_OUT(interpolate(t, [0, APPEAR + 4], [0, 1], CLAMP));
+  const appear = EASE_OUT(
+    interpolate(t, [appearEl.start, appearEl.end], [0, 1], CLAMP),
+  );
   const view = camAt(t);
   const focusX = view.focusX;
   // The pan is an in-out ease, so it counts as moving while a point at the
@@ -388,7 +413,7 @@ export function QuadtreeMark({
   const camLeans = camMoving || Math.abs(view.k - 1) > 1e-9;
 
   const merge = EASE_IO(
-    interpolate(t, [MERGE_AT, MERGE_AT + MERGE_DUR], [0, 1], CLAMP),
+    interpolate(t, [mergeEl.start, mergeEl.end], [0, 1], CLAMP),
   );
   const gapStart = Math.max(1.4 * u, leaf * 0.26);
   const hairline = (1.1 * u) / fit;
@@ -489,8 +514,18 @@ export function QuadtreeMark({
     walk(tree.root);
   }
 
-  const frameIn = interpolate(t, [0, 8], [0, 1], CLAMP);
-  const frameOut = interpolate(t, [44, 62], [1, 0], CLAMP);
+  const frameIn = interpolate(
+    t,
+    [guides.start, guides.start + guides.beat("in")],
+    [0, 1],
+    CLAMP,
+  );
+  const frameOut = interpolate(
+    t,
+    [guides.start + guides.beat("out"), guides.end],
+    [1, 0],
+    CLAMP,
+  );
   const guide = frameIn * frameOut;
   const tick = 10 * u;
   const corners = [
@@ -500,7 +535,10 @@ export function QuadtreeMark({
     [ox + rootPx + 8 * u, oy + rootPx + 8 * u, -1, -1],
   ];
 
-  const glowK = interpolate(t, [24, 80], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const glowK = interpolate(t, [glowEl.start, glowEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
   const wordLeft = markLeft + markW + wordGap;
 
   return (
@@ -591,9 +629,10 @@ export function QuadtreeMark({
               ))}
             </g>
             {letters.map((ch, i) => {
+              const letter = tl.get(`letter:${i}`);
               const k = interpolate(
-                t - WORD_AT - i * stagger,
-                [0, 14],
+                t - letter.start,
+                [0, letter.length],
                 [0, 1],
                 {
                   ...CLAMP,

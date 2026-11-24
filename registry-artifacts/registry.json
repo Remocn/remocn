@@ -13746,12 +13746,21 @@
       "title": "Quadtree Mark",
       "description": "The R mark is built from subdividing pixel squares that refine into a sharp logo.",
       "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/quadtree-mark/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/quadtree-mark.tsx"
+          "target": "components/remocn/quadtree-mark/index.tsx"
+        },
+        {
+          "path": "registry/remocn/quadtree-mark/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/quadtree-mark/timeline.ts"
         }
       ],
       "type": "registry:component"
