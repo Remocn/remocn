@@ -11369,13 +11369,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/ghost-complete/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ghost-complete.tsx"
+          "target": "components/remocn/ghost-complete/index.tsx"
+        },
+        {
+          "path": "registry/remocn/ghost-complete/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ghost-complete/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -17,6 +17,18 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_SUGGESTIONS,
+  DEFAULT_TYPED,
+  type GhostCompleteElementId,
+  ghostCompleteTimeline,
+  suggestionText,
+} from "./timeline";
 
 const { fontFamily: geist } = loadGeist("normal", {
   weights: ["300", "400"],
@@ -60,6 +72,12 @@ export interface GhostCompleteProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the card, the typing, single ghosts and
+   * accepts, the logo and the push, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<GhostCompleteElementId>;
 }
 
 const REMOCN_R_PATH =
@@ -159,13 +177,6 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-const TYPE_START = 6;
-const PER_CHAR = 2;
-const GHOST_LEAD = 4;
-const HOLD_GHOST = 16;
-const AFTER_FILL = 8;
-const SETTLE = 12;
-
 function advance(ch: string) {
   const code = ch.charCodeAt(0);
   return (code >= 32 && code < 127 ? ADV[code - 32] : 600) / 1000;
@@ -181,9 +192,8 @@ interface Segment {
   start: number;
   length: number;
   breaks: number;
-  ghostIn: number;
-  accept: number;
-  fillDur: number;
+  ghost: ResolvedElement<GhostCompleteElementId>;
+  accept: ResolvedElement<GhostCompleteElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -203,30 +213,40 @@ function ScaleLayer({
   );
 }
 
-export function GhostComplete({
-  title = "Launch notes",
-  typed = "Ship the",
-  suggestions = ["launch video", "\nbefore lunch."],
-  keepLastFill = true,
-  showLogo = true,
-  theme = "dark",
-  ground,
-  groundParams,
-  keyLabel = "Tab",
-  hintLabel = "to accept",
-  hold = HOLD_GHOST,
-  logo,
-  ink,
-  background,
-  fontFamily = geist,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: GhostCompleteProps) {
+export function GhostComplete(props: GhostCompleteProps) {
+  const {
+    title = "Launch notes",
+    typed = DEFAULT_TYPED,
+    suggestions = DEFAULT_SUGGESTIONS,
+    keepLastFill = true,
+    showLogo = true,
+    theme = "dark",
+    ground,
+    groundParams,
+    keyLabel = "Tab",
+    hintLabel = "to accept",
+    logo,
+    ink,
+    background,
+    fontFamily = geist,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const t = Math.max(0, frame - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    ghostCompleteTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const typeEl = tl.get("type");
+  const logoEl = tl.get("logo");
+  const pushEl = tl.get("push");
   const tall = H > W;
   const u = tall ? W / 1000 : H / 720;
   const c = THEMES[theme];
@@ -243,27 +263,19 @@ export function GhostComplete({
       i,
     }));
     const segs: Segment[] = [];
-    let clock = TYPE_START + typed.length * PER_CHAR + GHOST_LEAD;
     suggestions.forEach((raw, k) => {
-      const text =
-        raw.startsWith("\n") || raw.startsWith(" ") ? raw : ` ${raw}`;
-      const chars = Array.from(text);
+      const chars = Array.from(suggestionText(raw));
       const start = glyphs.length;
       chars.forEach((ch, i) => {
         glyphs.push({ ch, seg: k, i });
       });
-      const fillDur = Math.max(7, Math.min(12, chars.length * 0.6));
-      const ghostIn = clock;
-      const accept = ghostIn + hold + (k === 0 ? 6 : 0);
       segs.push({
         start,
         length: chars.length,
         breaks: chars.filter((ch) => ch === "\n").length,
-        ghostIn,
-        accept,
-        fillDur,
+        ghost: tl.get(`ghost:${k}`),
+        accept: tl.get(`accept:${k}`),
       });
-      clock = accept + fillDur + AFTER_FILL;
     });
     const lines: number[] = [0];
     for (const g of glyphs) {
@@ -275,9 +287,8 @@ export function GhostComplete({
       segs,
       widest: Math.max(...lines) - TRACK,
       lineCount: lines.length,
-      end: clock,
     };
-  }, [typed, suggestions, hold]);
+  }, [typed, suggestions, tl]);
   const { glyphs, segs } = plan;
   const last = segs[segs.length - 1];
 
@@ -302,10 +313,10 @@ export function GhostComplete({
         n +
         s.breaks *
           spring({
-            frame: t - s.ghostIn + 2,
+            frame: t - s.ghost.start - s.ghost.beat("breakAt"),
             fps,
             config: { damping: 200 },
-            durationInFrames: 14,
+            durationInFrames: s.ghost.beat("break"),
           }),
       0,
     );
@@ -323,18 +334,23 @@ export function GhostComplete({
 
   const typedCount = Math.max(
     0,
-    Math.min(typed.length, Math.floor((t - TYPE_START) / PER_CHAR) + 1),
+    Math.min(
+      typed.length,
+      Math.floor((t - typeEl.start) / typeEl.beat("char")) + 1,
+    ),
   );
   let caret = typedCount;
-  let busy = t < TYPE_START + typed.length * PER_CHAR + 2;
+  let busy = t < typeEl.end + typeEl.beat("busyTail");
   const fronts = segs.map((s) => {
-    const k = interpolate(t, [s.accept, s.accept + s.fillDur], [0, 1], {
+    const a = s.accept;
+    const k = interpolate(t, [a.start, a.end], [0, 1], {
       ...CLAMP,
       easing: MOVE,
     });
     const front = k * s.length;
-    if (t >= s.accept) caret = s.start + Math.min(s.length, Math.ceil(front));
-    if (t >= s.accept - 2 && t <= s.accept + s.fillDur + 3) busy = true;
+    if (t >= a.start) caret = s.start + Math.min(s.length, Math.ceil(front));
+    if (t >= a.start + a.beat("busyAt") && t <= a.end + a.beat("busyTail"))
+      busy = true;
     return front;
   });
   const phase = (t % 30) / 30;
@@ -347,19 +363,27 @@ export function GhostComplete({
     const s = segs[g.seg];
     const appear = interpolate(
       t,
-      [s.ghostIn + g.i * 0.35, s.ghostIn + g.i * 0.35 + 6],
+      [
+        s.ghost.start + g.i * s.ghost.beat("stagger"),
+        s.ghost.start + g.i * s.ghost.beat("stagger") + s.ghost.beat("appear"),
+      ],
       [0, 1],
       { ...CLAMP, easing: ENTER },
     );
     const filled = Math.min(1, Math.max(0, fronts[g.seg] - g.i));
-    const settleAt = s.accept + s.fillDur + AFTER_FILL;
+    const settleAt = s.accept.end + s.accept.beat("settleAt");
     const settle =
       keepLastFill && g.seg === segs.length - 1
         ? 0
-        : interpolate(t, [settleAt, settleAt + SETTLE], [0, 1], {
-            ...CLAMP,
-            easing: MOVE,
-          });
+        : interpolate(
+            t,
+            [settleAt, settleAt + s.accept.beat("settle")],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: MOVE,
+            },
+          );
     if (filled <= 0) return { color: c.ghost, opacity: appear };
     if (settle > 0) {
       return { color: interpolateColors(settle, [0, 1], [c.fill, fg]) };
@@ -369,38 +393,54 @@ export function GhostComplete({
 
   const hintOut = interpolate(
     t,
-    [last.accept + last.fillDur + 4, last.accept + last.fillDur + 12],
+    [
+      last.accept.end + last.accept.beat("hintAt"),
+      last.accept.end + last.accept.beat("hintEnd"),
+    ],
     [0, 1],
     { ...CLAMP, easing: EXIT },
   );
   const hintArmed = interpolate(
     t,
-    [segs[0].ghostIn + 2, segs[0].ghostIn + 12],
+    [
+      segs[0].ghost.start + segs[0].ghost.beat("armAt"),
+      segs[0].ghost.start + segs[0].ghost.beat("armEnd"),
+    ],
     [0, 1],
     { ...CLAMP, easing: ENTER },
   );
   const press = segs.reduce((p, s) => {
     const down = spring({
-      frame: t - s.accept + 3,
+      frame: t - s.accept.start - s.accept.beat("pressAt"),
       fps,
       config: { mass: 0.5, damping: 12, stiffness: 200 },
     });
     const up = spring({
-      frame: t - s.accept - 2,
+      frame: t - s.accept.start - s.accept.beat("releaseAt"),
       fps,
       config: { mass: 0.5, damping: 12, stiffness: 200 },
     });
     return Math.max(p, Math.max(0, down - up));
   }, 0);
-  const logoIn = interpolate(t, [plan.end - 2, plan.end + 12], [0, 1], {
-    ...CLAMP,
-    easing: ENTER,
-  });
-  const pushAt = (f: number) =>
-    interpolate(Math.max(0, f - delay) * speed, [0, plan.end + 40], [1, 1.03], {
+  const logoIn = interpolate(
+    t,
+    [logoEl.start + logoEl.beat("in"), logoEl.end],
+    [0, 1],
+    {
       ...CLAMP,
-      easing: MOVE,
-    });
+      easing: ENTER,
+    },
+  );
+  const pushAt = (f: number) =>
+    interpolate(
+      Math.max(0, f - delay) * speed,
+      [pushEl.start, pushEl.end],
+      [1, 1.03],
+      {
+        ...CLAMP,
+        easing: MOVE,
+      },
+    );
   const push = pushAt(frame);
   // Whether the push moves is read off the neighbouring frames, weighed by
   // the distance to the frame's edge.
@@ -439,7 +479,9 @@ export function GhostComplete({
   glyphs.forEach((g, idx) => {
     if (idx === caret) nodes.push(caretEl);
     const visible =
-      g.seg < 0 ? idx < typedCount : t >= segs[g.seg].ghostIn - 0.5;
+      g.seg < 0
+        ? idx < typedCount
+        : t >= segs[g.seg].ghost.start + segs[g.seg].ghost.beat("showAt");
     if (!visible) return;
     if (g.ch === "\n") {
       nodes.push(<br key={idx} />);
@@ -492,7 +534,7 @@ export function GhostComplete({
   );
 
   const keyIn = spring({
-    frame: t - segs[0].ghostIn + 4,
+    frame: t - segs[0].ghost.start - segs[0].ghost.beat("keyAt"),
     fps,
     config: { mass: 0.8, damping: 18, stiffness: 160 },
   });
