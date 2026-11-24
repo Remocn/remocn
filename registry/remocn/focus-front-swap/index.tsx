@@ -17,6 +17,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  type FocusFrontSwapElementId,
+  focusFrontSwapTimeline,
+  parse,
+} from "./timeline";
 
 const sans = loadSans("normal", {
   weights: ["300", "400"],
@@ -77,6 +84,12 @@ export interface FocusFrontSwapProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches single lines' fronts, the logo and the push,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<FocusFrontSwapElementId>;
 }
 
 const THEMES = {
@@ -102,14 +115,6 @@ const THEMES = {
     veilIn: 0.6,
     veilOut: 0.04,
   },
-};
-
-const BEAT = {
-  enter: 18,
-  swap: 30,
-  minSwap: 18,
-  decay: 0.8,
-  logo: -3,
 };
 
 const FONT_PX = 200;
@@ -196,30 +201,6 @@ function useMeasure(fontFamily: string, fontWeight: number) {
   );
 }
 
-interface Word {
-  text: string;
-  mask: boolean[];
-}
-
-function parse(text: string): Word[] {
-  const out: Word[] = [];
-  let on = false;
-  for (const raw of text.split(" ").filter(Boolean)) {
-    let t = "";
-    const mask: boolean[] = [];
-    for (const ch of Array.from(raw)) {
-      if (ch === "{") on = true;
-      else if (ch === "}") on = false;
-      else {
-        t += ch;
-        mask.push(on);
-      }
-    }
-    if (t) out.push({ text: t, mask });
-  }
-  return out;
-}
-
 function breakRows(widths: number[], gap: number, k: number) {
   const n = widths.length;
   const span = (a: number, b: number) =>
@@ -276,31 +257,36 @@ function ScaleLayer({
   );
 }
 
-export function FocusFrontSwap({
-  lines = [
-    "Remocn knows the beat",
-    "You describe it once",
-    "Ship it {tonight}.",
-  ],
-  accent,
-  ink,
-  logo = true,
-  theme = "dark",
-  ground,
-  groundParams,
-  swap = BEAT.swap,
-  blur = 18,
-  fontWeight = 300,
-  background,
-  fontFamily = sans.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: FocusFrontSwapProps) {
+export function FocusFrontSwap(props: FocusFrontSwapProps) {
+  const {
+    lines = DEFAULT_LINES,
+    accent,
+    ink,
+    logo = true,
+    theme = "dark",
+    ground,
+    groundParams,
+    blur = 18,
+    fontWeight = 300,
+    background,
+    fontFamily = sans.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const sinceDelay = useSceneFrame() - delay;
   const frame = Math.max(0, sinceDelay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  // The push runs over the clip without `speed`, so the schedule gets the
+  // clip length as it is.
+  const tl = useTimeline(
+    focusFrontSwapTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -311,40 +297,23 @@ export function FocusFrontSwap({
   const portrait = H > W * 1.1;
 
   const parsed = lines.map(parse);
-  const starts: number[] = [];
-  const lens: number[] = [];
-  let t = -9;
-  let len = swap;
-  parsed.forEach((ws, k) => {
-    if (k === 0) {
-      starts.push(t);
-      lens.push(BEAT.enter);
-      t += BEAT.enter;
-      return;
-    }
-    const prev = parsed[k - 1].length;
-    t += Math.max(24, Math.min(48, 8 + 4 * prev));
-    starts.push(t);
-    lens.push(len);
-    t += len;
-    len = Math.max(BEAT.minSwap, Math.round(len * BEAT.decay));
-    if (ws.length === 0) len = BEAT.minSwap;
-  });
+  const fronts = parsed.map((_, k) => tl.get(`line:${k}`));
   const front = (k: number) => {
-    if (k < 0 || k >= starts.length) return -1;
-    const p = interpolate(frame, [starts[k], starts[k] + lens[k]], [0, 1], {
+    if (k < 0 || k >= fronts.length) return -1;
+    const p = interpolate(frame, [fronts[k].start, fronts[k].end], [0, 1], {
       ...CLAMP,
       easing: FRONT,
     });
     return -SOFT + (1 + 2 * SOFT) * p;
   };
-  const lastEnd = starts[starts.length - 1] + lens[lens.length - 1];
+  const logoEl = tl.get("logo");
+  const pushEl = tl.get("push");
 
   const pan = parsed.reduce((acc, _, k) => {
     if (k === 0) return acc;
     return (
       acc +
-      interpolate(frame, [starts[k], starts[k] + lens[k]], [0, 1], {
+      interpolate(frame, [fronts[k].start, fronts[k].end], [0, 1], {
         ...CLAMP,
         easing: FRONT,
       })
@@ -479,7 +448,7 @@ export function FocusFrontSwap({
     });
 
     const logoIn = spring({
-      frame: frame - (lastEnd + BEAT.logo),
+      frame: frame - logoEl.start,
       fps,
       config: CHIP,
     });
@@ -489,9 +458,14 @@ export function FocusFrontSwap({
     const logoSize = Math.max(lastT * 0.38, H * 0.045);
     const logoTop = cy + (lastRows * lastT * 1.2) / 2 + lastT * 0.34;
 
-    const push = interpolate(frame, [0, durationInFrames], [1, 1.04], CLAMP);
+    const push = interpolate(
+      frame,
+      [pushEl.start, pushEl.end],
+      [1, 1.04],
+      CLAMP,
+    );
     // The push is linear over the whole clip; it only holds during `delay`.
-    const pushing = sinceDelay > -1 && frame < durationInFrames;
+    const pushing = sinceDelay > -1 && frame < pushEl.end;
     content = (
       <AbsoluteFill
         style={{ transform: `scale(${push.toFixed(4)})${glide(pushing)}` }}
