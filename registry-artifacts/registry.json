@@ -441,12 +441,21 @@
       "title": "Inline Pill Takeover",
       "description": "A clipped pill expands inside a sentence, physically pushes the surrounding words apart, removes them through blur and takes over the frame with a fast camera punch-in.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/inline-pill-takeover/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/inline-pill-takeover.tsx"
+          "target": "components/remocn/inline-pill-takeover/index.tsx"
+        },
+        {
+          "path": "registry/remocn/inline-pill-takeover/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/inline-pill-takeover/timeline.ts"
         }
       ],
       "type": "registry:component"
