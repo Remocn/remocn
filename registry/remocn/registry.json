@@ -16326,12 +16326,21 @@
       "title": "Token Tags",
       "description": "The rest of the UI washes out and leader lines run from elements to dark chips naming the design tokens they use.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/audit-core"],
+      "registryDependencies": [
+        "@remocn/audit-core",
+        "@remocn/timeline",
+        "@remocn/frame-rate"
+      ],
       "files": [
         {
           "path": "token-tags/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/token-tags.tsx"
+          "target": "components/remocn/token-tags/index.tsx"
+        },
+        {
+          "path": "token-tags/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/token-tags/timeline.ts"
         }
       ]
     },
