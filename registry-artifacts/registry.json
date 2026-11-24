@@ -12297,12 +12297,21 @@
       "title": "Cell Divide",
       "description": "A grid of dots doubles by cell division up to a count of 64.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/cell-divide/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/cell-divide.tsx"
+          "target": "components/remocn/cell-divide/index.tsx"
+        },
+        {
+          "path": "registry/remocn/cell-divide/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/cell-divide/timeline.ts"
         }
       ],
       "type": "registry:component"
