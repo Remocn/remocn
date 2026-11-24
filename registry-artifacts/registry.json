@@ -5095,12 +5095,17 @@
       "title": "Dolly Zoom",
       "description": "The vertigo shot: a perspective corridor with a red door stretches deeper while the subject in the center holds its exact size.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/dolly-zoom/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/dolly-zoom.tsx"
+          "target": "components/remocn/dolly-zoom/index.tsx"
+        },
+        {
+          "path": "registry/remocn/dolly-zoom/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/dolly-zoom/timeline.ts"
         }
       ],
       "type": "registry:component"

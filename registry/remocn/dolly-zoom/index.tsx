@@ -3,6 +3,8 @@
 import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type DollyZoomElementId, dollyZoomTimeline } from "./timeline";
 
 export type DollyZoomColors = {
   background: string;
@@ -31,6 +33,11 @@ export type DollyZoomProps = {
   /** Corridor edge line color. Overrides `colors.line`. */
   lineColor?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the dolly zoom, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<DollyZoomElementId>;
 };
 
 export const dollyZoomDefaults = {
@@ -50,8 +57,6 @@ export const dollyZoomDefaults = {
   speed: 1,
 };
 
-const START = 4;
-const END = 36;
 // Corridor in world units. Screen y points down, so the floor is positive.
 const HALF_W = 2;
 const CEIL = -1.3;
@@ -62,18 +67,27 @@ const NEAR = 0.25;
 
 type Vec = [number, number, number];
 
-export function DollyZoom({
-  children,
-  intensity = dollyZoomDefaults.intensity,
-  reverse = dollyZoomDefaults.reverse,
-  colors: colorOverrides,
-  doorColor,
-  figureColor,
-  lineColor,
-  speed = dollyZoomDefaults.speed,
-}: DollyZoomProps) {
+export function DollyZoom(props: DollyZoomProps) {
+  const {
+    children,
+    intensity = dollyZoomDefaults.intensity,
+    reverse = dollyZoomDefaults.reverse,
+    colors: colorOverrides,
+    doorColor,
+    figureColor,
+    lineColor,
+    speed = dollyZoomDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    dollyZoomTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const moveEl = tl.get("move");
   const baseColors = { ...dollyZoomDefaults.colors, ...colorOverrides };
   const colors = {
     ...baseColors,
@@ -82,7 +96,7 @@ export function DollyZoom({
     line: lineColor ?? baseColors.line,
   };
   const t = (frame * speed * 30) / fps;
-  const move = interpolate(t, [START, END], [0, 1], {
+  const move = interpolate(t, [moveEl.start, moveEl.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.45, 0, 0.3, 1),
