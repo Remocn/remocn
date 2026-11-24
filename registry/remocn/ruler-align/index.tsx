@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type RulerAlignElementId,
+  rulerAlignTimeline,
+} from "./timeline";
 
 const face = loadFont("normal", { weights: ["300"], subsets: ["latin"] });
 const mono = loadMono("normal", { weights: ["400"], subsets: ["latin"] });
@@ -37,6 +43,12 @@ export interface RulerAlignProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single letters, the ruler's moves, the drops
+   * and the taps, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<RulerAlignElementId>;
 }
 
 const THEMES = {
@@ -62,23 +74,6 @@ const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_FALL = Easing.bezier(0.5, 0, 0.9, 0.6);
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
-
-// Beats, in frames at 30fps (before `speed`).
-const IN = 0;
-const IN_STAGGER = 2;
-const RULER_IN = 14;
-const RULER_IN_LEN = 30;
-const LEVEL = 44;
-const LEVEL_LEN = 14;
-const RISE = 56;
-const RISE_LEN = 24;
-const DROP = 82;
-const DROP_STAGGER = 3;
-const FALL = 10;
-const TAP_1 = 112;
-const TAP_2 = 130;
-const TAP_LEN = 10;
-const SLIDE_LEN = 16;
 
 const LINE_HEIGHT = 1.2;
 /** Gap between the baseline and the ruler while it waits underneath, in em. */
@@ -107,12 +102,12 @@ function sameLayout(a: Layout | null, b: Layout) {
   );
 }
 
-/** A quick dip and recovery of the ruler, in em (positive is down). */
-function tapDip(f: number, at: number) {
+/** A quick dip and recovery of the ruler over `len`, in em (positive is down). */
+function tapDip(f: number, at: number, len: number) {
   const d = f - at;
-  if (d < 0 || d > TAP_LEN) return 0;
+  if (d < 0 || d > len) return 0;
   if (d < 3) return 0.05 * EASE_OUT(d / 3);
-  return 0.05 * (1 - EASE_IN_OUT((d - 3) / (TAP_LEN - 3)));
+  return 0.05 * (1 - EASE_IN_OUT((d - 3) / (len - 3)));
 }
 
 /** The hop a letter makes when the ruler is tapped, in em (positive is up). */
@@ -138,22 +133,37 @@ function ScaleLayer({
   );
 }
 
-export function RulerAlign({
-  text = "Made to measure.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = face.fontFamily,
-  fontWeight = 300,
-  stagger = IN_STAGGER,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: RulerAlignProps) {
+export function RulerAlign(props: RulerAlignProps) {
+  const {
+    text = DEFAULT_TEXT,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = face.fontFamily,
+    fontWeight = 300,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    rulerAlignTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const rulerEl = tl.get("ruler");
+  const levelEl = tl.get("level");
+  const riseEl = tl.get("rise");
+  const taps = [tl.get("tap:0"), tl.get("tap:1")];
+  const dips = (f: number) =>
+    tapDip(f, taps[0].start, taps[0].length) +
+    tapDip(f, taps[1].start, taps[1].length);
+  const hops = (f: number) => hop(f, taps[0].start) + hop(f, taps[1].start);
   const t = THEMES[theme];
   const fg = ink ?? t.fg;
   const clipId = `ruler-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -239,18 +249,18 @@ export function RulerAlign({
   const rulerW = textW + em * 1.4;
   const rulerX0 = width / 2 - rulerW / 2;
   const inAt = (f: number) =>
-    interpolate(f, [RULER_IN, RULER_IN + RULER_IN_LEN], [0, 1], {
+    interpolate(f, [rulerEl.start, rulerEl.end], [0, 1], {
       ...clamp,
       easing: EASE_OUT,
     });
   const levelAt = (f: number) =>
-    interpolate(f, [LEVEL, LEVEL + LEVEL_LEN], [0, 1], {
+    interpolate(f, [levelEl.start, levelEl.end], [0, 1], {
       ...clamp,
       easing: EASE_IN_OUT,
     });
   const inP = inAt(frame);
   const riseAt = (f: number) =>
-    interpolate(f, [RISE, RISE + RISE_LEN], [0, 1], {
+    interpolate(f, [riseEl.start, riseEl.end], [0, 1], {
       ...clamp,
       easing: EASE_IN_OUT,
     });
@@ -261,8 +271,7 @@ export function RulerAlign({
   // there by transform: layout rounds a box to whole pixels, so a ruler eased
   // by `top` steps along with its numbers.
   const rulerDx = (-rulerW - em - rulerX0) * (1 - inP);
-  const rulerDrop = (f: number) =>
-    em * PARK * (1 - riseAt(f)) + (tapDip(f, TAP_1) + tapDip(f, TAP_2)) * em;
+  const rulerDrop = (f: number) => em * PARK * (1 - riseAt(f)) + dips(f) * em;
   const rulerDy = rulerDrop(frame);
   const rulerMoving =
     Math.abs(rulerDrop(frame + 1) - rulerDy) > 1e-3 ||
@@ -270,28 +279,29 @@ export function RulerAlign({
     Math.abs(tiltAt(frame + 1) - rulerTilt) > 1e-6 ||
     Math.abs(rulerTilt - tiltAt(frame - 1)) > 1e-6;
 
-  // High letters drop onto the edge once it reaches the baseline, left to right.
-  const highOrder: number[] = [];
-  mess.forEach((m, i) => {
-    if (chars[i] !== " " && m.dy < 0) highOrder.push(i);
-  });
-
   // Kerning: each tap moves the letters halfway home.
-  const slideP = (i: number, at: number, f = frame) =>
-    interpolate(f, [at + 2 + (i % 4), at + 2 + (i % 4) + SLIDE_LEN], [0, 1], {
-      ...clamp,
-      easing: EASE_IN_OUT,
-    });
+  const slideP = (i: number, tap: (typeof taps)[number], f = frame) =>
+    interpolate(
+      f,
+      [
+        tap.start + tap.beat("slide") + (i % 4),
+        tap.start + tap.beat("slide") + (i % 4) + tap.beat("slideLen"),
+      ],
+      [0, 1],
+      {
+        ...clamp,
+        easing: EASE_IN_OUT,
+      },
+    );
 
   /** Where letter `i` sits on frame `f`: lift, its own tilt and squash. */
   const pose = (i: number, f: number) => {
     const m = mess[i];
-    const fade = interpolate(
-      f,
-      [IN + i * stagger, IN + i * stagger + 18],
-      [0, 1],
-      { ...clamp, easing: EASE_OUT },
-    );
+    const letter = tl.get(`letter:${i}`);
+    const fade = interpolate(f, [letter.start, letter.end], [0, 1], {
+      ...clamp,
+      easing: EASE_OUT,
+    });
 
     // Vertical: below the baseline is positive.
     let y = m.dy;
@@ -305,24 +315,22 @@ export function RulerAlign({
       y = Math.min(m.dy, lift);
       rot = m.rot * (y / m.dy);
     } else {
-      const k = highOrder.indexOf(i);
-      const start = DROP + k * DROP_STAGGER;
-      const p = interpolate(f, [start, start + FALL], [0, 1], {
+      // High letter: drops onto the edge once it reaches the baseline.
+      const drop = tl.get(`drop:${i}`);
+      const p = interpolate(f, [drop.start, drop.end], [0, 1], {
         ...clamp,
         easing: EASE_FALL,
       });
       y = m.dy * (1 - p);
       rot = m.rot * (1 - p);
-      const d = f - (start + FALL);
+      const d = f - drop.end;
       if (d >= 0 && d < 7) {
         const b = Math.sin((Math.PI * d) / 7) * (1 - d / 9);
         sx = 1 + 0.025 * b;
         sy = 1 - 0.05 * b;
       }
     }
-    y +=
-      (tapDip(f, TAP_1) + tapDip(f, TAP_2)) * em -
-      (hop(f, TAP_1) + hop(f, TAP_2)) * em;
+    y += dips(f) * em - hops(f) * em;
     return { fade, y: y + (1 - fade) * em * 0.12, rot, sx, sy };
   };
 
@@ -337,7 +345,8 @@ export function RulerAlign({
     // the rounding.
     const xOf = (k1: number, k2: number) =>
       home + m.off * (1 - 0.55 * k1 - 0.45 * k2);
-    const xAt = (f: number) => xOf(slideP(i, TAP_1, f), slideP(i, TAP_2, f));
+    const xAt = (f: number) =>
+      xOf(slideP(i, taps[0], f), slideP(i, taps[1], f));
     const xRest = xOf(1, 1);
     const x = xAt(frame);
     // Marked as moving while the letter travels or squashes.

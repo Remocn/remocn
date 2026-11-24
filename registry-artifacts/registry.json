@@ -9455,12 +9455,21 @@
       "title": "Ruler Align",
       "description": "A ruler slides under a text line and straightens its letters onto the edge: 'Made to measure.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/ruler-align/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ruler-align.tsx"
+          "target": "components/remocn/ruler-align/index.tsx"
+        },
+        {
+          "path": "registry/remocn/ruler-align/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ruler-align/timeline.ts"
         }
       ],
       "type": "registry:component"
