@@ -12,6 +12,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type BeeswarmElementId, beeswarmTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -51,6 +53,12 @@ export interface BeeswarmProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the rule, the pour, the push, the total label,
+   * the split and the medians, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BeeswarmElementId>;
 }
 
 const DEFAULT_BEFORE: BeeswarmGroup = {
@@ -99,12 +107,6 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
-
-const POUR = [0, 40] as const;
-const FALL_T = 16;
-const SPLIT = 64;
-const SPLIT_STAGGER = 10;
-const SPLIT_T = 32;
 
 function hash(n: number) {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -189,34 +191,46 @@ function Grain({ opacity }: { opacity: number }) {
 
 const fmt = (n: number) => n.toFixed(1).replace(/\.0$/, "");
 
-export function Beeswarm({
-  before = DEFAULT_BEFORE,
-  after = DEFAULT_AFTER,
-  count = 200,
-  domain = [0, 14],
-  tickStep = 2,
-  axisLabel = "launch videos shipped per quarter",
-  totalLabel = "200 teams",
-  accent = "#3B5BFD",
-  split = SPLIT_T,
-  fontWeight = 400,
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: BeeswarmProps) {
+export function Beeswarm(props: BeeswarmProps) {
+  const {
+    before = DEFAULT_BEFORE,
+    after = DEFAULT_AFTER,
+    count = 200,
+    domain = [0, 14],
+    tickStep = 2,
+    axisLabel = "launch videos shipped per quarter",
+    totalLabel = "200 teams",
+    accent = "#3B5BFD",
+    fontWeight = 400,
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    beeswarmTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const ruleEl = tl.get("rule");
+  const pourEl = tl.get("pour");
+  const pushEl = tl.get("push");
+  const totalEl = tl.get("total");
+  const splitEl = tl.get("split");
+  const medians = tl.get("medians");
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const stage = background ?? p.bg;
-  const HIT = SPLIT + SPLIT_STAGGER + split - 4;
 
   const N = Math.max(20, Math.min(320, Math.round(count)));
   const [d0, d1] = domain;
@@ -299,13 +313,25 @@ export function Beeswarm({
     };
   }, [N, before, after, d0, d1, x0, x1, pitch]);
 
-  const ruleIn = interpolate(t, [0, 18], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const ruleIn = interpolate(t, [ruleEl.start, ruleEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
   const totalIn =
-    interpolate(t, [POUR[1] + 6, POUR[1] + 16], [0, 1], {
+    interpolate(t, [totalEl.start, totalEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
-    }) * interpolate(t, [SPLIT - 2, SPLIT + 8], [1, 0], CLAMP);
-  const push = interpolate(t, [0, HIT + 40], [0, 1], {
+    }) *
+    interpolate(
+      t,
+      [
+        splitEl.start + splitEl.beat("totalOutAt"),
+        splitEl.start + splitEl.beat("totalOut"),
+      ],
+      [1, 0],
+      CLAMP,
+    );
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -321,22 +347,23 @@ export function Beeswarm({
   const circles: React.ReactNode[] = [];
   for (let i = 0; i < N; i++) {
     const g = layout.group[i];
-    const start = POUR[0] + layout.pourRank[i] * (POUR[1] - POUR[0]);
-    const fall = interpolate(t, [start, start + FALL_T], [0, 1], {
+    const start = pourEl.start + layout.pourRank[i] * pourEl.beat("spread");
+    const fall = interpolate(t, [start, start + pourEl.beat("fall")], [0, 1], {
       ...CLAMP,
       easing: FALL,
     });
     if (fall <= 0) continue;
     const fromY = -H * 0.08 - hash(i + 12.1) * H * 0.12;
     const ty1 = axisY + layout.ys1[i];
-    const landT = t - start - FALL_T;
+    const landT = t - start - pourEl.beat("fall");
+    const bounce = pourEl.beat("bounce");
     const settle =
-      landT > 0 && landT < 8
-        ? Math.sin((landT / 8) * Math.PI) * 1.6 * u * (1 - landT / 8)
+      landT > 0 && landT < bounce
+        ? Math.sin((landT / bounce) * Math.PI) * 1.6 * u * (1 - landT / bounce)
         : 0;
     const y1 = fromY + (ty1 - fromY) * fall + settle;
-    const sStart = SPLIT + hash(i + 2.9) * SPLIT_STAGGER;
-    const k = interpolate(t, [sStart, sStart + split], [0, 1], {
+    const sStart = splitEl.start + hash(i + 2.9) * splitEl.beat("stagger");
+    const k = interpolate(t, [sStart, sStart + splitEl.beat("move")], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -367,16 +394,30 @@ export function Beeswarm({
   const axisBase = axisY + Math.max(layout.ext1, ...layout.ext) + 72 * u;
 
   const groups = [before, after].map((grp, g) => {
+    const lag = g * medians.beat("stagger");
     const snap = spring({
-      frame: t - HIT - g * 4,
+      frame: t - medians.start - lag,
       fps,
       config: { damping: 14, stiffness: 190, mass: 0.6 },
     });
-    const a = interpolate(t, [HIT + g * 4, HIT + g * 4 + 8], [0, 1], CLAMP);
-    const lab = interpolate(t, [HIT + 6 + g * 4, HIT + 24 + g * 4], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    const a = interpolate(
+      t,
+      [medians.start + lag, medians.start + lag + medians.beat("fade")],
+      [0, 1],
+      CLAMP,
+    );
+    const lab = interpolate(
+      t,
+      [
+        medians.start + medians.beat("labelAt") + lag,
+        medians.start + medians.beat("label") + lag,
+      ],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
     const ext = Math.max(...layout.ext) + 16 * u;
     return {
       grp,

@@ -12740,10 +12740,19 @@
         {
           "path": "beeswarm/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/beeswarm.tsx"
+          "target": "components/remocn/beeswarm/index.tsx"
+        },
+        {
+          "path": "beeswarm/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/beeswarm/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "chart-morph",
