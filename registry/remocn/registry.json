@@ -10145,12 +10145,17 @@
       "title": "Stripe Mask",
       "description": "Slanted stripes mask a two-sentence bold headline into view.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "stripe-mask/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/stripe-mask.tsx"
+          "target": "components/remocn/stripe-mask/index.tsx"
+        },
+        {
+          "path": "stripe-mask/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/stripe-mask/timeline.ts"
         }
       ]
     },
