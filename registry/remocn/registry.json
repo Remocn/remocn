@@ -6581,13 +6581,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "tilt-settle-list/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/tilt-settle-list.tsx"
+          "target": "components/remocn/tilt-settle-list/index.tsx"
+        },
+        {
+          "path": "tilt-settle-list/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/tilt-settle-list/timeline.ts"
         }
       ]
     },

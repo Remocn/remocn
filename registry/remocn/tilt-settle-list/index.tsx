@@ -15,6 +15,14 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  DEFAULT_ROWS,
+  DEFAULT_TITLE,
+  type TiltSettleListElementId,
+  tiltSettleListTimeline,
+} from "./timeline";
 
 const figtree = loadFont("normal", {
   weights: ["300", "400"],
@@ -54,6 +62,12 @@ export interface TiltSettleListProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the title words, the card, the checklist and
+   * its highlight steps, and the rows, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TiltSettleListElementId>;
 }
 
 const THEMES = {
@@ -93,43 +107,7 @@ const THEMES = {
   },
 };
 
-const DEFAULT_LINES = [
-  "Open on the product",
-  "Type the headline",
-  "Zoom blur to the demo",
-  "Show the editor",
-  "Cut to pricing",
-  "Fan the formats",
-  "Land the logo",
-  "Fade to the URL",
-];
-const DEFAULT_ROWS: ListRow[] = [
-  {
-    title: "Text Reveal",
-    meta: "1.2k renders",
-    src: "templates/brand-guidelines/ceramics.jpg",
-  },
-  {
-    title: "Logo Orbit",
-    meta: "980 renders",
-    src: "templates/launch-anything/earth.jpg",
-  },
-  { title: "Card Fan", meta: "740 renders", src: "reel/reel-2.jpg" },
-];
-
-const BEATS = [
-  { id: "title", at: -6 },
-  { id: "card", at: -2 },
-  { id: "lines", at: 10 },
-  { id: "rows", at: 30 },
-  { id: "step", at: 24 },
-  { id: "end", at: 126 },
-] as const;
-const beat = (id: (typeof BEATS)[number]["id"]) =>
-  BEATS.find((b) => b.id === id)?.at ?? 0;
-const STEP = 14;
 const VISIBLE = 6;
-const ROW_TIMES = [0, 6, 11];
 
 const EASE_ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const EASE_MOVE = Easing.bezier(0.65, 0, 0.35, 1);
@@ -192,30 +170,41 @@ function ScaleLayer({
   );
 }
 
-export function TiltSettleList({
-  title = "Your top scenes",
-  accentWord = 1,
-  heroTitle = "Zoom Blur",
-  heroMeta = "Transition · 2.4k renders",
-  heroSrc,
-  lines = DEFAULT_LINES,
-  rows,
-  theme = "dark",
-  accent,
-  ink,
-  background,
-  fontFamily = figtree.fontFamily,
-  stagger = 3,
-  step = STEP,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: TiltSettleListProps) {
+export function TiltSettleList(props: TiltSettleListProps) {
+  const {
+    title = DEFAULT_TITLE,
+    accentWord = 1,
+    heroTitle = "Zoom Blur",
+    heroMeta = "Transition · 2.4k renders",
+    heroSrc,
+    lines = DEFAULT_LINES,
+    rows,
+    theme = "dark",
+    accent,
+    ink,
+    background,
+    fontFamily = figtree.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    tiltSettleListTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const card = tl.get("card");
+  const camera = tl.get("camera");
+  const hero = tl.get("hero");
+  const reveal = tl.get("lines");
+  const steps = lines.map((_, i) => tl.get(`line:${i}`));
   const t = THEMES[theme];
   const light = theme === "light";
   const fg = ink ?? t.ink;
@@ -243,12 +232,12 @@ export function TiltSettleList({
   const lineH = lineSize * 1.42;
 
   const swing = spring({
-    frame: frame - beat("card"),
+    frame: frame - card.start,
     fps,
     config: SPRING_SWING,
   });
   const swingPrev = spring({
-    frame: frame - beat("card") - 1,
+    frame: frame - card.start - 1,
     fps,
     config: SPRING_SWING,
   });
@@ -264,7 +253,7 @@ export function TiltSettleList({
   const sc = 1 + 0.12 * fly;
 
   const pushAt = (f: number) =>
-    interpolate(f, [0, beat("end")], [1, 1.04], {
+    interpolate(f, [camera.start, camera.end], [1, 1.04], {
       ...CLAMP,
       easing: EASE_CAMERA,
     });
@@ -274,23 +263,29 @@ export function TiltSettleList({
   const pushMoving =
     Math.abs(pushAt(frame + speed) - push) * W * 0.5 > 1e-3 ||
     Math.abs(push - pushAt(frame - speed)) * W * 0.5 > 1e-3;
-  const steps = Math.max(
-    0,
-    Math.min(lines.length - 1, Math.floor((frame - beat("step")) / step) + 1),
-  );
+  // The highlight has moved past every line whose step has started.
+  let stepped = 0;
+  while (stepped < lines.length - 1 && frame >= steps[stepped + 1].start) {
+    stepped++;
+  }
   const scrollP = spring({
-    frame: frame - (beat("step") + (steps - 1) * step),
+    frame: frame - (steps[stepped]?.start ?? 0),
     fps,
     config: SPRING_HEAVY,
   });
   const maxScroll = Math.max(0, lines.length - VISIBLE);
-  const scrollTo = Math.min(maxScroll, Math.max(0, steps - 1));
-  const scrollFrom = Math.min(maxScroll, Math.max(0, steps - 2));
+  const scrollTo = Math.min(maxScroll, Math.max(0, stepped - 1));
+  const scrollFrom = Math.min(maxScroll, Math.max(0, stepped - 2));
   const scrollIdx = scrollFrom + (scrollTo - scrollFrom) * scrollP;
-  const progress = interpolate(frame, [0, beat("end")], [0.08, 0.72], {
-    ...CLAMP,
-    easing: EASE_MOVE,
-  });
+  const progress = interpolate(
+    frame,
+    [camera.start, camera.end],
+    [0.08, 0.72],
+    {
+      ...CLAMP,
+      easing: EASE_MOVE,
+    },
+  );
 
   const listX = portrait ? W * 0.08 : W * 0.635;
   const listW = portrait ? W * 0.84 : W * 0.32;
@@ -348,8 +343,8 @@ export function TiltSettleList({
             }}
           >
             {titleWords.map((word, i) => {
-              const s = beat("title") + i * stagger;
-              const p = interpolate(frame, [s, s + 12], [0, 1], {
+              const w = tl.get(`word:${i}`);
+              const p = interpolate(frame, [w.start, w.end], [0, 1], {
                 ...CLAMP,
                 easing: EASE_ENTER,
               });
@@ -435,7 +430,7 @@ export function TiltSettleList({
                   width: coverS,
                 }}
               >
-                <Reveal frame={frame} at={beat("lines") - 2}>
+                <Reveal frame={frame} at={hero.start}>
                   <div
                     style={{
                       fontSize: lineSize * 1.12,
@@ -447,7 +442,7 @@ export function TiltSettleList({
                     {heroTitle}
                   </div>
                 </Reveal>
-                <Reveal frame={frame} at={beat("lines")}>
+                <Reveal frame={frame} at={hero.start + hero.beat("meta")}>
                   <div
                     style={{
                       fontSize: lineSize * 0.74,
@@ -479,13 +474,14 @@ export function TiltSettleList({
                   }}
                 >
                   {lines.map((line, i) => {
+                    const e = steps[i];
                     const on = interpolate(
                       frame,
                       [
-                        beat("step") + (i - 1) * step,
-                        beat("step") + (i - 1) * step + 6,
-                        beat("step") + i * step,
-                        beat("step") + i * step + 6,
+                        e.start,
+                        e.start + e.beat("fade"),
+                        e.end,
+                        e.end + e.beat("fade"),
                       ],
                       [0, 1, 1, i === lines.length - 1 ? 1 : 0],
                       { ...CLAMP, easing: EASE_MOVE },
@@ -499,7 +495,10 @@ export function TiltSettleList({
                           alignItems: "center",
                         }}
                       >
-                        <Reveal frame={frame} at={beat("lines") + i * 2}>
+                        <Reveal
+                          frame={frame}
+                          at={reveal.start + i * reveal.beat("stagger")}
+                        >
                           <div
                             style={{
                               fontSize: lineSize,
@@ -598,26 +597,32 @@ export function TiltSettleList({
             }}
           >
             {list.map((row, i) => {
-              const at = beat("rows") + (ROW_TIMES[i] ?? i * 5);
+              const e = tl.get(`row:${i}`);
+              const at = e.start;
               const slide = spring({
                 frame: frame - at,
                 fps,
                 config: SPRING_CARD,
               });
               const thumbP = spring({
-                frame: frame - at - 2,
+                frame: frame - at - e.beat("thumb"),
                 fps,
                 config: SPRING_CHIP,
               });
               const playP = spring({
-                frame: frame - at - 6,
+                frame: frame - at - e.beat("play"),
                 fps,
                 config: SPRING_CHIP,
               });
-              const divider = interpolate(frame, [at + 4, at + 18], [0, 1], {
-                ...CLAMP,
-                easing: EASE_MOVE,
-              });
+              const divider = interpolate(
+                frame,
+                [at + e.beat("divider"), at + e.beat("dividerEnd")],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_MOVE,
+                },
+              );
               return (
                 <div
                   key={row.title}
@@ -665,7 +670,7 @@ export function TiltSettleList({
                     />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <Reveal frame={frame} at={at + 3}>
+                    <Reveal frame={frame} at={at + e.beat("title")}>
                       <div
                         style={{
                           fontSize: rowTitle,
@@ -678,7 +683,7 @@ export function TiltSettleList({
                         {row.title}
                       </div>
                     </Reveal>
-                    <Reveal frame={frame} at={at + 5}>
+                    <Reveal frame={frame} at={at + e.beat("meta")}>
                       <div
                         style={{
                           fontSize: rowMeta,
