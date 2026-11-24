@@ -10539,12 +10539,21 @@
       "title": "Path Text",
       "description": "Text starts along a loose path then straightens into a clean line with an italic tail.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/path-text/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/path-text.tsx"
+          "target": "components/remocn/path-text/index.tsx"
+        },
+        {
+          "path": "registry/remocn/path-text/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/path-text/timeline.ts"
         }
       ],
       "type": "registry:component"

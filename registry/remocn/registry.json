@@ -10544,10 +10544,19 @@
         {
           "path": "path-text/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/path-text.tsx"
+          "target": "components/remocn/path-text/index.tsx"
+        },
+        {
+          "path": "path-text/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/path-text/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "ellipsis-resolve",

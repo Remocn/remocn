@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type PathTextElementId,
+  pathTextTimeline,
+  splitItalic,
+} from "./timeline";
 
 const serif = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 const serifItalic = loadFont("italic", {
@@ -43,6 +50,12 @@ export interface PathTextProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the stroke, single glyphs and the pull, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<PathTextElementId>;
 }
 
 const THEMES = {
@@ -102,15 +115,6 @@ function smoothPath(pts: Pt[]) {
   return d;
 }
 
-function splitItalic(text: string, italicWords: number) {
-  if (italicWords <= 0) return [text, ""] as const;
-  const parts = text.split(" ");
-  const k = Math.max(0, parts.length - italicWords);
-  const roman = parts.slice(0, k).join(" ");
-  const italic = parts.slice(k).join(" ");
-  return [roman ? `${roman} ` : "", italic] as const;
-}
-
 function useTextWidth(roman: string, italic: string, fontFamily: string) {
   const [width, setWidth] = useState<number | null>(null);
   const [handle] = useState(() => delayRender("path-text: measuring"));
@@ -165,23 +169,29 @@ function ScaleLayer({
   );
 }
 
-export function PathText({
-  text = "From rough to ready.",
-  italicWords = 1,
-  looseness = 0.15,
-  ink,
-  background,
-  fontFamily = serif.fontFamily,
-  stagger = 2,
-  pullAt = 46,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: PathTextProps) {
+export function PathText(props: PathTextProps) {
+  const {
+    text = DEFAULT_TEXT,
+    italicWords = 1,
+    looseness = 0.15,
+    ink,
+    background,
+    fontFamily = serif.fontFamily,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    pathTextTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
@@ -204,16 +214,23 @@ export function PathText({
   const lineY = baseline + gap;
 
   // Beats: draw the loose stroke, write the words onto it, pull it taut.
-  const drawIn = interpolate(t, [0, 26], [0, 1], {
+  const drawEl = tl.get("stroke");
+  const pull = tl.get("pull");
+  const drift = tl.get("drift");
+  const drawIn = interpolate(t, [drawEl.start, drawEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const morphStart = pullAt;
-  const morphLen = 40;
-  const thin = interpolate(t, [morphStart + 6, morphStart + morphLen], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const ripple = pull.beat("ripple");
+  const thin = interpolate(
+    t,
+    [pull.start + pull.beat("thin"), pull.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
 
   const amp = H * looseness;
   const startSpan = W * 0.86;
@@ -225,7 +242,7 @@ export function PathText({
     const p = EASE_IO(
       interpolate(
         t,
-        [morphStart + f * 10, morphStart + morphLen - 10 + f * 10],
+        [pull.start + f * ripple, pull.end - ripple + f * ripple],
         [0, 1],
         CLAMP,
       ),
@@ -247,17 +264,16 @@ export function PathText({
   );
   const romanCount = [...roman].length;
   const glyphs = [...roman, ...italic];
-  const slide = interpolate(t, [0, 110], [0, 0.1], CLAMP);
+  const slide = interpolate(t, [drift.start, drift.end], [0, 0.1], CLAMP);
   const palette = STROKE[theme];
   const gradSpan = startSpan + (endSpan - startSpan) * thin;
-  const writeStart = 14;
   // Chrome parks a glyph raster on a whole pixel vertically for as long as
   // its matrix is axis-aligned, and as the stroke pulls taut the glyphs riding
   // it straighten and click down pixel by pixel. The drawing is marked so
   // they lean off that grid for the pull. The mark counts as moving from the
   // frame before the pull to the frame after it, so the lean comes and goes
   // on a frame where the glyphs stand still rather than as they set off.
-  const pulling = t + speed > morphStart && t - speed < morphStart + morphLen;
+  const pulling = t + speed > pull.start && t - speed < pull.end;
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -311,12 +327,11 @@ export function PathText({
           >
             <textPath href={`#${id}`} startOffset="50%" textAnchor="middle">
               {glyphs.map((g, i) => {
-                const o = interpolate(
-                  t,
-                  [writeStart + i * stagger, writeStart + i * stagger + 8],
-                  [0, 1],
-                  { ...CLAMP, easing: EASE_OUT },
-                );
+                const e = tl.get(`glyph:${i}`);
+                const o = interpolate(t, [e.start, e.end], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                });
                 return (
                   <tspan
                     key={i}
