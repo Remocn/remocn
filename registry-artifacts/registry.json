@@ -7365,12 +7365,21 @@
       "title": "on Approach",
       "description": "'Wheels up' stays fixed while the time phrase swaps from 'in June' down to 'today.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/on-approach/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/on-approach.tsx"
+          "target": "components/remocn/on-approach/index.tsx"
+        },
+        {
+          "path": "registry/remocn/on-approach/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/on-approach/timeline.ts"
         }
       ],
       "type": "registry:component"
