@@ -16034,13 +16034,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/roadmap-timeline/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/roadmap-timeline.tsx"
+          "target": "components/remocn/roadmap-timeline/index.tsx"
+        },
+        {
+          "path": "registry/remocn/roadmap-timeline/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/roadmap-timeline/timeline.ts"
         }
       ],
       "type": "registry:component"
