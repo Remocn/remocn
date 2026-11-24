@@ -12807,12 +12807,17 @@
       "title": "Ring Align",
       "description": "Concentric dotted rings rotate until their slots align and reveal a word in the channel.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "ring-align/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ring-align.tsx"
+          "target": "components/remocn/ring-align/index.tsx"
+        },
+        {
+          "path": "ring-align/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ring-align/timeline.ts"
         }
       ]
     },
