@@ -10787,12 +10787,21 @@
       "title": "Level Up",
       "description": "'LEVEL UP' ticks from one level to the next, 42, with an XP bar and a stat chip.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/level-up/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/level-up.tsx"
+          "target": "components/remocn/level-up/index.tsx"
+        },
+        {
+          "path": "registry/remocn/level-up/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/level-up/timeline.ts"
         }
       ],
       "type": "registry:component"

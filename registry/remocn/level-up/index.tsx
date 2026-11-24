@@ -7,6 +7,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_CHIPS,
+  type LevelUpElementId,
+  levelUpTimeline,
+} from "./timeline";
 
 const { fontFamily: hud } = loadFont("normal", {
   weights: ["400", "500"],
@@ -82,6 +88,12 @@ export interface LevelUpProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the bar, single chips, the max-out, the
+   * collapse, the burst, the duck, the roll and the stat line, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LevelUpElementId>;
 }
 
 // Beat sheet (30fps, speed 1):
@@ -96,20 +108,6 @@ export interface LevelUpProps {
 //  68–76   the call ducks to a kicker, the old level number rises in big
 //  82–90   the changed digit rolls 41 → 42 and lands with a kick
 //  94–106  the stat line slides in and ticks up; poster hold to the end
-const BAR_AT = 0;
-const CHIP_FLY = 12;
-const ARRIVALS = [18, 25, 31, 37, 42];
-const FILL_LEN = 6;
-const MAX_AT = 48;
-const COLLAPSE_AT = 51;
-const COLLAPSE_LEN = 7;
-const BURST_AT = 58;
-const DUCK_AT = 68;
-const DUCK_LEN = 8;
-const ROLL_AT = 82;
-const ROLL_LEN = 8;
-const STAT_AT = 94;
-const STAT_LEN = 12;
 const SEGMENTS = 10;
 
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -199,29 +197,47 @@ function ScaleLayer({
   );
 }
 
-export function LevelUp({
-  level = 41,
-  startXp = 2800,
-  maxXp = 4000,
-  chips = [120, 240, 180, 300, 360],
-  title = "LEVEL UP",
-  stat = { label: "Render speed", value: 40, suffix: "%" },
-  barLabel = "EXPERIENCE",
-  maxLabel = "MAX",
-  unit = "XP",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hud,
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: LevelUpProps) {
+export function LevelUp(props: LevelUpProps) {
+  const {
+    level = 41,
+    startXp = 2800,
+    maxXp = 4000,
+    chips = DEFAULT_CHIPS,
+    title = "LEVEL UP",
+    stat = { label: "Render speed", value: 40, suffix: "%" },
+    barLabel = "EXPERIENCE",
+    maxLabel = "MAX",
+    unit = "XP",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hud,
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    levelUpTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const barEl = tl.get("bar");
+  const chipEls = chips.map((_, i) => tl.get(`chip:${i}`));
+  const maxEl = tl.get("max");
+  const collapseEl = tl.get("collapse");
+  const burstEl = tl.get("burst");
+  const BURST_AT = burstEl.start;
+  const duckEl = tl.get("duck");
+  const rollEl = tl.get("roll");
+  const statEl = tl.get("stat");
+  const STAT_AT = statEl.start;
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   // The burst fades into the stage colour, so a custom fill takes its place.
@@ -236,12 +252,11 @@ export function LevelUp({
   const cy = 0.53 * H;
 
   // ── XP state ──────────────────────────────────────────────────────────────
-  const arrivals = chips.map(
-    (_, i) => ARRIVALS[i] ?? ARRIVALS[ARRIVALS.length - 1] + (i - 4) * 5,
-  );
+  // A chip hits the bar at the end of its flight.
+  const arrivals = chipEls.map((e) => e.end);
   let xp = startXp;
   chips.forEach((v, i) => {
-    xp += v * OUT(ramp(t, arrivals[i], FILL_LEN));
+    xp += v * OUT(ramp(t, arrivals[i], chipEls[i].beat("fill")));
   });
   const fill = Math.min(1, xp / maxXp);
   const lastHit = arrivals.reduce((acc, a) => (t >= a ? a : acc), -99);
@@ -252,23 +267,28 @@ export function LevelUp({
   const barH = 34 * u;
   const gap = 7 * u;
   const segW = (barW - gap * (SEGMENTS - 1)) / SEGMENTS;
-  const collapse = INOUT(ramp(t, COLLAPSE_AT, COLLAPSE_LEN));
-  const maxFlash = t >= MAX_AT ? Math.max(0, 1 - (t - MAX_AT) / 6) : 0;
-  const barGone = t >= COLLAPSE_AT + COLLAPSE_LEN;
-  const labelsIn = OUT(ramp(t, BAR_AT + 3, 9));
-  const labelsOut = ramp(t, COLLAPSE_AT, 4);
+  const collapse = INOUT(ramp(t, collapseEl.start, collapseEl.length));
+  const maxFlash =
+    t >= maxEl.start
+      ? Math.max(0, 1 - (t - maxEl.start) / maxEl.beat("flash"))
+      : 0;
+  const barGone = t >= collapseEl.end;
+  const labelsIn = OUT(
+    ramp(t, barEl.start + barEl.beat("labelsAt"), barEl.beat("labels")),
+  );
+  const labelsOut = ramp(t, collapseEl.start, collapseEl.beat("labels"));
 
   // ── Burst ─────────────────────────────────────────────────────────────────
-  const burst = OUT(ramp(t, BURST_AT, 16));
-  const burstOp = ramp(t, BURST_AT, 3);
-  const rollHit = ROLL_AT + ROLL_LEN;
+  const burst = OUT(ramp(t, BURST_AT, burstEl.length));
+  const burstOp = ramp(t, BURST_AT, burstEl.beat("raysFade"));
+  const rollHit = rollEl.end;
   const rayPulse = kick(t - rollHit + 1);
   const spin = Math.max(0, t - BURST_AT) * 0.22;
-  const ring = ramp(t, BURST_AT, 16);
+  const ring = ramp(t, BURST_AT, burstEl.length);
 
   const titleFs = 140 * u;
-  const titleIn = SLAM(ramp(t, BURST_AT, 7));
-  const duck = INOUT(ramp(t, DUCK_AT, DUCK_LEN));
+  const titleIn = SLAM(ramp(t, BURST_AT, burstEl.beat("title")));
+  const duck = INOUT(ramp(t, duckEl.start, duckEl.length));
   const titleScale =
     interpolate(titleIn, [0, 1], [1.7, 1]) *
     interpolate(duck, [0, 1], [1, 0.36]);
@@ -280,26 +300,33 @@ export function LevelUp({
 
   // ── Big level number ──────────────────────────────────────────────────────
   const numFs = 360 * u;
-  const numIn = OUT(ramp(t, DUCK_AT + 5, 10));
-  const roll = SLAM(ramp(t, ROLL_AT, ROLL_LEN));
+  const numAt = duckEl.start + duckEl.beat("numAt");
+  const numIn = OUT(ramp(t, numAt, duckEl.beat("num")));
+  const roll = SLAM(ramp(t, rollEl.start, rollEl.length));
   const from = String(level);
   const to = String(level + 1);
   const len = Math.max(from.length, to.length);
   const fromP = from.padStart(len, " ");
   const toP = to.padStart(len, " ");
   const numKick = 1 + 0.045 * kick(t - rollHit);
-  const numMoving = midway(numIn) || (t > rollHit && t < rollHit + 10);
+  const numMoving =
+    midway(numIn) || (t > rollHit && t < rollHit + rollEl.beat("kick"));
 
   // ── Stat line ─────────────────────────────────────────────────────────────
-  const statP = OUT(ramp(t, STAT_AT, 10));
+  const statP = OUT(ramp(t, STAT_AT, statEl.length));
   const statAt = (f: number) =>
-    Math.round(stat.value * OUT(ramp(f, STAT_AT + 2, STAT_LEN)));
+    Math.round(
+      stat.value *
+        OUT(ramp(f, STAT_AT + statEl.beat("countAt"), statEl.beat("count"))),
+    );
   const statN = statAt(t);
   // The count reflows the centred line sideways in layout; the lean stays on
   // until the number has stopped, so it never goes in a frame that reflows.
   const statMoving =
     midway(statP) || statAt(t + speed) !== statN || statAt(t - speed) !== statN;
-  const logoP = OUT(ramp(t, STAT_AT + 6, 10));
+  const logoP = OUT(
+    ramp(t, STAT_AT + statEl.beat("logoAt"), statEl.beat("logo")),
+  );
 
   // Rays: wedges from an inner radius out, alternating widths and lengths.
   const RAYS = 24;
@@ -337,7 +364,15 @@ export function LevelUp({
               opacity:
                 burstOp *
                 c.rayAlpha *
-                (0.5 + 0.5 * (1 - ramp(t, BURST_AT + 8, 14)) + 0.3 * rayPulse),
+                (0.5 +
+                  0.5 *
+                    (1 -
+                      ramp(
+                        t,
+                        BURST_AT + burstEl.beat("raysAt"),
+                        burstEl.beat("rays"),
+                      )) +
+                  0.3 * rayPulse),
             }}
             aria-hidden
           >
@@ -377,7 +412,11 @@ export function LevelUp({
             style={{
               position: "absolute",
               inset: 0,
-              opacity: ramp(t, BURST_AT + 4, 10),
+              opacity: ramp(
+                t,
+                BURST_AT + burstEl.beat("glowAt"),
+                burstEl.beat("glow"),
+              ),
               background: [
                 `radial-gradient(30% 34% at 50% ${(cy / H) * 100}%, ${knock} 45%, transparent 100%)`,
                 `linear-gradient(0deg, ${knock} 0%, ${knock} 12%, transparent 34%)`,
@@ -401,7 +440,13 @@ export function LevelUp({
           >
             {Array.from({ length: SEGMENTS }, (_, i) => {
               const x = i * (segW + gap);
-              const appear = OUT(ramp(t, BAR_AT + i * 0.8, 6));
+              const appear = OUT(
+                ramp(
+                  t,
+                  barEl.start + i * barEl.beat("segment"),
+                  barEl.beat("appear"),
+                ),
+              );
               const f = Math.max(0, Math.min(1, fill * SEGMENTS - i));
               const justFilled =
                 f > 0 && fill * SEGMENTS - i < 1.6 && hitKick > 0 ? hitKick : 0;
@@ -532,10 +577,10 @@ export function LevelUp({
 
         {/* XP chips flying into the fill head. */}
         {chips.map((v, i) => {
-          const at = arrivals[i];
-          const launch = at - CHIP_FLY;
-          if (t < launch || t >= at + 1) return null;
-          const p = ramp(t, launch, CHIP_FLY);
+          const chip = chipEls[i];
+          const launch = chip.start;
+          if (t < launch || t >= launch + chip.beat("gone")) return null;
+          const p = ramp(t, launch, chip.length);
           const e = IN(p);
           const L = LAUNCH[i % LAUNCH.length];
           const sx = cx + L.x * W;
@@ -547,9 +592,11 @@ export function LevelUp({
           const my = (sy + ty) / 2 + (L.y < 0 ? -0.12 : 0.12) * H;
           const x = (1 - e) * (1 - e) * sx + 2 * (1 - e) * e * mx + e * e * tx;
           const y = (1 - e) * (1 - e) * sy + 2 * (1 - e) * e * my + e * e * ty;
-          const appear = OUT(ramp(t, launch, 4));
+          const appear = OUT(ramp(t, launch, chip.beat("appear")));
           const k = interpolate(e, [0, 1], [1, 0.5]) * (0.85 + 0.15 * appear);
-          const op = appear * (1 - ramp(t, at - 2, 3));
+          const op =
+            appear *
+            (1 - ramp(t, launch + chip.beat("fadeAt"), chip.beat("fade")));
           return (
             <div
               key={`${i}-${v}`}
@@ -594,7 +641,7 @@ export function LevelUp({
               alignItems: "center",
               justifyContent: "center",
               transform: `translateY(${titleRise}px) scale(${titleScale})${glide(titleMoving)}`,
-              opacity: ramp(t, BURST_AT, 2),
+              opacity: ramp(t, BURST_AT, burstEl.beat("fade")),
               fontFamily,
               fontWeight: 500,
               fontSize: titleFs,
@@ -609,7 +656,7 @@ export function LevelUp({
         ) : null}
 
         {/* Big level number: the changed digits roll. */}
-        {t >= DUCK_AT + 5 ? (
+        {t >= numAt ? (
           <div
             style={{
               position: "absolute",
