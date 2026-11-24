@@ -15255,13 +15255,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "channel-reactions/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/channel-reactions.tsx"
+          "target": "components/remocn/channel-reactions/index.tsx"
+        },
+        {
+          "path": "channel-reactions/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/channel-reactions/timeline.ts"
         }
       ]
     },
