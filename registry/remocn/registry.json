@@ -12233,10 +12233,19 @@
         {
           "path": "hex-fill/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/hex-fill.tsx"
+          "target": "components/remocn/hex-fill/index.tsx"
+        },
+        {
+          "path": "hex-fill/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/hex-fill/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "log-rescale",
