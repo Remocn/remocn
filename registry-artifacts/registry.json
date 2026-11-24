@@ -7912,12 +7912,21 @@
       "title": "Negation Drop",
       "description": "Condensed caps poster where each line's key word drops in on a lime highlight block.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/negation-drop/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/negation-drop.tsx"
+          "target": "components/remocn/negation-drop/index.tsx"
+        },
+        {
+          "path": "registry/remocn/negation-drop/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/negation-drop/timeline.ts"
         }
       ],
       "type": "registry:component"
