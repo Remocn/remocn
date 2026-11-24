@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_PAIRS,
+  type KnownTermsElementId,
+  knownTermsTimeline,
+  pairsOf,
+} from "./timeline";
 
 const epilogue = loadFont("normal", {
   weights: ["400", "500"],
@@ -42,20 +49,17 @@ export interface KnownTermsProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single pairs, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<KnownTermsElementId>;
 }
 
 const THEMES = {
   dark: { bg: "#111418", ink: "#FFFFFF", accent: "#5CF2B5" },
   light: { bg: "#F4F6F5", ink: "#111418", accent: "#12A06B" },
 } as const;
-
-const DEFAULT_PAIRS: KnownTermsPair[] = [
-  { video: "A scene", dev: "a component." },
-  { video: "Timing", dev: "a prop." },
-  { video: "An edit", dev: "a commit." },
-  { video: "A render", dev: "a build." },
-  { video: "Your launch", dev: "a deploy." },
-];
 
 const WGHT = 500;
 const JOIN_WGHT = 400;
@@ -73,17 +77,6 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-const STEP = 14;
-const LEAD = 3;
-const ARRIVE = 10;
-const ALONE = 6;
-const SLIDE = 14;
-const PUSH_DELAY = 1;
-const PUSH = 14;
-const JOIN_IN = 8;
-const SETTLE = 12;
-const LINE_LEN = LEAD + ARRIVE + ALONE + SLIDE;
-const HOLD = 33;
 const DIM = 0.46;
 const JOIN_DIM = 0.4;
 
@@ -197,29 +190,36 @@ function ScaleLayer({
   );
 }
 
-export function KnownTerms({
-  pairs = DEFAULT_PAIRS,
-  joiner = "is",
-  hold = HOLD,
-  accent,
-  ink,
-  background,
-  fontFamily = epilogue.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: KnownTermsProps) {
+export function KnownTerms(props: KnownTermsProps) {
+  const {
+    pairs = DEFAULT_PAIRS,
+    joiner = "is",
+    accent,
+    ink,
+    background,
+    fontFamily = epilogue.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    knownTermsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = pairs.length > 0 ? pairs : DEFAULT_PAIRS;
+  const list = pairsOf(pairs);
   const joins = list.map((p) => p.joiner ?? joiner);
   const m = useMetrics(
     [
@@ -237,10 +237,7 @@ export function KnownTerms({
   }
 
   const n = list.length;
-  const span = durationInFrames * speed;
-  const period =
-    n > 1 ? Math.min(40, Math.max(24, (span - LINE_LEN - hold) / (n - 1))) : 0;
-  const starts = list.map((_, k) => k * period);
+  const rows = list.map((_, k) => tl.get(`pair:${k}`));
 
   const portrait = H > W * 1.1;
   const marginX = W * (portrait ? 0.08 : 0.07);
@@ -313,7 +310,10 @@ export function KnownTerms({
   const liftAt = (at: number) => {
     let missing = 0;
     for (let k = 1; k < n; k++) {
-      missing += (1 - easeAt(at, starts[k], STEP, EASE_MOVE)) * rowsEm[k] * F;
+      missing +=
+        (1 - easeAt(at, rows[k].start, rows[k].beat("lift"), EASE_MOVE)) *
+        rowsEm[k] *
+        F;
     }
     return missing / 2;
   };
@@ -347,17 +347,24 @@ export function KnownTerms({
   const nodes: React.ReactNode[] = [];
 
   for (let k = 0; k < n; k++) {
-    const s = starts[k] + (k > 0 ? LEAD : 0);
+    const row = rows[k];
+    const s = row.start + row.beat("enter");
     if (t < s - 1) continue;
     const last = k === n - 1;
     const top = rowTops[k] + ((LH - 1) * F) / 2;
-    const arrive = ease(s, ARRIVE);
-    const slideAt = s + ARRIVE + ALONE;
-    const slide = ease(slideAt, SLIDE, EASE_MOVE);
-    const push = ease(slideAt + PUSH_DELAY, PUSH);
-    const joinIn = ease(slideAt + SLIDE * 0.72, JOIN_IN);
-    const settled = ease(slideAt + SLIDE, SETTLE);
-    const next = k + 1 < n ? ease(starts[k + 1], STEP + 6, EASE_MOVE) : 0;
+    const arriveLen = row.beat("arrive");
+    const slideLen = row.beat("slide");
+    const pushDelay = row.beat("pushDelay");
+    const arrive = ease(s, arriveLen);
+    const slideAt = s + arriveLen + row.beat("alone");
+    const slide = ease(slideAt, slideLen, EASE_MOVE);
+    const push = ease(slideAt + pushDelay, row.beat("push"));
+    const joinIn = ease(slideAt + slideLen * 0.72, row.beat("joinIn"));
+    const settled = ease(slideAt + slideLen, row.beat("settle"));
+    const next =
+      k + 1 < n
+        ? ease(rows[k + 1].start, rows[k + 1].beat("dim"), EASE_MOVE)
+        : 0;
     const lead = last ? 1 : 1 - (1 - DIM) * next;
 
     const v = vs[k];
@@ -400,7 +407,7 @@ export function KnownTerms({
       </div>,
     );
 
-    if (t < slideAt + PUSH_DELAY - 1) continue;
+    if (t < slideAt + pushDelay - 1) continue;
 
     const dx0 = W + F * 0.4;
     const pushed = dx0 + (devX - dx0) * push;

@@ -7342,12 +7342,21 @@
       "title": "Known Terms",
       "description": "Definitions, \"A scene is a component ...\", build to a green \"Your launch is a deploy.\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/known-terms/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/known-terms.tsx"
+          "target": "components/remocn/known-terms/index.tsx"
+        },
+        {
+          "path": "registry/remocn/known-terms/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/known-terms/timeline.ts"
         }
       ],
       "type": "registry:component"
