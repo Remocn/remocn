@@ -11926,10 +11926,19 @@
         {
           "path": "waveform-title/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/waveform-title.tsx"
+          "target": "components/remocn/waveform-title/index.tsx"
+        },
+        {
+          "path": "waveform-title/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/waveform-title/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "line-relief",

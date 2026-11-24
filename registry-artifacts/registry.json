@@ -11921,12 +11921,21 @@
       "title": "Waveform Title",
       "description": "A headline rises over an aurora waveform line that settles into an underline beneath it.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/waveform-title/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/waveform-title.tsx"
+          "target": "components/remocn/waveform-title/index.tsx"
+        },
+        {
+          "path": "registry/remocn/waveform-title/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/waveform-title/timeline.ts"
         }
       ],
       "type": "registry:component"

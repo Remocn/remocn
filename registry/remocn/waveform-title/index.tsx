@@ -7,6 +7,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TITLE,
+  type WaveformTitleElementId,
+  waveformTitleTimeline,
+} from "./timeline";
 
 const { fontFamily: display } = loadSans("normal", {
   weights: ["500"],
@@ -36,6 +42,12 @@ export interface WaveformTitleProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the waveform opening, the sweep, the settle,
+   * the haze and single words of the title, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WaveformTitleElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -70,11 +82,6 @@ const THEMES = {
   },
 } as const;
 
-const OPEN = [0, 16] as const;
-const SWEEP = [40, 82] as const;
-const SETTLE = [82, 104] as const;
-const RISE = 84;
-const STAGGER = 4;
 const SAMPLES = 360;
 
 function hash(n: number) {
@@ -156,23 +163,34 @@ function ScaleLayer({
   );
 }
 
-export function WaveformTitle({
-  title = "Your voice, captioned",
-  accentWords = 1,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  stagger = STAGGER,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: WaveformTitleProps) {
+export function WaveformTitle(props: WaveformTitleProps) {
+  const {
+    title = DEFAULT_TITLE,
+    accentWords = 1,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    waveformTitleTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const openEl = tl.get("open");
+  const sweepEl = tl.get("sweep");
+  const settleEl = tl.get("settle");
+  const hazeEl = tl.get("haze");
   const u = height / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -185,9 +203,18 @@ export function WaveformTitle({
   const span = x1 - x0;
   const lineY = height * 0.6;
 
-  const open = interpolate(t, OPEN, [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const sweep = interpolate(t, SWEEP, [0, 1], { ...CLAMP, easing: EASE_IO });
-  const settle = interpolate(t, SETTLE, [0, 1], { ...CLAMP, easing: EASE_IO });
+  const open = interpolate(t, [openEl.start, openEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const sweep = interpolate(t, [sweepEl.start, sweepEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const settle = interpolate(t, [settleEl.start, settleEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
   const head = lerp(-0.04, 1.04, sweep);
   const centreY = lerp(height * 0.5, lineY, sweep);
   const amp = 150 * u * lerp(0.55, 1, open) * (1 - 0.35 * sweep);
@@ -215,9 +242,22 @@ export function WaveformTitle({
 
   const headX = x0 + Math.min(1, Math.max(0, head)) * span;
   const headO =
-    interpolate(t, [SWEEP[0], SWEEP[0] + 6], [0, 1], CLAMP) *
-    interpolate(t, [SWEEP[1] - 6, SWEEP[1] + 2], [1, 0], CLAMP);
-  const handoff = t >= SETTLE[0];
+    interpolate(
+      t,
+      [sweepEl.start, sweepEl.start + sweepEl.beat("headIn")],
+      [0, 1],
+      CLAMP,
+    ) *
+    interpolate(
+      t,
+      [
+        sweepEl.start + sweepEl.beat("headOut"),
+        sweepEl.start + sweepEl.beat("headGone"),
+      ],
+      [1, 0],
+      CLAMP,
+    );
+  const handoff = t >= settleEl.start;
   const words = title.split(" ");
   const serifFrom =
     words.length - Math.max(0, Math.min(accentWords, words.length));
@@ -228,7 +268,7 @@ export function WaveformTitle({
   const stroke = 4 * u;
   const lineGrad = `linear-gradient(90deg, ${p.line.join(", ")})`;
   const drift = Math.sin((t / fps) * 0.6) * 3;
-  const hazeIn = interpolate(t, [0, 30], [0.35, 1], CLAMP);
+  const hazeIn = interpolate(t, [hazeEl.start, hazeEl.end], [0.35, 1], CLAMP);
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -345,15 +385,11 @@ export function WaveformTitle({
                 }}
               >
                 {words.map((w, i) => {
-                  const k = interpolate(
-                    t,
-                    [RISE + i * stagger, RISE + i * stagger + 22],
-                    [0, 1],
-                    {
-                      ...CLAMP,
-                      easing: EASE_OUT,
-                    },
-                  );
+                  const word = tl.get(`word:${i}`);
+                  const k = interpolate(t, [word.start, word.end], [0, 1], {
+                    ...CLAMP,
+                    easing: EASE_OUT,
+                  });
                   const isSerif = i >= serifFrom;
                   return (
                     <span
