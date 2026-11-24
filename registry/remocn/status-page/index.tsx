@@ -16,6 +16,16 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_COMPONENTS,
+  type StatusComponent,
+  type StatusIncident,
+  type StatusPageElementId,
+  statusPageTimeline,
+} from "./timeline";
+
+export type { StatusComponent, StatusIncident };
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -23,20 +33,6 @@ const geist = loadGeist("normal", {
 });
 const mono = loadGeistMono("normal", { weights: ["400"], subsets: ["latin"] });
 const manrope = loadManrope("normal", { weights: ["600"], subsets: ["latin"] });
-
-export interface StatusIncident {
-  day: number;
-  level?: "degraded" | "outage";
-  title?: string;
-  minutes?: number;
-  date?: string;
-}
-
-export interface StatusComponent {
-  name: string;
-  uptime: number;
-  incidents?: StatusIncident[];
-}
 
 export interface StatusPageProps {
   brand?: string;
@@ -67,48 +63,13 @@ export interface StatusPageProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the card, single service rows, the banner
+   * resolving, the cursor's hovers and the camera, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<StatusPageElementId>;
 }
-
-const DEFAULT_COMPONENTS: StatusComponent[] = [
-  {
-    name: "API",
-    uptime: 99.98,
-    incidents: [
-      {
-        day: 69,
-        level: "degraded",
-        title: "Elevated latency",
-        minutes: 12,
-        date: "Oct 3",
-      },
-    ],
-  },
-  {
-    name: "Studio",
-    uptime: 99.99,
-    incidents: [{ day: 41, level: "degraded", minutes: 6, date: "Sep 5" }],
-  },
-  {
-    name: "Render farm",
-    uptime: 99.91,
-    incidents: [
-      {
-        day: 23,
-        level: "outage",
-        title: "Partial outage",
-        minutes: 47,
-        date: "Aug 18",
-      },
-      { day: 69, level: "degraded", minutes: 18, date: "Oct 3" },
-    ],
-  },
-  { name: "Registry CDN", uptime: 100 },
-  {
-    name: "Docs",
-    uptime: 99.99,
-    incidents: [{ day: 55, level: "degraded", minutes: 4, date: "Sep 19" }],
-  },
-];
 
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -120,19 +81,6 @@ const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH = { damping: 200 };
 const CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const DAYS = 90;
-
-const B = {
-  card: 0,
-  bars: 8,
-  resolve: 54,
-  cursor: 64,
-  pushIn: 70,
-  hoverA: 92,
-  moveB: 134,
-  hoverB: 156,
-  leave: 196,
-  pullOut: 198,
-};
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -308,30 +256,46 @@ function levelColor(c: Pal, level?: StatusIncident["level"]) {
   return level === "outage" ? c.red : c.amber;
 }
 
-export function StatusPage({
-  brand = "remocn",
-  url = "status.remocn.dev",
-  components = DEFAULT_COMPONENTS,
-  hover,
-  year = 2026,
-  ctaLabel = "Subscribe",
-  statusLabel = "All systems operational",
-  updatedLabel = "Updated 14:02 UTC",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  ground,
-  groundParams,
-}: StatusPageProps) {
+export function StatusPage(props: StatusPageProps) {
+  const {
+    brand = "remocn",
+    url = "status.remocn.dev",
+    components = DEFAULT_COMPONENTS,
+    hover,
+    year = 2026,
+    ctaLabel = "Subscribe",
+    statusLabel = "All systems operational",
+    updatedLabel = "Updated 14:02 UTC",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    statusPageTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const cardEl = tl.get("card");
+  const resolveEl = tl.get("resolve");
+  const cursorEl = tl.get("cursor");
+  const pushEl = tl.get("push");
+  const hoverA = tl.get("hover:0");
+  const moveB = tl.get("hover:1");
+  const leave = tl.get("leave");
+  const pull = tl.get("pull");
   const portrait = height > width;
   const L = layoutFor(portrait);
   const s = Math.min(width / L.stageW, height / L.stageH);
@@ -376,9 +340,14 @@ export function StatusPage({
   const pA = barCenter(first);
   const pB = barCenter(second);
 
-  const toB = sp(B.moveB, { mass: 0.9, damping: 24, stiffness: 140 });
+  const toB = sp(moveB.start, { mass: 0.9, damping: 24, stiffness: 140 });
   const active = toB > 0.5 ? 1 : 0;
-  const swap = tw(frame, B.moveB + 4, B.moveB + 14, SOFT);
+  const swap = tw(
+    frame,
+    moveB.start + moveB.beat("swapAt"),
+    moveB.start + moveB.beat("swapEnd"),
+    SOFT,
+  );
 
   const curStart = { x: L.stageW * 0.86, y: L.stageH * 0.94 };
   const curExit = { x: L.stageW * 0.9, y: L.stageH * 0.78 };
@@ -397,28 +366,43 @@ export function StatusPage({
       y: lerp(a.y, b.y, p) + (dx / d) * k,
     };
   };
-  const toA = sp(B.cursor, { mass: 0.9, damping: 24, stiffness: 110 });
-  const toOut = sp(B.leave, { mass: 0.9, damping: 24, stiffness: 140 });
+  const toA = sp(cursorEl.start, { mass: 0.9, damping: 24, stiffness: 110 });
+  const toOut = sp(leave.start, { mass: 0.9, damping: 24, stiffness: 140 });
   let cur = arcPt(curStart, { x: pA.x + 2, y: pA.y + 4 }, toA, 60);
-  if (frame >= B.moveB)
+  if (frame >= moveB.start)
     cur = arcPt(
       { x: pA.x + 2, y: pA.y + 4 },
       { x: pB.x + 2, y: pB.y + 4 },
       toB,
       40,
     );
-  if (frame >= B.leave)
+  if (frame >= leave.start)
     cur = arcPt({ x: pB.x + 2, y: pB.y + 4 }, curExit, toOut, 50);
   const cursorO =
-    tw(frame, B.cursor, B.cursor + 8) *
-    (1 - tw(frame, B.leave + 10, B.leave + 18, EXIT));
+    tw(frame, cursorEl.start, cursorEl.end) *
+    (1 -
+      tw(
+        frame,
+        leave.start + leave.beat("fadeAt"),
+        leave.start + leave.beat("fadeEnd"),
+        EXIT,
+      ));
   const click = (at: number) =>
     spring({ frame: frame - at + 3, fps, config: CHIP }) -
     spring({ frame: frame - at, fps, config: CHIP });
-  const press = Math.max(0, click(B.hoverA), click(B.hoverB));
+  const press = Math.max(
+    0,
+    click(hoverA.start),
+    click(moveB.start + moveB.beat("click")),
+  );
 
-  const tipIn = sp(B.hoverA);
-  const tipOut = tw(frame, B.leave, B.leave + 7, EXIT);
+  const tipIn = sp(hoverA.start);
+  const tipOut = tw(
+    frame,
+    leave.start,
+    leave.start + leave.beat("tipOut"),
+    EXIT,
+  );
   const tip = clamp(tipIn) * (1 - tipOut);
   const tipPos = {
     x: lerp(pA.x, pB.x, toB),
@@ -427,8 +411,8 @@ export function StatusPage({
   const tipTarget = targets[active];
 
   const push =
-    tw(frame, B.pushIn, B.hoverA + 6, CAM) *
-    (1 - tw(frame, B.pullOut, B.pullOut + 22, CAM));
+    tw(frame, pushEl.start, pushEl.end, CAM) *
+    (1 - tw(frame, pull.start, pull.end, CAM));
   const zoom = portrait ? 1.06 : 1.1;
   const camS = lerp(1, zoom, push) * (1 + 0.02 * (frame / 240));
   const focus = {
@@ -436,11 +420,11 @@ export function StatusPage({
     y: lerp(L.stageH / 2, lerp(tipPos.y - 60, L.stageH / 2, 0.45), push),
   };
 
-  const cardIn = sp(B.card, HEAVY);
-  const cardO = tw(frame, B.card, B.card + 12);
-  const resolved = frame >= B.resolve;
-  const flip = clamp(sp(B.resolve, CHIP));
-  const lineSwap = tw(frame, B.resolve, B.resolve + 12);
+  const cardIn = sp(cardEl.start, HEAVY);
+  const cardO = tw(frame, cardEl.start, cardEl.end);
+  const resolved = frame >= resolveEl.start;
+  const flip = clamp(sp(resolveEl.start, CHIP));
+  const lineSwap = tw(frame, resolveEl.start, resolveEl.end);
 
   const resolvedGround: GshPresetId =
     ground ?? (dark ? "kiruna" : "paper-crease");
@@ -650,7 +634,13 @@ export function StatusPage({
                           pathLength={1}
                           strokeDasharray={1}
                           strokeDashoffset={
-                            1 - tw(frame, B.resolve + 3, B.resolve + 12, SOFT)
+                            1 -
+                            tw(
+                              frame,
+                              resolveEl.start + resolveEl.beat("checkAt"),
+                              resolveEl.start + resolveEl.beat("checkEnd"),
+                              SOFT,
+                            )
                           }
                         />
                       </svg>
@@ -724,10 +714,20 @@ export function StatusPage({
               </div>
 
               {components.map((comp, r) => {
-                const start = B.bars + r * 5;
-                const settle = tw(frame, start + 2, start + 40, SOFT);
+                const row = tl.get(`row:${r}`);
+                const start = row.start;
+                const settle = tw(
+                  frame,
+                  start + row.beat("settleAt"),
+                  row.end,
+                  SOFT,
+                );
                 const pct = comp.uptime - (1 - settle) * 0.42;
-                const rowIn = tw(frame, start - 2, start + 10);
+                const rowIn = tw(
+                  frame,
+                  start + row.beat("rowAt"),
+                  start + row.beat("rowEnd"),
+                );
                 const byDay = new Map(
                   (comp.incidents ?? []).map((i) => [i.day, i]),
                 );
@@ -788,7 +788,7 @@ export function StatusPage({
                       }}
                     >
                       {Array.from({ length: DAYS }, (_, j) => {
-                        const at = start + j * 0.32;
+                        const at = start + j * row.beat("barStep");
                         const v = spring({
                           frame: frame - at,
                           fps,
@@ -797,7 +797,7 @@ export function StatusPage({
                         const inc = byDay.get(j);
                         const base = inc ? levelColor(c, inc.level) : c.green;
                         const color = interpolateColors(
-                          tw(frame, at, at + 8),
+                          tw(frame, at, at + row.beat("barIn")),
                           [0, 1],
                           [c.empty, base],
                         );
@@ -855,7 +855,8 @@ export function StatusPage({
                     const comp = components[t.component] ?? components[0];
                     const inc = comp?.incidents?.find((i) => i.day === t.day);
                     const o = k === 0 ? 1 - swap : swap;
-                    if (o <= 0.01 || (k === 1 && frame < B.moveB)) return null;
+                    if (o <= 0.01 || (k === 1 && frame < moveB.start))
+                      return null;
                     const col = levelColor(c, inc?.level);
                     const label =
                       inc?.title ??
