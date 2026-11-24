@@ -13,6 +13,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type AspectSlitElementId, aspectSlitTimeline } from "./timeline";
 
 /** Film-title serif for the hero, its sans sibling for the caption. */
 const serif = loadSerif("normal", { weights: ["400"], subsets: ["latin"] });
@@ -43,29 +45,13 @@ export interface AspectSlitProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the bars closing and opening, the title's rise,
+   * push and growth, and the caption, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<AspectSlitElementId>;
 }
-
-// Beat sheet (30fps):
-//  0–24    letterbox bars close from 16:9 to 2.39:1 (already moving on frame 0)
-//  24–32   a beat on scope
-//  32–64   the bars keep closing to a thin slit
-//  50–74   the title rises into the slit from behind the lower bar; holds,
-//          tracking tightening, to 98
-//  98–138  bars open back to full frame; the title grows to hero size, never
-//          taller than the opening
-//  128–150 caption settles under the title; poster hold to 180
-const SCOPE_AT = -6;
-const SCOPE_END = 24;
-const SLIT_AT = 32;
-const SLIT_END = 64;
-const RISE_AT = 50;
-const RISE_END = 74;
-const OPEN_AT = 98;
-const OPEN_END = 138;
-const GROW_AT = 102;
-const GROW_END = 146;
-const CAPTION_AT = 128;
-const CAPTION_END = 150;
 
 /** Bars: a mechanical matte, eased at both ends. */
 const BARS = Easing.bezier(0.62, 0, 0.3, 1);
@@ -220,25 +206,40 @@ function ScaleLayer({
   );
 }
 
-export function AspectSlit({
-  title = "Now showing.",
-  caption = "A launch film, built in React.",
-  slit = 0.125,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  barColor = "#0A0A0B",
-  fontFamily = serif.fontFamily,
-  grain = true,
-  scale: zoom = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: AspectSlitProps) {
+export function AspectSlit(props: AspectSlitProps) {
+  const {
+    title = "Now showing.",
+    caption = "A launch film, built in React.",
+    slit = 0.125,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    barColor = "#0A0A0B",
+    fontFamily = serif.fontFamily,
+    grain = true,
+    scale: zoom = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const raw = Math.max(0, useSceneFrame() - delay);
   const frame = raw * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    aspectSlitTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const scopeEl = tl.get("scope");
+  const slitEl = tl.get("slit");
+  const riseEl = tl.get("rise");
+  const pushEl = tl.get("push");
+  const openEl = tl.get("open");
+  const growEl = tl.get("grow");
+  const captionEl = tl.get("caption");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const metrics = useTitleMetrics(title, fontFamily);
@@ -248,15 +249,15 @@ export function AspectSlit({
   const slitH = Math.round(H * slit);
   const slitBar = (H - slitH) / 2;
   const barAt = (fr: number) => {
-    const toScope = interpolate(fr, [SCOPE_AT, SCOPE_END], [0, 1], {
+    const toScope = interpolate(fr, [scopeEl.start, scopeEl.end], [0, 1], {
       ...CLAMP,
       easing: BARS,
     });
-    const toSlit = interpolate(fr, [SLIT_AT, SLIT_END], [0, 1], {
+    const toSlit = interpolate(fr, [slitEl.start, slitEl.end], [0, 1], {
       ...CLAMP,
       easing: BARS,
     });
-    const open = interpolate(fr, [OPEN_AT, OPEN_END], [0, 1], {
+    const open = interpolate(fr, [openEl.start, openEl.end], [0, 1], {
       ...CLAMP,
       easing: OPEN,
     });
@@ -333,12 +334,12 @@ export function AspectSlit({
   const captionGap = H * 0.028;
   const geometry = (fr: number) => {
     const opening = H - 2 * barAt(fr);
-    const grow = interpolate(fr, [GROW_AT, GROW_END], [0, 1], {
+    const grow = interpolate(fr, [growEl.start, growEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
     // A slow push while it sits in the slit, so the hold is never frozen.
-    const push = interpolate(fr, [RISE_END - 6, OPEN_AT + 4], [0, 1], CLAMP);
+    const push = interpolate(fr, [pushEl.start, pushEl.end], [0, 1], CLAMP);
     const wanted = slitSize * (1 + 0.035 * push) + (heroSize - slitSize) * grow;
     // Framed, never clipped: the ink stays inside the opening with room to spare.
     const size = Math.min(
@@ -347,21 +348,26 @@ export function AspectSlit({
     );
     const scale = size / heroSize;
 
-    const rise = interpolate(fr, [RISE_AT, RISE_END], [0, 1], {
+    const rise = interpolate(fr, [riseEl.start, riseEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
     const tracking = interpolate(
       fr,
-      [RISE_AT, OPEN_AT, GROW_END],
+      [riseEl.start, openEl.start, growEl.end],
       [0.01, -0.012, HERO_TRACK],
       CLAMP,
     );
 
-    const captionIn = interpolate(fr, [CAPTION_AT, CAPTION_END], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    const captionIn = interpolate(
+      fr,
+      [captionEl.start, captionEl.end],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
 
     // Cap-height centre of the title sits on the frame centre, then the group
     // (title + caption) recentres as the caption arrives.

@@ -10277,10 +10277,19 @@
         {
           "path": "aspect-slit/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/aspect-slit.tsx"
+          "target": "components/remocn/aspect-slit/index.tsx"
+        },
+        {
+          "path": "aspect-slit/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/aspect-slit/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "parallax-lockup",

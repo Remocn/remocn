@@ -10272,12 +10272,21 @@
       "title": "Aspect Slit",
       "description": "A film-title card opens through a slit, with a serif hero line and a small caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/aspect-slit/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/aspect-slit.tsx"
+          "target": "components/remocn/aspect-slit/index.tsx"
+        },
+        {
+          "path": "registry/remocn/aspect-slit/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/aspect-slit/timeline.ts"
         }
       ],
       "type": "registry:component"
