@@ -6696,12 +6696,21 @@
       "title": "Half Built",
       "description": "A sentence where unfinished verbs are outlined and fill in, tagged Summer and Later.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/half-built/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/half-built.tsx"
+          "target": "components/remocn/half-built/index.tsx"
+        },
+        {
+          "path": "registry/remocn/half-built/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/half-built/timeline.ts"
         }
       ],
       "type": "registry:component"

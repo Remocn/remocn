@@ -6701,10 +6701,19 @@
         {
           "path": "half-built/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/half-built.tsx"
+          "target": "components/remocn/half-built/index.tsx"
+        },
+        {
+          "path": "half-built/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/half-built/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "what-sticks",
