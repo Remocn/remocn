@@ -5081,12 +5081,17 @@
       "title": "Riso Print",
       "description": "A two-ink risograph print: the accent plate slides in off-register, wobbles and settles a hair out of alignment over grainy paper.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "riso-print/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/riso-print.tsx"
+          "target": "components/remocn/riso-print/index.tsx"
+        },
+        {
+          "path": "riso-print/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/riso-print/timeline.ts"
         }
       ]
     },
