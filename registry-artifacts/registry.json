@@ -6720,12 +6720,21 @@
       "title": "Which Means",
       "description": "A feature tag, \"Live preview\", leads into a \"which means\" explanation in teal and white.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/which-means/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/which-means.tsx"
+          "target": "components/remocn/which-means/index.tsx"
+        },
+        {
+          "path": "registry/remocn/which-means/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/which-means/timeline.ts"
         }
       ],
       "type": "registry:component"
