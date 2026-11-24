@@ -5926,12 +5926,21 @@
       "title": "Focus Pan Text",
       "description": "Blurred earlier lines stack above while focus pans down to \"You're ready to launch.\" and a toolbar.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/gsh", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/gsh",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/focus-pan-text/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/focus-pan-text.tsx"
+          "target": "components/remocn/focus-pan-text/index.tsx"
+        },
+        {
+          "path": "registry/remocn/focus-pan-text/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/focus-pan-text/timeline.ts"
         }
       ],
       "type": "registry:component"
