@@ -8561,12 +8561,21 @@
       "title": "Pitch Over",
       "description": "A large number counts to 7,200 with a ruler of ticks and a marker sliding beneath it.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/pitch-over/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/pitch-over.tsx"
+          "target": "components/remocn/pitch-over/index.tsx"
+        },
+        {
+          "path": "registry/remocn/pitch-over/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/pitch-over/timeline.ts"
         }
       ],
       "type": "registry:component"

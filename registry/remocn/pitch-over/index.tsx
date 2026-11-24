@@ -12,6 +12,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type PitchOverElementId, pitchOverTimeline } from "./timeline";
 
 const grotesk = loadSpaceGrotesk("normal", {
   weights: ["400"],
@@ -45,6 +47,12 @@ export interface PitchOverProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the fade-up, the count, the pitch and the
+   * label, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<PitchOverElementId>;
 }
 
 const THEMES = {
@@ -54,10 +62,6 @@ const THEMES = {
 
 const TRACK = -0.03;
 const PROBE_PX = 200;
-
-const ENTER_END = 10;
-const COUNT_END = 46;
-const PITCH_LEN = 34;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_COUNT = Easing.bezier(0.25, 0.6, 0.25, 1);
@@ -196,32 +200,41 @@ function ScaleLayer({
   );
 }
 
-export function PitchOver({
-  value = 7200,
-  from = 0,
-  decimals = 0,
-  prefix = "",
-  suffix = "",
-  label = "Frames rendered, T+04:00",
-  accent,
-  ink,
-  background,
-  fontFamily = grotesk.fontFamily,
-  countLength = COUNT_END,
-  ticks: majors = 10,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: PitchOverProps) {
+export function PitchOver(props: PitchOverProps) {
+  const {
+    value = 7200,
+    from = 0,
+    decimals = 0,
+    prefix = "",
+    suffix = "",
+    label = "Frames rendered, T+04:00",
+    accent,
+    ink,
+    background,
+    fontFamily = grotesk.fontFamily,
+    ticks: majors = 10,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    pitchOverTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const countEl = tl.get("count");
+  const pitch = tl.get("pitch");
+  const labelEl = tl.get("label");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const mark = accent ?? fg;
-  const pitchAt = countLength - 4;
-  const labelAt = pitchAt + PITCH_LEN - 6;
   const m = useMetrics(prefix, suffix, label, fontFamily);
   const finalText = useMemo(
     () => `${prefix}${format(value, decimals)}${suffix}`,
@@ -274,11 +287,11 @@ export function PitchOver({
     (W * (portrait ? 0.62 : 0.4)) / (capH + below),
   );
 
-  const enter = interpolate(t, [0, ENTER_END], [0, 1], {
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const g = interpolate(t, [0, countLength], [0, 1], {
+  const g = interpolate(t, [countEl.start, countEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_COUNT,
   });
@@ -288,11 +301,11 @@ export function PitchOver({
     decimals,
   )}${suffix}`;
 
-  const move = interpolate(t, [pitchAt, pitchAt + PITCH_LEN], [0, 1], {
+  const move = interpolate(t, [pitch.start, pitch.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const turn = interpolate(t, [pitchAt, pitchAt + PITCH_LEN], [0, 1], {
+  const turn = interpolate(t, [pitch.start, pitch.end], [0, 1], {
     ...CLAMP,
     easing: EASE_TURN,
   });
@@ -311,7 +324,7 @@ export function PitchOver({
   const dy =
     (Math.round(vy) - Math.round(hy)) * (1 - move) + (1 - enter) * H * 0.05;
   const travelling = Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3;
-  const moving = enter < 1 || (t > pitchAt && t < pitchAt + PITCH_LEN);
+  const moving = enter < 1 || (t > pitch.start && t < pitch.end);
 
   const minors = majors * 5;
   const reach = g * rulerLen;
@@ -322,7 +335,7 @@ export function PitchOver({
       major: i % (minors / majors) === 0,
     });
   }
-  const labelP = interpolate(t, [labelAt, labelAt + 16], [0, 1], {
+  const labelP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
