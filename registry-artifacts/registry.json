@@ -13777,12 +13777,21 @@
       "title": "Ruler Scrub",
       "description": "A ruler scrubs past ticks until the year 2026 lands in a gradient numeral.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/ruler-scrub/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ruler-scrub.tsx"
+          "target": "components/remocn/ruler-scrub/index.tsx"
+        },
+        {
+          "path": "registry/remocn/ruler-scrub/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ruler-scrub/timeline.ts"
         }
       ],
       "type": "registry:component"
