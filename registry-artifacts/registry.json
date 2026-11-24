@@ -9138,12 +9138,21 @@
       "title": "Comet Headline",
       "description": "A headline and subhead arrive while a comet streaks arcs behind it, 'Every launch beat, already in orbit.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/comet-headline/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/comet-headline.tsx"
+          "target": "components/remocn/comet-headline/index.tsx"
+        },
+        {
+          "path": "registry/remocn/comet-headline/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/comet-headline/timeline.ts"
         }
       ],
       "type": "registry:component"
