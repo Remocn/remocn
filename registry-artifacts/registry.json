@@ -3790,12 +3790,21 @@
       "title": "Type Repeater",
       "description": "An After Effects style repeater on a word, where copies unfold into a tunnel, a spiral or a fan behind it, breathe, then fold back into the word.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/type-repeater/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/type-repeater.tsx"
+          "target": "components/remocn/type-repeater/index.tsx"
+        },
+        {
+          "path": "registry/remocn/type-repeater/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/type-repeater/timeline.ts"
         }
       ],
       "type": "registry:component"
