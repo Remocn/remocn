@@ -3626,12 +3626,17 @@
       "title": "Truchet Flip",
       "description": "Quarter-circle Truchet tiles snap a quarter turn as a wave crosses the grid, rerouting continuous lines until they settle into concentric loops, a calm field, or a circle of small rings.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/truchet-flip/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/truchet-flip.tsx"
+          "target": "components/remocn/truchet-flip/index.tsx"
+        },
+        {
+          "path": "registry/remocn/truchet-flip/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/truchet-flip/timeline.ts"
         }
       ],
       "type": "registry:component"

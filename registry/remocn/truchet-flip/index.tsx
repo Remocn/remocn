@@ -3,6 +3,16 @@
 import { useMemo } from "react";
 import { random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  type TruchetFlipElementId,
+  truchetFlipPlan,
+  truchetFlipTimeline,
+} from "./timeline";
 
 export type TruchetFlipWaveMode = "radial" | "diagonal" | "random";
 export type TruchetFlipResolve = "rings" | "field" | "silhouette";
@@ -22,10 +32,15 @@ export interface TruchetFlipProps {
   speed?: number;
   loop?: boolean;
   className?: string;
+  /**
+   * Moves, trims or stretches single waves, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<TruchetFlipElementId>;
 }
 
 type Paint = "color" | "secondaryColor" | "className";
-type Unset = "secondaryColor" | "className";
+type Unset = "secondaryColor" | "className" | "timing";
 
 export interface TruchetFlipOptions extends Omit<TruchetFlipProps, Paint> {
   width?: number;
@@ -57,17 +72,11 @@ export const truchetFlipDefaults: Required<Omit<TruchetFlipProps, Unset>> = {
   loop: false,
 };
 
-const LEAD = 6;
 const SPREAD = 30;
 const SNAP = 12;
 const SNAP_SETTLE = 8;
 const SNAP_RISE = 4;
 const SNAP_DAMPING = 0.65;
-const GAP = 24;
-const RESOLVE_GAP = 30;
-const HOLD = 18;
-const LOOP_HOLD = 24;
-const MAX_PASSES = 4;
 const MIN_TILES = 4;
 const MAX_TILES = 24;
 const MIN_WEIGHT = 0.04;
@@ -116,26 +125,7 @@ export function getTruchetFlipSnap(frames: number) {
   return 1 - ring * (1 - settle);
 }
 
-export function getTruchetFlipTimeline(options: TruchetFlipOptions = {}) {
-  const requested = finite(options.passes, truchetFlipDefaults.passes);
-  const passes = Math.round(clamp(requested, 0, MAX_PASSES));
-  const starts = Array.from({ length: passes }, (_, i) => LEAD + i * GAP);
-  const lastPass = LEAD + Math.max(0, passes - 1) * GAP;
-  const resolveStart = passes === 0 ? LEAD : lastPass + RESOLVE_GAP;
-  const settled = resolveStart + SPREAD + SNAP;
-  const returnStart = settled + LOOP_HOLD;
-  const loop = options.loop === true;
-  const duration = loop ? returnStart + SPREAD + SNAP : settled + HOLD;
-  return {
-    passes,
-    starts,
-    resolveStart,
-    settled,
-    returnStart,
-    loop,
-    duration,
-  };
-}
+export const getTruchetFlipTimeline = truchetFlipPlan;
 
 export type TruchetFlipTimeline = ReturnType<typeof getTruchetFlipTimeline>;
 
@@ -147,14 +137,45 @@ export function getTruchetFlipDuration(options: TruchetFlipOptions = {}) {
   return rate === 0 ? 1 : Math.max(1, Math.ceil(duration / rate));
 }
 
+/** One wave as the tiles read it: its start, its spread and its snap pace. */
+export interface TruchetFlipWave {
+  start: number;
+  /** Multiplies each tile's delay; 1 reaches the farthest tile in 30 frames. */
+  spread: number;
+  /** Multiplies the time a tile has snapped for; 1 snaps in 12 frames. */
+  pace: number;
+}
+
+export interface TruchetFlipWaves {
+  passes: TruchetFlipWave[];
+  resolve: TruchetFlipWave;
+  back: TruchetFlipWave;
+  /** Frames of one loop, when the film loops. */
+  period: number;
+}
+
+/** The waves exactly as the plan places them. */
+export function getTruchetFlipWaves(
+  timeline: TruchetFlipTimeline,
+): TruchetFlipWaves {
+  const at = (start: number) => ({ start, spread: 1, pace: 1 });
+  return {
+    passes: timeline.starts.map(at),
+    resolve: at(timeline.resolveStart),
+    back: at(timeline.returnStart),
+    period: timeline.duration,
+  };
+}
+
 export function getTruchetFlipTime(
   frame: number,
   options: TruchetFlipOptions = {},
+  period?: number,
 ) {
   const scale = 30 / Math.max(1, finite(options.fps, 30));
   const time = Math.max(0, finite(frame, 0)) * scale * rateOf(options.speed);
   const { duration, loop } = getTruchetFlipTimeline(options);
-  return loop ? time % duration : time;
+  return loop ? time % (period ?? duration) : time;
 }
 
 export function getTruchetFlipTarget(
@@ -235,19 +256,22 @@ export function getTruchetFlipAngle(
   tile: TruchetFlipTile,
   time: number,
   timeline: TruchetFlipTimeline,
+  waves: TruchetFlipWaves = getTruchetFlipWaves(timeline),
 ) {
+  const snapOf = (wave: TruchetFlipWave) =>
+    getTruchetFlipSnap(
+      (time - wave.start - tile.delay * wave.spread) * wave.pace,
+    );
   let turns = 0;
-  for (const [wave, start] of timeline.starts.entries()) {
-    turns += turn(wave) * getTruchetFlipSnap(time - start - tile.delay);
+  for (const [index, wave] of waves.passes.entries()) {
+    turns += turn(index) * snapOf(wave);
   }
   const reached = (tile.initial + timeline.passes) % 2;
   if (reached !== tile.target) {
-    const since = time - timeline.resolveStart - tile.delay;
-    turns += turn(timeline.passes) * getTruchetFlipSnap(since);
+    turns += turn(timeline.passes) * snapOf(waves.resolve);
   }
   if (timeline.loop && tile.target !== tile.initial) {
-    const since = time - timeline.returnStart - tile.delay;
-    turns += turn(timeline.passes + 1) * getTruchetFlipSnap(since);
+    turns += turn(timeline.passes + 1) * snapOf(waves.back);
   }
   return (tile.initial + turns) * 90;
 }
@@ -286,9 +310,11 @@ export function getTruchetFlipState(
   frame: number,
   options: TruchetFlipOptions = {},
   grid: TruchetFlipGrid = getTruchetFlipGrid(options),
+  waves?: TruchetFlipWaves,
 ) {
   const timeline = getTruchetFlipTimeline(options);
-  const time = getTruchetFlipTime(frame, options);
+  const placed = waves ?? getTruchetFlipWaves(timeline);
+  const time = getTruchetFlipTime(frame, options, placed.period);
   const variant = variantOf(options.variant);
   const requested = finite(options.weight, truchetFlipDefaults.weight);
   const weight = clamp(requested, MIN_WEIGHT, MAX_WEIGHT);
@@ -300,7 +326,7 @@ export function getTruchetFlipState(
     strokeWidth: round(grid.size * weight),
     path: getTruchetFlipTilePath(grid.size, variant, OVERLAP * grid.unit),
     tiles: grid.tiles.map((tile) => {
-      const angle = getTruchetFlipAngle(tile, time, timeline);
+      const angle = getTruchetFlipAngle(tile, time, timeline, placed);
       const rotation = round(angle);
       const transform = `translate(${tile.x} ${tile.y}) rotate(${rotation})`;
       return { ...tile, angle, transform };
@@ -308,28 +334,52 @@ export function getTruchetFlipState(
   };
 }
 
-export function TruchetFlip({
-  tiles = truchetFlipDefaults.tiles,
-  weight = truchetFlipDefaults.weight,
-  passes = truchetFlipDefaults.passes,
-  waveMode = truchetFlipDefaults.waveMode,
-  resolve = truchetFlipDefaults.resolve,
-  variant = truchetFlipDefaults.variant,
-  color = truchetFlipDefaults.color,
-  secondaryColor,
-  seed = truchetFlipDefaults.seed,
-  speed = truchetFlipDefaults.speed,
-  loop = truchetFlipDefaults.loop,
-  className,
-}: TruchetFlipProps) {
+/** A scheduled wave as the tiles read it. */
+const waveOfElement = (e: ResolvedElement<TruchetFlipElementId>) => ({
+  start: e.start,
+  spread: e.beat("spread") / SPREAD,
+  pace: SNAP / e.beat("snap"),
+});
+
+export function TruchetFlip(props: TruchetFlipProps) {
+  const {
+    tiles = truchetFlipDefaults.tiles,
+    weight = truchetFlipDefaults.weight,
+    passes = truchetFlipDefaults.passes,
+    waveMode = truchetFlipDefaults.waveMode,
+    resolve = truchetFlipDefaults.resolve,
+    variant = truchetFlipDefaults.variant,
+    color = truchetFlipDefaults.color,
+    secondaryColor,
+    seed = truchetFlipDefaults.seed,
+    speed = truchetFlipDefaults.speed,
+    loop = truchetFlipDefaults.loop,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    truchetFlipTimeline,
+    props,
+    durationInFrames * rateOf(speed),
+    timing,
+  );
   const grid = useMemo(() => {
     const layout = { width, height, tiles, seed, waveMode, resolve };
     return getTruchetFlipGrid(layout);
   }, [width, height, tiles, seed, waveMode, resolve]);
   const motion = { fps, weight, passes, variant, speed, loop };
-  const state = getTruchetFlipState(frame, motion, grid);
+  const plan = getTruchetFlipTimeline(motion);
+  const resolveWave = waveOfElement(tl.get("resolve"));
+  const back = plan.loop ? tl.get("back") : undefined;
+  const waves: TruchetFlipWaves = {
+    passes: plan.starts.map((_, i) => waveOfElement(tl.get(`pass:${i}`))),
+    resolve: resolveWave,
+    back: back ? waveOfElement(back) : resolveWave,
+    period: back ? back.end : plan.duration,
+  };
+  const state = getTruchetFlipState(frame, motion, grid, waves);
   const filled = state.variant === "filled";
   const primary = state.tiles.filter((tile) => !tile.alternate);
   const alternate = state.tiles.filter((tile) => tile.alternate);
