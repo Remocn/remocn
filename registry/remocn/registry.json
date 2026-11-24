@@ -9791,10 +9791,19 @@
         {
           "path": "scrub-reveal/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/scrub-reveal.tsx"
+          "target": "components/remocn/scrub-reveal/index.tsx"
+        },
+        {
+          "path": "scrub-reveal/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/scrub-reveal/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "aspect-slit",

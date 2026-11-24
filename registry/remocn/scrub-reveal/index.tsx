@@ -7,6 +7,8 @@ import { useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ScrubRevealElementId, scrubRevealTimeline } from "./timeline";
 
 const { fontFamily: geist } = loadFont("normal", {
   weights: ["500"],
@@ -40,6 +42,12 @@ export interface ScrubRevealProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the scroll, the settle and the drift, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<ScrubRevealElementId>;
 }
 
 // Beat sheet (30fps):
@@ -48,11 +56,6 @@ export interface ScrubRevealProps {
 //          word by word; both ride the same eased progress, like a real scrub
 //  118–142 fully lit; the plain words settle a step back, the accent phrase holds
 //  142–170 poster hold, the drift never quite stops
-const SCROLL_START = 4;
-const SCROLL_END = 122;
-const SETTLE_START = 118;
-const SETTLE_END = 142;
-
 /** Trackpad scroll: eases in, carries steady velocity, glides to a stop. */
 const SCROLL = Easing.bezier(0.3, 0.06, 0.22, 1);
 const SETTLE = Easing.bezier(0.33, 0, 0.2, 1);
@@ -130,59 +133,58 @@ function ScaleLayer({
   );
 }
 
-export function ScrubReveal({
-  text = "Every frame is code. Every cut is yours. Ship the film your product deserves.",
-  highlight = "Every cut is yours.",
-  scrub = SCROLL_END - SCROLL_START,
-  fontWeight = 500,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ScrubRevealProps) {
+export function ScrubReveal(props: ScrubRevealProps) {
+  const {
+    text = "Every frame is code. Every cut is yours. Ship the film your product deserves.",
+    highlight = "Every cut is yours.",
+    fontWeight = 500,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    scrubRevealTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const scrollEl = tl.get("scroll");
+  const settleEl = tl.get("settle");
+  const drift = tl.get("drift");
   const c = THEMES[theme];
-  const late = scrub - (SCROLL_END - SCROLL_START);
 
   const words = useMemo(() => splitWords(text, highlight), [text, highlight]);
   const lastStart = words.length ? words[words.length - 1].start : 0;
 
-  const scroll = interpolate(frame, [SCROLL_START, SCROLL_END + late], [0, 1], {
+  const scroll = interpolate(frame, [scrollEl.start, scrollEl.end], [0, 1], {
     ...CLAMP,
     easing: SCROLL,
   });
-  const settle = interpolate(
-    frame,
-    [SETTLE_START + late, SETTLE_END + late],
-    [0, 1],
-    {
-      ...CLAMP,
-      easing: SETTLE,
-    },
-  );
+  const settle = interpolate(frame, [settleEl.start, settleEl.end], [0, 1], {
+    ...CLAMP,
+    easing: SETTLE,
+  });
 
   // The front starts just before the first word and parks past the last one.
   const front = interpolate(scroll, [0, 1], [-SOFT * 0.15, lastStart + SOFT]);
 
   // The page climbs with the same progress, then keeps a hair of drift.
   const climb = interpolate(scroll, [0, 1], [H * 0.15, 0]);
-  const tail = interpolate(
-    frame,
-    [SCROLL_END + late, SCROLL_END + late + 90],
-    [0, -H * 0.012],
-    {
-      ...CLAMP,
-    },
-  );
+  const tail = interpolate(frame, [drift.start, drift.end], [0, -H * 0.012], {
+    ...CLAMP,
+  });
 
   // The climb hands over to the drift, which outlasts the default length.
-  const moving = frame > SCROLL_START && frame < SCROLL_END + late + 90;
+  const moving = frame > scrollEl.start && frame < drift.end;
 
   const size = Math.round(Math.min(W * 0.064, H * 0.114));
   const measure = Math.min(W * 0.8, size * 13.2);
