@@ -14,6 +14,14 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ICONS,
+  DEFAULT_ROLLS,
+  type FloodStingElementId,
+  type FloodStingGlyph,
+  floodStingTimeline,
+} from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["600"],
@@ -49,15 +57,7 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
   );
 }
 
-export type GlyphName =
-  | "cluster"
-  | "download"
-  | "globe"
-  | "gear"
-  | "brackets"
-  | "spark"
-  | "grid"
-  | "diamonds";
+export type GlyphName = FloodStingGlyph;
 
 const gearPath = (() => {
   const pts: string[] = [];
@@ -182,6 +182,12 @@ export interface FloodStingProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the row, the hops, the rolls, the press, the
+   * flood and the logo, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FloodStingElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -237,39 +243,8 @@ const THEMES = {
   },
 };
 
-const DEFAULT_ICONS: GlyphName[] = [
-  "cluster",
-  "download",
-  "globe",
-  "gear",
-  "brackets",
-];
-const DEFAULT_ROLLS: GlyphName[][] = [
-  ["grid", "spark", "globe", "diamonds", "cluster"],
-  ["diamonds", "grid", "spark", "cluster", "download"],
-];
-
-const BEATS = [
-  { name: "row", at: -12 },
-  { name: "select", at: 0 },
-  { name: "hop1", at: 6 },
-  { name: "hop2", at: 18 },
-  { name: "roll1", at: 22 },
-  { name: "hop3", at: 28 },
-  { name: "hop4", at: 36 },
-  { name: "roll2", at: 38 },
-  { name: "hop5", at: 42 },
-  { name: "press", at: 48 },
-  { name: "flood", at: 54 },
-  { name: "logo", at: 62 },
-  { name: "flank", at: 62 },
-  { name: "tuck", at: 96 },
-  { name: "end", at: 120 },
-] as const;
-type BeatName = (typeof BEATS)[number]["name"];
-const beat = (n: BeatName) => BEATS.find((b) => b.name === n)?.at ?? 0;
-const HOPS: BeatName[] = ["hop1", "hop2", "hop3", "hop4", "hop5"];
-const ROLLS: BeatName[] = ["roll1", "roll2"];
+/** The glyph rolls, by index: each turns every tile on to the next set. */
+const ROLL_COUNT = [0, 1];
 
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
@@ -282,28 +257,42 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-export function FloodSting({
-  icons = DEFAULT_ICONS,
-  rolls = DEFAULT_ROLLS,
-  pick = 2,
-  theme = "dark",
-  paper,
-  ink,
-  flood,
-  logoColor,
-  hops,
-  logo,
-  stagger = 2,
-  radius = 0.24,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: FloodStingProps) {
+export function FloodSting(props: FloodStingProps) {
+  const {
+    icons = DEFAULT_ICONS,
+    rolls = DEFAULT_ROLLS,
+    pick = 2,
+    theme = "dark",
+    paper,
+    ink,
+    flood,
+    logoColor,
+    hops,
+    logo,
+    radius = 0.24,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    floodStingTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const rowEl = tl.get("row");
+  const selectEl = tl.get("select");
+  const hopEls = [1, 2, 3, 4, 5].map((k) => tl.get(`hop:${k}`));
+  const lastHop = hopEls[hopEls.length - 1];
+  const pressEl = tl.get("press");
+  const floodEl = tl.get("flood");
+  const FLOOD = floodEl.start;
   const t = THEMES[theme];
   const portrait = H > W;
   const paperC = paper ?? t.paper;
@@ -326,49 +315,49 @@ export function FloodSting({
 
   const hopSlots = [Math.min(n - 1, 1), Math.min(n - 1, 3), 0, n - 1, target];
   let hx = slotX(hopSlots[0] as number);
-  for (let i = 1; i < HOPS.length; i++) {
-    const p = sp(beat(HOPS[i] as BeatName), CHIP);
+  for (let i = 1; i < hopEls.length; i++) {
+    const p = sp(hopEls[i].start, CHIP);
     hx += (slotX(hopSlots[i] as number) - slotX(hopSlots[i - 1] as number)) * p;
   }
-  const hopIdx = HOPS.reduce((acc, h, i) => (frame >= beat(h) ? i : acc), 0);
-  const hlIn = sp(beat("hop1"), CHIP);
+  const hopIdx = hopEls.reduce((acc, h, i) => (frame >= h.start ? i : acc), 0);
+  const hlIn = sp(hopEls[0].start, CHIP);
   const hlColor =
-    hopIdx === HOPS.length - 1
+    hopIdx === hopEls.length - 1
       ? interpolateColors(
           frame,
-          [beat("hop5"), beat("hop5") + 4],
+          [lastHop.start, lastHop.start + lastHop.beat("tint")],
           [hopColors[(hopIdx - 1) % hopColors.length] as string, floodC],
         )
       : (hopColors[hopIdx % hopColors.length] as string);
-  const press = sp(beat("press"), CHIP);
-  const pressScale = frame < beat("press") ? 1 : 0.86 + 0.14 * press;
+  const press = sp(pressEl.start, CHIP);
+  const pressScale = frame < pressEl.start ? 1 : 0.86 + 0.14 * press;
 
-  const floodP = interpolate(
-    frame,
-    [beat("flood"), beat("flood") + 15],
-    [0, 1],
-    { ...CLAMP, easing: BURST },
-  );
+  const floodP = interpolate(frame, [FLOOD, floodEl.end], [0, 1], {
+    ...CLAMP,
+    easing: BURST,
+  });
   const fx = slotX(target);
   const r0 = S * 0.7;
   const rMax = Math.hypot(Math.max(fx, W - fx), H / 2) * 1.04;
   const floodR = r0 + (rMax - r0) * floodP;
   const pickedOut = interpolate(
     frame,
-    [beat("flood") + 4, beat("flood") + 11],
+    [FLOOD + floodEl.beat("outAt"), FLOOD + floodEl.beat("outEnd")],
     [0, 1],
     { ...CLAMP, easing: EXIT },
   );
-  const logoIn = sp(beat("logo"), CARD);
+  const logoIn = sp(tl.get("logo").start, CARD);
   const logoSize = portrait ? W * 0.15 : H * 0.15;
   const logoW = logoSize * 3.95;
-  const flank = sp(beat("flank"), CHIP);
-  const tuck = interpolate(frame, [beat("tuck"), beat("tuck") + 8], [0, 1], {
+  const flank = sp(tl.get("flank").start, CHIP);
+  const tuckEl = tl.get("tuck");
+  const tuck = interpolate(frame, [tuckEl.start, tuckEl.end], [0, 1], {
     ...CLAMP,
     easing: EXIT,
   });
-  const push = interpolate(frame, [0, beat("end")], [1, 1.04]);
-  const selIn = sp(beat("select"), CARD);
+  const pushEl = tl.get("push");
+  const push = interpolate(frame, [pushEl.start, pushEl.end], [1, 1.04]);
+  const selIn = sp(selectEl.start, CARD);
   const boxPad = S * 0.55;
   const box = {
     x: cx - rowW / 2 - boxPad,
@@ -399,15 +388,20 @@ export function FloodSting({
     ) as GlyphName[];
     const layers: { name: GlyphName; y: number }[] = [];
     let current = 0;
-    ROLLS.forEach((rb, ri) => {
+    const rollAt = (ri: number) => {
+      const e = tl.get(`roll:${ri + 1}`);
+      return {
+        st: e.start + Math.abs(k - target) * e.beat("ripple"),
+        turn: e.beat("turn"),
+      };
+    };
+    ROLL_COUNT.forEach((ri) => {
       if (ri + 1 >= seq.length) return;
-      const st = beat(rb) + Math.abs(k - target);
-      if (frame >= st) current = ri + 1;
+      if (frame >= rollAt(ri).st) current = ri + 1;
     });
-    const rbName = ROLLS[current - 1];
-    if (current > 0 && rbName) {
-      const st = beat(rbName) + Math.abs(k - target);
-      const p = interpolate(frame, [st, st + 8], [0, 1], {
+    if (current > 0 && current <= ROLL_COUNT.length) {
+      const { st, turn } = rollAt(current - 1);
+      const p = interpolate(frame, [st, st + turn], [0, 1], {
         ...CLAMP,
         easing: ROLL,
       });
@@ -458,8 +452,8 @@ export function FloodSting({
             }}
           />
           {icons.map((_, k) => {
-            const pop = sp(beat("row") + k * stagger, CHIP);
-            const isPick = k === target && frame >= beat("hop5");
+            const pop = sp(rowEl.start + k * rowEl.beat("stagger"), CHIP);
+            const isPick = k === target && frame >= lastHop.start;
             const overlap =
               hlIn *
               Math.max(
@@ -510,7 +504,7 @@ export function FloodSting({
       <AbsoluteFill
         style={{
           clipPath: `circle(${floodR}px at ${cx + (fx - cx) * push * scale}px ${cy}px)`,
-          opacity: frame >= beat("flood") ? 1 : 0,
+          opacity: frame >= FLOOD ? 1 : 0,
         }}
       >
         <GshGround
@@ -524,7 +518,7 @@ export function FloodSting({
         {/* The push never rests and carries the logo, so this layer, which
             paints nothing of its own, is always tilted. */}
         <AbsoluteFill style={{ transform: `scale(${push})${glide(true)}` }}>
-          {frame >= beat("flood") && pickedOut < 1 ? (
+          {frame >= FLOOD && pickedOut < 1 ? (
             <div
               style={{
                 position: "absolute",
@@ -550,11 +544,19 @@ export function FloodSting({
           {corners.map(([x0, y0, side], i) => {
             const before = interpolate(
               frame,
-              [beat("select") + i, beat("select") + i + 8],
+              [
+                selectEl.start + i * selectEl.beat("cornerStagger"),
+                selectEl.start +
+                  i * selectEl.beat("cornerStagger") +
+                  selectEl.beat("cornerIn"),
+              ],
               [0, 1],
               CLAMP,
             );
-            const popIn = sp(beat("select") + i * 2, CHIP);
+            const popIn = sp(
+              selectEl.start + i * selectEl.beat("popStagger"),
+              CHIP,
+            );
             const tx = cx + side * flankGap;
             const x = x0 + (tx - x0) * flank;
             const y = y0 + (cy - y0) * flank;

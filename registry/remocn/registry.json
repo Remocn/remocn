@@ -6714,13 +6714,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "flood-sting/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/flood-sting.tsx"
+          "target": "components/remocn/flood-sting/index.tsx"
+        },
+        {
+          "path": "flood-sting/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/flood-sting/timeline.ts"
         }
       ]
     },
