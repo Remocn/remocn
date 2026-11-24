@@ -4879,12 +4879,17 @@
       "title": "Phyllotaxis",
       "description": "Seeds spiral out at the golden angle into a sunflower head, then an accent Fibonacci arm pulses outward.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/phyllotaxis/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/phyllotaxis.tsx"
+          "target": "components/remocn/phyllotaxis/index.tsx"
+        },
+        {
+          "path": "registry/remocn/phyllotaxis/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/phyllotaxis/timeline.ts"
         }
       ],
       "type": "registry:component"
