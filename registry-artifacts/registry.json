@@ -6797,12 +6797,21 @@
       "title": "Price Page",
       "description": "A huge teal \"Free.\" fills the frame with \"That's the whole pricing page.\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/price-page/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/price-page.tsx"
+          "target": "components/remocn/price-page/index.tsx"
+        },
+        {
+          "path": "registry/remocn/price-page/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/price-page/timeline.ts"
         }
       ],
       "type": "registry:component"
