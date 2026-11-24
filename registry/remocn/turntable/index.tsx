@@ -3,6 +3,8 @@
 import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type TurntableElementId, turntableTimeline } from "./timeline";
 
 export type TurntableColors = {
   background: string;
@@ -34,6 +36,11 @@ export type TurntableProps = {
   /** Stage background. Overrides `colors.background`. */
   backgroundColor?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the spin, by the id in `./timeline`. Frames on
+   * the scene timeline, after `speed`.
+   */
+  timing?: Timing<TurntableElementId>;
 };
 
 export const turntableDefaults = {
@@ -50,9 +57,6 @@ export const turntableDefaults = {
   } satisfies TurntableColors,
   speed: 1,
 };
-
-const START = 6;
-const END = 64;
 
 function DefaultFront({ colors }: { colors: TurntableColors }) {
   return (
@@ -122,21 +126,30 @@ function DefaultBack({ colors }: { colors: TurntableColors }) {
   );
 }
 
-export function Turntable({
-  children,
-  back,
-  thickness = turntableDefaults.thickness,
-  turns = turntableDefaults.turns,
-  tilt = turntableDefaults.tilt,
-  colors: colorOverrides,
-  frontColor,
-  edgeColor,
-  backColor,
-  backgroundColor,
-  speed = turntableDefaults.speed,
-}: TurntableProps) {
+export function Turntable(props: TurntableProps) {
+  const {
+    children,
+    back,
+    thickness = turntableDefaults.thickness,
+    turns = turntableDefaults.turns,
+    tilt = turntableDefaults.tilt,
+    colors: colorOverrides,
+    frontColor,
+    edgeColor,
+    backColor,
+    backgroundColor,
+    speed = turntableDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    turntableTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const spinEl = tl.get("spin");
   const baseColors = { ...turntableDefaults.colors, ...colorOverrides };
   const colors = {
     ...baseColors,
@@ -153,7 +166,7 @@ export function Turntable({
   const depth = thickness * unit;
   const radius = Math.min(cardH * 0.06, depth * 1.2);
 
-  const spin = interpolate(t, [START, END], [0, 1], {
+  const spin = interpolate(t, [spinEl.start, spinEl.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.55, 0, 0.25, 1),

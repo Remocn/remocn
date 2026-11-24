@@ -5080,12 +5080,17 @@
       "title": "Turntable",
       "description": "A product card spins on an invisible turntable through front, edge and back in real 3D, with face shading and a breathing floor shadow.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/turntable/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/turntable.tsx"
+          "target": "components/remocn/turntable/index.tsx"
+        },
+        {
+          "path": "registry/remocn/turntable/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/turntable/timeline.ts"
         }
       ],
       "type": "registry:component"
