@@ -7438,12 +7438,21 @@
       "title": "Changed Mind",
       "description": "A big serif pull quote, \"The only tool I use now.\", with a solo-founder attribution.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/changed-mind/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/changed-mind.tsx"
+          "target": "components/remocn/changed-mind/index.tsx"
+        },
+        {
+          "path": "registry/remocn/changed-mind/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/changed-mind/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -7443,10 +7443,19 @@
         {
           "path": "changed-mind/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/changed-mind.tsx"
+          "target": "components/remocn/changed-mind/index.tsx"
+        },
+        {
+          "path": "changed-mind/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/changed-mind/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "said-who",
