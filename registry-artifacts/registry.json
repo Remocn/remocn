@@ -15802,13 +15802,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/upvote-burst/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/upvote-burst.tsx"
+          "target": "components/remocn/upvote-burst/index.tsx"
+        },
+        {
+          "path": "registry/remocn/upvote-burst/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/upvote-burst/timeline.ts"
         }
       ],
       "type": "registry:component"
