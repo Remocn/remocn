@@ -4,6 +4,15 @@ import type React from "react";
 import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_HIGHLIGHT,
+  DEFAULT_TEXT,
+  type LedTickerElementId,
+  ledTickerTimeline,
+  ROWS,
+  tickerLayout,
+} from "./timeline";
 
 export interface LedTickerProps {
   text?: string;
@@ -25,6 +34,12 @@ export interface LedTickerProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the scroll, the highlight and the camera
+   * settle, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<LedTickerElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -51,70 +66,6 @@ const THEMES = {
   },
 } as const;
 
-const GLYPHS: Record<string, string[]> = {
-  A: [".###.", "#...#", "#...#", "#####", "#...#", "#...#", "#...#"],
-  B: ["####.", "#...#", "#...#", "####.", "#...#", "#...#", "####."],
-  C: [".###.", "#...#", "#....", "#....", "#....", "#...#", ".###."],
-  D: ["####.", "#...#", "#...#", "#...#", "#...#", "#...#", "####."],
-  E: ["#####", "#....", "#....", "####.", "#....", "#....", "#####"],
-  F: ["#####", "#....", "#....", "####.", "#....", "#....", "#...."],
-  G: [".###.", "#...#", "#....", "#.###", "#...#", "#...#", ".####"],
-  H: ["#...#", "#...#", "#...#", "#####", "#...#", "#...#", "#...#"],
-  I: ["###", ".#.", ".#.", ".#.", ".#.", ".#.", "###"],
-  J: ["..###", "...#.", "...#.", "...#.", "...#.", "#..#.", ".##.."],
-  K: ["#...#", "#..#.", "#.#..", "##...", "#.#..", "#..#.", "#...#"],
-  L: ["#....", "#....", "#....", "#....", "#....", "#....", "#####"],
-  M: ["#...#", "##.##", "#.#.#", "#.#.#", "#...#", "#...#", "#...#"],
-  N: ["#...#", "#...#", "##..#", "#.#.#", "#..##", "#...#", "#...#"],
-  O: [".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."],
-  P: ["####.", "#...#", "#...#", "####.", "#....", "#....", "#...."],
-  Q: [".###.", "#...#", "#...#", "#...#", "#.#.#", "#..#.", ".##.#"],
-  R: ["####.", "#...#", "#...#", "####.", "#.#..", "#..#.", "#...#"],
-  S: [".####", "#....", "#....", ".###.", "....#", "....#", "####."],
-  T: ["#####", "..#..", "..#..", "..#..", "..#..", "..#..", "..#.."],
-  U: ["#...#", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."],
-  V: ["#...#", "#...#", "#...#", "#...#", "#...#", ".#.#.", "..#.."],
-  W: ["#...#", "#...#", "#...#", "#.#.#", "#.#.#", "#.#.#", ".#.#."],
-  X: ["#...#", "#...#", ".#.#.", "..#..", ".#.#.", "#...#", "#...#"],
-  Y: ["#...#", "#...#", ".#.#.", "..#..", "..#..", "..#..", "..#.."],
-  Z: ["#####", "....#", "...#.", "..#..", ".#...", "#....", "#####"],
-  "0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."],
-  "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
-  "2": [".###.", "#...#", "....#", "...#.", "..#..", ".#...", "#####"],
-  "3": ["#####", "...#.", "..#..", "...#.", "....#", "#...#", ".###."],
-  "4": ["...#.", "..##.", ".#.#.", "#..#.", "#####", "...#.", "...#."],
-  "5": ["#####", "#....", "####.", "....#", "....#", "#...#", ".###."],
-  "6": ["..##.", ".#...", "#....", "####.", "#...#", "#...#", ".###."],
-  "7": ["#####", "....#", "...#.", "..#..", ".#...", ".#...", ".#..."],
-  "8": [".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."],
-  "9": [".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."],
-  ".": [".", ".", ".", ".", ".", ".", "#"],
-  ",": ["..", "..", "..", "..", "..", ".#", "#."],
-  "!": ["#", "#", "#", "#", "#", ".", "#"],
-  "?": [".###.", "#...#", "....#", "...#.", "..#..", ".....", "..#.."],
-  "-": ["....", "....", "....", "####", "....", "....", "...."],
-  ":": [".", ".", "#", ".", ".", "#", "."],
-  "'": ["#", "#", ".", ".", ".", ".", "."],
-  "&": [".##..", "#..#.", "#.#..", ".#...", "#.#.#", "#..#.", ".##.#"],
-  "/": ["....#", "...#.", "...#.", "..#..", ".#...", ".#...", "#...."],
-  "%": ["##..#", "##..#", "...#.", "..#..", ".#...", "#..##", "#..##"],
-  "+": [".....", "..#..", "..#..", "#####", "..#..", "..#..", "....."],
-  " ": ["...", "...", "...", "...", "...", "...", "..."],
-};
-
-// The remocn.dev "R" mark on the 7-row grid: top bar with no upper stem,
-// the bowl, and the stem + leg below. Replaces the R when the text opens
-// with the word "remocn".
-const MARK_R = [
-  "#####.",
-  ".....#",
-  ".....#",
-  ".####.",
-  "#..#..",
-  "#...#.",
-  "#....#",
-];
-
 // gradients.sh "halo" (peach → amber → rose → blue) across the hot word.
 const HALO = ["#ffd2ad", "#ffb36b", "#e2457a", "#3d4dff"];
 const HOT_STEPS = 9;
@@ -134,7 +85,6 @@ function ramp(stops: string[], n: number) {
   });
 }
 
-const ROWS = 7;
 const TRAIL = [1, 0.4, 0.16, 0.06];
 const BUCKETS = 6;
 
@@ -142,64 +92,6 @@ function hash(n: number) {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return x - Math.floor(x);
 }
-
-interface Cell {
-  c: number;
-  r: number;
-  hot: number;
-}
-
-function layout(text: string, highlightWord?: string) {
-  const chars = text.toUpperCase().split("");
-  const target = highlightWord?.trim().toUpperCase();
-  const brand = /^REMOCN(\s|$)/.test(chars.join(""));
-  const cells: Cell[] = [];
-  let col = 0;
-  let wordStart = 0;
-  let hotRange: [number, number] | null = null;
-  let word = "";
-  const closeWord = (end: number) => {
-    if (!hotRange && target && word === target) hotRange = [wordStart, end];
-    word = "";
-  };
-  chars.forEach((ch, i) => {
-    const g = brand && i === 0 ? MARK_R : (GLYPHS[ch] ?? GLYPHS[" "]);
-    if (ch === " ") {
-      closeWord(col - 2);
-    } else if (word === "") {
-      wordStart = col;
-      word = ch;
-    } else {
-      word += ch;
-    }
-    const gw = g[0].length;
-    for (let r = 0; r < ROWS; r++) {
-      for (let x = 0; x < gw; x++) {
-        if (g[r][x] === "#") cells.push({ c: col + x, r, hot: 0 });
-      }
-    }
-    col += gw + (i < chars.length - 1 ? 1 : 0);
-  });
-  closeWord(col - 1);
-  const range = hotRange as [number, number] | null;
-  if (range) {
-    for (const cell of cells) {
-      if (cell.c >= range[0] && cell.c <= range[1]) {
-        cell.hot = cell.c - range[0] + 1;
-      }
-    }
-  }
-  return {
-    cells,
-    width: Math.max(1, col),
-    hotWidth: range ? range[1] - range[0] + 1 : 0,
-  };
-}
-
-const ENTER = 2;
-const SCROLL_DUR = 54;
-const HOT_STEP = 0.8;
-const HOT_DUR = 6;
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
@@ -217,34 +109,43 @@ function ScaleLayer({
   );
 }
 
-export function LedTicker({
-  text = "remocn is live",
-  highlightWord = "live",
-  accent = "#3B5BFD",
-  scroll = SCROLL_DUR,
-  dotSize = 0.45,
-  ink: inkColor,
-  background,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: LedTickerProps) {
+export function LedTicker(props: LedTickerProps) {
+  const {
+    text = DEFAULT_TEXT,
+    highlightWord = DEFAULT_HIGHLIGHT,
+    accent = "#3B5BFD",
+    dotSize = 0.45,
+    ink: inkColor,
+    background,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    ledTickerTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const scrollEl = tl.get("scroll");
+  const highlight = tl.get("highlight");
+  const camera = tl.get("camera");
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];
   const fg = inkColor ?? pal.ink;
   const bg =
     background === "transparent" ? "transparent" : (background ?? pal.bg);
-  const hotStart = ENTER + scroll + 14;
 
   const {
     cells,
     width: textCols,
     hotWidth,
-  } = useMemo(() => layout(text, highlightWord), [text, highlightWord]);
+  } = useMemo(() => tickerLayout(text, highlightWord), [text, highlightWord]);
 
   const pitch = Math.min((W * 0.86) / textCols, H / 13);
   const cols = Math.ceil(W / pitch) + 2;
@@ -257,14 +158,14 @@ export function LedTicker({
   const rOn = pitch * dotSize;
 
   const offsetAt = (f: number) => {
-    const p = interpolate(f, [ENTER, ENTER + scroll], [0, 1], CLAMP);
+    const p = interpolate(f, [scrollEl.start, scrollEl.end], [0, 1], CLAMP);
     return home + Math.round((cols - home) * (1 - SCROLL(p)));
   };
 
   const lit = new Map<number, { b: number; hot: number }>();
   TRAIL.forEach((w, k) => {
     const f = Math.floor(t) - k;
-    if (f < ENTER - 1) return;
+    if (f < scrollEl.start - 1) return;
     const o = offsetAt(f);
     for (const cell of cells) {
       const c = o + cell.c;
@@ -294,8 +195,8 @@ export function LedTicker({
     let b = v.b * falloff * (0.94 + hash(key * 0.37) * 0.06);
     let isHot = false;
     if (v.hot > 0 && v.b === 1) {
-      const start = hotStart + (v.hot - 1) * HOT_STEP;
-      const p = (t - start) / HOT_DUR;
+      const start = highlight.start + (v.hot - 1) * highlight.beat("step");
+      const p = (t - start) / highlight.beat("flip");
       if (p > 0) {
         const dip = p < 0.45 ? 1 - p / 0.45 : Math.min(1, (p - 0.45) / 0.55);
         b *= 0.12 + 0.88 * EASE_IO(dip);
@@ -314,8 +215,7 @@ export function LedTicker({
     }
   }
 
-  const total = hotStart + hotWidth * HOT_STEP + HOT_DUR + 40;
-  const cam = interpolate(t, [0, total], [1.035, 1], {
+  const cam = interpolate(t, [camera.start, camera.end], [1.035, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });

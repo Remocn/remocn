@@ -14960,12 +14960,17 @@
       "title": "Led Ticker",
       "description": "REMOCN IS LIVE scrolls on a retro LED dot-matrix with a gradient on the last word.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/led-ticker/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/led-ticker.tsx"
+          "target": "components/remocn/led-ticker/index.tsx"
+        },
+        {
+          "path": "registry/remocn/led-ticker/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/led-ticker/timeline.ts"
         }
       ],
       "type": "registry:component"
