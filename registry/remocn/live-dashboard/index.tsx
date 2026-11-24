@@ -10,32 +10,24 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type DashboardMetric,
+  type DashboardTick,
+  DEFAULT_LIVE,
+  DEFAULT_METRICS,
+  DEFAULT_PAYMENTS,
+  type LiveDashboardElementId,
+  liveDashboardTimeline,
+} from "./timeline";
+
+export type { DashboardMetric, DashboardTick };
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
 const mono = loadGeistMono("normal", { weights: ["400"], subsets: ["latin"] });
-
-export interface DashboardMetric {
-  label: string;
-  value: number;
-  format?: "currency" | "number" | "percent";
-  decimals?: number;
-  /** Percent change shown next to the label. */
-  change: number;
-  /** Which direction is good news (colors the change). Default "up". */
-  goodWhen?: "up" | "down";
-  /** Sparkline values; generated when omitted. */
-  spark?: number[];
-  /** Added to the value on every live tick. */
-  liveStep?: number;
-}
-
-export interface DashboardTick {
-  customer: string;
-  amount: number;
-}
 
 export interface LiveDashboardProps {
   title?: string;
@@ -71,6 +63,13 @@ export interface LiveDashboardProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the window, the headings, the count-up, the
+   * chart, single feed rows and KPI tiles, and single live payments, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<LiveDashboardElementId>;
 }
 
 function hash(n: number) {
@@ -106,41 +105,6 @@ function makeSpark(n: number, down: boolean) {
 }
 
 const DEFAULT_SERIES = makeSeries(22, 48210.32, 7);
-const DEFAULT_METRICS: DashboardMetric[] = [
-  { label: "MRR", value: 84210, format: "currency", change: 8.2 },
-  {
-    label: "Active users",
-    value: 12408,
-    format: "number",
-    change: 4.1,
-    liveStep: 3,
-  },
-  {
-    label: "Conversion",
-    value: 3.84,
-    format: "percent",
-    decimals: 2,
-    change: 0.6,
-  },
-  {
-    label: "Churn",
-    value: 1.2,
-    format: "percent",
-    decimals: 1,
-    change: -0.3,
-    goodWhen: "down",
-  },
-];
-const DEFAULT_LIVE: DashboardTick[] = [
-  { customer: "Fernway", amount: 2480 },
-  { customer: "Tessel Labs", amount: 1920.5 },
-  { customer: "Lumen Studio", amount: 3150 },
-];
-const DEFAULT_PAYMENTS: DashboardTick[] = [
-  { customer: "Quarry", amount: 1240 },
-  { customer: "Orbitly", amount: 560 },
-  { customer: "Halcyon Health", amount: 2100 },
-];
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
@@ -154,15 +118,6 @@ const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH = { damping: 200 };
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
-const B = {
-  window: 0,
-  head: 8,
-  count: 12,
-  draw: 16,
-  feed: 14,
-  kpi: 20,
-  live: [84, 110, 132],
-};
 const ROW = 56;
 
 const LIGHT_PAL = {
@@ -349,33 +304,46 @@ function ScaleLayer({
   );
 }
 
-export function LiveDashboard({
-  title = "Today",
-  workspace = "Kitebase",
-  series = DEFAULT_SERIES,
-  change = 15.1,
-  metrics = DEFAULT_METRICS,
-  live = DEFAULT_LIVE,
-  payments = DEFAULT_PAYMENTS,
-  visitors = 128,
-  currency = "USD",
-  volumeLabel = "Gross volume",
-  feedTitle = "Payments",
-  visitorsLabel = "on site",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  ground,
-  groundParams,
-}: LiveDashboardProps) {
+export function LiveDashboard(props: LiveDashboardProps) {
+  const {
+    title = "Today",
+    workspace = "Kitebase",
+    series = DEFAULT_SERIES,
+    change = 15.1,
+    metrics = DEFAULT_METRICS,
+    live = DEFAULT_LIVE,
+    payments = DEFAULT_PAYMENTS,
+    visitors = 128,
+    currency = "USD",
+    volumeLabel = "Gross volume",
+    feedTitle = "Payments",
+    visitorsLabel = "on site",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    liveDashboardTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const appEl = tl.get("app");
+  const cameraEl = tl.get("camera");
+  const headEl = tl.get("head");
+  const countEl = tl.get("count");
+  const drawEl = tl.get("draw");
   const tall = height > width;
   const W = tall ? 720 : 1280;
   const H = tall ? 1280 : 720;
@@ -409,18 +377,22 @@ export function LiveDashboard({
             maximumFractionDigits: m.decimals ?? 0,
           }).format(n);
 
-  const tickAt = live.map(
-    (_, i) =>
-      B.live[i] ?? B.live[B.live.length - 1] + (i - B.live.length + 1) * 22,
-  );
-  const tickS = tickAt.map((at) =>
-    spring({ frame: frame - at, fps, config: MORPH, durationInFrames: 18 }),
+  const ticks = live.map((_, i) => tl.get(`tick:${i}`));
+  const tickAt = ticks.map((e) => e.start);
+  const tickS = ticks.map((e) =>
+    spring({
+      frame: frame - e.start,
+      fps,
+      config: MORPH,
+      durationInFrames: e.length,
+    }),
   );
   const rowS = tickAt.map((at) =>
     spring({ frame: frame - at, fps, config: CARD }),
   );
   const ticksDone = tickAt.filter((at) => frame >= at).length;
-  const lastTickT = ticksDone > 0 ? frame - tickAt[ticksDone - 1] : -1;
+  const lastTick = ticksDone > 0 ? ticks[ticksDone - 1] : undefined;
+  const lastTickT = lastTick ? frame - lastTick.start : -1;
 
   const all = [...series];
   for (const t of live) all.push(all[all.length - 1] + t.amount);
@@ -441,7 +413,7 @@ export function LiveDashboard({
     y: CHART.h - (v / yMax) * (CHART.h - 10),
   }));
 
-  const draw = interpolate(frame, [B.draw, B.draw + 46], [0, 1], {
+  const draw = interpolate(frame, [drawEl.start, drawEl.end], [0, 1], {
     ...clamp,
     easing: MOVE,
   });
@@ -456,7 +428,7 @@ export function LiveDashboard({
   };
   const line = linePath(pts);
 
-  const countUp = interpolate(frame, [B.count, B.count + 40], [0, 1], {
+  const countUp = interpolate(frame, [countEl.start, countEl.end], [0, 1], {
     ...clamp,
     easing: LIGHT,
   });
@@ -474,14 +446,17 @@ export function LiveDashboard({
     );
 
   const winAt = (f: number) =>
-    spring({ frame: f - B.window, fps, config: HEAVY });
+    spring({ frame: f - appEl.start, fps, config: HEAVY });
   const win = winAt(frame);
-  const winFade = interpolate(frame, [B.window, B.window + 12], [0, 1], {
+  const winFade = interpolate(frame, [appEl.start, appEl.end], [0, 1], {
     ...clamp,
     easing: ENTER,
   });
   const cameraAt = (f: number) =>
-    interpolate(f, [0, 190], [1, 1.03], { ...clamp, easing: CAMERA });
+    interpolate(f, [cameraEl.start, cameraEl.end], [1, 1.03], {
+      ...clamp,
+      easing: CAMERA,
+    });
   const camera = cameraAt(frame);
   // The window carries the whole dashboard, so one tilt on it covers every
   // line inside while it rises or the camera creeps in.
@@ -491,8 +466,8 @@ export function LiveDashboard({
   const winMoving =
     stirs((f) => (1 - winAt(f)) * 70, 5e-4) ||
     stirs((f) => (0.95 + 0.05 * winAt(f)) * cameraAt(f), 1e-6);
-  const rise = (at: number): React.CSSProperties => {
-    const s = interpolate(frame, [at, at + 14], [0, 1], {
+  const rise = (at: number, len: number): React.CSSProperties => {
+    const s = interpolate(frame, [at, at + len], [0, 1], {
       ...clamp,
       easing: ENTER,
     });
@@ -521,7 +496,11 @@ export function LiveDashboard({
       p,
       k: -1,
       y: j + tickS.reduce((a, b) => a + b, 0),
-      s: spring({ frame: frame - (B.feed + j * 3), fps, config: CARD }),
+      s: spring({
+        frame: frame - tl.get(`payment:${j}`).start,
+        fps,
+        config: CARD,
+      }),
     })),
   ];
   const feedVisible = tall ? 4 : 4;
@@ -643,7 +622,7 @@ export function LiveDashboard({
             >
               <div
                 style={{
-                  ...rise(B.head),
+                  ...rise(headEl.start, headEl.beat("rise")),
                   display: "flex",
                   alignItems: "center",
                   height: 44,
@@ -733,7 +712,10 @@ export function LiveDashboard({
                 <div style={{ width: CHART.w }}>
                   <div
                     style={{
-                      ...rise(B.head + 3),
+                      ...rise(
+                        headEl.start + headEl.beat("chartAt"),
+                        headEl.beat("rise"),
+                      ),
                       fontSize: 16,
                       color: c.muted,
                     }}
@@ -752,7 +734,7 @@ export function LiveDashboard({
                       fontVariantNumeric: "tabular-nums",
                       opacity: interpolate(
                         frame,
-                        [B.count, B.count + 8],
+                        [countEl.start, countEl.start + countEl.beat("fade")],
                         [0, 1],
                         {
                           ...clamp,
@@ -765,7 +747,10 @@ export function LiveDashboard({
                   </div>
                   <div
                     style={{
-                      ...rise(B.count + 30),
+                      ...rise(
+                        countEl.start + countEl.beat("changeAt"),
+                        countEl.beat("rise"),
+                      ),
                       display: "flex",
                       alignItems: "baseline",
                       gap: 12,
@@ -846,7 +831,10 @@ export function LiveDashboard({
                       strokeLinecap="round"
                       opacity={interpolate(
                         frame,
-                        [B.draw + 4, B.draw + 28],
+                        [
+                          drawEl.start + drawEl.beat("yesterdayAt"),
+                          drawEl.start + drawEl.beat("yesterdayEnd"),
+                        ],
                         [0, 0.8],
                         {
                           ...clamp,
@@ -877,12 +865,15 @@ export function LiveDashboard({
                           y2={CHART.h - dot.y}
                           stroke={withAlpha(accent, 0.3)}
                           strokeDasharray="2 4"
-                          opacity={clamp01((frame - B.draw - 40) / 8)}
+                          opacity={clamp01(
+                            (frame - drawEl.start - drawEl.beat("dropAt")) /
+                              drawEl.beat("drop"),
+                          )}
                         />
                         <circle
                           r={4 + pulse * 10}
                           fill={accent}
-                          opacity={frame > B.draw + 46 ? (1 - pulse) * 0.2 : 0}
+                          opacity={frame > drawEl.end ? (1 - pulse) * 0.2 : 0}
                         />
                         <circle
                           r={4.5}
@@ -892,7 +883,10 @@ export function LiveDashboard({
                         />
                       </g>
                     ) : null}
-                    {ticksDone > 0 && (lastLive || lastTickT < 22)
+                    {lastTick &&
+                    (lastLive ||
+                      lastTickT <
+                        lastTick.beat("popOutAt") + lastTick.beat("popOut"))
                       ? (() => {
                           const label = `+${money(live[ticksDone - 1].amount)}`;
                           const w = label.length * 9.6 + 22;
@@ -903,10 +897,19 @@ export function LiveDashboard({
                           });
                           const out = lastLive
                             ? 0
-                            : interpolate(lastTickT, [14, 22], [0, 1], {
-                                ...clamp,
-                                easing: EXIT,
-                              });
+                            : interpolate(
+                                lastTickT,
+                                [
+                                  lastTick.beat("popOutAt"),
+                                  lastTick.beat("popOutAt") +
+                                    lastTick.beat("popOut"),
+                                ],
+                                [0, 1],
+                                {
+                                  ...clamp,
+                                  easing: EXIT,
+                                },
+                              );
                           return (
                             <g
                               transform={`translate(${Math.min(dot.x, CHART.w - w / 2)} ${dot.y - 34 + (1 - pop) * 10 - out * 6}) scale(${0.85 + 0.15 * pop})`}
@@ -960,7 +963,10 @@ export function LiveDashboard({
                 >
                   <div
                     style={{
-                      ...rise(B.head + 6),
+                      ...rise(
+                        headEl.start + headEl.beat("feedAt"),
+                        headEl.beat("rise"),
+                      ),
                       display: "flex",
                       fontSize: 16,
                       color: c.muted,
@@ -988,7 +994,11 @@ export function LiveDashboard({
                     {feedRows.map(({ p, k, y, s }) => {
                       if (s <= 0.001) return null;
                       const fresh =
-                        k >= 0 ? clamp01(1 - (frame - tickAt[k]) / 36) : 0;
+                        k >= 0
+                          ? clamp01(
+                              1 - (frame - tickAt[k]) / ticks[k].beat("glow"),
+                            )
+                          : 0;
                       return (
                         <div
                           key={`${k}-${p.customer}`}
@@ -1071,14 +1081,18 @@ export function LiveDashboard({
               >
                 {kpis.map((m, i) => {
                   const fmt = fmtMetric(m);
+                  const kpi = tl.get(`kpi:${i}`);
                   const enter = spring({
-                    frame: frame - (B.kpi + i * 3),
+                    frame: frame - kpi.start,
                     fps,
                     config: CARD,
                   });
                   const roll = interpolate(
                     frame,
-                    [B.kpi + 2 + i * 3, B.kpi + 38 + i * 3],
+                    [
+                      kpi.start + kpi.beat("rollAt"),
+                      kpi.start + kpi.beat("rollAt") + kpi.beat("roll"),
+                    ],
                     [0, 1],
                     {
                       ...clamp,
@@ -1093,7 +1107,7 @@ export function LiveDashboard({
                   const spark = m.spark ?? makeSpark(i, m.goodWhen === "down");
                   const sparkP = interpolate(
                     frame,
-                    [B.kpi + 6 + i * 3, B.kpi + 44 + i * 3],
+                    [kpi.start + kpi.beat("sparkAt"), kpi.end],
                     [0, 1],
                     {
                       ...clamp,
@@ -1135,7 +1149,12 @@ export function LiveDashboard({
                             fontVariantNumeric: "tabular-nums",
                             opacity: interpolate(
                               frame,
-                              [B.kpi + 30 + i * 3, B.kpi + 40 + i * 3],
+                              [
+                                kpi.start + kpi.beat("changeAt"),
+                                kpi.start +
+                                  kpi.beat("changeAt") +
+                                  kpi.beat("change"),
+                              ],
                               [0, 1],
                               {
                                 ...clamp,
@@ -1164,7 +1183,7 @@ export function LiveDashboard({
                           <Rolling
                             from={m.value + step * (ticksDone - 1)}
                             to={m.value + step * ticksDone}
-                            t={lastTickT - 2}
+                            t={lastTickT - (lastTick?.beat("kpiLag") ?? 0)}
                             fmt={fmt}
                             lineHeight={36}
                           />

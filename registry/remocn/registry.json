@@ -15356,13 +15356,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "live-dashboard/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/live-dashboard.tsx"
+          "target": "components/remocn/live-dashboard/index.tsx"
+        },
+        {
+          "path": "live-dashboard/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/live-dashboard/timeline.ts"
         }
       ]
     },
