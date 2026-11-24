@@ -14300,10 +14300,19 @@
         {
           "path": "frosted-clear/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/frosted-clear.tsx"
+          "target": "components/remocn/frosted-clear/index.tsx"
+        },
+        {
+          "path": "frosted-clear/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/frosted-clear/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "embossed-mark",

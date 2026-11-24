@@ -14295,12 +14295,21 @@
       "title": "Frosted Clear",
       "description": "A frosted glass card clears to show a large 10x stat with a kicker.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/frosted-clear/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/frosted-clear.tsx"
+          "target": "components/remocn/frosted-clear/index.tsx"
+        },
+        {
+          "path": "registry/remocn/frosted-clear/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/frosted-clear/timeline.ts"
         }
       ],
       "type": "registry:component"

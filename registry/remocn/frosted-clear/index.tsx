@@ -7,6 +7,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type FrostedClearElementId, frostedClearTimeline } from "./timeline";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400"],
@@ -39,6 +41,12 @@ export interface FrostedClearProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the kicker, the title, the frost clearing,
+   * the copy settling and the glass edge resting, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FrostedClearElementId>;
 }
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -150,7 +158,11 @@ function Content({
   settle,
   ink,
   fontFamily,
+  kickerIn,
+  titleIn,
 }: {
+  kickerIn: { start: number; length: number };
+  titleIn: { start: number; length: number };
   t: number;
   title: string;
   kicker?: string;
@@ -163,8 +175,11 @@ function Content({
   const glide = useGlide();
   const { width, height } = useSceneConfig();
   const u = height / 720;
-  const rise = (d: number) =>
-    interpolate(t, [d, d + 26], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const rise = ({ start, length }: { start: number; length: number }) =>
+    interpolate(t, [start, start + length], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
   return (
     <div
       style={{
@@ -190,8 +205,8 @@ function Content({
             textTransform: "uppercase",
             color: ink ?? p.fg,
             marginBottom: size * 0.06,
-            opacity: rise(0),
-            transform: `translateY(${(1 - rise(0)) * 24 * u}px)${glide(midway(rise(0)))}`,
+            opacity: rise(kickerIn),
+            transform: `translateY(${(1 - rise(kickerIn)) * 24 * u}px)${glide(midway(rise(kickerIn)))}`,
           }}
         >
           {kicker}
@@ -218,8 +233,8 @@ function Content({
           backgroundClip: "text",
           color: ink ?? "transparent",
           whiteSpace: "pre",
-          opacity: rise(3),
-          transform: `translateY(${(1 - rise(3)) * 40 * u}px)${glide(midway(rise(3)))}`,
+          opacity: rise(titleIn),
+          transform: `translateY(${(1 - rise(titleIn)) * 40 * u}px)${glide(midway(rise(titleIn)))}`,
         }}
       >
         {title}
@@ -244,23 +259,33 @@ function ScaleLayer({
   );
 }
 
-export function FrostedClear({
-  title = "10×",
-  kicker = "Faster renders",
-  accent = "#3B5BFD",
-  clear = 64,
-  blur = 30,
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: FrostedClearProps) {
+export function FrostedClear(props: FrostedClearProps) {
+  const {
+    title = "10×",
+    kicker = "Faster renders",
+    accent = "#3B5BFD",
+    blur = 30,
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    frostedClearTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const clearEl = tl.get("clear");
+  const settleEl = tl.get("settle");
+  const restEl = tl.get("rest");
   const p = THEMES[theme];
   const bg =
     background === "transparent" ? "transparent" : (background ?? p.bg);
@@ -279,9 +304,11 @@ export function FrostedClear({
   const ox = pw * 0.5;
   const oy = ph * 0.55;
   const feather = 170 * u;
-  const k = EASE_CLEAR(interpolate(t, [28, 28 + clear], [0, 1], CLAMP));
+  const k = EASE_CLEAR(
+    interpolate(t, [clearEl.start, clearEl.end], [0, 1], CLAMP),
+  );
   const r = k * pw * 0.6;
-  const settle = interpolate(t, [52, 96], [0, 1], {
+  const settle = interpolate(t, [settleEl.start, settleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -293,7 +320,7 @@ export function FrostedClear({
   const front = `radial-gradient(circle at ${ox}px ${oy}px, rgba(0,0,0,0) ${Math.max(0, r - feather * 0.85)}px, #000 ${Math.max(0, r - feather * 0.5)}px, rgba(0,0,0,0) ${Math.max(0, r - feather * 0.1)}px)`;
   const inside = `radial-gradient(circle at ${ox}px ${oy}px, #000 ${Math.max(0, r - feather)}px, rgba(0,0,0,0) ${r}px)`;
   const glint = interpolate(k, [0.05, 0.2, 0.8, 1], [0, 1, 1, 0], CLAMP);
-  const restAll = interpolate(t, [80, 100], [0, 1], CLAMP);
+  const restAll = interpolate(t, [restEl.start, restEl.end], [0, 1], CLAMP);
 
   const contentProps = {
     t,
@@ -304,6 +331,8 @@ export function FrostedClear({
     settle,
     ink,
     fontFamily,
+    kickerIn: tl.get("kicker"),
+    titleIn: tl.get("title"),
   };
   const stroke = Math.max(1, 1.2 * u);
   const edge = (paint: string, mask: string, opacity: number) => (
