@@ -5717,13 +5717,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/tile-snake-loader/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/tile-snake-loader.tsx"
+          "target": "components/remocn/tile-snake-loader/index.tsx"
+        },
+        {
+          "path": "registry/remocn/tile-snake-loader/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/tile-snake-loader/timeline.ts"
         }
       ],
       "type": "registry:component"
