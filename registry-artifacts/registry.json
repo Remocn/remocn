@@ -3892,12 +3892,21 @@
       "title": "Agent Run",
       "description": "Animated brand-neutral AI agent run — a Thinking status and short plan, tool calls whose spinners close into checks while a timer counts real seconds, then a markdown answer with citations and a code block that streams in irregular token bursts. Light/dark themes.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/agent-run/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/agent-run.tsx"
+          "target": "components/remocn/agent-run/index.tsx"
+        },
+        {
+          "path": "registry/remocn/agent-run/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/agent-run/timeline.ts"
         }
       ],
       "type": "registry:component"
