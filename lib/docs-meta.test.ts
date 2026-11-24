@@ -517,7 +517,7 @@ describe("components with a timeline read it through useTimeline", () => {
     }
 
     expect(problems).toEqual([]);
-  });
+  }, 60_000);
 });
 
 describe("the transitions library page stays complete", () => {

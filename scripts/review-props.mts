@@ -61,7 +61,12 @@ function registrySubset(): string {
     const end = index.indexOf("\n  },\n", start);
     return index.slice(start + 1, end + 5);
   });
-  const file = path.join(root, "out/.review-props/registry-subset.tsx");
+  // One file per run: parallel runs in one checkout must not bundle each
+  // other's subset.
+  const file = path.join(
+    root,
+    `out/.review-props/registry-subset-${process.pid}.tsx`,
+  );
   mkdirSync(path.dirname(file), { recursive: true });
   writeFileSync(
     file,
