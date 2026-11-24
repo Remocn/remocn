@@ -8620,10 +8620,19 @@
         {
           "path": "flash-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/flash-count.tsx"
+          "target": "components/remocn/flash-count/index.tsx"
+        },
+        {
+          "path": "flash-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/flash-count/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "pull-in",

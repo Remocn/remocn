@@ -13,6 +13,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type FlashCountElementId, flashCountTimeline } from "./timeline";
 
 const hanken = loadHanken("normal", {
   weights: ["300", "400", "500"],
@@ -44,6 +46,12 @@ export interface FlashCountProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the drift, the count, the flash and the label,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<FlashCountElementId>;
 }
 
 const THEMES = {
@@ -166,30 +174,41 @@ function ScaleLayer({
   );
 }
 
-export function FlashCount({
-  value = 3600,
-  from = 120,
-  decimals = 0,
-  prefix = "",
-  suffix = "",
-  label = "frames in a two\u2011minute launch film",
-  eyebrow = "f/8  ·  1/250 s",
-  flashAt = 54,
-  accent,
-  ink,
-  background,
-  fontFamily = hanken.fontFamily,
-  fontWeight = 300,
-  shadow = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: FlashCountProps) {
+export function FlashCount(props: FlashCountProps) {
+  const {
+    value = 3600,
+    from = 120,
+    decimals = 0,
+    prefix = "",
+    suffix = "",
+    label = "frames in a two\u2011minute launch film",
+    eyebrow = "f/8  ·  1/250 s",
+    accent,
+    ink,
+    background,
+    fontFamily = hanken.fontFamily,
+    fontWeight = 300,
+    shadow = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const t = Math.max(0, frame - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    flashCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const flash = tl.get("flash");
+  const countEl = tl.get("count");
+  const driftEl = tl.get("drift");
+  const labelEl = tl.get("label");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const dot = accent ?? RED;
@@ -201,15 +220,29 @@ export function FlashCount({
   ).join("");
   const m = useMetrics(chars, label, eyebrow, fontFamily, fontWeight);
 
-  const F_ = flashAt;
+  const F_ = flash.start;
   const lit = t >= F_;
   const pop = lit
-    ? interpolate(t, [F_, F_ + 1, F_ + 12], [1, 0.85, 0], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      })
+    ? interpolate(
+        t,
+        [F_, F_ + flash.beat("popPeak"), flash.end],
+        [1, 0.85, 0],
+        {
+          ...CLAMP,
+          easing: EASE_OUT,
+        },
+      )
     : 0;
-  const pre = interpolate(t, [F_ - 8, F_ - 7, F_ - 5], [0, 1, 0], CLAMP);
+  const pre = interpolate(
+    t,
+    [
+      F_ + flash.beat("preAt"),
+      F_ + flash.beat("prePeak"),
+      F_ + flash.beat("preEnd"),
+    ],
+    [0, 1, 0],
+    CLAMP,
+  );
   const field = lit
     ? interpolateColors(pop, [0, 1], [c.bg, c.pop])
     : interpolateColors(pre * 0.25, [0, 1], [c.ambient, c.pop]);
@@ -227,7 +260,7 @@ export function FlashCount({
     );
   }
 
-  const countP = interpolate(t, [4, F_], [0, 1], {
+  const countP = interpolate(t, [countEl.start, countEl.end], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.3, 0.6, 0.4, 1),
   });
@@ -259,7 +292,11 @@ export function FlashCount({
   const right = W - marginX;
 
   const driftAt = (f: number) =>
-    Math.min(1, (Math.max(0, f - delay) * speed) / F_);
+    Math.min(
+      1,
+      Math.max(0, Math.max(0, f - delay) * speed - driftEl.start) /
+        driftEl.length,
+    );
   const driftP = driftAt(frame);
   const drifting =
     driftAt(frame + 1) !== driftP || driftAt(frame - 1) !== driftP;
@@ -315,7 +352,7 @@ export function FlashCount({
     </div>
   );
 
-  const labelP = interpolate(t, [F_ + 4, F_ + 22], [0, 1], {
+  const labelP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

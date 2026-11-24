@@ -8615,12 +8615,21 @@
       "title": "Flash Count",
       "description": "A counter lands on 3,600 with a camera-flash pop, an exposure eyebrow in the corner.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/flash-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/flash-count.tsx"
+          "target": "components/remocn/flash-count/index.tsx"
+        },
+        {
+          "path": "registry/remocn/flash-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/flash-count/timeline.ts"
         }
       ],
       "type": "registry:component"
