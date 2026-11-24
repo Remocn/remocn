@@ -5894,13 +5894,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/noise-forge-sting/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/noise-forge-sting.tsx"
+          "target": "components/remocn/noise-forge-sting/index.tsx"
+        },
+        {
+          "path": "registry/remocn/noise-forge-sting/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/noise-forge-sting/timeline.ts"
         }
       ],
       "type": "registry:component"
