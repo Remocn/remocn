@@ -9789,12 +9789,21 @@
       "title": "Sold Out",
       "description": "A stock counter races to zero, then a tilted chrome-gradient 'SOLD OUT' band slams across.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/sold-out/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/sold-out.tsx"
+          "target": "components/remocn/sold-out/index.tsx"
+        },
+        {
+          "path": "registry/remocn/sold-out/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/sold-out/timeline.ts"
         }
       ],
       "type": "registry:component"
