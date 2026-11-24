@@ -7120,12 +7120,21 @@
       "title": "Answer First",
       "description": "The question \"Who made this video?\" is answered by a big \"A pull request.\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/answer-first/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/answer-first.tsx"
+          "target": "components/remocn/answer-first/index.tsx"
+        },
+        {
+          "path": "registry/remocn/answer-first/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/answer-first/timeline.ts"
         }
       ],
       "type": "registry:component"
