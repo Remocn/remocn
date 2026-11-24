@@ -2776,12 +2776,17 @@
       "title": "Radial Burst",
       "description": "Sculptural ribbons twist into a tilted ring and sweep outward through contour echoes for an expressive product introduction.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/radial-burst/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/radial-burst.tsx"
+          "target": "components/remocn/radial-burst/index.tsx"
+        },
+        {
+          "path": "registry/remocn/radial-burst/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/radial-burst/timeline.ts"
         }
       ],
       "type": "registry:component"
