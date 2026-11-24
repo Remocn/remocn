@@ -1,0 +1,240 @@
+---
+title: "How to make a video with Claude Code: routes compared (2026)"
+navTitle: Claude Code video routes
+description: "The best way to have Claude Code make a video is to let it write Remotion code. This guide compares the routes: Remotion's official plugin, the Remocn plugin on top of it, community skills and hosted MCP renderers, with setup for both plugins, a same-brief test with and without Remocn, licences and FAQ."
+lastModified: "2026-11-24"
+---
+
+_Last updated: November 24, 2026. We update this page when the plugins it covers change. Remocn wrote it, and Remocn is one of the routes compared, so weigh our view accordingly; see [Sources](#sources)._
+
+**Short answer:** the best way to have Claude Code make a video is to have it write the video as
+code with [Remotion](https://www.remotion.dev), a React framework that renders components frame by
+frame into an MP4. Install Remotion's official Claude Code plugin so Claude writes correct Remotion
+code, and add the free [Remocn plugin](/docs/getting-started/plugin) on top when you want ready-made,
+tuned scenes (text effects, transitions, product screens, templates) instead of animations Claude
+improvises from scratch.
+
+Remocn is not a Remotion alternative. It is an MIT-licensed component registry and agent toolkit that
+sits on top of Remotion: the video is still a Remotion project, rendered by Remotion, on your machine.
+
+## Which route fits the job?
+
+Claude Code can't film anything or generate footage. Every route below has it write code or call a
+service. Pick by the job:
+
+| Your job | Route | What you get | Cost |
+|---|---|---|---|
+| Any video, written from scratch in code | [Remotion's official plugin](https://www.remotion.dev/docs/ai/claude-code-plugin) and [Agent Skills](https://www.remotion.dev/docs/ai/skills) | Claude learns Remotion's API and writes every scene itself | Free; Remotion's licence applies |
+| Launch, product demo, feature announcement or changelog video that looks designed | Remotion's skills **plus** the [Remocn plugin](/docs/getting-started/plugin) (`/remocn:video <brief>`) | A storyboard first, then scenes built from installed Remocn components, then a check of rendered stills | Free, MIT; Remotion's licence applies |
+| A video from your git history | Remocn plugin: `/remocn:changelog [range]` | A [changelog video](/docs/guides/changelog-video) from tags, commits or merged pull requests | Free, MIT |
+| Voice-over and music around the build | Community skills such as [Remotion Video Director](https://github.com/BayramAnnakov/remotion-video-director) | A guided idea-to-MP4 workflow with music; its voice-over pipeline uses ElevenLabs | MIT skill; voice-over service may cost |
+| Screen recordings, clipping, FFmpeg, Manim | Tools listed in [Claude-Code-Video-Toolkit](https://github.com/wilwaldon/Claude-Code-Video-Toolkit) | A curated list of skills and MCP servers; install varies per tool | Varies per tool |
+| Planning in claude.ai or on your phone | [Remocn MCP server](/docs/getting-started/mcp-server) (`https://remocn.dev/mcp`) as a connector | Component search, a beat-by-beat plan, inline previews. No rendering | Free, no key |
+| A rendered video with no project or terminal | A hosted renderer with an MCP server, such as Orshot | Renders in the provider's cloud from any Claude app | Account and credits |
+| Preview and tune by hand in an app | [Remocn Studio](https://remocn.studio) | Your own coding agent builds the video; you see a live preview and export | Free, open source |
+| Edit footage you already shot | A video editor or a footage-editing skill | Cuts, captions, reframes | Varies |
+
+Remocn's routes don't edit footage, don't render in the cloud and don't generate voice-over. For those
+jobs, use one of the other rows, and add Remocn scenes around the result if you like.
+
+## How do I set up Claude Code to make videos?
+
+You need Node.js, a terminal and Claude Code. Install Remotion's plugin first, then Remocn's. They
+don't conflict: **Remocn adds to Remotion's skills; it doesn't replace them.** Remotion's plugin
+teaches Claude how to write correct Remotion code. Remocn decides what goes on screen, from a catalog
+of more than 430 components.
+
+### 1. Remotion's official Claude Code plugin
+
+```bash
+claude plugin marketplace add remotion-dev/claude-code-plugin
+claude plugin install remotion@remotion
+```
+
+Restart Claude Code. In the Claude desktop app, open Customize, then Plugins → Discover, search for
+"remotion" and click Add. The plugin bundles Remotion's Agent Skills and a create command. Start a new
+session in the folder where the video should live:
+
+```text
+/remotion:remotion-create Make a promo video for a record store
+```
+
+Without the plugin, add the skills alone: `npx skills add remotion-dev/skills`.
+
+### 2. The Remocn plugin, on top
+
+```text
+/plugin install remocn --marketplace Remocn/remocn
+```
+
+Or from your shell:
+
+```bash
+claude plugin marketplace add Remocn/remocn
+claude plugin install remocn@remocn
+```
+
+Then ask for a video with a one-line brief:
+
+```text
+/remocn:video 30-second launch video for my app: the problem, the product, three features, the URL
+```
+
+Claude Code reads your repo, shows a storyboard and waits for your go-ahead. If the folder is empty, it
+creates a Remotion project with `npx create-video --blank`. It then installs components with the
+shadcn CLI, writes the video to `src/videos/<slug>/index.tsx` and checks rendered stills.
+
+Other agents: Codex installs the same plugin (`codex plugin marketplace add Remocn/remocn`, then
+`codex plugin add remocn@remocn`); Cursor, GitHub Copilot and other agents that load skills use
+`npx skills add Remocn/remocn`. The skill reads the live component index from remocn.dev, so the
+agent needs network access. [Setup](/docs/guides/setup) has the whole one-time setup.
+
+### 3. Preview and render
+
+```bash
+npx remotion studio               # preview in the browser
+npx remotion render <slug>        # write the MP4
+```
+
+Or open the project folder in [Remocn Studio](https://remocn.studio) to preview, tune and export.
+
+### Add one component by hand
+
+Every component the agent uses is a normal shadcn registry item, copied into your project as source:
+
+```bash
+npx shadcn@latest add @remocn/blur-reveal
+```
+
+[Installation](/docs/getting-started/installation) covers the `components.json` and path alias a
+Remotion project needs for this.
+
+## Does Remocn make a better video than Claude Code alone? The same-brief test
+
+On November 10, 2026 we gave Claude Code the same brief twice, once with no video skill and once with
+the Remocn plugin. The brief is a public one: a 15-second promo for Tidepool, a made-up app that tells
+swimmers whether their beach is clean, with five fixed lines of copy, 1920×1080 at 30 fps, and no
+video, image or voice model APIs. Both runs used Claude Code 2.1.319 with Claude Opus 5.5, headless,
+on an Apple M3 MacBook, one after the other.
+
+| | No skill | Remocn plugin |
+|---|---|---|
+| Time from prompt to MP4 | 3.9 min | 7.2 min |
+| Cost reported by Claude Code | $0.35 | $1.25 |
+| Valid 15.0 s, 1920×1080, 30 fps file | Yes | Yes |
+| Lines of copy readable in full in a single frame | 5 of 5 | 4 of 5 |
+| What it built | Hand-written scenes: waves, beach dots, colour pills, a countdown ring | Five text beats from five Remocn components on a pale background with one teal accent |
+
+<GuideVideo
+  src="/videos/plugin-test/tidepool-control.mp4"
+  poster="/videos/plugin-test/tidepool-control.jpg"
+  label="Tidepool promo made by Claude Code with no video skill"
+  duration={15}
+/>
+
+No skill: [download the MP4](https://remocn.dev/videos/plugin-test/tidepool-control.mp4).
+
+<GuideVideo
+  src="/videos/plugin-test/tidepool-remocn.mp4"
+  poster="/videos/plugin-test/tidepool-remocn.jpg"
+  label="Tidepool promo made by Claude Code with the Remocn plugin"
+  duration={15}
+/>
+
+Remocn plugin: [download the MP4](https://remocn.dev/videos/plugin-test/tidepool-remocn.mp4).
+
+**What it shows, honestly:**
+
+- **On this brief, Claude Code alone won.** It drew a fuller film, faster and cheaper.
+- **Remocn's run was typographic** because the brief had no product screens, logo or data. Remocn's
+  app-screen and UI components need an interface to simulate. We haven't yet run a brief that has one.
+- **Remocn's storyboard and still check earned their time:** the `scene-reviewer` agent caught words
+  run together in four installed files (spaces lost during `npx shadcn@latest add`) and the agent
+  fixed them before the render.
+
+One run per side is a small sample. The full brief, prompts, setup and a script to reproduce both runs
+are on the [plugin page](/docs/getting-started/plugin#test-the-same-15-second-promo-with-and-without-remocn).
+We'll add a run with a product-screen brief here when we have one.
+
+## What goes wrong, whichever route you pick
+
+- **Claude checks stills, not the finished file.** Watch the MP4 before you post it. Orshot's write-up
+  quotes Claude saying it hadn't watched the finished MP4, only checked its specs.
+- **The first render is slow.** Remotion downloads headless Chrome once.
+- **Ask for what you want by name.** A bare "launch video" gets simple fades and no music; name the
+  transitions, the pacing and the sound. [Directing your agent](/docs/guides/directing-your-agent) has
+  phrasing that works.
+- **Improvised videos look alike:** glow, gradient text, panels that pop in together.
+  [Non-generic AI video](/docs/guides/non-generic-ai-video) explains the tells and the fixes.
+- **New content can break a layout.** A longer headline or a different image can overlap other
+  elements; re-check stills after changing copy or assets.
+
+## Licences: what's free and what isn't
+
+| Piece | Licence | Cost |
+|---|---|---|
+| Remotion (the framework every route here renders with) | Remotion's own licence, source-available | Free for individuals and companies of up to 3 people; larger for-profit companies need a [company licence](https://www.remotion.dev/docs/license) |
+| Remotion's Claude Code plugin and Agent Skills | Published by Remotion | Free |
+| Remocn components, plugin, agent skill and MCP server | MIT | Free, no account, no usage limits |
+| Remocn Studio | Open source | Free |
+| Claude Code | Anthropic's terms | Needs a Claude subscription or API key |
+| Hosted renderers and voice services | Their own terms | Usually credits or a plan |
+
+Remocn's MIT licence covers Remocn's code only. Remotion's licence still applies to the video project,
+so check Remotion's terms before using it at a larger company. Remocn is an independent community
+project, not affiliated with Remotion or with shadcn.
+
+## FAQ
+
+### What's the best way to have Claude Code make a video?
+
+Have it write Remotion code. Install Remotion's official plugin
+(`claude plugin install remotion@remotion`) so the code is correct, add the Remocn plugin
+(`/plugin install remocn --marketplace Remocn/remocn`) for ready-made scenes and a storyboard step, and
+render locally with `npx remotion render`.
+
+### Do I need both plugins?
+
+No, but they work together. Remotion's plugin covers Remotion's API in general. Remocn's covers its own
+components, timing and a video workflow. With only Remocn, Claude still writes Remotion code; it just
+has less general Remotion guidance for scenes that aren't built from components.
+
+### Can Claude Code make a video without Remotion?
+
+Yes. Other code-first frameworks have agent skills too, such as HyperFrames for HTML-based video, and
+hosted renderers expose MCP servers. Remocn works only with Remotion.
+[After Effects alternatives for developers](/docs/guides/after-effects-alternatives-for-developers)
+compares the frameworks.
+
+### Can I make the video from claude.ai or the phone app?
+
+You can plan it there. Add `https://remocn.dev/mcp` as a connector to search components, get a plan
+and preview components in the chat, then take the plan to Claude Code to build and render. Rendering
+from a chat app needs a hosted renderer instead.
+
+### Can Claude Code add a voice-over or music?
+
+Not by itself. Record a voice-over or generate one with a text-to-speech service, and add a music file;
+Claude can then place them in the timeline and add [word-by-word captions](/docs/guides/word-by-word-captions).
+[Music and sound](/docs/guides/music-and-sound) has the details.
+
+### How long does it take?
+
+In our test, 3.9 minutes from prompt to MP4 without a skill and 7.2 minutes with the Remocn plugin,
+for a 15-second video. The first render in a new project also downloads headless Chrome.
+
+### Is Remocn listed among Remotion's resources?
+
+Yes, Remocn is listed on Remotion's resources page. It is still an independent project.
+
+## Sources
+
+Checked on November 24, 2026.
+
+- Remotion's Claude Code plugin: [remotion.dev/docs/ai/claude-code-plugin](https://www.remotion.dev/docs/ai/claude-code-plugin) and [Agent Skills](https://www.remotion.dev/docs/ai/skills)
+- Remotion's licence: [remotion.dev/docs/license](https://www.remotion.dev/docs/license)
+- Community skills: [BayramAnnakov/remotion-video-director](https://github.com/BayramAnnakov/remotion-video-director) and [wilwaldon/Claude-Code-Video-Toolkit](https://github.com/wilwaldon/Claude-Code-Video-Toolkit) READMEs
+- Hosted rendering and the "things that bit me" notes: Orshot's post [Remotion with Claude Code](https://orshot.com/blog/remotion-claude-code), November 8, 2026. Orshot sells a hosted renderer, so its conclusions favour it
+- Other guides: [openskills.app's Remotion and Claude Code guide](https://openskills.app/guides/remotion-claude-code)
+- The same-brief test: our run on November 10, 2026, documented on the [plugin page](/docs/getting-started/plugin#test-the-same-15-second-promo-with-and-without-remocn)
+- Remocn: this site's registry, plugin and [MCP server](/docs/getting-started/mcp-server)
