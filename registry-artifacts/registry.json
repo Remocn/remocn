@@ -9136,12 +9136,21 @@
       "title": "Slash Wipe",
       "description": "A gradient slash wipes across and reveals a large title, '/transitions', with a one-line sub.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/slash-wipe/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/slash-wipe.tsx"
+          "target": "components/remocn/slash-wipe/index.tsx"
+        },
+        {
+          "path": "registry/remocn/slash-wipe/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/slash-wipe/timeline.ts"
         }
       ],
       "type": "registry:component"

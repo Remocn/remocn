@@ -7,6 +7,14 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_SECTIONS,
+  type SectionText,
+  type SlashWipeElementId,
+  sectionsOf,
+  slashWipeTimeline,
+} from "./timeline";
 
 const bricolage = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -17,10 +25,7 @@ const manrope = loadManrope("normal", {
   subsets: ["latin"],
 });
 
-export interface SlashSection {
-  title: string;
-  sub?: string;
-}
+export type SlashSection = SectionText;
 
 export interface SlashWipeProps {
   sections?: SlashSection[];
@@ -40,12 +45,13 @@ export interface SlashWipeProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the logo, single sections and wipes, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<SlashWipeElementId>;
 }
-
-const DEFAULT_SECTIONS: SlashSection[] = [
-  { title: "captions", sub: "31 caption styles that follow every word." },
-  { title: "transitions", sub: "Cuts that land on the beat." },
-];
 
 const FLUTED = ["#1d2a8f", "#2f7bff", "#ff7a3d", "#ffe2c4"] as const;
 
@@ -128,28 +134,35 @@ function ScaleLayer({
   );
 }
 
-export function SlashWipe({
-  sections = DEFAULT_SECTIONS,
-  every = 56,
-  logo,
-  fontWeight = 500,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = bricolage.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: SlashWipeProps) {
+export function SlashWipe(props: SlashWipeProps) {
+  const {
+    sections = DEFAULT_SECTIONS,
+    logo,
+    fontWeight = 500,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = bricolage.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const raw = Math.max(0, useSceneFrame() - delay);
   const glide = useGlide();
   const frame = raw * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    slashWipeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const p = PALETTES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
-  const list = sections.length >= 1 ? sections.slice(0, 5) : DEFAULT_SECTIONS;
+  const list = sectionsOf(sections);
   const n = list.length;
   const portrait = H > W * 1.1;
   const u = Math.min(W, H) / 720;
@@ -182,25 +195,35 @@ export function SlashWipe({
   const lineX = (xAtBase: number, y: number) => xAtBase + k * (yb - y);
   const travel = W + k * (H + pad - yb) + base * SLASH.sw + pad * 4;
 
-  const T = (j: number) => 22 + j * every;
   const sweep = (j: number) => {
-    const t0 = T(j);
-    const stretch = interpolate(frame, [t0, t0 + 8], [0, 1], {
+    const w = tl.get(`wipe:${j}`);
+    const t0 = w.start;
+    const stretch = interpolate(frame, [t0, t0 + w.beat("stretch")], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
     });
-    const lead = interpolate(frame, [t0 + 6, t0 + 24], [0, travel], {
-      ...CLAMP,
-      easing: EASE_SWEEP,
-    });
-    const trail = interpolate(frame, [t0 + 10, t0 + 30], [0, travel], {
-      ...CLAMP,
-      easing: EASE_SWEEP,
-    });
+    const lead = interpolate(
+      frame,
+      [t0 + w.beat("lead"), t0 + w.beat("leadEnd")],
+      [0, travel],
+      {
+        ...CLAMP,
+        easing: EASE_SWEEP,
+      },
+    );
+    const trail = interpolate(
+      frame,
+      [t0 + w.beat("trail"), w.end],
+      [0, travel],
+      {
+        ...CLAMP,
+        easing: EASE_SWEEP,
+      },
+    );
     return {
       started: frame >= t0,
-      wiping: frame >= t0 + 6,
-      done: frame >= t0 + 30,
+      wiping: frame >= t0 + w.beat("lead"),
+      done: frame >= w.end,
       stretch,
       lead: geo[j].xL + geo[j].sw + lead,
       trail: geo[j].xL + trail,
@@ -257,27 +280,36 @@ export function SlashWipe({
     ]
       .map(([x, y]) => `${x},${y}`)
       .join(" ");
-    const arrive = i === 0 ? null : T(i - 1);
-    const rise =
-      arrive === null
-        ? interpolate(frame, [0, 16], [0, 1], { ...CLAMP, easing: EASE_OUT })
-        : 1;
-    const slide =
-      arrive === null
-        ? 1
-        : interpolate(frame, [arrive + 12, arrive + 34], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-    const subStart = arrive === null ? 8 : arrive + 22;
-    const subT = interpolate(frame, [subStart, subStart + 16], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
-    const glyphT =
-      arrive === null
-        ? interpolate(frame, [0, 14], [0, 1], { ...CLAMP, easing: EASE_OUT })
-        : 1;
+    const e = tl.get(`section:${i}`);
+    const first = i === 0;
+    const rise = first
+      ? interpolate(frame, [e.start, e.start + e.beat("rise")], [0, 1], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        })
+      : 1;
+    const slide = first
+      ? 1
+      : interpolate(frame, [e.start, e.start + e.beat("slide")], [0, 1], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        });
+    const subStart = e.start + e.beat("sub");
+    const subT = interpolate(
+      frame,
+      [subStart, subStart + e.beat("subLen")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
+    const glyphT = first
+      ? interpolate(frame, [e.start, e.start + e.beat("glyph")], [0, 1], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        })
+      : 1;
     const clipId = `${uid}-w${i}`;
     const gradId = `${uid}-g${i}`;
     return (
@@ -409,7 +441,8 @@ export function SlashWipe({
   }
 
   const transparent = background === "transparent";
-  const logoT = interpolate(frame, [0, 16], [0, 1], {
+  const logoEl = tl.get("logo");
+  const logoT = interpolate(frame, [logoEl.start, logoEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
