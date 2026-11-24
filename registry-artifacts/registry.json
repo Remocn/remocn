@@ -3873,12 +3873,21 @@
       "title": "Path Ride",
       "description": "A line draws itself along a curve with the text riding behind its head, then the curve pulls taut and the text settles on a straight, centered baseline.",
       "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/path-ride/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/path-ride.tsx"
+          "target": "components/remocn/path-ride/index.tsx"
+        },
+        {
+          "path": "registry/remocn/path-ride/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/path-ride/timeline.ts"
         }
       ],
       "type": "registry:component"

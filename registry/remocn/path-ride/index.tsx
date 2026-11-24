@@ -10,6 +10,12 @@ import { useEffect, useMemo, useState } from "react";
 import { continueRender, delayRender, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  PATH_RIDE_BEATS,
+  type PathRideElementId,
+  pathRideTimeline,
+} from "./timeline";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -27,6 +33,11 @@ export interface PathRideProps {
   lineWidth?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the draw, the straightening and the erase, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<PathRideElementId>;
 }
 
 /** An S-curve across a 1280×720 frame. */
@@ -43,14 +54,21 @@ export const pathRideDefaults = {
   lineColor: "#D97757",
   lineWidth: 3,
   speed: 1,
-} satisfies Required<Omit<PathRideProps, "className">>;
+} satisfies Required<Omit<PathRideProps, "className" | "timing">>;
 
 /** Beats on the 30 fps clock. */
-export const pathRideTiming = {
-  draw: [0, 40],
-  straighten: [50, 68],
-  erase: [52, 70],
-} as const;
+export const pathRideTiming = PATH_RIDE_BEATS;
+
+/** Where an element of the schedule starts and ends. */
+export interface PathRideSpan {
+  start: number;
+  end: number;
+}
+
+const span = (beat: readonly [number, number]): PathRideSpan => ({
+  start: beat[0],
+  end: beat[1],
+});
 
 /** Gap between the head and the last letter, in em. */
 const LEAD = 0.3;
@@ -86,24 +104,35 @@ export function getPathRideTime(
 }
 
 /** Arc length drawn so far. */
-export function getPathRideHead(t: number, length: number) {
-  return interpolate(t, [...pathRideTiming.draw], [0, length], {
+export function getPathRideHead(
+  t: number,
+  length: number,
+  draw: PathRideSpan = span(pathRideTiming.draw),
+) {
+  return interpolate(t, [draw.start, draw.end], [0, length], {
     ...CLAMP,
     easing: easeInOutCubic,
   });
 }
 
 /** Arc length erased from the start. */
-export function getPathRideTail(t: number, length: number) {
-  return interpolate(t, [...pathRideTiming.erase], [0, length], {
+export function getPathRideTail(
+  t: number,
+  length: number,
+  erase: PathRideSpan = span(pathRideTiming.erase),
+) {
+  return interpolate(t, [erase.start, erase.end], [0, length], {
     ...CLAMP,
     easing: easeInOutCubic,
   });
 }
 
 /** How far the curve has pulled straight, 0..1. */
-export function getPathRideStraighten(t: number) {
-  return interpolate(t, [...pathRideTiming.straighten], [0, 1], {
+export function getPathRideStraighten(
+  t: number,
+  straighten: PathRideSpan = span(pathRideTiming.straighten),
+) {
+  return interpolate(t, [straighten.start, straighten.end], [0, 1], {
     ...CLAMP,
     easing: easeInOutCubic,
   });
@@ -311,21 +340,32 @@ function useMetrics(text: string, font: string, fallback: number) {
   );
 }
 
-export function PathRide({
-  text = pathRideDefaults.text,
-  path = pathRideDefaults.path,
-  fontSize = pathRideDefaults.fontSize,
-  fontWeight = pathRideDefaults.fontWeight,
-  fontFamily = pathRideDefaults.fontFamily,
-  color = pathRideDefaults.color,
-  lineColor = pathRideDefaults.lineColor,
-  lineWidth = pathRideDefaults.lineWidth,
-  speed = pathRideDefaults.speed,
-  className,
-}: PathRideProps) {
+export function PathRide(props: PathRideProps) {
+  const {
+    text = pathRideDefaults.text,
+    path = pathRideDefaults.path,
+    fontSize = pathRideDefaults.fontSize,
+    fontWeight = pathRideDefaults.fontWeight,
+    fontFamily = pathRideDefaults.fontFamily,
+    color = pathRideDefaults.color,
+    lineColor = pathRideDefaults.lineColor,
+    lineWidth = pathRideDefaults.lineWidth,
+    speed = pathRideDefaults.speed,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    pathRideTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const draw = tl.get("draw");
+  const straighten = tl.get("straighten");
+  const erase = tl.get("erase");
   const unit = height / 720;
   const t = getPathRideTime(frame, { fps, speed });
   const metrics = useMetrics(
@@ -338,9 +378,9 @@ export function PathRide({
   const advances = metrics.advances.map((a) => a * fontSize);
   const { centers, width: textWidth } = getPathRideCenters(advances);
   const length = samples.length;
-  const head = getPathRideHead(t, length);
-  const tail = getPathRideTail(t, length);
-  const k = getPathRideStraighten(t);
+  const head = getPathRideHead(t, length, draw);
+  const tail = getPathRideTail(t, length, erase);
+  const k = getPathRideStraighten(t, straighten);
   const lift = lineWidth / 2 + LIFT * fontSize;
   // The line settles `lift` below the text so the capitals center on the frame.
   const straight: PathRideStraight = {
@@ -365,7 +405,7 @@ export function PathRide({
   const poseAt = (f: number, center: number) => {
     const at = getPathRideTime(f, { fps, speed });
     const arc = getPathRideArc(
-      getPathRideHead(at, length),
+      getPathRideHead(at, length, draw),
       center,
       textWidth,
       fontSize,
@@ -373,7 +413,7 @@ export function PathRide({
     return getPathRidePoint(
       samples,
       arc,
-      getPathRideStraighten(at),
+      getPathRideStraighten(at, straighten),
       straight,
       lift,
     );
