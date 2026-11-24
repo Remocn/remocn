@@ -4,6 +4,22 @@ import { loadFont } from "@remotion/google-fonts/Inter";
 import { useEffect, useState } from "react";
 import { continueRender, delayRender, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedTimeline,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_HOLD,
+  DEFAULT_STRIPES,
+  finite,
+  STRIPE_TIMING,
+  type StripeTypeElementId,
+  stripeCount,
+  stripePhases,
+  stripeTypeTimeline,
+} from "./timeline";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -25,6 +41,12 @@ export interface StripeTypeProps {
   hold?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single bands, the closing of the gaps and the
+   * exit, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `speed`.
+   */
+  timing?: Timing<StripeTypeElementId>;
 }
 
 export const stripeTypeDefaults = {
@@ -33,22 +55,16 @@ export const stripeTypeDefaults = {
   fontWeight: 800,
   fontFamily: INTER,
   color: "#fafafa",
-  stripes: 8,
+  stripes: DEFAULT_STRIPES,
   gap: 0.35,
   settle: "striped",
   exit: true,
-  hold: 30,
+  hold: DEFAULT_HOLD,
   speed: 1,
-} satisfies Required<Omit<StripeTypeProps, "className">>;
+} satisfies Required<Omit<StripeTypeProps, "className" | "timing">>;
 
 /** Beats on the 30 fps clock. */
-export const stripeTypeTiming = {
-  stagger: 2,
-  travel: 16,
-  close: 10,
-  /** Frames of empty screen after the exit in the preview. */
-  tail: 10,
-} as const;
+export const stripeTypeTiming = STRIPE_TIMING;
 
 /** Ink box of Inter in a `line-height: 1` box, in em from the top, until measured. */
 const INTER_INK = { top: 0.136, bottom: 0.864 + 0.24 };
@@ -64,10 +80,6 @@ const easeOutExpo = Easing.bezier(0.16, 1, 0.3, 1);
 const easeInExpo = Easing.bezier(0.7, 0, 0.84, 0);
 const easeInOutCubic = Easing.inOut(Easing.cubic);
 
-function finite(value: number | undefined, fallback: number) {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-}
-
 /** Maps a composition frame onto the 30 fps timeline, scaled by `speed`. */
 export function getStripeTypeTime(
   frame: number,
@@ -76,10 +88,6 @@ export function getStripeTypeTime(
   const fps = Math.max(1, finite(options.fps, 30));
   const speed = Math.max(0, finite(options.speed, 1));
   return (Math.max(0, finite(frame, 0)) * 30 * speed) / fps;
-}
-
-function stripeCount(stripes: number | undefined) {
-  return Math.max(1, Math.round(finite(stripes, stripeTypeDefaults.stripes)));
 }
 
 export interface StripeBand {
@@ -118,22 +126,17 @@ export interface StripeTypeTimeline {
 export function getStripeTypeTimeline(
   options: Pick<StripeTypeProps, "stripes" | "settle" | "exit" | "hold"> = {},
 ): StripeTypeTimeline {
-  const n = stripeCount(options.stripes);
-  const { stagger, travel, close, tail } = stripeTypeTiming;
-  const entered = stagger * (n - 1) + travel;
-  const settled = options.settle === "solid" ? entered + close : entered;
-  const hold = Math.max(0, finite(options.hold, stripeTypeDefaults.hold));
-  const exitStart = settled + hold;
-  const exitEnd = exitStart + stagger * (n - 1) + travel;
-  const exit = options.exit !== false;
-  return {
-    entered,
-    settled,
-    exitStart,
-    exitEnd,
-    duration: exit ? exitEnd + tail : settled + hold,
-  };
+  return stripePhases(options);
 }
+
+type StripeOptions = Pick<
+  StripeTypeProps,
+  "stripes" | "settle" | "exit" | "hold"
+>;
+
+/** The default schedule for `options`, when no resolved one is passed. */
+const scheduleOf = (options: StripeOptions) =>
+  resolve(stripeTypeTimeline(options, { length: 0 }));
 
 /** Preview length for the given options and speed. */
 export function getStripeTypeDuration(
@@ -155,20 +158,19 @@ export function getStripeTypeDuration(
 export function getStripeBandOffset(
   t: number,
   k: number,
-  options: Pick<StripeTypeProps, "stripes" | "settle" | "exit" | "hold"> = {},
+  options: StripeOptions = {},
+  schedule: ResolvedTimeline<StripeTypeElementId> = scheduleOf(options),
 ) {
-  const { stagger, travel } = stripeTypeTiming;
-  const timeline = getStripeTypeTimeline(options);
   const side = k % 2 === 0 ? -1 : 1;
-  const inStart = stagger * k;
-  const enter = interpolate(t, [inStart, inStart + travel], [1, 0], {
+  const bandIn = schedule.get(`band:${k}`);
+  const enter = interpolate(t, [bandIn.start, bandIn.end], [1, 0], {
     ...CLAMP,
     easing: easeOutExpo,
   });
   // `|| 0` folds −0 into 0 for a locked band.
   if (options.exit === false) return side * enter || 0;
-  const outStart = timeline.exitStart + stagger * k;
-  const leave = interpolate(t, [outStart, outStart + travel], [0, 1], {
+  const bandOut = schedule.get(`exit:${k}`);
+  const leave = interpolate(t, [bandOut.start, bandOut.end], [0, 1], {
     ...CLAMP,
     easing: easeInExpo,
   });
@@ -180,10 +182,11 @@ export function getStripeGap(
   t: number,
   gap: number,
   options: Pick<StripeTypeProps, "stripes" | "settle"> = {},
+  schedule: ResolvedTimeline<StripeTypeElementId> = scheduleOf(options),
 ) {
   if (options.settle !== "solid") return gap;
-  const { entered, settled } = getStripeTypeTimeline(options);
-  return interpolate(t, [entered, settled], [gap, 0], {
+  const closing = schedule.get("close");
+  return interpolate(t, [closing.start, closing.end], [gap, 0], {
     ...CLAMP,
     easing: easeInOutCubic,
   });
@@ -231,22 +234,30 @@ function useInkBox(text: string, font: string) {
   return ink;
 }
 
-export function StripeType({
-  text = stripeTypeDefaults.text,
-  fontSize = stripeTypeDefaults.fontSize,
-  fontWeight = stripeTypeDefaults.fontWeight,
-  fontFamily = stripeTypeDefaults.fontFamily,
-  color = stripeTypeDefaults.color,
-  stripes = stripeTypeDefaults.stripes,
-  gap = stripeTypeDefaults.gap,
-  settle = stripeTypeDefaults.settle,
-  exit = stripeTypeDefaults.exit,
-  hold = stripeTypeDefaults.hold,
-  speed = stripeTypeDefaults.speed,
-  className,
-}: StripeTypeProps) {
+export function StripeType(props: StripeTypeProps) {
+  const {
+    text = stripeTypeDefaults.text,
+    fontSize = stripeTypeDefaults.fontSize,
+    fontWeight = stripeTypeDefaults.fontWeight,
+    fontFamily = stripeTypeDefaults.fontFamily,
+    color = stripeTypeDefaults.color,
+    stripes = stripeTypeDefaults.stripes,
+    gap = stripeTypeDefaults.gap,
+    settle = stripeTypeDefaults.settle,
+    exit = stripeTypeDefaults.exit,
+    hold = stripeTypeDefaults.hold,
+    speed = stripeTypeDefaults.speed,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    stripeTypeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const unit = height / 720;
   const size = fontSize * unit;
   const t = getStripeTypeTime(frame, { fps, speed });
@@ -259,7 +270,7 @@ export function StripeType({
     width: 0.6 * Array.from(text).length,
   };
   const options = { stripes, settle, exit, hold };
-  const bands = getStripeBands(stripes, getStripeGap(t, gap, options));
+  const bands = getStripeBands(stripes, getStripeGap(t, gap, options, tl));
   const inkHeight = ink.bottom - ink.top;
   // Far enough that a band starting on either side is fully off the frame.
   const travel = (width + ink.width * size) / 2 + 0.2 * size;
@@ -297,7 +308,7 @@ export function StripeType({
           const bleed = k < bands.length - 1 ? Math.max(1, unit) / size : 0;
           const bottom =
             (1 - (ink.top + band.bottom * inkHeight) - bleed) * 100;
-          const offset = getStripeBandOffset(t, k, options);
+          const offset = getStripeBandOffset(t, k, options, tl);
           return (
             <div
               key={k}

@@ -3835,12 +3835,17 @@
       "title": "Stripe Type",
       "description": "A word cut into horizontal bands, as in the IBM logo, slides together from alternating sides and locks, then can pass on through.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "stripe-type/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/stripe-type.tsx"
+          "target": "components/remocn/stripe-type/index.tsx"
+        },
+        {
+          "path": "stripe-type/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/stripe-type/timeline.ts"
         }
       ]
     },
