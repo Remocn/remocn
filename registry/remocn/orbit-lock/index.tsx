@@ -11,6 +11,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type OrbitLockElementId, orbitLockTimeline } from "./timeline";
 
 export type OrbitLockProps = {
   /** Lockup revealed after the moons collide with the core. Falls back to a placeholder "remocn" lockup. */
@@ -25,6 +27,11 @@ export type OrbitLockProps = {
   /** Orbit tilt in degrees: 0 is a flat circle, 80 is nearly edge-on. */
   tilt?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the spiral, the impact and the lockup, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<OrbitLockElementId>;
 };
 
 export const orbitLockDefaults = {
@@ -36,8 +43,6 @@ export const orbitLockDefaults = {
   tilt: 64,
   speed: 1,
 };
-
-const IMPACT = 30;
 
 const TURNS = 1.9;
 const TRAIL = 10;
@@ -56,8 +61,10 @@ function moonAt(
   outer: number,
   inner: number,
   tilt: number,
+  /** Frames the spiral takes to reach the core. */
+  span: number,
 ): Moon {
-  const p = Math.min(1, Math.max(0, t / IMPACT));
+  const p = Math.min(1, Math.max(0, t / span));
   // Orbit radius collapses late; angular speed ramps up as it tightens.
   const r = inner + (outer - inner) * (1 - Easing.in(Easing.cubic)(p));
   const theta =
@@ -135,12 +142,24 @@ export function OrbitLock(props: OrbitLockProps) {
     flashColor,
     tilt,
     speed,
+    timing,
   } = { ...orbitLockDefaults, ...props };
   const glide = useGlide();
   const uid = `orbit-lock-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
   const t = frame * Math.max(0, speed);
+  const tl = useTimeline(
+    orbitLockTimeline,
+    props,
+    durationInFrames * Math.max(0, speed),
+    timing,
+  );
+  const orbit = tl.get("orbit");
+  const impact = tl.get("impact");
+  const lockup = tl.get("lockup");
+  const IMPACT = impact.start;
+  const at = (e: typeof impact, name: string) => e.start + e.beat(name);
   const s = Math.min(width, height);
   const cx = width / 2;
   const cy = height / 2;
@@ -150,36 +169,43 @@ export function OrbitLock(props: OrbitLockProps) {
   const core = s * 0.055;
   const outer = s * 0.36;
   const moonR = s * 0.02;
-  const p = Math.min(1, t / IMPACT);
+  const p = Math.min(1, (t - orbit.start) / orbit.length);
 
   const corePulse = 1 + 0.3 * p ** 4;
-  const burst = interpolate(t, [IMPACT, IMPACT + 2, IMPACT + 6], [1, 1.6, 0], {
-    ...clamp,
-    easing: Easing.out(Easing.cubic),
-  });
+  const burst = interpolate(
+    t,
+    [IMPACT, at(impact, "peak"), at(impact, "burst")],
+    [1, 1.6, 0],
+    {
+      ...clamp,
+      easing: Easing.out(Easing.cubic),
+    },
+  );
   const coreScale = t < IMPACT ? corePulse : corePulse * burst;
   const coreFill = interpolateColors(
     t,
-    [IMPACT - 2, IMPACT + 1],
+    [at(impact, "flashAt"), at(impact, "flashEnd")],
     [coreColor, flashColor],
   );
 
-  const ring = interpolate(t, [IMPACT, IMPACT + 16], [0, 1], {
+  const ring = interpolate(t, [IMPACT, impact.end], [0, 1], {
     ...clamp,
     easing: Easing.out(Easing.cubic),
   });
   const ringVisible = t >= IMPACT && ring < 1;
   const orbitOpacity = interpolate(
     t,
-    [0, 6, IMPACT - 4, IMPACT],
+    [orbit.start, at(orbit, "trace"), at(impact, "orbitsOut"), IMPACT],
     [0, 0.16, 0.1, 0],
     clamp,
   );
   const orbitR = core + (outer - core) * (1 - Easing.in(Easing.cubic)(p));
 
+  // The pop counts from the impact, as it always has: same float sums.
+  const popGap = lockup.start - IMPACT;
   const popAt = (f: number) =>
     spring({
-      frame: f - IMPACT - 3,
+      frame: f - IMPACT - popGap,
       fps,
       config: { damping: 11, stiffness: 170, mass: 0.7 },
     });
@@ -193,14 +219,35 @@ export function OrbitLock(props: OrbitLockProps) {
     Math.abs(pop - popAt(t - step)) * 0.45 > 4e-6;
 
   const bodies = Array.from({ length: count }, (_, i) => {
-    const head = moonAt(t, i, count, outer, core, tiltRad);
+    const head = moonAt(
+      t - orbit.start,
+      i,
+      count,
+      outer,
+      core,
+      tiltRad,
+      orbit.length,
+    );
     const trail = Array.from({ length: TRAIL }, (_, k) =>
-      moonAt(t - (k + 1) * TRAIL_STEP, i, count, outer, core, tiltRad),
+      moonAt(
+        t - (k + 1) * TRAIL_STEP - orbit.start,
+        i,
+        count,
+        outer,
+        core,
+        tiltRad,
+        orbit.length,
+      ),
     );
     return { i, head, trail };
   });
   const showMoons = t < IMPACT && t >= 0;
-  const appear = interpolate(t, [0, 5], [0, 1], clamp);
+  const appear = interpolate(
+    t,
+    [orbit.start, at(orbit, "fade")],
+    [0, 1],
+    clamp,
+  );
 
   const renderMoon = ({ i, head, trail }: (typeof bodies)[number]) => {
     const depth = 1 + (0.18 * head.z) / outer;
@@ -299,7 +346,12 @@ export function OrbitLock(props: OrbitLockProps) {
         style={{
           alignItems: "center",
           justifyContent: "center",
-          opacity: interpolate(t, [IMPACT + 3, IMPACT + 6], [0, 1], clamp),
+          opacity: interpolate(
+            t,
+            [lockup.start, at(lockup, "fade")],
+            [0, 1],
+            clamp,
+          ),
           transform: `scale(${0.55 + 0.45 * pop})${glide(popMoving)}`,
         }}
       >

@@ -4572,10 +4572,19 @@
         {
           "path": "orbit-lock/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/orbit-lock.tsx"
+          "target": "components/remocn/orbit-lock/index.tsx"
+        },
+        {
+          "path": "orbit-lock/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/orbit-lock/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "puzzle-snap",
