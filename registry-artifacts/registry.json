@@ -13376,12 +13376,21 @@
       "title": "Feature Chips Flow",
       "description": "Rows of feature pills stream by, then snap into a cluster around the logo.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/feature-chips-flow/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/feature-chips-flow.tsx"
+          "target": "components/remocn/feature-chips-flow/index.tsx"
+        },
+        {
+          "path": "registry/remocn/feature-chips-flow/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/feature-chips-flow/timeline.ts"
         }
       ],
       "type": "registry:component"
