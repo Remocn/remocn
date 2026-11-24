@@ -8111,12 +8111,21 @@
       "title": "Tategaki Turn",
       "description": "Vertical Japanese-style text turns upright into a horizontal line, 'Read it both ways.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/tategaki-turn/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/tategaki-turn.tsx"
+          "target": "components/remocn/tategaki-turn/index.tsx"
+        },
+        {
+          "path": "registry/remocn/tategaki-turn/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/tategaki-turn/timeline.ts"
         }
       ],
       "type": "registry:component"

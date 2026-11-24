@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type TategakiTurnElementId,
+  tategakiTurnTimeline,
+  wordsOf,
+} from "./timeline";
 
 const kaku = loadZenKaku("normal", { weights: ["500"], subsets: ["latin"] });
 
@@ -34,6 +41,11 @@ export interface TategakiTurnProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words and the turn, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TategakiTurnElementId>;
 }
 
 const VERMILION = "#E03C31";
@@ -48,13 +60,7 @@ const PITCH = 1.2;
 const STRETCH = 0.22;
 const COL = 1.34;
 
-const COL_STAGGER = 5;
-const LETTER_STAGGER = 2;
-const LETTER_LEN = 11;
 const DROP = 0.42;
-const SWING_LEN = 36;
-const LINE_STAGGER = 12;
-const TRAVEL_LEN = 22;
 const LINE = 1.16;
 const TIER_GAP = 0.9;
 
@@ -159,32 +165,35 @@ function ScaleLayer({
   );
 }
 
-export function TategakiTurn({
-  text = "Read it both ways.",
-  highlight,
-  hold = 16,
-  stagger = COL_STAGGER,
-  accent,
-  ink,
-  background,
-  fontFamily = kaku.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: TategakiTurnProps) {
+export function TategakiTurn(props: TategakiTurnProps) {
+  const {
+    text = DEFAULT_TEXT,
+    highlight,
+    accent,
+    ink,
+    background,
+    fontFamily = kaku.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    tategakiTurnTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
   const red = accent ?? VERMILION;
 
-  const words = useMemo(() => {
-    const ws = text.split(/\s+/).filter(Boolean);
-    return ws.length ? ws : [" "];
-  }, [text]);
+  const words = useMemo(() => wordsOf(text), [text]);
   const m = useMetrics(words, fontFamily);
 
   if (!m) {
@@ -262,10 +271,8 @@ export function TategakiTurn({
   const pivotV: { x: number; y: number }[] = [];
   let tierY = 0;
   let maxCols = 1;
-  let maxLen = 1;
   lines.forEach((ids, l) => {
     const longest = Math.max(...ids.map((j) => m.words[j].chars.length));
-    maxLen = Math.max(maxLen, longest);
     maxCols = Math.max(maxCols, ids.length);
     ids.forEach((j, i) => {
       pivotV[j] = { x: (i - (ids.length - 1) / 2) * colPitch, y: tierY };
@@ -280,8 +287,9 @@ export function TategakiTurn({
     H * (portrait ? 0.16 : 0.22),
   );
 
-  const lastStart = (n - 1) * stagger + (maxLen - 1) * LETTER_STAGGER;
-  const turnAt = lastStart + LETTER_LEN + hold;
+  const turn = tl.get("turn");
+  const turnAt = turn.start;
+  const wordEls = m.words.map((_wd, j) => tl.get(`word:${j}`));
 
   interface Glyph {
     j: number;
@@ -296,18 +304,20 @@ export function TategakiTurn({
   const sceneAt = (time: number) => {
     const swing = m.words.map((_wd, j) =>
       spring({
-        frame: time - turnAt - lineOf[j] * LINE_STAGGER,
+        frame: time - turnAt - lineOf[j] * turn.beat("line"),
         fps,
-        durationInFrames: SWING_LEN,
+        durationInFrames: turn.beat("swing"),
         config: { damping: 15, stiffness: 90, mass: 1 },
       }),
     );
     const travel = m.words.map((_wd, j) => {
-      const s0 = turnAt + lineOf[j] * LINE_STAGGER;
-      return interpolate(time, [s0 - 2, s0 + TRAVEL_LEN], [0, 1], {
-        ...CLAMP,
-        easing: EASE_TRAVEL,
-      });
+      const s0 = turnAt + lineOf[j] * turn.beat("line");
+      return interpolate(
+        time,
+        [s0 + turn.beat("travelLead"), s0 + turn.beat("travel")],
+        [0, 1],
+        { ...CLAMP, easing: EASE_TRAVEL },
+      );
     });
     const zoomP =
       travel.reduce((acc, v) => acc + v, 0) / Math.max(1, travel.length);
@@ -363,11 +373,14 @@ export function TategakiTurn({
     const oy = oyV + (oyH - oyV) * zoomP;
 
     return glyphs.map((g) => {
-      const startAt = g.j * stagger + g.k * LETTER_STAGGER - 3;
-      const rise = interpolate(time, [startAt, startAt + LETTER_LEN], [0, 1], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      });
+      const word = wordEls[g.j];
+      const startAt = word.start + g.k * word.beat("letter");
+      const rise = interpolate(
+        time,
+        [startAt, startAt + word.beat("rise")],
+        [0, 1],
+        { ...CLAMP, easing: EASE_OUT },
+      );
       return {
         ...g,
         rise,
