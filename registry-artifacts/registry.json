@@ -2839,12 +2839,21 @@
       "title": "Paper Sticker",
       "description": "A taped paper chip that slaps onto the scene over two stop-motion poses, keeping a hand-placed tilt and per-pose wobble.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/stop-motion", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/stop-motion",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/paper-sticker/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/paper-sticker.tsx"
+          "target": "components/remocn/paper-sticker/index.tsx"
+        },
+        {
+          "path": "registry/remocn/paper-sticker/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/paper-sticker/timeline.ts"
         }
       ],
       "type": "registry:component"
