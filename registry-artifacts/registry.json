@@ -8536,12 +8536,21 @@
       "title": "Edge Fit",
       "description": "A single huge cream word, 'recaps', fills the frame edge to edge with a caption and logo.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/edge-fit/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/edge-fit.tsx"
+          "target": "components/remocn/edge-fit/index.tsx"
+        },
+        {
+          "path": "registry/remocn/edge-fit/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/edge-fit/timeline.ts"
         }
       ],
       "type": "registry:component"
