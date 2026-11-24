@@ -9830,12 +9830,21 @@
       "title": "Parallax Lockup",
       "description": "A three-line headline locks up with parallax, the last line in a gradient.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/parallax-lockup/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/parallax-lockup.tsx"
+          "target": "components/remocn/parallax-lockup/index.tsx"
+        },
+        {
+          "path": "registry/remocn/parallax-lockup/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/parallax-lockup/timeline.ts"
         }
       ],
       "type": "registry:component"
