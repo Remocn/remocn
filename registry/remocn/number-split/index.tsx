@@ -6,6 +6,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  MOVE,
+  MOVE_DUR,
+  type NumberSplitElementId,
+  numberSplitTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -43,6 +50,13 @@ export interface NumberSplitProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the total landing and moving up, the push,
+   * the bar drawing and splitting, the label, the tree's stem, span and
+   * branches, and the parts, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<NumberSplitElementId>;
 }
 
 const DEFAULT_PARTS: SplitPart[] = [
@@ -84,9 +98,6 @@ const THEMES = {
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-const BAR_IN = 10;
-const MOVE = 36;
-const MOVE_DUR = 26;
 const TREE = MOVE + MOVE_DUR - 2;
 
 export const numberSplitLength = () => TREE + 8 + 12 + 6 + 24 + 40;
@@ -149,33 +160,48 @@ function ScaleLayer({
   );
 }
 
-export function NumberSplit({
-  total = "300+",
-  label = "components",
-  parts = DEFAULT_PARTS,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  hold = MOVE,
-  barHeight = 16,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: NumberSplitProps) {
+export function NumberSplit(props: NumberSplitProps) {
+  const {
+    total = "300+",
+    label = "components",
+    parts = DEFAULT_PARTS,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    barHeight = 16,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    numberSplitTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const totalEl = tl.get("total");
+  const cameraEl = tl.get("camera");
+  const driftEl = tl.get("drift");
+  const barEl = tl.get("bar");
+  const moveEl = tl.get("move");
+  const labelEl = tl.get("label");
+  const splitEl = tl.get("split");
+  const stemEl = tl.get("stem");
+  const spanEl = tl.get("span");
+  const branchesEl = tl.get("branches");
+  const partsEl = tl.get("parts");
   const u = Math.min(W / 1280, H / 720);
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const bg =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const moveAt = hold;
-  const splitAt = moveAt + MOVE_DUR - 10;
-  const treeAt = moveAt + MOVE_DUR - 2;
   const n = Math.max(1, parts.length);
 
   const L = W * 0.1;
@@ -204,40 +230,50 @@ export function NumberSplit({
   const { num, unit } = splitUnit(total);
   const heroW0 = (num.length * 0.6 + unit.length * 0.4) * heroF0;
 
-  const heroIn = interpolate(t, [0, 18], [0, 1], {
+  const heroIn = interpolate(t, [totalEl.start, totalEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_LAND,
   });
-  const heroBlur = interpolate(t, [0, 9], [1, 0], CLAMP);
-  const barIn = interpolate(t, [BAR_IN, BAR_IN + 20], [0, 1], {
+  const heroBlur = interpolate(
+    t,
+    [totalEl.start, totalEl.start + totalEl.beat("blur")],
+    [1, 0],
+    CLAMP,
+  );
+  const barIn = interpolate(t, [barEl.start, barEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const mv = interpolate(t, [moveAt, moveAt + MOVE_DUR], [0, 1], {
+  const mv = interpolate(t, [moveEl.start, moveEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const split = interpolate(t, [splitAt, splitAt + 12], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const gapP = interpolate(t, [splitAt, splitAt + 16], [0, 1], {
+  const split = interpolate(
+    t,
+    [splitEl.start, splitEl.start + splitEl.beat("fade")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const gapP = interpolate(t, [splitEl.start, splitEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_LAND,
   });
-  const labelIn = interpolate(t, [moveAt + 14, moveAt + 32], [0, 1], {
+  const labelIn = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const stemP = interpolate(t, [treeAt, treeAt + 8], [0, 1], {
+  const stemP = interpolate(t, [stemEl.start, stemEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const spanP = interpolate(t, [treeAt + 8, treeAt + 22], [0, 1], {
+  const spanP = interpolate(t, [spanEl.start, spanEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const camP = interpolate(t, [0, treeAt + 90], [0, 1], {
+  const camP = interpolate(t, [cameraEl.start, cameraEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -271,19 +307,23 @@ export function NumberSplit({
   const lastCx = segs[n - 1].cx;
   const center = W / 2;
   const root = center + lockShift;
-  const dropAt = segs.map((s) => {
+  // How far each segment sits from the root, 0 to 1: its branch drops and
+  // its part comes in that far into their spread.
+  const fracs = segs.map((s) => {
     const end = s.cx < root ? firstCx : lastCx;
-    const frac = Math.min(
+    return Math.min(
       1,
       Math.abs(s.cx - root) / Math.max(1, Math.abs(end - root)),
     );
-    return treeAt + 8 + 12 * frac;
   });
+  const dropAt = fracs.map(
+    (frac) => branchesEl.start + branchesEl.beat("spread") * frac,
+  );
 
   const gradId = `split${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const barL = center + (segs[0].x - center) * barIn;
   const barR = center + (segs[n - 1].x + segs[n - 1].w - center) * barIn;
-  const drift = interpolate(t, [0, 150], [0, 1], CLAMP);
+  const drift = interpolate(t, [driftEl.start, driftEl.end], [0, 1], CLAMP);
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
@@ -422,10 +462,15 @@ export function NumberSplit({
             />
             {segs.map((s, i) => {
               const ds = dropAt[i];
-              const drop = interpolate(t, [ds, ds + 10], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
+              const drop = interpolate(
+                t,
+                [ds, ds + branchesEl.beat("drop")],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                },
+              );
               const dp = drop > 0 ? 1 : 0;
               return (
                 <g key={i} opacity={dp}>
@@ -475,19 +520,34 @@ export function NumberSplit({
 
           {parts.map((p, i) => {
             const s = segs[i];
-            const start = dropAt[i] + 6;
-            const e = interpolate(t, [start, start + 16], [0, 1], {
-              ...CLAMP,
-              easing: EASE_LAND,
-            });
-            const count = interpolate(t, [start, start + 24], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            const lab = interpolate(t, [start + 4, start + 18], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
+            const start =
+              partsEl.start +
+              partsEl.beat("spread") * fracs[i] +
+              partsEl.beat("wait");
+            const e = interpolate(
+              t,
+              [start, start + partsEl.beat("in")],
+              [0, 1],
+              {
+                ...CLAMP,
+                easing: EASE_LAND,
+              },
+            );
+            const count = interpolate(
+              t,
+              [start, start + partsEl.beat("count")],
+              [0, 1],
+              { ...CLAMP, easing: EASE_OUT },
+            );
+            const lab = interpolate(
+              t,
+              [
+                start + partsEl.beat("labelAt"),
+                start + partsEl.beat("labelEnd"),
+              ],
+              [0, 1],
+              { ...CLAMP, easing: EASE_OUT },
+            );
             return (
               <div
                 key={i}

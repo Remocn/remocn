@@ -13181,10 +13181,19 @@
         {
           "path": "number-split/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/number-split.tsx"
+          "target": "components/remocn/number-split/index.tsx"
+        },
+        {
+          "path": "number-split/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/number-split/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "radial-bars",

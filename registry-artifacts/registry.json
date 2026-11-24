@@ -13176,12 +13176,21 @@
       "title": "Number Split",
       "description": "A big 300+ splits down a bracket into four category counts on colored bars.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/number-split/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/number-split.tsx"
+          "target": "components/remocn/number-split/index.tsx"
+        },
+        {
+          "path": "registry/remocn/number-split/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/number-split/timeline.ts"
         }
       ],
       "type": "registry:component"
