@@ -566,6 +566,7 @@ describe("stated text effect counts match the docs", () => {
   const STATED = [
     "content/docs/typography/index.mdx",
     "content/docs/guides/remotion-text-animations.mdx",
+    "content/docs/guides/remotion-kinetic-typography.mdx",
   ];
 
   it("states the real number of typography and caption components", () => {
@@ -586,6 +587,23 @@ describe("stated text effect counts match the docs", () => {
     }
 
     expect(wrong).toEqual([]);
+  });
+});
+
+describe("stated numbers component count matches the docs", () => {
+  it("states the real number of Numbers & Stats components", () => {
+    const real = pages.filter(
+      (p) =>
+        p.file.startsWith("content/docs/numbers/") &&
+        typeof p.frontmatter.component === "string",
+    ).length;
+    const file = "content/docs/guides/remotion-data-video.mdx";
+    const src = readFileSync(file, "utf8");
+    const stated = [
+      ...src.matchAll(/\b(\d+) (?:free, MIT-licensed )?components\b/g),
+    ].map(([, n]) => Number(n));
+    expect(stated.length).toBeGreaterThan(0);
+    expect(stated.filter((n) => n !== real)).toEqual([]);
   });
 });
 
@@ -618,6 +636,7 @@ describe("stated catalog size matches the registry", () => {
     "content/docs/guides/remotion-mcp-servers.mdx",
     "content/docs/guides/hyperframes-alternatives.mdx",
     "content/docs/guides/remotion-component-libraries.mdx",
+    "content/docs/guides/claude-code-video-skills.mdx",
     "README.md",
   ];
 

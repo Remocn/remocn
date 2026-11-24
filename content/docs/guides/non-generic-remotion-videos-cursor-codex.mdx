@@ -1,0 +1,285 @@
+---
+title: "How do I get Cursor or Codex to make a Remotion video that doesn't look generic?"
+navTitle: Cursor and Codex videos
+description: "Stop Cursor and Codex making generic Remotion videos: install Remotion's Agent Skills plus a component library like Remocn, then prompt with named components. Tested setup steps, causes and fixes, prompts with before/after clips."
+lastModified: "2026-11-24"
+---
+
+_Last updated: November 24, 2026. Remocn wrote this page, so weigh the comparison with that in mind._
+
+To get Cursor or Codex to make a Remotion video that doesn't look generic, stop letting the agent
+build every scene from scratch: out of the box it hand-writes each animation with `interpolate()`
+and `spring()`, and falls back on the same glow, gradient ALL-CAPS and panels that pop in together.
+Give it Remotion's Agent Skills for correct Remotion code **plus** a component library like
+Remocn, so it assembles the video from pre-designed, pre-timed components instead. The same applies
+to Claude Code.
+
+Remocn is a free, MIT-licensed, shadcn-style registry of more than 430 Remotion components. Each
+one installs as source into your project with `npx shadcn@latest add @remocn/<name>`. It is an
+independent project, not made by Remotion or shadcn.
+
+## Why do Cursor and Codex make generic Remotion videos?
+
+- **Remotion's skills are taste-neutral on purpose.** Remotion's Skills 2.0 (August 17, 2026)
+  removed design defaults so the agent follows your brief. They teach the API, not what looks good.
+  With a vague brief, the agent's own defaults fill the gap.
+- **The agent writes everything from zero.** Every title, card and cut is new code, so it reaches
+  for the most common moves in the code it learned from.
+- **A vague ask gets a vague video.** "Make a cool launch video" leaves fonts, pacing, layout and
+  transitions to the model.
+
+Better prompts help, but a prompt can only name what exists. A component library gives the agent
+finished pieces to name.
+
+## Causes and fixes
+
+| What looks generic | Cause | Fix | Remocn component or rule |
+|---|---|---|---|
+| Linear or springy-everything motion | Agent picks `spring()` with defaults, or linear `interpolate()` | Ease-out entrances, one focal motion per beat | Any text component, e.g. [`staggered-fade-up`](/docs/typography/staggered-fade-up). Rule: [slow in and slow out](/docs/craft/motion-principles#slow-in-and-slow-out) |
+| System fonts, one weight | No font is loaded before render | Load one display and one UI font before render (`@remotion/google-fonts` or `@remotion/fonts`) | [Design defaults: fonts](/docs/craft/design-defaults#fonts) |
+| Gradient ALL-CAPS headline with a glow | Decoration in place of emphasis | Sentence case, solid text, mark the one word that matters | [`marker-highlight`](/docs/typography/marker-highlight). Rules: [no glow](/docs/craft/design-defaults#no-glow-or-heavy-shadows), [no ALL-CAPS](/docs/craft/design-defaults#no-uppercase-or-all-caps-defaults) |
+| Cuts that jump, or a crossfade everywhere | Motion blur and transitions are hard to hand-write | A transition presentation with motion blur, passed to `TransitionSeries.Transition` | [`whip-pan`](/docs/transitions/whip-pan), [`push-through`](/docs/transitions/push-through), [`focus-pull`](/docs/transitions/focus-pull) |
+| Flat layouts: text centered on a flat color, or cards in a row | No camera, depth or product surface | Put real screens on a staged plane, or show a believable product UI | [`stage`](/docs/layout/stage), [`backdrop`](/docs/layout/backdrop), [Product Scenes](/docs/product-scenes), [AI app screens](/docs/ai) |
+| Everything enters on frame 0 | Every element gets the same `spring({ frame })` | Stagger siblings by 3–6 frames | [`staggered-fade-up`](/docs/typography/staggered-fade-up). Rule: [anti-patterns](/docs/craft/anti-patterns#everything-enters-on-one-frame) |
+| Animations cut off | `Sequence` shorter than the motion inside it | Budget each `Sequence` at least the component's natural length | Lengths in [`/llms-components.txt`](https://remocn.dev/llms-components.txt) |
+
+## Set up Codex
+
+Tested on November 24, 2026 with Codex CLI 0.172.0 and the Remocn plugin 0.2.0.
+
+1. Install Remotion's Agent Skills in your project:
+
+   ```bash
+   npx skills add remotion-dev/skills -a codex
+   ```
+
+2. Install the Remocn plugin. It bundles the Remocn skill and the MCP server:
+
+   ```bash
+   codex plugin marketplace add Remocn/remocn
+   codex plugin add remocn@remocn
+   ```
+
+3. In Codex, run `/remocn:video` with a one-line brief. Per the [plugin docs](/docs/getting-started/plugin),
+   it creates a Remotion project when the folder is empty, prepares it for the shadcn CLI and shows
+   a storyboard before it writes code. Steps 1 and 2 were run in this test; step 3 needs a signed-in
+   Codex session and was not.
+
+   ```text
+   /remocn:video 30-second launch video for Tasklane, a shared task inbox for small teams
+   ```
+
+Prefer no plugin? Add the skill and the MCP server on their own:
+
+```bash
+npx skills add Remocn/remocn --skill remocn -a codex
+codex mcp add remocn --url https://remocn.dev/mcp
+```
+
+## Set up Cursor
+
+The `npx skills` steps were tested on November 24, 2026 with skills CLI 1.9.0. Cursor itself was
+not run in this test, so the MCP config below is Remocn's documented setup rather than a tested one.
+
+1. Install Remotion's Agent Skills and the Remocn skill. Both land in `.agents/skills/`:
+
+   ```bash
+   npx skills add remotion-dev/skills -a cursor
+   npx skills add Remocn/remocn --skill remocn -a cursor
+   ```
+
+2. Add the hosted MCP server to `.cursor/mcp.json` in your project, or `~/.cursor/mcp.json` for
+   every project. No key, no account:
+
+   ```json
+   {
+     "mcpServers": {
+       "remocn": {
+         "url": "https://remocn.dev/mcp"
+       }
+     }
+   }
+   ```
+
+3. Ask for the video with one of the [prompts below](#prompts-with-before-and-after-clips).
+
+Cursor has no `/remocn:video` command, so you or the agent prepare the project once. In a fresh
+project from `npx create-video@latest --yes --blank`, `npx shadcn@latest init` stops with "could not
+detect a supported framework". Instead:
+
+- Create `components.json` with `"registries": { "@remocn": "https://remocn.dev/r/{name}.json" }`.
+- Add `"@/*": ["./src/*"]` to `compilerOptions.paths` in `tsconfig.json`.
+- Alias `@` to `src` in `remotion.config.ts`, because Remotion's bundler doesn't read tsconfig
+  paths.
+
+The exact file contents are in the plugin's
+[setup skill](https://github.com/Remocn/remocn/blob/main/plugins/remocn/skills/setup/SKILL.md);
+you can point the agent at it.
+
+## Install a component
+
+With the project prepared, every component installs the same way, in Cursor, Codex or a terminal:
+
+```bash
+npx shadcn@latest add @remocn/marker-highlight @remocn/staggered-fade-up
+```
+
+We ran this on November 24, 2026 with shadcn 4.23.0 in a Remotion 4.0.546 blank project. It
+copied the two components and their shared helpers (`src/lib/remocn/frame-rate.ts`,
+`src/lib/remocn/glide.ts`) into `src/`.
+
+<Warning>
+In that run the shadcn CLI turned `text.split(" ")` into `text.split("")` in the copied
+`staggered-fade-up.tsx`, which splits text into letters instead of words. The file at
+`https://remocn.dev/r/staggered-fade-up.json` is correct. After installing a text component,
+search the copied files for `split("")` and `""` where you expect `" "`.
+</Warning>
+
+## Prompts with before and after clips
+
+The **before** clips are what an agent typically hand-writes from the vague prompt. We wrote them by
+hand to show the pattern; they were not generated by Cursor or Codex. The **after** clips are the
+Remocn components the better prompt asks for, rendered with their default props and Inter loaded
+before render. All four: 1280×720, 30 fps, 4 seconds, rendered with Remotion 4.0.546.
+
+### 1. The headline
+
+Vague prompt:
+
+```text
+Make a launch title for Tasklane.
+```
+
+<GuideVideo
+  src="/videos/cursor-codex/headline-before.mp4"
+  poster="/videos/cursor-codex/headline-before.jpg"
+  label="Before: gradient ALL-CAPS headline with a glow and a spring pop"
+  duration={4}
+/>
+
+Better prompt:
+
+<GuidePrompt>
+
+```text
+Make the opening title for Tasklane, a shared task inbox for small teams.
+Use the remocn component marker-highlight: before "Your team's tasks, ",
+highlight "in one inbox", after ".". Install it with
+npx shadcn@latest add @remocn/marker-highlight. White background, sentence
+case, no gradient text and no glow. Load Inter before render.
+```
+
+</GuidePrompt>
+
+<GuideVideo
+  src="/videos/cursor-codex/headline-after.mp4"
+  poster="/videos/cursor-codex/headline-after.jpg"
+  label="After: marker-highlight with one phrase marked"
+  duration={4}
+/>
+
+### 2. The feature beat
+
+Vague prompt:
+
+```text
+Show Tasklane's three features: assign, snooze, ship.
+```
+
+<GuideVideo
+  src="/videos/cursor-codex/features-before.mp4"
+  poster="/videos/cursor-codex/features-before.jpg"
+  label="Before: three glowing cards that pop in on the same frame"
+  duration={4}
+/>
+
+Better prompt:
+
+<GuidePrompt>
+
+```text
+Show Tasklane's three features as one line of text, not cards:
+"Assign it, snooze it, ship it." Call the remocn MCP tool get_component on
+staggered-fade-up, read its props and natural length, then install it with
+npx shadcn@latest add @remocn/staggered-fade-up. Words enter 4 frames apart.
+Make the Sequence at least the component's natural length, then add a hold.
+```
+
+</GuidePrompt>
+
+<GuideVideo
+  src="/videos/cursor-codex/features-after.mp4"
+  poster="/videos/cursor-codex/features-after.jpg"
+  label="After: staggered-fade-up, words entering 4 frames apart"
+  duration={4}
+/>
+
+### 3. The cut between scenes
+
+Vague prompt: "Add a transition between the title and the demo." Agents usually answer with a
+crossfade or a hard cut. Better prompt:
+
+<GuidePrompt>
+
+```text
+Between the title and the demo, use a transition with motion blur. Call the
+remocn MCP tool search_components with "fast sideways cut with motion blur"
+and show me two options with their lengths. Use the one I pick as a
+presentation in TransitionSeries.Transition, not as a component in a
+Sequence.
+```
+
+</GuidePrompt>
+
+One answer is [`whip-pan`](/docs/transitions/whip-pan), 26 frames at 30 fps:
+
+<ComponentPreview name="whip-pan" />
+
+## Remotion Skills alone vs. plus Remocn
+
+| | Remotion's Agent Skills alone | Remotion's Agent Skills + Remocn |
+|---|---|---|
+| What it teaches the agent | Correct Remotion code: compositions, timing, fonts, captions, rendering | The same, plus which component plays each beat |
+| Design defaults | None, by design ("taste-neutral") | [Craft rules](/docs/craft): design defaults, motion principles, anti-patterns |
+| Building blocks | Whatever the agent writes | More than 430 components installed as source |
+| Transitions | `TransitionSeries` API | Presentations to pass to it, including motion-blur cuts |
+| Planning | Your brief | `plan_video` returns beats with frame ranges and component picks |
+| Codex | Skills, or Remotion's own plugin | Plus the Remocn plugin with `/remocn:video` and the MCP server |
+| Cursor | Skills, or Remotion's own plugin | Plus the Remocn skill and MCP server; no slash command |
+| Price | Free; Remotion's own license applies | Remocn is free and MIT; Remotion's license still applies |
+
+Where Remotion's skills alone are enough: a one-off scene you plan to design yourself, or a brief
+specific enough to set fonts, colors and timing. In our own
+[15-second promo test](/docs/getting-started/plugin#test-the-same-15-second-promo-with-and-without-remocn)
+with Claude Code, the run without any skill was faster, cheaper and drew a fuller picture than the
+Remocn run, which stayed typographic. Remocn changes what the agent builds from; it does not
+guarantee a better film on every brief.
+
+Remocn is not a video editor and not a hosted text-to-video service. It needs a Remotion project,
+React and Node.js, and the skill reads the component index from remocn.dev, so the agent needs
+network access.
+
+## FAQ
+
+<Faq>
+
+**Do I still need Remotion's Agent Skills if I use Remocn?**
+Yes. Install both. Remotion's skills teach the agent the Remotion API; Remocn gives it components and design rules.
+
+**Does Cursor support the Remocn plugin?**
+No. The plugin with `/remocn:video` is for Claude Code and Codex. In Cursor, use the skill (`npx skills add Remocn/remocn --skill remocn -a cursor`) and the MCP server at `https://remocn.dev/mcp`.
+
+**Is Remocn free?**
+Yes. Remocn is MIT licensed, with no account and no usage limits. Remotion has [its own license](https://www.remotion.dev/docs/license), which can require a company license for larger companies.
+
+**Is Remocn part of Remotion?**
+No. It is an independent community project, listed on Remotion's resources page.
+
+</Faq>
+
+## What's next
+
+- [Why AI launch videos look generic](/docs/guides/non-generic-ai-video): every tell and its fix, plus Claude Code setup
+- [Make Remotion videos with ChatGPT and Codex](/docs/guides/remotion-chatgpt)
+- [Agent skill](/docs/getting-started/agent-skill) and [Plugin](/docs/getting-started/plugin)
+- [MCP server](/docs/getting-started/mcp-server): setup for every MCP client

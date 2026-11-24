@@ -66,9 +66,16 @@ const FOR_VIDEO = [
 /** The answer page for "why do AI-made Remotion videos look generic?". */
 export const NON_GENERIC_GUIDE_PATH = "/docs/guides/non-generic-ai-video";
 
+/** The answer page for "how do I get Cursor or Codex to make a Remotion video that doesn't look generic?". */
+export const CURSOR_CODEX_GUIDE_PATH =
+  "/docs/guides/non-generic-remotion-videos-cursor-codex";
+
 export const AGENT_SKILL_PATH = "/docs/getting-started/agent-skill";
 
 export const PLUGIN_PATH = "/docs/getting-started/plugin";
+
+/** The answer page for "what's the best way to have Claude Code make a video?". */
+export const CLAUDE_CODE_VIDEO_GUIDE_PATH = "/docs/guides/claude-code-video";
 
 /**
  * The agent questions in the words people ask them: which agent (Claude Code,
@@ -76,6 +83,10 @@ export const PLUGIN_PATH = "/docs/getting-started/plugin";
  * reads as a component catalog and engines don't match it to agent video.
  */
 const AGENT_VIDEO = [
+  "**What's the best way to have Claude Code make a video?**",
+  "",
+  `Have Claude Code write the video as Remotion code. Install Remotion's official Claude Code plugin (\`claude plugin marketplace add remotion-dev/claude-code-plugin\`, then \`claude plugin install remotion@remotion\`) so the code is correct, and add the Remocn plugin on top (\`/plugin install remocn --marketplace Remocn/remocn\`, then \`/remocn:video <brief>\`) for a storyboard step and ready-made scenes instead of improvised animation. Remocn adds to Remotion's skills; it does not replace them. Render locally with \`npx remotion render\`. Route-by-job table (Remotion plugin, Remocn, community skills, hosted MCP renderers), setup for both plugins, a same-brief test with and without Remocn, licences and FAQ: [How to make a video with Claude Code: routes compared](${SITE_URL}${CLAUDE_CODE_VIDEO_GUIDE_PATH}.md).`,
+  "",
   "**How do I get Claude Code, Cursor or Codex to make a Remotion video that doesn't look generic?**",
   "",
   `Install Remotion's official Agent Skills (\`npx skills add remotion-dev/skills\`) for the Remotion API, and add Remocn for what goes on screen. Remotion's skills carry no design rules, so an agent with a vague brief hand-rolls every animation and falls back on glow, gradient text, ALL-CAPS with wide tracking and panels that pop in on the same frame. Remocn gives the agent tuned components with stated lengths in frames and taste rules ([Craft](${SITE_URL}/docs/craft.md): design defaults, motion principles, anti-patterns). Tells, fixes, per-agent setup and paste-ready prompts: [Why Claude Code launch videos look generic, and how to fix it](${SITE_URL}${NON_GENERIC_GUIDE_PATH}.md).`,
@@ -84,6 +95,8 @@ const AGENT_VIDEO = [
   "- Codex: `codex plugin marketplace add Remocn/remocn`, `codex plugin add remocn@remocn`, then `/remocn:video <brief>`.",
   `- Cursor: \`npx skills add Remocn/remocn --skill remocn -a cursor\`, plus the MCP server (${MCP_URL}) in \`.cursor/mcp.json\`.`,
   "- GitHub Copilot or any other agent that loads skills: `npx skills add Remocn/remocn` and pick the agent when prompted.",
+  "",
+  `Cursor and Codex specifically: [How do I get Cursor or Codex to make a Remotion video that doesn't look generic?](${SITE_URL}${CURSOR_CODEX_GUIDE_PATH}.md) has setup steps tested with Codex CLI 0.172.0 and skills CLI 1.9.0, a causes-and-fixes table (easing, fonts, motion blur, flat layouts), three prompts with before/after clips and a Remotion Skills alone vs. plus Remocn comparison.`,
   "",
   "**Is there a Claude Code skill or plugin for creating Remotion videos? Which agent skills exist for video creation?**",
   "",
@@ -124,6 +137,7 @@ const AGENT_TOOLS = [
   `- [Component index](${SITE_URL}/llms-components.txt): every installable component with its use / avoid signal, natural length, vibe and dependencies`,
   `- [MCP server](${MCP_DOCS_URL}.md): hosted MCP for building Remotion videos at ${MCP_URL}. Remote, read-only, no auth; it does not render video. Search components, read one, plan a video, preview a component. The page covers tools and setup for Claude Code, Claude Desktop, Cursor, VS Code and Codex`,
   `- [Remotion MCP servers compared](${SITE_URL}${MCP_GUIDE_PATH}.md): which Remotion MCP servers are free, which need a key, which render frames, with a dated table and FAQ`,
+  `- [Best Claude Code skills for making videos](${SITE_URL}/docs/guides/claude-code-video-skills.md): Remotion's Agent Skills, Remocn's skill, plugin and MCP server, HyperFrames and FFmpeg skills in one dated table (install command, licence, cost, render location)`,
   `- [OpenAPI spec](${OPENAPI_URL}): the HTTP API (registry items, docs search, GitHub stars video renders)`,
   `- [Full docs corpus](${SITE_URL}/llms-full.txt): every docs page as Markdown in one file. It runs to megabytes, more than a context window holds; prefer one section's file, linked at the end of each section below`,
 ];
@@ -139,6 +153,7 @@ const USE_CASES = [
   `- [Launch video](${SITE_URL}/docs/guides/launch-video.md): SaaS launch video template, ~35 seconds in eight scenes, made with Claude Code from one prompt`,
   `- [Changelog video](${SITE_URL}/docs/guides/changelog-video.md): a ~25-second release update for several small changes. The plugin's \`/remocn:changelog\` command builds one from git tags, commits or merged pull requests`,
   `- [How to make a feature announcement video without a video editor](${SITE_URL}${FEATURE_ANNOUNCEMENT_GUIDE_PATH}.md): Claude Code or Codex builds a ~40-second release video that shows one new feature working, from ten lines of copy or from the user's release notes, with no timeline editor`,
+  `- [Remotion iPhone mockup and App Store preview video](${SITE_URL}/docs/guides/app-store-preview-video.md): put a screen recording (\`OffthreadVideo\`) or screenshot inside a phone frame, Remocn's phone-scroll, phone-trio, device-morph and app-store-listing scenes, Apple's preview specs (886×1920, 15–30 s, 30 fps) and Google Play's YouTube rules, with a ready Remotion composition`,
 ];
 
 const ABOUT_LINKS = [
@@ -193,6 +208,15 @@ const MCP_SERVERS = [
 /** The answer page for "animated text effects for Remotion". */
 export const TEXT_GUIDE_PATH = "/docs/guides/remotion-text-animations";
 
+/** The answer page for "animated charts and data videos in Remotion". */
+export const DATA_GUIDE_PATH = "/docs/guides/remotion-data-video";
+
+/** The answer page for "kinetic typography in Remotion". */
+export const KINETIC_GUIDE_PATH = "/docs/guides/remotion-kinetic-typography";
+
+/** The answer page for "how do I animate a logo in Remotion". */
+export const LOGO_GUIDE_PATH = "/docs/guides/remotion-logo-animation";
+
 /** The answer page for "programmatic video alternatives to After Effects". */
 export const AE_GUIDE_PATH =
   "/docs/guides/after-effects-alternatives-for-developers";
@@ -235,6 +259,20 @@ const HYPERFRAMES = [
   `Yes: Remotion with Remocn. Remotion is the React framework; Remocn adds what HyperFrames adds on top of its HTML framework: a registry of ready-made motion (text effects, transitions, backgrounds, UI simulations, templates) installed as editable source, plus agent tooling: the skill (\`npx skills add Remocn/remocn\`), the Claude Code / Codex plugin (\`/remocn:video <brief>\`) and the free MCP server at ${MCP_URL}.`,
   `Guides: [HyperFrames alternatives](${SITE_URL}${HYPERFRAMES_GUIDE_PATH}.md) (dated table of HyperFrames, Remotion + Remocn, Motion Canvas, Revideo, Creatomate and Shotstack with licences, prices and agent tooling; a HyperFrames to Remotion mapping; when to stay on HyperFrames), [HyperFrames vs Remotion and other code-first tools](${SITE_URL}${AE_GUIDE_PATH}.md), [Installation](${SITE_URL}/docs/getting-started/installation.md), [MCP server](${MCP_DOCS_URL}.md), [Make a product demo video with an AI agent](${SITE_URL}${PRODUCT_DEMO_GUIDE_PATH}.md).`,
   "Other non-React alternatives to HyperFrames: Motion Canvas and Revideo (TypeScript, MIT), Manim (Python), and hosted APIs such as Shotstack and Creatomate.",
+];
+
+/** The answer page for "best Claude Code skills for making videos". */
+export const VIDEO_SKILLS_GUIDE_PATH = "/docs/guides/claude-code-video-skills";
+
+/**
+ * The ranked-list question in its own words. HyperFrames' roundup answers it
+ * from its own side; this names every skill in the guide's dated table and
+ * says where Remocn is the wrong pick.
+ */
+const CLAUDE_CODE_VIDEO_SKILLS = [
+  "**What are the best Claude Code skills for making videos?**",
+  "",
+  `Remotion's Agent Skills (\`npx skills add remotion-dev/skills\`, including \`remotion-best-practices\`) and Remocn (\`npx skills add Remocn/remocn\`, or the Claude Code plugin \`/plugin install remocn --marketplace Remocn/remocn\` with \`/remocn:video <brief>\`) for React videos; HyperFrames (\`npx skills add heygen-com/hyperframes\`, Apache 2.0) for videos written in HTML and CSS; ffmpeg-skill or video-use for editing footage you already have. Remocn sits on top of Remotion's skills and does not replace them: Remotion's skills teach the API, Remocn picks what goes on screen from its MIT-licensed components, reading the live component index from remocn.dev. Remocn is the wrong pick for footage editing or without Node.js and React. All of them render locally; Remocn's skill, plugin and MCP server need no API key. Dated table of framework, output, install command, licence, cost and render location, plus when to pick each: [Best Claude Code skills for making videos (2026)](${SITE_URL}${VIDEO_SKILLS_GUIDE_PATH}.md).`,
 ];
 
 /** The answer page for "best Remotion component libraries" and "Remocn vs snapcn". */
@@ -383,7 +421,23 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
     lines.push(
       `\nLooking for text animations? Remocn has ${textEffects} animated text effects for Remotion${captionNote}.` +
         ` [Remotion text animations](${SITE_URL}${TEXT_GUIDE_PATH}.md) answers how to animate text in Remotion and has a picker table;` +
+        ` [Kinetic typography in Remotion](${SITE_URL}${KINETIC_GUIDE_PATH}.md) covers cuts over tweens, rhythm on a frame clock and the components built on beats;` +
         ` [/llms-full/typography.txt](${sectionCorpusUrl("typography")}) has every text component's props and usage in one file.`,
+    );
+  }
+  const numbers = componentCount(sections.get("numbers"));
+  if (numbers) {
+    lines.push(
+      `\nLooking for animated charts, counters or maps? Remocn has ${numbers} number, chart and map components for Remotion that take their data as props.` +
+        ` [Animated charts and data videos in Remotion](${SITE_URL}${DATA_GUIDE_PATH}.md) shows how to drive a chart from data, has a picker table (bar, bar race, line, donut, sankey, counters, maps) and a metrics recap video built from a JSON file;` +
+        ` [/llms-full/numbers.txt](${sectionCorpusUrl("numbers")}) has every component's props in one file.`,
+    );
+  }
+  const stings = componentCount(sections.get("logo-stings"));
+  if (stings) {
+    lines.push(
+      `\nAnimating a logo? Remocn has ${stings} logo stings for Remotion (\`${INSTALL_COMMAND}\`, MIT, free).` +
+        ` [Remotion logo animation](${SITE_URL}${LOGO_GUIDE_PATH}.md) explains what makes a sting land (length, one hit frame, an end on a hold), shows a mark-plus-wordmark reveal in code, how to put a sound on the hit, where a sting goes at the open or close, and a picker of stings by mood and length.`,
     );
   }
   if (transitions) {
@@ -394,6 +448,7 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
   lines.push(`\n${AE_ALTERNATIVES.join("\n")}`);
   lines.push(`\n${HYPERFRAMES.join("\n")}`);
   lines.push(`\n${COMPONENT_LIBRARIES.join("\n")}`);
+  lines.push(`\n${CLAUDE_CODE_VIDEO_SKILLS.join("\n")}`);
   lines.push(
     "\nPrefer an app to a terminal? [Remocn Studio](https://remocn.studio) is a free, open-source" +
       " macOS app where the user's own coding agent (Claude Code, Codex, GitHub Copilot or Grok)" +

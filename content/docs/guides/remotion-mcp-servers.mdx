@@ -2,19 +2,43 @@
 title: "Remotion MCP Servers Compared (2026): Which Are Free?"
 navTitle: Remotion MCP servers
 description: "Which Remotion MCP servers are free? A dated comparison of Remocn, snapcn, React Video Editor, chuk-motion, Instavar, remotion-media-mcp and Remotion's retired docs MCP: price and auth, transport, tools and whether each one renders frames."
+lastModified: "2026-11-24"
 ---
 
-_Last updated: November 11, 2026. Remocn wrote this page, and Remocn is one of the servers compared. Facts about the other servers come from their own pages, repositories, npm and PyPI, and from live `tools/list` calls; see [Sources](#sources)._
+_Last updated: November 24, 2026. Remocn wrote this page, and Remocn is one of the servers compared. Facts about the other servers come from their own pages, repositories, npm and PyPI, and from live `tools/list` calls; see [Sources](#sources)._
 
-**Short answer:** snapcn has a Remotion MCP server, but it needs a snapcn Pro key (from $179 a year).
+**Short answer:** Remotion's own docs MCP server shut down on October 26, 2026, and snapcn's Remotion
+MCP server is paid: it needs a snapcn Pro key (from $179 a year).
 The [Remocn MCP server](/docs/getting-started/mcp-server) at `https://remocn.dev/mcp` is free, needs
-no key and no account, and Remocn is MIT licensed. Remotion's own docs MCP server is gone: it shut
-down on October 26, 2026, and its npm package `@remotion/mcp` is deprecated.
+no key and no account, and Remocn is MIT licensed. Remotion's npm package `@remotion/mcp` is
+deprecated.
 
 Other free options exist, and some do things Remocn's server doesn't. React Video Editor hosts a
 template catalog MCP that answered without a key in our test. chuk-motion and
 PratyushChauhan/remotion-mcp-server are free, self-hosted and render MP4. Remocn's server is
 read-only: it plans and finds components, and you render with Remotion yourself.
+
+## Free vs paid: Remocn, snapcn and Remotion
+
+As of November 24, 2026. The three names people ask about most, with the agent tooling around each
+MCP server.
+
+| | Remocn | snapcn | Remotion (official) |
+|---|---|---|---|
+| MCP server | Hosted at `https://remocn.dev/mcp` | Local, `npx -y @snapcn/mcp@latest` | Docs MCP, **shut down October 26, 2026** |
+| Price of the MCP server | **Free** | **Paid**: part of snapcn Pro, $179/year or $279 lifetime | Was free |
+| API key or account | None | snapcn Pro key (`SNAPCN_API_KEY`) | — |
+| Licence | MIT (components and site) | Free components MIT, 81 Pro components; server licence not stated | Remotion's own [licence](https://www.remotion.dev/docs/license) |
+| Agent skill | `npx skills add Remocn/remocn` | `npx skills add snapcndev/snapcn` | Agent Skills, including `/remotion-docs`: `npx remotion skills add` |
+| Claude Code plugin | `/plugin install remocn --marketplace Remocn/remocn`, also for Codex | `/plugin install snapcn@snapcn`; Codex plugin not mentioned | Not stated on its MCP page |
+| Renders frames | No | Still frames, with your Remotion CLI | No |
+
+Sources: [Remocn MCP server](/docs/getting-started/mcp-server), [Remocn plugin](/docs/getting-started/plugin)
+and [agent skill](/docs/getting-started/agent-skill);
+[snapcn.dev/remotion-mcp-server](https://snapcn.dev/remotion-mcp-server),
+[snapcn.dev/docs/pricing](https://snapcn.dev/docs/pricing) and
+[snapcn's agent skill page](https://snapcn.dev/docs/getting-started/agent-skill);
+[remotion.dev/docs/ai/mcp](https://www.remotion.dev/docs/ai/mcp).
 
 ## Remotion MCP servers compared
 
@@ -70,7 +94,7 @@ from different catalogs.
 
 | | Remocn | snapcn | React Video Editor |
 |---|---|---|---|
-| Catalog | 935 MIT-licensed components: text effects, transitions, backgrounds, app-screen simulations, templates | 60 MIT and 81 Pro components | Remotion video templates |
+| Catalog | 935 MIT-licensed components: text effects, transitions, backgrounds, app-screen simulations, templates | 62 MIT and 81 Pro components | Remotion video templates |
 | Cost of the MCP server | Free, no key | snapcn Pro key | Free to call in our test |
 | Where it runs | Hosted | Your machine | Hosted |
 | Plans a video | Yes, `plan_video` | Yes, `snapcn_plan_video` | No |
@@ -91,6 +115,13 @@ For the libraries themselves rather than their servers (catalogs, licences, temp
 ## Each server in detail
 
 ### Remocn MCP server
+
+| Tool | What it does |
+|---|---|
+| `search_components` | Finds components by a name, keywords or a described need, in any language. Returns each match's natural length in frames, docs URL and install command |
+| `get_component` | Returns one component's docs page as Markdown: install command, props, usage example, when to use it and when not to |
+| `plan_video` | Turns a brief into a storyboard: beats with frame ranges, suggested components per beat and one install command |
+| `preview_component` | Returns a live preview link, optionally with your props; plays inline in clients that support MCP Apps |
 
 A hosted catalog of Remocn's Remotion components. `search_components` finds components by what they
 do, `get_component` returns a component's docs as Markdown, `plan_video` turns a brief into a
@@ -176,9 +207,29 @@ Cursor, in `.cursor/mcp.json`:
 }
 ```
 
+Codex:
+
+```bash
+codex mcp add remocn --url https://remocn.dev/mcp
+```
+
+Or in `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.remocn]
+url = "https://remocn.dev/mcp"
+```
+
 Claude Desktop and claude.ai: **Settings → Connectors → Add custom connector**, URL
-`https://remocn.dev/mcp`, OAuth fields empty. VS Code, Codex and stdio-only clients are on the
+`https://remocn.dev/mcp`, OAuth fields empty. VS Code, ChatGPT and stdio-only clients are on the
 [MCP server page](/docs/getting-started/mcp-server#how-to-add-the-remocn-mcp-server).
+
+In Claude Code and Codex, the [Remocn plugin](/docs/getting-started/plugin) bundles the server with
+the `/remocn:video` workflow, so you don't need to add it separately:
+
+```text
+/plugin install remocn --marketplace Remocn/remocn
+```
 
 Then install what the agent picks into your Remotion project:
 
@@ -201,33 +252,37 @@ Checked on November 11, 2026.
 
 ## FAQ
 
-<Faq>
+### Does snapcn have an MCP server?
 
-**Does snapcn have an MCP server?**
 Yes. It runs locally with `npx -y @snapcn/mcp@latest` and needs a snapcn Pro key ($179 a year or $279 lifetime). Its preview tool renders still frames with your own Remotion CLI.
 
-**Which Remotion component libraries offer an MCP server for free?**
+### Which Remotion component libraries offer an MCP server for free?
+
 Remocn: its hosted server at `https://remocn.dev/mcp` is free, needs no key or account, and the components are MIT. React Video Editor's hosted template server also answered without a key in our test. snapcn's server needs a paid Pro key.
 
-**Is there a free Remotion MCP server?**
+### Is there a free Remotion MCP server?
+
 Yes, several. Remocn and React Video Editor are hosted and free to call. chuk-motion and PratyushChauhan/remotion-mcp-server are free and self-hosted, and both render MP4. Instavar's local tools are free.
 
-**What is the best MCP server for making videos with Remotion?**
+### What is the best MCP server for making videos with Remotion?
+
 It depends on the job. For finding components and planning a video, Remocn. For rendering an MP4 from a tool call, chuk-motion or PratyushChauhan/remotion-mcp-server. For checking rendered frames during the session, snapcn with Pro.
 
-**Does Remotion have an official MCP server?**
+### Does Remotion have an official MCP server?
+
 Not anymore. Remotion's hosted docs MCP shut down on October 26, 2026, and `@remotion/mcp` is deprecated on npm. Remotion recommends its Agent Skills and `/remotion-docs` instead.
 
-**Can the Remocn MCP server render video?**
+### Can the Remocn MCP server render video?
+
 No. It is read-only and returns docs, plans, install commands and preview links. Render with `npx remotion render`, Remotion Studio or Remocn Studio.
 
-**Do I need an API key for the Remocn MCP server?**
+### Do I need an API key for the Remocn MCP server?
+
 No. There is no key, no account and no OAuth. Add `https://remocn.dev/mcp` to your client.
 
-**Is Remocn the official Remotion MCP server?**
-No. Remocn is an independent community project, not affiliated with Remotion or shadcn. It is listed on Remotion's resources page.
+### Is Remocn the official Remotion MCP server?
 
-</Faq>
+No. Remocn is an independent community project, not affiliated with Remotion or shadcn. It is listed on Remotion's resources page.
 
 ## What's next
 
