@@ -901,12 +901,17 @@
       "title": "Shimmer Sweep",
       "description": "Light shine sweeps across muted text via background-clip:text.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/shimmer-sweep/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/shimmer-sweep.tsx"
+          "target": "components/remocn/shimmer-sweep/index.tsx"
+        },
+        {
+          "path": "registry/remocn/shimmer-sweep/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/shimmer-sweep/timeline.ts"
         }
       ],
       "type": "registry:component"

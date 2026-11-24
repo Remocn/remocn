@@ -2,6 +2,8 @@
 
 import { interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ShimmerSweepElementId, shimmerSweepTimeline } from "./timeline";
 
 export interface ShimmerSweepProps {
   text: string;
@@ -11,26 +13,35 @@ export interface ShimmerSweepProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the sweep, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<ShimmerSweepElementId>;
 }
 
-export function ShimmerSweep({
-  text,
-  baseColor = "#3f3f46",
-  shineColor = "#fafafa",
-  fontSize = 96,
-  fontWeight = 700,
-  speed = 1,
-  className,
-}: ShimmerSweepProps) {
+export function ShimmerSweep(props: ShimmerSweepProps) {
+  const {
+    text,
+    baseColor = "#3f3f46",
+    shineColor = "#fafafa",
+    fontSize = 96,
+    fontWeight = 700,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
   const { durationInFrames } = useSceneConfig();
+  // The sweep has always been a share of the clip without `speed`: a faster
+  // tempo finishes it sooner and holds longer.
+  const tl = useTimeline(shimmerSweepTimeline, props, durationInFrames, timing);
+  const sweep = tl.get("sweep");
 
-  const position = interpolate(
-    frame,
-    [0, durationInFrames * 0.8],
-    [200, -100],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
+  const position = interpolate(frame, [sweep.start, sweep.end], [200, -100], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   const textStyle: React.CSSProperties = {
     fontSize,
