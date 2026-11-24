@@ -6,6 +6,12 @@ import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BalanceBeamElementId,
+  balanceBeamTimeline,
+  DEFAULT_ITEMS,
+} from "./timeline";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -81,6 +87,12 @@ export interface BalanceBeamProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the entry, each block's drop, the accent block,
+   * the camera move and the headline, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BalanceBeamElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -121,11 +133,6 @@ const THEMES = {
   },
 } as const;
 
-const START = 12;
-const STEP = 9;
-const FALL = 14;
-const ACCENT_GAP = 16;
-const ACCENT_FALL = 18;
 const MAX_TILT = 9;
 const FINAL_TILT = 7;
 const K = 0.045;
@@ -233,26 +240,33 @@ function ScaleLayer({
   );
 }
 
-export function BalanceBeam({
-  items = ["$4,800", "62 hours", "3 tools", "9 revisions", "2 freelancers"],
-  accentLabel = "remocn",
-  title = "One block.",
-  subtitle = "Outweighs the whole stack.",
-  accent = "#3B5BFD",
-  stagger = STEP,
-  ink,
-  background,
-  fontFamily = display,
-  logo,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: BalanceBeamProps) {
+export function BalanceBeam(props: BalanceBeamProps) {
+  const {
+    items = DEFAULT_ITEMS,
+    accentLabel = "remocn",
+    title = "One block.",
+    subtitle = "Outweighs the whole stack.",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    logo,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    balanceBeamTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -288,31 +302,30 @@ export function BalanceBeam({
       const total = row.reduce((s, b) => s + b.w, 0) + gap * (n - 1);
       let x = stackX - total / 2;
       row.forEach((b) => {
-        const spawn = START + out.length * stagger;
+        const drop = tl.get(`block:${out.length}`);
         out.push({
           label: b.label,
           w: b.w,
           lx: x + b.w / 2,
           ly: -beamT - blockH / 2 - r * blockH,
-          spawn,
-          land: spawn + FALL,
+          spawn: drop.start,
+          land: drop.end,
         });
         x += b.w + gap;
       });
       k += n;
     });
-    const last = out.length ? out[out.length - 1].land : START;
+    const drop = tl.get("accent");
     const aw = isLogo
       ? (LOGO_W / 100) * logoSize + 40 * u
       : widthOf(accentLabel);
-    const aSpawn = last + ACCENT_GAP;
     const acc: Block = {
       label: accentLabel,
       w: aw,
       lx: 0.62 * halfL,
       ly: -beamT - blockH / 2,
-      spawn: aSpawn,
-      land: aSpawn + ACCENT_FALL,
+      spawn: drop.start,
+      land: drop.end,
     };
     return { blocks: out, accentBlock: acc };
   })();
@@ -330,16 +343,18 @@ export function BalanceBeam({
     y: pivotY + lx * sin + ly * cos,
   });
 
-  const heroAt = accentBlock.land + 22;
-  const cam = interpolate(t, [heroAt - 8, heroAt + 22], [0, 1], {
+  const camEl = tl.get("camera");
+  const titleEl = tl.get("title");
+  const subEl = tl.get("subtitle");
+  const cam = interpolate(t, [camEl.start, camEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const titleIn = interpolate(t, [heroAt + 2, heroAt + 22], [0, 1], {
+  const titleIn = interpolate(t, [titleEl.start, titleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const subIn = interpolate(t, [heroAt + 10, heroAt + 28], [0, 1], {
+  const subIn = interpolate(t, [subEl.start, subEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -356,7 +371,11 @@ export function BalanceBeam({
   const startShift = height / 2 - actionCenter;
   const shift = startShift * (1 - cam);
 
-  const enter = interpolate(t, [0, 14], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const enterEl = tl.get("enter");
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
   const groundHalf = (halfL + 70 * u) * enter;
   const sw = Math.max(1, u);
 

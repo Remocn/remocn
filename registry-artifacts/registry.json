@@ -12894,12 +12894,21 @@
       "title": "Balance Beam",
       "description": "A seesaw tips as one remocn block outweighs a pile of hours, tools and revisions.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/balance-beam/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/balance-beam.tsx"
+          "target": "components/remocn/balance-beam/index.tsx"
+        },
+        {
+          "path": "registry/remocn/balance-beam/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/balance-beam/timeline.ts"
         }
       ],
       "type": "registry:component"
