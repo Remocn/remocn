@@ -15171,13 +15171,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "bento-build/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bento-build.tsx"
+          "target": "components/remocn/bento-build/index.tsx"
+        },
+        {
+          "path": "bento-build/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bento-build/timeline.ts"
         }
       ]
     },
