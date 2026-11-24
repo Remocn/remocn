@@ -7,18 +7,24 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_GOAL,
+  DEFAULT_START,
+  DEFAULT_WALLS,
+  type PathSearchCell,
+  type PathSearchElementId,
+  type PathSearchWall,
+  pathSearchTimeline,
+  search,
+} from "./timeline";
+
+export type { PathSearchWall };
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400", "500"],
   subsets: ["latin"],
 });
-
-export interface PathSearchWall {
-  col: number;
-  row: number;
-  w: number;
-  h: number;
-}
 
 export interface PathSearchProps {
   cols?: number;
@@ -45,14 +51,13 @@ export interface PathSearchProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the grid, walls, markers, flood, route and
+   * fade, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<PathSearchElementId>;
 }
-
-const DEFAULT_WALLS: PathSearchWall[] = [
-  { col: 4, row: 0, w: 1, h: 6 },
-  { col: 8, row: 3, w: 1, h: 6 },
-  { col: 12, row: 0, w: 1, h: 5 },
-  { col: 9, row: 3, w: 2, h: 1 },
-];
 
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -61,11 +66,6 @@ const CLAMP = {
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
-
-const MARK_AT = 10;
-const FLOOD_AT = 22;
-const STEP = 1.45;
-const TRACE = 32;
 
 const THEMES = {
   dark: {
@@ -104,7 +104,7 @@ const THEMES = {
   },
 } as const;
 
-type Cell = [number, number];
+type Cell = PathSearchCell;
 
 function hexRgb(hex: string): [number, number, number] {
   const n = Number.parseInt(hex.slice(1), 16);
@@ -120,74 +120,6 @@ function sampleRamp(ramp: readonly string[], k: number) {
   const b = hexRgb(ramp[i + 1]);
   const c = a.map((v, j) => Math.round(v + (b[j] - v) * f));
   return `rgb(${c[0]},${c[1]},${c[2]})`;
-}
-
-const DIRS: Cell[] = [
-  [1, 0],
-  [0, 1],
-  [-1, 0],
-  [0, -1],
-];
-
-function search(
-  cols: number,
-  rows: number,
-  start: Cell,
-  goal: Cell,
-  walls: PathSearchWall[],
-) {
-  const blocked = new Set<number>();
-  for (const w of walls) {
-    for (let c = w.col; c < w.col + w.w; c++) {
-      for (let r = w.row; r < w.row + w.h; r++) blocked.add(r * cols + c);
-    }
-  }
-  const idx = (c: number, r: number) => r * cols + c;
-  const distArr = new Array<number>(cols * rows).fill(-1);
-  const s = idx(start[0], start[1]);
-  const g = idx(goal[0], goal[1]);
-  blocked.delete(s);
-  blocked.delete(g);
-  distArr[s] = 0;
-  const queue = [s];
-  for (let qi = 0; qi < queue.length; qi++) {
-    const cur = queue[qi];
-    if (cur === g) break;
-    const c = cur % cols;
-    const r = Math.floor(cur / cols);
-    for (const [dc, dr] of DIRS) {
-      const nc = c + dc;
-      const nr = r + dr;
-      if (nc < 0 || nr < 0 || nc >= cols || nr >= rows) continue;
-      const ni = idx(nc, nr);
-      if (blocked.has(ni) || distArr[ni] >= 0) continue;
-      distArr[ni] = distArr[cur] + 1;
-      queue.push(ni);
-    }
-  }
-  const dGoal = distArr[g];
-  const path: Cell[] = [];
-  if (dGoal > 0) {
-    let c = goal[0];
-    let r = goal[1];
-    let dir: Cell = [0, 0];
-    path.push([c, r]);
-    while (distArr[idx(c, r)] > 0) {
-      const here = distArr[idx(c, r)];
-      const options = DIRS.filter(([dc, dr]) => {
-        const nc = c + dc;
-        const nr = r + dr;
-        if (nc < 0 || nr < 0 || nc >= cols || nr >= rows) return false;
-        return distArr[idx(nc, nr)] === here - 1;
-      });
-      const keep = options.find(([dc, dr]) => dc === dir[0] && dr === dir[1]);
-      dir = keep ?? options[0];
-      c += dir[0];
-      r += dir[1];
-      path.push([c, r]);
-    }
-  }
-  return { blocked, distArr, dGoal, path };
 }
 
 function roundedPath(pts: Cell[], radius: number) {
@@ -265,28 +197,42 @@ function ScaleLayer({
   );
 }
 
-export function PathSearch({
-  cols = 17,
-  rows = 9,
-  start = [1, 4],
-  goal = [15, 4],
-  walls = DEFAULT_WALLS,
-  startLabel = "Start",
-  goalLabel = "Goal",
-  accent = "#3B5BFD",
-  floodStep = STEP,
-  trace: traceDur = TRACE,
-  ink,
-  background,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: PathSearchProps) {
+export function PathSearch(props: PathSearchProps) {
+  const {
+    cols = 17,
+    rows = 9,
+    start = DEFAULT_START,
+    goal = DEFAULT_GOAL,
+    walls = DEFAULT_WALLS,
+    startLabel = "Start",
+    goalLabel = "Goal",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    pathSearchTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const camera = tl.get("camera");
+  const ground = tl.get("ground");
+  const gridEl = tl.get("grid");
+  const markers = tl.get("markers");
+  const flood = tl.get("flood");
+  const arrive = tl.get("arrive");
+  const traceEl = tl.get("trace");
+  const fadeEl = tl.get("fade");
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -307,16 +253,13 @@ export function PathSearch({
   const cx = (c: number) => x0 + (c + 0.5) * cell;
   const cy = (r: number) => y0 + (r + 0.5) * cell;
 
-  const reach = FLOOD_AT + Math.max(0, dGoal) * floodStep;
-  const traceAt = reach + 6;
-  const fadeAt = traceAt + traceDur - 6;
-  const doneAt = fadeAt + 22;
+  const reach = arrive.start;
 
-  const gridIn = interpolate(t, [0, 14], [0, 1], {
+  const gridIn = interpolate(t, [gridEl.start, gridEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const trace = interpolate(t, [traceAt, traceAt + traceDur], [0, 1], {
+  const trace = interpolate(t, [traceEl.start, traceEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -326,7 +269,7 @@ export function PathSearch({
     config: { damping: 14, stiffness: 180, mass: 0.6 },
   });
   const startHit = spring({
-    frame: t - (traceAt + traceDur - 2),
+    frame: t - (traceEl.end - 2),
     fps,
     config: { damping: 14, stiffness: 180, mass: 0.6 },
   });
@@ -342,21 +285,27 @@ export function PathSearch({
     for (let c = 0; c < cols; c++) {
       const d = distArr[r * cols + c];
       if (d < 0 || d > dGoal) continue;
-      const at = FLOOD_AT + d * floodStep;
+      const at = flood.start + d * flood.beat("step");
       if (t < at) continue;
       const k = t - at;
-      const rise = interpolate(k, [0, 4], [0, 1], {
+      const rise = interpolate(k, [0, flood.beat("rise")], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
       const band = Math.floor(d / 3) % 2 === 0 ? 1 : 0.78;
-      const decay = interpolate(k, [3, 16], [p.front, p.tint * band], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      });
+      const decay = interpolate(
+        k,
+        [flood.beat("peak"), flood.beat("cool")],
+        [p.front, p.tint * band],
+        {
+          ...CLAMP,
+          easing: EASE_OUT,
+        },
+      );
+      const fadeAt = fadeEl.start + d * fadeEl.beat("ripple");
       const fade = interpolate(
         t,
-        [fadeAt + d * 0.35, fadeAt + d * 0.35 + 16],
+        [fadeAt, fadeAt + fadeEl.beat("fade")],
         [1, p.residue],
         CLAMP,
       );
@@ -422,7 +371,7 @@ export function PathSearch({
       const i = r * cols + c;
       return !blocked.has(i) && !onPath.has(i);
     }) ?? [0, -1];
-    const a = interpolate(t, [at, at + 14], [0, 1], {
+    const a = interpolate(t, [at, at + markers.beat("label")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -456,21 +405,21 @@ export function PathSearch({
 
   const markerR = cell * 0.2;
   const startPop = spring({
-    frame: t - MARK_AT,
+    frame: t - markers.start,
     fps,
     config: { damping: 14, stiffness: 200, mass: 0.6 },
   });
   const goalPop = spring({
-    frame: t - MARK_AT - 3,
+    frame: t - markers.start - markers.beat("goal"),
     fps,
     config: { damping: 14, stiffness: 200, mass: 0.6 },
   });
-  const push = interpolate(t, [0, doneAt + 20], [0, 1], {
+  const push = interpolate(t, [camera.start, camera.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
 
-  const drift = interpolate(t, [0, 150], [0, 1], CLAMP);
+  const drift = interpolate(t, [ground.start, ground.end], [0, 1], CLAMP);
   const routeX1 = cx(start[0]);
   const routeX2 = cx(goal[0]) === routeX1 ? routeX1 + 1 : cx(goal[0]);
 
@@ -532,8 +481,8 @@ export function PathSearch({
             </g>
             {tints}
             {walls.map((w, i) => {
-              const at = 3 + i * 3;
-              const a = interpolate(t, [at, at + 14], [0, 1], {
+              const wall = tl.get(`wall:${i}`);
+              const a = interpolate(t, [wall.start, wall.end], [0, 1], {
                 ...CLAMP,
                 easing: EASE_OUT,
               });
@@ -613,8 +562,12 @@ export function PathSearch({
               opacity={Math.min(1, goalPop * 1.5)}
             />
           </svg>
-          {labelFor(start, startLabel, MARK_AT + 4)}
-          {labelFor(goal, goalLabel, MARK_AT + 7)}
+          {labelFor(
+            start,
+            startLabel,
+            markers.start + markers.beat("startLabel"),
+          )}
+          {labelFor(goal, goalLabel, markers.start + markers.beat("goalLabel"))}
         </AbsoluteFill>
       </ScaleLayer>
       <AbsoluteFill
