@@ -19,6 +19,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LEAD,
+  type LooksLikeThisElementId,
+  leadWords,
+  looksLikeThisTimeline,
+} from "./timeline";
 
 const onest = loadFont("normal", {
   weights: ["300", "400"],
@@ -52,6 +59,12 @@ export interface LooksLikeThisProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the lead words, the chip, its growth into the
+   * video and the player chrome, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LooksLikeThisElementId>;
 }
 
 const THEMES = {
@@ -233,38 +246,45 @@ function ScaleLayer({
   );
 }
 
-export function LooksLikeThis({
-  lead = "Your next launch looks like",
-  word = "this",
-  end = ".",
-  src,
-  aspect = 16 / 9,
-  duration = "0:30",
-  stagger = 2.5,
-  radius: radiusPx = 16,
-  accent,
-  ink,
-  background,
-  fontFamily = onest.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: LooksLikeThisProps) {
+export function LooksLikeThis(props: LooksLikeThisProps) {
+  const {
+    lead = DEFAULT_LEAD,
+    word = "this",
+    end = ".",
+    src,
+    aspect = 16 / 9,
+    duration = "0:30",
+    radius: radiusPx = 16,
+    accent,
+    ink,
+    background,
+    fontFamily = onest.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const now = useSceneFrame();
   const frame = Math.max(0, now - delay);
   const { width: W, height: H, fps, durationInFrames: D } = useSceneConfig();
+  // The scene scales its beats by the clip length without `speed`.
+  const tl = useTimeline(looksLikeThisTimeline, props, D, timing);
+  const chipEl = tl.get("chip");
+  const grow = tl.get("grow");
+  const chromeEl = tl.get("chrome");
+  const playEl = tl.get("play");
+  const punct = tl.get("punct");
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const image = src ?? staticFile("hero.png");
   const m = useMetrics(fontFamily);
 
-  const words = lead.split(/\s+/).filter(Boolean);
-  const k = Math.min(1.6, Math.max(0.6, D / 150));
+  const words = leadWords(lead);
   const t = frame * speed;
   const tAt = (n: number) => Math.max(0, n - delay) * speed;
   /** Whether a value in px, as a function of time, moves on this frame. */
@@ -324,22 +344,18 @@ export function LooksLikeThis({
     h: heroH,
   };
 
-  const CHIP_AT = 12 * k;
-  const GROW_AT = 48 * k;
-  const GROW_LEN = 30 * k;
-
   const pAt = (t: number) =>
-    interpolate(t, [GROW_AT, GROW_AT + GROW_LEN], [0, 1], {
+    interpolate(t, [grow.start, grow.end], [0, 1], {
       ...CLAMP,
       easing: MOVE,
     });
   const p = pAt(t);
   const pChipAt = (t: number) =>
     spring({
-      frame: t - GROW_AT - 4 * k,
+      frame: t - grow.start - grow.beat("chipDelay"),
       fps,
       config: MORPH,
-      durationInFrames: GROW_LEN + 2 * k,
+      durationInFrames: grow.beat("chip"),
     });
   const pChip = pChipAt(t);
   const lerp = (a: number, b: number, q: number) => a + (b - a) * q;
@@ -353,7 +369,7 @@ export function LooksLikeThis({
     w: chipW * sizeA,
     h: CHIP_H * sizeA,
   };
-  const chipOpen = spring({ frame: t - CHIP_AT, fps, config: CARD });
+  const chipOpen = spring({ frame: t - chipEl.start, fps, config: CARD });
   const chipAt = (pChip: number, p: number) => {
     const chipY = lerp(chipRect0.y, hero.y, pChip);
     const lineFloor =
@@ -368,7 +384,7 @@ export function LooksLikeThis({
   };
   const chip = chipAt(pChip, p);
   const radius = lerp(sizeA * 0.12, radiusPx * u, pChip);
-  const settle = interpolate(t, [GROW_AT + GROW_LEN, D], [1.04, 1], {
+  const settle = interpolate(t, [playEl.start, playEl.end], [1.04, 1], {
     ...CLAMP,
     easing: TYPE_IN,
   });
@@ -384,7 +400,7 @@ export function LooksLikeThis({
 
   const wordIn = interpolate(
     t,
-    [GROW_AT + GROW_LEN * 0.4, GROW_AT + GROW_LEN + 4 * k],
+    [grow.start + grow.beat("word"), grow.end + grow.beat("wordEnd")],
     [0, 1],
     { ...CLAMP, easing: TYPE_IN },
   );
@@ -402,13 +418,11 @@ export function LooksLikeThis({
     interpolate(p, [0, 0.55], [0, 1], { ...CLAMP, easing: TYPE_IN }),
   );
 
-  const chrome = interpolate(
-    t,
-    [GROW_AT + GROW_LEN, GROW_AT + GROW_LEN + 12 * k],
-    [0, 1],
-    { ...CLAMP, easing: TYPE_IN },
-  );
-  const play = interpolate(t, [GROW_AT + GROW_LEN, D], [0.04, 0.32], CLAMP);
+  const chrome = interpolate(t, [chromeEl.start, chromeEl.end], [0, 1], {
+    ...CLAMP,
+    easing: TYPE_IN,
+  });
+  const play = interpolate(t, [playEl.start, playEl.end], [0.04, 0.32], CLAMP);
   const totalSec = (() => {
     const [mm, ss] = duration.split(":").map((v) => Number.parseInt(v, 10));
     return (mm || 0) * 60 + (ss || 0);
@@ -459,7 +473,7 @@ export function LooksLikeThis({
       : `translate(${chipDx}px, ${chipDy}px)${glide(chipMoving)}`;
   const barDy = chip.h - chipRest.h;
   const chromeAt = (t: number) =>
-    interpolate(t, [GROW_AT + GROW_LEN, GROW_AT + GROW_LEN + 12 * k], [0, 1], {
+    interpolate(t, [chromeEl.start, chromeEl.end], [0, 1], {
       ...CLAMP,
       easing: TYPE_IN,
     });
@@ -487,22 +501,19 @@ export function LooksLikeThis({
         {words.map((wd, i) => {
           const a = A.placed[i];
           const b = B.placed[i];
-          const enter = interpolate(
-            t,
-            [i * stagger * k, i * stagger * k + 12 * k],
-            [0, 1],
-            { ...CLAMP, easing: TYPE_IN },
-          );
+          const w = tl.get(`word:${i}`);
+          const enter = interpolate(t, [w.start, w.end], [0, 1], {
+            ...CLAMP,
+            easing: TYPE_IN,
+          });
           const x = lerp(a.x, b.x, p);
           const y = lerp(a.y, b.y, p) + (1 - enter) * size * 0.32;
           const yAt = (t: number) => {
             const q = pAt(t);
-            const e = interpolate(
-              t,
-              [i * stagger * k, i * stagger * k + 12 * k],
-              [0, 1],
-              { ...CLAMP, easing: TYPE_IN },
-            );
+            const e = interpolate(t, [w.start, w.end], [0, 1], {
+              ...CLAMP,
+              easing: TYPE_IN,
+            });
             return lerp(a.y, b.y, q) + (1 - e) * lerp(sizeA, sizeB, q) * 0.32;
           };
           return (
@@ -522,7 +533,7 @@ export function LooksLikeThis({
           style={{
             ...textStyle,
             transform: `translate(${endX}px, ${endY}px)${fit}${glide(midway(p))}`,
-            opacity: interpolate(t, [10 * k, 18 * k], [0, 1], {
+            opacity: interpolate(t, [punct.start, punct.end], [0, 1], {
               ...CLAMP,
               easing: TYPE_IN,
             }),
