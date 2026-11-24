@@ -9767,12 +9767,21 @@
       "title": "Studio Reflection",
       "description": "A chrome-gradient 250+ appears with studio-style reflection and a small caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/studio-reflection/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/studio-reflection.tsx"
+          "target": "components/remocn/studio-reflection/index.tsx"
+        },
+        {
+          "path": "registry/remocn/studio-reflection/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/studio-reflection/timeline.ts"
         }
       ],
       "type": "registry:component"
