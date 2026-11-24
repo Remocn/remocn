@@ -13,6 +13,16 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  CUT_LEN,
+  DEFAULT_KEEP,
+  DEFAULT_TRANSCRIPT,
+  type FillerCutElementId,
+  fillerCutTimeline,
+  MARK_TO_CUT,
+  plan,
+} from "./timeline";
 
 const grotesk = loadSchibsted("normal", {
   weights: ["400", "500"],
@@ -43,6 +53,13 @@ export interface FillerCutProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words being said, the clock, the mark,
+   * single runs of filler collapsing, the reflow, the set and the highlight,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<FillerCutElementId>;
 }
 
 const HALO = ["#fff4ec", "#ffb36b", "#e2457a", "#3d4dff"] as const;
@@ -73,17 +90,6 @@ const HEAD_TRACK = -0.04;
 const SPEAK_LEAD = 1.32;
 const HEAD_LEAD = 1.02;
 
-const SPEAK_AT = 4;
-const SPEAK_PER = 2;
-const SPEAK_MAX = 28;
-const MARK_AT = 34;
-const MARK_TO_CUT = 10;
-const CUT_GAP = 6;
-const CUT_LEN = 10;
-const REFLOW_GAP = 2;
-const REFLOW_LEN = 12;
-const SET_GAP = 4;
-const SET_LEN = 24;
 const SEC_PER_WORD = 0.38;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -93,30 +99,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
-
-interface Token {
-  said: string;
-  keep: number;
-  cut: number;
-}
-
-function plan(transcript: string, keep: string) {
-  const said = transcript.split(/\s+/).filter(Boolean);
-  const kept = keep.split(/\s+/).filter(Boolean);
-  const tokens: Token[] = said.map((s) => ({ said: s, keep: -1, cut: -1 }));
-  let j = 0;
-  for (let i = 0; i < tokens.length && j < kept.length; i++)
-    if (norm(tokens[i].said) === norm(kept[j])) tokens[i].keep = j++;
-  const extra = kept.map((_, q) => q).filter((q) => q >= j);
-  let cuts = 0;
-  tokens.forEach((tk, i) => {
-    if (tk.keep >= 0) return;
-    tk.cut = i > 0 && tokens[i - 1].cut >= 0 ? tokens[i - 1].cut : cuts++;
-  });
-  return { tokens, kept, extra, cuts };
-}
 
 interface Metrics {
   said: number[];
@@ -310,26 +292,33 @@ function ScaleLayer({
   );
 }
 
-export function FillerCut({
-  transcript = "So, um, ship your, like, launch video, uh, today. You know?",
-  keep = "Ship your launch video today.",
-  highlight = "today.",
-  showTime = true,
-  stagger = CUT_GAP,
-  fontWeight = 500,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = grotesk.fontFamily,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: FillerCutProps) {
+export function FillerCut(props: FillerCutProps) {
+  const {
+    transcript = DEFAULT_TRANSCRIPT,
+    keep = DEFAULT_KEEP,
+    highlight = "today.",
+    showTime = true,
+    fontWeight = 500,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = grotesk.fontFamily,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    fillerCutTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
@@ -357,16 +346,20 @@ export function FillerCut({
   const nLinesA = (lineA[lineA.length - 1] ?? 0) + 1;
 
   const n = P.tokens.length;
-  const speakPer = Math.min(SPEAK_PER, SPEAK_MAX / Math.max(1, n - 1));
-  const markAt = Math.max(MARK_AT, SPEAK_AT + (n - 1) * speakPer + 8);
-  const cutAt = markAt + MARK_TO_CUT;
+  const eMark = tl.get("mark");
+  const eReflow = tl.get("reflow");
+  const eSet = tl.get("set");
+  const eHighlight = tl.get("highlight");
+  const eClock = tl.get("clock");
+  const cutEls = Array.from({ length: P.cuts }, (_, k) => tl.get(`cut:${k}`));
+  const markAt = eMark.start;
+  // With no filler there is no cut; the line still holds where one would be.
+  const cutAt = cutEls.length > 0 ? cutEls[0].start : markAt + MARK_TO_CUT;
   const cutP = (k: number) =>
-    interpolate(
-      t,
-      [cutAt + k * stagger, cutAt + k * stagger + CUT_LEN],
-      [0, 1],
-      { ...CLAMP, easing: EASE_CUT },
-    );
+    interpolate(t, [cutEls[k].start, cutEls[k].end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_CUT,
+    });
   const collapse = P.tokens.map((tk) => (tk.cut >= 0 ? cutP(tk.cut) : 0));
 
   const ripple = (col: number[]) => {
@@ -419,17 +412,18 @@ export function FillerCut({
     });
   }
 
-  const cutEnd = cutAt + Math.max(0, P.cuts - 1) * stagger + CUT_LEN;
-  const reflowAt = cutEnd + REFLOW_GAP;
+  const cutEnd =
+    cutEls.length > 0 ? cutEls[cutEls.length - 1].end : cutAt + CUT_LEN;
+  const reflowAt = eReflow.start;
   const reflowEarly = interpolate(
     t,
-    [reflowAt, reflowAt + REFLOW_LEN * 0.6],
+    [reflowAt, reflowAt + eReflow.beat("early")],
     [0, 1],
     { ...CLAMP, easing: EASE_SET },
   );
   const reflowLate = interpolate(
     t,
-    [reflowAt + REFLOW_LEN * 0.4, reflowAt + REFLOW_LEN],
+    [reflowAt + eReflow.beat("lateAt"), eReflow.end],
     [0, 1],
     { ...CLAMP, easing: EASE_SET },
   );
@@ -458,28 +452,23 @@ export function FillerCut({
       x += (m.said[i] + m.space400) * sA;
     });
   }
-  const setAt = reflowAt + REFLOW_LEN + SET_GAP;
-  const setP = interpolate(t, [setAt, setAt + SET_LEN], [0, 1], {
+  const setAt = eSet.start;
+  const setP = interpolate(t, [setAt, eSet.end], [0, 1], {
     ...CLAMP,
     easing: EASE_SET,
   });
-  const setY = interpolate(t, [setAt, setAt + SET_LEN * 0.7], [0, 1], {
+  const setY = interpolate(t, [setAt, setAt + eSet.beat("drop")], [0, 1], {
     ...CLAMP,
     easing: EASE_SET,
   });
-  const markP = interpolate(t, [markAt, markAt + 8], [0, 1], {
+  const markP = interpolate(t, [markAt, eMark.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const hiP = interpolate(
-    t,
-    [setAt + SET_LEN - 6, setAt + SET_LEN + 10],
-    [0, 1],
-    {
-      ...CLAMP,
-      easing: EASE_OUT,
-    },
-  );
+  const hiP = interpolate(t, [eHighlight.start, eHighlight.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
   const hiStart = highlight ? keep.lastIndexOf(highlight) : -1;
   const isHi = (q: number) => {
     if (hiStart < 0) return false;
@@ -497,14 +486,12 @@ export function FillerCut({
   const between = (a: number, b: number) => t > a - speed && t < b + speed;
   const els: React.ReactNode[] = [];
   P.tokens.forEach((tk, i) => {
-    const spoken = interpolate(
-      t,
-      [SPEAK_AT + i * speakPer, SPEAK_AT + i * speakPer + 8],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
-    );
-    const rising =
-      t > SPEAK_AT + i * speakPer && t < SPEAK_AT + i * speakPer + 8;
+    const said = tl.get(`word:${i}`);
+    const spoken = interpolate(t, [said.start, said.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    const rising = t > said.start && t < said.end;
     const survivor = tk.keep >= 0;
     if (!survivor) {
       const col = collapse[i];
@@ -560,8 +547,8 @@ export function FillerCut({
     const wordMoving =
       rising ||
       between(cutAt, cutEnd) ||
-      between(reflowAt, reflowAt + REFLOW_LEN) ||
-      between(setAt, setAt + SET_LEN);
+      between(reflowAt, eReflow.end) ||
+      between(setAt, eSet.end);
     const textStyle: React.CSSProperties = {
       position: "absolute",
       left: headX[q],
@@ -601,7 +588,7 @@ export function FillerCut({
       );
   });
   for (const q of P.extra) {
-    const a = interpolate(t, [setAt + 8, setAt + SET_LEN], [0, 1], {
+    const a = interpolate(t, [setAt + eSet.beat("extraAt"), eSet.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -635,11 +622,11 @@ export function FillerCut({
   );
   const secs = (n - gone) * SEC_PER_WORD;
   const timeOn =
-    interpolate(t, [SPEAK_AT + 4, SPEAK_AT + 18], [0, 1], {
+    interpolate(t, [eClock.start, eClock.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     }) *
-    (1 - interpolate(t, [setAt, setAt + 10], [0, 1], CLAMP));
+    (1 - interpolate(t, [setAt, setAt + eSet.beat("clockOut")], [0, 1], CLAMP));
   const timeSize = Math.max(unit * 0.024, 11);
   const blockTop = live.top;
 

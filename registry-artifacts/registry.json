@@ -8994,12 +8994,21 @@
       "title": "Filler Cut",
       "description": "A transcript has its filler words cut, leaving a clean line, 'Ship your launch video today.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/filler-cut/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/filler-cut.tsx"
+          "target": "components/remocn/filler-cut/index.tsx"
+        },
+        {
+          "path": "registry/remocn/filler-cut/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/filler-cut/timeline.ts"
         }
       ],
       "type": "registry:component"
