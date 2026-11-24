@@ -10327,12 +10327,21 @@
       "title": "Candle Rally",
       "description": "Candlesticks rally past a prior high as 'ALL-TIME HIGH' lands beside a price tag.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/candle-rally/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/candle-rally.tsx"
+          "target": "components/remocn/candle-rally/index.tsx"
+        },
+        {
+          "path": "registry/remocn/candle-rally/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/candle-rally/timeline.ts"
         }
       ],
       "type": "registry:component"

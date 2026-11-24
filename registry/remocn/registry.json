@@ -10332,10 +10332,19 @@
         {
           "path": "candle-rally/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/candle-rally.tsx"
+          "target": "components/remocn/candle-rally/index.tsx"
+        },
+        {
+          "path": "candle-rally/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/candle-rally/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "chevron-run",
