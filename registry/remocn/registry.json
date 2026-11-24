@@ -15037,13 +15037,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "phone-scroll/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/phone-scroll.tsx"
+          "target": "components/remocn/phone-scroll/index.tsx"
+        },
+        {
+          "path": "phone-scroll/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/phone-scroll/timeline.ts"
         }
       ]
     },
