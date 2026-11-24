@@ -10,6 +10,18 @@ import {
 } from "@/components/remocn/use-cursor-path";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedTimeline,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  CARD_LAYERS,
+  CLICK_AT,
+  type XFollowCardElementId,
+  xFollowCardTimeline,
+} from "./timeline";
 
 const { fontFamily: FONT_FAMILY } = loadFont();
 
@@ -26,6 +38,12 @@ export interface XFollowCardProps {
   accentColor?: string;
   orientation?: "horizontal" | "vertical";
   speed?: number;
+  /**
+   * Moves, trims or stretches the card's bounce, each layer's blur-in, the
+   * cursor's travel and the click, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `speed`.
+   */
+  timing?: Timing<XFollowCardElementId>;
 }
 
 interface Theme {
@@ -56,7 +74,10 @@ export const THEMES: Record<"light" | "dark", Theme> = {
   },
 };
 
-export const CLICK_FRAME = 110;
+export const CLICK_FRAME = CLICK_AT;
+
+/** The schedule as it is laid out without `timing`. */
+const DEFAULT_TIMELINE = resolve(xFollowCardTimeline({}, { length: 0 }));
 
 const BUTTON_LAYOUT: Record<
   "horizontal" | "vertical",
@@ -80,22 +101,17 @@ export function cardBounceIn(
   return { translateY, scale };
 }
 
-export function blurInSchedule(): {
+export function blurInSchedule(
+  tl: ResolvedTimeline<XFollowCardElementId> = DEFAULT_TIMELINE,
+): {
   group: number;
   start: number;
   end: number;
 }[] {
-  return [
-    { group: 0, start: 20, end: 26 },
-    { group: 1, start: 22, end: 28 },
-    { group: 2, start: 24, end: 30 },
-    { group: 3, start: 26, end: 32 },
-    { group: 4, start: 28, end: 34 },
-    { group: 5, start: 30, end: 36 },
-    { group: 6, start: 32, end: 38 },
-    { group: 7, start: 34, end: 40 },
-    { group: 8, start: 36, end: 42 },
-  ];
+  return CARD_LAYERS.map((id, group) => {
+    const e = tl.get(id);
+    return { group, start: e.start, end: e.end };
+  });
 }
 
 export function blurInAt(
@@ -114,29 +130,42 @@ export function blurInAt(
   };
 }
 
-export function followStateAt(frame: number, speed: number): boolean {
-  return frame * speed >= CLICK_FRAME;
+export function followStateAt(
+  frame: number,
+  speed: number,
+  clickAt: number = CLICK_FRAME,
+): boolean {
+  return frame * speed >= clickAt;
 }
 
-export function buildFollowWaypoints(args: {
-  buttonCenter: { x: number; y: number };
-  orientation: "horizontal" | "vertical";
-}): CursorWaypoint[] {
+export function buildFollowWaypoints(
+  args: {
+    buttonCenter: { x: number; y: number };
+    orientation: "horizontal" | "vertical";
+  },
+  tl: ResolvedTimeline<XFollowCardElementId> = DEFAULT_TIMELINE,
+): CursorWaypoint[] {
   const { buttonCenter, orientation } = args;
   const rest =
     orientation === "vertical" ? { x: 640, y: 1120 } : { x: 1120, y: 600 };
+  const cursor = tl.get("cursor");
+  const follow = tl.get("follow");
   return [
     { at: 0, x: rest.x, y: rest.y },
-    { at: 75, x: rest.x, y: rest.y },
+    { at: cursor.start + cursor.beat("rest"), x: rest.x, y: rest.y },
     {
-      at: CLICK_FRAME,
+      at: cursor.end,
       x: buttonCenter.x,
       y: buttonCenter.y,
-      duration: 32,
+      duration: cursor.length,
       click: true,
       easing: "inOut",
     },
-    { at: CLICK_FRAME + 30, x: buttonCenter.x, y: buttonCenter.y },
+    {
+      at: follow.start + follow.beat("hold"),
+      x: buttonCenter.x,
+      y: buttonCenter.y,
+    },
   ];
 }
 
@@ -402,6 +431,7 @@ function CalendarIcon({ color }: { color: string }) {
 function FollowButton({
   frame,
   speed,
+  click,
   accent,
   theme,
   layout,
@@ -409,19 +439,18 @@ function FollowButton({
 }: {
   frame: number;
   speed: number;
+  click: { start: number; end: number };
   accent: string;
   theme: Theme;
   layout: { x: number; y: number; w: number; h: number };
   pressScale: number;
 }) {
   const glide = useGlide();
-  const _followed = followStateAt(frame, speed);
-  const flip = interpolate(
-    frame * speed,
-    [CLICK_FRAME, CLICK_FRAME + 10],
-    [0, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
+  const _followed = followStateAt(frame, speed, click.start);
+  const flip = interpolate(frame * speed, [click.start, click.end], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   const base = {
     position: "absolute" as const,
@@ -668,23 +697,32 @@ function CursorLayer({
   );
 }
 
-export function XFollowCard({
-  name = "remocn",
-  handle = "remocn",
-  bio = "Building the collaborative video toolkit for small teams.\nShip demos faster with ready-made motion.",
-  avatarUrl = "/logo.svg",
-  coverUrl = "",
-  location = "Tunisia",
-  website = "remocn.tn",
-  joined = "January 2024",
-  verified = true,
-  accentColor = "#1d9bf0",
-  orientation = "horizontal",
-  speed = 1,
-}: XFollowCardProps) {
+export function XFollowCard(props: XFollowCardProps) {
+  const {
+    name = "remocn",
+    handle = "remocn",
+    bio = "Building the collaborative video toolkit for small teams.\nShip demos faster with ready-made motion.",
+    avatarUrl = "/logo.svg",
+    coverUrl = "",
+    location = "Tunisia",
+    website = "remocn.tn",
+    joined = "January 2024",
+    verified = true,
+    accentColor = "#1d9bf0",
+    orientation = "horizontal",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    xFollowCardTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const card = tl.get("card");
   const t = THEMES.light;
   const isVertical = orientation === "vertical";
 
@@ -698,13 +736,13 @@ export function XFollowCard({
   const coverHeight = isVertical ? 180 : 150;
   const avatarSize = isVertical ? 120 : 110;
 
-  const bounce = cardBounceIn(frame * speed, fps);
-  const schedule = blurInSchedule();
+  const bounce = cardBounceIn(frame * speed - card.start, fps);
+  const schedule = blurInSchedule(tl);
   // The bounce overshoots and the blur-ins slide their groups up, all under
   // the card's transform: it is marked as moving while any of them moves. Checked
   // against the neighbouring frames, since the spring has a long tail.
   const shifts = (f: number, groups: number[]) => {
-    const b = cardBounceIn(f * speed, fps);
+    const b = cardBounceIn(f * speed - card.start, fps);
     return [
       b.translateY,
       b.scale * refH,
@@ -729,7 +767,7 @@ export function XFollowCard({
   };
 
   const cursorStyle = useCursorPath(
-    buildFollowWaypoints({ buttonCenter, orientation }),
+    buildFollowWaypoints({ buttonCenter, orientation }, tl),
     { speed },
   );
   const pressScale = 0.9 + 0.1 * (cursorStyle.pressScale ?? 1);
@@ -871,6 +909,7 @@ export function XFollowCard({
             <FollowButton
               frame={frame}
               speed={speed}
+              click={tl.get("follow")}
               accent={accentColor}
               theme={t}
               layout={layout}

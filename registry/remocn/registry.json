@@ -2561,13 +2561,19 @@
       "registryDependencies": [
         "@remocn/cursor",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "x-follow-card/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/x-follow-card.tsx"
+          "target": "components/remocn/x-follow-card/index.tsx"
+        },
+        {
+          "path": "x-follow-card/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/x-follow-card/timeline.ts"
         }
       ]
     },
