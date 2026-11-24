@@ -12399,12 +12399,21 @@
       "title": "Log Rescale",
       "description": "A bar chart rescales to a log axis so the final 2.4M bar stands out.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/log-rescale/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/log-rescale.tsx"
+          "target": "components/remocn/log-rescale/index.tsx"
+        },
+        {
+          "path": "registry/remocn/log-rescale/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/log-rescale/timeline.ts"
         }
       ],
       "type": "registry:component"
