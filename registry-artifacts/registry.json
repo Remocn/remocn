@@ -5534,13 +5534,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/node-trail/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/node-trail.tsx"
+          "target": "components/remocn/node-trail/index.tsx"
+        },
+        {
+          "path": "registry/remocn/node-trail/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/node-trail/timeline.ts"
         }
       ],
       "type": "registry:component"
