@@ -13723,10 +13723,19 @@
         {
           "path": "venn-merge/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/venn-merge.tsx"
+          "target": "components/remocn/venn-merge/index.tsx"
+        },
+        {
+          "path": "venn-merge/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/venn-merge/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "fluted-glass",
