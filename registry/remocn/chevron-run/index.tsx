@@ -6,6 +6,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ChevronRunElementId, COLS, chevronRunTimeline } from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -39,6 +41,12 @@ export interface ChevronRunProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the race, single column locks, the fuse, the
+   * figure and the caption, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ChevronRunElementId>;
 }
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -59,12 +67,6 @@ const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 //  72–86   the locked pieces fuse into one solid gradient chevron
 //  86–104  the figure drops into the cut-out under it, the caption follows
 // 104–     poster holds
-const LOCK_AT = 48;
-const LOCK_LEN = 14;
-const FUSE_AT = 74;
-const LAND_AT = 84;
-
-const COLS = 13;
 const ROWS = 15;
 const BAND_ROWS = 3;
 
@@ -121,23 +123,35 @@ function ScaleLayer({
   );
 }
 
-export function ChevronRun({
-  value = "+312%",
-  caption = "growth since launch",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  fontWeight = 500,
-  columns = COLS,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ChevronRunProps) {
+export function ChevronRun(props: ChevronRunProps) {
+  const {
+    value = "+312%",
+    caption = "growth since launch",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    fontWeight = 500,
+    columns = COLS,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    chevronRunTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const race = tl.get("race");
+  const fuseEl = tl.get("fuse");
+  const landEl = tl.get("land");
+  const captionEl = tl.get("caption");
   const u = H / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -171,13 +185,14 @@ export function ChevronRun({
     return (3.2 * x + 0.3 * x * x) * u;
   };
   const vel = (tt: number) => (travel(tt + 0.5) - travel(tt - 0.5)) / u;
-  const lockStart = (c: number) =>
-    LOCK_AT + Math.abs(c - (columns - 1) / 2) * 1.3;
-  const fuse = interpolate(t, [FUSE_AT, FUSE_AT + 12], [0, 1], {
+  const fuse = interpolate(t, [fuseEl.start, fuseEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const blurBase = Math.min(9 * u, vel(Math.min(t, LOCK_AT + 10)) * 0.28 * u);
+  const blurBase = Math.min(
+    9 * u,
+    vel(Math.min(t, race.start + race.beat("blurCap"))) * 0.28 * u,
+  );
 
   const streamY = (c: number, k: number, tt: number) => {
     const mult = 0.86 + 0.28 * hash(c * 7.3);
@@ -191,7 +206,8 @@ export function ChevronRun({
   const lockers: React.ReactNode[] = [];
   for (let c = 0; c < columns; c++) {
     const x = c * colStep;
-    const tL = lockStart(c);
+    const lock = tl.get(`lock:${c}`);
+    const tL = lock.start;
     const band = outerY(x);
     // per target row, the wall chevron just below it at the lock moment
     const taken = new Set<number>();
@@ -218,9 +234,9 @@ export function ChevronRun({
       const tone = 0.35 + 0.65 * hash(c * 13.7 + k * 3.3);
       const isAccent = hash(c * 5.1 + k * 9.7) > 0.9;
       if (pick && t >= tL) {
-        const e = EASE_OUT(Math.max(0, Math.min(1, (t - tL) / LOCK_LEN)));
+        const e = EASE_OUT(Math.max(0, Math.min(1, (t - tL) / lock.length)));
         const y = pick.y0 + (pick.ty - pick.y0) * e;
-        const tint = interpolate(t, [tL, tL + LOCK_LEN], [0, 1], CLAMP);
+        const tint = interpolate(t, [tL, lock.end], [0, 1], CLAMP);
         const grow = 1 + 0.42 * fuse;
         lockers.push(
           <path
@@ -241,7 +257,12 @@ export function ChevronRun({
       }
       const y = streamY(c, k, t);
       // the rest of the wall clears out once its column has locked
-      const leave = interpolate(t, [tL - 2, tL + 10], [1, 0], CLAMP);
+      const leave = interpolate(
+        t,
+        [tL + lock.beat("leaveAt"), tL + lock.beat("leave")],
+        [1, 0],
+        CLAMP,
+      );
       if (leave <= 0 || y < -rowStep * 1.2 || y > H + rowStep) continue;
       runners.push(
         <path
@@ -262,23 +283,38 @@ export function ChevronRun({
     ((yBase - innerApexY) / SLOPE - 0.12 * W) / (textEm / 2 + capH / SLOPE),
     (W * 0.7) / textEm,
   );
-  const land = interpolate(t, [LAND_AT, LAND_AT + 14], [0, 1], {
+  const land = interpolate(t, [landEl.start, landEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const capIn = interpolate(t, [LAND_AT + 8, LAND_AT + 24], [0, 1], {
+  const capIn = interpolate(t, [captionEl.start, captionEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const solid = interpolate(t, [FUSE_AT + 2, FUSE_AT + 12], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const settle = interpolate(t, [FUSE_AT, FUSE_AT + 20], [0.985, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const drift = interpolate(t, [FUSE_AT, 150], [0, 1], CLAMP);
+  const solid = interpolate(
+    t,
+    [fuseEl.start + fuseEl.beat("solidAt"), fuseEl.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const settle = interpolate(
+    t,
+    [fuseEl.start, fuseEl.start + fuseEl.beat("settle")],
+    [0.985, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const drift = interpolate(
+    t,
+    [fuseEl.start, fuseEl.start + fuseEl.beat("drift")],
+    [0, 1],
+    CLAMP,
+  );
 
   return (
     <AbsoluteFill

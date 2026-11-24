@@ -10288,12 +10288,21 @@
       "title": "Chevron Run",
       "description": "A giant gradient chevron frames a big +312% with a serif caption underneath.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/chevron-run/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/chevron-run.tsx"
+          "target": "components/remocn/chevron-run/index.tsx"
+        },
+        {
+          "path": "registry/remocn/chevron-run/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/chevron-run/timeline.ts"
         }
       ],
       "type": "registry:component"
