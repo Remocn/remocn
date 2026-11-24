@@ -22,6 +22,18 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  type CaretDollyElementId,
+  caretDollyPlan,
+  caretDollyTimeline,
+  DEFAULT_FOCUS,
+  DEFAULT_PROMPT,
+} from "./timeline";
 
 const face = loadFont("normal", {
   weights: ["400"],
@@ -50,6 +62,12 @@ export interface CaretDollyProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the typing, the camera's punch, pull and
+   * drift, the cursor and the press, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CaretDollyElementId>;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -102,19 +120,6 @@ const THEMES = {
     cursorFill: "#1b1612",
     cursorStroke: "#ffffff",
   },
-};
-
-const BEAT = {
-  typeA: 2,
-  punch: 24,
-  punchLen: 12,
-  focusLen: 22,
-  pull: 60,
-  pullLen: 24,
-  post: 72,
-  postLen: 30,
-  cursor: 82,
-  press: 108,
 };
 
 const TRACK = -0.012;
@@ -237,27 +242,50 @@ function ScaleLayer({
   );
 }
 
-export function CaretDolly({
-  prompt = "Make a launch video for our new app with a bold title, product shots and a calm ending",
-  focus = "launch video",
-  chipLabel = "Video",
-  modelLabel = "Remocn 1",
-  accent,
-  ink,
-  background,
-  theme = "dark",
-  ground,
-  groundParams,
-  fontFamily = face.fontFamily,
-  zoom = 1,
-  motionBlur = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: CaretDollyProps) {
+/**
+ * A typing rate, slowed or sped up as far as `timing` stretched or trimmed
+ * its element; exactly `rate` when the element has its scheduled length.
+ */
+const paced = (
+  rate: number,
+  own: number,
+  e: ResolvedElement<CaretDollyElementId>,
+) => (e.length > 0 ? rate * (own / e.length) : rate);
+
+export function CaretDolly(props: CaretDollyProps) {
+  const {
+    prompt = DEFAULT_PROMPT,
+    focus = DEFAULT_FOCUS,
+    chipLabel = "Video",
+    modelLabel = "Remocn 1",
+    accent,
+    ink,
+    background,
+    theme = "dark",
+    ground,
+    groundParams,
+    fontFamily = face.fontFamily,
+    zoom = 1,
+    motionBlur = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  // The drift after the pull runs to the clip's last frame, which the scene
+  // always counted without `speed`: the schedule fits into that length.
+  const tl = useTimeline(caretDollyTimeline, props, durationInFrames, timing);
+  const intro = tl.get("intro");
+  const punch = tl.get("punch");
+  const focusEl = tl.get("focus");
+  const pull = tl.get("pull");
+  const post = tl.get("post");
+  const cursorEl = tl.get("cursor");
+  const drift = tl.get("drift");
+  const pressEl = tl.get("press");
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -268,24 +296,21 @@ export function CaretDolly({
   const portrait = H > W * 1.1;
   const filterId = `cd${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
-  const found = prompt.indexOf(focus);
-  const fs = found >= 0 && focus.length > 0 ? found : 0;
-  const fe = found >= 0 && focus.length > 0 ? found + focus.length : 0;
-  const focusLen = fe - fs;
-  const postLen = prompt.length - fe;
-  const rateA = Math.max(0.6, fs / 18);
-  const rateF = Math.max(0.5, focusLen / BEAT.focusLen);
-  const rateP = Math.max(2, postLen / BEAT.postLen);
-  const punchEnd = BEAT.punch + BEAT.punchLen;
-  const pullEnd = BEAT.pull + BEAT.pullLen;
-  const postEnd = BEAT.post + postLen / rateP;
+  const plan = caretDollyPlan(prompt, focus);
+  const { fs, fe, focusLen, postLen } = plan;
+  const rateA = paced(plan.rateA, fs / plan.rateA, intro);
+  const rateF = paced(plan.rateF, focusLen / plan.rateF, focusEl);
+  const rateP = paced(plan.rateP, postLen / plan.rateP, post);
+  const punchEnd = punch.end;
+  const pullEnd = pull.end;
+  const postEnd = post.end;
 
   const typedA = (f: number) =>
-    Math.max(0, Math.min(fs, (f - BEAT.typeA) * rateA));
+    Math.max(0, Math.min(fs, (f - intro.start) * rateA));
   const typedF = (f: number) =>
-    Math.max(0, Math.min(focusLen, (f - punchEnd) * rateF));
+    Math.max(0, Math.min(focusLen, (f - focusEl.start) * rateF));
   const typedP = (f: number) =>
-    Math.max(0, Math.min(postLen, (f - BEAT.post) * rateP));
+    Math.max(0, Math.min(postLen, (f - post.start) * rateP));
 
   const layout = ((): Layout | null => {
     if (!m) return null;
@@ -391,28 +416,28 @@ export function CaretDolly({
     let scrPull = { x: 0, y: 0 };
     const total = Math.max(durationInFrames, pullEnd + 1);
     for (let f = 0; f < total; f++) {
-      if (f < BEAT.punch) {
+      if (f < punch.start) {
         const g = goalA(f);
         fx += (g.x - fx) * 0.32;
         fy += (g.y - fy) * 0.32;
         out.push({ x: fx, y: fy, s: sA });
         scrStart = { x: C.x + (K.x - fx) * sA, y: C.y + (K.y - fy) * sA };
       } else if (f < punchEnd) {
-        const p = CAMERA((f - BEAT.punch) / BEAT.punchLen);
+        const p = CAMERA((f - punch.start) / punch.length);
         const s = Math.exp(Math.log(sA) + (Math.log(sG) - Math.log(sA)) * p);
         const sx = scrStart.x + (C.x - scrStart.x) * p;
         const sy = scrStart.y + (C.y - scrStart.y) * p;
         fx = K.x - (sx - C.x) / s;
         fy = K.y - (sy - C.y) / s;
         out.push({ x: fx, y: fy, s });
-      } else if (f < BEAT.pull) {
+      } else if (f < pull.start) {
         const g = goalG(f);
         fx += (g.x - fx) * 0.3;
         fy += (g.y - fy) * 0.3;
         out.push({ x: fx, y: fy, s: sG });
         scrPull = { x: C.x + (Fp.x - fx) * sG, y: C.y + (Fp.y - fy) * sG };
       } else if (f < pullEnd) {
-        const p = CAMERA((f - BEAT.pull) / BEAT.pullLen);
+        const p = CAMERA((f - pull.start) / pull.length);
         const s = Math.exp(Math.log(sG) * (1 - p));
         const sx = scrPull.x + (Fp.x - scrPull.x) * p;
         const sy = scrPull.y + (Fp.y - scrPull.y) * p;
@@ -431,8 +456,8 @@ export function CaretDolly({
     const camAt = (ff: number) =>
       cams[Math.max(0, Math.min(cams.length - 1, Math.floor(ff)))];
     const pushAt = (ff: number) =>
-      ff >= pullEnd
-        ? interpolate(ff, [pullEnd, durationInFrames], [1, 1.03], CLAMP)
+      ff >= drift.start
+        ? interpolate(ff, [drift.start, drift.end], [1, 1.03], CLAMP)
         : 1;
     const cam = camAt(f);
     const prev = camAt(Math.floor(f) - 1);
@@ -463,16 +488,26 @@ export function CaretDolly({
     const by = zoomBlur;
 
     const preOp =
-      f < BEAT.punch
+      f < punch.start
         ? 1
-        : f < BEAT.pull
-          ? interpolate(f, [BEAT.punch, BEAT.punch + 5], [1, 0], CLAMP)
-          : interpolate(f, [BEAT.pull + 8, pullEnd], [0, 1], {
-              ...CLAMP,
-              easing: LIGHT_IN,
-            });
+        : f < pull.start
+          ? interpolate(
+              f,
+              [punch.start, punch.start + punch.beat("fade")],
+              [1, 0],
+              CLAMP,
+            )
+          : interpolate(
+              f,
+              [pull.start + pull.beat("fadeAt"), pullEnd],
+              [0, 1],
+              {
+                ...CLAMP,
+                easing: LIGHT_IN,
+              },
+            );
     const shown =
-      f < punchEnd
+      f < focusEl.start
         ? Math.floor(typedA(f))
         : fs + Math.floor(typedF(f)) + Math.floor(typedP(f));
     const caretIdx = Math.min(prompt.length, shown);
@@ -511,13 +546,18 @@ export function CaretDolly({
     });
 
     const typing =
-      (f >= BEAT.typeA && f < BEAT.typeA + fs / rateA + 2) ||
-      (f >= punchEnd && f < punchEnd + focusLen / rateF + 2) ||
-      (f >= BEAT.post && f < postEnd + 2);
+      (f >= intro.start && f < intro.end + intro.beat("tail")) ||
+      (f >= focusEl.start && f < focusEl.end + focusEl.beat("tail")) ||
+      (f >= post.start && f < postEnd + post.beat("tail"));
     const blinkOn = typing || Math.floor(f / 14) % 2 === 0;
     const caretFade =
-      f >= postEnd + 4
-        ? interpolate(f, [BEAT.press - 6, BEAT.press], [1, 0], CLAMP)
+      f >= postEnd + post.beat("caretOutAt")
+        ? interpolate(
+            f,
+            [pressEl.start + pressEl.beat("caretAt"), pressEl.start],
+            [1, 0],
+            CLAMP,
+          )
         : 1;
     const caretH = L.T * 1.18;
     const caretW = Math.max(L.T * 0.05, 1.6 / s);
@@ -537,10 +577,15 @@ export function CaretDolly({
       />
     );
 
-    const surfaceIn = interpolate(f, [BEAT.pull + 6, pullEnd], [0, 1], {
-      ...CLAMP,
-      easing: LIGHT_IN,
-    });
+    const surfaceIn = interpolate(
+      f,
+      [pull.start + pull.beat("surfaceAt"), pullEnd],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: LIGHT_IN,
+      },
+    );
     const u = L.u;
     const popAt = (at: number, ff: number) =>
       spring({
@@ -549,18 +594,34 @@ export function CaretDolly({
         config: { mass: 0.5, damping: 12, stiffness: 200 },
       });
     const pop = (at: number) => popAt(at, f);
-    const toolIn = [0, 1, 2, 3, 4].map((i) => pop(pullEnd - 8 + i * 2));
+    const toolIn = [0, 1, 2, 3, 4].map((i) =>
+      pop(pull.start + pull.beat("toolsAt") + i * pull.beat("toolStagger")),
+    );
     // The chip's label pops in on a spring that overshoots, so it is moving
     // while its printed scale differs from a neighbouring frame's.
-    const chipAt = (ff: number) => popAt(pullEnd - 6, ff).toFixed(4);
+    const chipAt = (ff: number) =>
+      popAt(pull.start + pull.beat("chipAt"), ff).toFixed(4);
     const chipMoving =
       chipAt(f + speed) !== chipAt(f) || chipAt(f) !== chipAt(f - speed);
-    const armed = interpolate(f, [postEnd, postEnd + 4], [0, 1], CLAMP);
+    const armed = interpolate(
+      f,
+      [postEnd, postEnd + post.beat("arm")],
+      [0, 1],
+      CLAMP,
+    );
     const PRESS = { mass: 0.5, damping: 14, stiffness: 260 };
     const dip =
-      spring({ frame: f - BEAT.press + 2, fps, config: PRESS }) -
-      spring({ frame: f - BEAT.press - 3, fps, config: PRESS });
-    const isPressed = f >= BEAT.press;
+      spring({
+        frame: f - pressEl.start - pressEl.beat("dipAt"),
+        fps,
+        config: PRESS,
+      }) -
+      spring({
+        frame: f - pressEl.start - pressEl.beat("releaseAt"),
+        fps,
+        config: PRESS,
+      });
+    const isPressed = f >= pressEl.start;
     const sendScale = 1 - 0.06 * dip;
     const sendBg = isPressed
       ? hi
@@ -569,15 +630,25 @@ export function CaretDolly({
       ? "#ffffff"
       : `color-mix(in oklab, ${c.sendGlyph} ${(armed * 100).toFixed(1)}%, ${c.muted})`;
     const stopIn = spring({
-      frame: f - BEAT.press - 3,
+      frame: f - pressEl.start - pressEl.beat("stopAt"),
       fps,
       config: { mass: 0.5, damping: 12, stiffness: 200 },
     });
-    const arrowOut = interpolate(f - BEAT.press, [1, 5], [1, 0], CLAMP);
-    const spin = interpolate(f - BEAT.press, [4, 12], [0, 1], {
-      ...CLAMP,
-      easing: LIGHT_IN,
-    });
+    const arrowOut = interpolate(
+      f - pressEl.start,
+      [pressEl.beat("arrowAt"), pressEl.beat("arrowEnd")],
+      [1, 0],
+      CLAMP,
+    );
+    const spin = interpolate(
+      f - pressEl.start,
+      [pressEl.beat("spinAt"), pressEl.beat("spinEnd")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: LIGHT_IN,
+      },
+    );
     const labelF = 15 * u;
     const ctrlD = 32 * u;
 
@@ -716,7 +787,7 @@ export function CaretDolly({
                   left: -3.5 * u,
                   top: -3.5 * u,
                   opacity: spin,
-                  transform: `rotate(${((f - BEAT.press) * 9).toFixed(2)}deg)`,
+                  transform: `rotate(${((f - pressEl.start) * 9).toFixed(2)}deg)`,
                 }}
                 aria-hidden
               >
@@ -757,12 +828,12 @@ export function CaretDolly({
 
     const curSize = portrait ? W * 0.05 : H * 0.05;
     const cursorP = spring({
-      frame: f - BEAT.cursor,
+      frame: f - cursorEl.start,
       fps,
       config: { mass: 0.8, damping: 20, stiffness: 140 },
     });
     const cursorPy = spring({
-      frame: f - BEAT.cursor - 3,
+      frame: f - cursorEl.start - cursorEl.beat("lag"),
       fps,
       config: { mass: 0.8, damping: 20, stiffness: 140 },
     });
@@ -771,7 +842,7 @@ export function CaretDolly({
     const sx0 = W * (portrait ? 0.96 : 0.9);
     const sy0 = H * 1.06;
     const away = spring({
-      frame: f - BEAT.press - 8,
+      frame: f - pressEl.start - pressEl.beat("awayAt"),
       fps,
       config: { mass: 0.8, damping: 20, stiffness: 140 },
     });
@@ -779,7 +850,7 @@ export function CaretDolly({
     const curY = sy0 + (ty - sy0) * cursorPy + curSize * 1.3 * away;
     const click = dip;
     const cursor =
-      f >= BEAT.cursor ? (
+      f >= cursorEl.start ? (
         <svg
           viewBox="0 0 24 24"
           width={curSize}

@@ -6423,13 +6423,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/caret-dolly/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/caret-dolly.tsx"
+          "target": "components/remocn/caret-dolly/index.tsx"
+        },
+        {
+          "path": "registry/remocn/caret-dolly/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/caret-dolly/timeline.ts"
         }
       ],
       "type": "registry:component"
