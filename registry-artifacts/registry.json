@@ -6200,13 +6200,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/word-pullback/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/word-pullback.tsx"
+          "target": "components/remocn/word-pullback/index.tsx"
+        },
+        {
+          "path": "registry/remocn/word-pullback/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/word-pullback/timeline.ts"
         }
       ],
       "type": "registry:component"

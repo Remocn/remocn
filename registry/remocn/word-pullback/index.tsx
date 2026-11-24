@@ -23,6 +23,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ACCENT_WORD,
+  DEFAULT_AFTER,
+  type WordPullbackElementId,
+  wordPullbackTimeline,
+} from "./timeline";
 
 const sans = loadSans("normal", {
   weights: ["300", "400"],
@@ -87,6 +94,12 @@ export interface WordPullbackProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the typing, the camera's pulls, the words and
+   * lines rising, the flood and the logo, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WordPullbackElementId>;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -125,20 +138,6 @@ const THEMES = {
     veilFrom: 0.75,
     veilTo: 0.05,
   },
-};
-
-const BEAT = {
-  typeEnd: 27,
-  pull1: 30,
-  pull1Len: 18,
-  line2: 45,
-  wordStep: 3,
-  rise: 12,
-  pull2: 72,
-  pull2Len: 15,
-  logo: 78,
-  flood: 72,
-  floodLen: 24,
 };
 
 const TRACK = -0.03;
@@ -243,27 +242,41 @@ function ScaleLayer({
   );
 }
 
-export function WordPullback({
-  before = "The",
-  accentWord = "cinematic",
-  after = "toolkit for every launch",
-  accent,
-  ink,
-  background,
-  fontFamily = sans.fontFamily,
-  fontWeight = 300,
-  stagger = BEAT.wordStep,
-  logo,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: WordPullbackProps) {
+export function WordPullback(props: WordPullbackProps) {
+  const {
+    before = "The",
+    accentWord = DEFAULT_ACCENT_WORD,
+    after = DEFAULT_AFTER,
+    accent,
+    ink,
+    background,
+    fontFamily = sans.fontFamily,
+    fontWeight = 300,
+    logo,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    wordPullbackTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const typeEl = tl.get("type");
+  const pull = tl.get("pull");
+  const pull2 = tl.get("pull2");
+  const wordsEl = tl.get("words");
+  const linesEl = tl.get("lines");
+  const floodEl = tl.get("flood");
+  const logoEl = tl.get("logo");
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -273,12 +286,10 @@ export function WordPullback({
   const m = useMeasure(fontFamily, fontWeight);
   const portrait = H > W * 1.1;
 
-  const flood = interpolate(
-    frame,
-    [BEAT.flood, BEAT.flood + BEAT.floodLen],
-    [0, 1],
-    { ...CLAMP, easing: FLOOD },
-  );
+  const flood = interpolate(frame, [floodEl.start, floodEl.end], [0, 1], {
+    ...CLAMP,
+    easing: FLOOD,
+  });
   const veil = c.veilFrom + (c.veilTo - c.veilFrom) * flood;
 
   let content: React.ReactNode = <div />;
@@ -379,11 +390,8 @@ export function WordPullback({
       Math.min(Math.sqrt(z0) * 1.05, (W * 0.94) / maxLinePx),
     );
 
-    const typeEnd = Math.max(
-      BEAT.typeEnd - 6,
-      Math.min(BEAT.typeEnd + 6, accentWord.length * 3),
-    );
-    const typed = interpolate(frame, [-9, typeEnd], [0, 1], {
+    const typeEnd = typeEl.end;
+    const typed = interpolate(frame, [typeEl.start, typeEnd], [0, 1], {
       ...CLAMP,
       easing: TYPE,
     });
@@ -392,34 +400,28 @@ export function WordPullback({
     const accentLeft = accentX - accentPx / 2;
 
     const cam = (f: number) => {
-      const p1 = interpolate(
+      const p1 = interpolate(f, [pull.start, pull.end], [0, 1], {
+        ...CLAMP,
+        easing: CAMERA,
+      });
+      const p2 = interpolate(f, [pull2.start, pull2.end], [0, 1], {
+        ...CLAMP,
+        easing: CAMERA,
+      });
+      const dolly = interpolate(
         f,
-        [BEAT.pull1, BEAT.pull1 + BEAT.pull1Len],
+        [0, pull.start + pull.beat("dolly")],
         [0, 1],
-        { ...CLAMP, easing: CAMERA },
+        CLAMP,
       );
-      const p2 = interpolate(
-        f,
-        [BEAT.pull2, BEAT.pull2 + BEAT.pull2Len],
-        [0, 1],
-        { ...CLAMP, easing: CAMERA },
-      );
-      const dolly = interpolate(f, [0, BEAT.pull1 + 6], [0, 1], CLAMP);
-      const tP = interpolate(f, [-9, typeEnd], [0, 1], {
+      const tP = interpolate(f, [typeEl.start, typeEnd], [0, 1], {
         ...CLAMP,
         easing: TYPE,
       });
       const lz0 = Math.log(z0 * (1 - 0.08 * dolly));
       const lz1 = Math.log(
         z1 *
-          (1 -
-            0.04 *
-              interpolate(
-                f,
-                [BEAT.pull1 + BEAT.pull1Len, BEAT.pull2],
-                [0, 1],
-                CLAMP,
-              )),
+          (1 - 0.04 * interpolate(f, [pull.end, pull2.start], [0, 1], CLAMP)),
       );
       const lnZ = lz0 + (lz1 - lz0) * p1 + (0 - lz1) * p2;
       const f0x = accentLeft + accentPx * (0.18 + 0.5 * tP);
@@ -436,12 +438,7 @@ export function WordPullback({
     const vel = Math.abs(C.lnZ - Cp.lnZ);
     const screenBlur = Math.min(8, vel * 30);
     const pushAt = (f: number) =>
-      interpolate(
-        f,
-        [BEAT.pull2 + BEAT.pull2Len, durationInFrames],
-        [1, 1.03],
-        CLAMP,
-      );
+      interpolate(f, [pull2.end, durationInFrames], [1, 1.03], CLAMP);
     const push = pushAt(frame);
     const Z = Math.exp(C.lnZ) * push;
     // Where the frame's corner lands in the layer at frame `f`; the camera
@@ -464,17 +461,21 @@ export function WordPullback({
       const isAccent = i === accentIdx;
       let enterAt = -99;
       if (!isAccent && i > accentIdx) {
+        // The words' lines are measured: they rise on top of the two anchors.
         if (li === accentLine) {
-          enterAt = typeEnd - 3 + (i - accentIdx - 1) * stagger;
+          enterAt =
+            wordsEl.start + (i - accentIdx - 1) * wordsEl.beat("stagger");
         } else {
           const firstOnLine = lines[li][0];
           enterAt =
-            BEAT.line2 +
-            (li - accentLine - 1) * 6 +
-            (i - firstOnLine) * stagger;
+            linesEl.start +
+            (li - accentLine - 1) * linesEl.beat("lineGap") +
+            (i - firstOnLine) * linesEl.beat("stagger");
         }
       }
-      const e = interpolate(frame, [enterAt, enterAt + BEAT.rise], [0, 1], {
+      const rise =
+        li === accentLine ? wordsEl.beat("rise") : linesEl.beat("rise");
+      const e = interpolate(frame, [enterAt, enterAt + rise], [0, 1], {
         ...CLAMP,
         easing: RISE,
       });
@@ -518,7 +519,7 @@ export function WordPullback({
       );
     });
 
-    const logoIn = spring({ frame: frame - BEAT.logo, fps, config: CHIP });
+    const logoIn = spring({ frame: frame - logoEl.start, fps, config: CHIP });
     const logoE = Math.min(1, Math.max(0, logoIn));
     const caretOn =
       frame < typeEnd + 4 && Math.floor(frame / 8) % 2 === 0 ? 1 : 0;
