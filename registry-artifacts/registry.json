@@ -15642,12 +15642,21 @@
       "title": "Layered Cutout",
       "description": "The camera dollies through layered cut sheets to land on a framed Remocn logo.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/layered-cutout/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/layered-cutout.tsx"
+          "target": "components/remocn/layered-cutout/index.tsx"
+        },
+        {
+          "path": "registry/remocn/layered-cutout/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/layered-cutout/timeline.ts"
         }
       ],
       "type": "registry:component"

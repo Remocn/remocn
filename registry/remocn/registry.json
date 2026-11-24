@@ -15647,10 +15647,19 @@
         {
           "path": "layered-cutout/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/layered-cutout.tsx"
+          "target": "components/remocn/layered-cutout/index.tsx"
+        },
+        {
+          "path": "layered-cutout/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/layered-cutout/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "neural-pulse",

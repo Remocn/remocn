@@ -7,6 +7,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type LayeredCutoutElementId, layeredCutoutTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -88,6 +90,12 @@ export interface LayeredCutoutProps {
   speed?: number;
   /** Light = warm card stock; dark = charcoal stock. */
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the sheets parting, the camera's dolly and the
+   * logo and tagline, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LayeredCutoutElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -339,25 +347,36 @@ function ScaleLayer({
   );
 }
 
-export function LayeredCutout({
-  tagline = "Launch films, cut from components.",
-  logo,
-  layers = 5,
-  accentLayer,
-  ink,
-  background,
-  fontFamily = sans,
-  push: pushDur = 132,
-  depthBlur = 1,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "light",
-}: LayeredCutoutProps) {
+export function LayeredCutout(props: LayeredCutoutProps) {
+  const {
+    tagline = "Launch films, cut from components.",
+    logo,
+    layers = 5,
+    accentLayer,
+    ink,
+    background,
+    fontFamily = sans,
+    depthBlur = 1,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "light",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    layeredCutoutTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const partEl = tl.get("part");
+  const dolly = tl.get("dolly");
+  const logoEl = tl.get("logo");
+  const tagEl = tl.get("tagline");
   const u = height / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -367,11 +386,11 @@ export function LayeredCutout({
 
   // sheets part in depth, then the camera dollies through the cuts
   const camera = (f: number) => {
-    const part = interpolate(f, [0, 72], [0, 1], {
+    const part = interpolate(f, [partEl.start, partEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-    const push = interpolate(f, [8, 8 + pushDur], [0, 1], {
+    const push = interpolate(f, [dolly.start, dolly.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -447,11 +466,11 @@ export function LayeredCutout({
     );
   }
 
-  const reveal = interpolate(t, [76, 104], [0, 1], {
+  const reveal = interpolate(t, [logoEl.start, logoEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const tag = interpolate(t, [98, 120], [0, 1], {
+  const tag = interpolate(t, [tagEl.start, tagEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
