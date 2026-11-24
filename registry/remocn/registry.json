@@ -11140,10 +11140,19 @@
         {
           "path": "select-replace/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/select-replace.tsx"
+          "target": "components/remocn/select-replace/index.tsx"
+        },
+        {
+          "path": "select-replace/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/select-replace/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "wrapped-squash",

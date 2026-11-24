@@ -11135,12 +11135,21 @@
       "title": "Select Replace",
       "description": "A text selection highlights a phrase and is replaced by new styled words.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/select-replace/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/select-replace.tsx"
+          "target": "components/remocn/select-replace/index.tsx"
+        },
+        {
+          "path": "registry/remocn/select-replace/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/select-replace/timeline.ts"
         }
       ],
       "type": "registry:component"
