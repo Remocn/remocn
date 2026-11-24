@@ -3121,12 +3121,17 @@
       "title": "Reel",
       "description": "A fixed centered card where images stack on the z-axis and each blooms open over the last via a centre-out mask.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "reel/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/reel.tsx"
+          "target": "components/remocn/reel/index.tsx"
+        },
+        {
+          "path": "reel/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/reel/timeline.ts"
         }
       ]
     },
