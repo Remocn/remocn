@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ITEMS,
+  type MovesUpElementId,
+  movesUpTimeline,
+  queueOf,
+} from "./timeline";
 
 const golos = loadFont("normal", {
   weights: ["400", "500"],
@@ -38,6 +45,12 @@ export interface MovesUpProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the row labels, the first items rising and
+   * single items shipping, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MovesUpElementId>;
 }
 
 const THEMES = {
@@ -45,27 +58,10 @@ const THEMES = {
   light: { bg: "#FFF4EC", ink: "#1D2B53", accent: "#D9623B" },
 } as const;
 
-const DEFAULT_ITEMS = [
-  "Auto captions",
-  "Voiceover",
-  "Vertical cuts",
-  "Your type, your colours",
-  "Whatever you ask for",
-];
-
 const ROW_SCALE = [1, 0.56, 0.38];
 const ROW_INK = [1, 0.74, 0.5];
 const LH = 1.06;
 const BASE_EM = 0.86;
-
-const INTRO = 30;
-const HOLD = 22;
-const STEP = 66;
-const TAG_IN = 10;
-const EXIT_AT = 11;
-const EXIT_DUR = 10;
-const PROMO_AT = 14;
-const PROMO_DUR = 20;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_STEP = Easing.bezier(0.4, 0, 0.15, 1);
@@ -91,36 +87,37 @@ function ScaleLayer({
   );
 }
 
-export function MovesUp({
-  items = DEFAULT_ITEMS,
-  labels = ["Now", "Next", "Later"],
-  shipped = "shipped",
-  hold = HOLD,
-  interval = STEP,
-  accent,
-  ink: inkColor,
-  background,
-  fontFamily = golos.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: MovesUpProps) {
+export function MovesUp(props: MovesUpProps) {
+  const {
+    items = DEFAULT_ITEMS,
+    labels = ["Now", "Next", "Later"],
+    shipped = "shipped",
+    accent,
+    ink: inkColor,
+    background,
+    fontFamily = golos.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const now = useSceneFrame();
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The pace that fits the schedule into the clip counts the clip without
+  // `speed`, as before.
+  const tl = useTimeline(movesUpTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = inkColor ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const queue = items.length > 0 ? items : DEFAULT_ITEMS;
+  const queue = queueOf(items);
   const steps = Math.max(0, queue.length - 3);
-  const stepAt = (s: number) => INTRO + hold + (s - 1) * interval;
-  const naturalEnd = steps > 0 ? stepAt(steps) + PROMO_AT + PROMO_DUR : INTRO;
-  const pace = Math.max(1, (naturalEnd + 30) / Math.max(1, durationInFrames));
-  const tAt = (f: number) => Math.max(0, f - delay) * speed * pace;
+  const ships = Array.from({ length: steps }, (_, k) => tl.get(`ship:${k}`));
+  const tAt = (f: number) => Math.max(0, f - delay) * speed;
   const t = tAt(now);
 
   const portrait = H > W * 1.1;
@@ -209,17 +206,12 @@ export function MovesUp({
 
   const promotedAt = (t: number) => {
     let sum = 0;
-    for (let s = 1; s <= steps; s++) {
-      const at = stepAt(s);
-      sum += interpolate(
-        t,
-        [at + PROMO_AT, at + PROMO_AT + PROMO_DUR],
-        [0, 1],
-        {
-          ...CLAMP,
-          easing: EASE_STEP,
-        },
-      );
+    for (const ship of ships) {
+      const at = ship.start + ship.beat("promo");
+      sum += interpolate(t, [at, at + ship.beat("promoLen")], [0, 1], {
+        ...CLAMP,
+        easing: EASE_STEP,
+      });
     }
     return sum;
   };
@@ -231,8 +223,8 @@ export function MovesUp({
     return arr[i] + (arr[i + 1] - arr[i]) * f;
   };
 
-  const rise = (start: number, dur = 14, at = t) =>
-    interpolate(at, [start, start + dur], [0, 1], {
+  const rise = (e: { start: number; end: number }, at = t) =>
+    interpolate(at, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -283,7 +275,7 @@ export function MovesUp({
           }}
         >
           {labels.map((label, r) => {
-            const p = rise(r * 4);
+            const p = rise(tl.get(`label:${r}`));
             const sc = ROW_SCALE[r];
             return (
               <div
@@ -308,10 +300,10 @@ export function MovesUp({
             );
           })}
           {queue.map((item, k) => {
-            const shipStep = k + 1;
-            const shipAt = shipStep <= steps ? stepAt(shipStep) : Infinity;
-            const tagP = Number.isFinite(shipAt)
-              ? interpolate(t, [shipAt, shipAt + TAG_IN], [0, 1], {
+            const ship = k < steps ? ships[k] : null;
+            const shipAt = ship ? ship.start : Infinity;
+            const tagP = ship
+              ? interpolate(t, [shipAt, shipAt + ship.beat("tag")], [0, 1], {
                   ...CLAMP,
                   easing: EASE_OUT,
                 })
@@ -319,12 +311,17 @@ export function MovesUp({
             const pose = (t: number, rest?: number) => {
               const rf = rest ?? k - promotedAt(t);
               const introP =
-                rest !== undefined || k >= 3 ? 1 : rise(6 + k * 5, 18, t);
+                rest !== undefined || k >= 3
+                  ? 1
+                  : rise(tl.get(`intro:${k}`), t);
               const exitP =
-                rest === undefined && Number.isFinite(shipAt)
+                rest === undefined && ship
                   ? interpolate(
                       t,
-                      [shipAt + EXIT_AT, shipAt + EXIT_AT + EXIT_DUR],
+                      [
+                        shipAt + ship.beat("exit"),
+                        shipAt + ship.beat("exit") + ship.beat("exitLen"),
+                      ],
                       [0, 1],
                       { ...CLAMP, easing: EASE_IN },
                     )

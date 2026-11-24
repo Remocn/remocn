@@ -6713,12 +6713,21 @@
       "title": "Moves Up",
       "description": "A Now/Next/Later roadmap list where the current item moves up and enlarges.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/moves-up/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/moves-up.tsx"
+          "target": "components/remocn/moves-up/index.tsx"
+        },
+        {
+          "path": "registry/remocn/moves-up/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/moves-up/timeline.ts"
         }
       ],
       "type": "registry:component"
