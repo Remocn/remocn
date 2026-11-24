@@ -9289,12 +9289,21 @@
       "title": "Tall Count",
       "description": "A tall condensed orange-gradient +240% counts up beside a three-line caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/tall-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/tall-count.tsx"
+          "target": "components/remocn/tall-count/index.tsx"
+        },
+        {
+          "path": "registry/remocn/tall-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/tall-count/timeline.ts"
         }
       ],
       "type": "registry:component"
