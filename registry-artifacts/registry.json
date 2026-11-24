@@ -15117,13 +15117,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/pill-morph/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/pill-morph.tsx"
+          "target": "components/remocn/pill-morph/index.tsx"
+        },
+        {
+          "path": "registry/remocn/pill-morph/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/pill-morph/timeline.ts"
         }
       ],
       "type": "registry:component"

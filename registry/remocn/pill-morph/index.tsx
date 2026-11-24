@@ -19,6 +19,16 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_FEATURES,
+  type PillMorphElementId,
+  pillMorphTimeline,
+} from "./timeline";
 
 const figtree = loadFont("normal", {
   weights: ["300", "400"],
@@ -137,6 +147,12 @@ export interface PillMorphProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the pill's open, collapse, split and merge,
+   * the editor, single features and the mark, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PillMorphElementId>;
 }
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -214,6 +230,7 @@ function Editor({
   p,
   accent,
   t,
+  c,
   caption,
   fontFamily,
 }: {
@@ -223,17 +240,29 @@ function Editor({
   p: Palette;
   accent: string;
   t: number;
+  /** The `content` element: rows and playhead. */
+  c: ResolvedElement<PillMorphElementId>;
   caption: string;
   fontFamily: string;
 }) {
   const side = w * 0.27;
   const fs = 16 * u;
-  const row = (i: number) =>
-    interpolate(t, [34 + i * 3, 50 + i * 3], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
-  const play = interpolate(t, [40, 110], [PLAY_FROM, 0.47], CLAMP);
+  const row = (i: number) => {
+    const lag = i * c.beat("rowStagger");
+    return interpolate(
+      t,
+      [c.start + lag, c.start + c.beat("row") + lag],
+      [0, 1],
+      { ...CLAMP, easing: EASE_OUT },
+    );
+  };
+  const playAt = c.start + c.beat("playAt");
+  const play = interpolate(
+    t,
+    [playAt, playAt + c.beat("play")],
+    [PLAY_FROM, 0.47],
+    CLAMP,
+  );
   const secs = play * 12;
   const tc = `0:${String(Math.floor(secs)).padStart(2, "0")}.${String(Math.floor((secs % 1) * 30)).padStart(2, "0")}`;
   const right = side + 16 * u;
@@ -457,28 +486,47 @@ interface Shape {
   r: [number, number, number, number];
 }
 
-export function PillMorph({
-  name = "",
-  features = ["Transitions", "Captions", "Backgrounds"],
-  logo,
-  src,
-  children,
-  accent = "#3B5BFD",
-  caption = "Launch day, in one take",
-  radius = 28,
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: PillMorphProps) {
+export function PillMorph(props: PillMorphProps) {
+  const {
+    name = "",
+    features = DEFAULT_FEATURES,
+    logo,
+    src,
+    children,
+    accent = "#3B5BFD",
+    caption = "Launch day, in one take",
+    radius = 28,
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    pillMorphTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const appearEl = tl.get("appear");
+  const openEl = tl.get("open");
+  const contentEl = tl.get("content");
+  const collapseEl = tl.get("collapse");
+  const splitEl = tl.get("split");
+  const mergeEl = tl.get("merge");
+  const markEl = tl.get("mark");
+  const nameEl = tl.get("name");
+  const driftEl = tl.get("drift");
+  /** Before the bar splits, the card is one shape. */
+  const whole = t < splitEl.start;
   const tall = height > width;
   const u = tall ? width / 760 : Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
@@ -525,13 +573,13 @@ export function PillMorph({
   const tileR = (tall ? 58 : 44) * u;
   const tileCy = cy - 22 * u;
 
-  const appear = sp(-4, CARD);
-  const wP = sp(18, MORPH);
-  const hP = sp(24, MORPH);
-  const collapse = sp(102, MORPH);
-  const split = sp(116, CARD);
-  const merge = sp(168, MORPH);
-  const settle = sp(182, CHIP);
+  const appear = sp(appearEl.start, CARD);
+  const wP = sp(openEl.start, MORPH);
+  const hP = sp(openEl.start + openEl.beat("heightAt"), MORPH);
+  const collapse = sp(collapseEl.start, MORPH);
+  const split = sp(splitEl.start, CARD);
+  const merge = sp(mergeEl.start, MORPH);
+  const settle = sp(tl.get("settle").start, CHIP);
 
   let w = lerp(w0, cw, wP);
   let h = lerp(h0, ch, hP);
@@ -546,7 +594,7 @@ export function PillMorph({
   // Where each feature pill rests once split, for laying its label out there.
   const restSegCx: number[] = [];
   let restLeft = cx - (total + gap * 2) / 2;
-  if (t < 116) {
+  if (whole) {
     shapes.push({
       x: cx - (w * scale0) / 2,
       y: cy - (h * scale0) / 2 + lift,
@@ -589,18 +637,35 @@ export function PillMorph({
     });
   }
 
-  const labelOut = 1 - fade(103, 112);
-  const content = fade(34, 52) * (1 - fade(96, 106));
-  const featIn = (i: number) =>
-    fade(122 + i * 3, 136 + i * 3) * (1 - fade(164 + i * 2, 172 + i * 2));
-  const tileFill = fade(176, 194);
-  const markIn = fade(186, 202);
-  const nameIn = fade(196, 216);
+  const span = (
+    e: ResolvedElement<PillMorphElementId>,
+    at: string,
+    len: string,
+  ) => {
+    const a = e.start + e.beat(at);
+    return fade(a, a + e.beat(len));
+  };
+  const labelOut = 1 - span(collapseEl, "labelOutAt", "labelOut");
+  const content =
+    fade(contentEl.start, contentEl.end) *
+    (1 - span(collapseEl, "contentOut", "contentFade"));
+  const featIn = (i: number) => {
+    const e = tl.get(`feature:${i}`);
+    const outAt =
+      mergeEl.start + mergeEl.beat("featOut") + i * mergeEl.beat("featStagger");
+    return (
+      fade(e.start, e.end) * (1 - fade(outAt, outAt + mergeEl.beat("featFade")))
+    );
+  };
+  const tileFill = span(mergeEl, "fillAt", "fill");
+  const markIn = fade(markEl.start, markEl.end);
+  const nameIn = fade(nameEl.start, nameEl.end);
 
   const s0 = shapes[0];
-  const labelX = t < 116 ? s0.x + pad * scale0 : 0;
-  const labelY =
-    t < 116 ? s0.y + Math.min(s0.h / 2, 30 * u) - (labelSize * scale0) / 2 : 0;
+  const labelX = whole ? s0.x + pad * scale0 : 0;
+  const labelY = whole
+    ? s0.y + Math.min(s0.h / 2, 30 * u) - (labelSize * scale0) / 2
+    : 0;
   // The card's label and content are laid out where the open card leaves
   // them and ride its growth as a transform: layout rounds a box and a
   // baseline to whole pixels, so text eased by `left`/`top` clicks along.
@@ -609,8 +674,8 @@ export function PillMorph({
   const restLabelX = restX + pad;
   const restLabelY = restY + Math.min(ch / 2, 30 * u) - labelSize / 2;
 
-  const drift = interpolate(t, [0, 240], [1, 1.035]);
-  const tileGlow = fade(178, 200);
+  const drift = interpolate(t, [driftEl.start, driftEl.end], [1, 1.035]);
+  const tileGlow = span(mergeEl, "glowAt", "glow");
   const blur = 12 * u;
 
   return (
@@ -719,7 +784,7 @@ export function PillMorph({
             </AbsoluteFill>
           </AbsoluteFill>
 
-          {t < 116 ? (
+          {whole ? (
             <div
               style={{
                 position: "absolute",
@@ -728,7 +793,7 @@ export function PillMorph({
                 display: "flex",
                 alignItems: "center",
                 gap: 9 * u * scale0,
-                opacity: labelOut * fade(-2, 9),
+                opacity: labelOut * span(appearEl, "labelAt", "label"),
                 transform: `translate(${labelX - restLabelX}px, ${labelY - restLabelY}px) scale(${scale0})`,
                 transformOrigin: "0 0",
               }}
@@ -763,7 +828,7 @@ export function PillMorph({
             </div>
           ) : null}
 
-          {t < 116 && content > 0 ? (
+          {whole && content > 0 ? (
             <div
               style={{
                 position: "absolute",
@@ -796,6 +861,7 @@ export function PillMorph({
                     p={p}
                     accent={accent}
                     t={t}
+                    c={contentEl}
                     caption={caption}
                     fontFamily={fontFamily}
                   />
@@ -803,7 +869,7 @@ export function PillMorph({
             </div>
           ) : null}
 
-          {t >= 116
+          {!whole
             ? shapes.map((s, i) => {
                 const k = featIn(i);
                 if (k <= 0) return null;
@@ -857,7 +923,7 @@ export function PillMorph({
               })
             : null}
 
-          {tileFill > 0 && t >= 116 ? (
+          {tileFill > 0 && !whole ? (
             <div
               style={{
                 position: "absolute",
