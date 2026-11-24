@@ -12858,12 +12858,21 @@
       "title": "Branch Tree",
       "description": "A tree branches from one component into many leaves, ending on 48 variants.",
       "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/branch-tree/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/branch-tree.tsx"
+          "target": "components/remocn/branch-tree/index.tsx"
+        },
+        {
+          "path": "registry/remocn/branch-tree/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/branch-tree/timeline.ts"
         }
       ],
       "type": "registry:component"
