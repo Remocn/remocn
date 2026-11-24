@@ -11994,12 +11994,17 @@
       "title": "Shape Morph O",
       "description": "A shape morphs into the O of the wordmark beside the R mark.",
       "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "shape-morph-o/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/shape-morph-o.tsx"
+          "target": "components/remocn/shape-morph-o/index.tsx"
+        },
+        {
+          "path": "shape-morph-o/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/shape-morph-o/timeline.ts"
         }
       ]
     },
