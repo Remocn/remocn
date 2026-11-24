@@ -9499,10 +9499,19 @@
         {
           "path": "magnet-letters/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/magnet-letters.tsx"
+          "target": "components/remocn/magnet-letters/index.tsx"
+        },
+        {
+          "path": "magnet-letters/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/magnet-letters/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "ruler-align",

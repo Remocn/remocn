@@ -12,6 +12,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_WORD,
+  type MagnetLettersElementId,
+  magnetLettersTimeline,
+} from "./timeline";
 
 const face = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -40,6 +46,12 @@ export interface MagnetLettersProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the magnet's moves, the flips, the repel, the
+   * reflow and single letters of the right word dropping in, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MagnetLettersElementId>;
 }
 
 const THEMES = {
@@ -64,28 +76,6 @@ const EASE_PULL = Easing.bezier(0.55, 0, 0.9, 0.5);
 const EASE_EXIT = Easing.bezier(0.55, 0, 0.8, 0.4);
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
-// Beats, in frames at 30fps (before `speed`).
-const IN = 0;
-const MAG_IN = 10;
-const SWEEP = 32;
-const SWEEP_END = 90;
-const RETURN = 98;
-const RETURN_END = 118;
-const FLIP = 120;
-const FLIP_LEN = 9;
-const REPEL = 128;
-const REPEL_LEN = 24;
-const REFLOW = 136;
-const REFLOW_LEN = 20;
-const FLIP_BACK = 142;
-const DROP = 152;
-const DROP_STAGGER = 4;
-const FALL = 11;
-const EXIT = 190;
-const EXIT_LEN = 26;
-
-/** Frames a letter takes from rest to the baseline once the magnet reaches it. */
-const SNAP = 8;
 const LINE_HEIGHT = 1.2;
 
 interface Row {
@@ -184,24 +174,41 @@ function ScaleLayer({
   );
 }
 
-export function MagnetLetters({
-  before = "Launch ",
-  word = "videos",
-  after = ", in code.",
-  wrongWord = "slides",
-  accent = "#3B5BFD",
-  stagger = DROP_STAGGER,
-  ink,
-  background,
-  fontFamily = face.fontFamily,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: MagnetLettersProps) {
+export function MagnetLetters(props: MagnetLettersProps) {
+  const {
+    before = "Launch ",
+    word = DEFAULT_WORD,
+    after = ", in code.",
+    wrongWord = "slides",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = face.fontFamily,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    magnetLettersTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const eScatter = tl.get("scatter");
+  const eEnter = tl.get("enter");
+  const eSweep = tl.get("sweep");
+  const eReturn = tl.get("return");
+  const eFlip = tl.get("flip");
+  const eRepel = tl.get("repel");
+  const eReflow = tl.get("reflow");
+  const eUnflip = tl.get("unflip");
+  const eExit = tl.get("exit");
+  const SNAP = eSweep.beat("snap");
   const t = THEMES[theme];
   const fg = ink ?? t.fg;
 
@@ -329,52 +336,53 @@ export function MagnetLetters({
   const startX = leftA - em * 0.45;
   const endX = leftA + wA + em * 0.35;
   const magnetX = (f: number) => {
-    if (f < SWEEP)
-      return interpolate(f, [MAG_IN, SWEEP], [-em, startX], {
+    if (f < eSweep.start)
+      return interpolate(f, [eEnter.start, eEnter.end], [-em, startX], {
         ...clamp,
         easing: EASE_OUT,
       });
-    if (f < RETURN)
-      return interpolate(f, [SWEEP, SWEEP_END], [startX, endX], {
+    if (f < eReturn.start)
+      return interpolate(f, [eSweep.start, eSweep.end], [startX, endX], {
         ...clamp,
         easing: EASE_SWEEP,
       });
-    if (f < REFLOW)
-      return interpolate(f, [RETURN, RETURN_END], [endX, wrongCentre], {
+    if (f < eReflow.start)
+      return interpolate(f, [eReturn.start, eReturn.end], [endX, wrongCentre], {
         ...clamp,
         easing: EASE_IN_OUT,
       });
-    if (f < EXIT)
+    if (f < eExit.start)
       return interpolate(
         f,
-        [REFLOW, REFLOW + REFLOW_LEN],
+        [eReflow.start, eReflow.end],
         [wrongCentre, rightCentre],
         { ...clamp, easing: EASE_IN_OUT },
       );
-    return interpolate(f, [EXIT, EXIT + EXIT_LEN], [rightCentre, width + em], {
+    return interpolate(f, [eExit.start, eExit.end], [rightCentre, width + em], {
       ...clamp,
       easing: EASE_EXIT,
     });
   };
   // A letter lands a couple of frames after the magnet passes under it.
   const landAt = (cx: number) => {
-    for (let f = SWEEP; f <= SWEEP_END; f++) if (magnetX(f) >= cx) return f + 2;
-    return SWEEP_END + 2;
+    for (let f = eSweep.start; f <= eSweep.end; f++)
+      if (magnetX(f) >= cx) return f + eSweep.beat("land");
+    return eSweep.end + eSweep.beat("land");
   };
 
   const flipAt = (f: number) =>
-    interpolate(f, [FLIP, FLIP + FLIP_LEN], [0, 1], {
+    interpolate(f, [eFlip.start, eFlip.end], [0, 1], {
       ...clamp,
       easing: EASE_IN_OUT,
     });
   const flipA = flipAt(frame);
-  const flipB = interpolate(frame, [FLIP_BACK, FLIP_BACK + FLIP_LEN], [0, 1], {
+  const flipB = interpolate(frame, [eUnflip.start, eUnflip.end], [0, 1], {
     ...clamp,
     easing: EASE_IN_OUT,
   });
   const magnetScaleX = Math.cos(Math.PI * (flipA + flipB));
   const reflowAt = (f: number) =>
-    interpolate(f, [REFLOW, REFLOW + REFLOW_LEN], [0, 1], {
+    interpolate(f, [eReflow.start, eReflow.end], [0, 1], {
       ...clamp,
       easing: EASE_IN_OUT,
     });
@@ -403,8 +411,9 @@ export function MagnetLetters({
     let tick: (typeof ticks)[number] | null = null;
 
     if (it.kind === "right") {
-      const start = DROP + it.k * stagger;
-      const land = start + FALL;
+      const drop = tl.get(`drop:${it.k}`);
+      const start = drop.start;
+      const land = drop.end;
       const p = interpolate(f, [start, land], [0, 1], clamp);
       x = bx(it.ib);
       y = -em * 1.7 * (1 - p * p);
@@ -425,17 +434,27 @@ export function MagnetLetters({
       const dx = (hash(seed * 3.1) - 0.5) * 0.35 * em;
       const dy = -(0.35 + (it.n % 3) * 0.62 + hash(seed * 7.7) * 0.3) * em;
       const r0 = (hash(seed * 5.3) - 0.5) * 40;
-      const lean = interpolate(f, [land - SNAP - 10, land - SNAP], [0, 1], {
-        ...clamp,
-        easing: EASE_IN_OUT,
-      });
+      const lean = interpolate(
+        f,
+        [land - SNAP - eSweep.beat("lean"), land - SNAP],
+        [0, 1],
+        {
+          ...clamp,
+          easing: EASE_IN_OUT,
+        },
+      );
       const q = interpolate(f, [land - SNAP, land], [0, 1], {
         ...clamp,
         easing: EASE_PULL,
       });
       const fadeIn = interpolate(
         f,
-        [IN + hash(seed * 9.1) * 14, IN + hash(seed * 9.1) * 14 + 16],
+        [
+          eScatter.start + hash(seed * 9.1) * eScatter.beat("spread"),
+          eScatter.start +
+            hash(seed * 9.1) * eScatter.beat("spread") +
+            eScatter.beat("fade"),
+        ],
         [0, 1],
         { ...clamp, easing: EASE_OUT },
       );
@@ -454,10 +473,10 @@ export function MagnetLetters({
         // fan out upwards from the magnet and dissolve.
         const n = wrong.length;
         const side = n > 1 ? it.k / (n - 1) - 0.5 : 0;
-        const delay = Math.abs(side) * 4;
+        const delay = Math.abs(side) * eRepel.beat("spread");
         const rp = interpolate(
           f,
-          [REPEL + delay, REPEL + delay + REPEL_LEN],
+          [eRepel.start + delay, eRepel.start + delay + eRepel.beat("letter")],
           [0, 1],
           clamp,
         );
@@ -515,13 +534,13 @@ export function MagnetLetters({
   // steps sideways pixel by pixel. Layout holds the place the current glide
   // ends at and the travel there is a transform, which is 0 once it arrives.
   const magnetRest =
-    frame < SWEEP
+    frame < eSweep.start
       ? startX
-      : frame < RETURN
+      : frame < eReturn.start
         ? endX
-        : frame < REFLOW
+        : frame < eReflow.start
           ? wrongCentre
-          : frame < EXIT
+          : frame < eExit.start
             ? rightCentre
             : width + em;
   const magnetDx = Math.abs(mx - magnetRest) > 1e-3 ? mx - magnetRest : 0;

@@ -9494,12 +9494,21 @@
       "title": "Magnet Letters",
       "description": "A wrong word is repelled by magnet and the right word drops in: 'Launch videos, in code.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/magnet-letters/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/magnet-letters.tsx"
+          "target": "components/remocn/magnet-letters/index.tsx"
+        },
+        {
+          "path": "registry/remocn/magnet-letters/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/magnet-letters/timeline.ts"
         }
       ],
       "type": "registry:component"
