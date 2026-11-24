@@ -6536,12 +6536,21 @@
       "title": "No Buts",
       "description": "A hesitant \"But...\" is answered by a yellow \"Go on. We'll wait.\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/no-buts/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/no-buts.tsx"
+          "target": "components/remocn/no-buts/index.tsx"
+        },
+        {
+          "path": "registry/remocn/no-buts/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/no-buts/timeline.ts"
         }
       ],
       "type": "registry:component"
