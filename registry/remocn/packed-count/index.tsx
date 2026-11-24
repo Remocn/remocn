@@ -13,6 +13,17 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  buildSlots,
+  countRange,
+  DEFAULT_FROM,
+  DEFAULT_VALUE,
+  group,
+  type PackedCountElementId,
+  packedCountTimeline,
+  type Slot,
+} from "./timeline";
 
 const figtree = loadFigtree("normal", {
   weights: ["500"],
@@ -39,6 +50,12 @@ export interface PackedCountProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the rise, the label, the count and the fill,
+   * by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PackedCountElementId>;
 }
 
 const SKY = "#1185FE";
@@ -50,64 +67,12 @@ const THEMES = {
 const TIGHT = -0.03;
 const FONT_PX = 400;
 
-const RISE_AT = 0;
-const RISE_LEN = 16;
-const RISE_GAP = 3;
-const LABEL_AT = 10;
-const COUNT_AT = 18;
-const COUNT_LEN = 64;
-const FILL_LEN = 20;
-
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_COUNT = Easing.bezier(0.42, 0, 0.3, 1);
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-interface Slot {
-  ch: string;
-  index: number;
-  kind: "digit" | "sep" | "fix";
-  place: number;
-}
-
-function group(n: number) {
-  const s = String(Math.max(0, Math.floor(n)));
-  let out = "";
-  for (let i = 0; i < s.length; i++) {
-    const fromEnd = s.length - i;
-    if (i > 0 && fromEnd % 3 === 0) out += ",";
-    out += s[i];
-  }
-  return out;
-}
-
-function buildSlots(value: number, prefix: string, suffix: string): Slot[] {
-  const body = Array.from(group(value));
-  const slots: Slot[] = [];
-  Array.from(prefix).forEach((ch) => {
-    slots.push({ ch, index: slots.length, kind: "fix", place: -1 });
-  });
-  let digitsRight = body.filter((c) => c !== ",").length;
-  for (const ch of body) {
-    if (ch === ",") {
-      slots.push({ ch, index: slots.length, kind: "sep", place: digitsRight });
-    } else {
-      digitsRight--;
-      slots.push({
-        ch,
-        index: slots.length,
-        kind: "digit",
-        place: digitsRight,
-      });
-    }
-  }
-  Array.from(suffix).forEach((ch) => {
-    slots.push({ ch, index: slots.length, kind: "fix", place: -1 });
-  });
-  return slots;
-}
 
 interface Metrics {
   cell: number;
@@ -187,33 +152,42 @@ function ScaleLayer({
   );
 }
 
-export function PackedCount({
-  value = 41900,
-  from = 120,
-  prefix = "",
-  suffix = "",
-  label = "replays on a single launch clip",
-  accent,
-  ink,
-  background,
-  fontFamily = figtree.fontFamily,
-  countLength = COUNT_LEN,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: PackedCountProps) {
+export function PackedCount(props: PackedCountProps) {
+  const {
+    value = DEFAULT_VALUE,
+    from = DEFAULT_FROM,
+    prefix = "",
+    suffix = "",
+    label = "replays on a single launch clip",
+    accent,
+    ink,
+    background,
+    fontFamily = figtree.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    packedCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const riseEl = tl.get("rise");
+  const labelEl = tl.get("label");
+  const countEl = tl.get("count");
+  const fillEl = tl.get("fill");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
-  const fillAt = COUNT_AT + countLength - 2;
   const bg = background ?? c.bg;
   const sky = accent ?? SKY;
 
-  const target = Math.max(1, Math.floor(Math.abs(value)));
-  const start = Math.min(target, Math.max(1, Math.floor(Math.abs(from))));
+  const { target, start } = countRange(value, from);
   const slots = useMemo(
     () => buildSlots(target, prefix, suffix),
     [target, prefix, suffix],
@@ -223,7 +197,7 @@ export function PackedCount({
   const logA = Math.log(start);
   const logB = Math.log(target);
   const countAt = (frame: number) => {
-    const p = interpolate(frame, [COUNT_AT, COUNT_AT + countLength], [0, 1], {
+    const p = interpolate(frame, [countEl.start, countEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_COUNT,
     });
@@ -241,9 +215,9 @@ export function PackedCount({
         continue;
       }
       const need = 10 ** place;
-      let f = COUNT_AT;
-      while (f < COUNT_AT + countLength) {
-        const p = interpolate(f, [COUNT_AT, COUNT_AT + countLength], [0, 1], {
+      let f = countEl.start;
+      while (f < countEl.end) {
+        const p = interpolate(f, [countEl.start, countEl.end], [0, 1], {
           ...CLAMP,
           easing: EASE_COUNT,
         });
@@ -253,7 +227,7 @@ export function PackedCount({
       out.push(f);
     }
     return out;
-  }, [start, target, logA, logB, countLength]);
+  }, [start, target, logA, logB, countEl]);
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -313,7 +287,8 @@ export function PackedCount({
     ? Math.min(H * 0.064, W * 0.06, ((W - margin * 2) * 0.9) / m.label)
     : 0;
 
-  const fillStep = slots.length > 1 ? 10 / (slots.length - 1) : 0;
+  const fillAt = fillEl.start;
+  const fillStep = fillEl.beat("step");
   const firstPresent = slots.findIndex((_, i) => presence[i] > 0.999);
   const glyphs: React.ReactNode[] = [];
   slots.forEach((s, i) => {
@@ -330,7 +305,10 @@ export function PackedCount({
     const intro = opening
       ? interpolate(
           t,
-          [RISE_AT + order * RISE_GAP, RISE_AT + order * RISE_GAP + RISE_LEN],
+          [
+            riseEl.start + order * riseEl.beat("gap"),
+            riseEl.start + order * riseEl.beat("gap") + riseEl.beat("rise"),
+          ],
           [0, 1],
           { ...CLAMP, easing: EASE_OUT },
         )
@@ -338,7 +316,7 @@ export function PackedCount({
     const opacity = interpolate(p, [0, 0.55], [0, 1], CLAMP);
     const fillP = interpolate(
       t,
-      [fillAt + i * fillStep, fillAt + i * fillStep + FILL_LEN],
+      [fillAt + i * fillStep, fillAt + i * fillStep + fillEl.beat("fill")],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
@@ -377,7 +355,7 @@ export function PackedCount({
 
   const labelRise = (f: number) =>
     (1 -
-      interpolate(f, [LABEL_AT, LABEL_AT + 18], [0, 1], {
+      interpolate(f, [labelEl.start, labelEl.end], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       })) *
