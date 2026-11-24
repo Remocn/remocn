@@ -8,6 +8,14 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_INPUT,
+  HIDDEN,
+  inputTokens,
+  type NeuralPulseElementId,
+  neuralPulseTimeline,
+} from "./timeline";
 
 const { fontFamily: mono } = loadMono("normal", {
   weights: ["400"],
@@ -51,6 +59,12 @@ export interface NeuralPulseProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the tokens, the network, the pulse's hops, the
+   * camera and the logo trace, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<NeuralPulseElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -59,14 +73,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const HIDDEN = [6, 7, 5];
-const T_SPLIT = 16;
-const T_FLY = 30;
-const T_FIRE = 54;
-const T_HOP0 = 62;
-const HOP = 15;
-const TRAVEL = 13;
 
 // gradients.sh "beam" palette: bg #02030a, [#f4f7ff, #8fb4ff, #3d5bff, #1a1660]
 const PALETTES = {
@@ -133,7 +139,7 @@ interface Edge {
 }
 
 /** Deterministic layered net: positions, attention weights, activations, path. */
-function buildNet(tokenLengths: number[], u: number, hop: number) {
+function buildNet(tokenLengths: number[], u: number, layerStarts: number[]) {
   const tokens = tokenLengths.length;
   const longest = Math.max(...tokenLengths);
   const sizes = [tokens, ...HIDDEN, 1];
@@ -190,7 +196,7 @@ function buildNet(tokenLengths: number[], u: number, hop: number) {
           i,
           j: jj,
           w: weight(k, i, jj),
-          start: T_HOP0 + k * hop + Math.round(hash(k * 7 + i * 13 + jj) * 3),
+          start: layerStarts[k] + Math.round(hash(k * 7 + i * 13 + jj) * 3),
           primary: path.has(`${k}-${i}-${jj}`),
         });
       }
@@ -199,8 +205,14 @@ function buildNet(tokenLengths: number[], u: number, hop: number) {
   return { layers, edges, primaryToken };
 }
 
-function arrival(k: number, hop: number) {
-  return k === 0 ? T_HOP0 : T_HOP0 + (k - 1) * hop + TRAVEL + 2;
+/** When the pulse lights layer `k`: the inputs fire with the first hop. */
+function arrival(
+  k: number,
+  hops: { start: number; beat(name: string): number }[],
+) {
+  return k === 0
+    ? hops[0].start
+    : hops[k - 1].start + hops[k - 1].beat("arrive");
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -243,42 +255,57 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
-export function NeuralPulse({
-  input = "Make a launch film",
-  output = "remocn",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = manrope.fontFamily,
-  hop = HOP,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: NeuralPulseProps) {
+export function NeuralPulse(props: NeuralPulseProps) {
+  const {
+    input = DEFAULT_INPUT,
+    output = "remocn",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = manrope.fontFamily,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const T_RESOLVE = T_HOP0 + 4 * hop;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    neuralPulseTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const drift = tl.get("drift");
+  const network = tl.get("network");
+  const splitEl = tl.get("split");
+  const flyEl = tl.get("fly");
+  const fireEl = tl.get("fire");
+  const hops = tl.lane("Network").filter((e) => e.id.startsWith("layer:"));
+  const resolveEl = tl.get("resolve");
+  const trace = tl.get("trace");
+  const nameEl = tl.get("name");
   const u = height / 720;
   const p: Palette = PALETTES[theme];
   const fg = p.fg;
   const transparent = background === "transparent";
 
-  const tokens = input.split(/\s+/).filter(Boolean).slice(0, 5);
+  const tokens = inputTokens(input);
   const { layers, edges, primaryToken } = buildNet(
     tokens.map((tk) => tk.length),
     u,
-    hop,
+    hops.map((e) => e.start),
   );
   const outK = layers.length - 1;
 
   const f = 1500 * u;
-  const T_TRACE = T_RESOLVE + 32;
+  const T_TRACE = trace.start;
   // Drift, resolve, trace and the name all clamp by here.
-  const T_REST = Math.max(200, T_TRACE + 52);
+  const T_REST = Math.max(...tl.elements.map((e) => e.end));
 
   // final lockup: the real logo (R mark + "emocn" in Manrope), centered.
   // The output node lands on the R's first anchor and traces its outline.
@@ -303,16 +330,21 @@ export function NeuralPulse({
     : toScreen({ x: 0.01, y: 0.81 });
   // ---- camera: slow yaw drift, gentle pitch, then truck + push at resolve
   const camAt = (tt: number) => {
-    const drift = interpolate(tt, [0, 200], [0, 1], {
+    const drifted = interpolate(tt, [drift.start, drift.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-    const yaw = ((-26 + drift * 30) * Math.PI) / 180;
-    const pitch = ((7 - drift * 4) * Math.PI) / 180;
-    const resolveP = interpolate(tt, [T_RESOLVE + 2, T_RESOLVE + 32], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    const yaw = ((-26 + drifted * 30) * Math.PI) / 180;
+    const pitch = ((7 - drifted * 4) * Math.PI) / 180;
+    const resolveP = interpolate(
+      tt,
+      [resolveEl.start + resolveEl.beat("pull"), resolveEl.end],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
     const dolly = -resolveP * 160 * u;
     const rawProject = (n: { x: number; y: number; z: number }) => {
       const cyw = Math.cos(yaw);
@@ -344,15 +376,26 @@ export function NeuralPulse({
 
   // network focus: soft at the open, sharp while firing, defocused behind the title
   const netBlur =
-    interpolate(t, [0, 44], [3.2, 0], { ...CLAMP, easing: EASE_IO }) +
+    interpolate(
+      t,
+      [
+        network.start + network.beat("focusFrom"),
+        network.start + network.beat("focusTo"),
+      ],
+      [3.2, 0],
+      { ...CLAMP, easing: EASE_IO },
+    ) +
     resolveP * 5;
   const netOpacity = 1 - resolveP * 0.7;
 
-  const intro = (k: number, i: number) =>
-    interpolate(t, [2 + k * 4 + i * 1.5, 22 + k * 4 + i * 1.5], [0, 1], CLAMP);
+  const intro = (k: number, i: number) => {
+    const at =
+      network.start + k * network.beat("layer") + i * network.beat("node");
+    return interpolate(t, [at, at + network.length], [0, 1], CLAMP);
+  };
 
   const nodeLit = (k: number, i: number, tt = t) => {
-    const a = arrival(k, hop);
+    const a = arrival(k, hops);
     const act = k === 0 ? 1 : layers[k][i].act;
     const env = interpolate(tt, [a, a + 4, a + 26], [0, 1, 0.4], CLAMP);
     const bloom = interpolate(tt, [a, a + 5, a + 18], [0, 1, 0], CLAMP);
@@ -369,6 +412,7 @@ export function NeuralPulse({
   const edgeEls: React.ReactNode[] = [];
   const pulseEls: React.ReactNode[] = [];
   for (const e of edges) {
+    const travel = hops[e.k].beat("travel");
     const a = proj[e.k][e.i];
     const b = proj[e.k + 1][e.j];
     const depth = interpolate(
@@ -380,7 +424,7 @@ export function NeuralPulse({
     const on = Math.min(intro(e.k, e.i), intro(e.k + 1, e.j));
     const env = interpolate(
       t,
-      [e.start, e.start + TRAVEL * 0.6, e.start + TRAVEL + 22],
+      [e.start, e.start + travel * 0.6, e.start + travel + 22],
       [0, 1, e.primary ? 0.7 : 0.18],
       CLAMP,
     );
@@ -400,7 +444,7 @@ export function NeuralPulse({
       />,
     );
     if (e.primary || e.w > 0.38) {
-      const raw = (t - e.start) / TRAVEL;
+      const raw = (t - e.start) / travel;
       for (let g = 0; g < 4; g++) {
         const q = raw - g * 0.06;
         if (q <= 0 || q >= 1) continue;
@@ -429,7 +473,7 @@ export function NeuralPulse({
   const pad = 13 * u;
   const tokW = tokens.map((tk) => tk.length * tokSize * 0.6 + pad * 2);
   const splitAt = (tt: number) =>
-    interpolate(tt, [T_SPLIT, T_SPLIT + 12], [0, 1], {
+    interpolate(tt, [splitEl.start, splitEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -440,15 +484,22 @@ export function NeuralPulse({
     const rowW = tokW.reduce((s, w) => s + w, 0) + gapX * (tokens.length - 1);
     let cursor = width / 2 - rowW / 2;
     return tokens.map((_, i) => {
-      const fly = interpolate(tt, [T_FLY + i * 3, T_FLY + i * 3 + 22], [0, 1], {
-        ...CLAMP,
-        easing: EASE_IO,
-      });
+      const flyAt = flyEl.start + i * flyEl.beat("stagger");
+      const fly = interpolate(
+        tt,
+        [flyAt, flyAt + flyEl.beat("flight")],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: EASE_IO,
+        },
+      );
       const node = c.proj[0][i];
       const startX = cursor;
       cursor += tokW[i] + gapX;
       const endX = node.x - 26 * u - tokW[i] * colScale;
-      const appear = interpolate(tt, [i * 2, i * 2 + 12], [0, 1], {
+      const tokenEl = tl.get(`token:${i}`);
+      const appear = interpolate(tt, [tokenEl.start, tokenEl.end], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
@@ -479,9 +530,10 @@ export function NeuralPulse({
         Math.abs(a.lift - b.lift),
       ) > 1e-3;
     const moving = gone(toks[i], toksPrev[i]) || gone(toks[i], toksNext[i]);
+    const fireAt = fireEl.start + i * fireEl.beat("stagger");
     const fire = interpolate(
       t,
-      [T_FIRE + i * 2, T_FIRE + i * 2 + 6],
+      [fireAt, fireAt + fireEl.beat("flash")],
       [0, 1],
       CLAMP,
     );
@@ -490,10 +542,15 @@ export function NeuralPulse({
       primary && fire > 0
         ? accent
         : rgba(fg, (0.08 + 0.14 * split) * (1 - fire * 0.3));
-    const line = interpolate(t, [T_FIRE + i * 2, T_FIRE + i * 2 + 8], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    const line = interpolate(
+      t,
+      [fireAt, fireAt + fireEl.beat("lead")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
     return (
       <div key={`t${i}`}>
         <div
@@ -535,7 +592,15 @@ export function NeuralPulse({
             opacity:
               fly >= 1
                 ? 1 -
-                  interpolate(t, [T_FIRE + 20, T_FIRE + 40], [0, 0.6], CLAMP)
+                  interpolate(
+                    t,
+                    [
+                      fireEl.start + fireEl.beat("dim"),
+                      fireEl.start + fireEl.beat("dimEnd"),
+                    ],
+                    [0, 0.6],
+                    CLAMP,
+                  )
                 : 0,
           }}
         />
@@ -580,7 +645,7 @@ export function NeuralPulse({
   }
 
   // ---- output node: fires, blooms, settles into the mark's dot
-  const outFire = arrival(outK, hop);
+  const outFire = arrival(outK, hops);
   const outIn = intro(outK, 0);
   const outLit = interpolate(t, [outFire, outFire + 4], [0, 1], CLAMP);
   const dotR = 5.5 * u;
@@ -598,7 +663,7 @@ export function NeuralPulse({
       [0, 1, 0],
       CLAMP,
     );
-    const traceP = interpolate(tt, [T_TRACE, T_TRACE + 34], [0, 1], {
+    const traceP = interpolate(tt, [trace.start, trace.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -621,17 +686,38 @@ export function NeuralPulse({
   };
   const { outP, outBloom, outR, traceP, head, nodeX, nodeY } = outGeo(t, cam);
   const outRest = outGeo(T_REST, camRest);
-  const fillP = interpolate(t, [T_TRACE + 18, T_TRACE + 42], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const fillP = interpolate(
+    t,
+    [T_TRACE + trace.beat("fill"), T_TRACE + trace.beat("fillEnd")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const nodeFade = logo
-    ? 1 - interpolate(t, [T_TRACE, T_TRACE + 12], [0, 1], CLAMP)
-    : 1 - interpolate(t, [T_TRACE + 32, T_TRACE + 44], [0, 1], CLAMP);
+    ? 1 -
+      interpolate(t, [T_TRACE, T_TRACE + trace.beat("logoFade")], [0, 1], CLAMP)
+    : 1 -
+      interpolate(
+        t,
+        [T_TRACE + trace.beat("fade"), T_TRACE + trace.beat("fadeEnd")],
+        [0, 1],
+        CLAMP,
+      );
   const strokeO =
-    interpolate(t, [T_TRACE, T_TRACE + 4], [0, 1], CLAMP) *
-    (1 - interpolate(t, [T_TRACE + 34, T_TRACE + 50], [0, 1], CLAMP));
-  const nameP = interpolate(t, [T_TRACE + 20, T_TRACE + 52], [0, 1], {
+    interpolate(t, [T_TRACE, T_TRACE + trace.beat("strokeIn")], [0, 1], CLAMP) *
+    (1 -
+      interpolate(
+        t,
+        [
+          T_TRACE + trace.beat("strokeOut"),
+          T_TRACE + trace.beat("strokeOutEnd"),
+        ],
+        [0, 1],
+        CLAMP,
+      ));
+  const nameP = interpolate(t, [nameEl.start, nameEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -752,7 +838,12 @@ export function NeuralPulse({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              opacity: interpolate(t, [T_TRACE, T_TRACE + 14], [0, 1], CLAMP),
+              opacity: interpolate(
+                t,
+                [T_TRACE, T_TRACE + trace.beat("logoIn")],
+                [0, 1],
+                CLAMP,
+              ),
             }}
           >
             {logo}

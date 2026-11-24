@@ -15183,12 +15183,21 @@
       "title": "Neural Pulse",
       "description": "A neural network fires a prompt through its nodes and resolves into the Remocn logo.",
       "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/neural-pulse/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/neural-pulse.tsx"
+          "target": "components/remocn/neural-pulse/index.tsx"
+        },
+        {
+          "path": "registry/remocn/neural-pulse/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/neural-pulse/timeline.ts"
         }
       ],
       "type": "registry:component"
