@@ -8909,10 +8909,19 @@
         {
           "path": "prompt-restyle/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/prompt-restyle.tsx"
+          "target": "components/remocn/prompt-restyle/index.tsx"
+        },
+        {
+          "path": "prompt-restyle/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/prompt-restyle/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "block-swap",

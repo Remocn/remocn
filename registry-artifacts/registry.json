@@ -8904,12 +8904,21 @@
       "title": "Prompt Restyle",
       "description": "A headline is restyled by prompt instructions, ending in a serif italic gradient 'you own'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/prompt-restyle/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/prompt-restyle.tsx"
+          "target": "components/remocn/prompt-restyle/index.tsx"
+        },
+        {
+          "path": "registry/remocn/prompt-restyle/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/prompt-restyle/timeline.ts"
         }
       ],
       "type": "registry:component"
