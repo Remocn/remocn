@@ -7259,12 +7259,21 @@
       "title": "Overheard",
       "description": "A question quote, \"Who made our launch video?\", answered by \"I did. It's in the repo.\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/overheard/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/overheard.tsx"
+          "target": "components/remocn/overheard/index.tsx"
+        },
+        {
+          "path": "registry/remocn/overheard/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/overheard/timeline.ts"
         }
       ],
       "type": "registry:component"

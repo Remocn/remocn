@@ -12,13 +12,19 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  linesOf,
+  type OverheardElementId,
+  type OverheardLine,
+  overheardTimeline,
+  wordsOf,
+} from "./timeline";
 
 const serif = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
-export interface OverheardLine {
-  quote: string;
-  name: string;
-}
+export type { OverheardLine };
 
 export interface OverheardProps {
   lines?: OverheardLine[];
@@ -39,12 +45,13 @@ export interface OverheardProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words, speaker names and the dimming of
+   * each line, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<OverheardElementId>;
 }
-
-const DEFAULT_LINES: OverheardLine[] = [
-  { quote: "Who made our launch video?", name: "Mia Okafor, CEO" },
-  { quote: "I did. It’s in the repo.", name: "Leo Marsh, engineer" },
-];
 
 const THEMES = {
   dark: { bg: "#101828", ink: "#BFE3FF", accent: "#F6C453" },
@@ -53,10 +60,6 @@ const THEMES = {
 
 const TRACK = -0.02;
 const LH = 1.1;
-const WORD = 4;
-const PAUSE = 10;
-const BETWEEN = 26;
-const RISE = 14;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -65,33 +68,7 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-interface Word {
-  text: string;
-  hot: boolean;
-}
-
-function stripQuotes(s: string) {
-  return s
-    .trim()
-    .replace(/^["“”]+/, "")
-    .replace(/["“”]+$/, "");
-}
-
-function wordsOf(quote: string, highlight: string): Word[] {
-  const body = stripQuotes(quote);
-  const at = highlight ? body.indexOf(highlight) : -1;
-  const parts = body.split(" ").filter(Boolean);
-  let cursor = 0;
-  return parts.map((part, i) => {
-    const s = body.indexOf(part, cursor);
-    const e = s + part.length;
-    cursor = e;
-    let text = part;
-    if (i === 0) text = `“${text}`;
-    if (i === parts.length - 1) text = `${text}”`;
-    return { text, hot: at >= 0 && s < at + highlight.length && e > at };
-  });
-}
+type Word = ReturnType<typeof wordsOf>[number];
 
 function place(
   words: Word[],
@@ -243,20 +220,20 @@ function ScaleLayer({
   );
 }
 
-export function Overheard({
-  lines = DEFAULT_LINES,
-  highlight = "It’s in the repo.",
-  stagger = WORD,
-  pause = BETWEEN,
-  accent,
-  ink,
-  background,
-  fontFamily = serif.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: OverheardProps) {
+export function Overheard(props: OverheardProps) {
+  const {
+    lines = DEFAULT_LINES,
+    highlight = "It’s in the repo.",
+    accent,
+    ink,
+    background,
+    fontFamily = serif.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const now = useSceneFrame();
   const tAt = (f: number) => Math.max(0, f - delay) * speed;
@@ -270,13 +247,16 @@ export function Overheard({
     );
   };
   const { width: W, height: H, durationInFrames: T } = useSceneConfig();
+  // The schedule's compression for long speech counts the clip without
+  // `speed`, as before.
+  const tl = useTimeline(overheardTimeline, props, T, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = lines.length > 0 ? lines : DEFAULT_LINES;
+  const list = linesOf(lines);
   const n = list.length;
   const voices = list.map((l, i) =>
     wordsOf(l.quote, i === n - 1 ? highlight : ""),
@@ -322,26 +302,6 @@ export function Overheard({
   }
   const L = Math.max(16, Math.max(unit * 0.03, F * nameRatio));
 
-  const natural: number[][] = [];
-  const nameAt: number[] = [];
-  const starts: number[] = [];
-  let clock = 6;
-  voices.forEach((v, i) => {
-    starts.push(clock);
-    const times: number[] = [];
-    v.forEach((wd) => {
-      times.push(clock);
-      clock += stagger;
-      if (/[.?!,…]”?$/.test(wd.text)) clock += PAUSE;
-    });
-    natural.push(times);
-    nameAt.push(clock + 2);
-    clock += i < n - 1 ? pause : 0;
-  });
-  const speechEnd = clock + RISE;
-  const room = Math.max(1, T - Math.max(30, T * 0.2));
-  const k = speechEnd > room ? room / speechEnd : 1;
-
   const heights = lays.map((l) => blockH(l.lines, F));
   const free = H - marginY * 2 - heights.reduce((s, h) => s + h, 0);
   const tops: number[] = [];
@@ -367,14 +327,17 @@ export function Overheard({
         {voices.map((v, i) => {
           const right = i % 2 === 1;
           const lay = lays[i];
-          const next = i < n - 1 ? starts[i + 1] * k : 1e6;
-          const back = interpolate(t, [next, next + 16], [0, 1], {
-            ...CLAMP,
-            easing: EASE_IO,
-          });
+          const dimEl = i < n - 1 ? tl.get(`dim:${i}`) : null;
+          const back = dimEl
+            ? interpolate(t, [dimEl.start, dimEl.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_IO,
+              })
+            : 0;
           const dim = 1 - back * 0.55;
+          const nameEl = tl.get(`name:${i}`);
           const nameIn = (t: number) =>
-            interpolate(t, [nameAt[i] * k, nameAt[i] * k + 16], [0, 1], {
+            interpolate(t, [nameEl.start, nameEl.end], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });
@@ -393,9 +356,9 @@ export function Overheard({
                 const x = right
                   ? W - marginX - (lw - p.x) * F
                   : marginX + p.x * F;
-                const at = natural[i][j] * k;
+                const wordEl = tl.get(`word:${i}:${j}`);
                 const rise = (t: number) =>
-                  interpolate(t, [at, at + RISE], [0, 1], {
+                  interpolate(t, [wordEl.start, wordEl.end], [0, 1], {
                     ...CLAMP,
                     easing: EASE_OUT,
                   });
