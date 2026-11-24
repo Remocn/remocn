@@ -7394,12 +7394,21 @@
       "title": "Plain License",
       "description": "A big green \"Free,\" then \"for anyone, for anything.\" in condensed type.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/plain-license/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/plain-license.tsx"
+          "target": "components/remocn/plain-license/index.tsx"
+        },
+        {
+          "path": "registry/remocn/plain-license/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/plain-license/timeline.ts"
         }
       ],
       "type": "registry:component"

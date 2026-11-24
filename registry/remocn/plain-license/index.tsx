@@ -12,16 +12,22 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  clausesOf,
+  DEFAULT_CLAUSES,
+  type PlainLicenseClause,
+  type PlainLicenseElementId,
+  plainLicenseTimeline,
+  splitWords,
+} from "./timeline";
 
 const shoulders = loadFont("normal", {
   weights: ["400", "500"],
   subsets: ["latin"],
 });
 
-export interface PlainLicenseClause {
-  legal: string;
-  plain: string;
-}
+export type { PlainLicenseClause };
 
 export interface PlainLicenseProps {
   clauses?: PlainLicenseClause[];
@@ -42,6 +48,13 @@ export interface PlainLicenseProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the legal text rising, and per clause its
+   * mark, drop, reflow, single words of the rewrite and the cool-down, and
+   * the final zoom, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PlainLicenseElementId>;
 }
 
 const THEMES = {
@@ -49,28 +62,9 @@ const THEMES = {
   light: { bg: "#F5F5F2", ink: "#000000", accent: "#0E9F4B" },
 } as const;
 
-const DEFAULT_CLAUSES: PlainLicenseClause[] = [
-  {
-    legal: "Permission is hereby granted, free of charge,",
-    plain: "Free,",
-  },
-  {
-    legal:
-      "to any person obtaining a copy of this software and associated documentation files (the “Software”),",
-    plain: "for anyone,",
-  },
-  {
-    legal:
-      "to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.",
-    plain: "for anything.",
-  },
-];
-
 const WGHT = 500;
 const PX = 200;
 const LEAD = 1.04;
-const T0 = 36;
-const ZOOM = 26;
 const LEGAL_ALPHA = 0.5;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -194,10 +188,6 @@ function fitSize(blocks: Token[][], m: Metrics, boxW: number, boxH: number) {
   return lo;
 }
 
-function splitWords(s: string) {
-  return s.split(/\s+/).filter(Boolean);
-}
-
 const midway = (p: number) => p > 0 && p < 1;
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -216,38 +206,41 @@ function ScaleLayer({
   );
 }
 
-export function PlainLicense({
-  clauses = DEFAULT_CLAUSES,
-  highlight = 0,
-  step = 40,
-  stagger = 3,
-  accent,
-  ink,
-  background,
-  fontFamily = shoulders.fontFamily,
-  fontWeight = WGHT,
-  scale: layerScale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: PlainLicenseProps) {
+export function PlainLicense(props: PlainLicenseProps) {
+  const {
+    clauses = DEFAULT_CLAUSES,
+    highlight = 0,
+    accent,
+    ink,
+    background,
+    fontFamily = shoulders.fontFamily,
+    fontWeight = WGHT,
+    scale: layerScale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The pace that fits the schedule into the clip counts the clip after
+  // `delay`, without `speed`, as before.
+  const tl = useTimeline(
+    plainLicenseTimeline,
+    props,
+    durationInFrames - delay,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = clauses.length > 0 ? clauses : DEFAULT_CLAUSES;
+  const list = clausesOf(clauses);
   const n = list.length;
-  const stepLen = Math.max(34, step);
-  const S = (k: number) => T0 + k * stepLen;
-  const zoomAt = S(n - 1) + 34;
-  const naturalEnd = zoomAt + ZOOM + 34;
-  const pace = Math.max(1, naturalEnd / Math.max(1, durationInFrames - delay));
-  const t = frame * speed * pace;
+  const t = frame * speed;
 
   const legal: Token[][] = list.map((cl, i) =>
     splitWords(cl.legal).map((text, j) => ({
@@ -305,8 +298,9 @@ export function PlainLicense({
     scales.push(Math.max(1, Math.min(boxW / maxW, boxH / h, maxS / s0)));
   }
 
+  const moveEls = Array.from({ length: n }, (_, k) => tl.get(`move:${k}`));
   const moveP = (k: number, tt = t) =>
-    interpolate(tt, [S(k) + 16, S(k) + 34], [0, 1], {
+    interpolate(tt, [moveEls[k].start, moveEls[k].end], [0, 1], {
       ...CLAMP,
       easing: EASE_MOVE,
     });
@@ -335,8 +329,10 @@ export function PlainLicense({
     return { at, travel };
   };
   const reflowing = Array.from({ length: n }, (_, k) => moveP(k)).some(midway);
+  const zoomEl = tl.get("zoom");
+  const introEl = tl.get("intro");
   const scaleAt = (tt: number) => {
-    const zoomP = interpolate(tt, [zoomAt, zoomAt + ZOOM], [0, 1], {
+    const zoomP = interpolate(tt, [zoomEl.start, zoomEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_MOVE,
     });
@@ -394,23 +390,32 @@ export function PlainLicense({
   const nodes: React.ReactNode[] = [];
   let rowIndex = 0;
   for (let i = 0; i < n; i++) {
-    const st = S(i);
+    const markEl = tl.get(`mark:${i}`);
+    const outEl = tl.get(`out:${i}`);
     const { at: top, travel } = stateAnchor((k) => tops[k][i]);
-    const mark = interpolate(t, [st, st + 8], [0, 1], {
+    const mark = interpolate(t, [markEl.start, markEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-    const out = interpolate(t, [st + 13, st + 22], [0, 1], {
+    const out = interpolate(t, [outEl.start, outEl.end], [0, 1], {
       ...CLAMP,
       easing: Easing.bezier(0.55, 0, 1, 0.45),
     });
     if (out < 1) {
       legalB[i].rows.forEach((row, r) => {
         const ri = rowIndex++;
-        const p = interpolate(t, [2 + ri * 2, 20 + ri * 2], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
+        const p = interpolate(
+          t,
+          [
+            introEl.start + ri * introEl.beat("row"),
+            introEl.end + ri * introEl.beat("row"),
+          ],
+          [0, 1],
+          {
+            ...CLAMP,
+            easing: EASE_OUT,
+          },
+        );
         const base = top + m.cap * s0 + r * rowH;
         row.tokens.forEach((tk, j) => {
           nodes.push(
@@ -431,17 +436,18 @@ export function PlainLicense({
       rowIndex += legalB[i].rows.length;
     }
     const keep = i === highlight;
-    const cool = keep
+    const coolEl = keep ? null : tl.get(`cool:${i}`);
+    const cool = !coolEl
       ? 0
-      : interpolate(t, [st + 50, st + 68], [0, 1], {
+      : interpolate(t, [coolEl.start, coolEl.end], [0, 1], {
           ...CLAMP,
           easing: Easing.bezier(0.65, 0, 0.35, 1),
         });
     plainB[i].rows.forEach((row, r) => {
       const base = top + m.cap * s0 + r * rowH;
       row.tokens.forEach((tk, j) => {
-        const inAt = st + 24 + j * stagger;
-        const p = interpolate(t, [inAt, inAt + 14], [0, 1], {
+        const plainEl = tl.get(`plain:${i}:${j}`);
+        const p = interpolate(t, [plainEl.start, plainEl.end], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
         });
