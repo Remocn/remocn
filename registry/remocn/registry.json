@@ -11004,10 +11004,19 @@
         {
           "path": "price-slate/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/price-slate.tsx"
+          "target": "components/remocn/price-slate/index.tsx"
+        },
+        {
+          "path": "price-slate/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/price-slate/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "score-bug",

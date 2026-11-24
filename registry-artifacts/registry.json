@@ -10999,12 +10999,21 @@
       "title": "Price Slate",
       "description": "A price reel spins to land on $0 with the old $29 struck through.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/price-slate/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/price-slate.tsx"
+          "target": "components/remocn/price-slate/index.tsx"
+        },
+        {
+          "path": "registry/remocn/price-slate/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/price-slate/timeline.ts"
         }
       ],
       "type": "registry:component"
