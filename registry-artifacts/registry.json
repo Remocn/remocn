@@ -10673,12 +10673,21 @@
       "title": "Timing Tower",
       "description": "A racing timing tower reorders until the hero car sits at a big P1 with a gap time.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/timing-tower/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/timing-tower.tsx"
+          "target": "components/remocn/timing-tower/index.tsx"
+        },
+        {
+          "path": "registry/remocn/timing-tower/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/timing-tower/timeline.ts"
         }
       ],
       "type": "registry:component"
