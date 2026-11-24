@@ -8635,12 +8635,21 @@
       "title": "Long Vowel",
       "description": "A serif word stretches one vowel, 'Waaaaaay', in a warm gradient with an italic caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/long-vowel/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/long-vowel.tsx"
+          "target": "components/remocn/long-vowel/index.tsx"
+        },
+        {
+          "path": "registry/remocn/long-vowel/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/long-vowel/timeline.ts"
         }
       ],
       "type": "registry:component"
