@@ -829,12 +829,17 @@
       "title": "Marker Highlight",
       "description": "Colored marker block draws behind a phrase as the text color shifts.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/marker-highlight/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/marker-highlight.tsx"
+          "target": "components/remocn/marker-highlight/index.tsx"
+        },
+        {
+          "path": "registry/remocn/marker-highlight/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/marker-highlight/timeline.ts"
         }
       ],
       "type": "registry:component"
