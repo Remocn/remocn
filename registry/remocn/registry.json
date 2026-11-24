@@ -13392,10 +13392,19 @@
         {
           "path": "timer-duel/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/timer-duel.tsx"
+          "target": "components/remocn/timer-duel/index.tsx"
+        },
+        {
+          "path": "timer-duel/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/timer-duel/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "contribution-heatmap",

@@ -13387,12 +13387,21 @@
       "title": "Timer Duel",
       "description": "Two stopwatch timers run side by side, the faster one ending on 38x faster.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/timer-duel/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/timer-duel.tsx"
+          "target": "components/remocn/timer-duel/index.tsx"
+        },
+        {
+          "path": "registry/remocn/timer-duel/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/timer-duel/timeline.ts"
         }
       ],
       "type": "registry:component"

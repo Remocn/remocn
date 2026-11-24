@@ -6,6 +6,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type TimerDuelElementId, timerDuelTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -45,6 +47,12 @@ export interface TimerDuelProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the columns, the run, the chase, the stop,
+   * the rise, the delta and its hold, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TimerDuelElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -53,10 +61,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const START = 18;
-const RUN = 32;
-const CHASE = 50;
 
 const THEMES = {
   dark: {
@@ -188,29 +192,41 @@ function ScaleLayer({
   );
 }
 
-export function TimerDuel({
-  before = 2718.4,
-  after = 70.9,
-  beforeLabel = "Before",
-  afterLabel = "With remocn",
-  delta,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  run = RUN,
-  chase = CHASE,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: TimerDuelProps) {
+export function TimerDuel(props: TimerDuelProps) {
+  const {
+    before = 2718.4,
+    after = 70.9,
+    beforeLabel = "Before",
+    afterLabel = "With remocn",
+    delta,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const STOP_AFTER = START + run;
-  const STOP_BEFORE = STOP_AFTER + chase;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    timerDuelTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const runEl = tl.get("run");
+  const chaseEl = tl.get("chase");
+  const stopEl = tl.get("stop");
+  const riseEl = tl.get("rise");
+  const deltaEl = tl.get("delta");
+  const holdEl = tl.get("hold");
+  const STOP_AFTER = chaseEl.start;
+  const STOP_BEFORE = stopEl.start;
   const u = height / 720;
   const p: Palette = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -223,11 +239,12 @@ export function TimerDuel({
   const deltaText =
     delta ?? `${ratio >= 10 ? Math.round(ratio) : ratio.toFixed(1)}× faster`;
 
-  const r0 = fast / run;
+  const r0 = fast / runEl.length;
+  const chase = chaseEl.length;
   const clock = (f: number) => {
-    if (f <= START) return 0;
-    if (f <= STOP_AFTER) return (f - START) * r0;
-    const dt = Math.min(chase, f - STOP_AFTER);
+    if (f <= runEl.start) return 0;
+    if (f <= runEl.end) return (f - runEl.start) * r0;
+    const dt = Math.max(0, Math.min(chase, f - STOP_AFTER));
     const k = EASE_IO(dt / chase);
     return fast + r0 * dt + (slow - fast - r0 * chase) * k;
   };
@@ -235,40 +252,53 @@ export function TimerDuel({
   const left = Math.min(slow, c);
   const right = Math.min(fast, c);
 
-  const appear = (d: number) =>
-    interpolate(t, [d, d + 18], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const appear = (i: number) => {
+    const e = tl.get(`column:${i}`);
+    return interpolate(t, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  };
   const rightStop = interpolate(
     t,
-    [STOP_AFTER, STOP_AFTER + 2, STOP_AFTER + 16],
+    [
+      STOP_AFTER,
+      STOP_AFTER + chaseEl.beat("pulsePeak"),
+      STOP_AFTER + chaseEl.beat("pulse"),
+    ],
     [0, 1, 0],
     CLAMP,
   );
   const rightLit = t >= STOP_AFTER;
-  const freeze = interpolate(t, [STOP_BEFORE + 2, STOP_BEFORE + 16], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const freeze = interpolate(
+    t,
+    [STOP_BEFORE + stopEl.beat("freezeAt"), stopEl.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const leftStop = interpolate(
     t,
-    [STOP_BEFORE, STOP_BEFORE + 2, STOP_BEFORE + 12],
+    [
+      STOP_BEFORE,
+      STOP_BEFORE + stopEl.beat("pulsePeak"),
+      STOP_BEFORE + stopEl.beat("pulse"),
+    ],
     [0, 1, 0],
     CLAMP,
   );
 
-  const rise = interpolate(t, [STOP_BEFORE + 6, STOP_BEFORE + 36], [0, 1], {
+  const rise = interpolate(t, [riseEl.start, riseEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const deltaIn = interpolate(t, [STOP_BEFORE + 14, STOP_BEFORE + 38], [0, 1], {
+  const deltaIn = interpolate(t, [deltaEl.start, deltaEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const hold = interpolate(
-    t,
-    [STOP_BEFORE + 38, STOP_BEFORE + 120],
-    [0, 1],
-    CLAMP,
-  );
+  const hold = interpolate(t, [holdEl.start, holdEl.end], [0, 1], CLAMP);
 
   const size = Math.min(height * 0.16, width * 0.085);
   const sample = format(slow, long);
@@ -307,7 +337,7 @@ export function TimerDuel({
       opacity: 1,
       pulse: rightStop,
       x: colW + gapX,
-      d: 3,
+      d: 1,
     },
   ];
 
