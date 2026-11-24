@@ -475,6 +475,23 @@ describe("stated text effect counts match the docs", () => {
   });
 });
 
+describe("stated numbers component count matches the docs", () => {
+  it("states the real number of Numbers & Stats components", () => {
+    const real = pages.filter(
+      (p) =>
+        p.file.startsWith("content/docs/numbers/") &&
+        typeof p.frontmatter.component === "string",
+    ).length;
+    const file = "content/docs/guides/remotion-data-video.mdx";
+    const src = readFileSync(file, "utf8");
+    const stated = [
+      ...src.matchAll(/\b(\d+) (?:free, MIT-licensed )?components\b/g),
+    ].map(([, n]) => Number(n));
+    expect(stated.length).toBeGreaterThan(0);
+    expect(stated.filter((n) => n !== real)).toEqual([]);
+  });
+});
+
 describe("lastModified matches the page's own date", () => {
   // The sitemap's lastmod and the article's dateModified come from the
   // frontmatter; the reader sees the "Last updated" line. Edit one, edit both.

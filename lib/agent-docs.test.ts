@@ -108,6 +108,29 @@ describe("buildLlmsTxt with component pages", () => {
   });
 });
 
+describe("buildLlmsTxt data video answer", () => {
+  test("points chart questions at the data guide only when there are number components", () => {
+    expect(buildLlmsTxt(PAGES)).not.toContain("Looking for animated charts");
+    const withNumbers = buildLlmsTxt([
+      ...PAGES,
+      {
+        slugs: ["numbers", "share-donut"],
+        url: "/docs/numbers/share-donut",
+        title: "Share Donut",
+        component: "share-donut",
+      },
+    ]);
+    const preamble = withNumbers.slice(0, withNumbers.indexOf("\n## "));
+    expect(preamble).toContain(
+      "Remocn has 1 number, chart and map components for Remotion",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/remotion-data-video.md)",
+    );
+    expect(preamble).toContain("(https://remocn.dev/llms-full/numbers.txt)");
+  });
+});
+
 describe("buildLlmsTxt transitions answer", () => {
   const transitionPages = [
     {
