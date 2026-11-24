@@ -12,6 +12,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_AFTER,
+  DEFAULT_BEFORE,
+  phrasesOf,
+  type TwoHitElementId,
+  twoHitTimeline,
+} from "./timeline";
 
 const urbanist = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -34,6 +42,11 @@ export interface TwoHitProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the lines rising and the two hits, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TwoHitElementId>;
 }
 
 const THEMES = {
@@ -118,13 +131,6 @@ function pulse(x: number, attack: number, hold: number, release: number) {
   return 1 - EASE_RELEASE(Math.min(1, (x - attack - hold) / release));
 }
 
-function splitLast(text: string) {
-  const clean = text.trim().replace(/\s+/g, " ");
-  const i = clean.lastIndexOf(" ");
-  if (i < 0) return [clean];
-  return [clean.slice(0, i), clean.slice(i + 1)];
-}
-
 function normalizeHex(c: string | undefined, fallback: string) {
   if (c && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(c)) return c;
   return fallback;
@@ -146,30 +152,34 @@ function ScaleLayer({
   );
 }
 
-export function TwoHit({
-  before = "Premieres Friday.",
-  after = "Streaming now.",
-  hitAt = 34,
-  hitGap = 24,
-  fontWeight = WGHT,
-  accent,
-  ink,
-  background,
-  fontFamily = urbanist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: TwoHitProps) {
+export function TwoHit(props: TwoHitProps) {
+  const {
+    before = DEFAULT_BEFORE,
+    after = DEFAULT_AFTER,
+    fontWeight = WGHT,
+    accent,
+    ink,
+    background,
+    fontFamily = urbanist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    twoHitTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const blue = normalizeHex(accent, c.blue);
-  const a = before.trim() || "Soon.";
-  const b = after.trim() || "Now.";
-  const phrases = useMemo(() => [splitLast(a), splitLast(b)], [a, b]);
+  const phrases = useMemo(() => phrasesOf(before, after), [before, after]);
   const m = useMetrics(phrases, fontFamily, fontWeight);
 
   const transparent = background === "transparent";
@@ -205,20 +215,29 @@ export function TwoHit({
       Math.max(REST, (span / F - m.widths[i][j]) / Math.max(1, lens[i][j] - 1)),
     );
 
-  const h1 = hitAt;
-  const h2 = hitAt + hitGap;
-  const swapAt = h2 + 7;
-  const e1 = FIRST_GAIN * pulse(t - h1, 4, 0, 16);
-  const e2 = pulse(t - h2, 5, 4, 24);
+  const hit1 = tl.get("hit:0");
+  const hit2 = tl.get("hit:1");
+  const swapAt = hit2.start + hit2.beat("swap");
+  const pulseOf = (hit: typeof hit1) =>
+    pulse(
+      t - hit.start,
+      hit.beat("attack"),
+      hit.beat("hold"),
+      hit.beat("release"),
+    );
+  const e1 = FIRST_GAIN * pulseOf(hit1);
+  const e2 = pulseOf(hit2);
   const e = Math.max(e1, e2);
   const idx = t < swapAt ? 0 : 1;
   const lines = phrases[idx];
 
-  const enterAt = (j: number, f: number) =>
-    interpolate(f, [2 + j * 4, 20 + j * 4], [0, 1], {
+  const enterAt = (j: number, f: number) => {
+    const line = tl.get(`line:${j}`);
+    return interpolate(f, [line.start, line.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
   const enter = (j: number) => enterAt(j, t);
   // The rise is a long ease-out, so its tail still crosses pixels well after
   // the progress looks settled: test the travel itself against its neighbours.

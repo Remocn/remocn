@@ -7203,12 +7203,21 @@
       "title": "Two Hit",
       "description": "A two-hit headline, \"Streaming now.\", in white then blue, right-aligned on black.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/two-hit/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/two-hit.tsx"
+          "target": "components/remocn/two-hit/index.tsx"
+        },
+        {
+          "path": "registry/remocn/two-hit/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/two-hit/timeline.ts"
         }
       ],
       "type": "registry:component"
