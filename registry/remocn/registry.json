@@ -5179,10 +5179,19 @@
         {
           "path": "impact-shake/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/impact-shake.tsx"
+          "target": "components/remocn/impact-shake/index.tsx"
+        },
+        {
+          "path": "impact-shake/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/impact-shake/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "riso-print",

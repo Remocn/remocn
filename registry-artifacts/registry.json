@@ -5174,12 +5174,21 @@
       "title": "Impact Shake",
       "description": "Heavy content slams in from above with squash, a damped camera jolt, a two-frame RGB split and dust puffs kicking out sideways.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/impact-shake/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/impact-shake.tsx"
+          "target": "components/remocn/impact-shake/index.tsx"
+        },
+        {
+          "path": "registry/remocn/impact-shake/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/impact-shake/timeline.ts"
         }
       ],
       "type": "registry:component"
