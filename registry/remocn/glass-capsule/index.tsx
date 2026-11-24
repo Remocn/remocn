@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  type GlassCapsuleElementId,
+  glassCapsuleTimeline,
+} from "./timeline";
 
 const SANS = loadSans("normal", { weights: ["500"], subsets: ["latin"] });
 const SERIF = loadSerif("italic", { weights: ["400"], subsets: ["latin"] });
@@ -54,6 +60,12 @@ export interface GlassCapsuleProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the lines and the capsule's enter, glide,
+   * opening, light and settle, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<GlassCapsuleElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -259,7 +271,10 @@ function Capsule({
   room,
   beforeW,
   wordW,
+  rim,
 }: {
+  /** Frames the rim light drifts over, from the schedule. */
+  rim: [number, number];
   fg: string;
   inner: string;
   wordNode: React.ReactNode;
@@ -288,7 +303,7 @@ function Capsule({
   const edge = lh * 0.26;
   const M = margin;
   const map = lensMap(Math.round(lw), Math.round(lh), edge);
-  const rimX = 24 + interpolate(t, [10, 80], [0, 14], CLAMP);
+  const rimX = 24 + interpolate(t, rim, [0, 14], CLAMP);
   return (
     <div
       style={{
@@ -487,23 +502,36 @@ function ScaleLayer({
   );
 }
 
-export function GlassCapsule({
-  lines = ["Launch films", "that move."],
-  focus = "move",
-  magnify = 1.1,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = SANS.fontFamily,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: GlassCapsuleProps) {
+export function GlassCapsule(props: GlassCapsuleProps) {
+  const {
+    lines = DEFAULT_LINES,
+    focus = "move",
+    magnify = 1.1,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = SANS.fontFamily,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const tilt = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    glassCapsuleTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const glideEl = tl.get("glide");
+  const openEl = tl.get("open");
+  const litEl = tl.get("lit");
+  const settleEl = tl.get("settle");
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const stage =
@@ -579,44 +607,57 @@ export function GlassCapsule({
   const lw = wordW + padX * 2;
   const lh = size * 1.0;
 
-  const glide = EASE_GLIDE(interpolate(t, [10, 74], [0, 1], CLAMP));
+  const glide = EASE_GLIDE(
+    interpolate(t, [glideEl.start, glideEl.end], [0, 1], CLAMP),
+  );
   const start = -(wordCenter + lw / 2 + 40 * u);
+  const s0 = settleEl.start;
   const settle =
-    t > 74
-      ? Math.sin(((t - 74) / 16) * Math.PI) *
-        Math.exp(-(t - 74) / 9) *
+    t > s0
+      ? Math.sin(((t - s0) / settleEl.beat("period")) * Math.PI) *
+        Math.exp(-(t - s0) / settleEl.beat("decay")) *
         5 *
         u *
-        (t < 106 ? 1 : 0)
+        (t < settleEl.end ? 1 : 0)
       : 0;
   const offset = start * (1 - glide) + settle;
   const travel = 1 - glide;
+  const magSpan = [openEl.start + openEl.beat("mag"), openEl.end];
   const mag =
-    1.05 + (restMag - 1.05) * EASE_IO(interpolate(t, [52, 80], [0, 1], CLAMP));
+    1.05 + (restMag - 1.05) * EASE_IO(interpolate(t, magSpan, [0, 1], CLAMP));
   const disp = (18 + 16 * travel) * u;
   // Sized for the strongest displacement, not the live one: a margin that
   // steps with `Math.ceil` as the lens calms shifted the lens box by a pixel.
   const margin = Math.ceil((18 + 16) * u + 8 * u);
   const magAt = (f: number) =>
-    1.05 + (restMag - 1.05) * EASE_IO(interpolate(f, [52, 80], [0, 1], CLAMP));
+    1.05 + (restMag - 1.05) * EASE_IO(interpolate(f, magSpan, [0, 1], CLAMP));
   const magMoving =
     Math.abs(magAt(t + speed) - mag) * lw > 1e-3 ||
     Math.abs(mag - magAt(t - speed)) * lw > 1e-3;
-  const enter = interpolate(t, [8, 14], [0, 1], CLAMP);
-  const lit = interpolate(t, [72, 90], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], CLAMP);
+  const lit = interpolate(t, [litEl.start, litEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  // The sheen runs on to the clip's end, counted without `speed` as before.
   const sheen = interpolate(
     t,
-    [72, Math.max(73, durationInFrames)],
+    [litEl.start, Math.max(litEl.start + 1, durationInFrames)],
     [0, 1],
     CLAMP,
   );
 
   const room =
     Math.max(0, padX - size * 0.15) *
-    EASE_IO(interpolate(t, [50, 80], [0, 1], CLAMP));
+    EASE_IO(interpolate(t, [openEl.start, openEl.end], [0, 1], CLAMP));
   const shiftLine = seg.after ? 0 : room / 2;
-  const rise = (d: number) =>
-    interpolate(t, [d, d + 20], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const rise = (i: number) => {
+    const e = tl.get(`line:${i}`);
+    return interpolate(t, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  };
 
   const textStyle: React.CSSProperties = {
     fontFamily,
@@ -673,7 +714,7 @@ export function GlassCapsule({
           }}
         >
           {lines.map((line, i) => {
-            const r = rise(i * 4);
+            const r = rise(i);
             const isFocus = i === seg.line;
             return (
               <div
@@ -732,6 +773,10 @@ export function GlassCapsule({
                         room={room}
                         beforeW={beforeW}
                         wordW={wordW}
+                        rim={[
+                          glideEl.start,
+                          glideEl.start + glideEl.beat("rim"),
+                        ]}
                       />
                     </span>
                     <span

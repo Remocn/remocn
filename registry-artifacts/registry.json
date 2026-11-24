@@ -11862,12 +11862,21 @@
       "title": "Glass Capsule",
       "description": "A glass capsule slides over the focus word of a two-line headline, magnifying it in italic.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/glass-capsule/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/glass-capsule.tsx"
+          "target": "components/remocn/glass-capsule/index.tsx"
+        },
+        {
+          "path": "registry/remocn/glass-capsule/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/glass-capsule/timeline.ts"
         }
       ],
       "type": "registry:component"
