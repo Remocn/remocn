@@ -8744,12 +8744,21 @@
       "title": "Slim Count",
       "description": "A slim outlined zero counts down beside a condensed line, 'Keyframes left to set by hand'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/slim-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/slim-count.tsx"
+          "target": "components/remocn/slim-count/index.tsx"
+        },
+        {
+          "path": "registry/remocn/slim-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/slim-count/timeline.ts"
         }
       ],
       "type": "registry:component"

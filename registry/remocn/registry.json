@@ -8749,10 +8749,19 @@
         {
           "path": "slim-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/slim-count.tsx"
+          "target": "components/remocn/slim-count/index.tsx"
+        },
+        {
+          "path": "slim-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/slim-count/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "squeeze-out",

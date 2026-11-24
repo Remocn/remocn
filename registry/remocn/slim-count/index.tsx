@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LABEL,
+  labelWords,
+  type SlimCountElementId,
+  slimCountTimeline,
+} from "./timeline";
 
 const anton = loadAnton("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -38,6 +45,12 @@ export interface SlimCountProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the number's rise, each label word and the
+   * count, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SlimCountElementId>;
 }
 
 const THEMES = {
@@ -51,10 +64,6 @@ const THEMES = {
   },
 } as const;
 
-const RISE_LEN = 16;
-const LABEL_AT = 6;
-const COUNT_AT = 24;
-const COUNT_END = 84;
 const WAVE_POINTS = 48;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -146,27 +155,33 @@ function ScaleLayer({
   );
 }
 
-export function SlimCount({
-  value = 0,
-  from = 100,
-  decimals = 0,
-  prefix = "",
-  suffix = "",
-  label = "Keyframes left to set by hand",
-  accent,
-  ink,
-  background,
-  fontFamily = anton.fontFamily,
-  countDuration = COUNT_END - COUNT_AT,
-  stagger = 3,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: SlimCountProps) {
+export function SlimCount(props: SlimCountProps) {
+  const {
+    value = 0,
+    from = 100,
+    decimals = 0,
+    prefix = "",
+    suffix = "",
+    label = DEFAULT_LABEL,
+    accent,
+    ink,
+    background,
+    fontFamily = anton.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    slimCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const fill = accent ?? fg;
@@ -181,8 +196,9 @@ export function SlimCount({
     );
   }
 
+  const countEl = tl.get("count");
   const progress = (f: number) =>
-    interpolate(f, [COUNT_AT, COUNT_AT + countDuration], [0, 1], {
+    interpolate(f, [countEl.start, countEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_COUNT,
     });
@@ -224,15 +240,16 @@ export function SlimCount({
       ? "inset(100% 0 0 0)"
       : `polygon(${pts.join(", ")}, 100% 100%, 0% 100%)`;
 
+  const numberEl = tl.get("number");
   const riseAt = (f: number) =>
-    interpolate(f, [0, RISE_LEN], [0, 1], {
+    interpolate(f, [numberEl.start, numberEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
   const rise = riseAt(t);
   const strokeW = Math.max(2, F * 0.011);
   const labelSize = portrait ? W * 0.1 : H * 0.094;
-  const words = label ? label.split(" ") : [];
+  const words = labelWords(label);
 
   const numberStyle = {
     position: "absolute" as const,
@@ -307,13 +324,12 @@ export function SlimCount({
             }}
           >
             {words.map((w, i) => {
+              const e = tl.get(`word:${i}`);
               const wordAt = (f: number) =>
-                interpolate(
-                  f,
-                  [LABEL_AT + i * stagger, LABEL_AT + i * stagger + 16],
-                  [0, 1],
-                  { ...CLAMP, easing: EASE_OUT },
-                );
+                interpolate(f, [e.start, e.end], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                });
               const p = wordAt(t);
               return (
                 <span key={`${w}-${i}`}>
