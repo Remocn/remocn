@@ -11185,13 +11185,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "crash-zoom/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/crash-zoom.tsx"
+          "target": "components/remocn/crash-zoom/index.tsx"
+        },
+        {
+          "path": "crash-zoom/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/crash-zoom/timeline.ts"
         }
       ]
     },

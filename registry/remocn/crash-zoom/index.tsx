@@ -9,6 +9,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type CrashZoomElementId, crashZoomTimeline } from "./timeline";
 
 const { fontFamily: grotesk } = loadFont("normal", {
   weights: ["400"],
@@ -47,17 +49,13 @@ export interface CrashZoomProps {
   /** gradients.sh preset for the ground. Defaults to "ember" (dark) or a warm paper mist (light). */
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the tease, its dots, the crash, the slam and
+   * the tagline, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CrashZoomElementId>;
 }
-
-const BEAT = {
-  teaseIn: 0,
-  dots: 9,
-  dotGap: 6,
-  crash: 36,
-  crashLen: 6,
-  impact: 42,
-  tag: 54,
-} as const;
 
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -136,25 +134,36 @@ function ScaleLayer({
   );
 }
 
-export function CrashZoom({
-  tease = "Wait for it…",
-  reveal = "1 DAY.",
-  tagline = "to make this video.",
-  ink,
-  background,
-  fontFamily = grotesk,
-  windup = BEAT.crash,
-  streaks = LINE_COUNT,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-  ground,
-  groundParams,
-}: CrashZoomProps) {
+export function CrashZoom(props: CrashZoomProps) {
+  const {
+    tease = "Wait for it…",
+    reveal = "1 DAY.",
+    tagline = "to make this video.",
+    ink,
+    background,
+    fontFamily = grotesk,
+    streaks = LINE_COUNT,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    crashZoomTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const teaseEl = tl.get("tease");
+  const crashEl = tl.get("crash");
+  const impactEl = tl.get("impact");
+  const tagEl = tl.get("tag");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
@@ -163,33 +172,34 @@ export function CrashZoom({
       : background === "transparent"
         ? "transparent"
         : background;
-  const shift = windup - BEAT.crash;
-  const beat = {
-    ...BEAT,
-    crash: BEAT.crash + shift,
-    impact: BEAT.impact + shift,
-    tag: BEAT.tag + shift,
-  };
+  const impact = impactEl.start;
+  const flash = impactEl.beat("flash");
   const u = Math.min(W / 1280, H / 720);
-  const inverted = t >= beat.impact && t < beat.impact + 1;
+  const inverted = t >= impact && t < impact + flash;
 
   const hasDots = tease.endsWith("…");
   const teaseBody = hasDots ? tease.slice(0, -1) : tease;
-  const teaseIn = ENTER(ramp(t, beat.teaseIn, 12));
-  const dots = hasDots
-    ? Math.min(3, Math.max(0, Math.floor((t - beat.dots) / beat.dotGap) + 1))
+  const teaseIn = ENTER(ramp(t, teaseEl.start, teaseEl.length));
+  const dotsEl = hasDots ? tl.get("dots") : undefined;
+  const dots = dotsEl
+    ? Math.min(
+        3,
+        Math.max(0, Math.floor((t - dotsEl.start) / dotsEl.beat("gap")) + 1),
+      )
     : 0;
-  const push = interpolate(t, [0, beat.crash], [1, 1.28], {
+  const push = interpolate(t, [0, crashEl.start], [1, 1.28], {
     ...CLAMP,
     easing: EXIT,
   });
-  const crash = ramp(t, beat.crash, beat.crashLen);
+  const crash = ramp(t, crashEl.start, crashEl.length);
   const teaseScale = push * (1 + 7 * crash ** 2.2);
   const teaseBlur = crash > 0 ? 2 + 10 * crash : 0;
-  const teaseOpacity = teaseIn * (1 - ramp(t, beat.crash + 3, 3));
+  const teaseOpacity =
+    teaseIn *
+    (1 - ramp(t, crashEl.start + crashEl.beat("fadeAt"), crashEl.beat("fade")));
 
   const slamAt = (f: number) =>
-    spring({ frame: f - beat.impact - 1, fps, config: CARD });
+    spring({ frame: f - impact - flash, fps, config: CARD });
   const slam = slamAt(t);
   const revealScale = inverted ? 1.14 : 1.14 - 0.14 * slam;
   // The slam spring has a long tail; weigh its scale step by the half width
@@ -206,16 +216,18 @@ export function CrashZoom({
       1e-3;
   const revealBlur = inverted ? 0 : 10 * Math.max(0, 1 - slam * 1.4);
 
-  const rumble = ramp(t, beat.crash, beat.crashLen);
-  const rx = t < beat.impact ? 5 * u * rumble * Math.sin(t * 2.1) : 0;
-  const ry = t < beat.impact ? 4 * u * rumble * Math.cos(t * 2.7) : 0;
-  const hit = shake(t - beat.impact, 14 * u, 12, 1.7);
+  const rumble = ramp(t, crashEl.start, crashEl.length);
+  const rx = t < impact ? 5 * u * rumble * Math.sin(t * 2.1) : 0;
+  const ry = t < impact ? 4 * u * rumble * Math.cos(t * 2.7) : 0;
+  const hit = shake(t - impact, 14 * u, impactEl.beat("shake"), 1.7);
 
-  const linesIn = ramp(t, beat.crash + 1, beat.crashLen - 1) ** 1.4;
-  const linesBack = SOFT(ramp(t, beat.impact + 1, 20));
-  const reach = t < beat.impact ? 1.9 - 0.9 * linesIn : 1 + 0.18 * linesBack;
+  const linesLead = crashEl.beat("lines");
+  const linesIn =
+    ramp(t, crashEl.start + linesLead, crashEl.length - linesLead) ** 1.4;
+  const linesBack = SOFT(ramp(t, impact + flash, impactEl.beat("lines")));
+  const reach = t < impact ? 1.9 - 0.9 * linesIn : 1 + 0.18 * linesBack;
   const linesAlpha =
-    t < beat.impact ? 0.55 * linesIn : 0.55 - (0.55 - 0.1) * linesBack;
+    t < impact ? 0.55 * linesIn : 0.55 - (0.55 - 0.1) * linesBack;
   const cx = W / 2;
   const cy = H / 2;
   const far = Math.hypot(W, H) * 0.75;
@@ -239,14 +251,15 @@ export function CrashZoom({
     );
   }
 
-  const bloom = ENTER(ramp(t, beat.impact, 18));
-  const veil = t < beat.impact ? 0.9 : 0.9 - (0.9 - c.veilRest) * bloom;
-  const groundScale = 1.12 - 0.12 * bloom + 0.03 * ramp(t, beat.impact, 80);
+  const bloom = ENTER(ramp(t, impact, impactEl.beat("bloom")));
+  const veil = t < impact ? 0.9 : 0.9 - (0.9 - c.veilRest) * bloom;
+  const groundScale =
+    1.12 - 0.12 * bloom + 0.03 * ramp(t, impact, impactEl.beat("drift"));
 
   const revealFs = Math.min(0.5 * H, (0.84 * W) / (0.43 * reveal.length));
   const teaseFs = Math.min(0.1 * H, 0.085 * W);
   const tagFs = Math.min(0.075 * H, 0.062 * W);
-  const tagIn = ENTER(ramp(t, beat.tag, 12));
+  const tagIn = ENTER(ramp(t, tagEl.start, tagEl.length));
 
   const teaseText = (scale: number, opacity: number, key: string) => (
     <div
@@ -346,7 +359,7 @@ export function CrashZoom({
             </svg>
           ) : null}
 
-          {t < beat.impact ? (
+          {t < impact ? (
             <>
               {crash > 0.02
                 ? [5, 4, 3, 2, 1].map((k) =>
