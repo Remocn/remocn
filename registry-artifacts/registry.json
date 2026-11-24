@@ -10943,13 +10943,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/achievement-pop/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/achievement-pop.tsx"
+          "target": "components/remocn/achievement-pop/index.tsx"
+        },
+        {
+          "path": "registry/remocn/achievement-pop/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/achievement-pop/timeline.ts"
         }
       ],
       "type": "registry:component"

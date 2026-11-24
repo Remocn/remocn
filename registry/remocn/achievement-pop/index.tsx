@@ -10,6 +10,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AchievementPopElementId,
+  achievementPopTimeline,
+  CARD_STARTS,
+  DEFAULT_ACHIEVEMENTS,
+} from "./timeline";
 
 const { fontFamily: geist } = loadGeist("normal", {
   weights: ["300", "400"],
@@ -85,15 +92,13 @@ export interface AchievementPopProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches single achievements, the total, the poster
+   * and the logo, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<AchievementPopElementId>;
 }
-
-const BEATS = {
-  starts: [4, 34, 58],
-  open: 6,
-  shiftLead: 6,
-  poster: 30,
-  logo: 10,
-} as const;
 
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const CLAMP = {
@@ -213,43 +218,32 @@ function Icon({
   );
 }
 
-export function AchievementPop({
-  achievements = [
-    {
-      label: "Unlocked · 64% of makers",
-      title: "Shipped in one day",
-      points: 100,
-      icon: "trophy",
-    },
-    {
-      label: "Unlocked · 23% of makers",
-      title: "Zero keyframes by hand",
-      points: 50,
-      icon: "bolt",
-    },
-    {
-      label: "Rare · 1.8% of makers",
-      title: "Launch video shipped",
-      points: 250,
-      icon: "star",
-    },
-  ],
-  theme = "dark",
-  ground,
-  groundParams,
-  totalLabel = "Launch week",
-  unit = "XP",
-  logo,
-  ink: inkProp,
-  background,
-  fontFamily = geist,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: AchievementPopProps) {
+export function AchievementPop(props: AchievementPopProps) {
+  const {
+    achievements = DEFAULT_ACHIEVEMENTS,
+    theme = "dark",
+    ground,
+    groundParams,
+    totalLabel = "Launch week",
+    unit = "XP",
+    logo,
+    ink: inkProp,
+    background,
+    fontFamily = geist,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    achievementPopTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const tall = H > W;
   const dark = theme === "dark";
   const c = THEMES[theme];
@@ -259,10 +253,9 @@ export function AchievementPop({
     ground ?? (groundParams ? undefined : dark ? "kiln" : undefined);
   const resolvedParams = groundParams ?? (dark ? DARK_GROUND : LIGHT_GROUND);
 
-  const list = achievements.slice(0, BEATS.starts.length);
+  const list = achievements.slice(0, CARD_STARTS.length);
   const n = list.length;
-  const starts = BEATS.starts.slice(0, n);
-  const lastStart = starts[n - 1] ?? BEATS.starts[0];
+  const cards = list.map((_, i) => tl.get(`card:${i}`));
 
   const ph = 116 * u;
   const D = ph;
@@ -279,29 +272,38 @@ export function AchievementPop({
     });
 
   const kf =
-    1 + starts.slice(1).reduce((a, s) => a + sp(s - BEATS.shiftLead, CARD), 0);
-  const posterAt = lastStart + BEATS.poster;
-  const poster = sp(posterAt, HEAVY);
+    1 +
+    cards.slice(1).reduce((a, e) => a + sp(e.start + e.beat("shift"), CARD), 0);
+  const posterEl = tl.get("poster");
+  const logoEl = tl.get("logo");
+  const totalEl = tl.get("total");
+  const poster = sp(posterEl.start, HEAVY);
   const stackK = interpolate(kf, [1, 2, 3], [1.26, 1.1, 1], CLAMP);
   const groupK = stackK * interpolate(poster, [0, 1], [1, tall ? 1.04 : 1.12]);
-  const logoP = interpolate(
-    t,
-    [posterAt + BEATS.logo, posterAt + BEATS.logo + 14],
-    [0, 1],
-    { ...CLAMP, easing: ENTER },
-  );
+  const logoP = interpolate(t, [logoEl.start, logoEl.end], [0, 1], {
+    ...CLAMP,
+    easing: ENTER,
+  });
 
   const total = list.reduce(
     (a, item, i) =>
       a +
       item.points *
-        interpolate(t, [starts[i] + 10, starts[i] + 22], [0, 1], {
-          ...CLAMP,
-          easing: ENTER,
-        }),
+        interpolate(
+          t,
+          [
+            cards[i].start + cards[i].beat("count"),
+            cards[i].start + cards[i].beat("countEnd"),
+          ],
+          [0, 1],
+          {
+            ...CLAMP,
+            easing: ENTER,
+          },
+        ),
     0,
   );
-  const totalIn = interpolate(t, [starts[0] + 8, starts[0] + 22], [0, 1], {
+  const totalIn = interpolate(t, [totalEl.start, totalEl.end], [0, 1], {
     ...CLAMP,
     easing: ENTER,
   });
@@ -342,7 +344,8 @@ export function AchievementPop({
           }}
         >
           {list.map((a, i) => {
-            const s = starts[i];
+            const e = cards[i];
+            const s = e.start;
             if (t < s) return null;
             const rare = i === n - 1 && n > 1;
             // The stack recentres as it grows. That travel is a transform on
@@ -352,28 +355,33 @@ export function AchievementPop({
             const lift = -((kf - 1) / 2) * gap;
             const pop = sp(s, CHIP);
             const badgeK = 0.5 + 0.5 * pop;
-            const open = sp(s + BEATS.open, MORPH, 16);
+            const open = sp(s + e.beat("open"), MORPH, e.beat("openLen"));
             const pillW = D + (pw - D) * open;
             const left = W / 2 - pillW / 2;
             const textP = interpolate(
               t,
-              [s + BEATS.open + 4, s + BEATS.open + 16],
+              [s + e.beat("text"), s + e.beat("textEnd")],
               [0, 1],
               { ...CLAMP, easing: ENTER },
             );
             const ptsP = interpolate(
               t,
-              [s + BEATS.open + 8, s + BEATS.open + 20],
+              [s + e.beat("points"), s + e.beat("pointsEnd")],
               [0, 1],
               { ...CLAMP, easing: ENTER },
             );
-            const flashP = interpolate(t, [s + 2, s + 16], [0, 1], {
-              ...CLAMP,
-              easing: ENTER,
-            });
+            const flashP = interpolate(
+              t,
+              [s + e.beat("flash"), s + e.beat("flashEnd")],
+              [0, 1],
+              {
+                ...CLAMP,
+                easing: ENTER,
+              },
+            );
             const sheen = interpolate(
               t,
-              [s + BEATS.open + 14, s + BEATS.open + 32],
+              [s + e.beat("sheen"), s + e.beat("sheenEnd")],
               [0, 1],
               { ...CLAMP, easing: Easing.bezier(0.65, 0, 0.35, 1) },
             );
@@ -381,7 +389,12 @@ export function AchievementPop({
             const dim = rare ? "rgba(255,233,199,0.72)" : c.dim;
             const bx = left + D / 2;
             const R = D / 2;
-            const appear = interpolate(t, [s, s + 3], [0, 1], CLAMP);
+            const appear = interpolate(
+              t,
+              [s, s + e.beat("appear")],
+              [0, 1],
+              CLAMP,
+            );
             return (
               <div
                 key={`${a.title}-${s}`}
