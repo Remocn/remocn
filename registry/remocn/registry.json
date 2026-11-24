@@ -6546,13 +6546,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "stat-rail/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/stat-rail.tsx"
+          "target": "components/remocn/stat-rail/index.tsx"
+        },
+        {
+          "path": "stat-rail/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/stat-rail/timeline.ts"
         }
       ]
     },
