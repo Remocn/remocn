@@ -15549,13 +15549,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/money-send/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/money-send.tsx"
+          "target": "components/remocn/money-send/index.tsx"
+        },
+        {
+          "path": "registry/remocn/money-send/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/money-send/timeline.ts"
         }
       ],
       "type": "registry:component"

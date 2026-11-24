@@ -15,6 +15,15 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  amountDigits,
+  DEFAULT_AMOUNT,
+  DEFAULT_NOTE,
+  type MoneySendElementId,
+  moneySendTimeline,
+  splitNote,
+} from "./timeline";
 
 const hanken = loadFont("normal", {
   weights: ["300", "400"],
@@ -53,6 +62,12 @@ export interface MoneySendProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches each keypad tap and typed letter, the note and
+   * keyboard swap, the send, the progress and the sent screen, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MoneySendElementId>;
 }
 
 const SW = 390;
@@ -232,16 +247,6 @@ function Glyph({
       />
     </svg>
   );
-}
-
-function splitNote(note: string) {
-  const chars = Array.from(note);
-  const idx = chars.findIndex((ch) => (ch.codePointAt(0) ?? 0) > 0x2100);
-  if (idx < 0) return { word: chars, emoji: "" };
-  return {
-    word: Array.from(chars.slice(0, idx).join("").trimEnd()),
-    emoji: chars.slice(idx).join("").trim(),
-  };
 }
 
 function StatusBar({ color }: { color: string }) {
@@ -464,31 +469,38 @@ function ScaleLayer({
   );
 }
 
-export function MoneySend({
-  recipient = "Maya Chen",
-  amount = 120,
-  currency = "USD",
-  note = "Dinner 🍜",
-  lines = ["Type any amount.", "Say what it’s for.", "Sent in a second."],
-  notePlaceholder = "Add a note",
-  doneLabel = "Done",
-  stagger = 11,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: MoneySendProps) {
+export function MoneySend(props: MoneySendProps) {
+  const {
+    recipient = "Maya Chen",
+    amount = DEFAULT_AMOUNT,
+    currency = "USD",
+    note = DEFAULT_NOTE,
+    lines = ["Type any amount.", "Say what it’s for.", "Sent in a second."],
+    notePlaceholder = "Add a note",
+    doneLabel = "Done",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const rawFrame = useSceneFrame();
   const frame = Math.max(0, rawFrame - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const f = frame * speed;
+  const tl = useTimeline(
+    moneySendTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const dark = theme !== "light";
   const c: Palette = dark ? DARK : LIGHT_PAL;
   const fg = ink ?? c.copy;
@@ -519,7 +531,7 @@ export function MoneySend({
     (Math.abs(at(f + speed) - at(f)) > eps ||
       Math.abs(at(f) - at(f - speed)) > eps);
 
-  const digits = String(Math.max(1, Math.round(amount))).slice(0, 6);
+  const digits = amountDigits(amount);
   const symbol = SYMBOLS[currency] ?? "";
   const { word, emoji } = splitNote(note);
   const first = recipient.split(" ")[0];
@@ -530,19 +542,27 @@ export function MoneySend({
     .slice(0, 2)
     .toUpperCase();
 
-  const keyTimes = digits.split("").map((_, i) => 30 + i * stagger);
-  const NOTE_TAP = keyTimes[keyTimes.length - 1] + 22;
-  const KB_SWAP = NOTE_TAP + 3;
-  const gap = Math.min(5, 36 / Math.max(1, word.length));
-  const letterTimes = word.map((_, i) => KB_SWAP + 18 + i * gap);
+  const phoneEl = tl.get("phone");
+  const pushEl = tl.get("push");
+  const keyEls = digits.split("").map((_, i) => tl.get(`key:${i}`));
+  const noteEl = tl.get("note");
+  const kbEl = tl.get("keyboard");
+  const letterEls = word.map((_, i) => tl.get(`letter:${i}`));
+  const sendEl = tl.get("send");
+  const progEl = tl.get("progress");
+  const doneEl = tl.get("done");
+  const keyTimes = keyEls.map((e) => e.start);
+  const NOTE_TAP = noteEl.start;
+  const KB_SWAP = kbEl.start;
+  const letterTimes = letterEls.map((e) => e.start);
   const typeEnd = letterTimes.length
     ? letterTimes[letterTimes.length - 1]
-    : KB_SWAP + 12;
-  const SUGG_TAP = emoji ? typeEnd + 11 : typeEnd;
-  const SEND_TAP = SUGG_TAP + 18;
-  const FLY = SEND_TAP + 3;
-  const PROG = SEND_TAP + 6;
-  const DONE = PROG + 30;
+    : KB_SWAP + kbEl.beat("empty");
+  const SUGG_TAP = emoji ? tl.get("emoji").start : typeEnd;
+  const SEND_TAP = sendEl.start;
+  const FLY = SEND_TAP + sendEl.beat("fly");
+  const PROG = progEl.start;
+  const DONE = doneEl.start;
 
   const nTyped = keyTimes.filter((t) => f >= t).length;
   const nLetters = letterTimes.filter((t) => f >= t).length;
@@ -567,7 +587,11 @@ export function MoneySend({
     { t: SEND_TAP, x: SW / 2 + 36, y: PILL_Y + 28 },
   ];
   const path = [
-    { t: presses[0].t - 16, x: presses[0].x + 70, y: presses[0].y + 120 },
+    {
+      t: presses[0].t + keyEls[0].beat("approach"),
+      x: presses[0].x + 70,
+      y: presses[0].y + 120,
+    },
     ...presses,
   ];
   let touch = { x: path[0].x, y: path[0].y };
@@ -591,38 +615,56 @@ export function MoneySend({
   }
   const touchOpacity = interpolate(
     f,
-    [path[0].t, path[0].t + 8, SEND_TAP + 2, SEND_TAP + 7],
+    [
+      path[0].t,
+      path[0].t + keyEls[0].beat("touchIn"),
+      SEND_TAP + sendEl.beat("touchOut"),
+      SEND_TAP + sendEl.beat("touchGone"),
+    ],
     [0, 1, 1, 0],
     clamp,
   );
   const touchPress = Math.max(...presses.map((p) => pressAt(p.t)));
   const touchHome = presses[presses.length - 1];
 
-  const kbOut = interpolate(f, [KB_SWAP, KB_SWAP + 8], [0, 1], {
+  const kbOut = interpolate(f, [KB_SWAP, KB_SWAP + kbEl.beat("out")], [0, 1], {
     ...clamp,
     easing: EXIT,
   });
   const qInAt = (t: number) =>
-    t >= KB_SWAP + 5 ? spAt(t, KB_SWAP + 5, MORPH) : 0;
+    t >= KB_SWAP + kbEl.beat("rise")
+      ? spAt(t, KB_SWAP + kbEl.beat("rise"), MORPH)
+      : 0;
   const qIn = qInAt(f);
   const fly = sp(FLY, MORPH);
   const kbDownAt = (t: number) =>
-    interpolate(t, [SEND_TAP + 2, SEND_TAP + 11], [0, 1], {
-      ...clamp,
-      easing: ENTER,
-    });
+    interpolate(
+      t,
+      [SEND_TAP + sendEl.beat("kbDown"), SEND_TAP + sendEl.beat("kbDownEnd")],
+      [0, 1],
+      {
+        ...clamp,
+        easing: ENTER,
+      },
+    );
   const qYAt = (t: number) =>
     (1 - qInAt(t)) * (SH - KB_TOP) + kbDownAt(t) * (SH - KB_TOP);
   const qY = qYAt(f);
   const caps = nLetters === 0 && word[0] === word[0]?.toUpperCase();
   const lastLetter = nLetters - 1;
 
-  const riseAt = (t: number) => spring({ frame: t, fps, config: HEAVY });
+  const riseAt = (t: number) =>
+    spring({ frame: t - phoneEl.start, fps, config: HEAVY });
   const camAt = (t: number) =>
-    interpolate(t, [16, 70, FLY, FLY + 50], [1, 1.03, 1.03, 1.05], {
-      ...clamp,
-      easing: CAMERA,
-    });
+    interpolate(
+      t,
+      [pushEl.start, pushEl.end, FLY, FLY + sendEl.beat("push")],
+      [1, 1.03, 1.03, 1.05],
+      {
+        ...clamp,
+        easing: CAMERA,
+      },
+    );
   const rise = riseAt(f);
   const camS = camAt(f);
   // Everything on the screen rides the phone, so the tolerances are those of
@@ -630,19 +672,34 @@ export function MoneySend({
   const phoneMoving =
     stirs((t) => riseAt(t) * H * 0.9, 1e-4) || stirs(camAt, 1e-7);
 
-  const enabled = interpolate(f, [keyTimes[0], keyTimes[0] + 6], [0, 1], {
-    ...clamp,
-    easing: ENTER,
-  });
+  const enabled = interpolate(
+    f,
+    [keyTimes[0], keyTimes[0] + keyEls[0].beat("enable")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: ENTER,
+    },
+  );
   const sendPress = pressAt(SEND_TAP);
-  const away = interpolate(f, [SEND_TAP + 2, SEND_TAP + 9], [0, 1], {
-    ...clamp,
-    easing: EXIT,
-  });
-  const lbl = interpolate(f, [NOTE_TAP, NOTE_TAP + 6], [0, 1], {
-    ...clamp,
-    easing: ENTER,
-  });
+  const away = interpolate(
+    f,
+    [SEND_TAP + sendEl.beat("away"), SEND_TAP + sendEl.beat("awayEnd")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: EXIT,
+    },
+  );
+  const lbl = interpolate(
+    f,
+    [NOTE_TAP, NOTE_TAP + noteEl.beat("label")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: ENTER,
+    },
+  );
   const typed = nTyped === 0 ? "0" : digits.slice(0, nTyped);
   const amountChars = Number(typed)
     .toLocaleString("en-US")
@@ -657,28 +714,45 @@ export function MoneySend({
   const caretOn = f < NOTE_TAP && Math.floor((f + 6) / 14) % 2 === 0;
 
   const ringIn = sp(PROG, CARD);
-  const arc = interpolate(f, [PROG, DONE - 4, DONE + 2], [0.12, 0.7, 1], {
-    ...clamp,
-    easing: MOVE,
-  });
+  const arc = interpolate(
+    f,
+    [PROG, DONE + doneEl.beat("settle"), DONE + doneEl.beat("close")],
+    [0.12, 0.7, 1],
+    {
+      ...clamp,
+      easing: MOVE,
+    },
+  );
   const spin = f < DONE ? (f - PROG) * 11 : (DONE - PROG) * 11;
-  const disc = sp(DONE + 1, CHIP);
-  const tick = interpolate(f, [DONE + 5, DONE + 15], [0, 1], {
-    ...clamp,
-    easing: LIGHT,
-  });
-  const pulse = interpolate(f, [DONE + 6, DONE + 40], [0, 1], {
-    ...clamp,
-    easing: LIGHT,
-  });
-  const swap = sp(DONE + 4, CHIP);
+  const disc = sp(DONE + doneEl.beat("disc"), CHIP);
+  const tick = interpolate(
+    f,
+    [DONE + doneEl.beat("tick"), DONE + doneEl.beat("tickEnd")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: LIGHT,
+    },
+  );
+  const pulse = interpolate(
+    f,
+    [DONE + doneEl.beat("pulse"), DONE + doneEl.beat("pulseEnd")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: LIGHT,
+    },
+  );
+  const SWAP = DONE + doneEl.beat("swap");
+  const swap = sp(SWAP, CHIP);
   const receipt: [string, string][] = [
     ["Amount", money(Number(digits))],
     ["From", `Main · ${currency}`],
     ["Arrives", "Instantly"],
     ["Fee", money(0)],
   ];
-  const rowAt = (i: number) => DONE + 12 + i * 3;
+  const rowAt = (i: number) =>
+    DONE + doneEl.beat("rows") + i * doneEl.beat("stagger");
   const enter = (at: number, dy = 14): React.CSSProperties => {
     const v = sp(at);
     return {
@@ -687,22 +761,28 @@ export function MoneySend({
     };
   };
 
-  const beats = [0, NOTE_TAP, PROG];
+  const lineEls = [0, 1, 2].map((i) => tl.get(`line:${i}`));
   const copyLine = (i: number) => {
-    const inAt = beats[i] + (i === 0 ? 6 : 0);
-    const outAt = beats[i + 1];
+    const el = lineEls[i];
+    const inAt = el.start;
+    const outAt = lineEls[i + 1]?.start;
     const pinAt = (t: number) =>
-      interpolate(t, [inAt, inAt + 14], [0, 1], {
+      interpolate(t, [inAt, inAt + el.beat("in")], [0, 1], {
         ...clamp,
         easing: ENTER,
       });
     const poutAt = (t: number) =>
       outAt === undefined
         ? 0
-        : interpolate(t, [outAt - 2, outAt + 6], [0, 1], {
-            ...clamp,
-            easing: EXIT,
-          });
+        : interpolate(
+            t,
+            [outAt + el.beat("leave"), outAt + el.beat("gone")],
+            [0, 1],
+            {
+              ...clamp,
+              easing: EXIT,
+            },
+          );
     const pin = pinAt(f);
     const pout = poutAt(f);
     const shiftAt = (t: number) => (1 - pinAt(t)) * 70 - poutAt(t) * 50;
@@ -1037,7 +1117,9 @@ export function MoneySend({
                   .split("")
                   .findIndex(
                     (x, j) =>
-                      x === d && f >= keyTimes[j] - 1 && f < keyTimes[j] + 10,
+                      x === d &&
+                      f >= keyTimes[j] + keyEls[j].beat("lit") &&
+                      f < keyTimes[j] + keyEls[j].beat("litEnd"),
                   );
                 const p = idx >= 0 ? pressAt(keyTimes[idx]) : 0;
                 return (
@@ -1132,8 +1214,8 @@ export function MoneySend({
                     const hit = word.findIndex(
                       (ch, i) =>
                         letterKey(ch).id === q.id &&
-                        f >= letterTimes[i] - 1 &&
-                        f < letterTimes[i] + 7,
+                        f >= letterTimes[i] + letterEls[i].beat("lit") &&
+                        f < letterTimes[i] + letterEls[i].beat("litEnd"),
                     );
                     const p = hit >= 0 ? pressAt(letterTimes[hit]) : 0;
                     const shiftOn = q.id === "shift" && caps;
@@ -1329,19 +1411,17 @@ export function MoneySend({
                       fontWeight: 300,
                       letterSpacing: "-0.03em",
                       color: c.text,
-                      ...enter(PROG + 4),
+                      ...enter(PROG + progEl.beat("copy")),
                     }}
                   >
                     <span
                       style={{
                         display: "inline-block",
-                        opacity: f < DONE + 4 ? 0.55 : Math.min(1, swap * 1.5),
-                        transform: `scale(${f < DONE + 4 ? 1 : 0.92 + swap * 0.08})${glide(f >= DONE + 4 && stirs((t) => spAt(t, DONE + 4, CHIP)))}`,
+                        opacity: f < SWAP ? 0.55 : Math.min(1, swap * 1.5),
+                        transform: `scale(${f < SWAP ? 1 : 0.92 + swap * 0.08})${glide(f >= SWAP && stirs((t) => spAt(t, SWAP, CHIP)))}`,
                       }}
                     >
-                      {f < DONE + 4
-                        ? `Sending to ${first}…`
-                        : `Sent to ${first}`}
+                      {f < SWAP ? `Sending to ${first}…` : `Sent to ${first}`}
                     </span>
                   </div>
                   <div
@@ -1353,7 +1433,7 @@ export function MoneySend({
                       textAlign: "center",
                       fontSize: 15,
                       color: c.muted,
-                      ...enter(DONE + 8),
+                      ...enter(DONE + doneEl.beat("title")),
                     }}
                   >
                     {note} · Just now
@@ -1403,7 +1483,7 @@ export function MoneySend({
                       bottom: 40,
                       display: "flex",
                       gap: 10,
-                      ...enter(DONE + 24, 24),
+                      ...enter(DONE + doneEl.beat("button"), 24),
                     }}
                   >
                     <div
