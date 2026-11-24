@@ -12963,12 +12963,21 @@
       "title": "Bracket Focus",
       "description": "Camera-viewfinder brackets focus in on a 1.8s render-time value over a dotted grid.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/bracket-focus/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bracket-focus.tsx"
+          "target": "components/remocn/bracket-focus/index.tsx"
+        },
+        {
+          "path": "registry/remocn/bracket-focus/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bracket-focus/timeline.ts"
         }
       ],
       "type": "registry:component"

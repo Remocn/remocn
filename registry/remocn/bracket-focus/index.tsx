@@ -7,6 +7,12 @@ import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BracketFocusElementId,
+  bracketFocusTimeline,
+  CORNERS,
+} from "./timeline";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -37,6 +43,12 @@ export interface BracketFocusProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the grid, the subject, single corners, the
+   * tag, the focus and the readout, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BracketFocusElementId>;
 }
 
 const CLAMP = {
@@ -46,9 +58,6 @@ const CLAMP = {
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
-
-const FLY_AT = 10;
-const FLY_LEN = 22;
 
 const THEMES = {
   dark: {
@@ -74,13 +83,6 @@ const THEMES = {
     grain: 0.04,
   },
 } as const;
-
-const CORNERS = [
-  { sx: -1, sy: -1, delay: 0 },
-  { sx: 1, sy: -1, delay: 2 },
-  { sx: 1, sy: 1, delay: 3 },
-  { sx: -1, sy: 1, delay: 5 },
-] as const;
 
 function widthEm(text: string) {
   let w = 0;
@@ -142,20 +144,21 @@ function bracketPath(x: number, y: number, sx: number, sy: number, L: number) {
   return `M ${x} ${y - sy * L} L ${x} ${y} L ${x - sx * L} ${y}`;
 }
 
-export function BracketFocus({
-  subject = "1.8s",
-  tag = "Render time",
-  fontWeight = 500,
-  fly = FLY_LEN,
-  accent = "#3B5BFD",
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: BracketFocusProps) {
+export function BracketFocus(props: BracketFocusProps) {
+  const {
+    subject = "1.8s",
+    tag = "Render time",
+    fontWeight = 500,
+    accent = "#3B5BFD",
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const now = useSceneFrame();
   const tAt = (n: number) => Math.max(0, n - delay) * speed;
@@ -168,13 +171,21 @@ export function BracketFocus({
       Math.abs(here - v(tAt(now - 1))) > 1e-3
     );
   };
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    bracketFocusTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const gridEl = tl.get("grid");
+  const subjectEl = tl.get("subject");
+  const tagEl = tl.get("tag");
+  const focusEl = tl.get("focus");
+  const readEl = tl.get("readout");
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
   const stage = background ?? p.bg;
-  const SNAP_AT = FLY_AT + fly;
-  const TAG_AT = SNAP_AT + 6;
-  const DIM_AT = SNAP_AT + 8;
   const maskId = `m${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const cx = W / 2;
@@ -198,12 +209,12 @@ export function BracketFocus({
       far.hh + (loose.hh - far.hh) * fly + (tight.hh - loose.hh) * snap;
     return { x: cx + sx * hw, y: cy + sy * hh };
   };
-  const corner = (sx: number, sy: number, delay: number, at: number) => {
-    const fly = EASE_IO(
-      interpolate(at, [FLY_AT + delay, SNAP_AT + delay], [0, 1], CLAMP),
-    );
+  const corner = (i: number, at: number) => {
+    const { sx, sy } = CORNERS[i];
+    const e = tl.get(`corner:${i}`);
+    const fly = EASE_IO(interpolate(at, [e.start, e.end], [0, 1], CLAMP));
     const snap = spring({
-      frame: at - SNAP_AT - delay,
+      frame: at - e.end,
       fps,
       config: { damping: 13, stiffness: 320, mass: 0.55 },
     });
@@ -216,32 +227,41 @@ export function BracketFocus({
   // along pixel by pixel. The snap is a spring, so the leftover is dropped,
   // but the transform stays: without it the tag loses its mark and snaps to a
   // whole pixel on the frame it goes.
-  const shiftOf = (sx: number, sy: number, delay: number) => {
-    const live = corner(sx, sy, delay, t);
+  const shiftOf = (i: number) => {
+    const { sx, sy } = CORNERS[i];
+    const live = corner(i, t);
     const rest = place(sx, sy, 1, 1);
     const dx = live.x - rest.x;
     const dy = live.y - rest.y;
     const still = Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3;
-    const moving =
-      stirs((t) => corner(sx, sy, delay, t).x) ||
-      stirs((t) => corner(sx, sy, delay, t).y);
+    const moving = stirs((t) => corner(i, t).x) || stirs((t) => corner(i, t).y);
     return { rest, dx, dy, still, moving };
   };
-  const tagRide = shiftOf(-1, -1, 0);
-  const readRide = shiftOf(1, 1, 3);
-
-  const appear = interpolate(t, [0, 8], [0.35, 1], CLAMP);
-  const dim = EASE_IO(interpolate(t, [DIM_AT, DIM_AT + 22], [0, 1], CLAMP));
-  const tagIn = EASE_OUT(interpolate(t, [TAG_AT, TAG_AT + 14], [0, 1], CLAMP));
-  const tagText = EASE_OUT(
-    interpolate(t, [TAG_AT + 4, TAG_AT + 16], [0, 1], CLAMP),
+  // The tag rides the top-left corner, the readout the bottom-right one.
+  const tagRide = shiftOf(0);
+  const readRide = shiftOf(2);
+  const appear = interpolate(t, [gridEl.start, gridEl.end], [0.35, 1], CLAMP);
+  const dim = EASE_IO(
+    interpolate(t, [focusEl.start, focusEl.end], [0, 1], CLAMP),
   );
+  const tagIn = EASE_OUT(
+    interpolate(t, [tagEl.start, tagEl.end], [0, 1], CLAMP),
+  );
+  const tagTextAt = tagEl.start + tagEl.beat("textAt");
+  const tagText = EASE_OUT(
+    interpolate(t, [tagTextAt, tagTextAt + tagEl.beat("text")], [0, 1], CLAMP),
+  );
+  const liftAt = focusEl.start + focusEl.beat("liftAt");
   const subjectAt = (t: number) => {
-    const subjectIn = EASE_OUT(interpolate(t, [0, 16], [0.25, 1], CLAMP));
-    const lift = EASE_OUT(
-      interpolate(t, [DIM_AT - 2, DIM_AT + 18], [0, 1], CLAMP),
+    const subjectIn = EASE_OUT(
+      interpolate(t, [subjectEl.start, subjectEl.end], [0.25, 1], CLAMP),
     );
-    const push = EASE_IO(interpolate(t, [0, DIM_AT + 50], [0, 1], CLAMP));
+    const lift = EASE_OUT(
+      interpolate(t, [liftAt, liftAt + focusEl.beat("lift")], [0, 1], CLAMP),
+    );
+    const push = EASE_IO(
+      interpolate(t, [0, focusEl.start + focusEl.beat("push")], [0, 1], CLAMP),
+    );
     return { subjectIn, lift, push };
   };
   const { subjectIn, lift, push } = subjectAt(t);
@@ -257,7 +277,7 @@ export function BracketFocus({
   const tagFont = 14 * u;
   const tagW = tag.length * 0.6 * tagFont * 1.06 + 26 * u;
   const readAt = (t: number) =>
-    EASE_OUT(interpolate(t, [TAG_AT + 8, TAG_AT + 22], [0, 1], CLAMP));
+    EASE_OUT(interpolate(t, [readEl.start, readEl.end], [0, 1], CLAMP));
   const readIn = readAt(t);
   const readMoving = readRide.moving || stirs((t) => (1 - readAt(t)) * 6 * u);
   const boxW = Math.round((tight.hw * 2) / u);
@@ -276,7 +296,13 @@ export function BracketFocus({
       const x = ox + c * gap;
       const y = oy + r * gap;
       const d = Math.hypot((x - cx) / W, (y - cy) / H);
-      const wave = interpolate(t, [d * 18, d * 18 + 10], [0, 1], CLAMP);
+      const at = gridEl.start + d * gridEl.beat("ripple");
+      const wave = interpolate(
+        t,
+        [at, at + gridEl.beat("wave")],
+        [0, 1],
+        CLAMP,
+      );
       dots.push(
         <circle
           key={`${r}-${c}`}
@@ -382,10 +408,10 @@ export function BracketFocus({
           height={H}
           style={{ position: "absolute", inset: 0, opacity: appear }}
         >
-          {CORNERS.map(({ sx, sy, delay }) =>
+          {CORNERS.map(({ sx, sy }, i) =>
             [2.4, 1.2, 0].map((lag) => {
-              const c = corner(sx, sy, delay, t - lag);
-              const now = corner(sx, sy, delay, t);
+              const c = corner(i, t - lag);
+              const now = corner(i, t);
               const moved = Math.hypot(c.x - now.x, c.y - now.y);
               const o = lag === 0 ? 1 : lag > 2 ? 0.12 : 0.26;
               if (lag > 0 && moved < 2 * u) return null;

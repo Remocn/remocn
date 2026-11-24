@@ -12968,10 +12968,19 @@
         {
           "path": "bracket-focus/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bracket-focus.tsx"
+          "target": "components/remocn/bracket-focus/index.tsx"
+        },
+        {
+          "path": "bracket-focus/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bracket-focus/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "crosshair-lock",
