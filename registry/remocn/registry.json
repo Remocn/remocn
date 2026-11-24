@@ -8284,10 +8284,19 @@
         {
           "path": "diminuendo/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/diminuendo.tsx"
+          "target": "components/remocn/diminuendo/index.tsx"
+        },
+        {
+          "path": "diminuendo/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/diminuendo/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "core-sum",

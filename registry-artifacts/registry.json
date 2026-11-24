@@ -8279,12 +8279,21 @@
       "title": "Diminuendo",
       "description": "Huge counter climbs to 860,000 while each trailing digit group fades quieter than the last.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/diminuendo/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/diminuendo.tsx"
+          "target": "components/remocn/diminuendo/index.tsx"
+        },
+        {
+          "path": "registry/remocn/diminuendo/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/diminuendo/timeline.ts"
         }
       ],
       "type": "registry:component"
