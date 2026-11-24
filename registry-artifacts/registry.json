@@ -15812,13 +15812,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/streak-reward/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/streak-reward.tsx"
+          "target": "components/remocn/streak-reward/index.tsx"
+        },
+        {
+          "path": "registry/remocn/streak-reward/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/streak-reward/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -9,6 +9,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type StreakRewardElementId, streakRewardTimeline } from "./timeline";
 
 const onest = loadFont("normal", {
   weights: ["300", "400"],
@@ -56,6 +58,12 @@ export interface StreakRewardProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the streak beats, the touch and press, the
+   * reward screen and the copy lines, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<StreakRewardElementId>;
 }
 
 const DEFAULT_STATS: StreakStat[] = [
@@ -79,23 +87,6 @@ const RISE = Easing.bezier(0.22, 1, 0.36, 1);
 const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
 const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
-
-const BEAT = {
-  phone: 0,
-  flame: 6,
-  number: 12,
-  week: 18,
-  today: 48,
-  note: 60,
-  touch: 66,
-  press: 84,
-  swap: 88,
-  medal: 96,
-  title: 102,
-  stats: 108,
-  line2: 90,
-  end: 180,
-};
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const FLAME = "#ff7a1a";
@@ -452,31 +443,54 @@ function ScaleLayer({
   );
 }
 
-export function StreakReward({
-  streak = 7,
-  stats = DEFAULT_STATS,
-  title = "Lesson complete",
-  subtitle = "No mistakes across 14 answers.",
-  days = ["M", "T", "W", "T", "F", "S", "S"],
-  cta = "Continue",
-  lines = ["Day seven. Still shipping.", "Small wins, every day."],
-  streakLabel = "day streak",
-  note = "One more lesson keeps the week alive.",
-  doneNote = "Seven for seven. Come back tomorrow for eight.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = onest.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  ground,
-  groundParams,
-}: StreakRewardProps) {
+export function StreakReward(props: StreakRewardProps) {
+  const {
+    streak = 7,
+    stats = DEFAULT_STATS,
+    title = "Lesson complete",
+    subtitle = "No mistakes across 14 answers.",
+    days = ["M", "T", "W", "T", "F", "S", "S"],
+    cta = "Continue",
+    lines = ["Day seven. Still shipping.", "Small wins, every day."],
+    streakLabel = "day streak",
+    note = "One more lesson keeps the week alive.",
+    doneNote = "Seven for seven. Come back tomorrow for eight.",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = onest.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    streakRewardTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const phone = tl.get("phone");
+  const flame = tl.get("flame");
+  const numberEl = tl.get("number");
+  const week = tl.get("week");
+  const today = tl.get("today");
+  const noteEl = tl.get("note");
+  const touch = tl.get("touch");
+  const press = tl.get("press");
+  const swapEl = tl.get("swap");
+  const medal = tl.get("medal");
+  const camera = tl.get("camera");
+  const titleEl = tl.get("title");
+  const statsEl = tl.get("stats");
+  const line0 = tl.get("line:0");
+  const line1 = tl.get("line:1");
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const f = frame * speed;
   const dark = theme === "dark";
@@ -506,50 +520,75 @@ export function StreakReward({
     );
   };
 
-  const rise = sp(BEAT.phone, HEAVY);
+  const rise = sp(phone.start, HEAVY);
   const camAt = (x: number) =>
-    interpolate(x, [BEAT.medal, BEAT.end], [1, 1.035], {
+    interpolate(x, [camera.start, camera.end], [1, 1.035], {
       ...clamp,
       easing: CAMERA,
     });
   const cam = camAt(f);
   // Weighed at the phone's far corner, half its height from the centre.
   const phoneMoving = stirs(
-    (x) => (1 - spAt(x, BEAT.phone, HEAVY)) * H * 0.9 + camAt(x) * k * (BH / 2),
+    (x) =>
+      (1 - spAt(x, phone.start, HEAVY)) * H * 0.9 + camAt(x) * k * (BH / 2),
   );
   // Inside the phone a px is k * u on screen; the spring tails there are
   // long, so the cut-off sits at the 2e-3 screen px a resting frame allows.
   const inner = (px: (x: number) => number) =>
     !phoneMoving && stirs((x) => px(x) * k * u, 2e-3);
 
-  const flameIn = sp(BEAT.flame, CARD);
-  const roll = sp(BEAT.today + 2, CARD);
+  const flameIn = sp(flame.start, CARD);
+  const roll = sp(today.start + today.beat("roll"), CARD);
   const flare =
-    sp(BEAT.today, CHIP) -
-    spring({ frame: f - BEAT.today - 8, fps, config: MORPH });
-  const numIn = ease(BEAT.number, BEAT.number + 14);
-  const weekIn = sp(BEAT.week, CARD);
+    sp(today.start, CHIP) -
+    spring({
+      frame: f - today.start - today.beat("settle"),
+      fps,
+      config: MORPH,
+    });
+  const numIn = ease(numberEl.start, numberEl.end);
+  const weekIn = sp(week.start, CARD);
   const filled = Math.min(days.length, streak);
   const todayIdx = filled - 1;
-  const noteSwap = ease(BEAT.note, BEAT.note + 12, MOVE);
+  const noteSwap = ease(noteEl.start, noteEl.end, MOVE);
   const noteMoving = inner(
-    (x) => easeAt(x, BEAT.note, BEAT.note + 12, MOVE) * 10,
+    (x) => easeAt(x, noteEl.start, noteEl.end, MOVE) * 10,
   );
-  const swap = sp(BEAT.swap, MORPH);
+  const swap = sp(swapEl.start, MORPH);
 
-  const medalIn = sp(BEAT.medal, CARD);
-  const sheen = ease(BEAT.medal + 12, BEAT.medal + 34, MOVE);
-  const titleIn = ease(BEAT.title, BEAT.title + 14);
-  const subIn = ease(BEAT.title + 4, BEAT.title + 18);
-  const ctaIn = sp(BEAT.today + 12, CARD);
+  const medalIn = sp(medal.start, CARD);
+  const sheen = ease(
+    medal.start + medal.beat("sheen"),
+    medal.start + medal.beat("sheenEnd"),
+    MOVE,
+  );
+  const titleIn = ease(titleEl.start, titleEl.end);
+  const subIn = ease(
+    titleEl.start + titleEl.beat("sub"),
+    titleEl.start + titleEl.beat("subEnd"),
+  );
+  const ctaIn = sp(today.start + today.beat("cta"), CARD);
 
-  const touchPath = ease(BEAT.touch, BEAT.press - 2, MOVE);
+  const touchPath = ease(touch.start, touch.end, MOVE);
   const touchO =
-    ease(BEAT.touch - 4, BEAT.touch + 4, RISE) *
-    (1 - ease(BEAT.press + 6, BEAT.press + 14, EXIT));
+    ease(
+      touch.start + touch.beat("fadeIn"),
+      touch.start + touch.beat("fadeInEnd"),
+      RISE,
+    ) *
+    (1 -
+      ease(
+        press.start + press.beat("fade"),
+        press.start + press.beat("fadeEnd"),
+        EXIT,
+      ));
   const pressK =
-    spring({ frame: f - BEAT.press, fps, config: CHIP }) -
-    spring({ frame: f - BEAT.press - 5, fps, config: CHIP });
+    spring({ frame: f - press.start, fps, config: CHIP }) -
+    spring({
+      frame: f - press.start - press.beat("release"),
+      fps,
+      config: CHIP,
+    });
   const tx = interpolate(touchPath, [0, 1], [SW * 0.78, SW / 2 + 36]);
   const ty =
     interpolate(touchPath, [0, 1], [640, 778]) -
@@ -558,11 +597,14 @@ export function StreakReward({
   const tyEnd = 778;
 
   const copyLine = (i: number) => {
-    const inAt = i === 0 ? BEAT.number + 4 : BEAT.line2;
-    const outAt = i === 0 ? BEAT.line2 - 6 : undefined;
-    const pinAt = (x: number) => easeAt(x, inAt, inAt + 16);
+    const line = i === 0 ? line0 : line1;
+    const inAt = line.start;
+    const outAt = i === 0 ? line1.start + line1.beat("lead") : undefined;
+    const pinAt = (x: number) => easeAt(x, inAt, inAt + line.beat("in"));
     const poutAt = (x: number) =>
-      outAt === undefined ? 0 : easeAt(x, outAt, outAt + 8, EXIT);
+      outAt === undefined
+        ? 0
+        : easeAt(x, outAt, outAt + line0.beat("out"), EXIT);
     const pin = pinAt(f);
     const pout = poutAt(f);
     const moving = stirs((x) => ((1 - pinAt(x)) * 60 - poutAt(x) * 40) * 2);
@@ -588,7 +630,14 @@ export function StreakReward({
   const count = (i: number, value: number) =>
     interpolate(
       f,
-      [BEAT.stats + 4 + i * 6, BEAT.stats + 30 + i * 6],
+      [
+        statsEl.start +
+          statsEl.beat("count") +
+          i * statsEl.beat("countStagger"),
+        statsEl.start +
+          (statsEl.beat("count") + statsEl.beat("countLen")) +
+          i * statsEl.beat("countStagger"),
+      ],
       [0, value],
       { ...clamp, easing: RISE },
     );
@@ -710,8 +759,8 @@ export function StreakReward({
                       transform: `translateY(${-roll * 128 + (1 - numIn) * 30}px)${glide(
                         inner(
                           (x) =>
-                            -spAt(x, BEAT.today + 2) * 128 +
-                            (1 - easeAt(x, BEAT.number, BEAT.number + 14)) * 30,
+                            -spAt(x, today.start + today.beat("roll")) * 128 +
+                            (1 - easeAt(x, numberEl.start, numberEl.end)) * 30,
                         ),
                       )}`,
                     }}
@@ -743,7 +792,7 @@ export function StreakReward({
                     top: 474,
                     opacity: Math.min(1, weekIn * 1.6),
                     transform: `translateY(${(1 - weekIn) * 24}px)${glide(
-                      inner((x) => (1 - spAt(x, BEAT.week)) * 24),
+                      inner((x) => (1 - spAt(x, week.start)) * 24),
                     )}`,
                   }}
                 >
@@ -755,7 +804,11 @@ export function StreakReward({
                   >
                     {days.slice(0, 7).map((d, i) => {
                       const isToday = i === todayIdx;
-                      const at = isToday ? BEAT.today : BEAT.week + 4 + i * 3;
+                      const at = isToday
+                        ? today.start
+                        : week.start +
+                          week.beat("day") +
+                          i * week.beat("stagger");
                       const p =
                         i <= todayIdx
                           ? isToday
@@ -766,7 +819,9 @@ export function StreakReward({
                               })
                             : ease(at, at + 14, MOVE)
                           : 0;
-                      const pop = isToday ? sp(at + 6, CHIP) : 1;
+                      const pop = isToday
+                        ? sp(at + today.beat("pop"), CHIP)
+                        : 1;
                       return (
                         <div
                           key={`${d}-${i}`}
@@ -783,7 +838,7 @@ export function StreakReward({
                               fontSize: 15,
                               fontWeight: 400,
                               color:
-                                isToday && f >= BEAT.today ? FLAME : c.faint,
+                                isToday && f >= today.start ? FLAME : c.faint,
                             }}
                           >
                             {d}
@@ -846,7 +901,7 @@ export function StreakReward({
                 </div>
               </AbsoluteFill>
 
-              {f >= BEAT.swap && (
+              {f >= swapEl.start && (
                 <AbsoluteFill
                   style={{
                     transform: `translateX(${(1 - swap) * SW * 0.4}px)`,
@@ -913,7 +968,10 @@ export function StreakReward({
                     }}
                   >
                     {stats.slice(0, 3).map((s, i) => {
-                      const pop = sp(BEAT.stats + i * 3, CARD);
+                      const pop = sp(
+                        statsEl.start + i * statsEl.beat("stagger"),
+                        CARD,
+                      );
                       return (
                         <div
                           key={s.label}
@@ -961,7 +1019,10 @@ export function StreakReward({
                       display: "flex",
                       alignItems: "center",
                       gap: 12,
-                      opacity: ease(BEAT.stats + 20, BEAT.stats + 34),
+                      opacity: ease(
+                        statsEl.start + statsEl.beat("footer"),
+                        statsEl.start + statsEl.beat("footerEnd"),
+                      ),
                     }}
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
@@ -1000,12 +1061,16 @@ export function StreakReward({
                   transform: `translateY(${(1 - ctaIn) * 30}px) scale(${1 - 0.04 * Math.max(0, pressK)})${glide(
                     inner(
                       (x) =>
-                        (1 - spAt(x, BEAT.today + 12)) * 30 +
+                        (1 - spAt(x, today.start + today.beat("cta"))) * 30 +
                         0.04 *
                           Math.max(
                             0,
-                            spAt(x, BEAT.press, CHIP) -
-                              spAt(x, BEAT.press + 5, CHIP),
+                            spAt(x, press.start, CHIP) -
+                              spAt(
+                                x,
+                                press.start + press.beat("release"),
+                                CHIP,
+                              ),
                           ) *
                           SW,
                     ),
