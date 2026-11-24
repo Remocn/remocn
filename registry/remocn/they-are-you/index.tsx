@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_FACTS,
+  factsOf,
+  type TheyAreYouElementId,
+  theyAreYouTimeline,
+} from "./timeline";
 
 const gabarito = loadFont("normal", {
   weights: ["400", "500"],
@@ -36,6 +43,11 @@ export interface TheyAreYouProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single facts and pronoun flips, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TheyAreYouElementId>;
 }
 
 const THEMES = {
@@ -195,35 +207,34 @@ function ScaleLayer({
   );
 }
 
-export function TheyAreYou({
-  facts = [
-    "They write React for a living.",
-    "They have a launch on Monday.",
-    "They’ve never touched a timeline.",
-  ],
-  from = "They",
-  to = "You",
-  stagger = 6,
-  accent,
-  ink,
-  background,
-  fontFamily = gabarito.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: TheyAreYouProps) {
+export function TheyAreYou(props: TheyAreYouProps) {
+  const {
+    facts = DEFAULT_FACTS,
+    from = "They",
+    to = "You",
+    accent,
+    ink,
+    background,
+    fontFamily = gabarito.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
   const t = frame * speed;
-  const D = Math.max(100, durationInFrames);
+  // The spacing of the facts counts the clip without `speed`, so the
+  // schedule gets `durationInFrames`.
+  const tl = useTimeline(theyAreYouTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const list = facts.length > 0 ? facts : [`${from} build things.`];
+  const list = factsOf(facts, from);
   const parsed = list.map((f) => parse(f, from));
   const m = useMetrics(
     parsed.map((p) => p.rest),
@@ -266,13 +277,6 @@ export function TheyAreYou({
   const lineBox = F * LH;
   const textTop = (lineBox - F) / 2;
 
-  const inStart = 4;
-  const gapIn = Math.min(22, Math.max(12, (D * 0.3) / list.length));
-  const lastIn = inStart + (list.length - 1) * gapIn;
-  const flipStart = Math.max(lastIn + 26, D * 0.44);
-  const flipStagger = stagger;
-  const flipLen = 11;
-
   const base: React.CSSProperties = {
     position: "absolute",
     height: F,
@@ -287,9 +291,10 @@ export function TheyAreYou({
   let shifting = false;
   layout.forEach((lines, k) => {
     if (k === 0) return;
+    const fact = tl.get(`fact:${k}`);
     const e = interpolate(
       t,
-      [inStart + k * gapIn - 2, inStart + k * gapIn + 12],
+      [fact.start + fact.beat("shift"), fact.start + fact.beat("shiftEnd")],
       [0, 1],
       {
         ...CLAMP,
@@ -308,20 +313,23 @@ export function TheyAreYou({
   let y = blockTop;
   layout.forEach((lines, k) => {
     const p = parsed[k];
-    const appear = inStart + k * gapIn;
-    const flip = interpolate(
-      t,
-      [flipStart + k * flipStagger, flipStart + k * flipStagger + flipLen],
-      [0, 1],
-      { ...CLAMP, easing: EASE_IO },
-    );
+    const fact = tl.get(`fact:${k}`);
+    const appear = fact.start;
+    const flipEl = tl.get(`flip:${k}`);
+    const flip = interpolate(t, [flipEl.start, flipEl.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
     const out = interpolate(flip, [0, 0.48], [0, 1], CLAMP);
     const inn = interpolate(flip, [0.52, 1], [0, 1], CLAMP);
     const proNow = p.hasPro ? m.from + (m.to - m.from) * flip : 0;
     lines.forEach((ln, j) => {
       const rise = interpolate(
         t,
-        [appear + j * 3, appear + j * 3 + 16],
+        [
+          appear + j * fact.beat("line"),
+          appear + j * fact.beat("line") + fact.beat("rise"),
+        ],
         [0, 1],
         {
           ...CLAMP,

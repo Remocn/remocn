@@ -7064,12 +7064,21 @@
       "title": "They Are You",
       "description": "Three \"You ...\" lines in orange and white describe the viewer on a purple ground.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/they-are-you/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/they-are-you.tsx"
+          "target": "components/remocn/they-are-you/index.tsx"
+        },
+        {
+          "path": "registry/remocn/they-are-you/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/they-are-you/timeline.ts"
         }
       ],
       "type": "registry:component"
