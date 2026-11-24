@@ -6565,12 +6565,21 @@
       "title": "Drop Upload",
       "description": "A file card drops in and fills an upload bar until a check confirms it.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/gsh", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/gsh",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "drop-upload/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/drop-upload.tsx"
+          "target": "components/remocn/drop-upload/index.tsx"
+        },
+        {
+          "path": "drop-upload/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/drop-upload/timeline.ts"
         }
       ]
     },

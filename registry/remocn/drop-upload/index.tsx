@@ -8,6 +8,8 @@ import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type DropUploadElementId, dropUploadTimeline } from "./timeline";
 
 const instrument = loadInstrument("normal", {
   weights: ["400"],
@@ -25,19 +27,6 @@ const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH = { damping: 200 };
-
-const B = {
-  zone: -8,
-  title: -2,
-  fly: 6,
-  hover: 30,
-  drop: 54,
-  collapse: 60,
-  info: 72,
-  progress: 78,
-  done: 114,
-  end: 162,
-};
 
 const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   interpolate(f, [start, start + dur], [0, 1], {
@@ -155,6 +144,12 @@ export interface DropUploadProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the zone, the file's flight, hover and drop,
+   * the collapse, the upload row and the camera, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DropUploadElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -173,37 +168,60 @@ function ScaleLayer({
   );
 }
 
-export function DropUpload({
-  theme = "dark",
-  accent = "#3B5BFD",
-  title = "Drop in your launch notes",
-  fileName = "launch-notes.md",
-  fileKind = "MD",
-  fileSize = "2.4 MB",
-  hint = "MD, PDF or ZIP · up to 50 MB",
-  history = [
-    {
-      name: "changelog-2.0.pdf",
-      kind: "PDF",
-      size: "1.1 MB",
-      ago: "4 min ago",
-    },
-    { name: "press-kit.zip", kind: "ZIP", size: "18.6 MB", ago: "12 min ago" },
-  ],
-  ground,
-  groundParams,
-  dropLabel = "Drag and drop a file, or",
-  releaseLabel = "Release to upload",
-  doneLabel = "Uploaded",
-  ink: inkProp,
-  background,
-  fontFamily = instrument.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed: rate = 1,
-}: DropUploadProps) {
+export function DropUpload(props: DropUploadProps) {
+  const {
+    theme = "dark",
+    accent = "#3B5BFD",
+    title = "Drop in your launch notes",
+    fileName = "launch-notes.md",
+    fileKind = "MD",
+    fileSize = "2.4 MB",
+    hint = "MD, PDF or ZIP · up to 50 MB",
+    history = [
+      {
+        name: "changelog-2.0.pdf",
+        kind: "PDF",
+        size: "1.1 MB",
+        ago: "4 min ago",
+      },
+      {
+        name: "press-kit.zip",
+        kind: "ZIP",
+        size: "18.6 MB",
+        ago: "12 min ago",
+      },
+    ],
+    ground,
+    groundParams,
+    dropLabel = "Drag and drop a file, or",
+    releaseLabel = "Release to upload",
+    doneLabel = "Uploaded",
+    ink: inkProp,
+    background,
+    fontFamily = instrument.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed: rate = 1,
+    timing,
+  } = props;
   const frame = Math.max(0, useSceneFrame() - delay) * rate;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    dropUploadTimeline,
+    props,
+    durationInFrames * rate,
+    timing,
+  );
+  const cam = tl.get("camera");
+  const zoneEl = tl.get("zone");
+  const titleEl = tl.get("title");
+  const fly = tl.get("fly");
+  const hover = tl.get("hover");
+  const dropEl = tl.get("drop");
+  const collapseEl = tl.get("collapse");
+  const infoEl = tl.get("info");
+  const progressEl = tl.get("progress");
+  const doneEl = tl.get("done");
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 760 : 1280;
@@ -231,20 +249,42 @@ export function DropUpload({
   const titleSize = portrait ? 50 : 60;
   const titleGap = portrait ? 56 : 44;
 
-  const zoneIn = spring({ frame: frame - B.zone, fps, config: HEAVY });
-  const titleIn = ramp(frame, B.title, 15);
-  const collapse = spring({ frame: frame - B.collapse, fps, config: MORPH });
+  const zoneIn = spring({ frame: frame - zoneEl.start, fps, config: HEAVY });
+  const titleIn = ramp(frame, titleEl.start, titleEl.length);
+  const collapse = spring({
+    frame: frame - collapseEl.start,
+    fps,
+    config: MORPH,
+  });
   const highlight =
-    ramp(frame, B.hover - 8, 12) * (1 - ramp(frame, B.collapse, 8, EXIT));
+    ramp(
+      frame,
+      hover.start + hover.beat("highlightAt"),
+      hover.beat("highlight"),
+    ) *
+    (1 - ramp(frame, collapseEl.start, collapseEl.beat("highlightOut"), EXIT));
   const breathe =
-    Math.sin(((frame - B.hover) / 22) * Math.PI * 2) * 0.012 * highlight;
-  const dropHit = spring({ frame: frame - B.drop - 6, fps, config: CHIP });
+    Math.sin(((frame - hover.start) / 22) * Math.PI * 2) * 0.012 * highlight;
+  const dropHit = spring({
+    frame: frame - dropEl.start - dropEl.beat("hitAt"),
+    fps,
+    config: CHIP,
+  });
   const dropPunch =
     0.03 *
     Math.sin(Math.PI * Math.min(1, dropHit)) *
-    (1 - ramp(frame, B.drop + 14, 6));
+    (1 -
+      ramp(
+        frame,
+        dropEl.start + dropEl.beat("punchOutAt"),
+        dropEl.beat("punchOut"),
+      ));
 
-  const solid = ramp(frame, B.collapse - 2, 14);
+  const solid = ramp(
+    frame,
+    collapseEl.start + collapseEl.beat("solidAt"),
+    collapseEl.beat("solid"),
+  );
   const tint = accentMix(Math.round(12 * highlight), "transparent");
   const radius = mix(24, 20, collapse);
   const zW = mix(zoneW, rowW, collapse);
@@ -259,7 +299,12 @@ export function DropUpload({
   const hoverX = cx + 30;
   const hoverY = cy - (portrait ? 84 : 66);
   const flyT = (f: number) =>
-    spring({ frame: f - B.fly, fps, config: CARD, durationInFrames: 26 });
+    spring({
+      frame: f - fly.start,
+      fps,
+      config: CARD,
+      durationInFrames: fly.length,
+    });
   const bez = (t: number, a: number, c: number, b: number) =>
     (1 - t) * (1 - t) * a + 2 * (1 - t) * t * c + t * t * b;
   const p = flyT(frame);
@@ -270,12 +315,15 @@ export function DropUpload({
     tx - bez(pPrev, startX, ctrlX, hoverX),
     ty - bez(pPrev, startY, ctrlY, hoverY),
   );
-  const hoverAmt = ramp(frame, B.hover - 4, 10) * (1 - ramp(frame, B.drop, 8));
-  tx += Math.sin((frame - B.hover) / 7) * 5 * hoverAmt;
-  ty += Math.cos((frame - B.hover) / 9) * 5 * hoverAmt;
-  let rot = mix(28, -7, p) + Math.sin((frame - B.hover) / 10) * 2.5 * hoverAmt;
+  const hoverAmt =
+    ramp(frame, hover.start + hover.beat("swayAt"), hover.beat("sway")) *
+    (1 - ramp(frame, dropEl.start, dropEl.beat("fall")));
+  tx += Math.sin((frame - hover.start) / 7) * 5 * hoverAmt;
+  ty += Math.cos((frame - hover.start) / 9) * 5 * hoverAmt;
+  let rot =
+    mix(28, -7, p) + Math.sin((frame - hover.start) / 10) * 2.5 * hoverAmt;
   let lift = mix(1.2, 0.74, p);
-  const drop = ramp(frame, B.drop, 8, EXIT);
+  const drop = ramp(frame, dropEl.start, dropEl.beat("fall"), EXIT);
   lift *= mix(1, 0.84, drop);
   ty += 16 * drop;
   rot = mix(rot, -3, drop);
@@ -283,7 +331,11 @@ export function DropUpload({
   const iconW = 48;
   const iconX = cx - rowW / 2 + 26 + iconW / 2;
   const iconY = cy;
-  const toRow = spring({ frame: frame - B.collapse - 2, fps, config: MORPH });
+  const toRow = spring({
+    frame: frame - collapseEl.start - collapseEl.beat("toRowAt"),
+    fps,
+    config: MORPH,
+  });
   tx = mix(tx, iconX, toRow);
   ty = mix(ty, iconY, toRow);
   rot = mix(rot, 0, toRow);
@@ -291,24 +343,41 @@ export function DropUpload({
   const tileBlur = Math.min(6, speed * 0.1);
   const shadowAmt = (1 - drop * 0.7) * (1 - toRow);
 
-  const zoneContent = 1 - ramp(frame, B.collapse - 2, 8, EXIT);
-  const info = ramp(frame, B.info, 12);
-  const prog = interpolate(frame, [B.progress, B.done - 4], [0, 1], {
+  const zoneContent =
+    1 -
+    ramp(
+      frame,
+      collapseEl.start + collapseEl.beat("contentAt"),
+      collapseEl.beat("contentOut"),
+      EXIT,
+    );
+  const info = ramp(frame, infoEl.start, infoEl.length);
+  const prog = interpolate(frame, [progressEl.start, progressEl.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: FILL,
   });
-  const done = spring({ frame: frame - B.done, fps, config: CHIP });
-  const doneIn = ramp(frame, B.done, 6);
+  const done = spring({ frame: frame - doneEl.start, fps, config: CHIP });
+  const doneIn = ramp(frame, doneEl.start, doneEl.length);
   const pct = Math.round(prog * 100);
 
-  const camIn = spring({ frame: frame + 8, fps, config: HEAVY });
-  const rowFocus = spring({ frame: frame - B.collapse, fps, config: HEAVY });
+  const camIn = spring({ frame: frame - cam.start, fps, config: HEAVY });
+  const rowFocus = spring({
+    frame: frame - collapseEl.start,
+    fps,
+    config: HEAVY,
+  });
   const rotX = mix(18, 4, camIn) - 2.5 * rowFocus;
   const rotY = mix(14, 4, camIn) - 4 * rowFocus;
   const push =
     mix(0.9, 1, camIn) +
-    0.025 * ramp(frame, 0, B.end, Easing.linear) +
+    0.025 *
+      ramp(
+        frame,
+        cam.start + cam.beat("pushAt"),
+        cam.beat("push"),
+        Easing.linear,
+      ) +
     (portrait ? 0.06 : 0.26) * rowFocus;
   const titleTop0 = cy - zoneH / 2 - titleGap - titleSize * 1.05;
   const titleTop1 = cy - rowH / 2 - (portrait ? 44 : 34) - titleSize * 1.05;
@@ -405,7 +474,11 @@ export function DropUpload({
                 borderRadius: radius,
                 background: `linear-gradient(${tint}, ${tint}), color-mix(in oklab, ${base} ${Math.round(mix(dark ? 58 : 52, 100, solid))}%, transparent)`,
                 boxShadow: rowShadow(solid),
-                opacity: ramp(frame, -6, 8),
+                opacity: ramp(
+                  frame,
+                  zoneEl.start + zoneEl.beat("fadeAt"),
+                  zoneEl.beat("fade"),
+                ),
                 transform: `${shift(zL - (cx - rowW / 2), zT - (cy - rowH / 2))}translateY(${mix(60, 0, zoneIn)}px) scale(${mix(0.94, 1, zoneIn) * (1 + breathe + dropPunch)})`,
                 overflow: "hidden",
               }}
@@ -531,7 +604,7 @@ export function DropUpload({
                   top: 0,
                   height: rowH,
                   opacity: info,
-                  display: frame >= B.info ? "block" : "none",
+                  display: frame >= infoEl.start ? "block" : "none",
                 }}
               >
                 <div
@@ -666,7 +739,15 @@ export function DropUpload({
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeDasharray={20}
-                        strokeDashoffset={20 * (1 - ramp(frame, B.done + 2, 8))}
+                        strokeDashoffset={
+                          20 *
+                          (1 -
+                            ramp(
+                              frame,
+                              doneEl.start + doneEl.beat("checkAt"),
+                              doneEl.beat("check"),
+                            ))
+                        }
                       />
                     </svg>
                   </div>
@@ -675,7 +756,10 @@ export function DropUpload({
             </div>
 
             {shown.map((h, i) => {
-              const at = B.info + 2 + i * 5;
+              const at =
+                infoEl.start +
+                infoEl.beat("historyAt") +
+                i * infoEl.beat("stagger");
               const k = spring({ frame: frame - at, fps, config: CARD });
               return (
                 <div
@@ -693,7 +777,7 @@ export function DropUpload({
                     alignItems: "center",
                     gap: 20,
                     padding: "0 26px 0 32px",
-                    opacity: ramp(frame, at, 8),
+                    opacity: ramp(frame, at, infoEl.beat("history")),
                     transform: `translateY(${mix(28, 0, k)}px)`,
                   }}
                 >
@@ -732,7 +816,7 @@ export function DropUpload({
                   tileBlur > 0.3 ? `blur(${tileBlur}px)` : "",
                   `drop-shadow(0 ${mix(4, 34, shadowAmt)}px ${mix(6, 36, shadowAmt)}px rgba(4,6,30,${dark ? 0.55 : 0.22}))`,
                 ].join(" "),
-                opacity: ramp(frame, B.fly, 4),
+                opacity: ramp(frame, fly.start, fly.beat("fade")),
               }}
             >
               <FileTile kind={fileKind} accent={accent} w={tileW} />
