@@ -9280,12 +9280,21 @@
       "title": "Compact Stat",
       "description": "A big 1.2M with a blue-gradient suffix sits above a small caption on a dark ground.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/compact-stat/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/compact-stat.tsx"
+          "target": "components/remocn/compact-stat/index.tsx"
+        },
+        {
+          "path": "registry/remocn/compact-stat/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/compact-stat/timeline.ts"
         }
       ],
       "type": "registry:component"

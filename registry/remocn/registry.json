@@ -9285,10 +9285,19 @@
         {
           "path": "compact-stat/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/compact-stat.tsx"
+          "target": "components/remocn/compact-stat/index.tsx"
+        },
+        {
+          "path": "compact-stat/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/compact-stat/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "plus-open",
