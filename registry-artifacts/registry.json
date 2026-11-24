@@ -3714,12 +3714,21 @@
       "title": "Code Morph",
       "description": "A flat code editor that morphs between versions of a file, gliding each surviving token to its new line and column while removed code dissolves and new code fades in.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/code-morph/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/code-morph.tsx"
+          "target": "components/remocn/code-morph/index.tsx"
+        },
+        {
+          "path": "registry/remocn/code-morph/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/code-morph/timeline.ts"
         }
       ],
       "type": "registry:component"
