@@ -15259,13 +15259,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "deploy-pipeline/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/deploy-pipeline.tsx"
+          "target": "components/remocn/deploy-pipeline/index.tsx"
+        },
+        {
+          "path": "deploy-pipeline/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/deploy-pipeline/timeline.ts"
         }
       ]
     },
