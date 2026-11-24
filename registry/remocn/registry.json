@@ -15852,13 +15852,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "now-playing/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/now-playing.tsx"
+          "target": "components/remocn/now-playing/index.tsx"
+        },
+        {
+          "path": "now-playing/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/now-playing/timeline.ts"
         }
       ]
     },
