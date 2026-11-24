@@ -2,13 +2,15 @@
 
 import { interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CursorPoint,
+  DEFAULT_POINTS,
+  type SimulatedCursorElementId,
+  simulatedCursorTimeline,
+} from "./timeline";
 
-export interface CursorPoint {
-  x: number;
-  y: number;
-  hold?: number;
-  click?: boolean;
-}
+export type { CursorPoint };
 
 export interface SimulatedCursorProps {
   points?: CursorPoint[];
@@ -16,42 +18,52 @@ export interface SimulatedCursorProps {
   size?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches each leg of the cursor's path, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<SimulatedCursorElementId>;
 }
 
-const DEFAULT_POINTS: CursorPoint[] = [
-  { x: 200, y: 150, hold: 20 },
-  { x: 800, y: 360, hold: 25, click: true },
-  { x: 1050, y: 560, hold: 20 },
-];
-
-export function SimulatedCursor({
-  points = DEFAULT_POINTS,
-  color = "#ffffff",
-  size = 32,
-  speed = 1,
-  className,
-}: SimulatedCursorProps) {
+export function SimulatedCursor(props: SimulatedCursorProps) {
+  const {
+    points = DEFAULT_POINTS,
+    color = "#ffffff",
+    size = 32,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
   const { fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    simulatedCursorTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
-  const travelPerLeg = 24;
   const segments: Array<{
     start: number;
     end: number;
     holdEnd: number;
     from: CursorPoint;
     to: CursorPoint;
+    dip: number;
+    ripple: number;
   }> = [];
 
-  let cursor = 0;
   for (let i = 0; i < points.length - 1; i++) {
-    const from = points[i];
-    const to = points[i + 1];
-    const start = cursor;
-    const end = start + travelPerLeg;
-    const holdEnd = end + (to.hold ?? 15);
-    segments.push({ start, end, holdEnd, from, to });
-    cursor = holdEnd;
+    const leg = tl.get(`leg:${i}`);
+    segments.push({
+      start: leg.start,
+      end: leg.start + leg.beat("travel"),
+      holdEnd: leg.end,
+      from: points[i],
+      to: points[i + 1],
+      dip: leg.beat("dip"),
+      ripple: leg.beat("ripple"),
+    });
   }
 
   // Find current segment
@@ -59,11 +71,13 @@ export function SimulatedCursor({
   let y = points[0].y;
   let activeClickFrame: number | null = null;
   let clickTarget: CursorPoint | null = null;
+  let dipFrames = 14;
+  let rippleFrames = 24;
 
   if (segments.length === 0) {
     x = points[0].x;
     y = points[0].y;
-  } else if (frame < segments[0].start + (points[0].hold ?? 0)) {
+  } else if (frame < segments[0].start + tl.get("leg:0").beat("wait")) {
     x = points[0].x;
     y = points[0].y;
   } else {
@@ -85,6 +99,8 @@ export function SimulatedCursor({
           if (seg.to.click) {
             activeClickFrame = frame - seg.end;
             clickTarget = seg.to;
+            dipFrames = seg.dip;
+            rippleFrames = seg.ripple;
           }
         }
         break;
@@ -105,21 +121,18 @@ export function SimulatedCursor({
       fps,
       frame: activeClickFrame,
       config: { damping: 10, stiffness: 200, mass: 0.6 },
-      durationInFrames: 14,
+      durationInFrames: dipFrames,
     });
     clickScale = 1 - dip * 0.18;
-    rippleRadius = interpolate(activeClickFrame, [0, 24], [4, 60], {
+    rippleRadius = interpolate(activeClickFrame, [0, rippleFrames], [4, 60], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     });
-    rippleOpacity = interpolate(activeClickFrame, [0, 24], [0.6, 0], {
+    rippleOpacity = interpolate(activeClickFrame, [0, rippleFrames], [0.6, 0], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     });
   }
-
-  // Suppress unused warning when durationInFrames not used directly
-  void durationInFrames;
 
   return (
     <div

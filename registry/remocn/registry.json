@@ -1954,12 +1954,17 @@
       "title": "Simulated Cursor",
       "description": "Animated mouse cursor moving between waypoints with click ripple feedback.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "simulated-cursor/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/simulated-cursor.tsx"
+          "target": "components/remocn/simulated-cursor/index.tsx"
+        },
+        {
+          "path": "simulated-cursor/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/simulated-cursor/timeline.ts"
         }
       ]
     },
