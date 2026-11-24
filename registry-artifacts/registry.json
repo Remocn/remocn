@@ -7020,12 +7020,21 @@
       "title": "and You",
       "description": "A list of audiences (\"For the founder who...\") ends on a big \"and you.\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/and-you/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/and-you.tsx"
+          "target": "components/remocn/and-you/index.tsx"
+        },
+        {
+          "path": "registry/remocn/and-you/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/and-you/timeline.ts"
         }
       ],
       "type": "registry:component"

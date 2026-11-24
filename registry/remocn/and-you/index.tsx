@@ -12,6 +12,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AndYouElementId,
+  andYouTimeline,
+  DEFAULT_CLAUSES,
+  DEFAULT_LAST,
+  FALLBACK_CLAUSES,
+} from "./timeline";
 
 const gabarito = loadFont("normal", {
   weights: ["400", "500"],
@@ -35,6 +43,12 @@ export interface AndYouProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches each clause, the page pulling back, the last
+   * line and its last word, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<AndYouElementId>;
 }
 
 const THEMES = {
@@ -175,35 +189,32 @@ function ScaleLayer({
   );
 }
 
-export function AndYou({
-  clauses = [
-    "For the founder who launches on Monday,",
-    "the designer who just learned React,",
-    "the two-person studio,",
-    "the student with a weekend project,",
-  ],
-  last = "and you.",
-  accent,
-  ink,
-  background,
-  fontFamily = gabarito.fontFamily,
-  stagger = 2,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: AndYouProps) {
+export function AndYou(props: AndYouProps) {
+  const {
+    clauses = DEFAULT_CLAUSES,
+    last = DEFAULT_LAST,
+    accent,
+    ink,
+    background,
+    fontFamily = gabarito.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
   const t = frame * speed;
-  const D = Math.max(110, durationInFrames);
+  // The clause slot is fitted to the composition's length, without `speed`.
+  const tl = useTimeline(andYouTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const list = clauses.length > 0 ? clauses : ["For everyone who builds,"];
+  const list = clauses.length > 0 ? clauses : FALLBACK_CLAUSES;
   const m = useMetrics(fontFamily);
 
   if (!m) {
@@ -238,25 +249,33 @@ export function AndYou({
   const finalRoomH = H - marginY * 2 - lastCap - gapY;
   const sFinal = Math.min(1, finalRoomH / heightAt(n - 1), portrait ? 1 : 0.6);
 
-  const start = 6;
-  const cl = Math.min(30, Math.max(14, (D * 0.56 - start) / n));
-  const clauseAt = (k: number) => start + k * cl;
-  const finalAt = clauseAt(n);
+  const clause = (k: number) => tl.get(`clause:${k}`);
+  const pullback = tl.get("pullback");
+  const lastEl = tl.get("last");
+  const tailEl = tl.get("tail");
 
   /** The page's scroll and its pull-back to `sFinal`, at time `u`. */
   const pageAt = (u: number) => {
     let scroll = scrollAt(0);
     for (let k = 1; k < n; k++) {
-      const e = interpolate(u, [clauseAt(k) - 2, clauseAt(k) + 12], [0, 1], {
-        ...CLAMP,
-        easing: EASE_IO,
-      });
+      const ck = clause(k);
+      const e = interpolate(
+        u,
+        [ck.start + ck.beat("scrollFrom"), ck.start + ck.beat("scrollTo")],
+        [0, 1],
+        { ...CLAMP, easing: EASE_IO },
+      );
       scroll += (scrollAt(k) - scrollAt(k - 1)) * e;
     }
-    const back = interpolate(u, [finalAt - 4, finalAt + 16], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    const back = interpolate(
+      u,
+      [pullback.start + pullback.beat("lead"), pullback.end],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
     return { back, s: 1 + (sFinal - 1) * back, offY: -scroll * (1 - back) };
   };
   const { back, s, offY } = pageAt(t);
@@ -284,8 +303,9 @@ export function AndYou({
   };
 
   const nodes = words.map((w, i) => {
-    const at = clauseAt(w.clause) + w.order * stagger;
-    const p = interpolate(t, [at, at + 14], [0, 1], {
+    const ck = clause(w.clause);
+    const at = ck.start + w.order * ck.beat("stagger");
+    const p = interpolate(t, [at, at + ck.beat("word")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -314,14 +334,24 @@ export function AndYou({
     );
   });
 
-  const lastIn = interpolate(t, [finalAt + 4, finalAt + 22], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const tailIn = interpolate(t, [finalAt + 8, finalAt + 26], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const lastIn = interpolate(
+    t,
+    [lastEl.start + lastEl.beat("enter"), lastEl.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const tailIn = interpolate(
+    t,
+    [tailEl.start + tailEl.beat("enter"), tailEl.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const lastBase = H - marginY;
   const lastTop = lastBase - ((1 - m.asc - m.desc) / 2 + m.asc) * FY;
   const lastStyle: React.CSSProperties = {
