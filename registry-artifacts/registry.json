@@ -736,12 +736,21 @@
       "title": "Strikethrough Replace",
       "description": "Draws a strike line across old text then reveals new text in its place.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/strikethrough-replace/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/strikethrough-replace.tsx"
+          "target": "components/remocn/strikethrough-replace/index.tsx"
+        },
+        {
+          "path": "registry/remocn/strikethrough-replace/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/strikethrough-replace/timeline.ts"
         }
       ],
       "type": "registry:component"
