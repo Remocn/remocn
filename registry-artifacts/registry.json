@@ -9457,12 +9457,21 @@
       "title": "Zero Stretch",
       "description": "The zero in '200' stretches into a glossy pill that holds the word 'components'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/zero-stretch/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/zero-stretch.tsx"
+          "target": "components/remocn/zero-stretch/index.tsx"
+        },
+        {
+          "path": "registry/remocn/zero-stretch/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/zero-stretch/timeline.ts"
         }
       ],
       "type": "registry:component"

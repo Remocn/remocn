@@ -9462,10 +9462,19 @@
         {
           "path": "zero-stretch/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/zero-stretch.tsx"
+          "target": "components/remocn/zero-stretch/index.tsx"
+        },
+        {
+          "path": "zero-stretch/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/zero-stretch/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "wake-wipe",
