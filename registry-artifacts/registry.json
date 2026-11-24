@@ -2974,13 +2974,19 @@
       "registryDependencies": [
         "@remocn/stop-motion",
         "@remocn/brush",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/scribble-circle/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/scribble-circle.tsx"
+          "target": "components/remocn/scribble-circle/index.tsx"
+        },
+        {
+          "path": "registry/remocn/scribble-circle/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/scribble-circle/timeline.ts"
         }
       ],
       "type": "registry:component"
