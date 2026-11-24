@@ -19,6 +19,7 @@ import {
   type OverheardElementId,
   type OverheardLine,
   overheardTimeline,
+  type Word,
   wordsOf,
 } from "./timeline";
 
@@ -67,8 +68,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-type Word = ReturnType<typeof wordsOf>[number];
 
 function place(
   words: Word[],

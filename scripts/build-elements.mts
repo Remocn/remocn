@@ -196,10 +196,11 @@ function renameClashes(module: ParsedSource, others: ParsedSource[]) {
 }
 
 function stripExports(body: string): string {
-  return body.replace(
-    /^export\s+(?=(function|const|class|interface|type|let)\b)/gm,
-    "",
-  );
+  // `export type { A };` re-exports a name already in scope; once everything
+  // sits in one file it has nothing left to do.
+  return body
+    .replace(/^export\s+(?:type\s+)?\{[^}]*\};?[ \t]*\n?/gm, "")
+    .replace(/^export\s+(?=(function|const|class|interface|type|let)\b)/gm, "");
 }
 
 const WRAPPER_IMPORTS: ParsedSource["imports"] = new Map([
