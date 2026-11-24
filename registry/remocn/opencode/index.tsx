@@ -5,7 +5,14 @@ import { AbsoluteFill, interpolate, spring } from "remotion";
 import { Caret } from "@/components/remocn/caret";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
-import { useTypewriter } from "@/lib/remocn-ui";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_QUERY,
+  type OpenCodeElementId,
+  openCodeTimeline,
+  TYPE_AT,
+  TYPE_CPS,
+} from "./timeline";
 
 const { fontFamily: MONO_FAMILY } = loadFont();
 
@@ -17,6 +24,11 @@ export interface OpenCodeProps {
   provider?: string;
   accentColor?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the intro, the fades and the typing, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<OpenCodeElementId>;
 }
 
 interface Theme {
@@ -50,9 +62,9 @@ export const THEMES: Record<"light" | "dark", Theme> = {
   },
 };
 
-export const TYPING_START_FRAME = 48;
+export const TYPING_START_FRAME = TYPE_AT;
 
-export const TYPING_CPS = 20;
+export const TYPING_CPS = TYPE_CPS;
 
 function introBounceIn(
   frame: number,
@@ -82,34 +94,61 @@ function fadeUpAt(
   };
 }
 
-export function OpenCode({
-  placeholder = "Ask anything... ",
-  query = '"What is the tech stack of this project?"',
-  agentName = "Build",
-  modelName = "Kimi K2.5",
-  provider = "Moonshot AI",
-  accentColor = "#2B7FFF",
-  speed = 1,
-}: OpenCodeProps) {
+export function OpenCode(props: OpenCodeProps) {
+  const {
+    placeholder = "Ask anything... ",
+    query = DEFAULT_QUERY,
+    agentName = "Build",
+    modelName = "Kimi K2.5",
+    provider = "Moonshot AI",
+    accentColor = "#2B7FFF",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    openCodeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introEl = tl.get("intro");
+  const logoEl = tl.get("logo");
+  const boxEl = tl.get("box");
+  const hintsEl = tl.get("hints");
+  const typing = tl.get("typing");
   const t = THEMES.dark;
 
   const refW = 1280;
   const refH = 720;
   const stageScale = Math.min(width / refW, height / refH);
 
-  const tw = useTypewriter(query, {
-    cps: TYPING_CPS,
-    speed,
-    startFrame: TYPING_START_FRAME,
-  });
+  // A letter lands every `typing.length / query.length` frames.
+  const typed = frame * speed - typing.start;
+  const count =
+    typed <= 0
+      ? 0
+      : typing.length <= 0
+        ? query.length
+        : Math.max(
+            0,
+            Math.min(
+              query.length,
+              Math.floor((typed / typing.length) * query.length),
+            ),
+          );
+  const tw = {
+    text: query.slice(0, count),
+    count,
+    typing: count > 0 && count < query.length,
+  };
 
-  const intro = introBounceIn(frame * speed, fps);
-  const logoFade = fadeUpAt(frame * speed, [4, 22]);
-  const boxFade = fadeUpAt(frame * speed, [12, 30]);
-  const hintsFade = fadeUpAt(frame * speed, [20, 38]);
+  const intro = introBounceIn(frame * speed - introEl.start, fps);
+  const logoFade = fadeUpAt(frame * speed, [logoEl.start, logoEl.end]);
+  const boxFade = fadeUpAt(frame * speed, [boxEl.start, boxEl.end]);
+  const hintsFade = fadeUpAt(frame * speed, [hintsEl.start, hintsEl.end]);
 
   const boxWidth = 1000;
 
@@ -117,8 +156,8 @@ export function OpenCode({
   // it moves is read off the neighbouring frames: its travel in px, and its
   // scale weighed by the reach from its top-centre origin to its far corner.
   const boxAt = (f: number) => {
-    const i = introBounceIn(f * speed, fps);
-    const b = fadeUpAt(f * speed, [12, 30]);
+    const i = introBounceIn(f * speed - introEl.start, fps);
+    const b = fadeUpAt(f * speed, [boxEl.start, boxEl.end]);
     return { y: b.translateY + i.translateY * 0.6, k: i.scale };
   };
   const boxStep = (a: number, b: number) => {
@@ -127,7 +166,8 @@ export function OpenCode({
     return Math.abs(p.y - q.y) > 1e-3 || Math.abs(p.k - q.k) * 520 > 1e-3;
   };
   const boxMoving = boxStep(frame, frame + 1) || boxStep(frame - 1, frame);
-  const hintsAt = (f: number) => fadeUpAt(f * speed, [20, 38]).translateY;
+  const hintsAt = (f: number) =>
+    fadeUpAt(f * speed, [hintsEl.start, hintsEl.end]).translateY;
   const hintsMoving =
     Math.abs(hintsAt(frame + 1) - hintsAt(frame)) > 1e-3 ||
     Math.abs(hintsAt(frame) - hintsAt(frame - 1)) > 1e-3;

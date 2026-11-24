@@ -2728,13 +2728,19 @@
         "@remocn/caret",
         "@remocn/remocn-ui",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/opencode/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/opencode.tsx"
+          "target": "components/remocn/opencode/index.tsx"
+        },
+        {
+          "path": "registry/remocn/opencode/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/opencode/timeline.ts"
         }
       ],
       "type": "registry:component"
