@@ -9065,12 +9065,21 @@
       "title": "Point Hop",
       "description": "A decimal figure 34.2 with a pink point that hops between digits, then a unit like microseconds.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/point-hop/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/point-hop.tsx"
+          "target": "components/remocn/point-hop/index.tsx"
+        },
+        {
+          "path": "registry/remocn/point-hop/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/point-hop/timeline.ts"
         }
       ],
       "type": "registry:component"
