@@ -7832,12 +7832,21 @@
       "title": "Nonstop",
       "description": "A stops counter ticks down from three until the line resolves to the big phrase 'No stops'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/nonstop/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/nonstop.tsx"
+          "target": "components/remocn/nonstop/index.tsx"
+        },
+        {
+          "path": "registry/remocn/nonstop/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/nonstop/timeline.ts"
         }
       ],
       "type": "registry:component"
