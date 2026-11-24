@@ -5,6 +5,19 @@ import { type ReactNode, useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  type AbacusCountElementId,
+  abacusCountTimeline,
+  abacusTarget,
+  BEADS,
+  buildSteps,
+  digitAt,
+} from "./timeline";
 
 const { fontFamily: geist } = loadFont("normal", {
   weights: ["300", "400"],
@@ -39,13 +52,13 @@ export interface AbacusCountProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the fade-in, the push, the rods, the beads,
+   * single steps of the count and the label, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<AbacusCountElementId>;
 }
-
-const BEADS = 9;
-const START = 16;
-const TICK = 5;
-const CARRY_DELAY = 3;
-const MID = [0.37, 0.58, 0.46, 0.63, 0.52];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -82,42 +95,8 @@ const THEMES = {
   },
 } as const;
 
-function digitAt(v: number, place: number) {
-  return Math.floor(v / 10 ** place) % 10;
-}
-
 function leadOf(v: number) {
   return v <= 0 ? -1 : Math.floor(Math.log10(v) + 1e-9);
-}
-
-function buildSteps(value: number, places: number) {
-  const seq: number[] = [0];
-  const add = (v: number) => {
-    if (v > seq[seq.length - 1] && v <= value) seq.push(v);
-  };
-  for (const v of [3, 6, 9, 10]) add(v);
-  for (let pl = 2; pl < places; pl++) {
-    const top = 10 ** pl;
-    add(Math.round(top * MID[pl % MID.length]));
-    add(top - 1);
-    add(top);
-  }
-  add(value);
-  const times: number[] = [START];
-  let clock = START;
-  for (let k = 1; k < seq.length; k++) {
-    const prog = (k - 1) / Math.max(1, seq.length - 2);
-    let gap = interpolate(prog, [0, 1], [9, 5]);
-    let carry = false;
-    for (let pl = 0; pl < places; pl++) {
-      if (digitAt(seq[k], pl) < digitAt(seq[k - 1], pl)) carry = true;
-    }
-    if (carry) gap += 4;
-    if (k === seq.length - 1 && k > 1) gap += 6;
-    clock += gap;
-    times.push(clock);
-  }
-  return { seq, times };
 }
 
 interface Move {
@@ -126,7 +105,11 @@ interface Move {
   to: number;
 }
 
-function buildMoves(seq: number[], times: number[], places: number) {
+function buildMoves(
+  seq: number[],
+  steps: ResolvedElement<AbacusCountElementId>[],
+  places: number,
+) {
   const moves: Move[][][] = [];
   for (let pl = 0; pl < places; pl++) {
     const rod: Move[][] = Array.from({ length: BEADS }, () => []);
@@ -138,13 +121,18 @@ function buildMoves(seq: number[], times: number[], places: number) {
       for (let q = 0; q < pl; q++) {
         if (digitAt(seq[k], q) < digitAt(seq[k - 1], q)) lowerReset = true;
       }
-      const delay = d1 > d0 && lowerReset ? CARRY_DELAY : 0;
+      const step = steps[k];
+      const delay = d1 > d0 && lowerReset ? step.beat("carry") : 0;
       for (let i = 0; i < BEADS; i++) {
         const c0 = i >= BEADS - d0 ? 1 : 0;
         const c1 = i >= BEADS - d1 ? 1 : 0;
         if (c0 === c1) continue;
         const order = c1 > c0 ? BEADS - d0 - 1 - i : i - (BEADS - d0);
-        rod[i].push({ at: times[k] + delay + order * 0.7, from: c0, to: c1 });
+        rod[i].push({
+          at: step.start + delay + order * step.beat("bead"),
+          from: c0,
+          to: c1,
+        });
       }
     }
     moves.push(rod);
@@ -192,43 +180,52 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
-export function AbacusCount({
-  value = 48216,
-  label = "renders this week",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist,
-  fontWeight = 300,
-  separator = ",",
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: AbacusCountProps) {
+export function AbacusCount(props: AbacusCountProps) {
+  const {
+    value = 48216,
+    label = "renders this week",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist,
+    fontWeight = 300,
+    separator = ",",
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    abacusCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const frameEl = tl.get("frame");
+  const pushEl = tl.get("push");
+  const rodsEl = tl.get("rods");
+  const beadsEl = tl.get("beads");
+  const labelEl = tl.get("label");
+  const steps = useMemo(() => tl.lane("Count"), [tl]);
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const stage = background ?? p.bg;
-  const target = Math.max(0, Math.min(999999, Math.round(value)));
-  const places = Math.max(3, String(target).length);
-  const { seq, times } = useMemo(
-    () => buildSteps(target, places),
-    [target, places],
-  );
+  const { target, places } = abacusTarget(value);
+  const { seq } = useMemo(() => buildSteps(target, places), [target, places]);
   const moves = useMemo(
-    () => buildMoves(seq, times, places),
-    [seq, times, places],
+    () => buildMoves(seq, steps, places),
+    [seq, steps, places],
   );
 
   let kNow = 0;
-  for (let k = 0; k < times.length; k++) if (t >= times[k]) kNow = k;
+  for (let k = 0; k < steps.length; k++) if (t >= steps[k].start) kNow = k;
   const lead = leadOf(seq[kNow]);
-  const lastAt = times[times.length - 1];
 
   const cx = width / 2;
   const cy = height / 2;
@@ -256,12 +253,12 @@ export function AbacusCount({
   const restX = (i: number) => x0 + pad + i * D + D / 2;
   const countX = (i: number) => x1 - pad - (BEADS - 1 - i) * D - D / 2;
 
-  const frameIn = interpolate(t, [0, 16], [0, 1], {
+  const frameIn = interpolate(t, [frameEl.start, frameEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const pushAt = (tt: number) =>
-    interpolate(tt, [0, lastAt + 40], [0.985, 1.01], {
+    interpolate(tt, [pushEl.start, pushEl.end], [0.985, 1.01], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -273,7 +270,7 @@ export function AbacusCount({
     Math.abs(push - pushAt(Math.max(0, t - speed))) * width > 1e-3;
 
   const gradId = `ab${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const drift = interpolate(t, [0, lastAt + 40], [0, 1], {
+  const drift = interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -284,7 +281,8 @@ export function AbacusCount({
   for (let row = 0; row < places; row++) {
     const pl = places - 1 - row;
     const y = rodY(row);
-    const rodK = interpolate(t, [2 + row * 2, 18 + row * 2], [0, 1], {
+    const rodAt = rodsEl.start + row * rodsEl.beat("stagger");
+    const rodK = interpolate(t, [rodAt, rodAt + rodsEl.beat("each")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -317,7 +315,13 @@ export function AbacusCount({
     for (let i = 0; i < BEADS; i++) {
       const bIn = interpolate(
         t,
-        [6 + row * 2 + i * 0.6, 14 + row * 2 + i * 0.6],
+        [
+          beadsEl.start + row * beadsEl.beat("row") + i * beadsEl.beat("bead"),
+          beadsEl.start +
+            beadsEl.beat("each") +
+            row * beadsEl.beat("row") +
+            i * beadsEl.beat("bead"),
+        ],
         [0, 1],
         { ...CLAMP, easing: EASE_OUT },
       );
@@ -350,10 +354,15 @@ export function AbacusCount({
     const tick =
       kc === 0
         ? 1
-        : interpolate(t, [times[kc], times[kc] + TICK], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
+        : interpolate(
+            t,
+            [steps[kc].start, steps[kc].start + steps[kc].beat("tick")],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: EASE_OUT,
+            },
+          );
     const dNew = digitAt(seq[kc], pl);
     const isLead = pl === lead;
     const color = pl > lead ? p.faint : isLead ? "transparent" : fg;
@@ -396,10 +405,15 @@ export function AbacusCount({
     }
   }
 
-  const labelIn = interpolate(t, [lastAt + 6, lastAt + 24], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const labelIn = interpolate(
+    t,
+    [labelEl.start + labelEl.beat("in"), labelEl.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const blockH = numSize * 1.12 + 10 * u + 24 * u * 1.3;
 
   return (

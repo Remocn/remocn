@@ -12647,10 +12647,19 @@
         {
           "path": "abacus-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/abacus-count.tsx"
+          "target": "components/remocn/abacus-count/index.tsx"
+        },
+        {
+          "path": "abacus-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/abacus-count/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "fraction-split",

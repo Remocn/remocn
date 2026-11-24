@@ -12642,12 +12642,21 @@
       "title": "Abacus Count",
       "description": "Abacus beads slide along their rods to count up to 48,216.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/abacus-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/abacus-count.tsx"
+          "target": "components/remocn/abacus-count/index.tsx"
+        },
+        {
+          "path": "registry/remocn/abacus-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/abacus-count/timeline.ts"
         }
       ],
       "type": "registry:component"
