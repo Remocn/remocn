@@ -13276,10 +13276,19 @@
         {
           "path": "grid-snap-poster/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/grid-snap-poster.tsx"
+          "target": "components/remocn/grid-snap-poster/index.tsx"
+        },
+        {
+          "path": "grid-snap-poster/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/grid-snap-poster/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "spec-sheet",

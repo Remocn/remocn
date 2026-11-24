@@ -7,6 +7,17 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  COLS,
+  type GridSnapPosterElementId,
+  gridSnapPosterTimeline,
+  SNAPS,
+} from "./timeline";
 
 const { fontFamily: geist } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -39,6 +50,12 @@ export interface GridSnapPosterProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the grid bands, the rules, each block's snap,
+   * the grid fade and the push, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<GridSnapPosterElementId>;
 }
 
 // gradients.sh "mesh" palette, used as the clip-text fill of the hero number.
@@ -64,11 +81,6 @@ function meshFill(theme: "dark" | "light", t: number) {
     `linear-gradient(160deg, ${MESH[2]} 0%, ${MESH[3]} 100%)`,
   ].join(", ");
 }
-
-const COLS = 12;
-const STEP = 5;
-const MOVE = 3;
-const GRID_FADE = 84;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_SNAP = Easing.bezier(0.2, 0.9, 0.1, 1);
@@ -204,15 +216,24 @@ function Accented({ text, accent }: { text: string; accent: string }) {
 interface Snap {
   from: number;
   to: number;
-  start: number;
 }
 
-function snapState(t: number, s: Snap, step: number) {
-  const steps = Math.abs(s.to - s.from);
+function snapState(
+  t: number,
+  s: Snap,
+  el: ResolvedElement<GridSnapPosterElementId>,
+) {
   const dir = Math.sign(s.to - s.from);
-  const local = t - s.start;
-  const total = steps * step;
-  const appear = interpolate(local, [-8, -2], [0, 1], CLAMP);
+  const local = t - el.start;
+  const total = el.length;
+  const step = el.beat("step");
+  const move = el.beat("move");
+  const appear = interpolate(
+    local,
+    [el.beat("appearAt"), el.beat("appearEnd")],
+    [0, 1],
+    CLAMP,
+  );
   if (local <= 0) {
     return { pos: s.from, appear, moving: 0, landed: s.from, since: local };
   }
@@ -220,7 +241,7 @@ function snapState(t: number, s: Snap, step: number) {
     return { pos: s.to, appear, moving: 0, landed: s.to, since: local - total };
   }
   const k = Math.floor(local / step);
-  const frac = Math.min(1, (local - k * step) / MOVE);
+  const frac = Math.min(1, (local - k * step) / move);
   const e = EASE_SNAP(frac);
   const landedK = frac >= 1 ? k + 1 : k;
   return {
@@ -228,7 +249,7 @@ function snapState(t: number, s: Snap, step: number) {
     appear,
     moving: 1,
     landed: s.from + dir * landedK,
-    since: frac >= 1 ? local - k * step - MOVE : local - k * step,
+    since: frac >= 1 ? local - k * step - move : local - k * step,
   };
 }
 
@@ -248,26 +269,33 @@ function ScaleLayer({
   );
 }
 
-export function GridSnapPoster({
-  title = "Launch films,\nset in motion.",
-  number = "3.0",
-  body = "Production-ready motion for launch videos. Install a component, drop in your words, render.",
-  name = "remocn",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist,
-  step = STEP,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: GridSnapPosterProps) {
+export function GridSnapPoster(props: GridSnapPosterProps) {
+  const {
+    title = "Launch films,\nset in motion.",
+    number = "3.0",
+    body = "Production-ready motion for launch videos. Install a component, drop in your words, render.",
+    name = "remocn",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    gridSnapPosterTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = H / 720;
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
@@ -300,21 +328,26 @@ export function GridSnapPoster({
   );
   const numTop = mY - (BASELINE - CAP) * numF + 0.012 * numF;
 
-  const numSnap: Snap = { from: 4, to: 0, start: 20 };
-  const headSnap: Snap = { from: 3, to: 0, start: 32 };
-  const bodySnap: Snap = { from: 6, to: 9, start: 54 };
-  const logoSnap: Snap = { from: 10, to: 9, start: 66 };
-  const snaps = [numSnap, headSnap, bodySnap, logoSnap].map((s) =>
-    snapState(t, s, step),
-  );
+  const snaps = SNAPS.map((s) => snapState(t, s, tl.get(s.id)));
 
-  const gridFade = interpolate(t, [GRID_FADE, GRID_FADE + 22], [1, 0], {
+  const gridOut = tl.get("grid-out");
+  const pushEl = tl.get("push");
+  const rulesEl = tl.get("rules");
+  const gridFade = interpolate(t, [gridOut.start, gridOut.end], [1, 0], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const band = (i: number) =>
-    interpolate(t, [i * 2, i * 2 + 18], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const ruleP = interpolate(t, [4, 34], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const band = (i: number) => {
+    const e = tl.get(`band:${i}`);
+    return interpolate(t, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  };
+  const ruleP = interpolate(t, [rulesEl.start, rulesEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
 
   const flash = (k: number) => {
     let f = 0;
@@ -328,7 +361,7 @@ export function GridSnapPoster({
 
   const bodyF = 18 * u;
   const pushAt = (tt: number) =>
-    interpolate(tt, [GRID_FADE, GRID_FADE + 70], [1, 1.012], {
+    interpolate(tt, [pushEl.start, pushEl.end], [1, 1.012], {
       ...CLAMP,
       easing: EASE_IO,
     });
