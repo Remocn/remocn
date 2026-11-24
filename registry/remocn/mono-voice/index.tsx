@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type MonoVoiceElementId,
+  monoVoiceLines,
+  monoVoiceTimeline,
+} from "./timeline";
 
 const inter = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -35,6 +42,12 @@ export interface MonoVoiceProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the lines rising, the voicing and the refit,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<MonoVoiceElementId>;
 }
 
 const THEMES = {
@@ -58,13 +71,6 @@ const VOICE_WGHT = 440;
 const HI_WGHT = 500;
 const TRACK = -0.025;
 const SMALL = 0.22;
-
-const RISE_AT = 0;
-const RISE_LEN = 16;
-const RISE_GAP = 4;
-const VOICE_AT = 28;
-const VOICE_SPAN = 40;
-const VOICE_MAX_GAP = 2.2;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
@@ -121,26 +127,6 @@ function measure(lines: string[], family: string): Metrics {
   return { lines: out, baseline, capTop };
 }
 
-function wrap(text: string, maxChars: number) {
-  const out: string[] = [];
-  for (const para of text.split("\n")) {
-    const words = para.split(/\s+/).filter(Boolean);
-    if (!words.length) continue;
-    let cur = "";
-    for (const w of words) {
-      const next = cur ? `${cur} ${w}` : w;
-      if (cur && next.length > maxChars) {
-        out.push(cur);
-        cur = w;
-      } else {
-        cur = next;
-      }
-    }
-    if (cur) out.push(cur);
-  }
-  return out;
-}
-
 function useMetrics(lines: string[], family: string) {
   const key = lines.join("\n");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
@@ -187,38 +173,39 @@ function ScaleLayer({
   );
 }
 
-export function MonoVoice({
-  text = "Same script.\nA whole new\ndelivery.",
-  highlight = "delivery.",
-  voiceAt = VOICE_AT,
-  stagger = RISE_GAP,
-  accent,
-  ink,
-  background,
-  fontFamily = inter.fontFamily,
-  scale: zoom = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: MonoVoiceProps) {
+export function MonoVoice(props: MonoVoiceProps) {
+  const {
+    text = DEFAULT_TEXT,
+    highlight = "delivery.",
+    accent,
+    ink,
+    background,
+    fontFamily = inter.fontFamily,
+    scale: zoom = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    monoVoiceTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const riseEl = tl.get("rise");
+  const voiceEl = tl.get("voice");
+  const refitEl = tl.get("refit");
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const portrait = H > W * 1.1;
   const measureW = W * (portrait ? 0.84 : 0.8);
 
-  const lines = useMemo(() => {
-    const paras = text
-      .split("\n")
-      .map((p) => p.trim())
-      .filter(Boolean);
-    const longest = Math.max(1, ...paras.map((p) => p.length));
-    const maxChars = portrait ? 14 : 24;
-    return longest > maxChars ? wrap(text, maxChars) : paras;
-  }, [text, portrait]);
+  const lines = useMemo(() => monoVoiceLines(text, portrait), [text, portrait]);
   const m = useMetrics(lines, fontFamily);
 
   const transparent = background === "transparent";
@@ -261,23 +248,33 @@ export function MonoVoice({
   );
   const left = portrait ? W * 0.08 : contrast ? W * 0.07 : W * 0.1;
   const nGlyphs = m.lines.reduce((a, l) => a + l.chars.length, 0);
-  const gap = Math.min(VOICE_MAX_GAP, VOICE_SPAN / Math.max(1, nGlyphs));
+  const gap = Math.min(
+    voiceEl.beat("maxGap"),
+    voiceEl.beat("span") / Math.max(1, nGlyphs),
+  );
   const voiceOf = (tt: number, idx: number) =>
     spring({
-      frame: tt - voiceAt - idx * gap,
+      frame: tt - voiceEl.start - idx * gap,
       fps,
       config: { damping: 14, stiffness: 160, mass: 0.7 },
     });
 
+  /** Line `li` rising in, 0 → 1. */
+  const riseOf = (tt: number, li: number) => {
+    const at = riseEl.start + li * riseEl.beat("stagger");
+    return interpolate(tt, [at, at + riseEl.beat("rise")], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  };
+
   // Every glyph's top edge at a given time, so a frame can be compared with
   // its neighbours.
   const topsAt = (tt: number) => {
-    const refitT = interpolate(
-      tt,
-      [voiceAt + VOICE_SPAN * 0.45, voiceAt + VOICE_SPAN + 16],
-      [0, 1],
-      { ...CLAMP, easing: Easing.bezier(0.45, 0, 0.2, 1) },
-    );
+    const refitT = interpolate(tt, [refitEl.start, refitEl.end], [0, 1], {
+      ...CLAMP,
+      easing: Easing.bezier(0.45, 0, 0.2, 1),
+    });
     const Ft = F0 + (F1 - F0) * refitT;
     const heights = scale.map((k) => Ft * k * LH);
     const total = heights.reduce((a, b) => a + b, 0);
@@ -298,12 +295,7 @@ export function MonoVoice({
     return {
       F: Ft,
       glyphs: m.lines.map((line, li) => {
-        const rise = interpolate(
-          tt,
-          [RISE_AT + li * stagger, RISE_AT + li * stagger + RISE_LEN],
-          [0, 1],
-          { ...CLAMP, easing: EASE_OUT },
-        );
+        const rise = riseOf(tt, li);
         const Fl = Ft * scale[li];
         const baseY =
           tops[li] + (heights[li] + m.capTop * Fl) / 2 + (1 - rise) * Fl * 0.4;
@@ -330,12 +322,7 @@ export function MonoVoice({
 
   let gi = 0;
   const nodes = m.lines.flatMap((line, li) => {
-    const rise = interpolate(
-      t,
-      [RISE_AT + li * stagger, RISE_AT + li * stagger + RISE_LEN],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
-    );
+    const rise = riseOf(t, li);
     const Fl = F * scale[li];
     const hiMask: boolean[] = [];
     let ws = 0;

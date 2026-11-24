@@ -8261,12 +8261,21 @@
       "title": "Mono Voice",
       "description": "Three stacked lines shift voice mid-line, ending in a large accent 'delivery.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/mono-voice/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/mono-voice.tsx"
+          "target": "components/remocn/mono-voice/index.tsx"
+        },
+        {
+          "path": "registry/remocn/mono-voice/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/mono-voice/timeline.ts"
         }
       ],
       "type": "registry:component"
