@@ -7,6 +7,13 @@ import { Fragment, useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TAGLINE,
+  type HeatTraceElementId,
+  heatTraceTimeline,
+  taglineWords,
+} from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -40,6 +47,12 @@ export interface HeatTraceProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the heat's pass, the bloom, the eyebrow, the
+   * settle and single tagline words, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<HeatTraceElementId>;
 }
 
 const THEMES = {
@@ -183,26 +196,36 @@ function ScaleLayer({
   );
 }
 
-export function HeatTrace({
-  name = "remocn",
-  logo,
-  tagline = "Launch-video scenes for Remotion. Copy, paste, render.",
-  eyebrow = "",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  pass = 56,
-  stagger = 2,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: HeatTraceProps) {
+export function HeatTrace(props: HeatTraceProps) {
+  const {
+    name = "remocn",
+    logo,
+    tagline = DEFAULT_TAGLINE,
+    eyebrow = "",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    heatTraceTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const passEl = tl.get("pass");
+  const bloomEl = tl.get("bloom");
+  const eyebrowEl = tl.get("eyebrow");
+  const settleEl = tl.get("settle");
   const t = THEMES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const ids = {
@@ -247,9 +270,9 @@ export function HeatTrace({
   const x1 = x0 + nameW;
   const tagTop = inkTop + inkH + fs * 0.3;
 
-  const PASS_END = pass;
+  const PASS_END = passEl.end;
   const headAt = (f: number) => {
-    const u = interpolate(f, [0, PASS_END], [0, 1], {
+    const u = interpolate(f, [passEl.start, PASS_END], [0, 1], {
       ...CLAMP,
       easing: EASE_PASS,
     });
@@ -260,7 +283,7 @@ export function HeatTrace({
   };
   const trailPts: string[] = [];
   const trailEnd = Math.min(frame, PASS_END);
-  for (let f = 0; f <= trailEnd + 0.001; f += 1) {
+  for (let f = passEl.start; f <= trailEnd + 0.001; f += 1) {
     const p = headAt(Math.min(f, trailEnd));
     trailPts.push(`${p.x.toFixed(1)},${p.y.toFixed(1)}`);
   }
@@ -271,10 +294,15 @@ export function HeatTrace({
     const f = frame - age;
     if (f < -1) return null;
     const p = headAt(Math.max(0, f));
-    const leaving = interpolate(frame, [PASS_END - 6, PASS_END + 14], [1, 0], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    const leaving = interpolate(
+      frame,
+      [PASS_END + passEl.beat("fade"), PASS_END + passEl.beat("gone")],
+      [1, 0],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
     return {
       key: `b${k}`,
       cx: p.x,
@@ -284,13 +312,18 @@ export function HeatTrace({
     };
   }).filter((b): b is NonNullable<typeof b> => b !== null);
 
-  const settle = interpolate(frame, [46, 90], [0, 1], {
+  const settle = interpolate(frame, [settleEl.start, settleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const trailO = interpolate(
     frame,
-    [0, 6, PASS_END, 92],
+    [
+      passEl.start,
+      passEl.start + passEl.beat("glow"),
+      PASS_END,
+      settleEl.start + settleEl.beat("trailOut"),
+    ],
     [0.4, 0.48, 0.5, 0.12],
     CLAMP,
   );
@@ -319,7 +352,17 @@ export function HeatTrace({
   const transparent = background === "transparent";
   const showStage = !transparent && background === undefined;
 
-  const bloomO = interpolate(frame, [0, 10, 60, 96], [0.6, 1, 1, 0.35], CLAMP);
+  const bloomO = interpolate(
+    frame,
+    [
+      bloomEl.start,
+      bloomEl.start + bloomEl.beat("peak"),
+      bloomEl.start + bloomEl.beat("hold"),
+      bloomEl.end,
+    ],
+    [0.6, 1, 1, 0.35],
+    CLAMP,
+  );
 
   const heatContent = (withGround: boolean) => (
     <>
@@ -364,7 +407,7 @@ export function HeatTrace({
     </>
   );
 
-  const words = tagline.split(/\s+/).filter(Boolean);
+  const words = taglineWords(tagline);
   const markX = x0;
   const textX = x0 + markEm * fs;
   const logoLit = interpolate(
@@ -504,7 +547,12 @@ export function HeatTrace({
               lineHeight: 1,
               letterSpacing: "0.02em",
               color: ink ?? t.eyebrow,
-              opacity: interpolate(frame, [4, 20], [0, 1], CLAMP),
+              opacity: interpolate(
+                frame,
+                [eyebrowEl.start, eyebrowEl.end],
+                [0, 1],
+                CLAMP,
+              ),
             }}
           >
             {eyebrow}
@@ -529,15 +577,11 @@ export function HeatTrace({
             }}
           >
             {words.map((w, i) => {
-              const k = interpolate(
-                frame,
-                [58 + i * stagger, 76 + i * stagger],
-                [0, 1],
-                {
-                  ...CLAMP,
-                  easing: EASE_OUT,
-                },
-              );
+              const wordEl = tl.get(`word:${i}`);
+              const k = interpolate(frame, [wordEl.start, wordEl.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
               return (
                 <Fragment key={i}>
                   {i > 0 ? " " : null}

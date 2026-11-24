@@ -9860,12 +9860,21 @@
       "title": "Heat Trace",
       "description": "The remocn wordmark is traced in a warm-to-cool gradient heat line, with a tagline beneath.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/heat-trace/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/heat-trace.tsx"
+          "target": "components/remocn/heat-trace/index.tsx"
+        },
+        {
+          "path": "registry/remocn/heat-trace/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/heat-trace/timeline.ts"
         }
       ],
       "type": "registry:component"
