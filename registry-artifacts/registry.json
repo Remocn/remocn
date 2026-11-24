@@ -12393,12 +12393,21 @@
       "title": "Hatch Shade",
       "description": "A serif number is shaded in with engraving-style hatch lines on a copper plate.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/hatch-shade/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/hatch-shade.tsx"
+          "target": "components/remocn/hatch-shade/index.tsx"
+        },
+        {
+          "path": "registry/remocn/hatch-shade/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/hatch-shade/timeline.ts"
         }
       ],
       "type": "registry:component"

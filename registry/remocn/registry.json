@@ -12398,10 +12398,19 @@
         {
           "path": "hatch-shade/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/hatch-shade.tsx"
+          "target": "components/remocn/hatch-shade/index.tsx"
+        },
+        {
+          "path": "hatch-shade/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/hatch-shade/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "path-search",
