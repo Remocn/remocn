@@ -10818,12 +10818,21 @@
       "title": "Font Cycle",
       "description": "One word cycles through several typefaces and settles in its final face.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/font-cycle/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/font-cycle.tsx"
+          "target": "components/remocn/font-cycle/index.tsx"
+        },
+        {
+          "path": "registry/remocn/font-cycle/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/font-cycle/timeline.ts"
         }
       ],
       "type": "registry:component"

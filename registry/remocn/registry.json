@@ -10823,10 +10823,19 @@
         {
           "path": "font-cycle/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/font-cycle.tsx"
+          "target": "components/remocn/font-cycle/index.tsx"
+        },
+        {
+          "path": "font-cycle/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/font-cycle/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "case-flip",
