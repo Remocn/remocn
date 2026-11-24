@@ -7,6 +7,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ROWS,
+  type DumbbellShiftElementId,
+  dumbbellShiftTimeline,
+  shownRows,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -50,16 +57,13 @@ export interface DumbbellShiftProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the push, each row's entry and slide, the
+   * notes, the sort and the hero, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DumbbellShiftElementId>;
 }
-
-const DEFAULT_ROWS: DumbbellRow[] = [
-  { label: "Launch videos", before: 2, after: 9 },
-  { label: "Changelogs", before: 4, after: 7 },
-  { label: "Social clips", before: 3, after: 19 },
-  { label: "Tutorials", before: 5, after: 11 },
-  { label: "Onboarding", before: 1, after: 6 },
-  { label: "Ads", before: 6, after: 8 },
-];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -93,13 +97,6 @@ const THEMES = {
       "linear-gradient(100deg, #1d2a8f 0%, #2f7bff 34%, #ff7a3d 76%, #f2552c 100%)",
   },
 } as const;
-
-const ENTER_STAGGER = 3;
-const SLIDE_START = 18;
-const SLIDE_STAGGER = 5;
-const SLIDE_DUR = 26;
-const SORT = [78, 108] as const;
-const HERO = 110;
 
 const REMOCN_R_PATH =
   "M 0.01 0.81 C 0.01 1.73, 0.36 2.79, 1.09 4.13 C 4.91 11.04, 13.45 17.16, 21.7 18.9 C 22.94 19.16, 23.18 19.16, 51.39 19.27 C 76.07 19.36, 80.02 19.4, 81.32 19.57 C 89.89 20.69, 96.2 24.68, 99.38 31.01 C 103.19 38.56, 102.53 50.1, 97.91 57.07 C 94.66 61.96, 89.68 64.99, 83.26 66 C 82.81 66.07, 70.18 66.83, 55.2 67.69 C 24.82 69.43, 27.03 69.23, 24.18 70.4 C 19.9 72.15, 14.84 75.7, 10.65 79.89 C 4.86 85.68, 1.3 91.91, 0.25 98.13 C 0.12 98.85, 0.08 103.13, 0.04 116.66 L 0 134.26 9.5 134.26 L 19 134.26 19.05 119.41 C 19.1 103.27, 19.08 103.82, 19.82 101.04 C 21.79 93.65, 27.86 88.75, 36.45 87.63 C 37.23 87.53, 39.41 87.5, 43.57 87.53 C 50.12 87.59, 50.75 87.65, 53.22 88.45 C 56.61 89.56, 59.67 91.86, 62.02 95.07 C 62.52 95.76, 69.35 103.85, 77.2 113.07 C 85.04 122.28, 91.63 130.04, 91.85 130.32 C 92.07 130.59, 92.5 131.34, 92.82 131.97 C 93.52 133.35, 94.11 133.93, 95.06 134.13 C 95.5 134.23, 98.97 134.26, 106.36 134.23 L 117.01 134.19 100.82 113.07 C 91.91 101.45, 84.52 91.78, 84.39 91.57 C 83.36 89.89, 83.66 87.53, 85.09 86 C 85.79 85.25, 86.36 84.94, 88.07 84.38 C 96.18 81.72, 104.15 76.62, 109.97 70.36 C 120.59 58.93, 124.06 44.32, 119.44 30.43 C 114.59 15.81, 101.93 4.02, 87.64 0.83 C 83.93 0.01, 88.09 0.08, 41.85 0.04 L 0.01 0 0.01 0.81 Z";
@@ -178,35 +175,45 @@ function ScaleLayer({
   );
 }
 
-export function DumbbellShift({
-  rows = DEFAULT_ROWS,
-  beforeLabel = "Before",
-  afterLabel = "With remocn",
-  summaryCaption,
-  max,
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  stagger = SLIDE_STAGGER,
-  slideDuration = SLIDE_DUR,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: DumbbellShiftProps) {
+export function DumbbellShift(props: DumbbellShiftProps) {
+  const {
+    rows = DEFAULT_ROWS,
+    beforeLabel = "Before",
+    afterLabel = "With remocn",
+    summaryCaption,
+    max,
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const t = Math.max(0, frame - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    dumbbellShiftTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const sortEl = tl.get("sort");
+  const heroEl = tl.get("hero");
+  const notesEl = tl.get("notes-out");
+  const pushEl = tl.get("push");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const bg = background ?? p.bg;
 
-  const list = rows.slice(0, 7);
+  const list = shownRows(rows);
   const n = list.length;
   const deltas = list.map((r) => r.after - r.before);
   const order = list
@@ -230,31 +237,36 @@ export function DumbbellShift({
   const xOf = (v: number) =>
     ax0 + (Math.max(0, Math.min(v, scaleMax)) / scaleMax) * (ax1 - ax0);
 
-  const sortK = interpolate(t, [SORT[0], SORT[1]], [0, 1], {
+  const HERO = heroEl.start;
+  const sortK = interpolate(t, [sortEl.start, sortEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const dim = interpolate(t, [HERO, HERO + 16], [0, 1], {
+  const dim = interpolate(t, [HERO, HERO + heroEl.beat("dim")], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const grow = interpolate(t, [HERO, HERO + 22], [0, 1], {
+  const grow = interpolate(t, [HERO, HERO + heroEl.beat("grow")], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const capIn = interpolate(t, [HERO + 12, HERO + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const noteOut = interpolate(t, [SORT[0] - 8, SORT[0] + 2], [1, 0], {
+  const capIn = interpolate(
+    t,
+    [HERO + heroEl.beat("captionAt"), HERO + heroEl.beat("captionEnd")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_OUT },
+  );
+  const noteOut = interpolate(t, [notesEl.start, notesEl.end], [1, 0], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const pushAt = (f: number) =>
-    interpolate(Math.max(0, f - delay) * speed, [0, HERO + 40], [1.025, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    interpolate(
+      Math.max(0, f - delay) * speed,
+      [pushEl.start, pushEl.end],
+      [1.025, 1],
+      { ...CLAMP, easing: EASE_IO },
+    );
   const push = pushAt(frame);
   // The push's ease is so flat at its ends that a progress test would keep
   // the tilt on while nothing visibly moves; weigh the scale step by the
@@ -265,25 +277,24 @@ export function DumbbellShift({
     Math.abs(push - pushAt(frame - 1)) * reach > 1e-3;
 
   const items = list.map((row, i) => {
-    const enter = interpolate(
-      t,
-      [2 + i * ENTER_STAGGER, 20 + i * ENTER_STAGGER],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
-    );
-    const s0 = SLIDE_START + i * stagger;
-    const slide = interpolate(t, [s0, s0 + slideDuration], [0, 1], {
+    const rowEl = tl.get(`row:${i}`);
+    const slideEl = tl.get(`slide:${i}`);
+    const enter = interpolate(t, [rowEl.start, rowEl.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    const slide = interpolate(t, [slideEl.start, slideEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_SLIDE,
     });
     const deltaIn = interpolate(
       t,
-      [s0 + slideDuration - 8, s0 + slideDuration + 8],
+      [
+        slideEl.end + slideEl.beat("deltaIn"),
+        slideEl.end + slideEl.beat("deltaEnd"),
+      ],
       [0, 1],
-      {
-        ...CLAMP,
-        easing: EASE_OUT,
-      },
+      { ...CLAMP, easing: EASE_OUT },
     );
     const pos = i + (rank[i] - i) * sortK;
     const y = rowsTop + rowH * (pos + 0.5);

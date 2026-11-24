@@ -12579,12 +12579,21 @@
       "title": "Dumbbell Shift",
       "description": "Dumbbell rows slide their before and after dots apart, with a +16 summary.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/dumbbell-shift/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/dumbbell-shift.tsx"
+          "target": "components/remocn/dumbbell-shift/index.tsx"
+        },
+        {
+          "path": "registry/remocn/dumbbell-shift/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/dumbbell-shift/timeline.ts"
         }
       ],
       "type": "registry:component"
