@@ -7332,12 +7332,21 @@
       "title": "Week Shipped",
       "description": "A week-recap line, \"Sunday, we rested.\", in heavy type on orange.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/week-shipped/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/week-shipped.tsx"
+          "target": "components/remocn/week-shipped/index.tsx"
+        },
+        {
+          "path": "registry/remocn/week-shipped/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/week-shipped/timeline.ts"
         }
       ],
       "type": "registry:component"

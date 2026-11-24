@@ -7337,10 +7337,19 @@
         {
           "path": "week-shipped/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/week-shipped.tsx"
+          "target": "components/remocn/week-shipped/index.tsx"
+        },
+        {
+          "path": "week-shipped/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/week-shipped/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "a-to-z",
