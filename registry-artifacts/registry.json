@@ -4682,12 +4682,17 @@
       "title": "Anamorphic Flare",
       "description": "A point of light grows into a cinematic anamorphic streak that sweeps the frame and reveals the logo in its wake.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/anamorphic-flare/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/anamorphic-flare.tsx"
+          "target": "components/remocn/anamorphic-flare/index.tsx"
+        },
+        {
+          "path": "registry/remocn/anamorphic-flare/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/anamorphic-flare/timeline.ts"
         }
       ],
       "type": "registry:component"

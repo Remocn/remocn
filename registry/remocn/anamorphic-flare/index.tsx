@@ -4,6 +4,11 @@ import type React from "react";
 import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AnamorphicFlareElementId,
+  anamorphicFlareTimeline,
+} from "./timeline";
 
 export type AnamorphicFlareProps = {
   /** Lockup revealed behind the streak. Falls back to a placeholder "remocn" lockup. */
@@ -19,6 +24,11 @@ export type AnamorphicFlareProps = {
   y?: number;
   seed?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the ignition, the crossing and the trail, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<AnamorphicFlareElementId>;
 };
 
 export const anamorphicFlareDefaults = {
@@ -31,9 +41,6 @@ export const anamorphicFlareDefaults = {
   speed: 1,
 };
 
-const IGNITE = 6;
-const CROSS_START = 4;
-const CROSS_END = 26;
 const clamp = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
@@ -92,40 +99,63 @@ function PlaceholderLockup({
 }
 
 export function AnamorphicFlare(props: AnamorphicFlareProps) {
-  const { children, tint, coreColor, backgroundColor, ghosts, y, seed, speed } =
-    { ...anamorphicFlareDefaults, ...props };
+  const {
+    children,
+    tint,
+    coreColor,
+    backgroundColor,
+    ghosts,
+    y,
+    seed,
+    speed,
+    timing,
+  } = { ...anamorphicFlareDefaults, ...props };
   const uid = `anamorphic-flare-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const frame = useSceneFrame();
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
   const t = frame * Math.max(0, speed);
+  const tl = useTimeline(
+    anamorphicFlareTimeline,
+    props,
+    durationInFrames * Math.max(0, speed),
+    timing,
+  );
+  const igniteEl = tl.get("ignite");
+  const cross = tl.get("cross");
+  const trail = tl.get("residual");
   const cy = y * height;
   const cx = width / 2;
 
-  const head = interpolate(t, [CROSS_START, CROSS_END], [0.07, 1.12], {
+  const head = interpolate(t, [cross.start, cross.end], [0.07, 1.12], {
     ...clamp,
     easing: Easing.bezier(0.45, 0, 0.4, 1),
   });
   const hx = head * width;
-  const ignite = interpolate(t, [0, IGNITE], [0, 1], {
+  const ignite = interpolate(t, [igniteEl.start, igniteEl.end], [0, 1], {
     ...clamp,
     easing: Easing.out(Easing.cubic),
   });
-  const fade = interpolate(t, [CROSS_END - 6, CROSS_END + 2], [1, 0], clamp);
+  const fade = interpolate(
+    t,
+    [cross.start + cross.beat("fade"), cross.start + cross.beat("fadeEnd")],
+    [1, 0],
+    clamp,
+  );
   const power = ignite * fade;
   const streakLen =
     width *
-    interpolate(t, [0, 12], [0.04, 1.3], {
-      ...clamp,
-      easing: Easing.out(Easing.quad),
-    });
+    interpolate(
+      t,
+      [igniteEl.start, igniteEl.start + igniteEl.beat("grow")],
+      [0.04, 1.3],
+      {
+        ...clamp,
+        easing: Easing.out(Easing.quad),
+      },
+    );
   const coreH = Math.max(2, height * 0.004);
   const glowH = height * 0.05;
-  const residual = interpolate(
-    t,
-    [CROSS_END - 2, CROSS_END + 14],
-    [0, 0.14],
-    clamp,
-  );
+  const residual = interpolate(t, [trail.start, trail.end], [0, 0.14], clamp);
   const soft = width * 0.08;
   const mask = `linear-gradient(90deg, #000 0px, #000 ${hx - soft}px, transparent ${hx}px)`;
 
