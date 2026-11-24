@@ -5560,13 +5560,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "cta-collapse-mark/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/cta-collapse-mark.tsx"
+          "target": "components/remocn/cta-collapse-mark/index.tsx"
+        },
+        {
+          "path": "cta-collapse-mark/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/cta-collapse-mark/timeline.ts"
         }
       ]
     },
