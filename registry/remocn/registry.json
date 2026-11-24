@@ -7663,10 +7663,19 @@
         {
           "path": "layover/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/layover.tsx"
+          "target": "components/remocn/layover/index.tsx"
+        },
+        {
+          "path": "layover/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/layover/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "nonstop",

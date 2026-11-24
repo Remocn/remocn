@@ -7658,12 +7658,21 @@
       "title": "Layover",
       "description": "A headline's key word cycles through a short list of stops before settling on the final word.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/layover/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/layover.tsx"
+          "target": "components/remocn/layover/index.tsx"
+        },
+        {
+          "path": "registry/remocn/layover/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/layover/timeline.ts"
         }
       ],
       "type": "registry:component"
