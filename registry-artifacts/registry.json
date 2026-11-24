@@ -881,12 +881,17 @@
       "title": "Tracking In",
       "description": "Letter-spacing collapses and blur clears with a springy motion.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/tracking-in/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/tracking-in.tsx"
+          "target": "components/remocn/tracking-in/index.tsx"
+        },
+        {
+          "path": "registry/remocn/tracking-in/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/tracking-in/timeline.ts"
         }
       ],
       "type": "registry:component"
