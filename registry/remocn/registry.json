@@ -10282,10 +10282,19 @@
         {
           "path": "shot-clock/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/shot-clock.tsx"
+          "target": "components/remocn/shot-clock/index.tsx"
+        },
+        {
+          "path": "shot-clock/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/shot-clock/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "speed-trap",
