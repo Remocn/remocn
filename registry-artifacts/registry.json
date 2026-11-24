@@ -10951,12 +10951,17 @@
       "title": "Scan Reveal",
       "description": "A scan line reveals a headline over an underline with a small subtitle below.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/scan-reveal/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/scan-reveal.tsx"
+          "target": "components/remocn/scan-reveal/index.tsx"
+        },
+        {
+          "path": "registry/remocn/scan-reveal/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/scan-reveal/timeline.ts"
         }
       ],
       "type": "registry:component"
