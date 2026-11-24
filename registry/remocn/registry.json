@@ -3814,12 +3814,17 @@
       "title": "Outline Trace",
       "description": "Every glyph contour draws itself as a stroke, letter by letter, then the fill wipes up inside each letter and the stroke fades into it.",
       "dependencies": ["remotion", "opentype.js"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "outline-trace/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/outline-trace.tsx"
+          "target": "components/remocn/outline-trace/index.tsx"
+        },
+        {
+          "path": "outline-trace/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/outline-trace/timeline.ts"
         }
       ]
     },

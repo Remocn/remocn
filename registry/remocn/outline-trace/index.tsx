@@ -4,6 +4,19 @@ import { type Font, parse } from "opentype.js";
 import { useEffect, useId, useState } from "react";
 import { continueRender, delayRender, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_STAGGER,
+  DEFAULT_TEXT,
+  finite,
+  type OutlineTraceElementId,
+  outlineTraceTimeline,
+  TRACE_BEATS,
+} from "./timeline";
 
 export interface OutlineTraceProps {
   text?: string;
@@ -17,6 +30,11 @@ export interface OutlineTraceProps {
   keepStroke?: boolean;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single letters, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<OutlineTraceElementId>;
 }
 
 /** Static Inter ExtraBold (800) from Google Fonts. */
@@ -24,24 +42,20 @@ export const interExtraBoldTtf =
   "https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuDyYMZg.ttf";
 
 export const outlineTraceDefaults = {
-  text: "Outline",
+  text: DEFAULT_TEXT,
   fontUrl: interExtraBoldTtf,
   fontSize: 150,
   color: "#fafafa",
   strokeColor: "",
   strokeWidth: 2.5,
-  stagger: 3,
+  stagger: DEFAULT_STAGGER,
   fill: true,
   keepStroke: false,
   speed: 1,
-} satisfies Required<Omit<OutlineTraceProps, "className">>;
+} satisfies Required<Omit<OutlineTraceProps, "className" | "timing">>;
 
 /** Per-letter beats on the 30 fps clock, relative to the letter's start. */
-export const outlineTraceTiming = {
-  outer: [0, 18],
-  counter: [4, 18],
-  fill: [14, 26],
-} as const;
+export const outlineTraceTiming = TRACE_BEATS;
 
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -50,10 +64,6 @@ const CLAMP = {
 
 const easeInOutCubic = Easing.inOut(Easing.cubic);
 const easeOutCubic = Easing.out(Easing.cubic);
-
-function finite(value: number | undefined, fallback: number) {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-}
 
 /** Maps a composition frame onto the 30 fps timeline, scaled by `speed`. */
 export function getOutlineTraceTime(
@@ -74,13 +84,38 @@ export interface OutlineTraceLetterState {
   fill: number;
 }
 
+/**
+ * A letter's state at `t`. Pass the letter's resolved element from
+ * `./timeline` to follow a `timing` override; without it the letter runs on
+ * the default beats, `index * stagger` in.
+ */
 export function getOutlineTraceLetter(
   t: number,
   index: number,
   stagger = outlineTraceDefaults.stagger,
+  element?: ResolvedElement<OutlineTraceElementId>,
 ): OutlineTraceLetterState {
-  const u = t - index * Math.max(0, finite(stagger, 3));
   const { outer, counter, fill } = outlineTraceTiming;
+  if (element) {
+    const u = t - element.start;
+    return {
+      outer: interpolate(u, [outer[0], element.beat("outer")], [0, 1], {
+        ...CLAMP,
+        easing: easeInOutCubic,
+      }),
+      counter: interpolate(
+        u,
+        [element.beat("counter"), element.beat("counterEnd")],
+        [0, 1],
+        { ...CLAMP, easing: easeInOutCubic },
+      ),
+      fill: interpolate(u, [element.beat("fill"), element.length], [0, 1], {
+        ...CLAMP,
+        easing: easeOutCubic,
+      }),
+    };
+  }
+  const u = t - index * Math.max(0, finite(stagger, 3));
   return {
     outer: interpolate(u, [...outer], [0, 1], {
       ...CLAMP,
@@ -260,21 +295,29 @@ function useOutlineFont(url: string) {
   return font;
 }
 
-export function OutlineTrace({
-  text = outlineTraceDefaults.text,
-  fontUrl = outlineTraceDefaults.fontUrl,
-  fontSize = outlineTraceDefaults.fontSize,
-  color = outlineTraceDefaults.color,
-  strokeColor = outlineTraceDefaults.strokeColor,
-  strokeWidth = outlineTraceDefaults.strokeWidth,
-  stagger = outlineTraceDefaults.stagger,
-  fill = outlineTraceDefaults.fill,
-  keepStroke = outlineTraceDefaults.keepStroke,
-  speed = outlineTraceDefaults.speed,
-  className,
-}: OutlineTraceProps) {
+export function OutlineTrace(props: OutlineTraceProps) {
+  const {
+    text = outlineTraceDefaults.text,
+    fontUrl = outlineTraceDefaults.fontUrl,
+    fontSize = outlineTraceDefaults.fontSize,
+    color = outlineTraceDefaults.color,
+    strokeColor = outlineTraceDefaults.strokeColor,
+    strokeWidth = outlineTraceDefaults.strokeWidth,
+    stagger = outlineTraceDefaults.stagger,
+    fill = outlineTraceDefaults.fill,
+    keepStroke = outlineTraceDefaults.keepStroke,
+    speed = outlineTraceDefaults.speed,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    outlineTraceTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const id = `outline-trace-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const font = useOutlineFont(fontUrl);
   if (!font) return null;
@@ -303,7 +346,12 @@ export function OutlineTrace({
           </filter>
           {layout.letters.map((letter, i) => {
             if (!letter.box) return null;
-            const state = getOutlineTraceLetter(t, i, stagger);
+            const state = getOutlineTraceLetter(
+              t,
+              i,
+              stagger,
+              tl.get(`letter:${i}`),
+            );
             const box = letter.box;
             const tall = box.y1 - box.y0 + 2 * strokeWidth;
             const rise = tall * (fill ? state.fill : 0);
