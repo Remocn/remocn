@@ -8368,10 +8368,19 @@
         {
           "path": "times-turn/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/times-turn.tsx"
+          "target": "components/remocn/times-turn/index.tsx"
+        },
+        {
+          "path": "times-turn/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/times-turn/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "stripe-count",

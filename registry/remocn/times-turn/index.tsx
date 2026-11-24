@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LABEL,
+  labelWords,
+  type TimesTurnElementId,
+  timesTurnTimeline,
+} from "./timeline";
 
 const familjen = loadFamiljen("normal", {
   weights: ["400", "500"],
@@ -39,6 +46,12 @@ export interface TimesTurnProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the rises, the turn, the unit's drop, the
+   * swell and single label words, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TimesTurnElementId>;
 }
 
 const ORANGE = "#FF4F00";
@@ -53,14 +66,6 @@ const ARM = 0.56;
 const STROKE = 0.085;
 const CROSS_K = 0.86;
 const GAP = 0.03;
-
-const RISE_AT = 0;
-const RISE_LEN = 16;
-const TURN_AT = 30;
-const PCT_AT = 32;
-const SWELL_AT = 38;
-const SWELL_END = 74;
-const LABEL_AT = 64;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
@@ -152,24 +157,31 @@ function ScaleLayer({
   );
 }
 
-export function TimesTurn({
-  value = "3",
-  before = "%",
-  label = "more launch cuts from the same storyboard",
-  accent,
-  ink,
-  background,
-  fontFamily = familjen.fontFamily,
-  fontWeight = 500,
-  stagger = 2,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: TimesTurnProps) {
+export function TimesTurn(props: TimesTurnProps) {
+  const {
+    value = "3",
+    before = "%",
+    label = DEFAULT_LABEL,
+    accent,
+    ink,
+    background,
+    fontFamily = familjen.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    timesTurnTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const gid = `tt${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -202,13 +214,16 @@ export function TimesTurn({
     ? { x: 0, y: signBox.h, w: W, h: H - signBox.h }
     : { x: signBox.w, y: 0, w: W - signBox.w, h: H };
 
+  const turnEl = tl.get("turn");
+  const dropEl = tl.get("drop");
+  const swellEl = tl.get("swell");
   const turn = spring({
-    frame: t - TURN_AT,
+    frame: t - turnEl.start,
     fps,
     config: { damping: 11, stiffness: 120, mass: 0.9 },
   });
   const turnPrev = spring({
-    frame: t - TURN_AT - 1,
+    frame: t - turnEl.start - 1,
     fps,
     config: { damping: 11, stiffness: 120, mass: 0.9 },
   });
@@ -216,20 +231,28 @@ export function TimesTurn({
   const armK = 1 + (CROSS_K - 1) * Math.min(1, turn);
   const lean = Math.max(-9, Math.min(9, (turn - turnPrev) * 60));
 
-  const pctOut = interpolate(t, [PCT_AT, PCT_AT + 14], [0, 1], {
+  const pctOut = interpolate(t, [dropEl.start, dropEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IN_OUT,
   });
-  const swellRaw = (t - SWELL_AT) / (SWELL_END - SWELL_AT);
+  const swellRaw = (t - swellEl.start) / swellEl.length;
   const swelling = swellRaw > 0 && swellRaw < 1;
-  const swell = interpolate(t, [SWELL_AT, SWELL_END], [0, 1], {
+  const swell = interpolate(t, [swellEl.start, swellEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IN_OUT,
   });
-  const fill = interpolate(t, [SWELL_AT + 4, SWELL_END - 4], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IN_OUT,
-  });
+  const fill = interpolate(
+    t,
+    [
+      swellEl.start + swellEl.beat("fill"),
+      swellEl.start + swellEl.beat("fillEnd"),
+    ],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IN_OUT,
+    },
+  );
 
   const labelFs = (portrait ? 48 : 34) * s;
   const labelLines = portrait ? 2 : 3;
@@ -249,11 +272,13 @@ export function TimesTurn({
   const baseY = base0 + (base1 - base0) * swell;
   const digitsLeft = numBox.x + pad;
 
-  const rise = (k: number) =>
-    interpolate(t, [RISE_AT + k * 2, RISE_AT + k * 2 + RISE_LEN], [0, 1], {
+  const rise = (id: "sign" | "digits" | "unit") => {
+    const e = tl.get(id);
+    return interpolate(t, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
 
   const signCx = signBox.x + signBox.w / 2;
   const signCy = portrait
@@ -261,10 +286,10 @@ export function TimesTurn({
     : baseY - m.figH * F * 0.5;
   const arm = ARM * F * armK;
   const stroke = STROKE * F;
-  const signRise = rise(0);
+  const signRise = rise("sign");
   const signDy = (1 - signRise) * F * 0.9;
-  const digitsRise = rise(1);
-  const unitRise = rise(2);
+  const digitsRise = rise("digits");
+  const unitRise = rise("unit");
 
   const maskTop = baseY - m.figH * F - F * 0.12;
   const maskH = m.figH * F + F * 0.16;
@@ -296,7 +321,7 @@ export function TimesTurn({
   const quietSign = `color-mix(in srgb, ${c.inkOnAccent} 45%, ${hot})`;
   const signInk = transparent ? fg : c.inkOnAccent;
 
-  const labelWords = label ? label.split(" ") : [];
+  const words = labelWords(label);
 
   const textStyle = {
     position: "absolute" as const,
@@ -449,13 +474,12 @@ export function TimesTurn({
               color: fg,
             }}
           >
-            {labelWords.map((w, k) => {
-              const p = interpolate(
-                t,
-                [LABEL_AT + k * stagger, LABEL_AT + k * stagger + 16],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
+            {words.map((w, k) => {
+              const e = tl.get(`word:${k}`);
+              const p = interpolate(t, [e.start, e.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
               return (
                 <span
                   key={`${w}-${k}`}
