@@ -11,6 +11,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_MILESTONES,
+  type MilestoneRollElementId,
+  milestoneRollTimeline,
+} from "./timeline";
 
 const { fontFamily: grotesk } = loadFont("normal", {
   weights: ["300", "400"],
@@ -87,12 +93,13 @@ export interface MilestoneRollProps {
   /** Overrides for the ground shader. */
   groundParams?: Partial<GradientParams>;
   speed?: number;
+  /**
+   * Moves, trims or stretches the chrome, each milestone's race and hold,
+   * and the poster's number, unit and logo, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MilestoneRollElementId>;
 }
-
-const RUN = 15;
-const HOLD = 14;
-const OUT = 6;
-const FIRST = -2;
 
 const RACE = Easing.bezier(0.55, 0, 1, 0.45);
 const MOVE = Easing.bezier(0.83, 0, 0.17, 1);
@@ -184,25 +191,36 @@ function ScaleLayer({
   );
 }
 
-export function MilestoneRoll({
-  milestones = [1000, 10000, 100000, 1000000],
-  unit = "renders",
-  ink,
-  background,
-  fontFamily = grotesk,
-  run = RUN,
-  hold = HOLD,
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  ground,
-  groundParams,
-  speed = 1,
-}: MilestoneRollProps) {
+export function MilestoneRoll(props: MilestoneRollProps) {
+  const {
+    milestones = DEFAULT_MILESTONES,
+    unit = "renders",
+    ink,
+    background,
+    fontFamily = grotesk,
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    ground,
+    groundParams,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    milestoneRollTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const stops = milestones.map((_, i) => tl.get(`milestone:${i}`));
+  const chromeEl = tl.get("chrome");
+  const posterEl = tl.get("poster");
+  const unitEl = tl.get("unit");
+  const logoEl = tl.get("logo");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
@@ -211,14 +229,13 @@ export function MilestoneRoll({
       : background === "transparent"
         ? "transparent"
         : background;
-  const seg = run + hold + OUT;
   const tall = H > W;
   const base = tall ? W * 0.62 : H;
   const u = Math.min(W / 1280, H / 720);
 
   const n = milestones.length;
-  const hitAt = (i: number) => FIRST + i * seg + run;
-  const finalAt = hitAt(n - 1);
+  const hitAt = (i: number) => stops[i].start + stops[i].beat("hit");
+  const finalAt = posterEl.start;
 
   let hit = -1;
   for (let i = 0; i < n; i++) if (t >= hitAt(i)) hit = i;
@@ -236,27 +253,34 @@ export function MilestoneRoll({
     veil += (toVeil - step(c.veil, i)) * Math.min(1, k);
   }
   const breathe = interpolate(t, [0, 180], [0, 1], CLAMP);
-  const flash = hit >= 0 ? Math.max(0, 1 - (t - hitAt(hit)) / 4) ** 2 : 0;
+  const flash =
+    hit >= 0
+      ? Math.max(0, 1 - (t - hitAt(hit)) / stops[hit].beat("flash")) ** 2
+      : 0;
 
   const runIdx = hit + 1;
-  const runStart = FIRST + runIdx * seg;
+  const runEl = stops[runIdx];
   const from = runIdx === 0 ? 0 : milestones[runIdx - 1];
   const to = milestones[Math.min(runIdx, n - 1)];
-  const race = RACE(ramp(t, runStart, run));
+  // Past the last milestone `from` and `to` are the same number.
+  const race = runEl ? RACE(ramp(t, runEl.start, runEl.beat("hit"))) : 1;
   const value = from + (to - from) * race;
 
-  const h = hit >= 0 && !isFinal ? hitAt(hit) : -1e9;
+  const hitEl = hit >= 0 && !isFinal ? stops[hit] : undefined;
+  const h = hitEl ? hitAt(hit) : -1e9;
+  const holdFor = hitEl ? hitEl.beat("hold") : 0;
+  const pushFor = hitEl ? hitEl.beat("push") : 1;
   const pPunch = spring({ frame: Math.min(t - h, 60), fps, config: CARD });
-  const push = MOVE(ramp(t, h + hold, OUT));
+  const push = MOVE(ramp(t, h + holdFor, pushFor));
   const pushDist = 0.8 * H;
-  const inHit = hit >= 0 && !isFinal && t < h + hold + OUT;
+  const inHit = hitEl !== undefined && t < h + holdFor + pushFor;
 
   const cameraAt = (tt: number) => {
     let bump = 0;
     let x = 0;
     let y = 0;
     for (let i = 0; i < n; i++) {
-      const d = tt - hitAt(i) - 3;
+      const d = tt - hitAt(i) - stops[i].beat("kick");
       bump = Math.max(bump, (i === n - 1 ? 1.3 : 0.9) * kick(d));
       const s = shake(d, (i === n - 1 ? 9 : 6) * u, i * 1.9);
       x += s.x;
@@ -303,14 +327,19 @@ export function MilestoneRoll({
   const pFinalAt = (tt: number) =>
     spring({ frame: tt - finalAt, fps, config: CARD });
   const pUnitAt = (tt: number) =>
-    spring({ frame: tt - finalAt - 6, fps, config: MORPH });
+    spring({ frame: tt - unitEl.start, fps, config: MORPH });
   const pLogoAt = (tt: number) =>
-    spring({ frame: tt - finalAt - 12, fps, config: MORPH });
+    spring({ frame: tt - logoEl.start, fps, config: MORPH });
   const creepAt = (tt: number) =>
-    interpolate(tt, [finalAt + 4, finalAt + 70], [1, 1.035], {
-      ...CLAMP,
-      easing: CAMERA,
-    });
+    interpolate(
+      tt,
+      [finalAt + posterEl.beat("creepAt"), finalAt + posterEl.beat("creep")],
+      [1, 1.035],
+      {
+        ...CLAMP,
+        easing: CAMERA,
+      },
+    );
   const pFinal = pFinalAt(t);
   const pUnit = pUnitAt(t);
   const pLogo = pLogoAt(t);
@@ -324,7 +353,9 @@ export function MilestoneRoll({
       stirs((tt) => pUnitAt(tt) * 0.06 * base));
   const logoMoving = !camMoving && stirs((tt) => pLogoAt(tt) * 0.04 * H);
 
-  const chromeOut = isFinal ? 1 - ENTER(ramp(t, finalAt, 6)) : 1;
+  const chromeOut = isFinal
+    ? 1 - ENTER(ramp(t, finalAt, posterEl.beat("chromeOut")))
+    : 1;
   const runFill = isFinal ? 1 : inHit ? 1 : race;
   const margin = (tall ? 0.07 : 0.05) * W;
   const labelFs = (tall ? 0.017 : 0.025) * H;
@@ -374,7 +405,8 @@ export function MilestoneRoll({
               fontSize: labelFs,
               letterSpacing: "0.06em",
               textTransform: "uppercase",
-              opacity: chromeOut * ENTER(ramp(t, 0, 10)),
+              opacity:
+                chromeOut * ENTER(ramp(t, chromeEl.start, chromeEl.length)),
             }}
           >
             <div
@@ -416,7 +448,8 @@ export function MilestoneRoll({
               right: margin,
               bottom: (tall ? 0.06 : 0.08) * H,
               height: Math.max(2, 2 * u),
-              opacity: chromeOut * ENTER(ramp(t, 0, 10)),
+              opacity:
+                chromeOut * ENTER(ramp(t, chromeEl.start, chromeEl.length)),
             }}
           >
             <div
@@ -441,7 +474,7 @@ export function MilestoneRoll({
             />
           </div>
 
-          {!isFinal && (!inHit || t >= h + hold) ? (
+          {!isFinal && (!inHit || t >= h + holdFor) ? (
             <div
               style={{
                 position: "absolute",
@@ -514,7 +547,11 @@ export function MilestoneRoll({
                     pFinal < 0.9
                       ? `blur(${Math.max(0, 1 - pFinal) ** 2 * 14 * u}px)`
                       : undefined,
-                  opacity: ramp(t, finalAt - 1, 2),
+                  opacity: ramp(
+                    t,
+                    finalAt + posterEl.beat("fadeAt"),
+                    posterEl.beat("fade"),
+                  ),
                 }}
               >
                 {finalText}
@@ -528,7 +565,7 @@ export function MilestoneRoll({
                   lineHeight: 1,
                   letterSpacing: "-0.02em",
                   marginTop: 0.005 * base,
-                  opacity: ramp(t, finalAt + 6, 4),
+                  opacity: ramp(t, unitEl.start, unitEl.length),
                   transform: `translateY(${(1 - pUnit) * 0.06 * base}px)`,
                 }}
               >
@@ -545,7 +582,7 @@ export function MilestoneRoll({
                 bottom: (tall ? 0.07 : 0.075) * H,
                 display: "flex",
                 justifyContent: "center",
-                opacity: ramp(t, finalAt + 12, 5),
+                opacity: ramp(t, logoEl.start, logoEl.length),
                 transform: `translateY(${(1 - pLogo) * 0.04 * H}px)${glide(logoMoving)}`,
               }}
             >

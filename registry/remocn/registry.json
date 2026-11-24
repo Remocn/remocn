@@ -11626,13 +11626,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "milestone-roll/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/milestone-roll.tsx"
+          "target": "components/remocn/milestone-roll/index.tsx"
+        },
+        {
+          "path": "milestone-roll/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/milestone-roll/timeline.ts"
         }
       ]
     },
