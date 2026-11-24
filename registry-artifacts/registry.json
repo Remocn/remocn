@@ -4827,12 +4827,17 @@
       "title": "String Art",
       "description": "Threads string a ring of pins times-table style while the multiplier morphs from cardioid to nephroid and beyond.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/string-art/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/string-art.tsx"
+          "target": "components/remocn/string-art/index.tsx"
+        },
+        {
+          "path": "registry/remocn/string-art/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/string-art/timeline.ts"
         }
       ],
       "type": "registry:component"

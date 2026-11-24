@@ -2,6 +2,8 @@
 
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type StringArtElementId, stringArtTimeline } from "./timeline";
 
 export type StringArtProps = {
   /** Pins around the ring. */
@@ -26,9 +28,14 @@ export type StringArtProps = {
   background?: string;
   color?: string;
   accent?: string;
+  /**
+   * Moves, trims or stretches the pins, the stringing and the morph, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<StringArtElementId>;
 };
 
-export const stringArtDefaults: Required<StringArtProps> = {
+export const stringArtDefaults: Required<Omit<StringArtProps, "timing">> = {
   pins: 200,
   from: 2,
   to: 4,
@@ -45,51 +52,54 @@ export const stringArtDefaults: Required<StringArtProps> = {
 };
 
 const TAU = Math.PI * 2;
-const MORPH_DELAY = 24;
 // Share of each integer step spent holding on the clean integer figure.
 const HOLD = 0.3;
 const SWEEP_BUCKETS = 4;
 const fmt = (n: number) => Math.round(n * 10) / 10;
 
-export function StringArt({
-  pins = stringArtDefaults.pins,
-  from = stringArtDefaults.from,
-  to = stringArtDefaults.to,
-  stringFrames: stringFramesProp = stringArtDefaults.stringFrames,
-  morphFrames: morphFramesProp = stringArtDefaults.morphFrames,
-  sweep = stringArtDefaults.sweep,
-  sweepSpeed = stringArtDefaults.sweepSpeed,
-  threadOpacity = stringArtDefaults.threadOpacity,
-  showLabel = stringArtDefaults.showLabel,
-  speed = stringArtDefaults.speed,
-  background = stringArtDefaults.background,
-  color = stringArtDefaults.color,
-  accent = stringArtDefaults.accent,
-}: StringArtProps) {
+export function StringArt(props: StringArtProps) {
+  const {
+    pins = stringArtDefaults.pins,
+    from = stringArtDefaults.from,
+    to = stringArtDefaults.to,
+    sweep = stringArtDefaults.sweep,
+    sweepSpeed = stringArtDefaults.sweepSpeed,
+    threadOpacity = stringArtDefaults.threadOpacity,
+    showLabel = stringArtDefaults.showLabel,
+    speed = stringArtDefaults.speed,
+    background = stringArtDefaults.background,
+    color = stringArtDefaults.color,
+    accent = stringArtDefaults.accent,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    stringArtTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const stringing = tl.get("string");
+  const morph = tl.get("morph");
+  const pinsEl = tl.get("pins");
   const n = Math.max(8, Math.round(pins));
   const unit = Math.min(width, height) / 720;
   const radius = Math.min(width, height) * 0.42;
   const cx = width / 2;
   const cy = height / 2;
   const time = frame * speed;
-  // interpolate() needs a strictly increasing range.
-  const stringFrames = Math.max(1, stringFramesProp);
-  const morphFrames = Math.max(1, morphFramesProp);
-
-  const strung = interpolate(time, [0, stringFrames], [0, n], {
+  const strung = interpolate(time, [stringing.start, stringing.end], [0, n], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.inOut(Easing.quad),
   });
-  const morphStart = stringFrames + MORPH_DELAY;
   // The multiplier walks through each integer table (cardioid, nephroid, ...)
   // with an eased step and a short hold on every clean figure.
   const span = to - from;
   const steps = Math.max(1, Math.ceil(Math.abs(span) - 1e-6));
   const u =
-    interpolate(time, [morphStart, morphStart + morphFrames], [0, steps], {
+    interpolate(time, [morph.start, morph.end], [0, steps], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     }) - 1e-9;
@@ -112,7 +122,7 @@ export function StringArt({
   const accents: string[] = new Array(SWEEP_BUCKETS).fill("");
   const whole = Math.floor(strung);
   // The accent sweep rides the stringing head, then keeps circling the ring.
-  const head = strung + Math.max(0, time - stringFrames) * sweepSpeed;
+  const head = strung + Math.max(0, time - stringing.end) * sweepSpeed;
   const tail = Math.max(0, sweep) * n;
   for (let i = 0; i < Math.ceil(strung); i++) {
     const start = point(i);
@@ -138,13 +148,14 @@ export function StringArt({
     const { x, y } = point(i);
     pinDots += `M ${fmt(x - pr)} ${fmt(y)} a ${fmt(pr)} ${fmt(pr)} 0 1 0 ${fmt(pr * 2)} 0 a ${fmt(pr)} ${fmt(pr)} 0 1 0 ${fmt(-pr * 2)} 0 `;
   }
-  const pinsIn = interpolate(time, [0, 12], [0, 1], {
+  const pinsIn = interpolate(time, [pinsEl.start, pinsEl.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
+  const labelAt = stringing.end + stringing.beat("labelAt");
   const labelIn = interpolate(
     time,
-    [stringFrames - 10, stringFrames + 6],
+    [labelAt, labelAt + stringing.beat("label")],
     [0, 1],
     {
       extrapolateLeft: "clamp",
