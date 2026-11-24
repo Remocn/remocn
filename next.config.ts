@@ -123,6 +123,12 @@ const nextConfig: NextConfig = {
         destination: "/docs/guides/remotion-text-animations",
         permanent: true,
       },
+      // Short, question-shaped URL for the Remotion MCP servers answer page.
+      {
+        source: "/remotion-mcp-server",
+        destination: "/docs/guides/remotion-mcp-servers",
+        permanent: true,
+      },
       // Short URL for the Claude Code plugin page, as it is shared.
       {
         source: "/plugin",
