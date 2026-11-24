@@ -4627,12 +4627,17 @@
       "title": "Inflate",
       "description": "A deflated red sliver puffs up like a balloon toy, overshoots, squashes wide and settles into a glossy rounded mark.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/inflate/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/inflate.tsx"
+          "target": "components/remocn/inflate/index.tsx"
+        },
+        {
+          "path": "registry/remocn/inflate/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/inflate/timeline.ts"
         }
       ],
       "type": "registry:component"
