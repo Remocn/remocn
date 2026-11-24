@@ -7375,12 +7375,21 @@
       "title": "Feather Settle",
       "description": "\"Your launch, landing softly.\" settles in as if falling like a feather on a taupe ground.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/feather-settle/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/feather-settle.tsx"
+          "target": "components/remocn/feather-settle/index.tsx"
+        },
+        {
+          "path": "registry/remocn/feather-settle/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/feather-settle/timeline.ts"
         }
       ],
       "type": "registry:component"

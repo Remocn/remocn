@@ -7380,10 +7380,19 @@
         {
           "path": "feather-settle/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/feather-settle.tsx"
+          "target": "components/remocn/feather-settle/index.tsx"
+        },
+        {
+          "path": "feather-settle/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/feather-settle/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "churn-count",

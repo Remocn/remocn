@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type FeatherSettleElementId,
+  featherSettleTimeline,
+  wordsOf,
+} from "./timeline";
 
 const lexend = loadFont("normal", {
   weights: ["300"],
@@ -38,6 +45,11 @@ export interface FeatherSettleProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FeatherSettleElementId>;
 }
 
 const THEMES = {
@@ -45,7 +57,6 @@ const THEMES = {
   light: { bg: "#EFE6D8", ink: "#3A2F25", accent: "#5E8B60" },
 } as const;
 
-const FIRST = 4;
 const CYCLES = 1.55;
 const TILT = 7;
 
@@ -138,31 +149,37 @@ function ScaleLayer({
 // pixel grid until it lands.
 const midway = (k: number) => k > 5e-4 && k < 1 - 5e-4;
 
-export function FeatherSettle({
-  text = "Your launch, landing softly.",
-  highlight = "softly",
-  stagger = 13,
-  fall = 68,
-  sway = 1,
-  tilt: tiltMax = TILT,
-  accent,
-  ink,
-  background,
-  fontFamily = lexend.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: FeatherSettleProps) {
+export function FeatherSettle(props: FeatherSettleProps) {
+  const {
+    text = DEFAULT_TEXT,
+    highlight = "softly",
+    sway = 1,
+    tilt: tiltMax = TILT,
+    accent,
+    ink,
+    background,
+    fontFamily = lexend.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    featherSettleTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const words = useMemo(() => text.split(/\s+/).filter(Boolean), [text]);
+  const words = useMemo(() => wordsOf(text), [text]);
   const m = useMetrics(words, fontFamily);
 
   if (!m) {
@@ -200,8 +217,8 @@ export function FeatherSettle({
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <ScaleLayer scale={scale}>
         {placed.map((p, i) => {
-          const start = FIRST + i * stagger;
-          const k = interpolate(t, [start, start + fall], [0, 1], CLAMP);
+          const word = tl.get(`word:${i}`);
+          const k = interpolate(t, [word.start, word.end], [0, 1], CLAMP);
           const drop = DRIFT(k);
           const height = H * (portrait ? 0.5 : 0.6) * (0.9 + hash(i) * 0.2);
           const y = -height * (1 - drop);
