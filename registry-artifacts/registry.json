@@ -8664,12 +8664,21 @@
       "title": "Spotlight Text",
       "description": "A spotlight travels across a dark headline, 'Launch videos, in code.', with a mono eyebrow.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/spotlight-text/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/spotlight-text.tsx"
+          "target": "components/remocn/spotlight-text/index.tsx"
+        },
+        {
+          "path": "registry/remocn/spotlight-text/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/spotlight-text/timeline.ts"
         }
       ],
       "type": "registry:component"

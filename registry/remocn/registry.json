@@ -8669,10 +8669,19 @@
         {
           "path": "spotlight-text/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/spotlight-text.tsx"
+          "target": "components/remocn/spotlight-text/index.tsx"
+        },
+        {
+          "path": "spotlight-text/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/spotlight-text/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "border-beam",
