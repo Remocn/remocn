@@ -12425,10 +12425,19 @@
         {
           "path": "spring-bars/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/spring-bars.tsx"
+          "target": "components/remocn/spring-bars/index.tsx"
+        },
+        {
+          "path": "spring-bars/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/spring-bars/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "dot-sort",
