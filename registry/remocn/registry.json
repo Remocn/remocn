@@ -13205,10 +13205,19 @@
         {
           "path": "bubble-pack/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bubble-pack.tsx"
+          "target": "components/remocn/bubble-pack/index.tsx"
+        },
+        {
+          "path": "bubble-pack/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bubble-pack/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "treemap-split",

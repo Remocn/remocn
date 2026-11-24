@@ -13200,12 +13200,21 @@
       "title": "Bubble Pack",
       "description": "Packed bubbles for categories grow around one big gradient bubble reading 420.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/bubble-pack/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bubble-pack.tsx"
+          "target": "components/remocn/bubble-pack/index.tsx"
+        },
+        {
+          "path": "registry/remocn/bubble-pack/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bubble-pack/timeline.ts"
         }
       ],
       "type": "registry:component"
