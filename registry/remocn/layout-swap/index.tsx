@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_HEADLINES,
+  type LayoutSwapElementId,
+  layoutSwapSteps,
+  layoutSwapTimeline,
+} from "./timeline";
 
 const inter = loadInterTight("normal", {
   weights: ["400", "500"],
@@ -37,6 +44,12 @@ export interface LayoutSwapProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the first headline's entry, single swaps and
+   * the ground's drift, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LayoutSwapElementId>;
 }
 
 const BEAM = ["#f4f7ff", "#8fb4ff", "#3d5bff", "#1a1660"] as const;
@@ -239,32 +252,34 @@ function ScaleLayer({
   );
 }
 
-export function LayoutSwap({
-  headlines = [
-    "Animations.",
-    "Animations, transitions, backgrounds.",
-    "Animations, transitions and backgrounds, ready to install.",
-  ],
-  highlight = "ready to install.",
-  align = "center",
-  hold = 28,
-  move = 28,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = inter.fontFamily,
-  fontWeight = 500,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: LayoutSwapProps) {
+export function LayoutSwap(props: LayoutSwapProps) {
+  const {
+    headlines = DEFAULT_HEADLINES,
+    highlight = "ready to install.",
+    align = "center",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = inter.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    layoutSwapTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const t = THEMES[theme];
   const fg = ink ?? t.fg;
-  const steps = headlines.length > 0 ? headlines : ["remocn"];
+  const steps = layoutSwapSteps(headlines);
 
   const split = steps.map((h) => h.split(/\s+/).filter(Boolean));
   const all = split.flat();
@@ -302,26 +317,22 @@ export function LayoutSwap({
     return keyed[s].get(p.key) ?? p;
   };
 
-  const ENTER = 20;
-  const stepStart = (k: number) => ENTER + k * (hold + move);
+  // `swap:<k>` moves onto headline `k`.
   let k = 0;
-  while (k < steps.length - 1 && frame >= stepStart(k) + hold) k++;
-  const moving = k > 0 && frame < stepStart(k - 1) + hold + move;
+  while (k < steps.length - 1 && frame >= tl.get(`swap:${k + 1}`).start) k++;
+  const swap = k > 0 ? tl.get(`swap:${k}`) : null;
+  const moving = swap !== null && frame < swap.end;
   const from = moving ? k - 1 : k;
   const to = k;
-  const moveT = moving
-    ? (frame - (stepStart(from) + hold)) / Math.max(1, move)
-    : 1;
+  const moveT =
+    moving && swap ? (frame - swap.start) / Math.max(1, swap.length) : 1;
 
   const hlKeys = new Set(
     (highlight ?? "").split(/\s+/).map(norm).filter(Boolean),
   );
-  const drift = interpolate(
-    frame,
-    [0, durationInFrames * speed],
-    [0, 1],
-    CLAMP,
-  );
+  const eDrift = tl.get("drift");
+  const drift = interpolate(frame, [eDrift.start, eDrift.end], [0, 1], CLAMP);
+  const enter = tl.get("enter");
 
   type Draw = {
     id: string;
@@ -347,10 +358,15 @@ export function LayoutSwap({
     L.forEach((p, i) => {
       const e =
         to === 0
-          ? interpolate(frame, [i * 2.5, i * 2.5 + 16], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            })
+          ? interpolate(
+              frame,
+              [
+                enter.start + i * enter.beat("stagger"),
+                enter.start + i * enter.beat("stagger") + enter.beat("word"),
+              ],
+              [0, 1],
+              { ...CLAMP, easing: EASE_OUT },
+            )
           : 1;
       draws.push({
         id: `${to}:${p.key}`,

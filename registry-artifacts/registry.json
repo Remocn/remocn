@@ -9186,12 +9186,21 @@
       "title": "Layout Swap",
       "description": "Headlines swap by shifting layout, ending 'Animations, transitions and backgrounds, ready to install.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/layout-swap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/layout-swap.tsx"
+          "target": "components/remocn/layout-swap/index.tsx"
+        },
+        {
+          "path": "registry/remocn/layout-swap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/layout-swap/timeline.ts"
         }
       ],
       "type": "registry:component"
