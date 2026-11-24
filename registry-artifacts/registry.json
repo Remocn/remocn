@@ -2270,12 +2270,21 @@
       "title": "Number Wheel",
       "description": "Mechanical odometer that rolls an integer up or down to its target, direction inferred from the values.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/number-wheel/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/number-wheel.tsx"
+          "target": "components/remocn/number-wheel/index.tsx"
+        },
+        {
+          "path": "registry/remocn/number-wheel/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/number-wheel/timeline.ts"
         }
       ],
       "type": "registry:component"

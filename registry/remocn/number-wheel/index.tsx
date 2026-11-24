@@ -5,6 +5,8 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type NumberWheelElementId, numberWheelTimeline } from "./timeline";
 
 const { fontFamily: MONO_FAMILY } = loadMono();
 
@@ -14,6 +16,11 @@ export interface NumberWheelProps {
   fontSize?: number;
   color?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the count, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<NumberWheelElementId>;
 }
 
 export interface OdometerProps {
@@ -25,7 +32,6 @@ export interface OdometerProps {
 const WHEEL_ROLL_START = 0.9;
 const SPRING_FRAMES = 30;
 const SPRING_CONFIG = { damping: 200, stiffness: 100, mass: 1 } as const;
-const COUNT_PORTION = 0.8;
 
 function rollFraction(current: number, place: number): number {
   const v = current / 10 ** place;
@@ -194,22 +200,27 @@ export function Odometer({ current, fontSize, color }: OdometerProps) {
   );
 }
 
-export function NumberWheel({
-  from = 0,
-  to = 24813,
-  fontSize = 120,
-  color = "#171717",
-  speed = 1,
-}: NumberWheelProps) {
+export function NumberWheel(props: NumberWheelProps) {
+  const {
+    from = 0,
+    to = 24813,
+    fontSize = 120,
+    color = "#171717",
+    speed = 1,
+    timing,
+  } = props;
   const frame = useSceneFrame();
   const { durationInFrames, fps } = useSceneConfig();
+  // The count is a share of the clip's own length, not stretched by `speed`.
+  const tl = useTimeline(numberWheelTimeline, props, durationInFrames, timing);
+  const count = tl.get("count");
 
   const start = Math.max(0, Math.round(from));
   const end = Math.max(0, Math.round(to));
 
   const progress = interpolate(
     frame * speed,
-    [0, durationInFrames * COUNT_PORTION],
+    [count.start, count.end],
     [0, 1],
     {
       extrapolateLeft: "clamp",

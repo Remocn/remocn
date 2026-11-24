@@ -2275,10 +2275,19 @@
         {
           "path": "number-wheel/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/number-wheel.tsx"
+          "target": "components/remocn/number-wheel/index.tsx"
+        },
+        {
+          "path": "number-wheel/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/number-wheel/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "rolling-number",
