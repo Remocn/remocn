@@ -14779,12 +14779,21 @@
       "title": "Countdown",
       "description": "A monumental countdown numeral inside a ring resolves into a Live lockup.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/countdown/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/countdown.tsx"
+          "target": "components/remocn/countdown/index.tsx"
+        },
+        {
+          "path": "registry/remocn/countdown/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/countdown/timeline.ts"
         }
       ],
       "type": "registry:component"
