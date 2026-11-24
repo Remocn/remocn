@@ -9727,12 +9727,21 @@
       "title": "Thin Slab",
       "description": "A big '1 day' contrasted with a thin progress slab labeled 14x faster than by hand.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/thin-slab/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/thin-slab.tsx"
+          "target": "components/remocn/thin-slab/index.tsx"
+        },
+        {
+          "path": "registry/remocn/thin-slab/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/thin-slab/timeline.ts"
         }
       ],
       "type": "registry:component"
