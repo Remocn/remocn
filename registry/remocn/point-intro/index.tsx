@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TITLE,
+  type PointIntroElementId,
+  pointIntroTimeline,
+  wordsOf,
+} from "./timeline";
 
 const face = loadFont("normal", {
   weights: ["400"],
@@ -41,6 +48,12 @@ export interface PointIntroProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the point's entrance, breath and glide, single
+   * words, the full stop and the subline, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PointIntroElementId>;
 }
 
 const THEMES = {
@@ -50,17 +63,6 @@ const THEMES = {
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
-
-// Beats, in frames at 30fps (before `speed`).
-const DOT_IN = 0;
-const BREATHE = 14;
-const BREATHE_LEN = 30;
-const GLIDE = 46;
-const GLIDE_LEN = 26;
-const WRITE = 66;
-const WORD_STAGGER = 13;
-const WORD_LEN = 26;
-const DOT_STEP = 18;
 
 /** Diameter of the point, in em of the headline. Matches a Figtree full stop. */
 const DOT_EM = 0.118;
@@ -113,27 +115,40 @@ function ScaleLayer({
   );
 }
 
-export function PointIntro({
-  title = "Introducing remocn 2.0",
-  subline = "Animated components for Remotion. Free and open source.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = face.fontFamily,
-  stagger = WORD_STAGGER,
-  soloScale = SOLO_SCALE,
-  scale = 1,
-  delay = 0,
-  theme = "light",
-  speed = 1,
-}: PointIntroProps) {
+export function PointIntro(props: PointIntroProps) {
+  const {
+    title = DEFAULT_TITLE,
+    subline = "Animated components for Remotion. Free and open source.",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = face.fontFamily,
+    soloScale = SOLO_SCALE,
+    scale = 1,
+    delay = 0,
+    theme = "light",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    pointIntroTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const t = THEMES[theme];
   const stage =
     background === "transparent" ? "transparent" : (background ?? t.bg);
-  const words = title.split(/\s+/).filter(Boolean);
+  const words = wordsOf(title);
+  const dotEl = tl.get("dot");
+  const breatheEl = tl.get("breathe");
+  const glideEl = tl.get("glide");
+  const openEl = tl.get("open");
+  const subEl = tl.get("subline");
+  const wordEls = tl.lane("Words");
 
   const fontSize = Math.round(width * 0.052);
   const subSize = Math.round(width * 0.0165);
@@ -187,18 +202,18 @@ export function PointIntro({
 
   // The point: in, one breath, a glide to the start of the line, then it
   // leads the writing word by word and settles as the full stop.
-  const dotIn = interpolate(frame, [DOT_IN, DOT_IN + 14], [0, 1], {
+  const dotIn = interpolate(frame, [dotEl.start, dotEl.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: EASE_OUT,
   });
-  const breath = interpolate(frame, [BREATHE, BREATHE + BREATHE_LEN], [0, 1], {
+  const breath = interpolate(frame, [breatheEl.start, breatheEl.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
   const breathe = Math.sin(EASE_IN_OUT(breath) * Math.PI) * 0.38;
-  const lastLand = WRITE + (words.length - 1) * stagger + DOT_STEP;
-  const settle = interpolate(frame, [GLIDE, lastLand], [0, 1], {
+  const lastLand = openEl.start + openEl.beat("land");
+  const settle = interpolate(frame, [glideEl.start, lastLand], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: EASE_IN_OUT,
@@ -210,7 +225,7 @@ export function PointIntro({
 
   const dotAt = (f: number) => {
     if (!layout) return [0, 0];
-    const glide = interpolate(f, [GLIDE, GLIDE + GLIDE_LEN], [0, 1], {
+    const glide = interpolate(f, [glideEl.start, glideEl.end], [0, 1], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
       easing: EASE_IN_OUT,
@@ -229,7 +244,7 @@ export function PointIntro({
           : (layout.wordRight[i] ?? 0) + stopOffset;
       const p = interpolate(
         f,
-        [WRITE + i * stagger, WRITE + i * stagger + DOT_STEP],
+        [wordEls[i].start, wordEls[i].start + wordEls[i].beat("step")],
         [0, 1],
         {
           extrapolateLeft: "clamp",
@@ -263,7 +278,7 @@ export function PointIntro({
   // The point writes: text exists only behind it, surfacing through a soft
   // edge that ends just past its left side. Once it lands, the edge opens.
   const pad = MASK_PAD * fontSize;
-  const opened = interpolate(frame, [lastLand - 4, lastLand + 8], [0, 1], {
+  const opened = interpolate(frame, [openEl.start, openEl.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -274,8 +289,7 @@ export function PointIntro({
     frontier - fontSize * 0.16
   }px, transparent ${frontier}px)`;
 
-  const subStart = lastLand + 10;
-  const subP = interpolate(frame, [subStart, subStart + 30], [0, 1], {
+  const subP = interpolate(frame, [subEl.start, subEl.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: EASE_OUT,
@@ -316,8 +330,8 @@ export function PointIntro({
             }}
           >
             {words.map((w, i) => {
-              const start = WRITE + i * stagger;
-              const p = interpolate(frame, [start, start + WORD_LEN], [0, 1], {
+              const word = wordEls[i];
+              const p = interpolate(frame, [word.start, word.end], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
                 easing: EASE_OUT,

@@ -9006,10 +9006,19 @@
         {
           "path": "point-intro/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/point-intro.tsx"
+          "target": "components/remocn/point-intro/index.tsx"
+        },
+        {
+          "path": "point-intro/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/point-intro/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "grid-cell",
