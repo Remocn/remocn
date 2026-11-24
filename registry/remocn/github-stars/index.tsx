@@ -8,6 +8,12 @@ import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
 import { Odometer } from "@/components/remocn/number-wheel";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  COUNT_PORTION,
+  type GitHubStarsElementId,
+  gitHubStarsTimeline,
+} from "./timeline";
 
 export interface Stargazer {
   login: string;
@@ -25,6 +31,18 @@ export interface GitHubStarsProps {
   speed?: number;
   theme?: "light" | "dark";
   repoAvatarUrl?: string;
+  /**
+   * Moves, trims or stretches the count, the scroll and the newest row's
+   * highlight, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `speed`.
+   */
+  timing?: Timing<GitHubStarsElementId>;
+}
+
+/** Where a ramp runs, in frames of the scene timeline. */
+export interface GitHubStarsSpan {
+  start: number;
+  end: number;
 }
 
 /**
@@ -645,44 +663,47 @@ export function downsampleStargazers(
 const MAX_ELASTIC_OVERSHOOT = 0.0658; // Easing.elastic(1) peak−1 (true ≈0.0657267), rounded UP for use as a safety bound
 const SCROLL_OVERSHOOT = 1 + MAX_ELASTIC_OVERSHOOT; // ≈1.0658
 const MASK_SOLID_FRACTION = 0.88; // bottom fade mask is solid until 88% of viewport height
-const COUNT_PORTION = 0.8;
 
 /** Monotonic counter ramp — mirrors the reference StarCount easing. Drives the
  *  odometer, which must stay monotonic or the digit wheels roll backward. */
-export function computeCounterProgress({
-  frame,
-  speed = 1,
-  durationInFrames,
-}: {
-  frame: number;
-  speed?: number;
-  durationInFrames: number;
-}): number {
-  return interpolate(
-    frame * speed,
-    [0, durationInFrames * COUNT_PORTION],
-    [0, 1],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-      easing: Easing.bezier(0.5, 1, 0.5, 1),
-    },
-  );
+export function computeCounterProgress(
+  {
+    frame,
+    speed = 1,
+    durationInFrames,
+  }: {
+    frame: number;
+    speed?: number;
+    durationInFrames: number;
+  },
+  span: GitHubStarsSpan = {
+    start: 0,
+    end: durationInFrames * COUNT_PORTION,
+  },
+): number {
+  return interpolate(frame * speed, [span.start, span.end], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.5, 1, 0.5, 1),
+  });
 }
 
 /** Elastic scroll ramp — mirrors the reference avatar slide. NON-monotonic:
  *  overshoots to ~SCROLL_OVERSHOOT near t≈0.63 and settles to exactly 1 at t=1.
  *  Drives only scrollY (never the odometer). */
-export function computeScrollProgress({
-  frame,
-  speed = 1,
-  durationInFrames,
-}: {
-  frame: number;
-  speed?: number;
-  durationInFrames: number;
-}): number {
-  return interpolate(frame * speed, [0, durationInFrames], [0, 1], {
+export function computeScrollProgress(
+  {
+    frame,
+    speed = 1,
+    durationInFrames,
+  }: {
+    frame: number;
+    speed?: number;
+    durationInFrames: number;
+  },
+  span: GitHubStarsSpan = { start: 0, end: durationInFrames },
+): number {
+  return interpolate(frame * speed, [span.start, span.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.elastic(0.8),
@@ -941,19 +962,27 @@ const Row = memo(function Row({
 
 // --- Main composition ------------------------------------------------------
 
-export function GitHubStars({
-  repo = "remotion-dev/remotion",
-  totalStars = 24813,
-  stargazers = SAMPLE_STARGAZERS,
-  orientation = "horizontal",
-  accentColor = "#ffbb00",
-  speed = 1,
-  theme = "light",
-  repoAvatarUrl,
-}: GitHubStarsProps) {
+export function GitHubStars(props: GitHubStarsProps) {
+  const {
+    repo = "remotion-dev/remotion",
+    totalStars = 24813,
+    stargazers = SAMPLE_STARGAZERS,
+    orientation = "horizontal",
+    accentColor = "#ffbb00",
+    speed = 1,
+    theme = "light",
+    repoAvatarUrl,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const { durationInFrames, width, height } = useSceneConfig();
+  // The ramps span `durationInFrames` of the sped-up timeline, so the
+  // animation ends early at speed > 1 and the schedule is fitted to that.
+  const tl = useTimeline(gitHubStarsTimeline, props, durationInFrames, timing);
+  const counterEl = tl.get("counter");
+  const scrollEl = tl.get("scroll");
+  const settleEl = tl.get("settle");
   const t = THEMES[theme] ?? THEMES.light;
   const isVertical = orientation === "vertical";
 
@@ -968,15 +997,16 @@ export function GitHubStars({
   const N = rows.length;
 
   // Progress drivers: monotonic counter ramp + non-monotonic elastic scroll.
-  const counterProgress = computeCounterProgress({
-    frame,
-    speed,
-    durationInFrames,
-  });
-  const pScroll = computeScrollProgress({ frame, speed, durationInFrames });
+  const counterProgress = computeCounterProgress(
+    { frame, speed, durationInFrames },
+    counterEl,
+  );
+  const pScroll = computeScrollProgress(
+    { frame, speed, durationInFrames },
+    scrollEl,
+  );
   const scrollAt = (f: number) =>
-    computeScrollProgress({ frame: f, speed, durationInFrames });
-  const p = Math.max(0, Math.min(1, (frame * speed) / durationInFrames));
+    computeScrollProgress({ frame: f, speed, durationInFrames }, scrollEl);
 
   const current = counterProgress * totalStars;
 
@@ -1018,10 +1048,15 @@ export function GitHubStars({
   });
   const spacerPx = spacerRows * rowH;
 
-  const settle = interpolate(p, [0.92, 1], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const settle = interpolate(
+    frame * speed,
+    [settleEl.start, settleEl.end],
+    [0, 1],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    },
+  );
 
   // Counter zone type scale.
   const counterSize = isVertical ? 96 : 120;

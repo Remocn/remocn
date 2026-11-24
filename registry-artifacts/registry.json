@@ -2476,13 +2476,19 @@
       "registryDependencies": [
         "@remocn/number-wheel",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/github-stars/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/github-stars.tsx"
+          "target": "components/remocn/github-stars/index.tsx"
+        },
+        {
+          "path": "registry/remocn/github-stars/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/github-stars/timeline.ts"
         }
       ],
       "type": "registry:component"
