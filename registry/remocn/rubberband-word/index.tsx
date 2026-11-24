@@ -6,6 +6,14 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_SNAP_WORD,
+  DEFAULT_WORD,
+  type RubberbandWordElementId,
+  rubberbandWordTimeline,
+  wordsOf,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -34,6 +42,12 @@ export interface RubberbandWordProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the cursor's approach, pull, hold and snap,
+   * the word swap and the period, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RubberbandWordElementId>;
 }
 
 // Sora 500, per 1000 em, chars 32–126 (harfbuzz, wght 500).
@@ -94,11 +108,6 @@ const THEMES = {
   dark: { bg: "#0A0A0B", fg: "#F3F2EF", halo: ["#FFB36B", "#E2457A"] },
   light: { bg: "#F5F4F0", fg: "#121214", halo: ["#E8743A", "#D83A71"] },
 } as const;
-
-// Beats (frames at speed 1).
-const GRAB = 22;
-const DRAG_END = 56;
-const RELEASE = 64;
 
 function adv(ch: string) {
   const c = ch.charCodeAt(0);
@@ -225,32 +234,43 @@ function ScaleLayer({
   );
 }
 
-export function RubberbandWord({
-  word = "tension",
-  snapWord = "release",
-  period = true,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  hold = RELEASE - DRAG_END,
-  stretch = 1,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: RubberbandWordProps) {
+export function RubberbandWord(props: RubberbandWordProps) {
+  const {
+    word = DEFAULT_WORD,
+    snapWord = DEFAULT_SNAP_WORD,
+    period = true,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    stretch = 1,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    rubberbandWordTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const t = THEMES[theme];
   const fg = ink ?? t.fg;
-  // interpolate() needs a rising range from DRAG_END, so the hold is at least a frame.
-  const release = DRAG_END + Math.max(1, hold);
+  const approachEl = tl.get("approach");
+  const pull = tl.get("pull");
+  const holdEl = tl.get("hold");
+  const snap = tl.get("snap");
+  const GRAB = pull.start;
+  const release = snap.start;
 
-  const from = word.trim() || "tension";
-  const to = snapWord.trim() || from;
-  const swaps = to !== from;
+  const { from, to, swaps } = wordsOf(word, snapWord);
+  const swapEl = swaps ? tl.get("swap") : undefined;
+  const periodEl = period ? tl.get("period") : undefined;
 
   const A = layout(from);
   const B = layout(to);
@@ -265,22 +285,27 @@ export function RubberbandWord({
   const sMax = W * 0.21 * stretch;
 
   // Pull: drag out, hold the tension, then let go with one damped overshoot.
-  const drag = interpolate(frame, [GRAB + 4, DRAG_END], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const creep = interpolate(frame, [DRAG_END, release], [0, 1], {
+  const drag = interpolate(
+    frame,
+    [GRAB + pull.beat("drag"), pull.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const creep = interpolate(frame, [holdEl.start, holdEl.end], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
   const held = sMax * (0.95 * drag + 0.05 * creep);
   const sAt = (f: number) => {
     if (f < release) {
-      const d = interpolate(f, [GRAB + 4, DRAG_END], [0, 1], {
+      const d = interpolate(f, [GRAB + pull.beat("drag"), pull.end], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
-      const c = interpolate(f, [DRAG_END, release], [0, 1], {
+      const c = interpolate(f, [holdEl.start, holdEl.end], [0, 1], {
         ...CLAMP,
         easing: Easing.bezier(0.22, 1, 0.36, 1),
       });
@@ -301,21 +326,31 @@ export function RubberbandWord({
     leftA + (A.xs[lastA] + A.ws[lastA] - rsb(from[lastA])) * F - F * 0.05;
   const press = interpolate(
     frame,
-    [GRAB, GRAB + 3, release, release + 4],
+    [GRAB, GRAB + pull.beat("press"), release, release + snap.beat("pressOut")],
     [0, 1, 1, 0],
     CLAMP,
   );
-  const approach = interpolate(frame, [0, GRAB], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const approach = interpolate(
+    frame,
+    [approachEl.start, approachEl.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const startX = W * 0.8;
   const startY = H * 0.86;
   const arc = Math.sin(approach * Math.PI) * H * 0.05;
-  const away = interpolate(frame, [release + 1, release + 26], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const away = interpolate(
+    frame,
+    [release + snap.beat("awayAt"), release + snap.beat("away")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const lift = H * 0.015 * (0.95 * drag + 0.05 * creep);
   let cx = startX + (grabX0 - startX) * approach + arc * 0.5;
   let cyCursor = startY + (cy - startY) * approach + arc;
@@ -329,7 +364,7 @@ export function RubberbandWord({
   }
   const cursorOpacity = interpolate(
     frame,
-    [release + 8, release + 22],
+    [release + snap.beat("fadeAt"), release + snap.beat("fadeDone")],
     [1, 0],
     CLAMP,
   );
@@ -337,7 +372,6 @@ export function RubberbandWord({
 
   // The swap rides the snap: the old word squashes flat onto its baseline,
   // the new one springs up out of that line with one overshoot.
-  const SWAP = release + 4;
   const clipTop = baseline - F * 0.98;
   const clipH = F * 1.24;
   const squash = (
@@ -346,9 +380,13 @@ export function RubberbandWord({
     incoming: boolean,
     f: number = frame,
   ) => {
-    const start = SWAP + (count - 1 - i) * 0.5 + (incoming ? 4 : 0);
+    if (!swapEl) return 1;
+    const start =
+      swapEl.start +
+      (count - 1 - i) * swapEl.beat("stagger") +
+      (incoming ? swapEl.beat("incoming") : 0);
     if (!incoming) {
-      return interpolate(f, [start, start + 5], [1, 0], {
+      return interpolate(f, [start, start + swapEl.beat("squash")], [1, 0], {
         ...CLAMP,
         easing: Easing.bezier(0.55, 0, 1, 0.45),
       });
@@ -368,11 +406,12 @@ export function RubberbandWord({
     B.width *
     F *
     0.12 *
-    interpolate(frame, [release, release + 60], [0, 1], {
+    interpolate(frame, [release, release + snap.beat("drift")], [0, 1], {
       ...CLAMP,
       easing: Easing.bezier(0.45, 0, 0.55, 1),
     });
-  const accentOn = interpolate(frame, [GRAB, GRAB + 3], [0, 1], CLAMP) > 0.5;
+  const accentOn =
+    interpolate(frame, [GRAB, GRAB + pull.beat("press")], [0, 1], CLAMP) > 0.5;
 
   const glyphs = (
     text: string,
@@ -397,13 +436,16 @@ export function RubberbandWord({
       const moving = step(at(frame - speed)) || step(at(frame + speed));
       const isLast = i === text.length - 1;
       const color =
-        !incoming && isLast && accentOn && (swaps || frame < release + 6)
+        !incoming &&
+        isLast &&
+        accentOn &&
+        (swaps || frame < release + snap.beat("fill"))
           ? accent
           : fg;
       const w = L.ws[i] * F;
       // The snapped word wears the gradient; without a swap the word itself does.
       const fill: React.CSSProperties =
-        incoming || (!swaps && frame >= release + 6)
+        incoming || (!swaps && frame >= release + snap.beat("fill"))
           ? {
               color: "transparent",
               backgroundImage: wordGradient,
@@ -443,7 +485,12 @@ export function RubberbandWord({
   let bandX: [number, number] = [0, 1];
   const bandOpacity =
     interpolate(s, [sMax * 0.02, sMax * 0.1], [0, 1], CLAMP) *
-    interpolate(frame, [release, release + 5], [1, 0], CLAMP);
+    interpolate(
+      frame,
+      [release, release + snap.beat("bandOut")],
+      [1, 0],
+      CLAMP,
+    );
   if (from.length > 1 && bandOpacity > 0) {
     const prev = lastA - 1;
     const gp = elastic(prev, from.length, A.xs, s, sMax);
@@ -470,10 +517,12 @@ export function RubberbandWord({
     bandX = [xL - xh * 0.3, xR];
   }
 
-  const dotIn = interpolate(frame, [SWAP + 10, SWAP + 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const dotIn = periodEl
+    ? interpolate(frame, [periodEl.start, periodEl.end], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      })
+    : 0;
   const lastB = to.length - 1;
   const gB = elastic(lastB, to.length, B.xs, s, sMax);
   const dotLeft = leftB + (B.xs[lastB] + B.ws[lastB] + TRACK) * F + gB.dx;

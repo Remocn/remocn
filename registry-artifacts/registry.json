@@ -11115,12 +11115,21 @@
       "title": "Rubberband Word",
       "description": "A cursor grabs a word by its last letter, stretches it and snaps it into a new word.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/rubberband-word/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/rubberband-word.tsx"
+          "target": "components/remocn/rubberband-word/index.tsx"
+        },
+        {
+          "path": "registry/remocn/rubberband-word/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/rubberband-word/timeline.ts"
         }
       ],
       "type": "registry:component"
