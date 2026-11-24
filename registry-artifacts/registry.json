@@ -1901,12 +1901,17 @@
       "title": "Gooey Morph",
       "description": "Bars fly in Tetris-style, land as a row, and melt into a word through a gooey blur-and-threshold morph.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/gooey-morph/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/gooey-morph.tsx"
+          "target": "components/remocn/gooey-morph/index.tsx"
+        },
+        {
+          "path": "registry/remocn/gooey-morph/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/gooey-morph/timeline.ts"
         }
       ],
       "type": "registry:component"
