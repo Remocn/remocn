@@ -13,6 +13,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  DEFAULT_WORD,
+  linesOf,
+  type PinnedWordElementId,
+  pinnedWordTimeline,
+} from "./timeline";
 
 const sans = loadSans("normal", { weights: ["500"], subsets: ["latin"] });
 const serif = loadSerif("italic", { weights: ["400"], subsets: ["latin"] });
@@ -38,6 +46,12 @@ export interface PinnedWordProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the pinned word, the first line opening and
+   * each flick to the next line, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PinnedWordElementId>;
 }
 
 const MESH = ["#ecdcf2", "#8796ee", "#2e45b7", "#0e1645"] as const;
@@ -65,11 +79,6 @@ const THEMES = {
 
 const SANS_TRACK = -0.025;
 const PIN_SCALE = 1.8;
-
-const INTRO_WORD = 0;
-const INTRO_LINE = 8;
-const FIRST_FLICK = 40;
-const FLICK = 18;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_FLICK = Easing.bezier(0.3, 0, 0.08, 1);
@@ -202,34 +211,36 @@ function ScaleLayer({
   );
 }
 
-export function PinnedWord({
-  lines = [
-    "Ship a video tonight.",
-    "Write the video in code.",
-    "Own every video frame.",
-  ],
-  word = "video",
-  hold = 36,
-  flick = FLICK,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans.fontFamily,
-  accentFont = serif.fontFamily,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: PinnedWordProps) {
+export function PinnedWord(props: PinnedWordProps) {
+  const {
+    lines = DEFAULT_LINES,
+    word = DEFAULT_WORD,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans.fontFamily,
+    accentFont = serif.fontFamily,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    pinnedWordTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const blurId = `pwb${uid}`;
-  const list = lines.length > 0 ? lines : [word];
+  const list = linesOf(lines, word);
   const parts = useMemo(() => list.map((l) => split(l, word)), [list, word]);
   const widths = useWidths(parts, fontFamily, accentFont);
 
@@ -277,12 +288,11 @@ export function PinnedWord({
   const rowGap = F * 1.3;
 
   const n = list.length;
-  const STEP = Math.max(flick + 6, hold);
-  const flickAt = (k: number) => FIRST_FLICK + (k - 1) * STEP;
+  const lineEls = list.map((_, k) => tl.get(`line:${k}`));
   const posAt = (f: number) => {
     let p = 0;
     for (let k = 1; k < n; k++) {
-      p += interpolate(f, [flickAt(k), flickAt(k) + flick], [0, 1], {
+      p += interpolate(f, [lineEls[k].start, lineEls[k].end], [0, 1], {
         ...CLAMP,
         easing: EASE_FLICK,
       });
@@ -294,21 +304,29 @@ export function PinnedWord({
   const pitch = stacked ? H * 0.5 : H * 0.62;
   const blurY = Math.min(F * 0.5, vel * pitch * 0.3);
 
-  const wordIn = interpolate(t, [INTRO_WORD, INTRO_WORD + 12], [0, 1], {
+  const wordEl = tl.get("word");
+  const wordIn = interpolate(t, [wordEl.start, wordEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
+  const first = lineEls[0];
+  const openLen = first.beat("open");
   const openAt = (f: number, from: number) =>
-    interpolate(f, [from, from + 20], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const openL = openAt(t, INTRO_LINE);
-  const openR = openAt(t, INTRO_LINE + 3);
+    interpolate(f, [from, from + openLen], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const openFrom = first.start;
+  const openRightFrom = first.start + first.beat("right");
+  const openL = openAt(t, openFrom);
+  const openR = openAt(t, openRightFrom);
   // Whether the rows' transforms change on this frame: a flick, or the
   // intro's rise of the first row.
   const rowsMoving = [t - speed, t + speed].some(
     (f) =>
       posAt(f) !== pos ||
-      openAt(f, INTRO_LINE) !== openL ||
-      openAt(f, INTRO_LINE + 3) !== openR,
+      openAt(f, openFrom) !== openL ||
+      openAt(f, openRightFrom) !== openR,
   );
 
   const nearest = Math.min(n - 1, Math.max(0, Math.round(pos)));
@@ -316,8 +334,9 @@ export function PinnedWord({
 
   let sheen = -1;
   for (let k = 0; k < n; k++) {
-    const at = k === 0 ? INTRO_LINE + 4 : flickAt(k) + flick * 0.4;
-    const p = interpolate(t, [at, at + 24], [0, 1], {
+    const e = lineEls[k];
+    const at = e.start + e.beat("sheen");
+    const p = interpolate(t, [at, at + e.beat("sheenLen")], [0, 1], {
       ...CLAMP,
       easing: Easing.bezier(0.4, 0, 0.2, 1),
     });

@@ -9185,12 +9185,21 @@
       "title": "Pinned Word",
       "description": "A serif italic word is pinned in a sentence while the rest changes, 'Own every video frame.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/pinned-word/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/pinned-word.tsx"
+          "target": "components/remocn/pinned-word/index.tsx"
+        },
+        {
+          "path": "registry/remocn/pinned-word/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/pinned-word/timeline.ts"
         }
       ],
       "type": "registry:component"
