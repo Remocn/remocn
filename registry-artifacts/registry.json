@@ -12960,12 +12960,17 @@
       "title": "Flock Form",
       "description": "A flock of birds flies in, forms an arrow, then settles into the R mark.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/flock-form/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/flock-form.tsx"
+          "target": "components/remocn/flock-form/index.tsx"
+        },
+        {
+          "path": "registry/remocn/flock-form/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/flock-form/timeline.ts"
         }
       ],
       "type": "registry:component"

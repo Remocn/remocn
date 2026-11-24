@@ -4,6 +4,19 @@ import type React from "react";
 import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  CRUISE,
+  FLY_IN,
+  FLY_IN2,
+  type FlockFormElementId,
+  FORM1,
+  flockFormTimeline,
+  HOLD,
+  LAUNCH,
+  RELEASE,
+  STAGGER,
+} from "./timeline";
 
 export interface FlockFormProps {
   /** Number of birds. Formations resample to match. */
@@ -23,16 +36,14 @@ export interface FlockFormProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the arrow forming, its launch and the landing
+   * in the mark, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FlockFormElementId>;
 }
 
-const FORM1 = 18;
-const STAGGER = 18;
-const FLY_IN = 28;
-const LAUNCH = 74;
-const RELEASE = 24;
-const CRUISE = 20;
-const FLY_IN2 = 28;
-const HOLD = 32;
 const PATH_PX = 1100;
 
 export const flockFormLength = () =>
@@ -380,20 +391,43 @@ function ScaleLayer({
   );
 }
 
-export function FlockForm({
-  count = 340,
-  accent = "#3B5BFD",
-  stagger = STAGGER,
-  birdSize = 1,
-  background,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: FlockFormProps) {
+export function FlockForm(props: FlockFormProps) {
+  const {
+    count = 340,
+    accent = "#3B5BFD",
+    birdSize = 1,
+    background,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    flockFormTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const arrow = tl.get("arrow");
+  const launch = tl.get("launch");
+  const landing = tl.get("mark");
+  const spread = arrow.beat("spread");
+  const jitter1 = arrow.beat("jitter");
+  const fly1 = arrow.beat("fly");
+  const releaseSpan = launch.beat("release");
+  const jitter2 = launch.beat("jitter");
+  const peel = launch.beat("peel");
+  const launchAt = launch.start;
+  const cruise = landing.start - launch.start;
+  const fly2 = landing.beat("fly");
+  // The free flight is simulated up to the arrow's default finish; a later
+  // arrow keeps the flock flying that much longer.
+  const steps =
+    FORM1 + STAGGER + FLY_IN + Math.max(0, Math.ceil(arrow.start - FORM1));
   const isLight = theme === "light";
   const bg = isLight ? "#F5F4F0" : "#0A0A0B";
   const ink = isLight ? "#141416" : "#EEEEF0";
@@ -454,7 +488,7 @@ export function FlockForm({
         y: H * (0.62 - 0.5 * Math.sin(k * Math.PI * 0.75)),
       };
     };
-    const free1 = flock(init, FORM1 + STAGGER + FLY_IN, (_, f) => lead1(f), u);
+    const free1 = flock(init, steps, (_, f) => lead1(f), u);
 
     // Assign arrow targets: accent birds take the tip, the rest by Hilbert order.
     const tipOrder = arrowPts
@@ -480,7 +514,7 @@ export function FlockForm({
     // Flight 2: the arrow peels off from the tip as one ribbon, loops right
     // and streams back into the mark, the accent birds leading into the dot.
     const release = arrowOf.map(
-      (ti, i) => (1 - arrowPts[ti].t) * RELEASE + hash(i * 5.3) * 2,
+      (ti, i) => (1 - arrowPts[ti].t) * releaseSpan + hash(i * 5.3) * jitter2,
     );
     const P = [
       { x: cx + 0.3 * H, y: cy - 0.3 * H },
@@ -532,9 +566,9 @@ export function FlockForm({
     });
 
     const delay1 = arrowOf.map(
-      (ti, i) => (1 - arrowPts[ti].t) * stagger * 0.85 + hash(i * 5.3) * 3,
+      (ti, i) => (1 - arrowPts[ti].t) * spread * 0.85 + hash(i * 5.3) * jitter1,
     );
-    const delay2 = release.map((r) => r + CRUISE);
+    const delay2 = release.map((r) => r + cruise);
 
     return {
       arrowPts,
@@ -550,11 +584,11 @@ export function FlockForm({
       nDot,
       spacing,
     };
-  }, [W, H, n, u, stagger]);
+  }, [W, H, n, u, steps, spread, jitter1, releaseSpan, jitter2, cruise]);
 
   const posAt = (i: number, f: number): Pt => {
     const m = model;
-    if (f < LAUNCH) {
+    if (f < launchAt) {
       const fr = Math.max(0, Math.min(m.free1.length - 1, f));
       const f0 = Math.floor(fr);
       const a = m.free1[f0][i];
@@ -563,13 +597,13 @@ export function FlockForm({
       const fx = a.x + (b.x - a.x) * k;
       const fy = a.y + (b.y - a.y) * k;
       const w = INOUT(
-        Math.max(0, Math.min(1, (f - FORM1 - m.delay1[i]) / FLY_IN)),
+        Math.max(0, Math.min(1, (f - arrow.start - m.delay1[i]) / fly1)),
       );
       const t = m.arrowPts[m.arrowOf[i]];
       return { x: fx + (t.x - fx) * w, y: fy + (t.y - fy) * w };
     }
     const home = m.arrowPts[m.arrowOf[i]];
-    const tau = f - LAUNCH;
+    const tau = f - launchAt;
     const rel = tau - m.release[i];
     // Before release the whole arrow eases forward along its heading.
     const drift = (tt: number) => 0.2 * u * Math.max(0, tt) ** 2;
@@ -592,25 +626,25 @@ export function FlockForm({
       const t0 = Math.hypot(q0.x - p0.x, q0.y - p0.y) || 1;
       const ex = sx - (p0.x - ((q0.y - p0.y) / t0) * off);
       const ey = sy - (p0.y + ((q0.x - p0.x) / t0) * off);
-      const keep = 1 - INOUT(Math.min(1, rel / 14));
+      const keep = 1 - INOUT(Math.min(1, rel / peel));
       fx = px + ex * keep;
       fy = py + ey * keep;
     }
     const w = INOUT(
-      Math.max(0, Math.min(1, (f - LAUNCH - m.delay2[i]) / FLY_IN2)),
+      Math.max(0, Math.min(1, (f - launchAt - m.delay2[i]) / fly2)),
     );
     const t = m.markPts[m.markOf[i]];
     return { x: fx + (t.x - fx) * w, y: fy + (t.y - fy) * w };
   };
 
   const settle1 = (i: number, f: number) =>
-    f >= LAUNCH
+    f >= launchAt
       ? 0
-      : Math.max(0, Math.min(1, (f - FORM1 - model.delay1[i]) / FLY_IN));
+      : Math.max(0, Math.min(1, (f - arrow.start - model.delay1[i]) / fly1));
   const settle2 = (i: number, f: number) =>
-    f < LAUNCH
+    f < launchAt
       ? 0
-      : Math.max(0, Math.min(1, (f - LAUNCH - model.delay2[i]) / FLY_IN2));
+      : Math.max(0, Math.min(1, (f - launchAt - model.delay2[i]) / fly2));
 
   const len = model.spacing * 0.92 * birdSize;
   const wid = model.spacing * 0.58 * birdSize;
