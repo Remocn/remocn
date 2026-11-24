@@ -9270,13 +9270,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/menu-pick/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/menu-pick.tsx"
+          "target": "components/remocn/menu-pick/index.tsx"
+        },
+        {
+          "path": "registry/remocn/menu-pick/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/menu-pick/timeline.ts"
         }
       ],
       "type": "registry:component"

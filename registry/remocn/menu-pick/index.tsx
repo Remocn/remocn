@@ -8,6 +8,16 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_OPTIONS,
+  DEFAULT_PICK,
+  hopRoute,
+  type MenuPickElementId,
+  menuPickTimeline,
+  menuRows,
+  pickedRow,
+} from "./timeline";
 
 const rubik = loadRubik("normal", {
   weights: ["300", "400"],
@@ -38,6 +48,12 @@ export interface MenuPickProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the panel, the rows, the cursor's hops and the
+   * confirm, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MenuPickElementId>;
 }
 
 const RED = "#E60012";
@@ -78,13 +94,6 @@ const THEMES = {
   },
 };
 
-const ROW_IN = 3;
-const ROWS_AT = 4;
-const CURSOR_AT = 14;
-const HOP_GAPS = [10, 9, 7, 7];
-const CONFIRM_GAP = 9;
-const BLINK = 3;
-const BLINKS = 2;
 const DIM = 0.3;
 
 const EASE_ENTER = Easing.bezier(0.32, 0.72, 0, 1);
@@ -109,16 +118,6 @@ function estimateEm(text: string) {
     else w += 0.56;
   }
   return w;
-}
-
-function hopRoute(count: number, pick: number) {
-  if (count <= 1) return [0];
-  const route = [0];
-  const near = Math.max(0, Math.min(count - 1, pick === 0 ? 1 : pick - 1));
-  const steps = [near, pick, near, pick];
-  for (const s of steps) if (s !== route[route.length - 1]) route.push(s);
-  if (route[route.length - 1] !== pick) route.push(pick);
-  return route;
 }
 
 function Chevron({ size, color }: { size: number; color: string }) {
@@ -155,32 +154,45 @@ function ScaleLayer({
   );
 }
 
-export function MenuPick({
-  prompt = "Choose your launch",
-  options = ["Keyframe every beat", "Wait on an agency", "Install the scenes"],
-  pick = 2,
-  accent = RED,
-  background,
-  backLabel = "Back",
-  selectLabel = "Select",
-  stagger = ROW_IN,
-  ink,
-  fontFamily = rubik.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: MenuPickProps) {
+export function MenuPick(props: MenuPickProps) {
+  const {
+    prompt = "Choose your launch",
+    options = DEFAULT_OPTIONS,
+    pick = DEFAULT_PICK,
+    accent = RED,
+    background,
+    backLabel = "Back",
+    selectLabel = "Select",
+    ink,
+    fontFamily = rubik.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    menuPickTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const panelEl = tl.get("panel");
+  const header = tl.get("header");
+  const footer = tl.get("footer");
+  const cursor = tl.get("cursor");
+  const confirm = tl.get("confirm");
+  const settleEl = tl.get("settle");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
-  const list = options.length > 0 ? options : ["Start"];
+  const list = menuRows(options);
   const n = list.length;
-  const chosen = Math.max(0, Math.min(n - 1, Math.round(pick)));
+  const chosen = pickedRow(n, pick);
   const transparent = background === "transparent";
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const gParams = groundParams ?? c.groundParams;
@@ -206,35 +218,40 @@ export function MenuPick({
   const rowW = panelW - panelPad * 2;
 
   const route = hopRoute(n, chosen);
-  const hopAt = [CURSOR_AT];
-  for (let i = 1; i < route.length; i++) {
-    hopAt.push(hopAt[i - 1] + HOP_GAPS[Math.min(i - 1, HOP_GAPS.length - 1)]);
-  }
   let pos = route[0] as number;
   for (let i = 1; i < route.length; i++) {
-    const s = spring({ frame: t - hopAt[i], fps, config: SPRING_HOP });
+    const s = spring({
+      frame: t - tl.get(`hop:${i}`).start,
+      fps,
+      config: SPRING_HOP,
+    });
     pos += ((route[i] as number) - (route[i - 1] as number)) * s;
   }
-  const confirmAt = (hopAt[hopAt.length - 1] as number) + CONFIRM_GAP;
-  const blinkEnd = confirmAt + BLINK * 2 * BLINKS;
+  const confirmAt = confirm.start;
+  const blinkEnd = confirm.end;
   const blinking = t >= confirmAt && t < blinkEnd;
-  const blinkOff = blinking && Math.floor((t - confirmAt) / BLINK) % 2 === 0;
-  const cursorIn = interpolate(t, [CURSOR_AT, CURSOR_AT + 6], [0, 1], {
+  const blinkOff =
+    blinking && Math.floor((t - confirmAt) / confirm.beat("blink")) % 2 === 0;
+  const cursorIn = interpolate(t, [cursor.start, cursor.end], [0, 1], {
     ...CLAMP,
     easing: EASE_ENTER,
   });
   const pressAt = (f: number) =>
     spring({ frame: f - confirmAt, fps, config: SPRING_CHIP }) -
-    spring({ frame: f - confirmAt - 5, fps, config: SPRING_CHIP });
+    spring({
+      frame: f - confirmAt - confirm.beat("press"),
+      fps,
+      config: SPRING_CHIP,
+    });
   const press = pressAt(t);
   const barScale = 1 - 0.04 * press;
-  const settle = interpolate(t, [blinkEnd, blinkEnd + 10], [0, 1], {
+  const settle = interpolate(t, [settleEl.start, settleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_MOVE,
   });
 
   const panelAt = (f: number) =>
-    spring({ frame: f, fps, config: SPRING_HEAVY });
+    spring({ frame: f - panelEl.start, fps, config: SPRING_HEAVY });
   const panelIn = panelAt(t);
   // The panel's spring has a long tail; weigh a step by the larger of its
   // lift and the scale's reach to the panel's far corner.
@@ -250,34 +267,26 @@ export function MenuPick({
     (midway(cursorIn) ||
       Math.abs(pressAt(t + 1) - press) * 0.04 * rowW > 1e-3 ||
       Math.abs(press - pressAt(t - 1)) * 0.04 * rowW > 1e-3);
-  const panelO = interpolate(t, [0, 8], [0, 1], {
+  const panelO = interpolate(t, [panelEl.start, panelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_ENTER,
   });
-  const headIn = interpolate(t, [2, 14], [0, 1], {
+  const headIn = interpolate(t, [header.start, header.end], [0, 1], {
     ...CLAMP,
     easing: EASE_ENTER,
   });
-  const footIn = interpolate(
-    t,
-    [ROWS_AT + n * stagger, ROWS_AT + n * stagger + 12],
-    [0, 1],
-    {
+  const footIn = interpolate(t, [footer.start, footer.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_ENTER,
+  });
+
+  const rowIn = (i: number) => {
+    const row = tl.get(`row:${i}`);
+    return interpolate(t, [row.start, row.end], [0, 1], {
       ...CLAMP,
       easing: EASE_ENTER,
-    },
-  );
-
-  const rowIn = (i: number) =>
-    interpolate(
-      t,
-      [ROWS_AT + i * stagger, ROWS_AT + i * stagger + 12],
-      [0, 1],
-      {
-        ...CLAMP,
-        easing: EASE_ENTER,
-      },
-    );
+    });
+  };
 
   const barY = rowsTop + pos * rowH;
   // The bar hops by layout: its `top` and the counter-`top` that keeps the
