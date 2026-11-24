@@ -18,6 +18,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_WORDS,
+  type PhotoHaloElementId,
+  photoHaloTimeline,
+} from "./timeline";
 
 const interTight = loadFont("normal", {
   weights: ["300", "400"],
@@ -83,6 +89,13 @@ export interface PhotoHaloProps {
   blooms?: string[];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches each headline word, the photos popping in,
+   * the converge, the headline leaving, the logo and the land, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<PhotoHaloElementId>;
 }
 
 const THEMES = {
@@ -121,7 +134,6 @@ const THEMES = {
   },
 };
 
-const DEFAULT_WORDS = ["Launch", "films", "for", "everything", "you", "ship"];
 const DEFAULT_IMAGES = [
   "templates/brand-guidelines/ceramics.jpg",
   "reel/reel-2.jpg",
@@ -137,18 +149,6 @@ const DEFAULT_IMAGES = [
   "reel/reel-1.jpg",
 ];
 
-const BEATS = [
-  { id: "words", at: -6 },
-  { id: "pops", at: 6 },
-  { id: "textOut", at: 72 },
-  { id: "converge", at: 72 },
-  { id: "logo", at: 90 },
-  { id: "land", at: 96 },
-  { id: "end", at: 138 },
-] as const;
-const beat = (id: (typeof BEATS)[number]["id"]) =>
-  BEATS.find((b) => b.id === id)?.at ?? 0;
-
 const EASE_ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const EASE_REVEAL = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_EXIT = Easing.bezier(0.55, 0, 1, 0.45);
@@ -163,8 +163,9 @@ const CLAMP = {
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-function popTime(order: number) {
-  let t = beat("pops");
+/** When the photo `order`-th in line pops in, from the pops' start. */
+function popTime(order: number, popsAt: number) {
+  let t = popsAt;
   let step = 6;
   for (let k = 0; k < order; k++) {
     t += step;
@@ -192,6 +193,7 @@ function buildSlots(
   portrait: boolean,
   textW: number,
   textH: number,
+  popsAt: number,
 ): Slot[] {
   const cx = W / 2;
   const cy = H / 2;
@@ -238,7 +240,7 @@ function buildSlots(
       dx: (x < cx ? -1 : 1) * (0.5 + random(`ph2-dx-${i}`)),
       dy: (y < cy ? -1 : 1) * (0.3 + random(`ph2-dy-${i}`) * 0.5),
       rot: (random(`ph2-rot-${i}`) - 0.5) * 7,
-      t: popTime(order.indexOf(i)),
+      t: popTime(order.indexOf(i), popsAt),
     });
   }
   return slots;
@@ -260,27 +262,39 @@ function ScaleLayer({
   );
 }
 
-export function PhotoHalo({
-  words = DEFAULT_WORDS,
-  accentWord = 3,
-  images,
-  theme = "dark",
-  background,
-  ink,
-  accent: accentColor,
-  fontFamily = interTight.fontFamily,
-  stagger = 3,
-  logo,
-  scale: zoom = 1,
-  delay = 0,
-  speed = 1,
-  blooms,
-  ground,
-  groundParams,
-}: PhotoHaloProps) {
+export function PhotoHalo(props: PhotoHaloProps) {
+  const {
+    words = DEFAULT_WORDS,
+    accentWord = 3,
+    images,
+    theme = "dark",
+    background,
+    ink,
+    accent: accentColor,
+    fontFamily = interTight.fontFamily,
+    logo,
+    scale: zoom = 1,
+    delay = 0,
+    speed = 1,
+    blooms,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    photoHaloTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const photos = tl.get("photos");
+  const converge = tl.get("converge");
+  const textOutEl = tl.get("text-out");
+  const logoEl = tl.get("logo");
+  const land = tl.get("land");
   const t = THEMES[theme];
   const light = theme === "light";
   const bg =
@@ -309,7 +323,7 @@ export function PhotoHalo({
   const textH = lines * fontSize * 1.06;
 
   const count = portrait ? 12 : 11;
-  const slots = buildSlots(count, W, H, portrait, textW, textH);
+  const slots = buildSlots(count, W, H, portrait, textW, textH, photos.start);
 
   const rowCount = Math.min(5, count, srcs.length);
   const rowPick = slots
@@ -331,29 +345,29 @@ export function PhotoHalo({
   const rowFinal = portrait ? rowCentred : cx - groupW / 2 + logoW + gap;
   const rowY = portrait ? cy + d * 0.7 : cy;
 
-  const logoP = interpolate(frame, [beat("logo"), beat("logo") + 12], [0, 1], {
+  const logoP = interpolate(frame, [logoEl.start, logoEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_REVEAL,
   });
   const rowShift = spring({
-    frame: frame - beat("logo"),
+    frame: frame - logoEl.start,
     fps,
     config: SPRING_MORPH,
-    durationInFrames: 16,
+    durationInFrames: logoEl.beat("rowShift"),
   });
   const rowLeft = rowCentred + (rowFinal - rowCentred) * rowShift;
   const landSpring = spring({
-    frame: frame - beat("land"),
+    frame: frame - land.start,
     fps,
     config: SPRING_CHIP,
   });
   const punch = 1 + 0.05 * Math.sin(Math.min(1, landSpring) * Math.PI);
-  const lockP = interpolate(frame, [beat("land"), beat("end")], [0, 1], {
+  const lockP = interpolate(frame, [land.start, land.end], [0, 1], {
     ...CLAMP,
     easing: EASE_CAMERA,
   });
   const lockPush = 1 + 0.03 * lockP;
-  const pushP = interpolate(frame, [0, beat("converge")], [0, 1], {
+  const pushP = interpolate(frame, [0, converge.start], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.65, 0, 0.35, 1),
   });
@@ -361,7 +375,7 @@ export function PhotoHalo({
 
   const convergeStart = (i: number) => {
     const k = rowPick.indexOf(i);
-    return beat("converge") + (k >= 0 ? k * 2 : rowCount + (i % 3));
+    return converge.start + (k >= 0 ? k * 2 : rowCount + (i % 3));
   };
 
   const stateAt = (i: number, f: number) => {
@@ -390,12 +404,10 @@ export function PhotoHalo({
     return { x, y, w, h, r, q: Math.min(1, m), pop, k };
   };
 
-  const textOut = interpolate(
-    frame,
-    [beat("textOut"), beat("textOut") + 8],
-    [0, 1],
-    { ...CLAMP, easing: EASE_EXIT },
-  );
+  const textOut = interpolate(frame, [textOutEl.start, textOutEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_EXIT,
+  });
 
   const order = slots
     .map((s, i) => ({ i, z: s.z }))
@@ -467,8 +479,8 @@ export function PhotoHalo({
             }}
           >
             {words.map((word, i) => {
-              const start = beat("words") + i * stagger;
-              const p = interpolate(frame, [start, start + 12], [0, 1], {
+              const el = tl.get(`word:${i}`);
+              const p = interpolate(frame, [el.start, el.end], [0, 1], {
                 ...CLAMP,
                 easing: EASE_ENTER,
               });
@@ -524,7 +536,7 @@ export function PhotoHalo({
                     [1, 0],
                     CLAMP,
                   );
-            const locked = now.k >= 0 && frame >= beat("land");
+            const locked = now.k >= 0 && frame >= land.start;
             const scale = locked
               ? punch * lockPush
               : 0.6 + 0.4 * Math.min(1.04, now.pop);
