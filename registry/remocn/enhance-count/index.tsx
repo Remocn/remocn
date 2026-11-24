@@ -12,6 +12,13 @@ import {
   spring,
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type EnhanceCountElementId,
+  enhanceCountTimeline,
+  linesOf,
+} from "./timeline";
 
 const inter = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -36,6 +43,12 @@ export interface EnhanceCountProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the draft fading in and single glyphs
+   * sharpening, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<EnhanceCountElementId>;
 }
 
 const THEMES = {
@@ -54,11 +67,6 @@ const THEMES = {
 const DRAFT_WGHT = 100;
 const DONE_WGHT = 440;
 const TRACK = -0.025;
-
-const ENTER_LEN = 14;
-const ENHANCE_AT = 38;
-const ENHANCE_SPAN = 34;
-const ENHANCE_MAX_GAP = 2.4;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
@@ -171,33 +179,34 @@ function ScaleLayer({
   );
 }
 
-export function EnhanceCount({
-  text = "Draft it fast.\nFinish it sharp.",
-  highlight = "sharp.",
-  accent,
-  ink,
-  background,
-  fontFamily = inter.fontFamily,
-  fontWeight = DONE_WGHT,
-  draftWeight = DRAFT_WGHT,
-  span = ENHANCE_SPAN,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: EnhanceCountProps) {
+export function EnhanceCount(props: EnhanceCountProps) {
+  const {
+    text = DEFAULT_TEXT,
+    highlight = "sharp.",
+    accent,
+    ink,
+    background,
+    fontFamily = inter.fontFamily,
+    fontWeight = DONE_WGHT,
+    draftWeight = DRAFT_WGHT,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    enhanceCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
   const fg = ink ?? c.ink;
-  const lines = useMemo(() => {
-    const l = text
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    return l.length ? l : ["Finish it sharp."];
-  }, [text]);
+  const lines = useMemo(() => linesOf(text), [text]);
   const m = useMetrics(lines, fontFamily, fontWeight, draftWeight);
 
   const transparent = background === "transparent";
@@ -226,9 +235,8 @@ export function EnhanceCount({
       .filter(Boolean)
       .map((w) => w.toLowerCase()),
   );
-  const nGlyphs = m.lines.reduce((a, l) => a + l.chars.length, 0);
-  const gap = Math.min(ENHANCE_MAX_GAP, span / Math.max(1, nGlyphs));
-  const enter = interpolate(t, [0, ENTER_LEN], [0, 1], {
+  const enterEl = tl.get("enter");
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -250,7 +258,7 @@ export function EnhanceCount({
     return line.chars.map((ch, i) => {
       const idx = gi++;
       const u = spring({
-        frame: t - ENHANCE_AT - idx * gap,
+        frame: t - tl.get(`glyph:${idx}`).start,
         fps,
         config: { damping: 18, stiffness: 140, mass: 0.8 },
       });

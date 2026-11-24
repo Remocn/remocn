@@ -8113,12 +8113,17 @@
       "title": "Enhance Count",
       "description": "A blurred line sharpens in place, 'Draft it fast. Finish it sharp.', the last word accented.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/enhance-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/enhance-count.tsx"
+          "target": "components/remocn/enhance-count/index.tsx"
+        },
+        {
+          "path": "registry/remocn/enhance-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/enhance-count/timeline.ts"
         }
       ],
       "type": "registry:component"
