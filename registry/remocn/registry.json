@@ -11271,10 +11271,19 @@
         {
           "path": "beam-split/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/beam-split.tsx"
+          "target": "components/remocn/beam-split/index.tsx"
+        },
+        {
+          "path": "beam-split/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/beam-split/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "strobe-words",

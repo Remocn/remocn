@@ -7,6 +7,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type BeamSplitElementId, beamSplitTimeline } from "./timeline";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -64,6 +66,12 @@ export interface BeamSplitProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the rise, the beam, the opening and the
+   * closing of the gap, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BeamSplitElementId>;
 }
 
 const CLAMP = {
@@ -78,15 +86,6 @@ const CAP = 0.66;
 const BASE = 0.83;
 const SERIF_CAP = 0.72;
 const SERIF_BASE = 0.84;
-
-const RISE_AT = -6;
-const RISE_END = 14;
-const BEAM_AT = 10;
-const BEAM_END = 30;
-const OPEN_AT = 34;
-const OPEN_END = 60;
-const CLOSE_AT = 92;
-const CLOSE_END = 116;
 
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const DRAW = Easing.bezier(0.7, 0, 0.2, 1);
@@ -273,31 +272,42 @@ function ScaleLayer({
   );
 }
 
-export function BeamSplit({
-  title = "Ship the story",
-  inner = "with motion you own",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  innerColor = BEAM[0],
-  hold = CLOSE_AT - OPEN_END,
-  fontFamily = display,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: BeamSplitProps) {
+export function BeamSplit(props: BeamSplitProps) {
+  const {
+    title = "Ship the story",
+    inner = "with motion you own",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    innerColor = BEAM[0],
+    fontFamily = display,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    beamSplitTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const riseEl = tl.get("rise");
+  const beamEl = tl.get("beam");
+  const openEl = tl.get("open");
+  const closeEl = tl.get("close");
   const u = H / 720;
   const c = STAGES[theme];
   const fg = ink ?? c.fg;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const closeAt = OPEN_END + hold;
-  const closeEnd = closeAt + (CLOSE_END - CLOSE_AT);
+  const closeAt = closeEl.start;
+  const closeEnd = closeEl.end;
 
   const s = Math.min(168 * u, (0.8 * W) / widthEm(title, BRICO_500, TRACK));
   const si = Math.min(
@@ -309,14 +319,16 @@ export function BeamSplit({
   const lw = Math.max(1.5, 2 * u);
   const fall = 11 * u;
 
-  const rise = OUT(interpolate(t, [RISE_AT, RISE_END], [0, 1], CLAMP));
-  const draw = DRAW(interpolate(t, [BEAM_AT, BEAM_END], [0, 1], CLAMP));
+  const rise = OUT(interpolate(t, [riseEl.start, riseEl.end], [0, 1], CLAMP));
+  const draw = DRAW(interpolate(t, [beamEl.start, beamEl.end], [0, 1], CLAMP));
 
   const G1 = 0.34 * H;
   const G2 = 0.15 * H;
   const kRes = 0.56;
   const geometry = (f: number) => {
-    const open = MOVE(interpolate(f, [OPEN_AT, OPEN_END], [0, 1], CLAMP));
+    const open = MOVE(
+      interpolate(f, [openEl.start, openEl.end], [0, 1], CLAMP),
+    );
     const close = MOVE(interpolate(f, [closeAt, closeEnd], [0, 1], CLAMP));
     const gap = open * (G1 + (G2 - G1) * close);
     const k = close > 0 ? 1 + (kRes - 1) * close : 1.05 - 0.05 * open;
@@ -340,13 +352,32 @@ export function BeamSplit({
   );
 
   const moving =
-    (t >= BEAM_AT && t < OPEN_END + 8) || (t >= closeAt && t < closeEnd + 8);
-  const glowIn = interpolate(t, [BEAM_AT, BEAM_AT + 6], [0, 1], CLAMP);
+    (t >= beamEl.start && t < openEl.start + openEl.beat("moving")) ||
+    (t >= closeAt && t < closeAt + closeEl.beat("moving"));
+  const glowIn = interpolate(
+    t,
+    [beamEl.start, beamEl.start + beamEl.beat("glow")],
+    [0, 1],
+    CLAMP,
+  );
   const glowRest = Math.max(
-    interpolate(t, [OPEN_END - 4, OPEN_END + 10], [1, 0], CLAMP),
     interpolate(
       t,
-      [closeAt - 2, closeAt + 6, closeEnd - 2, closeEnd + 12],
+      [
+        openEl.start + openEl.beat("glowOut"),
+        openEl.start + openEl.beat("glowGone"),
+      ],
+      [1, 0],
+      CLAMP,
+    ),
+    interpolate(
+      t,
+      [
+        closeAt + closeEl.beat("glowIn"),
+        closeAt + closeEl.beat("glowFull"),
+        closeAt + closeEl.beat("glowOut"),
+        closeAt + closeEl.beat("glowGone"),
+      ],
       [0, 1, 1, 0],
       CLAMP,
     ),
@@ -357,7 +388,12 @@ export function BeamSplit({
 
   // The gap is a slab of beam light: deep indigo at the edges of frame, the
   // palette's bright core drifting a few percent across the shot.
-  const sway = interpolate(t, [OPEN_AT, closeEnd + 30], [-1, 1], CLAMP);
+  const sway = interpolate(
+    t,
+    [openEl.start, closeAt + closeEl.beat("sway")],
+    [-1, 1],
+    CLAMP,
+  );
   const edgeTone = theme === "light" ? "#14104a" : BEAM[4];
   const band = [
     `radial-gradient(38% 160% at ${50 + 6 * sway}% 50%, color-mix(in oklab, ${BEAM[1]} 55%, transparent) 0%, transparent 70%)`,
