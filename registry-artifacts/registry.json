@@ -11607,12 +11607,21 @@
       "title": "Title Converge",
       "description": "Each letter drifts in on its own path and converges into the logo between two rules.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/title-converge/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/title-converge.tsx"
+          "target": "components/remocn/title-converge/index.tsx"
+        },
+        {
+          "path": "registry/remocn/title-converge/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/title-converge/timeline.ts"
         }
       ],
       "type": "registry:component"
