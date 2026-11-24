@@ -4592,12 +4592,17 @@
       "title": "Puzzle Snap",
       "description": "Geometric pieces spin in from scattered positions and magnet-snap into a mark with a spark burst, then the mark slides aside for the wordmark.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "puzzle-snap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/puzzle-snap.tsx"
+          "target": "components/remocn/puzzle-snap/index.tsx"
+        },
+        {
+          "path": "puzzle-snap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/puzzle-snap/timeline.ts"
         }
       ]
     },
