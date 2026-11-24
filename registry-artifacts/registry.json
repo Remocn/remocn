@@ -11786,12 +11786,21 @@
       "title": "Bounce Logo",
       "description": "The wordmark bounces around the frame like an old DVD logo until it hits the corner.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/bounce-logo/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bounce-logo.tsx"
+          "target": "components/remocn/bounce-logo/index.tsx"
+        },
+        {
+          "path": "registry/remocn/bounce-logo/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bounce-logo/timeline.ts"
         }
       ],
       "type": "registry:component"

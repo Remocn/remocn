@@ -7,6 +7,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BounceLogoElementId,
+  bounceLogoTimeline,
+  CORNER,
+  DEFAULT_LINE,
+} from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -40,6 +47,12 @@ export interface BounceLogoProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the bounce, the corner hit, the lockup and the
+   * line, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<BounceLogoElementId>;
 }
 
 // Beat sheet (30fps):
@@ -52,12 +65,8 @@ export interface BounceLogoProps {
 //   134–148 the line rises in under it
 //   148–168 poster hold
 // The path is solved backwards from the corner, so the last hit always lands.
-const CORNER = 112;
 const PERIOD_X = 48.6;
 const PERIOD_Y = 47.13;
-const RESOLVE_AT = CORNER + 4;
-const RESOLVE = 22;
-const LINE_AT = CORNER + 22;
 export const BOUNCE_LOGO_DURATION = CORNER + 56;
 
 /** Manrope 500 advance widths (per mille) for ASCII 32–126 (non-logo brands). */
@@ -280,30 +289,39 @@ function ScaleLayer({
   );
 }
 
-export function BounceLogo({
-  brand = "remocn",
-  line = "Hit the corner.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = serif.fontFamily,
-  logo: mark,
-  cornerAt = CORNER,
-  flip = true,
-  scale: zoom = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: BounceLogoProps) {
+export function BounceLogo(props: BounceLogoProps) {
+  const {
+    brand = "remocn",
+    line = DEFAULT_LINE,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = serif.fontFamily,
+    logo: mark,
+    flip = true,
+    scale: zoom = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    bounceLogoTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const hit = tl.get("hit");
+  const resolveEl = tl.get("resolve");
+  const lineEl = tl.get("line");
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
-  const corner = cornerAt;
-  const resolveAt = corner + RESOLVE_AT - CORNER;
-  const lineAt = corner + LINE_AT - CORNER;
+  const corner = hit.start;
+  const resolveAt = resolveEl.start;
 
   // Logo box in em: top of the R (or caps) to the baseline.
   const logo = mark != null || brand.trim().toLowerCase() === "remocn";
@@ -321,21 +339,26 @@ export function BounceLogo({
   const hits = hitsBefore(t, corner);
   const bounceColor = flip && hits % 2 === 1 ? accent : fg;
 
-  const bloom = interpolate(t, [corner, corner + 26], [0, 1], {
+  const bloom = interpolate(t, [corner, hit.end], [0, 1], {
     ...CLAMP,
     easing: BLOOM,
   });
   // The hit itself: a short burst of extra light that settles into the bloom.
-  const burst = interpolate(t, [corner, corner + 1, corner + 12], [0, 1, 0], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const burst = interpolate(
+    t,
+    [corner, corner + hit.beat("burst"), corner + hit.beat("burstEnd")],
+    [0, 1, 0],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const drift = Math.max(0, t - corner) * 0.35 * (H / 720);
-  const resolve = interpolate(t, [resolveAt, resolveAt + RESOLVE], [0, 1], {
+  const resolve = interpolate(t, [resolveAt, resolveEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const lineIn = interpolate(t, [lineAt, lineAt + 16], [0, 1], {
+  const lineIn = interpolate(t, [lineEl.start, lineEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -352,7 +375,7 @@ export function BounceLogo({
   // The wordmark's place and size as a function of the frame, so it can be
   // compared with its neighbours to tell motion from rest.
   const placeAt = (f: number) => {
-    const r = interpolate(f, [resolveAt, resolveAt + RESOLVE], [0, 1], {
+    const r = interpolate(f, [resolveAt, resolveEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });

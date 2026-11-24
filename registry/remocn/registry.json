@@ -11791,10 +11791,19 @@
         {
           "path": "bounce-logo/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bounce-logo.tsx"
+          "target": "components/remocn/bounce-logo/index.tsx"
+        },
+        {
+          "path": "bounce-logo/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bounce-logo/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "glyph-matrix",
