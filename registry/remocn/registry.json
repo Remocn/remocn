@@ -11022,10 +11022,19 @@
         {
           "path": "ticker-tape/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ticker-tape.tsx"
+          "target": "components/remocn/ticker-tape/index.tsx"
+        },
+        {
+          "path": "ticker-tape/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ticker-tape/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "price-slate",
