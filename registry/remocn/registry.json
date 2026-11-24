@@ -3503,12 +3503,17 @@
       "title": "Shader Text Reveal",
       "description": "Reveal words through the original OpenShaders hero shader, then settle into white type.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "shader-text-reveal/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/shader-text-reveal.tsx"
+          "target": "components/remocn/shader-text-reveal/index.tsx"
+        },
+        {
+          "path": "shader-text-reveal/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/shader-text-reveal/timeline.ts"
         }
       ]
     },
