@@ -8633,12 +8633,21 @@
       "title": "Gear Shift",
       "description": "A big 42 shifts up through numbered gear steps on a teal panel with a caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/gear-shift/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/gear-shift.tsx"
+          "target": "components/remocn/gear-shift/index.tsx"
+        },
+        {
+          "path": "registry/remocn/gear-shift/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/gear-shift/timeline.ts"
         }
       ],
       "type": "registry:component"

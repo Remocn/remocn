@@ -8638,10 +8638,19 @@
         {
           "path": "gear-shift/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/gear-shift.tsx"
+          "target": "components/remocn/gear-shift/index.tsx"
+        },
+        {
+          "path": "gear-shift/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/gear-shift/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "slide-doors",
