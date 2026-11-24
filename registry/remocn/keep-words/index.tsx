@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_BELIEFS,
+  type KeepWordsElementId,
+  keepWordsTimeline,
+  mottoOf,
+} from "./timeline";
 
 const gloock = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -37,22 +44,13 @@ export interface KeepWordsProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single beliefs and the rows of the motto
+   * stack, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<KeepWordsElementId>;
 }
-
-const DEFAULT_BELIEFS: KeepBelief[] = [
-  {
-    text: "A launch video should be written, the same way the product was.",
-    keep: "written",
-  },
-  {
-    text: "Every frame you install should stay yours, down to the last easing curve.",
-    keep: "yours",
-  },
-  {
-    text: "And the film should land on time, in the same release as the code.",
-    keep: "on time",
-  },
-];
 
 const THEMES = {
   dark: { bg: "#0A1230", ink: "#FFFFFF", accent: "#FF4436" },
@@ -61,9 +59,6 @@ const THEMES = {
 
 const TRACK = -0.02;
 const LH = 1.08;
-const START = 6;
-const STACK_MOVE = 24;
-const FINAL_HOLD = 34;
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_IN = Easing.bezier(0.55, 0, 0.75, 0.2);
@@ -196,11 +191,6 @@ function splitBelief(b: KeepBelief, fontFamily: string): Word[] {
   });
 }
 
-function mottoOf(keep: string) {
-  const t = keep.trim();
-  return `${t.charAt(0).toUpperCase()}${t.slice(1)}`;
-}
-
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -217,22 +207,29 @@ function ScaleLayer({
   );
 }
 
-export function KeepWords({
-  beliefs = DEFAULT_BELIEFS,
-  hold = FINAL_HOLD,
-  accent,
-  ink,
-  background,
-  fontFamily = gloock.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: KeepWordsProps) {
+export function KeepWords(props: KeepWordsProps) {
+  const {
+    beliefs = DEFAULT_BELIEFS,
+    accent,
+    ink,
+    background,
+    fontFamily = gloock.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    keepWordsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -249,14 +246,6 @@ export function KeepWords({
 
   const portrait = H > W * 1.1;
   const n = beliefs.length;
-  const D = durationInFrames * speed;
-  const seg = Math.max(
-    48,
-    (D - START - STACK_MOVE - hold - 30) / Math.max(1, n),
-  );
-  const lastTravel =
-    START + (n - 1) * seg + seg * 0.66 + Math.min(24, seg * 0.3);
-  const stackAt = lastTravel + 14;
 
   const mx = W * (portrait ? 0.08 : 0.07);
   const boxTop = H * (portrait ? 0.1 : 0.1);
@@ -330,25 +319,27 @@ export function KeepWords({
   // travel; "moving" compares the drawn geometry with the neighbouring frames.
   const specsAt = (tt: number): Spec[] => {
     const out: Spec[] = [];
-    const stackOf = (i: number) =>
-      interpolate(tt, [stackAt + i * 4, stackAt + i * 4 + STACK_MOVE], [0, 1], {
+    const stackOf = (i: number) => {
+      const e = tl.get(`stack:${i}`);
+      return interpolate(tt, [e.start, e.end], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
+    };
     beliefs.forEach((_, bi) => {
       const stackP = stackOf(bi);
-      const s0 = START + bi * seg;
-      const u = tt - s0;
+      const belief = tl.get(`belief:${bi}`);
+      const u = tt - belief.start;
       const { words, F, lay } = laid[bi];
-      const markAt = seg * 0.42;
-      const fallAt = seg * 0.6;
-      const travelAt = seg * 0.66;
-      const travelLen = Math.min(24, seg * 0.3);
+      const markAt = belief.beat("mark");
+      const fallAt = belief.beat("fall");
+      const travelAt = belief.beat("travel");
+      const travelLen = belief.beat("travelLen");
       const mark = interpolate(u, [markAt, markAt + 8], [0, 1], CLAMP);
       const keyColor = interpolateColors(mark, [0, 1], [fg, hi]);
 
       if (u > -1) {
-        const stagger = Math.min(2, 22 / Math.max(1, words.length));
+        const stagger = belief.beat("stagger");
         let order = 0;
         words.forEach((w, wi) => {
           const pos = lay.words[wi];
@@ -437,7 +428,7 @@ export function KeepWords({
         });
       }
 
-      const dotAt = travelAt + (mottoSlots[bi].length - 2) * 2 + travelLen;
+      const dotAt = belief.beat("dot");
       const dot = interpolate(u, [dotAt - 4, dotAt + 6], [0, 1], CLAMP);
       if (dot > 0) {
         const row = mottoSlots[bi][mottoSlots[bi].length - 1];

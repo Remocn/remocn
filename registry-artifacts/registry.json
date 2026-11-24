@@ -7582,12 +7582,21 @@
       "title": "Keep Words",
       "description": "Three serif lines, \"Written. Yours. On time.\", each ending with a red full stop.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/keep-words/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/keep-words.tsx"
+          "target": "components/remocn/keep-words/index.tsx"
+        },
+        {
+          "path": "registry/remocn/keep-words/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/keep-words/timeline.ts"
         }
       ],
       "type": "registry:component"
