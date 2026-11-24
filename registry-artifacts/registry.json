@@ -12876,12 +12876,21 @@
       "title": "Poster Crop",
       "description": "A poster headline crops in tight, line by line, over a ruled blue ground.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/poster-crop/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/poster-crop.tsx"
+          "target": "components/remocn/poster-crop/index.tsx"
+        },
+        {
+          "path": "registry/remocn/poster-crop/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/poster-crop/timeline.ts"
         }
       ],
       "type": "registry:component"
