@@ -8,6 +8,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_HEADLINE,
+  HEAT_DRAIN_REVEAL_END,
+  type HeatDrainRevealElementId,
+  heatDrainRevealTimeline,
+} from "./timeline";
 
 const onest = loadOnest("normal", {
   weights: ["300", "400"],
@@ -23,19 +30,7 @@ const SWAY = Easing.bezier(0.45, 0, 0.55, 1);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 
-const B = {
-  words: -10,
-  recede: 8,
-  rise: 4,
-  drain: 24,
-  drainLen: 48,
-  tiltEnd: 78,
-  halo: 52,
-  chip: 78,
-  end: 126,
-};
-
-export const HEAT_DRAIN_REVEAL_DURATION = B.end;
+export const HEAT_DRAIN_REVEAL_DURATION = HEAT_DRAIN_REVEAL_END;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
@@ -81,6 +76,12 @@ export interface HeatDrainRevealProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the headline words, the calendar's rise, the
+   * drain, the halo and the launch chip, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<HeatDrainRevealElementId>;
 }
 
 const DARK_GROUND: Partial<GradientParams> = {
@@ -242,42 +243,56 @@ function ScaleLayer({
   );
 }
 
-export function HeatDrainReveal({
-  theme = "dark",
-  heat = ["#fff1df", "#ffc48a", "#ff9447", "#f56a22", "#d9481a"],
-  accent = "#ff7a2e",
-  headline = "Plan the whole launch week.",
-  monthLabel = "2026 / 11",
-  firstDay = 26,
-  daysInPrevMonth = 31,
-  daysInMonth = 30,
-  events = [
-    { day: 4, label: "Beta" },
-    { day: 10, label: "Docs" },
-    { day: 13, label: "Press" },
-    { day: 19, label: "Launch", launch: true },
-    { day: 24, label: "Recap" },
-  ],
-  upcoming = [
-    { when: "Thu 19", title: "Launch day", time: "09:00" },
-    { when: "Fri 13", title: "Press preview", time: "14:30" },
-    { when: "Tue 24", title: "Launch recap", time: "11:00" },
-  ],
-  todayLabel = "Today",
-  upcomingTitle = "Upcoming",
-  stagger = 2,
-  ink: inkProp,
-  background,
-  fontFamily = onest.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: HeatDrainRevealProps) {
+export function HeatDrainReveal(props: HeatDrainRevealProps) {
+  const {
+    theme = "dark",
+    heat = ["#fff1df", "#ffc48a", "#ff9447", "#f56a22", "#d9481a"],
+    accent = "#ff7a2e",
+    headline = DEFAULT_HEADLINE,
+    monthLabel = "2026 / 11",
+    firstDay = 26,
+    daysInPrevMonth = 31,
+    daysInMonth = 30,
+    events = [
+      { day: 4, label: "Beta" },
+      { day: 10, label: "Docs" },
+      { day: 13, label: "Press" },
+      { day: 19, label: "Launch", launch: true },
+      { day: 24, label: "Recap" },
+    ],
+    upcoming = [
+      { when: "Thu 19", title: "Launch day", time: "09:00" },
+      { when: "Fri 13", title: "Press preview", time: "14:30" },
+      { when: "Tue 24", title: "Launch recap", time: "11:00" },
+    ],
+    todayLabel = "Today",
+    upcomingTitle = "Upcoming",
+    ink: inkProp,
+    background,
+    fontFamily = onest.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    heatDrainRevealTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const riseEl = tl.get("rise");
+  const recedeEl = tl.get("recede");
+  const pushEl = tl.get("push");
+  const drainEl = tl.get("drain");
+  const haloEl = tl.get("halo");
+  const chipEl = tl.get("chip");
+  const words = tl.lane("Words");
   const dark = theme === "dark";
   const ditherId = `hdr-dither-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const portrait = height > width * 1.2;
@@ -301,31 +316,31 @@ export function HeatDrainReveal({
   const faint = dark ? "rgba(246,236,226,0.26)" : "rgba(27,22,18,0.24)";
   const hair = dark ? "rgba(255,240,226,0.09)" : "rgba(60,40,20,0.09)";
 
-  const rise = spring({ frame: frame - B.rise, fps, config: HEAVY });
-  const tilt = mix(24, 0, ramp(frame, B.rise, B.tiltEnd - B.rise, MOVE));
-  const drain = ramp(frame, B.drain, B.drainLen, DRAIN);
+  const rise = spring({ frame: frame - riseEl.start, fps, config: HEAVY });
+  const tilt = mix(24, 0, ramp(frame, riseEl.start, riseEl.length, MOVE));
+  const drain = ramp(frame, drainEl.start, drainEl.length, DRAIN);
   const feather = 84 * u;
   const front = mix(-feather * 0.6, ch + feather, drain);
-  const halo = ramp(frame, B.halo, 30, LIGHT);
-  const breathe = 0.9 + 0.1 * Math.sin(((frame - B.halo) / 36) * Math.PI);
-  const recede = ramp(frame, B.recede, 14, EXIT);
-  const lift = spring({ frame: frame - B.recede, fps, config: HEAVY });
-  const pushP = ramp(frame, B.rise + 20, B.end - B.rise - 20, SWAY);
+  const halo = ramp(frame, haloEl.start, haloEl.length, LIGHT);
+  const breathe =
+    0.9 +
+    0.1 * Math.sin(((frame - haloEl.start) / haloEl.beat("breath")) * Math.PI);
+  const recede = ramp(frame, recedeEl.start, recedeEl.length, EXIT);
+  const lift = spring({ frame: frame - recedeEl.start, fps, config: HEAVY });
+  const pushP = ramp(frame, pushEl.start, pushEl.length, SWAY);
   const push = 1 + 0.03 * pushP;
   const pushMoving = midway(pushP);
   const liftAt = (f: number) =>
-    spring({ frame: f - B.recede, fps, config: HEAVY });
+    spring({ frame: f - recedeEl.start, fps, config: HEAVY });
   const headMoving =
     !pushMoving &&
     (portrait
       ? Math.abs(liftAt(frame + 1) - lift) > 1e-6 ||
         Math.abs(lift - liftAt(frame - 1)) > 1e-6
       : midway(recede) ||
-        headline
-          .split(" ")
-          .some((_, i) => midway(ramp(frame, B.words + i * stagger, 14))));
-  const chipS = spring({ frame: frame - B.chip, fps, config: CHIP });
-  const chipOn = ramp(frame, B.chip, 4);
+        words.some((w) => midway(ramp(frame, w.start, w.length))));
+  const chipS = spring({ frame: frame - chipEl.start, fps, config: CHIP });
+  const chipOn = ramp(frame, chipEl.start, chipEl.beat("fill"));
 
   const reveal = (y: number) => clamp01((front - y) / (feather * 0.55));
   const rowStyle = (y: number) => {
@@ -444,7 +459,8 @@ export function HeatDrainReveal({
               }}
             >
               {headline.split(" ").map((w, i) => {
-                const p = ramp(frame, B.words + i * stagger, 14);
+                const word = tl.get(`word:${i}`);
+                const p = ramp(frame, word.start, word.length);
                 return (
                   <span
                     key={`${w}-${i.toString()}`}
@@ -667,7 +683,11 @@ export function HeatDrainReveal({
                                       ? "rgba(255,240,226,0.06)"
                                       : "rgba(60,40,20,0.05)",
                                   opacity: isLaunch
-                                    ? ramp(frame, B.chip + 4, 8)
+                                    ? ramp(
+                                        frame,
+                                        chipEl.start + chipEl.beat("label"),
+                                        chipEl.beat("labelIn"),
+                                      )
                                     : 1,
                                 }}
                               >

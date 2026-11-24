@@ -5687,13 +5687,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "heat-drain-reveal/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/heat-drain-reveal.tsx"
+          "target": "components/remocn/heat-drain-reveal/index.tsx"
+        },
+        {
+          "path": "heat-drain-reveal/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/heat-drain-reveal/timeline.ts"
         }
       ]
     },
