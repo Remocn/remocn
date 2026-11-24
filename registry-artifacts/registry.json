@@ -10294,12 +10294,21 @@
       "title": "Intelligence Glow",
       "description": "An AI-style answer types under a question while a soft glow breathes along an underline.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/intelligence-glow/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/intelligence-glow.tsx"
+          "target": "components/remocn/intelligence-glow/index.tsx"
+        },
+        {
+          "path": "registry/remocn/intelligence-glow/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/intelligence-glow/timeline.ts"
         }
       ],
       "type": "registry:component"
