@@ -6224,13 +6224,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/phrase-list-bridge/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/phrase-list-bridge.tsx"
+          "target": "components/remocn/phrase-list-bridge/index.tsx"
+        },
+        {
+          "path": "registry/remocn/phrase-list-bridge/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/phrase-list-bridge/timeline.ts"
         }
       ],
       "type": "registry:component"

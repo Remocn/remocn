@@ -23,6 +23,17 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ITEMS,
+  DEFAULT_LEFT,
+  DEFAULT_PICKED,
+  DEFAULT_RIGHT,
+  type PhraseListBridgeElementId,
+  phraseListBridgeTimeline,
+  pickOf,
+  rowsOf,
+} from "./timeline";
 
 const geist = loadFont("normal", {
   weights: ["300", "400"],
@@ -53,6 +64,12 @@ export interface PhraseListBridgeProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches single words, rows and steps, the split, the
+   * panel, the pick, the fold and the close, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PhraseListBridgeElementId>;
 }
 
 const THEMES = {
@@ -97,20 +114,6 @@ const THEMES = {
     hl: "rgba(16,19,28,0.05)",
     keycap: "rgba(16,19,28,0.05)",
   },
-};
-
-const BEAT = {
-  wordStep: 3,
-  enter: 12,
-  split: 24,
-  panel: 27,
-  deal: 33,
-  dealSteps: [5, 4, 4, 3, 3, 3, 3, 3],
-  hlLead: 9,
-  hlSteps: [9, 7, 6, 5, 4, 4, 4],
-  breath: 6,
-  exitLen: 9,
-  close: 6,
 };
 
 const TRACK = -0.035;
@@ -322,34 +325,34 @@ function ScaleLayer({
   );
 }
 
-export function PhraseListBridge({
-  left = "Browse through",
-  right = "ready-made scenes",
-  items = [
-    "Zoom Blur",
-    "Typewriter",
-    "Inline Highlight",
-    "Rolling Number",
-    "Echo Stack",
-    "Orbit Lock",
-  ],
-  pickedIndex = 2,
-  searchLabel = "Search scenes",
-  accent,
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  stagger = BEAT.wordStep,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: PhraseListBridgeProps) {
+export function PhraseListBridge(props: PhraseListBridgeProps) {
+  const {
+    left = DEFAULT_LEFT,
+    right = DEFAULT_RIGHT,
+    items = DEFAULT_ITEMS,
+    pickedIndex = DEFAULT_PICKED,
+    searchLabel = "Search scenes",
+    accent,
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    phraseListBridgeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -360,26 +363,19 @@ export function PhraseListBridge({
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const portrait = H > W * 1.1;
 
-  const rows = (items.length > 0 ? items : ["Zoom Blur"]).slice(0, 8);
+  const rows = rowsOf(items);
   const n = rows.length;
-  const pick = Math.max(0, Math.min(n - 1, pickedIndex));
+  const pick = pickOf(n, pickedIndex);
 
-  const landAt: number[] = [];
-  let acc = BEAT.deal;
-  for (let i = 0; i < n; i++) {
-    landAt.push(acc);
-    acc += BEAT.dealSteps[Math.min(i, BEAT.dealSteps.length - 1)];
-  }
-  const hlStart = landAt[n - 1] + BEAT.hlLead;
-  const hlAt: number[] = [hlStart];
-  for (let i = 1; i <= pick; i++) {
-    hlAt.push(
-      hlAt[i - 1] + BEAT.hlSteps[Math.min(i - 1, BEAT.hlSteps.length - 1)],
-    );
-  }
-  const pickAt = hlAt[pick] + BEAT.breath;
-  const exitAt = pickAt + 6;
-  const closeAt = exitAt + BEAT.close;
+  const rowEls = rows.map((_, i) => tl.get(`row:${i}`));
+  const splitEl = tl.get("split");
+  const panelEl = tl.get("panel");
+  const hlEl = tl.get("highlight");
+  const pickEl = tl.get("pick");
+  const exitEl = tl.get("exit");
+  const closeEl = tl.get("close");
+  const pickAt = pickEl.start;
+  const exitAt = exitEl.start;
 
   const springAt = (at: number, config: typeof HEAVY, f = frame) =>
     spring({ frame: f - at, fps, config });
@@ -436,16 +432,17 @@ export function PhraseListBridge({
       rowPadX * 2 + iconS + r * 0.7 + labelW(rows[pick]) + r * 0.9 + hugTrail;
 
     const layout = (f: number) => {
-      const sp1 = springAt(BEAT.split, HEAVY, f);
-      const cl = springAt(closeAt, HEAVY, f);
+      const sp1 = springAt(splitEl.start, HEAVY, f);
+      const cl = springAt(closeEl.start, HEAVY, f);
       const morph = spring({
-        frame: f - exitAt - 1,
+        frame: f - exitAt - exitEl.beat("morphAt"),
         fps,
         config: MORPH,
-        durationInFrames: 14,
+        durationInFrames: exitEl.beat("morph"),
       });
       const dealt = rows.reduce(
-        (a, _, i) => a + springAt(landAt[i] - 3, CARD, f),
+        (a, _, i) =>
+          a + springAt(rowEls[i].start + rowEls[i].beat("lead"), CARD, f),
         0,
       );
       const openH = pad * 2 + rh * (1 + Math.min(n, dealt));
@@ -502,7 +499,7 @@ export function PhraseListBridge({
       ccx: number,
       ccy: number,
       restCy: number,
-      startAt: number,
+      first: number,
       fid: string,
     ) => {
       const parts = text.split(" ").filter(Boolean);
@@ -531,11 +528,13 @@ export function PhraseListBridge({
           }}
         >
           {parts.map((w, i) => {
-            const at = startAt + i * stagger;
-            const e = interpolate(frame, [at - 3, at + BEAT.enter], [0, 1], {
-              ...CLAMP,
-              easing: RISE,
-            });
+            const word = tl.get(`word:${first + i}`);
+            const e = interpolate(
+              frame,
+              [word.start + word.beat("lead"), word.end],
+              [0, 1],
+              { ...CLAMP, easing: RISE },
+            );
             return (
               <span
                 key={`${w}${i}`}
@@ -565,38 +564,52 @@ export function PhraseListBridge({
       );
     };
 
-    const panelIn = springAt(BEAT.panel, CARD);
+    const panelIn = springAt(panelEl.start, CARD);
     const hlPos = (() => {
       let p = 0;
       for (let i = 1; i <= pick; i++) {
-        p += interpolate(frame, [hlAt[i - 1] + 1, hlAt[i] + 1], [0, 1], {
+        const step = tl.get(`step:${i}`);
+        p += interpolate(frame, [step.start, step.end], [0, 1], {
           ...CLAMP,
           easing: STEP,
         });
       }
       return p;
     })();
-    const hlIn = interpolate(frame, [hlStart - 3, hlStart + 3], [0, 1], CLAMP);
-    const picked = interpolate(frame, [pickAt, pickAt + 5], [0, 1], CLAMP);
+    const hlIn = interpolate(
+      frame,
+      [hlEl.start + hlEl.beat("lead"), hlEl.start + hlEl.beat("in")],
+      [0, 1],
+      CLAMP,
+    );
+    const picked = interpolate(
+      frame,
+      [pickAt, pickAt + pickEl.beat("fill")],
+      [0, 1],
+      CLAMP,
+    );
     const punch = springAt(pickAt, CHIP);
     const pickScale =
       1 + 0.05 * Math.sin(Math.min(1, punch) * Math.PI) * (1 - L.cl);
-    const checkP = interpolate(frame, [pickAt + 3, pickAt + 14], [0, 1], {
-      ...CLAMP,
-      easing: RISE,
-    });
+    const checkAt = pickAt + pickEl.beat("checkAt");
+    const checkP = interpolate(
+      frame,
+      [checkAt, checkAt + pickEl.beat("check")],
+      [0, 1],
+      { ...CLAMP, easing: RISE },
+    );
 
     const exitOf = (i: number) => {
       const d = i < 0 ? pick + 1 : Math.abs(i - pick);
-      const at = exitAt + Math.min(4, d - 1);
-      return interpolate(frame, [at, at + BEAT.exitLen], [0, 1], {
+      const at = exitAt + Math.min(4, d - 1) * exitEl.beat("step");
+      return interpolate(frame, [at, at + exitEl.beat("row")], [0, 1], {
         ...CLAMP,
         easing: EXIT,
       });
     };
 
     const rowNodes = rows.map((label, i) => {
-      const e = springAt(landAt[i] - 3, CARD);
+      const e = springAt(rowEls[i].start + rowEls[i].beat("lead"), CARD);
       const isPick = i === pick;
       const f = isPick ? 0 : exitOf(i);
       const rowWidth = isPick
@@ -854,7 +867,7 @@ export function PhraseListBridge({
           L.rightCx,
           L.botY,
           cy + restGapY,
-          left.split(" ").filter(Boolean).length * stagger,
+          left.split(" ").filter(Boolean).length,
           `${uid}b`,
         )}
       </AbsoluteFill>
