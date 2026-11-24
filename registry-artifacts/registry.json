@@ -9963,12 +9963,21 @@
       "title": "Depth Headline",
       "description": "A huge serif headline sits behind a gradient sphere that slides through it for depth.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/depth-headline/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/depth-headline.tsx"
+          "target": "components/remocn/depth-headline/index.tsx"
+        },
+        {
+          "path": "registry/remocn/depth-headline/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/depth-headline/timeline.ts"
         }
       ],
       "type": "registry:component"
