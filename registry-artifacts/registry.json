@@ -13385,12 +13385,21 @@
       "title": "Spec Sheet",
       "description": "A tech spec table with hairline rows reveals values like 4K, 60 fps and 1 command.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/spec-sheet/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/spec-sheet.tsx"
+          "target": "components/remocn/spec-sheet/index.tsx"
+        },
+        {
+          "path": "registry/remocn/spec-sheet/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/spec-sheet/timeline.ts"
         }
       ],
       "type": "registry:component"
