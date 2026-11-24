@@ -6294,13 +6294,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "figure-to-label/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/figure-to-label.tsx"
+          "target": "components/remocn/figure-to-label/index.tsx"
+        },
+        {
+          "path": "figure-to-label/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/figure-to-label/timeline.ts"
         }
       ]
     },

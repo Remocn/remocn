@@ -17,6 +17,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type FigureToLabelElementId, figureToLabelTimeline } from "./timeline";
 
 const onest = loadFont("normal", {
   weights: ["300", "400"],
@@ -80,6 +82,13 @@ export interface FigureToLabelProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the dots, the card and its ruler, the note,
+   * the wave and resolve, the collapse, each typed letter, the caret and
+   * the logo, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<FigureToLabelElementId>;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -139,24 +148,6 @@ const THEMES = {
       "inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 2px rgba(10,30,20,0.12), 0 16px 36px rgba(10,30,20,0.16), 0 60px 120px rgba(10,30,20,0.2)",
     line: "rgba(18,26,23,0.3)",
   },
-};
-
-const BEAT = {
-  card: -3,
-  dots: -8,
-  dotsLen: 27,
-  line: 9,
-  note: 15,
-  wave: 15,
-  waveLen: 18,
-  resolve: 33,
-  resolveLen: 15,
-  exit: 51,
-  collapse: 54,
-  type: 69,
-  charStep: 2,
-  logo: 75,
-  caretOff: 117,
 };
 
 const FONT_PX = 200;
@@ -303,27 +294,34 @@ function ScaleLayer({
   );
 }
 
-export function FigureToLabel({
-  value = "$6.4B",
-  word = "valuation",
-  eyebrow = "",
-  accent,
-  ink,
-  background,
-  fontFamily = onest.fontFamily,
-  fontWeight = 300,
-  stagger = BEAT.charStep,
-  logo,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: FigureToLabelProps) {
+export function FigureToLabel(props: FigureToLabelProps) {
+  const {
+    value = "$6.4B",
+    word = "valuation",
+    eyebrow = "",
+    accent,
+    ink,
+    background,
+    fontFamily = onest.fontFamily,
+    fontWeight = 300,
+    logo,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    figureToLabelTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -370,10 +368,15 @@ export function FigureToLabel({
       : cy - (m.boxEm * Fi) / 2 + Fi * 0.18;
     const wordY = portrait ? finY + Fi * 1.02 : finY;
 
-    const cardIn = spring({ frame: frame - BEAT.card, fps, config: CARD });
-    const col = spring({ frame: frame - BEAT.collapse, fps, config: HEAVY });
+    const collapse = tl.get("collapse");
+    const cardIn = spring({
+      frame: frame - tl.get("card").start,
+      fps,
+      config: CARD,
+    });
+    const col = spring({ frame: frame - collapse.start, fps, config: HEAVY });
     const colPrev = spring({
-      frame: frame - 1 - BEAT.collapse,
+      frame: frame - 1 - collapse.start,
       fps,
       config: HEAVY,
     });
@@ -390,7 +393,10 @@ export function FigureToLabel({
 
     const colorP = interpolate(
       frame,
-      [BEAT.collapse + 4, BEAT.collapse + 18],
+      [
+        collapse.start + collapse.beat("colorAt"),
+        collapse.start + collapse.beat("colorEnd"),
+      ],
       [0, 1],
       { ...CLAMP, easing: COLOR },
     );
@@ -401,10 +407,18 @@ export function FigureToLabel({
     const cardOpacity =
       Math.min(1, Math.max(0, cardIn)) *
       (1 -
-        interpolate(frame, [BEAT.collapse + 2, BEAT.collapse + 14], [0, 1], {
-          ...CLAMP,
-          easing: EXIT,
-        }));
+        interpolate(
+          frame,
+          [
+            collapse.start + collapse.beat("fadeAt"),
+            collapse.start + collapse.beat("fadeEnd"),
+          ],
+          [0, 1],
+          {
+            ...CLAMP,
+            easing: EXIT,
+          },
+        ));
     const cardCx =
       cardX +
       cardW / 2 +
@@ -417,6 +431,7 @@ export function FigureToLabel({
     const cardIntro = (1 - Math.min(1, Math.max(0, cardIn))) * H * 0.03;
     const cardDy = cardCy - cardH2 / 2 + cardIntro - cardY;
 
+    const ruler = tl.get("ruler");
     const card = (
       <div
         style={{
@@ -451,7 +466,10 @@ export function FigureToLabel({
           {Array.from({ length: 25 }).map((_, i) => {
             const tick = interpolate(
               frame,
-              [BEAT.line + i * 0.6, BEAT.line + 9 + i * 0.6],
+              [
+                ruler.start + i * ruler.beat("tickStep"),
+                ruler.start + ruler.beat("tick") + i * ruler.beat("tickStep"),
+              ],
               [0, 1],
               { ...CLAMP, easing: REVEAL },
             );
@@ -471,21 +489,24 @@ export function FigureToLabel({
     );
 
     const cell = 1 / CELLS;
+    const waveEl = tl.get("wave");
+    const resolveEl = tl.get("resolve");
+    const dotsEl = tl.get("dots");
     const waveX = interpolate(
       frame,
-      [BEAT.wave, BEAT.wave + BEAT.waveLen],
+      [waveEl.start, waveEl.end],
       [-0.3, m.figEm + 0.3],
       { ...CLAMP, easing: WIPE },
     );
     const resolveEdge = interpolate(
       frame,
-      [BEAT.resolve, BEAT.resolve + BEAT.resolveLen],
+      [resolveEl.start, resolveEl.end],
       [-0.25, m.figEm + 0.25],
       { ...CLAMP, easing: WIPE },
     );
     const soft = 0.35;
     const dotNodes = m.dots.map((d, i) => {
-      const at = BEAT.dots + random(`ftl-${i}`) * (BEAT.dotsLen - 8);
+      const at = dotsEl.start + random(`ftl-${i}`) * dotsEl.beat("spread");
       const pop = spring({ frame: frame - at, fps, config: CHIP });
       const wave = Math.exp(-(((d.x - waveX) / 0.22) ** 2));
       const res = Math.max(
@@ -550,19 +571,22 @@ export function FigureToLabel({
       </div>
     );
 
-    const exitP = interpolate(frame, [BEAT.exit, BEAT.exit + 8], [0, 1], {
+    const exitEl = tl.get("exit");
+    const leader = tl.get("leader");
+    const note = tl.get("note");
+    const exitP = interpolate(frame, [exitEl.start, exitEl.end], [0, 1], {
       ...CLAMP,
       easing: EXIT,
     });
-    const lineP = interpolate(frame, [BEAT.line, BEAT.line + 12], [0, 1], {
+    const lineP = interpolate(frame, [leader.start, leader.end], [0, 1], {
       ...CLAMP,
       easing: WIPE,
     });
-    const noteIn = interpolate(frame, [BEAT.note, BEAT.note + 12], [0, 1], {
+    const noteIn = interpolate(frame, [note.start, note.end], [0, 1], {
       ...CLAMP,
       easing: REVEAL,
     });
-    const noteLogo = spring({ frame: frame - BEAT.note, fps, config: CHIP });
+    const noteLogo = spring({ frame: frame - note.start, fps, config: CHIP });
     const anchorX = portrait ? cx : cardX + cardW;
     const anchorY = portrait ? cardY + cardH : cy;
     const outboard = (
@@ -627,20 +651,23 @@ export function FigureToLabel({
     );
 
     const nChars = Array.from(word).length;
-    const typedN = Math.max(
-      0,
-      Math.min(nChars, Math.floor((frame - BEAT.type) / stagger) + 1),
+    const charEls = Array.from({ length: nChars }, (_, i) =>
+      tl.get(`char:${i}`),
     );
+    const caret = tl.get("caret");
+    let typedN = 0;
+    while (typedN < nChars && frame >= charEls[typedN].start) typedN++;
+    // The caret blinks once the last letter is in, and two frames on.
+    const typedEnd = nChars > 0 ? charEls[nChars - 1].end : caret.start + 4;
     const typedStr = Array.from(word).slice(0, typedN).join("");
     const typedPx = m.text(typedStr, fontWeight) * Fi;
     const wordX = portrait
       ? cx - (wordEm * Fi) / 2
       : finX + (m.figEm + sp) * Fi;
     const caretVisible =
-      frame >= BEAT.type - 4 &&
-      frame < BEAT.caretOff &&
-      (frame < BEAT.type + nChars * stagger + 2 ||
-        Math.floor(frame / 9) % 2 === 0);
+      frame >= caret.start &&
+      frame < caret.end &&
+      (frame < typedEnd + 2 || Math.floor(frame / 9) % 2 === 0);
     const lineTop = finY + (m.boxEm * Fi - Fi) / 2;
     const wordTop = wordY + (m.boxEm * Fi - Fi) / 2;
 
@@ -677,13 +704,22 @@ export function FigureToLabel({
       </>
     );
 
-    const logoP = spring({ frame: frame - BEAT.logo, fps, config: CHIP });
+    const logoEl = tl.get("logo");
+    const logoP = spring({ frame: frame - logoEl.start, fps, config: CHIP });
     const logoE = Math.min(1, Math.max(0, logoP));
     const eyeE = Fi * 0.32;
-    const eyeIn = interpolate(frame, [BEAT.logo + 3, BEAT.logo + 15], [0, 1], {
-      ...CLAMP,
-      easing: REVEAL,
-    });
+    const eyeIn = interpolate(
+      frame,
+      [
+        logoEl.start + logoEl.beat("eyebrowAt"),
+        logoEl.start + logoEl.beat("eyebrowEnd"),
+      ],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: REVEAL,
+      },
+    );
     const eyeW =
       eyeE * 3.9 + (eyebrow ? eyeE * 0.45 + m.text(eyebrow, 400) * eyeE : 0);
     const eyebrowNode = (
