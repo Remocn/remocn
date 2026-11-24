@@ -14,6 +14,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type FirstLightElementId, firstLightTimeline } from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["600"],
@@ -57,6 +59,12 @@ export interface FirstLightProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the line, the name's fade and climb, the
+   * line settling and the tagline, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FirstLightElementId>;
 }
 
 const THEMES = {
@@ -73,11 +81,6 @@ const THEMES = {
 } as const;
 
 const PROBE_PX = 200;
-
-const APPEAR_LEN = 12;
-const CLIMB_AT = 10;
-const CLIMB_LEN = 54;
-const TAG_AT = 60;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_CLIMB = Easing.bezier(0.55, 0, 0.2, 1);
@@ -185,24 +188,36 @@ function ScaleLayer({
   );
 }
 
-export function FirstLight({
-  name = "remocn",
-  tagline = "Every frame catches the light.",
-  accent,
-  ink,
-  background,
-  fontFamily = grotesk.fontFamily,
-  logo,
-  rise = CLIMB_LEN,
-  ticks: showTicks = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: FirstLightProps) {
+export function FirstLight(props: FirstLightProps) {
+  const {
+    name = "remocn",
+    tagline = "Every frame catches the light.",
+    accent,
+    ink,
+    background,
+    fontFamily = grotesk.fontFamily,
+    logo,
+    ticks: showTicks = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    firstLightTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const lineEl = tl.get("line");
+  const nameEl = tl.get("name");
+  const climbEl = tl.get("climb");
+  const setEl = tl.get("set");
+  const tagEl = tl.get("tagline");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const lineInk = accent ?? fg;
@@ -244,17 +259,17 @@ export function FirstLight({
   const climb = baseStart - baseFinal;
 
   const dyAt = (tt: number) => {
-    const appear = interpolate(tt, [0, APPEAR_LEN], [0, 1], {
+    const appear = interpolate(tt, [nameEl.start, nameEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-    const k = interpolate(tt, [CLIMB_AT, CLIMB_AT + rise], [0, 1], {
+    const k = interpolate(tt, [climbEl.start, climbEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_CLIMB,
     });
     return climb * (1 - k) + (1 - appear) * F * 0.06;
   };
-  const appear = interpolate(t, [0, APPEAR_LEN], [0, 1], {
+  const appear = interpolate(t, [nameEl.start, nameEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -263,12 +278,10 @@ export function FirstLight({
     Math.abs(dyAt(t + speed) - dy) > 1e-3 ||
     Math.abs(dy - dyAt(t - speed)) > 1e-3;
 
-  const set = interpolate(
-    t,
-    [CLIMB_AT + rise - 14, CLIMB_AT + rise + 22],
-    [0, 1],
-    { ...CLAMP, easing: Easing.bezier(0.45, 0, 0.55, 1) },
-  );
+  const set = interpolate(t, [setEl.start, setEl.end], [0, 1], {
+    ...CLAMP,
+    easing: Easing.bezier(0.45, 0, 0.55, 1),
+  });
   const sunLine = sunLine0 + set * F * 0.05;
 
   const x0 = W / 2 - nameW / 2;
@@ -323,7 +336,7 @@ export function FirstLight({
     </g>
   );
 
-  const lineIn = interpolate(t, [0, 14], [0, 1], {
+  const lineIn = interpolate(t, [lineEl.start, lineEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -347,7 +360,7 @@ export function FirstLight({
     );
   }
 
-  const tagP = interpolate(t, [TAG_AT, TAG_AT + 16], [0, 1], {
+  const tagP = interpolate(t, [tagEl.start, tagEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

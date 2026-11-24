@@ -8795,12 +8795,21 @@
       "title": "First Light",
       "description": "The remocn wordmark is swept by a band of light along a baseline, with a tagline below.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/first-light/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/first-light.tsx"
+          "target": "components/remocn/first-light/index.tsx"
+        },
+        {
+          "path": "registry/remocn/first-light/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/first-light/timeline.ts"
         }
       ],
       "type": "registry:component"
