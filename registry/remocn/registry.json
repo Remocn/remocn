@@ -2709,13 +2709,19 @@
         "@remocn/caret",
         "@remocn/remocn-ui",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "claude-code/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/claude-code.tsx"
+          "target": "components/remocn/claude-code/index.tsx"
+        },
+        {
+          "path": "claude-code/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/claude-code/timeline.ts"
         }
       ]
     },

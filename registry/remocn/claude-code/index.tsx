@@ -5,7 +5,14 @@ import { AbsoluteFill, interpolate, spring } from "remotion";
 import { Caret } from "@/components/remocn/caret";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
-import { useTypewriter } from "@/lib/remocn-ui";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ClaudeCodeElementId,
+  claudeCodeTimeline,
+  DEFAULT_PROMPT,
+  TYPE_AT,
+  TYPE_CPS,
+} from "./timeline";
 
 const { fontFamily: MONO_FAMILY } = loadFont();
 
@@ -18,6 +25,11 @@ export interface ClaudeCodeProps {
   prompt?: string;
   accentColor?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the intro, the fades and the typing, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<ClaudeCodeElementId>;
 }
 
 interface Theme {
@@ -51,9 +63,9 @@ export const THEMES: Record<"light" | "dark", Theme> = {
   },
 };
 
-export const TYPING_START_FRAME = 48;
+export const TYPING_START_FRAME = TYPE_AT;
 
-export const TYPING_CPS = 18;
+export const TYPING_CPS = TYPE_CPS;
 
 export const WHATS_NEW: string[] = [
   "/agents to create subagents",
@@ -110,41 +122,68 @@ function Mascot({ accent, size = 96 }: { accent: string; size?: number }) {
   );
 }
 
-export function ClaudeCode({
-  title = "Claude Code v2.0.0",
-  userName = "Meaghan",
-  model = "Opus 4.8 • Max 20x",
-  cwd = "/users/meaghan/code/apps",
-  placeholder = 'Try "edit <filepath> to ..."',
-  prompt = "edit src/theme.ts to add a dark mode toggle",
-  accentColor = "#D97757",
-  speed = 1,
-}: ClaudeCodeProps) {
+export function ClaudeCode(props: ClaudeCodeProps) {
+  const {
+    title = "Claude Code v2.0.0",
+    userName = "Meaghan",
+    model = "Opus 4.8 • Max 20x",
+    cwd = "/users/meaghan/code/apps",
+    placeholder = 'Try "edit <filepath> to ..."',
+    prompt = DEFAULT_PROMPT,
+    accentColor = "#D97757",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    claudeCodeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introEl = tl.get("intro");
+  const leftEl = tl.get("left");
+  const rightEl = tl.get("right");
+  const promptEl = tl.get("prompt");
+  const typing = tl.get("typing");
   const t = THEMES.dark;
 
   const refW = 1280;
   const refH = 720;
   const stageScale = Math.min(width / refW, height / refH);
 
-  const tw = useTypewriter(prompt, {
-    cps: TYPING_CPS,
-    speed,
-    startFrame: TYPING_START_FRAME,
-  });
+  // A letter lands every `typing.length / prompt.length` frames.
+  const typed = frame * speed - typing.start;
+  const count =
+    typed <= 0
+      ? 0
+      : typing.length <= 0
+        ? prompt.length
+        : Math.max(
+            0,
+            Math.min(
+              prompt.length,
+              Math.floor((typed / typing.length) * prompt.length),
+            ),
+          );
+  const tw = {
+    text: prompt.slice(0, count),
+    count,
+    typing: count > 0 && count < prompt.length,
+  };
   const showText = tw.count > 0;
 
-  const intro = introBounceIn(frame * speed, fps);
-  const leftFade = fadeUpAt(frame * speed, [6, 22]);
-  const rightFade = fadeUpAt(frame * speed, [12, 30]);
-  const promptFade = fadeUpAt(frame * speed, [18, 36]);
+  const intro = introBounceIn(frame * speed - introEl.start, fps);
+  const leftFade = fadeUpAt(frame * speed, [leftEl.start, leftEl.end]);
+  const rightFade = fadeUpAt(frame * speed, [rightEl.start, rightEl.end]);
+  const promptFade = fadeUpAt(frame * speed, [promptEl.start, promptEl.end]);
   // The intro spring overshoots and has a long tail, so "moving" is read off
   // the neighbouring frames, in px: the drop, and the scale over the window's
   // height below its top-centre origin.
   const introPx = (ff: number) => {
-    const b = introBounceIn(ff, fps);
+    const b = introBounceIn(ff - introEl.start, fps);
     return [b.translateY, b.scale * 620];
   };
   const introNow = introPx(frame * speed);
