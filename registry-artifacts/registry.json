@@ -5841,13 +5841,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/rim-draw-card/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/rim-draw-card.tsx"
+          "target": "components/remocn/rim-draw-card/index.tsx"
+        },
+        {
+          "path": "registry/remocn/rim-draw-card/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/rim-draw-card/timeline.ts"
         }
       ],
       "type": "registry:component"

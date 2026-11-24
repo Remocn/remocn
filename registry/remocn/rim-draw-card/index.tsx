@@ -9,6 +9,15 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_INSTRUCTIONS,
+  DEFAULT_LINE,
+  DEFAULT_USES,
+  RIM_DRAW_END,
+  type RimDrawCardElementId,
+  rimDrawCardTimeline,
+} from "./timeline";
 
 const hanken = loadHanken("normal", {
   weights: ["300", "400"],
@@ -24,29 +33,7 @@ const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const PRESS = { mass: 0.5, damping: 14, stiffness: 260 };
 
-const B = {
-  words: -8,
-  stroke: 18,
-  strokeLen: 30,
-  erase: 20,
-  slide: 18,
-  chip: 24,
-  tail: 32,
-  tailLen: 16,
-  body: 36,
-  pan: 36,
-  title: 42,
-  field: 48,
-  footer: 54,
-  type: 60,
-  chips: 66,
-  preview: 78,
-  press: 96,
-  saved: 99,
-  end: 138,
-};
-
-export const RIM_DRAW_CARD_DURATION = B.end;
+export const RIM_DRAW_CARD_DURATION = RIM_DRAW_END;
 
 const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   interpolate(f, [start, start + dur], [0, 1], {
@@ -89,6 +76,12 @@ export interface RimDrawCardProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the line, the rim stroke, the card and its
+   * items, the typing, the press and the camera, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RimDrawCardElementId>;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 }
@@ -136,36 +129,59 @@ function ScaleLayer({
   );
 }
 
-export function RimDrawCard({
-  theme = "dark",
-  accent,
-  primary,
-  line = "Just tell it once.",
-  command = "/brand-voice",
-  title = "Brand voice",
-  subtitle = "Used every time you write launch copy.",
-  label = "Instructions",
-  instructions = "Short, calm sentences. Name the feature first, then what it saves you.",
-  action = "Save skill",
-  limit = 600,
-  done = "Saved",
-  uses = ["Launch posts", "Changelog", "Release emails"],
-  preview = "Scenes now render three times faster. Ship the reel tonight.",
-  cancelLabel = "Cancel",
-  placeholder = "Describe how this skill should write",
-  typeRate = 2.2,
-  ink,
-  background,
-  fontFamily = hanken.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: RimDrawCardProps) {
+export function RimDrawCard(props: RimDrawCardProps) {
+  const {
+    theme = "dark",
+    accent,
+    primary,
+    line = DEFAULT_LINE,
+    command = "/brand-voice",
+    title = "Brand voice",
+    subtitle = "Used every time you write launch copy.",
+    label = "Instructions",
+    instructions = DEFAULT_INSTRUCTIONS,
+    action = "Save skill",
+    limit = 600,
+    done = "Saved",
+    uses = DEFAULT_USES,
+    preview = "Scenes now render three times faster. Ship the reel tonight.",
+    cancelLabel = "Cancel",
+    placeholder = "Describe how this skill should write",
+    ink,
+    background,
+    fontFamily = hanken.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    rimDrawCardTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const lineEl = tl.get("line");
+  const strokeEl = tl.get("stroke");
+  const slideEl = tl.get("slide");
+  const eraseEl = tl.get("erase");
+  const chipEl = tl.get("chip");
+  const tailEl = tl.get("tail");
+  const body = tl.get("body");
+  const camera = tl.get("camera");
+  const titleEl = tl.get("title");
+  const field = tl.get("field");
+  const footer = tl.get("footer");
+  const typeEl = tl.get("type");
+  const chipsEl = tl.get("chips");
+  const previewEl = tl.get("preview");
+  const pressEl = tl.get("press");
+  const savedEl = tl.get("saved");
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 1080 : 1280;
@@ -192,48 +208,68 @@ export function RimDrawCard({
   const tailEnd = lead + r;
   const pathD = `M ${cw + lead} 0 L ${r} 0 A ${r} ${r} 0 0 0 0 ${r} L 0 ${ch - r} A ${r} ${r} 0 0 0 ${r} ${ch} L ${cw - r} ${ch} A ${r} ${r} 0 0 0 ${cw} ${ch - r} L ${cw} ${r} A ${r} ${r} 0 0 0 ${cw - r} 0`;
 
-  const head = ramp(frame, B.stroke, B.strokeLen, DRAW) * total;
-  const tail = ramp(frame, B.tail, B.tailLen, MOVE) * tailEnd;
-  const drawn = ramp(frame, B.stroke + B.strokeLen - 6, 6, MOVE);
-  const settle = ramp(frame, B.body + 6, 24, MOVE);
+  const head = ramp(frame, strokeEl.start, strokeEl.length, DRAW) * total;
+  const tail = ramp(frame, tailEl.start, tailEl.length, MOVE) * tailEnd;
+  const drawn = ramp(
+    frame,
+    strokeEl.start + strokeEl.beat("drawn"),
+    strokeEl.beat("drawnLen"),
+    MOVE,
+  );
+  const settle = ramp(
+    frame,
+    body.start + body.beat("settle"),
+    body.beat("settleLen"),
+    MOVE,
+  );
   const visible = Math.max(0, head - tail);
   const hotLen = Math.min(visible, 90 * u);
 
-  const bodyIn = ramp(frame, B.body, 12, DRAW);
-  const chipIn = spring({ frame: frame - B.chip, fps, config: CHIP });
-  const chipHot = ramp(frame, B.chip, 6) * (1 - 0.7 * bodyIn);
+  const bodyIn = ramp(frame, body.start, body.beat("fill"), DRAW);
+  const chipIn = spring({ frame: frame - chipEl.start, fps, config: CHIP });
+  const chipHot =
+    ramp(frame, chipEl.start, chipEl.beat("hot")) * (1 - 0.7 * bodyIn);
 
-  const pan = spring({ frame: frame - B.pan, fps, config: HEAVY });
-  const slide = spring({ frame: frame - B.slide, fps, config: HEAVY });
+  const pan = spring({ frame: frame - camera.start, fps, config: HEAVY });
+  const slide = spring({ frame: frame - slideEl.start, fps, config: HEAVY });
   const offX = portrait ? 0 : mix(300, 0, pan);
   const offY = portrait ? mix(300, 0, pan) : 0;
   const lineX = portrait ? 0 : mix(0, -330, slide);
   const lineY = portrait ? mix(0, -560, slide) : 0;
 
-  const brighten = ramp(frame, B.body - 4, 24, SWAY);
-  const push = 1 + 0.035 * ramp(frame, B.pan, B.end - B.pan, SWAY);
+  const brighten = ramp(
+    frame,
+    body.start + body.beat("brighten"),
+    body.beat("brightenLen"),
+    SWAY,
+  );
+  const push = 1 + 0.035 * ramp(frame, camera.start, camera.length, SWAY);
 
   const typed = Math.round(
-    interpolate(
-      frame,
-      [B.type, B.type + instructions.length / typeRate],
-      [0, instructions.length],
-      { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-    ),
+    interpolate(frame, [typeEl.start, typeEl.end], [0, instructions.length], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    }),
   );
   const caret =
-    frame >= B.field + 6 &&
-    frame < B.press &&
+    frame >= field.start + field.beat("caret") &&
+    frame < pressEl.start &&
     (typed < instructions.length || Math.floor(frame / 8) % 2 === 0);
-  const focus = ramp(frame, B.type - 6, 8) * (1 - ramp(frame, B.press, 8));
+  const focus =
+    ramp(frame, typeEl.start + typeEl.beat("focus"), typeEl.beat("focusLen")) *
+    (1 - ramp(frame, pressEl.start, pressEl.beat("unfocus")));
   const press =
-    spring({ frame: frame - B.press, fps, config: PRESS }) -
-    spring({ frame: frame - B.press - 4, fps, config: PRESS });
-  const savedIn = spring({ frame: frame - B.saved, fps, config: CHIP });
-  const savedOn = frame >= B.saved;
+    spring({ frame: frame - pressEl.start, fps, config: PRESS }) -
+    spring({
+      frame: frame - pressEl.start - pressEl.beat("release"),
+      fps,
+      config: PRESS,
+    });
+  const savedIn = spring({ frame: frame - savedEl.start, fps, config: CHIP });
+  const savedOn = frame >= savedEl.start;
 
-  const item = (start: number) => {
-    const p = ramp(frame, start, 12);
+  const item = (start: number, length: number) => {
+    const p = ramp(frame, start, length);
     return {
       opacity: p,
       transform: `translateY(${mix(10 * u, 0, p)}px)`,
@@ -246,8 +282,9 @@ export function RimDrawCard({
   // One tilt on the push layer covers all the text: the line rising in, then
   // from the chip on the card's arrival, its items and the push itself, which
   // runs to the last frame.
-  const riseEnd = B.words + Math.floor((n - 1) / 3) + 14;
-  const stageMoving = (frame > B.words && frame < riseEnd) || frame >= B.chip;
+  const riseEnd = lineEl.start + Math.floor((n - 1) / 3) + lineEl.beat("rise");
+  const stageMoving =
+    (frame > lineEl.start && frame < riseEnd) || frame >= chipEl.start;
 
   const resolvedGround: GshPresetId =
     ground ?? (dark ? "film-blue" : "paper-crease");
@@ -316,9 +353,18 @@ export function RimDrawCard({
               }}
             >
               {letters.map((ch_, i) => {
-                const rise = ramp(frame, B.words + Math.floor(i / 3), 14);
+                const rise = ramp(
+                  frame,
+                  lineEl.start + Math.floor(i / 3),
+                  lineEl.beat("rise"),
+                );
                 const k = n - 1 - i;
-                const gone = ramp(frame, B.erase + k * 0.72, 7, MOVE);
+                const gone = ramp(
+                  frame,
+                  eraseEl.start + k * eraseEl.beat("stagger"),
+                  eraseEl.beat("fade"),
+                  MOVE,
+                );
                 return (
                   <span
                     key={`${ch_}-${i.toString()}`}
@@ -397,7 +443,7 @@ export function RimDrawCard({
                         ? `color-mix(in oklab, ${acc} 80%, white)`
                         : acc,
                       background: `color-mix(in oklab, ${acc} ${Math.round((dark ? 12 : 9) + 10 * chipHot)}%, transparent)`,
-                      opacity: ramp(frame, B.chip, 4),
+                      opacity: ramp(frame, chipEl.start, chipEl.beat("fade")),
                       transform: `scale(${mix(0.7, 1, chipIn)})`,
                       transformOrigin: "0% 50%",
                     }}
@@ -408,7 +454,7 @@ export function RimDrawCard({
 
                 <div
                   style={{
-                    ...item(B.title),
+                    ...item(titleEl.start, titleEl.beat("item")),
                     display: "flex",
                     alignItems: "center",
                     gap: 10 * u,
@@ -427,7 +473,10 @@ export function RimDrawCard({
                 </div>
                 <div
                   style={{
-                    ...item(B.title + 3),
+                    ...item(
+                      titleEl.start + titleEl.beat("second"),
+                      titleEl.beat("item"),
+                    ),
                     fontSize: 18 * u,
                     color: muted,
                     marginTop: 6 * u,
@@ -439,7 +488,7 @@ export function RimDrawCard({
 
                 <div
                   style={{
-                    ...item(B.field),
+                    ...item(field.start, field.beat("item")),
                     fontSize: 16 * u,
                     color: muted,
                     marginTop: 22 * u,
@@ -449,7 +498,10 @@ export function RimDrawCard({
                 </div>
                 <div
                   style={{
-                    ...item(B.field + 2),
+                    ...item(
+                      field.start + field.beat("second"),
+                      field.beat("item"),
+                    ),
                     marginTop: 8 * u,
                     position: "relative",
                     height: (portrait ? 112 : 96) * u,
@@ -495,7 +547,10 @@ export function RimDrawCard({
                   <>
                     <div
                       style={{
-                        ...item(B.chips - 4),
+                        ...item(
+                          chipsEl.start + chipsEl.beat("label"),
+                          chipsEl.beat("item"),
+                        ),
                         fontSize: 16 * u,
                         color: muted,
                         marginTop: 24 * u,
@@ -513,7 +568,8 @@ export function RimDrawCard({
                     >
                       {uses.map((c, i) => {
                         const s = spring({
-                          frame: frame - B.chips - i * 3,
+                          frame:
+                            frame - chipsEl.start - i * chipsEl.beat("stagger"),
                           fps,
                           config: CHIP,
                         });
@@ -528,7 +584,11 @@ export function RimDrawCard({
                                 ? "rgba(255,255,255,0.04)"
                                 : "#f6f7fb",
                               fontSize: 16 * u,
-                              opacity: ramp(frame, B.chips + i * 3, 4),
+                              opacity: ramp(
+                                frame,
+                                chipsEl.start + i * chipsEl.beat("stagger"),
+                                chipsEl.beat("fade"),
+                              ),
                               transform: `scale(${mix(0.6, 1, s)})`,
                             }}
                           >
@@ -539,7 +599,7 @@ export function RimDrawCard({
                     </div>
                     <div
                       style={{
-                        ...item(B.preview),
+                        ...item(previewEl.start, previewEl.beat("item")),
                         fontSize: 16 * u,
                         color: muted,
                         marginTop: 24 * u,
@@ -549,7 +609,10 @@ export function RimDrawCard({
                     </div>
                     <div
                       style={{
-                        ...item(B.preview + 3),
+                        ...item(
+                          previewEl.start + previewEl.beat("second"),
+                          previewEl.beat("item"),
+                        ),
                         marginTop: 10 * u,
                         display: "flex",
                         gap: 12 * u,
@@ -575,7 +638,7 @@ export function RimDrawCard({
 
                 <div
                   style={{
-                    ...item(B.footer),
+                    ...item(footer.start, footer.beat("item")),
                     marginTop: "auto",
                     display: "flex",
                     alignItems: "center",
