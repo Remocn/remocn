@@ -1,83 +1,31 @@
 "use client";
 
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  CHARS_PER_FRAME,
+  EVENTS,
+  type LiveCodeCompilationElementId,
+  liveCodeCompilationTimeline,
+  typingFrames,
+  type UIState,
+} from "./timeline";
 
 export interface LiveCodeCompilationProps {
   accentColor?: string;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the typing of single code fragments, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<LiveCodeCompilationElementId>;
 }
 
 const FONT_FAMILY =
   "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif";
 const MONO_FAMILY =
   "var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace";
-
-interface UIState {
-  background?: string;
-  color?: string;
-  padding?: string;
-  borderRadius?: string;
-  fontWeight?: number;
-  label?: string;
-}
-
-interface CodeEvent {
-  code: string;
-  ui: UIState;
-}
-
-const EVENTS: CodeEvent[] = [
-  {
-    code: "export function Button() {\n  return (\n    <button",
-    ui: {},
-  },
-  { code: "\n      style={{", ui: {} },
-  {
-    code: '\n        background: "#3b82f6",',
-    ui: { background: "#3b82f6" },
-  },
-  {
-    code: '\n        color: "white",',
-    ui: { color: "white" },
-  },
-  {
-    code: '\n        padding: "12px 28px",',
-    ui: { padding: "12px 28px" },
-  },
-  {
-    code: '\n        borderRadius: "999px",',
-    ui: { borderRadius: "999px" },
-  },
-  {
-    code: "\n        fontWeight: 600,",
-    ui: { fontWeight: 600 },
-  },
-  {
-    code: "\n      }}\n    >\n      Ship it\n    </button>\n  );\n}",
-    ui: { label: "Ship it" },
-  },
-];
-
-const CHARS_PER_FRAME = 1.6;
-const DWELL_FRAMES = 5;
-const INITIAL_OFFSET = 8;
-
-interface TimelineEntry extends CodeEvent {
-  start: number;
-  end: number;
-}
-
-const TIMELINE: TimelineEntry[] = (() => {
-  let cursor = INITIAL_OFFSET;
-  return EVENTS.map((ev) => {
-    const start = cursor;
-    const end = start + Math.ceil(ev.code.length / CHARS_PER_FRAME);
-    cursor = end + DWELL_FRAMES;
-    return { ...ev, start, end };
-  });
-})();
-const TIMELINE_END = TIMELINE[TIMELINE.length - 1].end;
 
 function highlightLine(line: string, accentColor: string) {
   // very simple tokenizer: keywords, strings, props
@@ -107,26 +55,36 @@ function highlightLine(line: string, accentColor: string) {
   return tokens;
 }
 
-export function LiveCodeCompilation({
-  accentColor = "#3b82f6",
-  speed = 1,
-  className,
-}: LiveCodeCompilationProps) {
+export function LiveCodeCompilation(props: LiveCodeCompilationProps) {
+  const { accentColor = "#3b82f6", speed = 1, className, timing } = props;
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    liveCodeCompilationTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const edits = tl.lane("Code");
+  const TIMELINE_END = edits[edits.length - 1].end;
 
   // Build the visible code character-by-character from the auto-staggered
   // timeline. UI state only flips once a fragment is fully typed.
   let visibleCode = "";
   const ui: UIState = {};
-  for (const t of TIMELINE) {
+  for (const [i, ev] of EVENTS.entries()) {
+    const t = edits[i];
     if (frame < t.start) break;
     const elapsed = frame - t.start;
-    const charsTyped = Math.min(
-      t.code.length,
-      Math.floor(elapsed * CHARS_PER_FRAME),
-    );
-    visibleCode += t.code.slice(0, charsTyped);
-    if (frame >= t.end) Object.assign(ui, t.ui);
+    // A trimmed or stretched fragment types faster or slower; untouched, the
+    // ratio is exactly 1.
+    const rate =
+      t.length > 0
+        ? CHARS_PER_FRAME * (typingFrames(ev.code) / t.length)
+        : Number.POSITIVE_INFINITY;
+    const charsTyped = Math.min(ev.code.length, Math.floor(elapsed * rate));
+    visibleCode += ev.code.slice(0, charsTyped);
+    if (frame >= t.end) Object.assign(ui, ev.ui);
   }
 
   const lines = visibleCode.split("\n");

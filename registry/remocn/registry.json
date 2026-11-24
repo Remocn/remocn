@@ -2443,12 +2443,17 @@
       "title": "Live Code Compilation",
       "description": "Split-screen where typed code on the left snaps a live UI preview on the right, HMR-style.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "live-code-compilation/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/live-code-compilation.tsx"
+          "target": "components/remocn/live-code-compilation/index.tsx"
+        },
+        {
+          "path": "live-code-compilation/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/live-code-compilation/timeline.ts"
         }
       ]
     },
