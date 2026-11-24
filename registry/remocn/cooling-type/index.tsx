@@ -9,13 +9,25 @@ import {
   delayRender,
   Easing,
   interpolate,
-  random,
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  accentIndex,
+  type CoolingTypeElementId,
+  coolingTypeTimeline,
+  DEFAULT_ACCENT_WORD,
+  DEFAULT_TEXT,
+  wordsOf,
+} from "./timeline";
 
 const inter = loadInter("normal", {
   weights: ["300"],
@@ -51,6 +63,12 @@ export interface CoolingTypeProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches single letters, the caret's finish and the
+   * camera push, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<CoolingTypeElementId>;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -88,12 +106,6 @@ const THEMES = {
     scrim: "238,242,244",
     scrimAlpha: 0.4,
   },
-};
-
-const BEAT = {
-  start: -3,
-  breath: 8,
-  accentRate: 1.25,
 };
 
 const FONT_PX = 200;
@@ -171,6 +183,7 @@ interface Ch {
   line: number;
   serif: boolean;
   t: number;
+  el: ResolvedElement<CoolingTypeElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -189,30 +202,30 @@ function ScaleLayer({
   );
 }
 
-export function CoolingType({
-  text = "What if your launch video could write itself?",
-  accentWord = "itself?",
-  hot,
-  accent,
-  ink,
-  background,
-  fontFamily = inter.fontFamily,
-  fontWeight = 300,
-  glow = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-  startAt = BEAT.start,
-  charFrames = 1.6,
-  coolFrames = 20,
-  seed = 5,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: CoolingTypeProps) {
+export function CoolingType(props: CoolingTypeProps) {
+  const {
+    text = DEFAULT_TEXT,
+    accentWord = DEFAULT_ACCENT_WORD,
+    hot,
+    accent,
+    ink,
+    background,
+    fontFamily = inter.fontFamily,
+    fontWeight = 300,
+    glow = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The camera push runs over the clip without `speed`, as before.
+  const tl = useTimeline(coolingTypeTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const glowK = c.glow * glow;
   const inkC = ink ?? c.ink;
@@ -226,8 +239,8 @@ export function CoolingType({
 
   let content: ReactNode = <div />;
   if (m) {
-    const words = text.split(" ").filter((w) => w.length > 0);
-    const accIdx = accentWord ? words.lastIndexOf(accentWord) : -1;
+    const words = wordsOf(text);
+    const accIdx = accentIndex(words, accentWord);
     const isSerif = (wi: number) => wi === accIdx;
     const wordW = (wi: number) => m(words[wi], isSerif(wi));
     const space = m(" ", false);
@@ -264,12 +277,6 @@ export function CoolingType({
     const lineY = (li: number) => top + LH * (li + 0.5);
 
     const chars: Ch[] = [];
-    let t = startAt;
-    let total = 0;
-    rows.forEach((rw) => {
-      total += rw.reduce((a, wi) => a + words[wi].length + 1, 0);
-    });
-    let n = 0;
     rows.forEach((rw, li) => {
       let x = x0;
       rw.forEach((wi, k) => {
@@ -277,26 +284,27 @@ export function CoolingType({
           x += space * size;
         }
         const sf = isSerif(wi);
-        if (sf) t += BEAT.breath;
         const word = words[wi];
         Array.from(word).forEach((ch, ci) => {
           const pre = word.slice(0, ci);
           const cx = x + m(pre, sf) * size;
           const cw = m(ch, sf) * size;
-          chars.push({ ch, x: cx, w: cw, line: li, serif: sf, t });
-          const accel = 1.2 - 0.45 * (n / Math.max(1, total));
-          const jitter = (random(`ct-${seed}-${n}`) - 0.5) * 0.9;
-          let step = sf ? BEAT.accentRate : charFrames * accel + jitter;
-          if (/[,.;:!?]/.test(ch)) step += 4;
-          t += Math.max(0.6, step);
-          n++;
+          const el = tl.get(`char:${chars.length}`);
+          chars.push({
+            ch,
+            x: cx,
+            w: cw,
+            line: li,
+            serif: sf,
+            t: el.start,
+            el,
+          });
         });
         x += wordW(wi) * size;
-        t += sf ? 0 : charFrames * 0.9;
-        n++;
       });
     });
-    const typedEnd = chars.length > 0 ? chars[chars.length - 1].t : startAt;
+    const caretEl = tl.get("caret");
+    const typedEnd = caretEl.start;
     const f = frame;
 
     const shownAt = (fr: number) => {
@@ -313,13 +321,13 @@ export function CoolingType({
         k >= 2 && chars[k - 2].line === cur.line
           ? chars[k - 2].x + chars[k - 2].w
           : cur.x;
-      const e = KEY(Math.min(1, (fr - cur.t) / 2));
+      const e = KEY(Math.min(1, (fr - cur.t) / cur.el.beat("slide")));
       return { x: prevEnd + (end - prevEnd) * e, li: cur.line };
     };
 
     const heatOf = (ch: Ch) => {
       const a = f - ch.t;
-      const len = ch.serif ? coolFrames * 1.8 : coolFrames;
+      const len = ch.el.length;
       return 1 - interpolate(a, [0, len], [0, 1], { ...CLAMP, easing: COOL });
     };
 
@@ -352,8 +360,9 @@ export function CoolingType({
       );
     });
 
+    const pushEl = tl.get("push");
     const pushAt = (fr: number) =>
-      interpolate(fr, [0, durationInFrames], [1, 1.04], {
+      interpolate(fr, [pushEl.start, pushEl.end], [1, 1.04], {
         ...CLAMP,
         easing: CAMERA,
       });
@@ -368,7 +377,8 @@ export function CoolingType({
       if (ch.t > f) return null;
       const a = f - ch.t;
       const heat = heatOf(ch);
-      const e = KEY(Math.min(1, a / 4));
+      const land = ch.el.beat("land");
+      const e = KEY(Math.min(1, a / land));
       const target = ch.serif ? accC : inkC;
       const flare = ch.serif ? 1.4 : 1;
       const g = heat * glowK * flare;
@@ -394,8 +404,8 @@ export function CoolingType({
             whiteSpace: "pre",
             color: `color-mix(in oklab, ${hotC} ${pct(heat)}, ${target})`,
             textShadow: shadow,
-            opacity: Math.min(1, 0.35 + a / 1.5),
-            transform: `translateY(${((1 - e) * size * 0.1).toFixed(2)}px)${glide(a < 4 && !pushMoving)}`,
+            opacity: Math.min(1, 0.35 + a / ch.el.beat("fade")),
+            transform: `translateY(${((1 - e) * size * 0.1).toFixed(2)}px)${glide(a < land && !pushMoving)}`,
             filter:
               e < 0.98 ? `blur(${((1 - e) * 4).toFixed(2)}px)` : undefined,
           }}
@@ -407,19 +417,28 @@ export function CoolingType({
 
     const cur = caretAt(f);
     const back = caretAt(f - 3);
-    const typing = f <= typedEnd + 2;
+    const typing = f <= typedEnd + caretEl.beat("trail");
     const vel = cur.li === back.li ? Math.max(0, (cur.x - back.x) / 3) : 0;
     const trail = typing
       ? Math.min(size * 2.6, Math.max(size * 0.25, vel * 7))
-      : interpolate(f, [typedEnd + 2, typedEnd + 10], [size * 0.25, 0], CLAMP);
+      : interpolate(
+          f,
+          [
+            typedEnd + caretEl.beat("trail"),
+            typedEnd + caretEl.beat("trailEnd"),
+          ],
+          [size * 0.25, 0],
+          CLAMP,
+        );
     const caretHeat = typing
       ? 1
       : 1 -
-        interpolate(f, [typedEnd, typedEnd + coolFrames], [0, 1], {
+        interpolate(f, [typedEnd, caretEl.end], [0, 1], {
           ...CLAMP,
           easing: COOL,
         });
-    const blink = typing || Math.floor((f - typedEnd) / 15) % 2 === 1;
+    const blink =
+      typing || Math.floor((f - typedEnd) / caretEl.beat("blink")) % 2 === 1;
     const caretW = Math.max(2, size * 0.045);
     const caretH = size * 1.02;
     const caretC = `color-mix(in oklab, ${hotC} ${pct(caretHeat)}, ${inkC})`;

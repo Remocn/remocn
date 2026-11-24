@@ -5826,13 +5826,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "cooling-type/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/cooling-type.tsx"
+          "target": "components/remocn/cooling-type/index.tsx"
+        },
+        {
+          "path": "cooling-type/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/cooling-type/timeline.ts"
         }
       ]
     },
