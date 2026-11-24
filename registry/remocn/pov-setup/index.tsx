@@ -9,6 +9,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_SETUP,
+  type PovSetupElementId,
+  povSetupTimeline,
+  setupWordsOf,
+} from "./timeline";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["300", "400"],
@@ -50,18 +57,13 @@ export interface PovSetupProps {
   /** Overrides for the ground shader. */
   groundParams?: Partial<GradientParams>;
   speed?: number;
+  /**
+   * Moves, trims or stretches the label, its shrink, each setup word, the
+   * punchline and the ground rise, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PovSetupElementId>;
 }
-
-const BEATS = {
-  pov: 0,
-  shrink: 6,
-  setup: 10,
-  wordGap: 3,
-  wordLen: 12,
-  punch: 54,
-  lift: 54,
-  rise: 56,
-} as const;
 
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const LIGHT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -132,26 +134,36 @@ function ScaleLayer({
   );
 }
 
-export function PovSetup({
-  label = "POV:",
-  setup = "you shipped the launch video before standup",
-  lead = "and it",
-  punch = "slaps.",
-  ink,
-  background,
-  fontFamily = sora,
-  stagger = BEATS.wordGap,
-  punchAt = BEATS.punch,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  ground,
-  groundParams,
-  speed = 1,
-}: PovSetupProps) {
+export function PovSetup(props: PovSetupProps) {
+  const {
+    label = "POV:",
+    setup = DEFAULT_SETUP,
+    lead = "and it",
+    punch = "slaps.",
+    ink,
+    background,
+    fontFamily = sora,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    ground,
+    groundParams,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    povSetupTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const labelEl = tl.get("label");
+  const shrinkEl = tl.get("shrink");
+  const punchEl = tl.get("punch");
+  const groundEl = tl.get("ground");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
@@ -160,37 +172,38 @@ export function PovSetup({
       : background === "transparent"
         ? "transparent"
         : background;
-  const shift = punchAt - BEATS.punch;
-  const beats = {
-    ...BEATS,
-    wordGap: stagger,
-    punch: BEATS.punch + shift,
-    lift: BEATS.lift + shift,
-    rise: BEATS.rise + shift,
-  };
   const tall = H > W;
   const base = tall ? W * 0.75 : H;
   const u = Math.min(W / 1280, H / 720);
 
-  const words = setup.split(/\s+/).filter(Boolean);
+  const words = setupWordsOf(setup);
 
-  const pov = spring({ frame: t - beats.pov, fps, config: CHIP });
-  const shrink = spring({ frame: t - beats.shrink, fps, config: HEAVY });
-  const lift = spring({ frame: t - beats.lift, fps, config: HEAVY });
-  const p = spring({ frame: t - beats.punch, fps, config: CARD });
-  const punchOn = t >= beats.punch;
+  const pov = spring({ frame: t - labelEl.start, fps, config: CHIP });
+  const shrink = spring({ frame: t - shrinkEl.start, fps, config: HEAVY });
+  const lift = spring({
+    frame: t - (punchEl.start + punchEl.beat("lift")),
+    fps,
+    config: HEAVY,
+  });
+  const p = spring({ frame: t - punchEl.start, fps, config: CARD });
+  const punchOn = t >= punchEl.start;
 
   const camera = (at: number) => {
     const bump = Math.max(
-      0.5 * kick(at - beats.pov - 4),
-      1.2 * kick(at - beats.punch - 4),
+      0.5 * kick(at - labelEl.start - labelEl.beat("kick")),
+      1.2 * kick(at - punchEl.start - punchEl.beat("kick")),
     );
-    const creep = interpolate(at, [beats.setup, beats.punch + 70], [1, 1.035], {
-      ...CLAMP,
-      easing: CAMERA,
-    });
+    const creep = interpolate(
+      at,
+      [shrinkEl.end, punchEl.start + punchEl.beat("creep")],
+      [1, 1.035],
+      {
+        ...CLAMP,
+        easing: CAMERA,
+      },
+    );
     return {
-      hit: shake(at - beats.punch - 4, 8 * u, 2.3),
+      hit: shake(at - punchEl.start - punchEl.beat("kick"), 8 * u, 2.3),
       s: creep * (1 + 0.03 * bump),
     };
   };
@@ -214,10 +227,10 @@ export function PovSetup({
   const punchScale = 1.5 - 0.5 * p;
   const punchBlur = Math.max(0, 1 - p) * 14;
   const punchTilt = -4 * (1 - p);
-  const stepBack = LIGHT(ramp(t, beats.punch, 12));
+  const stepBack = LIGHT(ramp(t, punchEl.start, punchEl.length));
   const setupOpacity = 1 - 0.55 * stepBack;
 
-  const rise = LIGHT(ramp(t, beats.rise, 30));
+  const rise = LIGHT(ramp(t, groundEl.start, groundEl.length));
   const veil = c.veilFrom + (c.veilTo - c.veilFrom) * rise;
   const groundShift = (1 - rise) * 0.14 * H;
 
@@ -310,7 +323,11 @@ export function PovSetup({
                 transformOrigin: "0% 0%",
                 height: labelFs,
                 filter: povBlur > 0.2 ? `blur(${povBlur * u}px)` : undefined,
-                opacity: ramp(t, beats.pov - 1, 2),
+                opacity: ramp(
+                  t,
+                  labelEl.start + labelEl.beat("fadeAt"),
+                  labelEl.beat("fade"),
+                ),
                 marginBottom: labelGap,
               }}
             >
@@ -330,8 +347,8 @@ export function PovSetup({
               }}
             >
               {words.map((w, i) => {
-                const at = beats.setup + i * beats.wordGap;
-                const k = ENTER(ramp(t, at, beats.wordLen));
+                const word = tl.get(`word:${i}`);
+                const k = ENTER(ramp(t, word.start, word.length));
                 return (
                   <span
                     key={i}
@@ -348,7 +365,7 @@ export function PovSetup({
                       style={{
                         display: "inline-block",
                         transform: `translateY(${(1 - k) * 105}%)`,
-                        opacity: ramp(t, at, 4),
+                        opacity: ramp(t, word.start, word.beat("fade")),
                       }}
                     >
                       {w}
@@ -377,7 +394,7 @@ export function PovSetup({
                     transformOrigin: "0% 70%",
                     filter:
                       punchBlur > 0.2 ? `blur(${punchBlur * u}px)` : undefined,
-                    opacity: ramp(t, beats.punch, 2),
+                    opacity: ramp(t, punchEl.start, punchEl.beat("fade")),
                     color: fg,
                   }}
                 >

@@ -11485,13 +11485,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "pov-setup/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/pov-setup.tsx"
+          "target": "components/remocn/pov-setup/index.tsx"
+        },
+        {
+          "path": "pov-setup/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/pov-setup/timeline.ts"
         }
       ]
     },
