@@ -11437,12 +11437,17 @@
       "title": "Snap Click",
       "description": "The wordmark snaps together at a seam with a click, settling over a subtle caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/snap-click/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/snap-click.tsx"
+          "target": "components/remocn/snap-click/index.tsx"
+        },
+        {
+          "path": "registry/remocn/snap-click/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/snap-click/timeline.ts"
         }
       ],
       "type": "registry:component"
