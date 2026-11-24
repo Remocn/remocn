@@ -5818,13 +5818,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/glow-born-card/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/glow-born-card.tsx"
+          "target": "components/remocn/glow-born-card/index.tsx"
+        },
+        {
+          "path": "registry/remocn/glow-born-card/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/glow-born-card/timeline.ts"
         }
       ],
       "type": "registry:component"
