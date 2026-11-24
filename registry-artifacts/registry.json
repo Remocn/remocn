@@ -9929,12 +9929,21 @@
       "title": "Full Bleed Type",
       "description": "Huge condensed caps words slam in one at a time, the last lit by a sunrise gradient.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/full-bleed-type/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/full-bleed-type.tsx"
+          "target": "components/remocn/full-bleed-type/index.tsx"
+        },
+        {
+          "path": "registry/remocn/full-bleed-type/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/full-bleed-type/timeline.ts"
         }
       ],
       "type": "registry:component"
