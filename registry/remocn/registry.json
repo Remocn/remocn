@@ -2237,12 +2237,17 @@
       "title": "Animated Line Chart",
       "description": "Line chart whose SVG path draws on from left to right with a leading dot.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "animated-line-chart/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/animated-line-chart.tsx"
+          "target": "components/remocn/animated-line-chart/index.tsx"
+        },
+        {
+          "path": "animated-line-chart/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/animated-line-chart/timeline.ts"
         }
       ]
     },

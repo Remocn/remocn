@@ -2,6 +2,11 @@
 
 import { spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AnimatedLineChartElementId,
+  animatedLineChartTimeline,
+} from "./timeline";
 
 export interface AnimatedLineChartProps {
   data?: number[];
@@ -13,21 +18,36 @@ export interface AnimatedLineChartProps {
   showDot?: boolean;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the line drawing in, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<AnimatedLineChartElementId>;
 }
 
-export function AnimatedLineChart({
-  data = [12, 19, 8, 15, 22, 18, 28, 25, 32],
-  width = 1000,
-  height = 500,
-  strokeColor = "#22c55e",
-  strokeWidth = 4,
-  gridColor = "#27272a",
-  showDot = true,
-  speed = 1,
-  className,
-}: AnimatedLineChartProps) {
+export function AnimatedLineChart(props: AnimatedLineChartProps) {
+  const {
+    data = [12, 19, 8, 15, 22, 18, 28, 25, 32],
+    width = 1000,
+    height = 500,
+    strokeColor = "#22c55e",
+    strokeWidth = 4,
+    gridColor = "#27272a",
+    showDot = true,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
   const { fps, durationInFrames } = useSceneConfig();
+  // The draw has always been sized on the clip without `speed`.
+  const tl = useTimeline(
+    animatedLineChartTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
+  const draw = tl.get("draw");
 
   const padding = 60;
   const innerWidth = width - padding * 2;
@@ -58,9 +78,9 @@ export function AnimatedLineChart({
   // Spring-driven progress: smooth, no bounce. Matches the "smooth" preset
   // from remotion-best-practices/timing.md.
   const progress = spring({
-    frame,
+    frame: frame - draw.start,
     fps,
-    durationInFrames: Math.round(durationInFrames * 0.85),
+    durationInFrames: draw.length,
     config: { damping: 200 },
   });
 
