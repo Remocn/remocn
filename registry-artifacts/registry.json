@@ -16112,13 +16112,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/cart-add/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/cart-add.tsx"
+          "target": "components/remocn/cart-add/index.tsx"
+        },
+        {
+          "path": "registry/remocn/cart-add/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/cart-add/timeline.ts"
         }
       ],
       "type": "registry:component"
