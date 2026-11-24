@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LEAD,
+  splitWords,
+  type YourNameHereElementId,
+  yourNameHereTimeline,
+} from "./timeline";
 
 const lexend = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -38,6 +45,12 @@ export interface YourNameHereProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single lead words, the brand line, the braces,
+   * the swap, the opening and the note, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<YourNameHereElementId>;
 }
 
 const THEMES = {
@@ -149,8 +162,6 @@ function balanced(
   return greedy(words, adv, space, hi);
 }
 
-const splitWords = (s: string) => s.split(/\s+/).filter(Boolean);
-
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -169,26 +180,29 @@ function ScaleLayer({
   );
 }
 
-export function YourNameHere({
-  lead = "A launch film for",
-  brand = "remocn",
-  slot = "yourProduct",
-  end = ".",
-  note = "Swap one prop. The film is yours.",
-  accent,
-  ink,
-  background,
-  fontFamily = lexend.fontFamily,
-  stagger = 3,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: YourNameHereProps) {
+export function YourNameHere(props: YourNameHereProps) {
+  const {
+    lead = DEFAULT_LEAD,
+    brand = "remocn",
+    slot = "yourProduct",
+    end = ".",
+    note = "Swap one prop. The film is yours.",
+    accent,
+    ink,
+    background,
+    fontFamily = lexend.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The pace is counted on the clip after the delay, with `speed`.
   const Tt = Math.max(0, durationInFrames - delay) * speed;
+  const tl = useTimeline(yourNameHereTimeline, props, Tt, timing);
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -253,33 +267,36 @@ export function YourNameHere({
   const slotTop = blockTop + leadLines.length * lineH;
   const noteTop = slotTop + lineH + fs * 0.34;
 
-  const k = Math.min(1.5, Math.max(0.85, Tt / 180));
-  const braceAt = 44 * k;
-  const swapAt = braceAt + 26 * k;
-  const openAt = swapAt + 28;
-  const noteAt = openAt + 30;
+  const brace = tl.get("brace");
+  const swap = tl.get("swap");
+  const openEl = tl.get("open");
+  const noteEl = tl.get("note");
+  const swapAt = swap.start;
+  const openAt = openEl.start;
 
-  const p1 = interpolate(t, [braceAt, braceAt + 16], [0, 1], {
+  const p1 = interpolate(t, [brace.start, brace.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const out = interpolate(t, [swapAt, swapAt + 12], [0, 1], {
+  const out = interpolate(t, [swapAt, swapAt + swap.beat("out")], [0, 1], {
     ...CLAMP,
     easing: EASE_IN,
   });
-  const shut = interpolate(t, [swapAt + 4, swapAt + 18], [0, 1], {
+  const shut = interpolate(t, [swapAt + swap.beat("shut"), swap.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const open = interpolate(t, [openAt, openAt + 20], [0, 1], {
+  const open = interpolate(t, [openAt, openAt + openEl.beat("open")], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const rise = interpolate(t, [openAt + 4, openAt + 22], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const noteE = interpolate(t, [noteAt, noteAt + 18], [0, 1], {
+  const rise = interpolate(
+    t,
+    [openAt + openEl.beat("rise"), openEl.end],
+    [0, 1],
+    { ...CLAMP, easing: EASE_OUT },
+  );
+  const noteE = interpolate(t, [noteEl.start, noteEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -308,9 +325,9 @@ export function YourNameHere({
       }}
     >
       {line.map((word, wi) => {
-        const s = 3 + wordIndex * stagger;
+        const wordEl = tl.get(`word:${wordIndex}`);
         wordIndex++;
-        const e = interpolate(t, [s, s + 18], [0, 1], {
+        const e = interpolate(t, [wordEl.start, wordEl.end], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
         });
@@ -332,12 +349,11 @@ export function YourNameHere({
     </div>
   ));
 
-  const brandIn = interpolate(
-    t,
-    [3 + wordIndex * stagger + 2, 3 + wordIndex * stagger + 22],
-    [0, 1],
-    { ...CLAMP, easing: EASE_OUT },
-  );
+  const brandEl = tl.get("brand");
+  const brandIn = interpolate(t, [brandEl.start, brandEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
 
   const glyph = (
     text: string,

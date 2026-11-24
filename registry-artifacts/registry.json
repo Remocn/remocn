@@ -6896,12 +6896,21 @@
       "title": "Your Name Here",
       "description": "\"A launch film for {yourProduct}.\" with a swap-one-prop caption on a red card.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/your-name-here/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/your-name-here.tsx"
+          "target": "components/remocn/your-name-here/index.tsx"
+        },
+        {
+          "path": "registry/remocn/your-name-here/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/your-name-here/timeline.ts"
         }
       ],
       "type": "registry:component"
