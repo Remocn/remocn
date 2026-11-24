@@ -9277,12 +9277,21 @@
       "title": "Plus Open",
       "description": "A plus sign opens into the next statement on a soft aurora ground, 'Here's everything new.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/plus-open/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/plus-open.tsx"
+          "target": "components/remocn/plus-open/index.tsx"
+        },
+        {
+          "path": "registry/remocn/plus-open/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/plus-open/timeline.ts"
         }
       ],
       "type": "registry:component"

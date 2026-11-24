@@ -9282,10 +9282,19 @@
         {
           "path": "plus-open/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/plus-open.tsx"
+          "target": "components/remocn/plus-open/index.tsx"
+        },
+        {
+          "path": "plus-open/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/plus-open/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "res-climb",
