@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ChunkStackElementId,
+  chunkStackTimeline,
+  DEFAULT_TEXT,
+  wordsOf,
+} from "./timeline";
 
 const nunito = loadFont("normal", {
   weights: ["500"],
@@ -36,6 +43,12 @@ export interface ChunkStackProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the rise, the gaps opening and single word
+   * drops, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<ChunkStackElementId>;
 }
 
 const THEMES = {
@@ -56,13 +69,6 @@ const THEMES = {
 const FONT_PX = 200;
 const TRACK = -0.025;
 const LEAD = 0.98;
-const RISE_LEN = 16;
-const OPEN_AT = 26;
-const OPEN_GAP = 3;
-const OPEN_LEN = 14;
-const DROP_AT = 50;
-const DROP_GAP = 4;
-const DROP_LEN = 22;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.25, 1);
@@ -161,28 +167,35 @@ function impact(u: number) {
   return Math.exp(-u / 3.4) * Math.cos(u * 0.6);
 }
 
-export function ChunkStack({
-  text = "learn motion by making it",
-  highlight = "making",
-  accent,
-  ink,
-  background,
-  fontFamily = nunito.fontFamily,
-  fontWeight = 500,
-  stagger = DROP_GAP,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ChunkStackProps) {
+export function ChunkStack(props: ChunkStackProps) {
+  const {
+    text = DEFAULT_TEXT,
+    highlight = "making",
+    accent,
+    ink,
+    background,
+    fontFamily = nunito.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    chunkStackTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const pill = accent ?? c.accent;
   const fg = ink ?? c.ink;
-  const words = useMemo(() => text.trim().split(/\s+/).filter(Boolean), [text]);
+  const words = useMemo(() => wordsOf(text), [text]);
   const m = useMetrics(words, fontFamily, fontWeight);
 
   if (!m || words.length === 0) {
@@ -192,12 +205,12 @@ export function ChunkStack({
   const n = words.length;
   const gapOpen = m.space * 1.35;
   const spacedW = m.runW + gapOpen * (n - 1);
-  const openAll = interpolate(
-    t,
-    [OPEN_AT, OPEN_AT + (n - 2) * OPEN_GAP + OPEN_LEN],
-    [0, 1],
-    { ...CLAMP, easing: EASE_IN_OUT },
-  );
+  const riseEl = tl.get("rise");
+  const open = tl.get("open");
+  const openAll = interpolate(t, [open.start, open.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IN_OUT,
+  });
   const lineSize = Math.min(
     (W * 0.9) / (m.runW + (spacedW - m.runW) * openAll),
     H * 0.2,
@@ -216,7 +229,7 @@ export function ChunkStack({
   const stackH = (LEAD * (n - 1) + m.xh) * stackSize;
   const stackTop = (H - stackH) / 2 + m.xh * stackSize;
 
-  const rise = interpolate(t, [0, RISE_LEN], [0, 1], {
+  const rise = interpolate(t, [riseEl.start, riseEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -227,8 +240,8 @@ export function ChunkStack({
       : interpolate(
           t,
           [
-            OPEN_AT + (k - 1) * OPEN_GAP,
-            OPEN_AT + (k - 1) * OPEN_GAP + OPEN_LEN,
+            open.start + (k - 1) * open.beat("gap"),
+            open.start + (k - 1) * open.beat("gap") + open.beat("each"),
           ],
           [0, 1],
           { ...CLAMP, easing: EASE_OUT },
@@ -252,15 +265,23 @@ export function ChunkStack({
   const nodes: React.ReactNode[] = [];
   let pillNode: React.ReactNode = null;
   for (let k = 0; k < n; k++) {
-    const start = DROP_AT + k * stagger;
-    const dv = interpolate(t, [DROP_AT + k * 2, DROP_AT + k * 2 + 12], [0, 1], {
+    const drop = tl.get(`drop:${k}`);
+    const start = drop.start;
+    const land = drop.beat("land");
+    const fallAt = start + drop.beat("fall");
+    const dv = interpolate(t, [fallAt, fallAt + drop.beat("fallLen")], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
     });
-    const d = interpolate(t, [start + 6, start + DROP_LEN], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IN_OUT,
-    });
+    const d = interpolate(
+      t,
+      [start + drop.beat("slide"), start + land],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IN_OUT,
+      },
+    );
     const x0 = lineLeft + lineX[k] * lineSize + (m.words[k] * lineSize) / 2;
     const y0 = lineBase;
     const x1 = W / 2;
@@ -274,10 +295,10 @@ export function ChunkStack({
     const ax = parked ? x0 : x1;
     const ay = parked ? y0 : y1;
     const dx = parked ? 0 : (x0 - x1) * (1 - d);
-    const q = impact(t - start - DROP_LEN);
+    const q = impact(t - start - land);
     const squashing =
-      Math.abs(impact(t - start - DROP_LEN + speed) - q) * lh > 1e-2 ||
-      Math.abs(q - impact(t - start - DROP_LEN - speed)) * lh > 1e-2;
+      Math.abs(impact(t - start - land + speed) - q) * lh > 1e-2 ||
+      Math.abs(q - impact(t - start - land - speed)) * lh > 1e-2;
     const sx = 1 + 0.08 * q;
     const sy = 1 - 0.12 * q;
     const s = size / R;
@@ -294,7 +315,7 @@ export function ChunkStack({
     if (k === hlIndex) {
       const pp = interpolate(
         t,
-        [start + DROP_LEN - 2, start + DROP_LEN + 10],
+        [start + drop.beat("pill"), start + drop.beat("pillEnd")],
         [0, 1],
         { ...CLAMP, easing: EASE_OUT },
       );
@@ -327,7 +348,7 @@ export function ChunkStack({
       k === hlIndex
         ? interpolate(
             t,
-            [start + DROP_LEN - 1, start + DROP_LEN + 6],
+            [start + drop.beat("ink"), start + drop.beat("inkEnd")],
             [0, 1],
             CLAMP,
           )
@@ -365,7 +386,7 @@ export function ChunkStack({
             position: "absolute",
             inset: 0,
             clipPath:
-              t < RISE_LEN
+              t < riseEl.end
                 ? `inset(0 0 ${(H - lineBase - m.desc * lineSize * 0.9).toFixed(1)}px 0)`
                 : undefined,
           }}

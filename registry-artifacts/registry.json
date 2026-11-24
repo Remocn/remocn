@@ -7431,12 +7431,21 @@
       "title": "Chunk Stack",
       "description": "\"learn motion by making it\" stacks one word per line with a yellow highlighter on \"making\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/chunk-stack/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/chunk-stack.tsx"
+          "target": "components/remocn/chunk-stack/index.tsx"
+        },
+        {
+          "path": "registry/remocn/chunk-stack/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/chunk-stack/timeline.ts"
         }
       ],
       "type": "registry:component"
