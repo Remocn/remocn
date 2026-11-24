@@ -9213,12 +9213,21 @@
       "title": "Point Expand",
       "description": "Short statements land one at a time, ending 'Copy, paste, render.' with a pulsing accent period.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/point-expand/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/point-expand.tsx"
+          "target": "components/remocn/point-expand/index.tsx"
+        },
+        {
+          "path": "registry/remocn/point-expand/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/point-expand/timeline.ts"
         }
       ],
       "type": "registry:component"

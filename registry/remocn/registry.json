@@ -9218,10 +9218,19 @@
         {
           "path": "point-expand/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/point-expand.tsx"
+          "target": "components/remocn/point-expand/index.tsx"
+        },
+        {
+          "path": "point-expand/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/point-expand/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "layout-swap",

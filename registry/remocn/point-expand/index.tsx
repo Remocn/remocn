@@ -12,6 +12,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_STATEMENTS,
+  type PointExpandElementId,
+  pointExpandTimeline,
+  statementsOf,
+  statementText,
+} from "./timeline";
 
 const inter = loadInterTight("normal", {
   weights: ["500"],
@@ -39,6 +47,12 @@ export interface PointExpandProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single statements, their full stops and the
+   * expansions into the next scene, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PointExpandElementId>;
 }
 
 const BEAM = ["#f4f7ff", "#8fb4ff", "#3d5bff", "#1a1660"] as const;
@@ -229,28 +243,29 @@ function ScaleLayer({
   );
 }
 
-export function PointExpand({
-  statements = [
-    "Launch films used to take weeks.",
-    "Now they take an afternoon.",
-    "Copy, paste, render.",
-  ],
-  pulses = 2,
-  stagger = 2,
-  hold = 6,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = inter.fontFamily,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: PointExpandProps) {
+export function PointExpand(props: PointExpandProps) {
+  const {
+    statements = DEFAULT_STATEMENTS,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = inter.fontFamily,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    pointExpandTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const p = PALETTES[theme];
   const stage =
     background === "transparent" ? "transparent" : (background ?? p.stage);
@@ -266,7 +281,7 @@ export function PointExpand({
           y: height / 2 + (pt.y - height / 2) * scale,
           r: pt.r * scale,
         };
-  const list = (statements.length ? statements : [""]).slice(0, 5);
+  const list = statementsOf(statements);
   const count = list.length;
 
   const portrait = height > width * 1.1;
@@ -277,7 +292,7 @@ export function PointExpand({
   const baseFs = (portrait ? 112 : 108) * s;
 
   const scenes = list.map((raw, k) => {
-    const text = raw.trim().replace(/[.。]+$/, "");
+    const text = statementText(raw);
     const cap = portrait ? 3 : 2;
     let fs = baseFs;
     let lines = breakLines(text, maxW / fs, em);
@@ -305,22 +320,6 @@ export function PointExpand({
     return { text, fs, lh, rows, point, beam };
   });
 
-  const RISE = 14;
-  const STAGGER = stagger;
-  const HOLD = hold;
-  const PULSE = 7;
-  const EXPAND = 18;
-  const starts: number[] = [];
-  const expands: number[] = [];
-  let t = 2;
-  for (let k = 0; k < count; k++) {
-    starts.push(t);
-    const words = scenes[k].rows.reduce((m, r) => m + r.words.length, 0);
-    const landed = t + RISE + (words - 1) * STAGGER;
-    const expandAt = landed + HOLD + pulses * PULSE;
-    expands.push(expandAt);
-    t = expandAt + EXPAND * 0.5;
-  }
   const radius = (k: number) => {
     if (k === 0) return Number.POSITIVE_INFINITY;
     const point = at(scenes[k - 1].point);
@@ -330,15 +329,11 @@ export function PointExpand({
       Math.hypot(point.x, height - point.y),
       Math.hypot(width - point.x, height - point.y),
     );
-    const e = interpolate(
-      frame,
-      [expands[k - 1], expands[k - 1] + EXPAND],
-      [0, 1],
-      {
-        ...CLAMP,
-        easing: EASE_EXPAND,
-      },
-    );
+    const into = tl.get(`expand:${k - 1}`);
+    const e = interpolate(frame, [into.start, into.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_EXPAND,
+    });
     if (e <= 0) return 0;
     return point.r + (far + 4 - point.r) * e;
   };
@@ -357,9 +352,12 @@ export function PointExpand({
           return null;
         const origin = k > 0 ? at(scenes[k - 1].point) : null;
         const fg = sc.beam ? p.beamFg : (ink ?? p.stageFg);
+        const line = tl.get(`line:${k}`);
+        const point = tl.get(`point:${k}`);
+        const expand = k + 1 < count ? tl.get(`expand:${k}`) : null;
         const sinkAt = (f: number) =>
-          k + 1 < count
-            ? interpolate(f, [expands[k], expands[k] + EXPAND], [0, 1], {
+          expand
+            ? interpolate(f, [expand.start, expand.end], [0, 1], {
                 ...CLAMP,
                 easing: EASE_EXPAND,
               })
@@ -367,10 +365,15 @@ export function PointExpand({
         const settleAt = (f: number) =>
           Math.max(
             0,
-            interpolate(f, [starts[k] - 4, starts[k] + 40], [1, 0], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            }),
+            interpolate(
+              f,
+              [
+                line.start + line.beat("settleFrom"),
+                line.start + line.beat("settleTo"),
+              ],
+              [1, 0],
+              { ...CLAMP, easing: EASE_OUT },
+            ),
           );
         const sink = sinkAt(frame);
         const settle = settleAt(frame);
@@ -390,37 +393,51 @@ export function PointExpand({
           : origin
             ? `radial-gradient(circle at ${ox}px ${oy}px, color-mix(in oklab, ${accent} ${theme === "dark" ? 16 : 10}%, ${stage}) 0%, ${stage} ${(0.7 * width).toFixed(0)}px)`
             : stage;
-        const words = sc.rows.reduce((m, row) => m + row.words.length, 0);
-        const landed = starts[k] + RISE + (words - 1) * STAGGER;
-        const drop = interpolate(frame, [landed - 6, landed + 4], [0, 1], {
-          ...CLAMP,
-          easing: EASE_DROP,
-        });
+        const landed = point.start;
+        const drop = interpolate(
+          frame,
+          [landed + point.beat("dropFrom"), landed + point.beat("drop")],
+          [0, 1],
+          { ...CLAMP, easing: EASE_DROP },
+        );
         const last = k === count - 1;
-        const nPulses = last ? 1 : pulses;
-        const pulseStart = landed + HOLD;
+        const pulse = point.beat("pulse");
+        // The pulses fill the point after its hold: the last one pulses once.
+        const nPulses =
+          pulse > 0
+            ? Math.round((point.length - point.beat("hold")) / pulse)
+            : 0;
+        const pulseStart = landed + point.beat("hold");
         let pulseScale = 1;
         const rings: { r: number; o: number }[] = [];
         for (let i = 0; i < nPulses; i++) {
-          const a = pulseStart + i * PULSE;
-          const u = interpolate(frame, [a, a + PULSE], [0, 1], CLAMP);
+          const a = pulseStart + i * pulse;
+          const u = interpolate(frame, [a, a + pulse], [0, 1], CLAMP);
           if (u > 0 && u < 1)
             pulseScale += Math.sin(u * Math.PI) * (last ? 0.18 : 0.38);
-          const ru = interpolate(frame, [a + 1, a + 1 + PULSE * 2.2], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
+          const ru = interpolate(
+            frame,
+            [
+              a + point.beat("ringAt"),
+              a + point.beat("ringAt") + point.beat("ring"),
+            ],
+            [0, 1],
+            { ...CLAMP, easing: EASE_OUT },
+          );
           if (ru > 0 && ru < 1)
             rings.push({ r: sc.point.r * (1.2 + 3.4 * ru), o: (1 - ru) * 0.7 });
         }
-        const pre = last
+        const pre = !expand
           ? 1
           : 1 -
             0.18 *
               Math.sin(
                 interpolate(
                   frame,
-                  [expands[k] - 4, expands[k] + 2],
+                  [
+                    expand.start + expand.beat("preFrom"),
+                    expand.start + expand.beat("preTo"),
+                  ],
                   [0, 1],
                   CLAMP,
                 ) * Math.PI,
@@ -485,12 +502,10 @@ export function PointExpand({
                     >
                       {row.words.map((w, j) => {
                         const idx = wi++;
+                        const at = line.start + idx * line.beat("stagger");
                         const u = interpolate(
                           frame,
-                          [
-                            starts[k] + idx * STAGGER,
-                            starts[k] + idx * STAGGER + RISE,
-                          ],
+                          [at, at + line.beat("rise")],
                           [0, 1],
                           { ...CLAMP, easing: EASE_OUT },
                         );
