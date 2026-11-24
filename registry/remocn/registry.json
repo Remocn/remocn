@@ -13473,10 +13473,19 @@
         {
           "path": "streamgraph/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/streamgraph.tsx"
+          "target": "components/remocn/streamgraph/index.tsx"
+        },
+        {
+          "path": "streamgraph/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/streamgraph/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "clock-sweep",

@@ -7,6 +7,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type StreamgraphElementId, streamgraphTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -47,6 +49,12 @@ export interface StreamgraphProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the fade-up, the push, the growth, the dim,
+   * the leader line, the share and its caption, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<StreamgraphElementId>;
 }
 
 const DEFAULT_SERIES: StreamSeries[] = [
@@ -102,9 +110,7 @@ const THEMES = {
   },
 } as const;
 
-const GROW = [-16, 82] as const;
 const TIP = 0.12;
-const HIT = 82;
 const SAMPLES = 220;
 
 function Grain({ opacity }: { opacity: number }) {
@@ -203,26 +209,40 @@ function ScaleLayer({
   );
 }
 
-export function Streamgraph({
-  series = DEFAULT_SERIES,
-  highlight = 2,
-  label = "of new projects",
-  landAt = HIT,
-  dim: dimBy = 0.38,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  logo,
-  grain = true,
-  scale: size = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: StreamgraphProps) {
+export function Streamgraph(props: StreamgraphProps) {
+  const {
+    series = DEFAULT_SERIES,
+    highlight = 2,
+    label = "of new projects",
+    dim: dimBy = 0.38,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    logo,
+    grain = true,
+    scale: size = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    streamgraphTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const stageEl = tl.get("stage");
+  const pushEl = tl.get("push");
+  const growEl = tl.get("grow");
+  const dimEl = tl.get("dim");
+  const leadEl = tl.get("lead");
+  const shareEl = tl.get("share");
+  const capEl = tl.get("caption");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -244,7 +264,7 @@ export function Streamgraph({
 
   const wave = (uu: number) =>
     height * 0.022 * Math.sin(Math.PI * 2 * 0.9 * uu + 0.4);
-  const front = interpolate(t, [GROW[0], landAt], [0, 1 + TIP], {
+  const front = interpolate(t, [growEl.start, growEl.end], [0, 1 + TIP], {
     ...CLAMP,
     easing: EASE_GROW,
   });
@@ -289,40 +309,53 @@ export function Streamgraph({
   for (let i = 0; i < hl; i++) hlTop += endVals[i] * scale;
   const hlMid = hlTop + (endVals[hl] * scale) / 2;
 
-  const dim = interpolate(t, [landAt - 6, landAt + 14], [0, 1], {
+  const dim = interpolate(t, [dimEl.start, dimEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const land = spring({
-    frame: t - landAt,
+    frame: t - shareEl.start,
     fps,
     config: { damping: 18, stiffness: 150, mass: 0.8 },
   });
-  const landO = interpolate(t, [landAt, landAt + 8], [0, 1], CLAMP);
-  const blur = interpolate(t, [landAt, landAt + 14], [1, 0], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const count = interpolate(t, [landAt, landAt + 28], [0.6, 1], {
+  const landO = interpolate(
+    t,
+    [shareEl.start, shareEl.start + shareEl.beat("fade")],
+    [0, 1],
+    CLAMP,
+  );
+  const blur = interpolate(
+    t,
+    [shareEl.start, shareEl.start + shareEl.beat("blur")],
+    [1, 0],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const count = interpolate(t, [shareEl.start, shareEl.end], [0.6, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
-  const lead = interpolate(t, [landAt - 4, landAt + 14], [0, 1], {
+  const lead = interpolate(t, [leadEl.start, leadEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const cap = interpolate(t, [landAt + 10, landAt + 28], [0, 1], {
+  const cap = interpolate(t, [capEl.start, capEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
-  const push = interpolate(t, [0, 150], [0.965, 1.005], {
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0.965, 1.005], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const stage = interpolate(t, [0, 8], [0.5, 1], CLAMP);
+  const stage = interpolate(t, [stageEl.start, stageEl.end], [0.5, 1], CLAMP);
 
-  const sheen = interpolate(t, [0, 150], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const sheen = interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
 
   let grayIdx = 0;
   const colors = list.map((_, i) =>
@@ -339,7 +372,7 @@ export function Streamgraph({
           style={{
             // The slow push carries the number and its caption, so the tilt
             // rides here for the whole of it.
-            transform: `scale(${push})${glide(t > 0 && t < 150)}`,
+            transform: `scale(${push})${glide(t > pushEl.start && t < pushEl.end)}`,
             transformOrigin: "45% 50%",
             opacity: stage,
           }}

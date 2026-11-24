@@ -13468,12 +13468,21 @@
       "title": "Streamgraph",
       "description": "Flowing stacked layers draw across the frame and settle into a 48% share.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/streamgraph/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/streamgraph.tsx"
+          "target": "components/remocn/streamgraph/index.tsx"
+        },
+        {
+          "path": "registry/remocn/streamgraph/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/streamgraph/timeline.ts"
         }
       ],
       "type": "registry:component"
