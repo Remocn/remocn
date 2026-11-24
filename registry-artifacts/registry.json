@@ -7016,12 +7016,21 @@
       "title": "Double Take",
       "description": "\"Read that again.\" above an oversized pink \"One person\" on blue.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/double-take/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/double-take.tsx"
+          "target": "components/remocn/double-take/index.tsx"
+        },
+        {
+          "path": "registry/remocn/double-take/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/double-take/timeline.ts"
         }
       ],
       "type": "registry:component"

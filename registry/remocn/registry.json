@@ -7021,10 +7021,19 @@
         {
           "path": "double-take/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/double-take.tsx"
+          "target": "components/remocn/double-take/index.tsx"
+        },
+        {
+          "path": "double-take/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/double-take/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "turnabout",
