@@ -14023,12 +14023,21 @@
       "title": "Distribution Shift",
       "description": "A latency distribution curve collapses left while 120ms and -86% appear.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/distribution-shift/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/distribution-shift.tsx"
+          "target": "components/remocn/distribution-shift/index.tsx"
+        },
+        {
+          "path": "registry/remocn/distribution-shift/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/distribution-shift/timeline.ts"
         }
       ],
       "type": "registry:component"

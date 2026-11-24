@@ -13,6 +13,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_AFTER,
+  DEFAULT_BEFORE,
+  type DistributionShiftElementId,
+  distributionAxis,
+  distributionShiftTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -47,6 +55,12 @@ export interface DistributionShiftProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the axis, the bars, the curve, the ticks, the
+   * marker, the shift, the camera and the landing, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DistributionShiftElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -90,24 +104,12 @@ const THEMES = {
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-const AXIS = [-16, 14] as const;
-const RISE = -4;
-const MARK = [34, 48] as const;
-const MORPH = [64, 116] as const;
 const BINS = 96;
 const Z99 = 2.326;
 const SIGMA_BEFORE = 0.52;
 const SIGMA_AFTER = 0.3;
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
-
-function niceStep(max: number) {
-  const raw = max / 5;
-  const pow = 10 ** Math.floor(Math.log10(raw));
-  const f = raw / pow;
-  const n = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
-  return n * pow;
-}
 
 function shape(p99: number, sigma: number) {
   return { mu: Math.log(p99) - Z99 * sigma, sigma };
@@ -202,41 +204,51 @@ function ScaleLayer({
   );
 }
 
-export function DistributionShift({
-  before = 840,
-  after = 120,
-  unit = "ms",
-  label = "p99 latency",
-  fromLabel = "from",
-  shiftDuration = MORPH[1] - MORPH[0],
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: DistributionShiftProps) {
+export function DistributionShift(props: DistributionShiftProps) {
+  const {
+    before = DEFAULT_BEFORE,
+    after = DEFAULT_AFTER,
+    unit = "ms",
+    label = "p99 latency",
+    fromLabel = "from",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    distributionShiftTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const axisEl = tl.get("axis");
+  const barsEl = tl.get("bars");
+  const curveEl = tl.get("curve");
+  const pushEl = tl.get("push");
+  const ticksEl = tl.get("ticks");
+  const markEl = tl.get("marker");
+  const shiftEl = tl.get("shift");
+  const closerEl = tl.get("closer");
+  const landEl = tl.get("land");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const fill = background ?? p.bg;
-  const shift = [MORPH[0], MORPH[0] + shiftDuration] as const;
-  const hit = shift[1];
+  const shift = [shiftEl.start, shiftEl.end] as const;
+  const hit = landEl.start;
   const hw = Math.max(1, u);
 
-  const hi = Math.max(before, after);
-  const step = niceStep(hi * 1.18);
-  const axisMax = Math.ceil((hi * 1.12) / step) * step;
-  const ticks = Array.from(
-    { length: Math.round(axisMax / step) + 1 },
-    (_, i) => i * step,
-  );
+  const { axisMax, ticks } = distributionAxis(before, after);
 
   const L = width * 0.08;
   const R = width * 0.92;
@@ -265,28 +277,49 @@ export function DistributionShift({
     interpolateColors(morph, [0, 1], [p.neutral, c]),
   );
 
-  const axisK = interpolate(t, AXIS, [0, 1], { ...CLAMP, easing: EASE_IO });
-  const markK = interpolate(t, MARK, [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const tagIn = interpolate(t, [MARK[0] + 6, MARK[1] + 8], [0, 1], {
+  const axisK = interpolate(t, [axisEl.start, axisEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const markK = interpolate(t, [markEl.start, markEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const ghostO = interpolate(t, [shift[0], shift[0] + 14], [0, 1], CLAMP);
+  const tagIn = interpolate(
+    t,
+    [markEl.start + markEl.beat("tagAt"), markEl.start + markEl.beat("tag")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const ghostO = interpolate(
+    t,
+    [shiftEl.start, shiftEl.start + shiftEl.beat("ghost")],
+    [0, 1],
+    CLAMP,
+  );
   const kick = spring({
     frame: t - hit,
     fps,
     config: { damping: 14, stiffness: 180, mass: 0.6 },
   });
-  const after1 = interpolate(t, [hit + 4, hit + 22], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const push = interpolate(t, [0, hit + 54], [0, 1], {
+  const after1 = interpolate(
+    t,
+    [hit + landEl.beat("deltaAt"), hit + landEl.beat("delta")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
 
-  const closer = interpolate(t, [shift[0] + 16, hit + 44], [0, 1], {
+  const closer = interpolate(t, [closerEl.start, closerEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -295,7 +328,8 @@ export function DistributionShift({
   const barW = pitch * 0.56;
   const bars = Array.from({ length: BINS }, (_, i) => {
     const v = ((i + 0.5) / BINS) * axisMax;
-    const rise = interpolate(t, [RISE + i * 0.3, RISE + i * 0.3 + 16], [0, 1], {
+    const at = barsEl.start + i * barsEl.beat("stagger");
+    const rise = interpolate(t, [at, at + barsEl.beat("rise")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -311,7 +345,7 @@ export function DistributionShift({
       const v = (i / samples) * axisMax * k;
       return `${i ? "L" : "M"}${xOf(v).toFixed(2)} ${(base - fn(v)).toFixed(2)}`;
     }).join(" ");
-  const strokeK = interpolate(t, [RISE + 2, RISE + 40], [0, 1], {
+  const strokeK = interpolate(t, [curveEl.start, curveEl.end], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.4, 0, 0.2, 1),
   });
@@ -433,7 +467,13 @@ export function DistributionShift({
               strokeWidth={hw}
             />
             {ticks.map((v, i) => {
-              const a = interpolate(t, [4 + i * 2, 14 + i * 2], [0, 1], CLAMP);
+              const at = ticksEl.start + i * ticksEl.beat("stagger");
+              const a = interpolate(
+                t,
+                [at, at + ticksEl.beat("line")],
+                [0, 1],
+                CLAMP,
+              );
               return (
                 <line
                   key={v}
@@ -479,7 +519,8 @@ export function DistributionShift({
           </svg>
 
           {ticks.map((v, i) => {
-            const a = interpolate(t, [4 + i * 2, 16 + i * 2], [0, 1], {
+            const at = ticksEl.start + i * ticksEl.beat("stagger");
+            const a = interpolate(t, [at, at + ticksEl.beat("label")], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });
