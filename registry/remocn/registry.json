@@ -9741,10 +9741,19 @@
         {
           "path": "cursor-frame/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/cursor-frame.tsx"
+          "target": "components/remocn/cursor-frame/index.tsx"
+        },
+        {
+          "path": "cursor-frame/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/cursor-frame/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "caret-letter",

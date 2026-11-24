@@ -9736,12 +9736,21 @@
       "title": "Cursor Frame",
       "description": "A selection frame with handles and a size badge is dragged around a two-line headline.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/cursor-frame/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/cursor-frame.tsx"
+          "target": "components/remocn/cursor-frame/index.tsx"
+        },
+        {
+          "path": "registry/remocn/cursor-frame/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/cursor-frame/timeline.ts"
         }
       ],
       "type": "registry:component"

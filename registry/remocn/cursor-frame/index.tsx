@@ -13,6 +13,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type CursorFrameElementId, cursorFrameTimeline } from "./timeline";
 
 const face = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 const mono = loadMono("normal", { weights: ["500"], subsets: ["latin"] });
@@ -36,6 +38,12 @@ export interface CursorFrameProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the cursor's entry, the drag, the resize, the
+   * release, the clear and the recentre, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CursorFrameElementId>;
 }
 
 const THEMES = {
@@ -48,22 +56,7 @@ const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_DRAG = Easing.bezier(0.45, 0, 0.2, 1);
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
-// Beats, in frames at 30fps (before `speed`).
-const ENTER = 0;
-const ENTER_LEN = 24;
-const PRESS = 25;
-const DRAG = 28;
-const DRAG_END = 70;
-const GRAB = 80;
-const RESIZE = 86;
-const RESIZE_END = 134;
-const RELEASE = 140;
-const CLEAR = 150;
-const RECENTRE = 148;
-const RECENTRE_LEN = 36;
-const WORD_IN = 12;
 const LINE_HEIGHT = 1.1;
-const WRAP_IN = 11;
 /** How far a wrapping word drifts out and slides in, in em. */
 const WRAP_SLIDE = 0.3;
 
@@ -173,22 +166,47 @@ function ScaleLayer({
   );
 }
 
-export function CursorFrame({
-  title = "Launch videos, in code.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = face.fontFamily,
-  fontWeight = 400,
-  showCursor = true,
-  scale = 1,
-  delay = 0,
-  theme = "light",
-  speed = 1,
-}: CursorFrameProps) {
+export function CursorFrame(props: CursorFrameProps) {
+  const {
+    title = "Launch videos, in code.",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = face.fontFamily,
+    fontWeight = 400,
+    showCursor = true,
+    scale = 1,
+    delay = 0,
+    theme = "light",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    cursorFrameTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const dragEl = tl.get("drag");
+  const resizeEl = tl.get("resize");
+  const releaseEl = tl.get("release");
+  const recentreEl = tl.get("recentre");
+  const clearEl = tl.get("clear");
+  const ENTER = enterEl.start;
+  const DRAG = dragEl.start;
+  const DRAG_END = dragEl.end;
+  const RESIZE = resizeEl.start;
+  const RESIZE_END = resizeEl.end;
+  const RELEASE = releaseEl.start;
+  const RECENTRE = recentreEl.start;
+  const SETTLED = RESIZE_END + resizeEl.beat("settle");
+  const WRAP_DELAY = resizeEl.beat("wrapDelay");
+  const WRAP_IN = resizeEl.beat("wrap");
+  const WORD_IN = dragEl.beat("word");
   const t = THEMES[theme];
   const fg = ink ?? t.fg;
   const stage =
@@ -257,7 +275,10 @@ export function CursorFrame({
   const dragX = (f: number) =>
     interpolate(f, [DRAG, DRAG_END], [0, 1], { ...clamp, easing: EASE_DRAG });
   const dragY = (f: number) =>
-    interpolate(f, [DRAG, DRAG + 14], [0, 1], { ...clamp, easing: EASE_OUT });
+    interpolate(f, [DRAG, DRAG + dragEl.beat("rise")], [0, 1], {
+      ...clamp,
+      easing: EASE_OUT,
+    });
   const boxW = (f: number) =>
     f < RESIZE
       ? W1 * dragX(f)
@@ -283,7 +304,7 @@ export function CursorFrame({
     let vh = 0;
     const w = 0.6;
     const wh = 0.6;
-    const end = Math.min(f, RESIZE_END + 60);
+    const end = Math.min(f, SETTLED);
     for (let s = RESIZE; s <= end; s++) {
       const target = breakLines(m, boxW(s), lineH);
       pos.forEach((p, i) => {
@@ -331,8 +352,7 @@ export function CursorFrame({
     stepping(boxW(frame - speed), fw, boxW(frame + speed)) ||
     stepping(fhAt(frame - speed), fh, fhAt(frame + speed));
   const anchorW = frame < RESIZE ? boxW(DRAG_END) : boxW(RESIZE_END);
-  const anchorH =
-    frame < RESIZE ? H1 * dragY(DRAG_END) : settleAt(RESIZE_END + 60).h;
+  const anchorH = frame < RESIZE ? H1 * dragY(DRAG_END) : settleAt(SETTLED).h;
   const chromeAt = (x: number, y: number, ax: number, ay: number) =>
     cornerMoving
       ? { left: ax, top: ay, shift: `translate(${x - ax}px, ${y - ay}px) ` }
@@ -341,20 +361,26 @@ export function CursorFrame({
   // When does the growing frame first pass each word's centre?
   const wordIn = wide.pos.map((p, i) => {
     const centre = p.x + (m.words[i] ?? 0) * 0.5;
-    for (let f = DRAG; f <= DRAG_END; f++) if (boxW(f) >= centre) return f - 4;
+    for (let f = DRAG; f <= DRAG_END; f++)
+      if (boxW(f) >= centre) return f + dragEl.beat("wordLead");
     return DRAG_END;
   });
 
   // Cursor: glides in, presses, drags the corner out, swaps to the resize
   // arrows, drags the corner in, lets go and drifts off.
-  const enter = interpolate(frame, [ENTER, ENTER + ENTER_LEN], [0, 1], {
+  const enter = interpolate(frame, [ENTER, enterEl.end], [0, 1], {
     ...clamp,
     easing: EASE_IN_OUT,
   });
-  const leave = interpolate(frame, [RELEASE + 6, RELEASE + 34], [0, 1], {
-    ...clamp,
-    easing: EASE_IN_OUT,
-  });
+  const leave = interpolate(
+    frame,
+    [RELEASE + releaseEl.beat("drift"), releaseEl.end],
+    [0, 1],
+    {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    },
+  );
   let cx = x0;
   let cy = y0;
   if (frame < DRAG) {
@@ -367,33 +393,67 @@ export function CursorFrame({
   cx += leave * width * 0.1;
   cy += leave * height * 0.12;
   const cursorOpacity =
-    interpolate(frame, [ENTER, ENTER + 8], [0, 1], clamp) *
-    interpolate(frame, [RELEASE + 14, RELEASE + 34], [1, 0], clamp);
+    interpolate(frame, [ENTER, ENTER + enterEl.beat("fade")], [0, 1], clamp) *
+    interpolate(
+      frame,
+      [RELEASE + releaseEl.beat("fade"), releaseEl.end],
+      [1, 0],
+      clamp,
+    );
+  const PRESS = DRAG + dragEl.beat("press");
+  const LIFT = RESIZE_END + resizeEl.beat("lift");
+  const GRAB = RESIZE + resizeEl.beat("grab");
   const press =
-    interpolate(frame, [PRESS, PRESS + 3], [0, 1], clamp) -
-    interpolate(frame, [DRAG_END, DRAG_END + 3], [0, 1], clamp) +
-    interpolate(frame, [RESIZE - 3, RESIZE], [0, 1], clamp) -
-    interpolate(frame, [RESIZE_END + 4, RESIZE_END + 7], [0, 1], clamp);
+    interpolate(frame, [PRESS, PRESS + dragEl.beat("click")], [0, 1], clamp) -
+    interpolate(
+      frame,
+      [DRAG_END, DRAG_END + dragEl.beat("click")],
+      [0, 1],
+      clamp,
+    ) +
+    interpolate(
+      frame,
+      [RESIZE + resizeEl.beat("press"), RESIZE],
+      [0, 1],
+      clamp,
+    ) -
+    interpolate(frame, [LIFT, LIFT + resizeEl.beat("click")], [0, 1], clamp);
   const resizeIcon =
-    interpolate(frame, [GRAB, GRAB + 3], [0, 1], clamp) -
-    interpolate(frame, [RELEASE, RELEASE + 3], [0, 1], clamp);
+    interpolate(frame, [GRAB, GRAB + resizeEl.beat("icon")], [0, 1], clamp) -
+    interpolate(
+      frame,
+      [RELEASE, RELEASE + releaseEl.beat("icon")],
+      [0, 1],
+      clamp,
+    );
   const cursorSize = 30 * u * (1 - press * 0.06);
 
   // Selection chrome: appears with the drag, clears once the text is set.
-  const chromeIn = interpolate(frame, [DRAG, DRAG + 4], [0, 1], clamp);
-  const clear = interpolate(frame, [CLEAR, CLEAR + 14], [0, 1], {
+  const chromeIn = interpolate(
+    frame,
+    [DRAG, DRAG + dragEl.beat("chrome")],
+    [0, 1],
+    clamp,
+  );
+  const clear = interpolate(frame, [clearEl.start, clearEl.end], [0, 1], {
     ...clamp,
     easing: EASE_OUT,
   });
   const chrome = chromeIn * (1 - clear);
-  const handlesIn = interpolate(frame, [DRAG + 2, DRAG + 12], [0, 1], {
-    ...clamp,
-    easing: EASE_OUT,
-  });
+  const handlesAt = DRAG + dragEl.beat("handles");
+  const handlesIn = interpolate(
+    frame,
+    [handlesAt, handlesAt + dragEl.beat("handlesIn")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: EASE_OUT,
+    },
+  );
   const handleScale = (0.5 + 0.5 * handlesIn) * (1 - clear * 0.5);
 
   // Once the frame is gone, the text block glides to the optical centre.
-  const re = interpolate(frame, [RECENTRE, RECENTRE + RECENTRE_LEN], [0, 1], {
+  const re = interpolate(frame, [RECENTRE, recentreEl.end], [0, 1], {
     ...clamp,
     easing: EASE_IN_OUT,
   });
@@ -401,7 +461,7 @@ export function CursorFrame({
   const shiftX = re * (W1 - W2) * 0.5;
   const shiftY = re * (H1 - finalH) * 0.5;
   const reAt = (f: number) =>
-    interpolate(f, [RECENTRE, RECENTRE + RECENTRE_LEN], [0, 1], {
+    interpolate(f, [RECENTRE, recentreEl.end], [0, 1], {
       ...clamp,
       easing: EASE_IN_OUT,
     });
@@ -428,14 +488,19 @@ export function CursorFrame({
   const badgeSize = 13 * u;
   const badge = chromeAt(fw / 2, fh + 10 * u, anchorW / 2, anchorH + 10 * u);
   const cursorAt = (f: number) => {
-    const en = interpolate(f, [ENTER, ENTER + ENTER_LEN], [0, 1], {
+    const en = interpolate(f, [ENTER, enterEl.end], [0, 1], {
       ...clamp,
       easing: EASE_IN_OUT,
     });
-    const lv = interpolate(f, [RELEASE + 6, RELEASE + 34], [0, 1], {
-      ...clamp,
-      easing: EASE_IN_OUT,
-    });
+    const lv = interpolate(
+      f,
+      [RELEASE + releaseEl.beat("drift"), releaseEl.end],
+      [0, 1],
+      {
+        ...clamp,
+        easing: EASE_IN_OUT,
+      },
+    );
     const r = reAt(f);
     const x =
       f < DRAG
@@ -516,7 +581,7 @@ export function CursorFrame({
             };
             const wrapP = interpolate(
               frame,
-              [pos.wrap + 4, pos.wrap + 4 + WRAP_IN],
+              [pos.wrap + WRAP_DELAY, pos.wrap + WRAP_DELAY + WRAP_IN],
               [0, 1],
               {
                 ...clamp,
@@ -554,10 +619,15 @@ export function CursorFrame({
                 fontSize *
                 0.12 -
               (1 -
-                interpolate(f, [pos.wrap + 4, pos.wrap + 4 + WRAP_IN], [0, 1], {
-                  ...clamp,
-                  easing: EASE_OUT,
-                })) *
+                interpolate(
+                  f,
+                  [pos.wrap + WRAP_DELAY, pos.wrap + WRAP_DELAY + WRAP_IN],
+                  [0, 1],
+                  {
+                    ...clamp,
+                    easing: EASE_OUT,
+                  },
+                )) *
                 fontSize *
                 0.22;
             const drop = dropAt(frame);
