@@ -4824,12 +4824,17 @@
       "title": "Isometric Build",
       "description": "An isometric tile grid springs up row by row into a stepped block sculpture with one accent tower, then holds.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/isometric-build/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/isometric-build.tsx"
+          "target": "components/remocn/isometric-build/index.tsx"
+        },
+        {
+          "path": "registry/remocn/isometric-build/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/isometric-build/timeline.ts"
         }
       ],
       "type": "registry:component"
