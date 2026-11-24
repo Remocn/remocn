@@ -14005,12 +14005,17 @@
       "title": "Fluted Glass",
       "description": "Fluted glass refracts a gradient orb and its headline, clearing as it comes into focus.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/fluted-glass/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/fluted-glass.tsx"
+          "target": "components/remocn/fluted-glass/index.tsx"
+        },
+        {
+          "path": "registry/remocn/fluted-glass/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/fluted-glass/timeline.ts"
         }
       ],
       "type": "registry:component"
