@@ -8155,10 +8155,19 @@
         {
           "path": "shed-weight/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/shed-weight.tsx"
+          "target": "components/remocn/shed-weight/index.tsx"
+        },
+        {
+          "path": "shed-weight/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/shed-weight/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "serif-rise",
