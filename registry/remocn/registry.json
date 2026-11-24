@@ -6388,12 +6388,21 @@
       "title": "Button to Card",
       "description": "A button expands into a store card row with product images, prices and status.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/gsh", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/gsh",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "button-to-card/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/button-to-card.tsx"
+          "target": "components/remocn/button-to-card/index.tsx"
+        },
+        {
+          "path": "button-to-card/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/button-to-card/timeline.ts"
         }
       ]
     },

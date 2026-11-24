@@ -15,6 +15,14 @@ import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ButtonToCardElementId,
+  buttonToCardTimeline,
+  DEFAULT_NAME,
+  DEFAULT_OTHERS,
+  DEFAULT_PRICE,
+} from "./timeline";
 
 const hanken = loadHanken("normal", {
   weights: ["300", "400"],
@@ -30,24 +38,6 @@ const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH = { damping: 200 };
-
-const B = {
-  pill: -8,
-  press: 18,
-  morph: 22,
-  fields: 24,
-  title: 36,
-  carry: 50,
-  price: 54,
-  drop: 78,
-  status: 88,
-  save: 96,
-  shrink: 102,
-  pops: [106, 110, 114],
-  header: 108,
-  live: 120,
-  end: 162,
-};
 
 const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   interpolate(f, [start, start + dur], [0, 1], {
@@ -143,6 +133,13 @@ export interface ButtonToCardProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches each step of the story (the press, the morph,
+   * the typing, the image drop, the save, the shrink into the store, single
+   * tiles), by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<ButtonToCardElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -161,38 +158,55 @@ function ScaleLayer({
   );
 }
 
-export function ButtonToCard({
-  theme = "dark",
-  accent = "#f2552c",
-  buttonLabel = "Add an item",
-  name = "Ceramic pitcher",
-  price = "$48.00",
-  images = [
-    staticFile("templates/brand-guidelines/ceramics.jpg"),
-    staticFile("templates/brand-guidelines/chair.jpg"),
-    staticFile("templates/product-showcase/sculpture.jpg"),
-    staticFile("templates/brand-guidelines/materials.jpg"),
-  ],
-  others = [
-    { name: "Oak stool", price: "$120.00" },
-    { name: "Arch sculpture", price: "$86.00" },
-    { name: "Material kit", price: "$32.00" },
-  ],
-  storeName = "Studio Goods",
-  formTitle = "New product",
-  saveLabel = "Add to store",
-  dropLabel = "Drop an image here",
-  ink: inkColor,
-  background,
-  fontFamily = hanken.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: ButtonToCardProps) {
+export function ButtonToCard(props: ButtonToCardProps) {
+  const {
+    theme = "dark",
+    accent = "#f2552c",
+    buttonLabel = "Add an item",
+    name = DEFAULT_NAME,
+    price = DEFAULT_PRICE,
+    images = [
+      staticFile("templates/brand-guidelines/ceramics.jpg"),
+      staticFile("templates/brand-guidelines/chair.jpg"),
+      staticFile("templates/product-showcase/sculpture.jpg"),
+      staticFile("templates/brand-guidelines/materials.jpg"),
+    ],
+    others = DEFAULT_OTHERS,
+    storeName = "Studio Goods",
+    formTitle = "New product",
+    saveLabel = "Add to store",
+    dropLabel = "Drop an image here",
+    ink: inkColor,
+    background,
+    fontFamily = hanken.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    buttonToCardTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pill = tl.get("pill");
+  const pressEl = tl.get("press");
+  const morphEl = tl.get("morph");
+  const fields = tl.get("fields");
+  const title = tl.get("title");
+  const carryEl = tl.get("carry");
+  const priceEl = tl.get("price");
+  const dropEl = tl.get("drop");
+  const status = tl.get("status");
+  const save = tl.get("save");
+  const shrinkEl = tl.get("shrink");
+  const header = tl.get("header");
+  const live = tl.get("live");
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 720 : 1280;
@@ -259,26 +273,26 @@ export function ButtonToCard({
     ? { x: 36, y: 444, w: cardW - 72 }
     : { x: 494, y: 40, w: cardW - 494 - 40 };
 
-  const pillIn = spring({ frame: frame - B.pill, fps, config: CARD });
+  const pillIn = spring({ frame: frame - pill.start, fps, config: CARD });
   const morph = spring({
-    frame: frame - B.morph,
+    frame: frame - morphEl.start,
     fps,
     config: MORPH,
-    durationInFrames: 22,
+    durationInFrames: morphEl.length,
   });
   const shrink = spring({
-    frame: frame - B.shrink,
+    frame: frame - shrinkEl.start,
     fps,
     config: HEAVY,
-    durationInFrames: 26,
+    durationInFrames: shrinkEl.length,
   });
   const shrinkPrev = spring({
-    frame: frame - 1 - B.shrink,
+    frame: frame - 1 - shrinkEl.start,
     fps,
     config: HEAVY,
-    durationInFrames: 26,
+    durationInFrames: shrinkEl.length,
   });
-  const press = dip(frame, B.press, 0.07);
+  const press = dip(frame, pressEl.start, 0.07);
   let box = lerpRect(pillRect, cardRect, morph);
   box = lerpRect(box, tileRect(0), shrink);
   const t0 = tileRect(0);
@@ -286,10 +300,17 @@ export function ButtonToCard({
   const shrinkBlurX = Math.min(6, shrinkV * Math.abs(cardRect.x - t0.x) * 0.2);
   const shrinkBlurY = Math.min(6, shrinkV * Math.abs(cardRect.y - t0.y) * 0.2);
 
-  const pillLabel = 1 - ramp(frame, B.morph, 6, EXIT);
-  const fieldIn = (i: number) => ramp(frame, B.fields + i * 3, 12);
-  const cardContent = 1 - ramp(frame, B.shrink, 8, EXIT);
-  const tileContent = ramp(frame, B.shrink + 12, 12);
+  const pillLabel =
+    1 - ramp(frame, morphEl.start, morphEl.beat("labelOut"), EXIT);
+  const fieldIn = (i: number) =>
+    ramp(frame, fields.start + i * fields.beat("step"), fields.beat("field"));
+  const cardContent =
+    1 - ramp(frame, shrinkEl.start, shrinkEl.beat("contentOut"), EXIT);
+  const tileContent = ramp(
+    frame,
+    shrinkEl.start + shrinkEl.beat("tileAt"),
+    shrinkEl.beat("tile"),
+  );
   const media = lerpRect(mediaCard, mediaTile, shrink);
   // Layout rounds a box and a baseline to whole pixels, so anything eased by
   // `left`/`top` here clicks along pixel by pixel. Each mover is laid out at
@@ -300,32 +321,36 @@ export function ButtonToCard({
       ? ""
       : `translate(${x}px, ${y}px) `;
 
-  const typedName = name.slice(0, Math.max(0, frame - B.title));
+  const typedName = name.slice(
+    0,
+    Math.max(0, (frame - title.start) / title.beat("char")),
+  );
   const typedPrice = price.slice(
     0,
-    Math.max(0, Math.floor((frame - B.price) / 1.5)),
+    Math.max(0, Math.floor((frame - priceEl.start) / priceEl.beat("char"))),
   );
-  const nameCaret = frame >= B.title - 4 && frame < B.price;
-  const priceCaret = frame >= B.price && frame < B.status;
+  const nameCaret =
+    frame >= title.start + title.beat("caretAt") && frame < priceEl.start;
+  const priceCaret = frame >= priceEl.start && frame < status.start;
   const caretBlink = Math.floor(frame / 8) % 2 === 0 ? 1 : 0.2;
-  const statusOn = spring({ frame: frame - B.status, fps, config: CHIP });
+  const statusOn = spring({ frame: frame - status.start, fps, config: CHIP });
 
   const mediaCx = cardRect.x + mediaCard.x + mediaCard.w / 2;
   const mediaCy = cardRect.y + mediaCard.y + mediaCard.h / 2;
   const startPt = portrait ? { x: 300, y: 720 } : { x: 720, y: 360 };
   const carry = spring({
-    frame: frame - B.carry,
+    frame: frame - carryEl.start,
     fps,
     config: { mass: 0.9, damping: 20, stiffness: 90 },
   });
   const carryPrev = spring({
-    frame: frame - 1 - B.carry,
+    frame: frame - 1 - carryEl.start,
     fps,
     config: { mass: 0.9, damping: 20, stiffness: 90 },
   });
   const hover = { x: mediaCx + 40, y: mediaCy - 20 };
   const arc = Math.sin(Math.PI * Math.min(1, carry)) * (portrait ? 60 : -80);
-  const drop = spring({ frame: frame - B.drop, fps, config: CARD });
+  const drop = spring({ frame: frame - dropEl.start, fps, config: CARD });
   let ix = mix(startPt.x, hover.x, carry);
   let iy = mix(startPt.y, hover.y, carry) + arc;
   const vx = Math.abs(carry - carryPrev) * Math.abs(hover.x - startPt.x);
@@ -335,24 +360,38 @@ export function ButtonToCard({
   const carriedW = mix(portrait ? 220 : 200, mediaCard.w, Math.min(1, drop));
   const carriedH = mix(portrait ? 170 : 240, mediaCard.h, Math.min(1, drop));
   const carriedRot = mix(mix(14, -5, carry), 0, Math.min(1, drop));
-  const placed = frame >= B.drop + 10;
+  const placed = frame >= dropEl.start + dropEl.beat("placed");
   const slotHot =
-    ramp(frame, B.carry + 16, 8) * (1 - ramp(frame, B.drop + 4, 8, EXIT));
-  const breathe = 1 + 0.012 * Math.sin((frame - B.carry) / 3.2) * slotHot;
+    ramp(frame, carryEl.start + carryEl.beat("hotAt"), carryEl.beat("hot")) *
+    (1 -
+      ramp(
+        frame,
+        dropEl.start + dropEl.beat("hotOutAt"),
+        dropEl.beat("hotOut"),
+        EXIT,
+      ));
+  const breathe = 1 + 0.012 * Math.sin((frame - carryEl.start) / 3.2) * slotHot;
 
   const btnX = cardRect.x + col.x + col.w - 90;
   const btnY = cardRect.y + cardH - (portrait ? 64 : 64);
-  const cursorPath: [number, number, number][] = [
-    [-6, 200, 170],
-    [B.press - 2, 40, 14],
-    [B.morph + 8, 40, 14],
-    [B.morph + 24, startPt.x + 60, startPt.y + 50],
-    [B.carry, startPt.x + 40, startPt.y + 40],
-    [B.drop + 10, mediaCx + 120, mediaCy + 90],
-    [B.save - 4, btnX + 10, btnY + 6],
-    [B.shrink, btnX + 10, btnY + 6],
-    [B.shrink + 18, btnX + 140, btnY + 120],
-  ];
+  // In time order, so a `timing` that reorders waypoints still interpolates.
+  const cursorPath: [number, number, number][] = (
+    [
+      [pill.start + pill.beat("cursorAt"), 200, 170],
+      [pressEl.start + pressEl.beat("cursorAt"), 40, 14],
+      [morphEl.start + morphEl.beat("cursorAt"), 40, 14],
+      [
+        morphEl.start + morphEl.beat("cursorAway"),
+        startPt.x + 60,
+        startPt.y + 50,
+      ],
+      [carryEl.start, startPt.x + 40, startPt.y + 40],
+      [dropEl.start + dropEl.beat("cursorAt"), mediaCx + 120, mediaCy + 90],
+      [save.start + save.beat("cursorAt"), btnX + 10, btnY + 6],
+      [shrinkEl.start, btnX + 10, btnY + 6],
+      [shrinkEl.start + shrinkEl.beat("cursorAway"), btnX + 140, btnY + 120],
+    ] satisfies [number, number, number][]
+  ).sort((a, b) => a[0] - b[0]);
   const cAt = (i: 1 | 2) =>
     interpolate(
       frame,
@@ -365,29 +404,60 @@ export function ButtonToCard({
       },
     );
   const cursorRest = cursorPath[cursorPath.length - 1];
+  const attachAt = carryEl.start + carryEl.beat("attachAt");
+  const attachIn = ramp(frame, attachAt, carryEl.beat("attach"));
   const attach =
-    ramp(frame, B.carry - 2, 6) * (1 - ramp(frame, B.drop + 2, 8, EXIT));
+    attachIn *
+    (1 -
+      ramp(
+        frame,
+        dropEl.start + dropEl.beat("detachAt"),
+        dropEl.beat("detach"),
+        EXIT,
+      ));
   const pointerX = mix(cAt(1), ix + 30, attach);
   const pointerY = mix(cAt(2), iy + 40, attach);
   const cursorOpacity =
-    ramp(frame, -6, 8) * (1 - ramp(frame, B.shrink + 6, 8, EXIT));
-  const cursorScale = dip(frame, B.press, 0.16) * dip(frame, B.save, 0.16);
-  const saveDip = dip(frame, B.save, 0.06);
+    ramp(frame, pill.start + pill.beat("cursorAt"), pill.beat("cursorIn")) *
+    (1 -
+      ramp(
+        frame,
+        shrinkEl.start + shrinkEl.beat("cursorOutAt"),
+        shrinkEl.beat("cursorOut"),
+        EXIT,
+      ));
+  const cursorScale =
+    dip(frame, pressEl.start, 0.16) * dip(frame, save.start, 0.16);
+  const saveDip = dip(frame, save.start, 0.06);
 
-  const headerIn = ramp(frame, B.header, 14);
-  const liveIn = spring({ frame: frame - B.live, fps, config: CHIP });
+  const headerIn = ramp(frame, header.start, header.length);
+  const liveIn = spring({ frame: frame - live.start, fps, config: CHIP });
 
-  const camPill = 1 - ramp(frame, B.morph - 4, 26, CAM);
+  const camPill =
+    1 -
+    ramp(
+      frame,
+      morphEl.start + morphEl.beat("camAt"),
+      morphEl.beat("cam"),
+      CAM,
+    );
   const gridFocus = spring({
-    frame: frame - B.shrink,
+    frame: frame - shrinkEl.start,
     fps,
     config: HEAVY,
   });
-  const settle = spring({ frame: frame + 8, fps, config: HEAVY });
+  // The camera settles from the moment the pill starts rising.
+  const settle = spring({ frame: frame - pill.start, fps, config: HEAVY });
   const push =
     (portrait ? 1.7 : 2.1) * camPill +
     (1 - camPill) +
-    0.035 * ramp(frame, B.shrink + 10, B.end - B.shrink, Easing.linear);
+    0.035 *
+      ramp(
+        frame,
+        shrinkEl.start + shrinkEl.beat("pushAt"),
+        shrinkEl.beat("push"),
+        Easing.linear,
+      );
   const rotX = mix(10, 4, settle) - 2 * gridFocus + Math.sin(frame / 40) * 0.5;
   const rotY =
     mix(-14, -4, settle) + 5 * morph * (1 - gridFocus) - 3 * gridFocus;
@@ -628,7 +698,7 @@ export function ButtonToCard({
             {all.slice(1).map((n, j) => {
               const i = j + 1;
               const r = tileRect(i);
-              const at = B.pops[j] ?? B.pops[B.pops.length - 1] + j * 4;
+              const at = tl.get(`pop:${j}`).start;
               const pop = spring({ frame: frame - at, fps, config: CARD });
               return (
                 <div
@@ -853,7 +923,7 @@ export function ButtonToCard({
                           : dark
                             ? "rgba(255,236,220,0.06)"
                             : "rgba(70,40,20,0.05)",
-                      transform: `scale(${frame >= B.status ? mix(0.8, 1, statusOn) : 1})`,
+                      transform: `scale(${frame >= status.start ? mix(0.8, 1, statusOn) : 1})`,
                     }}
                   >
                     <span
@@ -1030,7 +1100,7 @@ export function ButtonToCard({
               {tileInfo({ name, price }, tileContent)}
             </div>
 
-            {frame >= B.carry - 2 && !placed ? (
+            {frame >= attachAt && !placed ? (
               <div
                 style={{
                   position: "absolute",
@@ -1041,7 +1111,7 @@ export function ButtonToCard({
                   borderRadius: mix(14, mediaCard.r, Math.min(1, drop)),
                   overflow: "hidden",
                   transform: `${shift(ix - carriedW / 2 - (mediaCx - mediaCard.w / 2), iy - carriedH / 2 - (mediaCy - mediaCard.h / 2))}rotate(${carriedRot}deg)`,
-                  opacity: ramp(frame, B.carry - 2, 6),
+                  opacity: attachIn,
                   boxShadow: `0 ${mix(30, 4, Math.min(1, drop))}px ${mix(50, 10, Math.min(1, drop))}px rgba(30,10,0,${dark ? 0.55 : 0.3})`,
                   border: `${mix(4, 0, Math.min(1, drop))}px solid #ffffff`,
                   filter: "url(#btc-carry)",
