@@ -5724,13 +5724,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "photo-caret/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/photo-caret.tsx"
+          "target": "components/remocn/photo-caret/index.tsx"
+        },
+        {
+          "path": "photo-caret/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/photo-caret/timeline.ts"
         }
       ]
     },

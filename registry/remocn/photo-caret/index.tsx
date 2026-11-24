@@ -19,6 +19,16 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  BEAT,
+  DEFAULT_FIRST_STEP,
+  DEFAULT_TEXT,
+  hopTimes,
+  type PhotoCaretElementId,
+  parseLines,
+  photoCaretTimeline,
+} from "./timeline";
 
 const figtree = loadFigtree("normal", {
   weights: ["400"],
@@ -50,6 +60,12 @@ export interface PhotoCaretProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the tile's intro, single hops, the push and
+   * the photos, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<PhotoCaretElementId>;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -98,16 +114,6 @@ const DEFAULT_IMAGES = [
   "templates/product-showcase/gallery.jpg",
   "reel/reel-4.jpg",
 ];
-
-const BEAT = {
-  intro: 12,
-  decay: 0.88,
-  minStep: 6,
-  breath: 9,
-  reveal: 8,
-  settle: 12,
-  hold: 45,
-};
 
 const FONT_PX = 200;
 const TRACK = -0.03;
@@ -196,30 +202,9 @@ function useMetrics(sansFamily: string, serifFamily: string) {
   );
 }
 
-const parseLines = (text: string) =>
-  text
-    .split("/")
-    .map((l) => l.trim().split(/\s+/).filter(Boolean))
-    .filter((l) => l.length > 0);
-
-const hopTimes = (count: number, firstStep: number) => {
-  const out: number[] = [];
-  let t = BEAT.intro;
-  for (let k = 0; k < count; k++) {
-    if (k === count - 1) t += BEAT.breath;
-    out.push(t);
-    const g = Math.max(
-      BEAT.minStep,
-      Math.round((firstStep * BEAT.decay ** k) / 3) * 3,
-    );
-    t += g;
-  }
-  return out;
-};
-
 export const photoCaretLength = (
-  text = "Your launch, / your name / on it.",
-  firstStep = 12,
+  text = DEFAULT_TEXT,
+  firstStep = DEFAULT_FIRST_STEP,
   hold = BEAT.hold,
 ) => {
   const n = parseLines(text).flat().length;
@@ -265,28 +250,34 @@ function ScaleLayer({
   );
 }
 
-export function PhotoCaret({
-  text = "Your launch, / your name / on it.",
-  accentWord = "it.",
-  src,
-  images,
-  accent,
-  ink,
-  background,
-  fontFamily = figtree.fontFamily,
-  accentFont = serif.fontFamily,
-  theme = "dark",
-  ground,
-  groundParams,
-  firstStep = 12,
-  hold = BEAT.hold,
-  scale: layerScale = 1,
-  delay = 0,
-  speed = 1,
-}: PhotoCaretProps) {
+export function PhotoCaret(props: PhotoCaretProps) {
+  const {
+    text = DEFAULT_TEXT,
+    accentWord = "it.",
+    src,
+    images,
+    accent,
+    ink,
+    background,
+    fontFamily = figtree.fontFamily,
+    accentFont = serif.fontFamily,
+    theme = "dark",
+    ground,
+    groundParams,
+    scale: layerScale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const glide = useGlide();
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    photoCaretTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -368,8 +359,15 @@ export function PhotoCaret({
 
   const { F, cap, tw, th, words, slots } = layout;
   const n = words.length;
-  const hops = useMemo(() => hopTimes(n, firstStep), [n, firstStep]);
+  const hopEls = useMemo(
+    () => Array.from({ length: n }, (_, k) => tl.get(`word:${k}`)),
+    [tl, n],
+  );
+  const hops = hopEls.map((e) => e.start);
   const payoff = hops[n - 1];
+  const payoffEl = hopEls[n - 1];
+  const pushEl = tl.get("push");
+  const introEl = tl.get("intro");
 
   const states = useMemo(() => {
     const out: { cx: number; cy: number; s: number }[] = [];
@@ -420,12 +418,10 @@ export function PhotoCaret({
   const pushAt = (t: number) =>
     1 +
     0.03 *
-      interpolate(
-        t,
-        [payoff + BEAT.settle, payoff + BEAT.settle + hold - 12],
-        [0, 1],
-        { ...CLAMP, easing: PUSH },
-      );
+      interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
+        ...CLAMP,
+        easing: PUSH,
+      });
   const viewAt = (t: number) => {
     const c = camAt(t);
     const s = c.s * pushAt(t);
@@ -470,14 +466,19 @@ export function PhotoCaret({
         lead,
         Math.abs(p - pPrev) * Math.hypot(b.x - a.x, b.y - a.y),
       );
-      squash = interpolate(f, [0, 3, 9], [0, 1, 0], CLAMP);
+      squash = interpolate(
+        f,
+        [0, hopEls[k].beat("squashPeak"), hopEls[k].beat("squash")],
+        [0, 1, 0],
+        CLAMP,
+      );
     }
 
     const intro = spring({
-      frame: fr,
+      frame: fr - introEl.start,
       fps,
       config: CAMERA,
-      durationInFrames: 16,
+      durationInFrames: introEl.length,
     });
     const view = viewAt(fr);
     const sx = view.ox + tx * view.s;
@@ -512,27 +513,35 @@ export function PhotoCaret({
   });
   const introBlur = Math.abs(
     intro -
-      spring({ frame: frame - 1, fps, config: CAMERA, durationInFrames: 16 }),
+      spring({
+        frame: frame - 1 - introEl.start,
+        fps,
+        config: CAMERA,
+        durationInFrames: introEl.length,
+      }),
   );
   const moveBlur = Math.min(8, lead * scale * 0.09 + introBlur * 40);
   const tileScale = 1 + 0.04 * squash;
 
   const hopProgressRight = tx + tw;
-  const accentHit = interpolate(frame, [payoff, payoff + 10], [0, 1], {
-    ...CLAMP,
-    easing: TYPE_IN,
-  });
+  const accentHit = interpolate(
+    frame,
+    [payoff, payoff + payoffEl.beat("accent")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: TYPE_IN,
+    },
+  );
 
   const sats = portrait ? SATS_TALL : SATS_WIDE;
-  const satStart = (i: number, far: boolean) => {
-    if (far) return i * 4 - 2;
-    return payoff + 2 + i * 3;
-  };
+  const satStart = (i: number, far: boolean) =>
+    tl.get(far ? `far:${i}` : `near:${i}`).start;
 
   // A word rising into place by its `y` attribute clicks the same way.
   const wordRising = words.some((_, i) => {
     const f = frame - hops[i];
-    return f > -1 && f < BEAT.reveal + 1;
+    return f > -1 && f < hopEls[i].beat("reveal") + 1;
   });
   // The camera holds the words under a scale, off the pixel grid, where
   // dropping the lean would snap them to the nearest pixel. A drawing in SVG
@@ -544,7 +553,7 @@ export function PhotoCaret({
     const start = hops[i];
     const f = frame - start;
     if (f < 0) return null;
-    const timeP = interpolate(f, [0, BEAT.reveal], [0, 1], {
+    const timeP = interpolate(f, [0, hopEls[i].beat("reveal")], [0, 1], {
       ...CLAMP,
       easing: TYPE_IN,
     });
@@ -587,7 +596,7 @@ export function PhotoCaret({
             fontWeight={400}
             fontSize={w.accent ? F * SERIF_SCALE : F}
             letterSpacing={w.accent ? "0em" : `${TRACK}em`}
-            opacity={interpolate(f, [0, 4], [0, 1], CLAMP)}
+            opacity={interpolate(f, [0, hopEls[i].beat("fade")], [0, 1], CLAMP)}
             style={{ fontKerning: "normal" }}
           >
             {w.text}
