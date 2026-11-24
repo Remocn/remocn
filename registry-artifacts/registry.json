@@ -8016,12 +8016,21 @@
       "title": "Slide Doors",
       "description": "Two panels slide apart like doors to reveal 'Arriving in your repo.' with an accent word.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/slide-doors/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/slide-doors.tsx"
+          "target": "components/remocn/slide-doors/index.tsx"
+        },
+        {
+          "path": "registry/remocn/slide-doors/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/slide-doors/timeline.ts"
         }
       ],
       "type": "registry:component"

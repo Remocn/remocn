@@ -8021,10 +8021,19 @@
         {
           "path": "slide-doors/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/slide-doors.tsx"
+          "target": "components/remocn/slide-doors/index.tsx"
+        },
+        {
+          "path": "slide-doors/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/slide-doors/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "lean-count",

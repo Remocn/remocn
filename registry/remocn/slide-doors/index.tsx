@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  linesOf,
+  type SlideDoorsElementId,
+  slideDoorsTimeline,
+} from "./timeline";
 
 const jakarta = loadJakarta("normal", {
   weights: ["400"],
@@ -35,6 +42,12 @@ export interface SlideDoorsProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the entry and each line's arrival through the
+   * doors, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<SlideDoorsElementId>;
 }
 
 const THEMES = {
@@ -57,11 +70,6 @@ const WGHT = 400;
 const TRACK = -0.03;
 const WORD = 0.14;
 
-const ENTER = 20;
-const CRACK = 8;
-const PUSH = 16;
-const CLEAR = 14;
-const OPEN = CRACK + PUSH + CLEAR;
 const PAD = 0.22;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
@@ -176,29 +184,33 @@ function ScaleLayer({
   );
 }
 
-export function SlideDoors({
-  lines = ["Scenes that move.", "Code you own.", "Arriving in your repo."],
-  highlight = "repo.",
-  hold = 28,
-  fontWeight = WGHT,
-  accent,
-  ink,
-  background,
-  fontFamily = jakarta.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: SlideDoorsProps) {
+export function SlideDoors(props: SlideDoorsProps) {
+  const {
+    lines = DEFAULT_LINES,
+    highlight = "repo.",
+    fontWeight = WGHT,
+    accent,
+    ink,
+    background,
+    fontFamily = jakarta.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    slideDoorsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.teal;
-  const list = useMemo(
-    () => (lines.length > 0 ? lines : ["Arriving in your repo."]),
-    [lines],
-  );
+  const list = useMemo(() => linesOf(lines), [lines]);
   const state = useLines(list, fontFamily, fontWeight);
 
   const transparent = background === "transparent";
@@ -226,11 +238,13 @@ export function SlideDoors({
   const far = W * 0.62;
   const stroke = Math.max(1.5, minDim * 0.0026);
 
-  const STEP = CRACK + PUSH + Math.max(8, hold);
-  const openAt = (k: number) => ENTER + Math.max(8, hold) + k * STEP;
+  const enter = tl.get("enter");
+  // Line `k` arrives through the doors of line `k - 1`.
+  const arrival = (k: number) => tl.get(`line:${k}`);
   let cur = 0;
-  for (let k = 0; k < list.length - 1; k++) if (t >= openAt(k)) cur = k + 1;
-  const opening = cur > 0 && t < openAt(cur - 1) + OPEN;
+  for (let k = 0; k < list.length - 1; k++)
+    if (t >= arrival(k + 1).start) cur = k + 1;
+  const opening = cur > 0 && t < arrival(cur).end;
   const out = opening ? cur - 1 : -1;
 
   const textStyle: React.CSSProperties = {
@@ -297,14 +311,17 @@ export function SlideDoors({
   let content: React.ReactNode;
   let gapL = cx;
   let gapR = cx;
-  if (t < ENTER || (cur === 0 && !opening)) {
-    const p = interpolate(t, [0, ENTER], [0, 1], {
+  if (t < enter.end || (cur === 0 && !opening)) {
+    const p = interpolate(t, [enter.start, enter.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
     content = doors(0, (1 - p) * far, (1 - p) * far);
   } else if (opening) {
-    const tau = t - openAt(out);
+    const arr = arrival(cur);
+    const crack = arr.beat("crack");
+    const pushLen = arr.beat("push");
+    const tau = t - arr.start;
     const lo = m[out];
     const ln = m[cur];
     const x0 = cx - (lo.full * F) / 2;
@@ -313,21 +330,21 @@ export function SlideDoors({
     const g0 = edgeR - edgeL;
     const gCrack = ln.full * SCALE_MIN * F + 2 * pad;
     const gRest = ln.full * F + 2 * pad;
-    const push = interpolate(tau, [CRACK, CRACK + PUSH], [0, 1], {
+    const push = interpolate(tau, [crack, crack + pushLen], [0, 1], {
       ...CLAMP,
       easing: EASE_PUSH,
     });
     const s = SCALE_MIN + (1 - SCALE_MIN) * push;
     const nw = ln.full * s * F;
     let gapW: number;
-    if (tau < CRACK) {
-      const k = interpolate(tau, [0, CRACK], [0, 1], {
+    if (tau < crack) {
+      const k = interpolate(tau, [0, crack], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
       gapW = g0 + (Math.max(gCrack, g0) - g0) * k;
     } else {
-      const after = Math.max(0, tau - CRACK - PUSH);
+      const after = Math.max(0, tau - crack - pushLen);
       gapW = Math.max(nw + 2 * pad, g0) + 2 * (F * 0.04 * after * after);
     }
     const centre0 = (edgeL + edgeR) / 2;
@@ -377,7 +394,7 @@ export function SlideDoors({
     );
   }
 
-  const trackIn = interpolate(t, [0, ENTER], [0, 1], {
+  const trackIn = interpolate(t, [enter.start, enter.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
