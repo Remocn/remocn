@@ -10486,13 +10486,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "border-beam/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/border-beam.tsx"
+          "target": "components/remocn/border-beam/index.tsx"
+        },
+        {
+          "path": "border-beam/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/border-beam/timeline.ts"
         }
       ]
     },

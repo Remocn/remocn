@@ -11,6 +11,14 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BorderBeamElementId,
+  borderBeamTimeline,
+  DEFAULT_COMMAND,
+  DEFAULT_DESCRIPTION,
+  DEFAULT_TITLE,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -78,6 +86,12 @@ export interface BorderBeamProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the card, the beam lap and single content
+   * lines, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<BorderBeamElementId>;
 }
 
 const THEMES = {
@@ -124,15 +138,6 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-const T = {
-  lapStart: 14,
-  lapDur: 80,
-  lag: 8,
-  contentStart: 84,
-  stagger: 5,
-  contentDur: 18,
-};
-
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "");
   const n = Number.parseInt(
@@ -170,27 +175,36 @@ function ScaleLayer({
   );
 }
 
-export function BorderBeam({
-  title = "Version 2.0",
-  description = "Launch videos, written in React. Installed like shadcn.",
-  command = "npx shadcn add @remocn/launch-film",
-  showLogo = true,
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  lap = T.lapDur,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: BorderBeamProps) {
+export function BorderBeam(props: BorderBeamProps) {
+  const {
+    title = DEFAULT_TITLE,
+    description = DEFAULT_DESCRIPTION,
+    command = DEFAULT_COMMAND,
+    showLogo = true,
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    borderBeamTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const card = tl.get("card");
+  const beam = tl.get("beam");
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -217,18 +231,24 @@ export function BorderBeam({
     "Z",
   ].join(" ");
 
-  const enter = spring({ frame, fps, config: SPRING_HEAVY });
-  const enterO = interpolate(frame, [0, 12], [0, 1], {
-    ...CLAMP,
-    easing: EASE_ENTER,
+  const enter = spring({
+    frame: frame - card.start,
+    fps,
+    config: SPRING_HEAVY,
   });
+  const enterO = interpolate(
+    frame,
+    [card.start, card.start + card.beat("fade")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_ENTER },
+  );
   const lapAt = (start: number) =>
-    interpolate(frame, [start, start + lap], [0, P], {
+    interpolate(frame, [start, start + beam.length], [0, P], {
       ...CLAMP,
       easing: EASE_MOVE,
     });
-  const headD = lapAt(T.lapStart);
-  const tailD = lapAt(T.lapStart + T.lag);
+  const headD = lapAt(beam.start);
+  const tailD = lapAt(beam.start + beam.beat("lag"));
   const L = headD - tailD;
 
   const head = c.head || accent;
@@ -265,16 +285,12 @@ export function BorderBeam({
       />
     ));
 
-  const item = (i: number): CSSProperties => {
-    const p = interpolate(
-      frame,
-      [
-        T.contentStart + i * T.stagger,
-        T.contentStart + i * T.stagger + T.contentDur,
-      ],
-      [0, 1],
-      { ...CLAMP, easing: EASE_ENTER },
-    );
+  const item = (id: BorderBeamElementId): CSSProperties => {
+    const e = tl.get(id);
+    const p = interpolate(frame, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_ENTER,
+    });
     return {
       opacity: p,
       filter: `blur(${(1 - p) * 6}px)`,
@@ -370,7 +386,7 @@ export function BorderBeam({
               justifyContent: "space-between",
             }}
           >
-            <div style={{ ...item(0), minHeight: logoFs }}>
+            <div style={{ ...item("logo"), minHeight: logoFs }}>
               {showLogo
                 ? (logo ?? <RemocnLogo fontSize={logoFs} color={c.logo} />)
                 : null}
@@ -378,7 +394,7 @@ export function BorderBeam({
             <div>
               <div
                 style={{
-                  ...item(1),
+                  ...item("title"),
                   fontFamily,
                   fontWeight: 400,
                   fontSize: titleFs,
@@ -392,7 +408,7 @@ export function BorderBeam({
               </div>
               <div
                 style={{
-                  ...item(2),
+                  ...item("description"),
                   marginTop: titleFs * 0.32,
                   fontFamily,
                   fontWeight: 300,
@@ -409,7 +425,7 @@ export function BorderBeam({
               {command ? (
                 <div
                   style={{
-                    ...item(3),
+                    ...item("command"),
                     marginTop: titleFs * 0.5,
                     paddingTop: monoFs * 1.1,
                     borderTop: `1px solid ${c.rule}`,
