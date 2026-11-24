@@ -11770,12 +11770,17 @@
       "title": "Glyph Matrix",
       "description": "A round LED dot matrix counts 3-2-1, then its dots hop into the R mark and the logo.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/glyph-matrix/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/glyph-matrix.tsx"
+          "target": "components/remocn/glyph-matrix/index.tsx"
+        },
+        {
+          "path": "registry/remocn/glyph-matrix/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/glyph-matrix/timeline.ts"
         }
       ],
       "type": "registry:component"

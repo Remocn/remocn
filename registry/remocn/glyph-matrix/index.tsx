@@ -5,6 +5,12 @@ import type React from "react";
 import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type GlyphMatrixElementId,
+  glyphMatrixTimeline,
+  matrixCharsOf,
+} from "./timeline";
 
 const { fontFamily: MANROPE } = loadFont("normal", {
   weights: ["500", "600"],
@@ -51,6 +57,12 @@ export interface GlyphMatrixProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the countdown numerals, the arc, the hop, the
+   * move into the logo, single typed letters and the caret, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<GlyphMatrixElementId>;
 }
 
 const N = 25;
@@ -209,7 +221,7 @@ interface TypeSet {
 
 function typeset(label: string): TypeSet {
   const logo = label.trim().toLowerCase() === "remocn";
-  const chars = Array.from(logo ? "emocn" : label);
+  const chars = matrixCharsOf(label);
   const track = logo ? -0.025 : -0.03;
   const xs: number[] = [];
   const advs: number[] = [];
@@ -314,18 +326,6 @@ function buildModel() {
   };
 }
 
-// Timeline (frames at speed 1).
-const NUM_STEP = 16;
-const ROW_STEP = 0.45;
-const ARC_START = 48;
-const ARC_LEN = 26;
-const HOP_START = 80;
-const HOP_LEN = 13;
-const MOVE_START = 104;
-const MOVE_LEN = 22;
-const TYPE_START = 128;
-const TYPE_STEP = 2.5;
-
 type Lit = Map<number, { b: number; accent: boolean }>;
 
 function light(lit: Lit, c: Cell, b: number, accent = false) {
@@ -342,10 +342,12 @@ function numeralSwap(
   next: Cell[],
   t: number,
   start: number,
+  /** Frames between the rows' refreshes. */
+  rowStep: number,
 ) {
   // Rows of the matrix refresh top to bottom; the row being written shows
   // at mid brightness for one step.
-  const front = (t - start) / ROW_STEP;
+  const front = (t - start) / rowStep;
   const r0 = C - 8;
   for (const c of next) {
     const row = c.j - r0;
@@ -376,51 +378,61 @@ function ScaleLayer({
   );
 }
 
-export function GlyphMatrix({
-  label = "remocn",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = MANROPE,
-  countStep: numStep = NUM_STEP,
-  typeStep = TYPE_STEP,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: GlyphMatrixProps) {
+export function GlyphMatrix(props: GlyphMatrixProps) {
+  const {
+    label = "remocn",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = MANROPE,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    glyphMatrixTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const counts = [0, 1, 2].map((k) => tl.get(`count:${k}`));
+  const arc = tl.get("arc");
+  const hop = tl.get("hop");
+  const move = tl.get("move");
+  const caret = tl.get("caret");
+  const arcStart = arc.start;
+  const hopStart = hop.start;
+  const moveStart = move.start;
   const pal = THEMES[theme];
-  // Everything after the countdown slides with its length.
-  const shift = 3 * (numStep - NUM_STEP);
-  const arcStart = ARC_START + shift;
-  const hopStart = HOP_START + shift;
-  const moveStart = MOVE_START + shift;
-  const typeStart = TYPE_START + shift;
   const model = useMemo(buildModel, []);
 
   const lit: Lit = new Map();
   const nums = model.numerals;
 
   // 1. Countdown.
-  if (t < numStep) numeralSwap(lit, null, nums["3"], t, 0);
-  else if (t < numStep * 2) numeralSwap(lit, nums["3"], nums["2"], t, numStep);
-  else if (t < arcStart) numeralSwap(lit, nums["2"], nums["1"], t, numStep * 2);
+  const [c3, c2, c1] = counts;
+  if (t < c3.end)
+    numeralSwap(lit, null, nums["3"], t, c3.start, c3.beat("row"));
+  else if (t < c2.end)
+    numeralSwap(lit, nums["3"], nums["2"], t, c2.start, c2.beat("row"));
+  else if (t < arcStart)
+    numeralSwap(lit, nums["2"], nums["1"], t, c1.start, c1.beat("row"));
   else {
     // The 1 steps down through the brightness levels as the arc runs.
-    const k = Math.floor((t - arcStart) / 6);
+    const k = Math.floor((t - arcStart) / arc.beat("dim"));
     const b = [L3, L2, L1][k];
     if (b !== undefined) for (const c of nums["1"]) light(lit, c, b);
   }
 
   // 2. Progress arc around the rim.
-  if (t >= arcStart && t < hopStart + 1) {
-    const p = INOUT(
-      interpolate(t, [arcStart, arcStart + ARC_LEN], [0, 1], CLAMP),
-    );
+  if (t >= arcStart && t < hopStart + hop.beat("takeover")) {
+    const p = INOUT(interpolate(t, [arcStart, arc.end], [0, 1], CLAMP));
     const sweep = p * TAU;
-    const done = t >= arcStart + ARC_LEN;
+    const done = t >= arc.end;
     for (const c of model.ring) {
       const a = angleOf(c.i, c.j);
       if (a >= sweep) continue;
@@ -434,9 +446,9 @@ export function GlyphMatrix({
 
   // 3. Ring pixels hop into the R on the grid. The accent head flies in
   // accent and joins the gradient once it lands.
-  if (t >= hopStart + 1) {
+  if (t >= hopStart + hop.beat("takeover")) {
     for (const h of model.hops) {
-      const local = (t - hopStart - h.delay) / HOP_LEN;
+      const local = (t - hopStart - h.delay) / hop.beat("hop");
       const p = INOUT(Math.min(1, Math.max(0, local)));
       const i = Math.round(h.from.i + (h.to.i - h.from.i) * p);
       const j = Math.round(h.from.j + (h.to.j - h.from.j) * p);
@@ -469,9 +481,7 @@ export function GlyphMatrix({
   const D1 = N * p1;
   const cx1 = markLeft - MARK_COL * p1 + D1 / 2;
   const cy1 = markTop - MARK_ROW * p1 + D1 / 2;
-  const mv = INOUT(
-    interpolate(t, [moveStart, moveStart + MOVE_LEN], [0, 1], CLAMP),
-  );
+  const mv = INOUT(interpolate(t, [moveStart, move.end], [0, 1], CLAMP));
   const D = D0 + (D1 - D0) * mv;
   const cx = W / 2 + (cx1 - W / 2) * mv;
   const cy = H / 2 + (cy1 - H / 2) * mv;
@@ -513,17 +523,16 @@ export function GlyphMatrix({
 
   // Label: typed character by character, caret in the accent.
   const { chars, xs, advs } = type;
-  const typed = Math.max(
-    0,
-    Math.min(chars.length, Math.floor((t - typeStart) / typeStep) + 1),
-  );
-  const typeEnd = typeStart + chars.length * typeStep;
+  let typed = 0;
+  while (typed < chars.length && t >= tl.get(`char:${typed}`).start) typed++;
+  const typeEnd = caret.start;
   const caretX =
     lx + (typed > 0 ? (xs[typed - 1] + advs[typed - 1]) * fontSize : 0);
   const caretOn =
-    t >= moveStart + MOVE_LEN &&
-    (t < typeEnd + 2 ||
-      (t < typeEnd + 34 && Math.floor((t - typeEnd) / 8) % 2 === 1));
+    t >= move.end &&
+    (t < typeEnd + caret.beat("hold") ||
+      (t < caret.end &&
+        Math.floor((t - typeEnd) / caret.beat("blink")) % 2 === 1));
 
   return (
     <AbsoluteFill
