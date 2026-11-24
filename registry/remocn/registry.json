@@ -12683,10 +12683,19 @@
         {
           "path": "line-cascade/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/line-cascade.tsx"
+          "target": "components/remocn/line-cascade/index.tsx"
+        },
+        {
+          "path": "line-cascade/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/line-cascade/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "hatch-shade",

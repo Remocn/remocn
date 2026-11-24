@@ -6,6 +6,8 @@ import { Fragment, useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type LineCascadeElementId, lineCascadeTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -67,6 +69,12 @@ export interface LineCascadeProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the floor, the rain, the snap and the caption,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<LineCascadeElementId>;
 }
 
 const CLAMP = {
@@ -76,14 +84,6 @@ const CLAMP = {
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
-
-const FLOOR_AT = 2;
-const FLOOR_END = 20;
-const RAIN_AT = 10;
-const RAIN_SPAN = 78;
-const SNAP_AT = 102;
-const SNAP_END = 111;
-const CAPTION_AT = 108;
 
 const THEMES = {
   dark: {
@@ -372,25 +372,38 @@ function ScaleLayer({
   );
 }
 
-export function LineCascade({
-  value = "240",
-  caption = "launch films rendered with remocn today",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  fontWeight = 400,
-  lineSpacing = 6.5,
-  logo,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: LineCascadeProps) {
+export function LineCascade(props: LineCascadeProps) {
+  const {
+    value = "240",
+    caption = "launch films rendered with remocn today",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    fontWeight = 400,
+    lineSpacing = 6.5,
+    logo,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    lineCascadeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const floor = tl.get("floor");
+  const rain = tl.get("rain");
+  const snapEl = tl.get("snap");
+  const SNAP_AT = snapEl.start;
+  const captionEl = tl.get("caption");
   const u = H / 720;
   const stage = THEMES[theme];
   const fg = ink ?? stage.fg;
@@ -467,8 +480,12 @@ export function LineCascade({
           const level = (floorY - bottom) / glyphH;
           const jitter = 4 * hash(c * 91.7 + iv * 13.1 + j * 5.3);
           const land = Math.min(
-            SNAP_AT - 5,
-            RAIN_AT + 12 + level * RAIN_SPAN * colRate + colLag + jitter,
+            SNAP_AT + snapEl.beat("landBy"),
+            rain.start +
+              rain.beat("lead") +
+              level * rain.beat("span") * colRate +
+              colLag +
+              jitter,
           );
           const target = bottom - gapY / 2;
           const fall = (target + lineLen * 3) / fallSpeed;
@@ -492,22 +509,37 @@ export function LineCascade({
     lineLen,
     u,
     fallSpeed,
+    rain,
+    snapEl,
+    SNAP_AT,
   ]);
 
   const floorDraw = EASE_IO(
-    interpolate(t, [FLOOR_AT, FLOOR_END], [0, 1], CLAMP),
+    interpolate(t, [floor.start, floor.end], [0, 1], CLAMP),
   );
-  const floorFade = interpolate(t, [SNAP_AT, SNAP_END + 6], [1, 0], CLAMP);
-  const snap = EASE_OUT(interpolate(t, [SNAP_AT, SNAP_END], [0, 1], CLAMP));
+  const floorFade = interpolate(
+    t,
+    [SNAP_AT, SNAP_AT + snapEl.beat("fade")],
+    [1, 0],
+    CLAMP,
+  );
+  const snap = EASE_OUT(interpolate(t, [SNAP_AT, snapEl.end], [0, 1], CLAMP));
+  const solidAt = SNAP_AT + snapEl.beat("solidAt");
   const solid = EASE_IO(
-    interpolate(t, [SNAP_AT + 2, SNAP_END - 1], [0, 1], CLAMP),
+    interpolate(t, [solidAt, solidAt + snapEl.beat("solid")], [0, 1], CLAMP),
   );
-  const pileOut = interpolate(t, [SNAP_END - 3, SNAP_END + 1], [1, 0], CLAMP);
+  const pileAt = SNAP_AT + snapEl.beat("pileAt");
+  const pileOut = interpolate(
+    t,
+    [pileAt, pileAt + snapEl.beat("pile")],
+    [1, 0],
+    CLAMP,
+  );
   const pileOpacity = stage.pile + (1 - stage.pile) * snap;
   const lineW = hair + (pitch + 0.6 * u - hair) * snap;
   const growY = gapY * snap;
   const capIn = EASE_OUT(
-    interpolate(t, [CAPTION_AT, CAPTION_AT + 16], [0, 1], CLAMP),
+    interpolate(t, [captionEl.start, captionEl.end], [0, 1], CLAMP),
   );
 
   const falling: React.ReactNode[] = [];

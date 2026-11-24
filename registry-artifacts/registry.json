@@ -12678,12 +12678,21 @@
       "title": "Line Cascade",
       "description": "A huge 240 is drawn from cascading gradient lines with a caption below.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/line-cascade/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/line-cascade.tsx"
+          "target": "components/remocn/line-cascade/index.tsx"
+        },
+        {
+          "path": "registry/remocn/line-cascade/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/line-cascade/timeline.ts"
         }
       ],
       "type": "registry:component"
