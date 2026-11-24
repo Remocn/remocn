@@ -10746,12 +10746,21 @@
       "title": "Split Flash",
       "description": "A lap-time clock freezes on its final value, flashing a purple bar and a minus delta.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/split-flash/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/split-flash.tsx"
+          "target": "components/remocn/split-flash/index.tsx"
+        },
+        {
+          "path": "registry/remocn/split-flash/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/split-flash/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -7,6 +7,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type SplitFlashElementId, splitFlashTimeline } from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -40,6 +42,12 @@ export interface SplitFlashProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the run, the freeze, the blink and the delta,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<SplitFlashElementId>;
 }
 
 // Geist 500 with tabular figures, per 1000 em (harfbuzz). Digits share one
@@ -63,13 +71,6 @@ const DIGIT_RSB = [38, 98, 49, 41, 29, 44, 46, 51, 32, 46];
 //  46–48   the band blinks off for two frames and back on: the timing flash
 //  50–59   the delta slides down out from under the band
 //  58–     poster hold
-const RUN = 42;
-const GROW_LEN = 2;
-const BLINK_AT = 4;
-const BLINK_LEN = 2;
-const DELTA_AT = 8;
-const DELTA_LEN = 9;
-
 const PUSH = Easing.bezier(0.45, 0, 0.8, 0.5);
 const DROP = Easing.bezier(0.2, 0.85, 0.3, 1);
 const GROW = Easing.bezier(0.22, 1, 0.36, 1);
@@ -143,24 +144,36 @@ function ScaleLayer({
   );
 }
 
-export function SplitFlash({
-  time = "1:12.408",
-  delta = "−0.412",
-  label = "Lap time",
-  flashLabel = "Fastest lap",
-  freezeAt = RUN,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: SplitFlashProps) {
+export function SplitFlash(props: SplitFlashProps) {
+  const {
+    time = "1:12.408",
+    delta = "−0.412",
+    label = "Lap time",
+    flashLabel = "Fastest lap",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const glide = useGlide();
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    splitFlashTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const runEl = tl.get("run");
+  const freezeEl = tl.get("freeze");
+  const blinkEl = tl.get("blink");
+  const deltaEl = tl.get("delta");
+  const freezeAt = runEl.end;
   const c = THEMES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
@@ -199,17 +212,24 @@ export function SplitFlash({
   const baseline = bandY + (bandH + cap) / 2;
   const bandBottom = bandY + bandH;
 
-  const since = t - freezeAt;
+  const since = t - freezeEl.start;
+  const blinkAt = blinkEl.start - freezeEl.start;
   const bandOn =
     frozen &&
     finalMs !== null &&
-    !(since >= BLINK_AT && since < BLINK_AT + BLINK_LEN);
+    !(since >= blinkAt && since < blinkAt + blinkEl.length);
   const progress =
-    finalMs === null ? 1 : Math.min(1, Math.max(0, t / freezeAt));
+    finalMs === null
+      ? 1
+      : Math.min(1, Math.max(0, (t - runEl.start) / runEl.length));
   const pushAt = (tt: number) =>
     0.955 +
     0.045 *
-      PUSH(finalMs === null ? 1 : Math.min(1, Math.max(0, tt / freezeAt)));
+      PUSH(
+        finalMs === null
+          ? 1
+          : Math.min(1, Math.max(0, (tt - runEl.start) / runEl.length)),
+      );
   const push = pushAt(t);
   // SVG text under a scaling group steps pixel by pixel while the matrix is
   // axis-aligned, so the drawing leans while the clock creeps closer. Moving: the push changes against either neighbouring
@@ -222,7 +242,7 @@ export function SplitFlash({
     DROP(
       interpolate(
         tt - freezeAt,
-        [DELTA_AT, DELTA_AT + DELTA_LEN],
+        [deltaEl.start - freezeAt, deltaEl.end - freezeAt],
         [0, 1],
         CLAMP,
       ),
@@ -238,10 +258,15 @@ export function SplitFlash({
 
   const lineH = Math.max(3, 0.0065 * H);
   // The band grows up out of the sector line, then blinks.
-  const grow = GROW(interpolate(since, [0, GROW_LEN], [0, 1], CLAMP));
+  const grow = GROW(interpolate(since, [0, freezeEl.length], [0, 1], CLAMP));
   const bandNowH = lineH + (bandH - lineH) * grow;
   // Gentle sheen drift across the band while it holds.
-  const drift = interpolate(since, [0, 60], [-0.08, 0.04], CLAMP);
+  const drift = interpolate(
+    since,
+    [0, freezeEl.beat("sheen")],
+    [-0.08, 0.04],
+    CLAMP,
+  );
   const onBand = bandOn ? "#F7F5FF" : (ink ?? c.ink);
   const cx = W / 2;
   const cy = bandY + bandH / 2;
