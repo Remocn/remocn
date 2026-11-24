@@ -16738,13 +16738,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "year-in-review/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/year-in-review.tsx"
+          "target": "components/remocn/year-in-review/index.tsx"
+        },
+        {
+          "path": "year-in-review/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/year-in-review/timeline.ts"
         }
       ]
     },

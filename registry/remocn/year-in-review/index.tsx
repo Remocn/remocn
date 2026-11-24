@@ -9,6 +9,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_CHAPTERS,
+  type YearInReviewElementId,
+  yearInReviewTimeline,
+} from "./timeline";
 
 const { fontFamily: hanken } = loadFont("normal", {
   weights: ["300", "400"],
@@ -56,6 +62,12 @@ export interface YearInReviewProps {
   delay?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the device's rise, the rail, each chapter in
+   * the list and each slide, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<YearInReviewElementId>;
 }
 
 const DEFAULT_STATS: YearInReviewStats = {
@@ -80,8 +92,6 @@ const DEFAULT_STATS: YearInReviewStats = {
 const SW = 393;
 const SH = 852;
 const BEZEL = 11;
-const STARTS = [0, 78, 156, 252, 360];
-const TR = 18;
 const INK = "#121212";
 const CREAM = "#F6F1E7";
 const LIME = "#CDF564";
@@ -992,23 +1002,30 @@ function enterClip(i: number, e: number): React.CSSProperties {
 
 function Screen({
   frame,
+  starts,
+  lens,
+  trs,
   fps,
   s,
   accent,
   top,
 }: {
   frame: number;
+  /** Each slide's start, length and cover-in frames, from the schedule. */
+  starts: number[];
+  lens: number[];
+  trs: number[];
   fps: number;
   s: YearInReviewStats;
   accent: string;
   top: number;
 }) {
   let cur = 0;
-  for (let i = 0; i < STARTS.length; i++) if (frame >= STARTS[i]) cur = i;
+  for (let i = 0; i < starts.length; i++) if (frame >= starts[i]) cur = i;
   const ui =
-    SLIDES[cur > 0 && frame < STARTS[cur] + TR * 0.45 ? cur - 1 : cur].ui;
+    SLIDES[cur > 0 && frame < starts[cur] + trs[cur] * 0.45 ? cur - 1 : cur].ui;
   const visible = SLIDES.map((_, i) => i).filter(
-    (i) => i === cur || (i === cur - 1 && frame < STARTS[cur] + TR),
+    (i) => i === cur || (i === cur - 1 && frame < starts[cur] + trs[cur]),
   );
   return (
     <div
@@ -1020,21 +1037,21 @@ function Screen({
       }}
     >
       {visible.map((i) => {
-        const lf = frame - STARTS[i];
+        const lf = frame - starts[i];
         const sl = SLIDES[i];
         const bg = sl.bg === "accent" ? accent : sl.bg;
         const e = spring({
           frame: lf,
           fps,
           config: HEAVY,
-          durationInFrames: TR,
+          durationInFrames: trs[i],
         });
-        const leaving = i < cur ? clamp((frame - STARTS[cur]) / TR) : 0;
+        const leaving = i < cur ? clamp((frame - starts[cur]) / trs[cur]) : 0;
         const entering = i === cur && i === 3;
         const slideK = entering ? 1.05 - 0.05 * e : 1 - leaving * 0.08;
         const turn = entering ? 0 : leaving * (i % 2 ? 3 : -3);
         const Body = sl.body;
-        const circles = i === 4 && lf < TR + 6;
+        const circles = i === 4 && lf < trs[i] + 6;
         return (
           <div
             key={`s${i}`}
@@ -1094,8 +1111,7 @@ function Screen({
         }}
       >
         {SLIDES.map((_, i) => {
-          const len = (STARTS[i + 1] ?? STARTS[i] + 110) - STARTS[i];
-          const fill = clamp((frame - STARTS[i]) / len);
+          const fill = clamp((frame - starts[i]) / lens[i]);
           return (
             <div
               key={`p${i}`}
@@ -1244,31 +1260,48 @@ function ScaleLayer({
   );
 }
 
-export function YearInReview({
-  stats,
-  accent = "#3B5BFD",
-  speed = 1,
-  device = "phone",
-  chapters = ["Your year", "Shipped", "Top component", "Your rank", "Share"],
-  rail: showRail = true,
-  ink,
-  background,
-  fontFamily = hanken,
-  scale = 1,
-  delay = 0,
-  ground,
-  groundParams,
-}: YearInReviewProps) {
+export function YearInReview(props: YearInReviewProps) {
+  const {
+    stats,
+    accent = "#3B5BFD",
+    speed = 1,
+    device = "phone",
+    chapters = DEFAULT_CHAPTERS,
+    rail: showRail = true,
+    ink,
+    background,
+    fontFamily = hanken,
+    scale = 1,
+    delay = 0,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const fg = ink ?? "#F4F1EA";
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    yearInReviewTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const slides = tl.lane("Slides");
+  const starts = slides.map((e) => e.start);
+  const lens = slides.map((e) => e.length);
+  const trs = slides.map((e) => e.beat("enter"));
+  const acts = slides.map((e) => e.beat("act"));
+  const actOuts = slides.map((e) => e.beat("actOut"));
+  const bars = slides.map((e) => e.beat("bar"));
+  const deviceEl = tl.get("device");
+  const railEl = tl.get("rail");
   const tall = height > width;
   const s = { ...DEFAULT_STATS, ...stats };
   const phone = device === "phone";
   let cur = 0;
-  for (let i = 0; i < STARTS.length; i++) if (frame >= STARTS[i]) cur = i;
-  const enter = spring({ frame, fps, config: HEAVY });
+  for (let i = 0; i < starts.length; i++) if (frame >= starts[i]) cur = i;
+  const enter = spring({ frame: frame - deviceEl.start, fps, config: HEAVY });
   const fw = phone ? SW + BEZEL * 2 : SW;
   const fh = phone ? SH + BEZEL * 2 : SH;
   const k = tall ? (height * 0.62) / fh : (height * 0.9) / fh;
@@ -1278,20 +1311,23 @@ export function YearInReview({
   const u = width / (tall ? 1080 : 1280);
   const push = 1 + 0.02 * (frame / 480);
   const ui =
-    SLIDES[cur > 0 && frame < STARTS[cur] + TR * 0.45 ? cur - 1 : cur].ui;
+    SLIDES[cur > 0 && frame < starts[cur] + trs[cur] * 0.45 ? cur - 1 : cur].ui;
   const act = (i: number) =>
     interpolate(
       frame,
       [
-        STARTS[i],
-        STARTS[i] + 12,
-        STARTS[i + 1] ?? 1e9,
-        (STARTS[i + 1] ?? 1e9) + 8,
+        starts[i],
+        starts[i] + acts[i],
+        starts[i + 1] ?? 1e9,
+        (starts[i + 1] ?? 1e9) + actOuts[i],
       ],
       [0, 1, 1, 0],
       { ...CL, easing: ENTER },
     );
-  const railIn = interpolate(frame, [6, 22], [0, 1], { ...CL, easing: ENTER });
+  const railIn = interpolate(frame, [railEl.start, railEl.end], [0, 1], {
+    ...CL,
+    easing: ENTER,
+  });
   const rail = tall ? (
     <div
       style={{
@@ -1322,7 +1358,7 @@ export function YearInReview({
           >
             <div
               style={{
-                width: `${clamp((frame - STARTS[i]) / ((STARTS[i + 1] ?? STARTS[i] + 120) - STARTS[i])) * 100}%`,
+                width: `${clamp((frame - starts[i]) / bars[i]) * 100}%`,
                 height: "100%",
                 background: fg,
               }}
@@ -1390,7 +1426,8 @@ export function YearInReview({
       </div>
       {chapters.map((ch, i) => {
         const a = act(i);
-        const shown = interpolate(frame, [8 + i * 3, 22 + i * 3], [0, 1], {
+        const chapter = tl.get(`chapter:${i}`);
+        const shown = interpolate(frame, [chapter.start, chapter.end], [0, 1], {
           ...CL,
           easing: ENTER,
         });
@@ -1499,6 +1536,9 @@ export function YearInReview({
           >
             <Screen
               frame={frame}
+              starts={starts}
+              lens={lens}
+              trs={trs}
               fps={fps}
               s={s}
               accent={accent}
