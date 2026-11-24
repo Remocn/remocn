@@ -8098,12 +8098,21 @@
       "title": "Less More",
       "description": "'Less explaining.' dims while 'More showing.' lands in bright blue below it.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/less-more/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/less-more.tsx"
+          "target": "components/remocn/less-more/index.tsx"
+        },
+        {
+          "path": "registry/remocn/less-more/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/less-more/timeline.ts"
         }
       ],
       "type": "registry:component"

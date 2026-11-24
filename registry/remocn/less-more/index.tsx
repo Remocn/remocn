@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LESS,
+  DEFAULT_MORE,
+  type LessMoreElementId,
+  lessMoreTimeline,
+} from "./timeline";
 
 const figtree = loadFigtree("normal", {
   weights: ["500"],
@@ -38,6 +45,12 @@ export interface LessMoreProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the two lines rising in, the swap and the
+   * fill, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<LessMoreElementId>;
 }
 
 const SKY = "#1185FE";
@@ -48,18 +61,6 @@ const THEMES = {
 } as const;
 
 const MEASURE_PX = 200;
-
-const RISE_AT = 0;
-const RISE_LEN = 18;
-const RISE_GAP = 1.2;
-const RISE_SPAN = 14;
-const LINE_GAP = 6;
-const DRAIN_AT = 34;
-const DRAIN_SPREAD = 30;
-const DRAIN_LEN = 18;
-const FILL_AT = 80;
-const FILL_SPREAD = 12;
-const FILL_LEN = 12;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -203,23 +204,33 @@ function ScaleLayer({
   );
 }
 
-export function LessMore({
-  less = "Less explaining.",
-  more = "More showing.",
-  swapAt = DRAIN_AT,
-  fillAt = FILL_AT,
-  accent,
-  ink,
-  background,
-  fontFamily = figtree.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: LessMoreProps) {
+export function LessMore(props: LessMoreProps) {
+  const {
+    less = DEFAULT_LESS,
+    more = DEFAULT_MORE,
+    accent,
+    ink,
+    background,
+    fontFamily = figtree.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    lessMoreTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const lessEl = tl.get("less");
+  const moreEl = tl.get("more");
+  const swap = tl.get("swap");
+  const fillEl = tl.get("fill");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
@@ -238,7 +249,6 @@ export function LessMore({
   const measureW = W - marginX * 2;
   const chars = lines.map((l) => Array.from(l));
   const n1 = chars[0].length;
-  const n2 = chars[1].length;
 
   const emRange = (g: number, from: number, to: number, track: number) => {
     let w = 0;
@@ -278,25 +288,33 @@ export function LessMore({
   const M = Math.max(S * 1.4, Math.min(fitEqual, B * 0.62));
   const rows: Row[] = [{ group: 0, from: 0, to: n1 }, ...moreRows];
 
-  const drainStep = n1 > 1 ? DRAIN_SPREAD / (n1 - 1) : 0;
-  const growStep = n2 > 1 ? DRAIN_SPREAD / (n2 - 1) : 0;
-  const riseGap = Math.min(RISE_GAP, RISE_SPAN / Math.max(1, n1, n2));
+  // Row 0 is the first line; rows 1 and on are the second line, which may
+  // wrap into several rows by its measured width.
+  const rowStart = (row: number) =>
+    row === 0 ? lessEl.start : moreEl.start + (row - 1) * moreEl.beat("rowGap");
+  const rowEl = (row: number) => (row === 0 ? lessEl : moreEl);
   const riseEnd = (row: number, len: number) =>
-    RISE_AT + row * LINE_GAP + (len - 1) * riseGap + RISE_LEN;
+    rowStart(row) +
+    (len - 1) * rowEl(row).beat("gap") +
+    rowEl(row).beat("rise");
   // Every glyph's place and size at `time`, so a row can tell whether it moves
   // by comparing with the neighbouring frames.
   const geometry = (time: number) => {
     const shrink = chars[0].map((_, i) =>
       interpolate(
         time,
-        [swapAt + i * drainStep, swapAt + i * drainStep + DRAIN_LEN],
+        [
+          swap.start + i * swap.beat("drainStep"),
+          swap.start + i * swap.beat("drainStep") + swap.beat("drain"),
+        ],
         [0, 1],
         { ...CLAMP, easing: EASE_IO },
       ),
     );
     const grow = chars[1].map((_, j) =>
       spring({
-        frame: time - (swapAt + 3 + j * growStep),
+        frame:
+          time - (swap.start + swap.beat("grow") + j * swap.beat("growStep")),
         fps,
         config: { damping: 20, stiffness: 120, mass: 0.9 },
       }),
@@ -331,8 +349,8 @@ export function LessMore({
       interpolate(
         time,
         [
-          RISE_AT + row * LINE_GAP + i * riseGap,
-          RISE_AT + row * LINE_GAP + i * riseGap + RISE_LEN,
+          rowStart(row) + i * rowEl(row).beat("gap"),
+          rowStart(row) + i * rowEl(row).beat("gap") + rowEl(row).beat("rise"),
         ],
         [0, 1],
         { ...CLAMP, easing: EASE_OUT },
@@ -364,11 +382,13 @@ export function LessMore({
     );
   const { shrink, placed, bases } = now;
 
-  const fillStep = n2 > 1 ? FILL_SPREAD / (n2 - 1) : 0;
   const fill = chars[1].map((_, j) =>
     interpolate(
       t,
-      [fillAt + j * fillStep, fillAt + j * fillStep + FILL_LEN],
+      [
+        fillEl.start + j * fillEl.beat("step"),
+        fillEl.start + j * fillEl.beat("step") + fillEl.beat("letter"),
+      ],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     ),
