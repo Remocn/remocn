@@ -9,7 +9,6 @@ import {
   delayRender,
   Easing,
   interpolate,
-  random,
   spring,
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
@@ -17,6 +16,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_NAME,
+  type MacroTabNameElementId,
+  macroTabNameTimeline,
+  TAB_NAME_END,
+} from "./timeline";
 
 const inter = loadInterTight("normal", {
   weights: ["300", "400"],
@@ -31,19 +37,7 @@ const GROW = { mass: 0.5, damping: 13, stiffness: 240 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const GLIDE = { mass: 0.8, damping: 22, stiffness: 150 };
 
-const B = {
-  focus: 0,
-  type: 10,
-  step: 3,
-  space: 6,
-  clicks: [1, 6],
-  park: 12,
-  morph: 60,
-  resolve: 86,
-  end: 108,
-};
-
-export const MACRO_TAB_NAME_DURATION = B.end;
+export const MACRO_TAB_NAME_DURATION = TAB_NAME_END;
 
 const MEASURE_PX = 100;
 
@@ -186,6 +180,12 @@ export interface MacroTabNameProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the cursor, the typed letters, the caret, the
+   * icon's morph and the camera, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MacroTabNameElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -204,34 +204,49 @@ function ScaleLayer({
   );
 }
 
-export function MacroTabName({
-  theme = "dark",
-  accent = "#3B5BFD",
-  name = "Launch Assets",
-  neighbors = ["Changelog", "Pricing"],
-  path = ["Marketing", "Launch week"],
-  docMeta = "Edited 2 min ago · 14 files",
-  docBody = [
-    "Hero cut, 0:42 — 1080p and 4K masters",
-    "Pricing table screenshots, light and dark",
-    "Waitlist email header, 600 × 200",
-    "Social cutdowns: 1:1, 4:5, 9:16",
-  ],
-  ground,
-  groundParams,
-  placeholder = "Untitled",
-  stagger = B.step,
-  ink: inkProp,
-  background,
-  fontFamily = inter.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: MacroTabNameProps) {
+export function MacroTabName(props: MacroTabNameProps) {
+  const {
+    theme = "dark",
+    accent = "#3B5BFD",
+    name = DEFAULT_NAME,
+    neighbors = ["Changelog", "Pricing"],
+    path = ["Marketing", "Launch week"],
+    docMeta = "Edited 2 min ago · 14 files",
+    docBody = [
+      "Hero cut, 0:42 — 1080p and 4K masters",
+      "Pricing table screenshots, light and dark",
+      "Waitlist email header, 600 × 200",
+      "Social cutdowns: 1:1, 4:5, 9:16",
+    ],
+    ground,
+    groundParams,
+    placeholder = "Untitled",
+    ink: inkProp,
+    background,
+    fontFamily = inter.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const raw = useSceneFrame();
   const frame = Math.max(0, raw - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    macroTabNameTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const cursorEl = tl.get("cursor");
+  const focusEl = tl.get("focus");
+  const pushEl = tl.get("push");
+  const parkEl = tl.get("park");
+  const caret = tl.get("caret");
+  const morph = tl.get("morph");
+  const resolveEl = tl.get("resolve");
+  const title = tl.get("title");
   const m = useMetrics(fontFamily);
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
@@ -266,14 +281,10 @@ export function MacroTabName({
   const docL = stageW / 2 - docW / 2;
 
   const chars = Array.from(name);
-  const times: number[] = [];
-  let t = B.type;
-  for (let i = 0; i < chars.length; i++) {
-    times.push(t);
-    const jitter = Math.round((random(`mtn-${i}`) - 0.5) * 2);
-    t += chars[i] === " " ? B.space : stagger + (i > 0 ? jitter : 0);
-  }
-  const typedEnd = t;
+  const letters = chars.map((_, i) => tl.get(`char:${i}`));
+  const times = letters.map((e) => e.start);
+  const typedEnd = caret.start;
+  const typeAt = letters.length > 0 ? letters[0].start : caret.start;
   const track = -0.018 * F;
   const prefix = chars.map(
     (_, i) => m.width(chars.slice(0, i).join("")) * F + i * track,
@@ -301,9 +312,9 @@ export function MacroTabName({
   const textL = chipLRest + padX + iconS + gap;
 
   const pushAt = (f: number) =>
-    mix(1.14, 1, ramp(f, B.focus, 16, FOCUS)) *
-    (1 + 0.04 * ramp(f, 16, B.end - 16, SWAY));
-  const focus = ramp(frame, B.focus, 16, FOCUS);
+    mix(1.14, 1, ramp(f, focusEl.start, focusEl.length, FOCUS)) *
+    (1 + 0.04 * ramp(f, pushEl.start, pushEl.length, SWAY));
+  const focus = ramp(frame, focusEl.start, focusEl.length, FOCUS);
   const push = pushAt(frame);
   const pushNear = (r: number) => pushAt(Math.max(0, r - delay) * speed);
   const pushMoving =
@@ -312,20 +323,39 @@ export function MacroTabName({
   const blurAll = (1 - focus) * 7;
 
   const caretVis =
-    frame < typedEnd + 4
-      ? frame < B.type
-        ? Math.floor(frame / 6) % 2 === 0
+    frame < typedEnd + caret.beat("solid")
+      ? frame < typeAt
+        ? Math.floor(frame / caret.beat("blink")) % 2 === 0
         : true
-      : Math.floor((frame - typedEnd) / 6) % 2 === 0 && frame < B.morph - 2;
+      : Math.floor((frame - typedEnd) / caret.beat("blink")) % 2 === 0 &&
+        frame < caret.end;
 
   const morphOut =
-    ramp(frame, B.morph, 7, EXIT) * (1 - ramp(frame, B.resolve + 2, 8, FOCUS));
-  const iconBack = spring({ frame: frame - B.resolve - 2, fps, config: CHIP });
-  const ringIn = spring({ frame: frame - B.morph - 3, fps, config: CHIP });
-  const ringOut = ramp(frame, B.resolve, 6, EXIT);
+    ramp(frame, morph.start, morph.beat("out"), EXIT) *
+    (1 -
+      ramp(
+        frame,
+        resolveEl.start + resolveEl.beat("back"),
+        resolveEl.beat("backLength"),
+        FOCUS,
+      ));
+  const iconBack = spring({
+    frame: frame - resolveEl.start - resolveEl.beat("back"),
+    fps,
+    config: CHIP,
+  });
+  const ringIn = spring({
+    frame: frame - morph.start - morph.beat("ring"),
+    fps,
+    config: CHIP,
+  });
+  const ringOut = ramp(frame, resolveEl.start, resolveEl.beat("ringOut"), EXIT);
   const ringSweep = interpolate(
     frame,
-    [B.morph + 3, B.resolve - 4],
+    [
+      morph.start + morph.beat("ring"),
+      resolveEl.start + resolveEl.beat("sweepEnd"),
+    ],
     [0.18, 1],
     {
       extrapolateLeft: "clamp",
@@ -333,9 +363,11 @@ export function MacroTabName({
       easing: Easing.bezier(0.65, 0, 0.35, 1),
     },
   );
-  const ringSpin = (frame - B.morph) * 9;
+  const ringSpin = (frame - morph.start) * 9;
   const iconScale =
-    frame < B.resolve + 2 ? 1 - 0.45 * morphOut : mix(0.55, 1, iconBack);
+    frame < resolveEl.start + resolveEl.beat("back")
+      ? 1 - 0.45 * morphOut
+      : mix(0.55, 1, iconBack);
 
   const lead = neighbors.slice(-2);
   const neighborW = lead.map(
@@ -354,39 +386,50 @@ export function MacroTabName({
     })
     .reverse();
   const plusX = chipLRest + chipWRest + F * 0.5;
-  const titleK = ramp(frame, B.resolve + 4, 12, FOCUS);
+  const titleK = ramp(frame, title.start, title.length, FOCUS);
   const docLines = portrait ? docBody : docBody.slice(0, 1);
 
   const curFrom = { x: cx + chipW * 0.62, y: cy + chipH * 1.9 };
   const curHit = { x: cx - F * 0.12, y: cy + F * 0.08 };
   const curRest = { x: cx + chipW * 0.36, y: cy + chipH * 0.78 };
   const arrive = spring({
-    frame: frame + 12,
+    frame: frame - cursorEl.start,
     fps,
     config: GLIDE,
-    durationInFrames: 13,
+    durationInFrames: cursorEl.length,
   });
-  const park = spring({ frame: frame - B.park, fps, config: GLIDE });
+  const park = spring({ frame: frame - parkEl.start, fps, config: GLIDE });
   const bow = (t: number, a: number, b: number) =>
     Math.sin(Math.PI * Math.min(1, Math.max(0, t))) * (b - a) * 0.18;
   const curX =
-    frame < B.park
+    frame < parkEl.start
       ? mix(curFrom.x, curHit.x, arrive) + bow(arrive, curFrom.y, curHit.y)
       : mix(curHit.x, curRest.x, park);
   const curY =
-    frame < B.park
+    frame < parkEl.start
       ? mix(curFrom.y, curHit.y, arrive) - bow(arrive, curFrom.x, curHit.x)
       : mix(curHit.y, curRest.y, park);
-  const curPress = B.clicks.reduce(
-    (acc, c) =>
-      Math.max(
-        acc,
-        spring({ frame: frame - c + 2, fps, config: CHIP }) -
-          spring({ frame: frame - c - 1, fps, config: CHIP }),
-      ),
-    0,
-  );
-  const curIn = ramp(frame, -12, 8);
+  const curPress = tl
+    .lane("Cursor")
+    .filter((e) => e.id.startsWith("click:"))
+    .reduce(
+      (acc, c) =>
+        Math.max(
+          acc,
+          spring({
+            frame: frame - c.start - c.beat("press"),
+            fps,
+            config: CHIP,
+          }) -
+            spring({
+              frame: frame - c.start - c.beat("release"),
+              fps,
+              config: CHIP,
+            }),
+        ),
+      0,
+    );
+  const curIn = ramp(frame, cursorEl.start, cursorEl.beat("fade"));
   const curParkX = cx + chipWRest * 0.36;
   const curParkY = curRest.y;
 
@@ -665,7 +708,7 @@ export function MacroTabName({
               >
                 <FileIcon size={iconS} color={ink} />
               </div>
-              {frame >= B.morph ? (
+              {frame >= morph.start ? (
                 <svg
                   viewBox="0 0 24 24"
                   width={iconS}
@@ -713,7 +756,7 @@ export function MacroTabName({
             >
               {chars.map((ch, i) => {
                 if (frame < times[i] || ch === " ") return null;
-                const k = ramp(frame, times[i], 4, FOCUS);
+                const k = ramp(frame, times[i], letters[i].beat("land"), FOCUS);
                 return (
                   <span
                     key={`c${i.toString()}`}

@@ -5615,13 +5615,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/macro-tab-name/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/macro-tab-name.tsx"
+          "target": "components/remocn/macro-tab-name/index.tsx"
+        },
+        {
+          "path": "registry/remocn/macro-tab-name/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/macro-tab-name/timeline.ts"
         }
       ],
       "type": "registry:component"
