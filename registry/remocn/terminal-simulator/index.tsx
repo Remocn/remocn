@@ -6,20 +6,16 @@ import {
   useSceneConfig,
   useSceneFrame,
 } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  type TerminalLine,
+  type TerminalLineType,
+  type TerminalSimulatorElementId,
+  terminalSimulatorTimeline,
+} from "./timeline";
 
-export type TerminalLineType = "command" | "log" | "success" | "error";
-
-export interface TerminalLine {
-  text: string;
-  type: TerminalLineType;
-  delay?: number;
-  /**
-   * Extra freeze-frame pause AFTER this line finishes typing, in frames.
-   * Use this to build dramatic tension before the next batch of logs.
-   * If omitted, lines whose text ends in "..." auto-freeze for 18 frames.
-   */
-  pause?: number;
-}
+export type { TerminalLine, TerminalLineType };
 
 export interface TerminalSimulatorProps {
   lines?: TerminalLine[];
@@ -38,18 +34,12 @@ export interface TerminalSimulatorProps {
   chunkSize?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single lines, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<TerminalSimulatorElementId>;
 }
-
-const DEFAULT_LINES: TerminalLine[] = [
-  { text: "npm run build", type: "command", delay: 0 },
-  { text: "Resolving dependencies...", type: "log", delay: 6 },
-  { text: "> remocn@1.0.0 build", type: "log", delay: 4 },
-  { text: "> next build", type: "log", delay: 4 },
-  { text: "Compiling...", type: "log", delay: 12 },
-  { text: "Compiled successfully in 4.2s", type: "success", delay: 14 },
-  { text: "Generating static pages (24/24)", type: "log", delay: 10 },
-  { text: "Build completed without errors", type: "success", delay: 12 },
-];
 
 const TYPE_COLORS: Record<TerminalLineType, string> = {
   command: "#fafafa",
@@ -58,27 +48,27 @@ const TYPE_COLORS: Record<TerminalLineType, string> = {
   error: "#ef4444",
 };
 
-/** Auto freeze-frame heuristic: any line ending in "..." holds the camera. */
-function autoPause(line: TerminalLine): number {
-  if (line.pause !== undefined) return line.pause;
-  if (line.text.trimEnd().endsWith("...")) return 18;
-  return 0;
-}
-
-export function TerminalSimulator({
-  lines = DEFAULT_LINES,
-  prompt = "$",
-  title = "~/projects/remocn",
-  background = "#0a0a0a",
-  chromeColor = "#1a1a1a",
-  fontSize = 18,
-  charsPerFrame = 1,
-  chunkSize = 1,
-  speed = 1,
-  className,
-}: TerminalSimulatorProps) {
+export function TerminalSimulator(props: TerminalSimulatorProps) {
+  const {
+    lines = DEFAULT_LINES,
+    prompt = "$",
+    title = "~/projects/remocn",
+    background = "#0a0a0a",
+    chromeColor = "#1a1a1a",
+    fontSize = 18,
+    chunkSize = 1,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
-  const { fps } = useSceneConfig();
+  const { fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    terminalSimulatorTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   // A `<Sequence>` starts on one of the composition's own frames.
   const toFrames = useCompositionFrames();
 
@@ -87,20 +77,8 @@ export function TerminalSimulator({
   const windowWidth = 900;
   const windowHeight = 480;
 
-  // Compute cumulative start frames for each line, including auto/explicit
-  // pauses AFTER a line finishes typing.
-  const starts: number[] = [];
-  let acc = 10;
-  for (let i = 0; i < lines.length; i++) {
-    const delay = lines[i].delay ?? 8;
-    acc += delay;
-    starts.push(acc);
-    // Approximate typing duration (in frames) for chunked output.
-    const typingFrames = Math.ceil(
-      lines[i].text.length / (chunkSize * charsPerFrame),
-    );
-    acc += typingFrames + autoPause(lines[i]);
-  }
+  const rows = lines.map((_, i) => tl.get(`line:${i}`));
+  const starts = rows.map((e) => e.start);
 
   // STEP-FUNCTION scroll. Each overflowing line snaps the buffer up by
   // exactly one lineHeight on the frame it begins. No interpolation, no
@@ -194,7 +172,7 @@ export function TerminalSimulator({
                   prompt={prompt}
                   fontSize={fontSize}
                   lineHeight={lineHeight}
-                  charsPerFrame={charsPerFrame}
+                  typeFrames={rows[index].beat("type")}
                   chunkSize={chunkSize}
                   fps={fps}
                   speed={speed}
@@ -227,7 +205,7 @@ function TerminalLineRow({
   prompt,
   fontSize,
   lineHeight,
-  charsPerFrame,
+  typeFrames,
   chunkSize,
   fps,
   speed,
@@ -236,7 +214,8 @@ function TerminalLineRow({
   prompt: string;
   fontSize: number;
   lineHeight: number;
-  charsPerFrame: number;
+  /** Frames the whole line takes to reveal. */
+  typeFrames: number;
   chunkSize: number;
   fps: number;
   speed: number;
@@ -248,7 +227,7 @@ function TerminalLineRow({
   // nearest multiple of `chunkSize`. This is what gives the bursty terminal
   // feel — text doesn't drip, it lurches.
   const linearRevealed = Math.floor(
-    interpolate(localFrame, [0, totalChars / charsPerFrame], [0, totalChars], {
+    interpolate(localFrame, [0, typeFrames], [0, totalChars], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     }),

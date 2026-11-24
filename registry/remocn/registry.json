@@ -2277,12 +2277,17 @@
       "title": "Terminal Simulator",
       "description": "Terminal window that types out commands and rolls old lines off the top.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "terminal-simulator/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/terminal-simulator.tsx"
+          "target": "components/remocn/terminal-simulator/index.tsx"
+        },
+        {
+          "path": "terminal-simulator/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/terminal-simulator/timeline.ts"
         }
       ]
     },
