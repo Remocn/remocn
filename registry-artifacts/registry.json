@@ -7416,12 +7416,21 @@
       "title": "Spine Turn",
       "description": "Vertical titles turn like book spines, handing off to a large accent 'Wrap-up'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/spine-turn/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/spine-turn.tsx"
+          "target": "components/remocn/spine-turn/index.tsx"
+        },
+        {
+          "path": "registry/remocn/spine-turn/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/spine-turn/timeline.ts"
         }
       ],
       "type": "registry:component"
