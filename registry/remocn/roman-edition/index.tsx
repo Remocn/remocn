@@ -12,6 +12,16 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_FROM,
+  DEFAULT_TAGLINE,
+  DEFAULT_VALUE,
+  type RomanEditionElementId,
+  romanEditionTimeline,
+  sequence,
+  taglineWords,
+} from "./timeline";
 
 const archivo = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -37,6 +47,12 @@ export interface RomanEditionProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the band, the intro, each step of the count
+   * and the tagline words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RomanEditionElementId>;
 }
 
 const THEMES = {
@@ -87,32 +103,8 @@ function toRoman(n: number): string {
   return out;
 }
 
-function sequence(from: number, to: number): number[] {
-  const a = Math.max(1, Math.round(Math.min(from, to)));
-  const b = Math.max(1, Math.round(to));
-  if (b - a <= 15) {
-    return Array.from({ length: b - a + 1 }, (_, i) => a + i);
-  }
-  const out: number[] = [];
-  for (let v = a; v <= Math.min(b, a + 4); v++) out.push(v);
-  const steps = [5, 10, 50, 100, 500, 1000];
-  const unit = steps.find((u) => (b - a) / u <= 9) ?? 1000;
-  let v = Math.ceil((out[out.length - 1] + 1) / unit) * unit;
-  while (v < b) {
-    out.push(v);
-    v += unit;
-  }
-  out.push(b);
-  return out;
-}
-
 const TRACK = 0.02;
 const FONT_PX = 200;
-
-const START = 16;
-const SLOW = 8;
-const FAST = 3.5;
-const MOVE = 10;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN = Easing.bezier(0.5, 0, 0.75, 0);
@@ -226,26 +218,33 @@ function ScaleLayer({
   );
 }
 
-export function RomanEdition({
-  value = 14,
-  from = 1,
-  eyebrow = "Launch Week",
-  tagline = "Five days of new scenes, one every morning.",
-  showNumber = true,
-  accent,
-  ink,
-  band,
-  background,
-  fontFamily = archivo.fontFamily,
-  stagger = 3,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: RomanEditionProps) {
+export function RomanEdition(props: RomanEditionProps) {
+  const {
+    value = DEFAULT_VALUE,
+    from = DEFAULT_FROM,
+    eyebrow = "Launch Week",
+    tagline = DEFAULT_TAGLINE,
+    showNumber = true,
+    accent,
+    ink,
+    band,
+    background,
+    fontFamily = archivo.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    romanEditionTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -254,19 +253,7 @@ export function RomanEdition({
 
   const seq = useMemo(() => sequence(from, value), [from, value]);
   const romans = useMemo(() => seq.map(toRoman), [seq]);
-  const times = useMemo(() => {
-    const out: number[] = [];
-    let at = START;
-    const n = seq.length;
-    for (let k = 0; k < n; k++) {
-      out.push(at);
-      const p = n > 1 ? k / (n - 1) : 1;
-      const u = Math.abs(p - 0.5) * 2;
-      const gap = k < 3 ? SLOW + 1 : FAST + (SLOW - FAST) * u ** 2.2;
-      at += gap;
-    }
-    return out;
-  }, [seq]);
+  const steps = tl.lane("Numeral");
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -286,26 +273,26 @@ export function RomanEdition({
   );
 
   let k = 0;
-  for (let q = 1; q < times.length; q++) if (t >= times[q]) k = q;
-  const lastAt = times[times.length - 1];
+  for (let q = 1; q < steps.length; q++) if (t >= steps[q].start) k = q;
 
   const capPx = m.capTop * F;
   const bandH = capPx * 1.56;
   const bandTop = H / 2 - bandH / 2 - (portrait ? 0 : H * 0.02);
   const baseY = bandTop + bandH / 2 + capPx / 2;
   const lineTop = baseY - m.baseline * F;
-  const bandP = interpolate(t, [0, 16], [0, 1], {
+  const bandEl = tl.get("band");
+  const introEl = tl.get("intro");
+  const bandP = interpolate(t, [bandEl.start, bandEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IN_OUT,
   });
-  const intro = interpolate(t, [START - 8, START + 8], [0, 1], {
+  const intro = interpolate(t, [introEl.start, introEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
   const smallSize = portrait ? W * 0.044 : H * 0.042;
   const tagSize = portrait ? W * 0.06 : H * 0.058;
-  const tagAt = lastAt + 8;
 
   // A glyph rising in or out is laid out on the line and travels by a
   // transform: `top` rounds the baseline to whole pixels, so the rise came
@@ -338,9 +325,9 @@ export function RomanEdition({
     }
   } else {
     const prev = layouts[k - 1];
-    const T = times[k];
-    const room = k < times.length - 1 ? times[k + 1] - T : MOVE + 4;
-    const span = Math.min(MOVE, room);
+    const step = steps[k];
+    const T = step.start;
+    const span = Math.min(step.beat("move"), step.length);
     const dOut = Math.max(1.5, span * 0.42);
     const inAt = T + span * 0.34;
     const pm = interpolate(t, [T, T + span], [0, 1], {
@@ -393,7 +380,7 @@ export function RomanEdition({
   const arabic = seq[k];
   const digits = String(Math.round(value)).length;
   const numLabel = `No. ${String(arabic).padStart(Math.max(2, digits), "0")}`;
-  const tagWords = tagline ? tagline.split(" ") : [];
+  const tagWords = taglineWords(tagline);
   const textBase = {
     fontFamily,
     fontVariationSettings: FVS_TEXT,
@@ -467,12 +454,11 @@ export function RomanEdition({
             }}
           >
             {tagWords.map((w, i) => {
-              const p = interpolate(
-                t,
-                [tagAt + i * stagger, tagAt + i * stagger + 16],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
+              const wordEl = tl.get(`word:${i}`);
+              const p = interpolate(t, [wordEl.start, wordEl.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
               return (
                 <span key={`${w}-${i}`}>
                   <span

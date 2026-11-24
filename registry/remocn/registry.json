@@ -8812,10 +8812,19 @@
         {
           "path": "roman-edition/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/roman-edition.tsx"
+          "target": "components/remocn/roman-edition/index.tsx"
+        },
+        {
+          "path": "roman-edition/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/roman-edition/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "single-stroke",
