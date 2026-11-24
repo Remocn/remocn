@@ -11033,10 +11033,19 @@
         {
           "path": "slit-scan/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/slit-scan.tsx"
+          "target": "components/remocn/slit-scan/index.tsx"
+        },
+        {
+          "path": "slit-scan/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/slit-scan/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "moire-reveal",

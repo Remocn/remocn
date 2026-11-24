@@ -11028,12 +11028,21 @@
       "title": "Slit Scan",
       "description": "A word is slit-scanned into view through fluted slices, with a speed stat in the caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/slit-scan/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/slit-scan.tsx"
+          "target": "components/remocn/slit-scan/index.tsx"
+        },
+        {
+          "path": "registry/remocn/slit-scan/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/slit-scan/timeline.ts"
         }
       ],
       "type": "registry:component"
