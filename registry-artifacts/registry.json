@@ -8399,12 +8399,21 @@
       "title": "Fuchidori Count",
       "description": "A sticker-style counter whose digits gain stacked red outline borders, landing on 4,096.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/fuchidori-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/fuchidori-count.tsx"
+          "target": "components/remocn/fuchidori-count/index.tsx"
+        },
+        {
+          "path": "registry/remocn/fuchidori-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/fuchidori-count/timeline.ts"
         }
       ],
       "type": "registry:component"
