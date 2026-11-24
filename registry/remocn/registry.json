@@ -6875,10 +6875,19 @@
         {
           "path": "overnight/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/overnight.tsx"
+          "target": "components/remocn/overnight/index.tsx"
+        },
+        {
+          "path": "overnight/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/overnight/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "story-dip",

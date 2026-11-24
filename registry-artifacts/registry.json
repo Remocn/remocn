@@ -6870,12 +6870,21 @@
       "title": "Overnight",
       "description": "A dated story line, \"The demo went up before the launch post did.\", on a yellow ground.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/overnight/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/overnight.tsx"
+          "target": "components/remocn/overnight/index.tsx"
+        },
+        {
+          "path": "registry/remocn/overnight/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/overnight/timeline.ts"
         }
       ],
       "type": "registry:component"
