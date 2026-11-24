@@ -11,6 +11,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ChurnCountElementId, churnCountTimeline } from "./timeline";
 
 const urbanist = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -36,6 +38,12 @@ export interface ChurnCountProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the figure's entry, the caption and the count,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<ChurnCountElementId>;
 }
 
 const THEMES = {
@@ -45,10 +53,6 @@ const THEMES = {
 
 const W_THIN = 100;
 const W_FULL = 600;
-const RECOVER = 13;
-const COUNT_AT = 8;
-const COUNT_END = 84;
-const LABEL_AT = 3;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_COUNT = Easing.bezier(0.3, 0.1, 0.05, 1);
@@ -159,25 +163,33 @@ function ScaleLayer({
   );
 }
 
-export function ChurnCount({
-  value = 72960,
-  from = 0,
-  label = "frames played back live, straight from your props",
-  accent,
-  ink,
-  background,
-  fontFamily = urbanist.fontFamily,
-  fontWeight = W_FULL,
-  duration = COUNT_END - COUNT_AT,
-  separator = ",",
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ChurnCountProps) {
+export function ChurnCount(props: ChurnCountProps) {
+  const {
+    value = 72960,
+    from = 0,
+    label = "frames played back live, straight from your props",
+    accent,
+    ink,
+    background,
+    fontFamily = urbanist.fontFamily,
+    fontWeight = W_FULL,
+    separator = ",",
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    churnCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const count = tl.get("count");
   const c = THEMES[theme];
   const blue = normalizeHex(accent ?? "") ?? c.blue;
   const fg = normalizeHex(ink ?? "") ?? c.ink;
@@ -191,13 +203,13 @@ export function ChurnCount({
 
   const countAt = useMemo(
     () => (f: number) => {
-      const g = interpolate(f, [COUNT_AT, COUNT_AT + duration], [0, 1], {
+      const g = interpolate(f, [count.start, count.end], [0, 1], {
         ...CLAMP,
         easing: EASE_COUNT,
       });
       return Math.round(start + (target - start) * g);
     },
-    [start, target, duration],
+    [start, target, count],
   );
 
   if (!m) {
@@ -239,11 +251,12 @@ export function ChurnCount({
     const f0 = Math.floor(t);
     const digitAt = (f: number) => Math.floor(countAt(f) / pow) % 10;
     const now = digitAt(f0);
-    for (let k = 0; k <= RECOVER; k++) {
+    const recover = count.beat("recover");
+    for (let k = 0; k <= recover; k++) {
       const f = f0 - k;
-      if (f < COUNT_AT) return 1;
+      if (f < count.start) return 1;
       if (digitAt(f - 1) !== now) {
-        return Math.min(1, (t - f) / RECOVER);
+        return Math.min(1, (t - f) / recover);
       }
     }
     return 1;
@@ -289,8 +302,13 @@ export function ChurnCount({
     );
   }
 
-  const enter = interpolate(t, [0, 10], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const labelP = interpolate(t, [LABEL_AT, LABEL_AT + 18], [0, 1], {
+  const enterEl = tl.get("enter");
+  const labelEl = tl.get("label");
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const labelP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

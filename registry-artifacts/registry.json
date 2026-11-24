@@ -7991,12 +7991,21 @@
       "title": "Churn Count",
       "description": "A huge frame counter reaches 72,960 under a small blue caption on black.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/churn-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/churn-count.tsx"
+          "target": "components/remocn/churn-count/index.tsx"
+        },
+        {
+          "path": "registry/remocn/churn-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/churn-count/timeline.ts"
         }
       ],
       "type": "registry:component"
