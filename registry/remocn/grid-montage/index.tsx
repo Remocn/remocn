@@ -11,6 +11,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type GridMontageElementId,
+  gridMontageBeat,
+  gridMontageTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -971,6 +977,12 @@ export interface GridMontageProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the opener, the split, the two rounds of tile
+   * swaps, the grow to 3x3 and the merge, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<GridMontageElementId>;
 }
 
 const DARK_LIST: SceneSpec[] = [
@@ -997,8 +1009,6 @@ const EASE_SNAP = Easing.bezier(0.22, 1, 0.36, 1);
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const MORPH_SPRING = { damping: 200 };
 const EASE_SWAP = Easing.bezier(0.83, 0, 0.17, 1);
-const SWAP = 8;
-const MERGE = 12;
 
 const CORNERS = [
   [0, 0],
@@ -1064,28 +1074,35 @@ function ScaleLayer({
   );
 }
 
-export function GridMontage({
-  scenes,
-  images,
-  beat = 14,
-  radius = 14,
-  accent = "#3B5BFD",
-  background,
-  fontFamily = sans,
-  logo,
-  ground,
-  groundParams,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: GridMontageProps) {
+export function GridMontage(props: GridMontageProps) {
+  const {
+    scenes,
+    images,
+    radius = 14,
+    accent = "#3B5BFD",
+    background,
+    fontFamily = sans,
+    logo,
+    ground,
+    groundParams,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    gridMontageTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = H / 720;
-  const b = Math.max(8, beat);
+  const b = gridMontageBeat(props.beat);
   const lightStage = theme === "light";
   const specs = theme === "light" ? LIGHT_LIST : DARK_LIST;
   const stage = theme === "light" ? "#F5F4F0" : "#0A0A0B";
@@ -1100,11 +1117,14 @@ export function GridMontage({
   const G = 0.022 * H;
   const R = radius * u;
 
-  const tOpen = 2 * b;
-  const tSwap1 = 3 * b;
-  const tGrow = 5 * b;
-  const tSwap2 = 7 * b;
-  const tMerge = 9 * b;
+  const tOpen = tl.get("split").start;
+  const swap1 = tl.get("swap:0");
+  const tSwap1 = swap1.start;
+  const tGrow = tl.get("grow").start;
+  const swap2 = tl.get("swap:1");
+  const tSwap2 = swap2.start;
+  const mergeEl = tl.get("merge");
+  const tMerge = mergeEl.start;
   const pAt = (f: number, start: number, dur: number) =>
     interpolate(f, [start, start + dur], [0, 1], CLAMP);
   const p = (start: number, dur: number) => pAt(frame, start, dur);
@@ -1133,7 +1153,7 @@ export function GridMontage({
         1,
         0.36,
         1,
-      )(pAt(f, tSwap2, tMerge + MERGE + 40 - tSwap2));
+      )(pAt(f, tSwap2, mergeEl.end + mergeEl.beat("tail") - tSwap2));
   const closerPush = closerPushAt(frame);
   const closerTilt = glide(moves(closerPushAt));
 
@@ -1286,7 +1306,7 @@ export function GridMontage({
     const parting = moves(qAt);
     const pushing = moves((f) => ownPushAt(tSwap1, f));
     body = rects.map((rect, i) => {
-      const swap = p(tSwap1 + i * 2, SWAP);
+      const swap = p(tSwap1 + i * swap1.beat("stagger"), swap1.beat("swap"));
       return panel(
         `a${i}`,
         rect,
@@ -1311,7 +1331,7 @@ export function GridMontage({
     const qgAt = (f: number) => spring({ frame: f - tGrow, fps, config: CARD });
     const qg = qgAt(frame);
     const qmAt = (f: number) =>
-      f >= tMerge + MERGE
+      f >= mergeEl.end
         ? 1
         : Math.min(
             1,
@@ -1319,7 +1339,7 @@ export function GridMontage({
               frame: f - tMerge,
               fps,
               config: MORPH_SPRING,
-              durationInFrames: MERGE,
+              durationInFrames: mergeEl.length,
             }),
           );
     const qm = qmAt(frame);
@@ -1352,7 +1372,10 @@ export function GridMontage({
           : lerpRect(seed(r, c), cells[idx], qg);
         const ownShot = isCorner ? 1 + corner : 5 + fresh++;
         const ownStart = isCorner ? tSwap1 : tGrow;
-        const swap = p(tSwap2 + (r + c) * 2, SWAP);
+        const swap = p(
+          tSwap2 + (r + c) * swap2.beat("stagger"),
+          swap2.beat("swap"),
+        );
         const own: Fill = {
           type: "own",
           shot: ownShot,
