@@ -12,7 +12,7 @@
 //
 // The bundle holds only the named components: the full preview index makes
 // webpack compile every component in the registry.
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { bundle } from "@remotion/bundler";
 import {
@@ -195,6 +195,9 @@ try {
   }
 } finally {
   await browser.close({ silent: true });
+  // A bundle is a few hundred MB in the system temp folder; one made here is
+  // not reused.
+  if (!flag("serve")) rmSync(serveUrl, { recursive: true, force: true });
 }
 console.log(`\n${failed.length} failed`);
 for (const line of failed) console.log(line);
