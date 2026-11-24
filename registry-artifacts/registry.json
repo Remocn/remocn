@@ -2556,13 +2556,19 @@
       "registryDependencies": [
         "@remocn/confetti",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/x-followers-overview/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/x-followers-overview.tsx"
+          "target": "components/remocn/x-followers-overview/index.tsx"
+        },
+        {
+          "path": "registry/remocn/x-followers-overview/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/x-followers-overview/timeline.ts"
         }
       ],
       "type": "registry:component"
