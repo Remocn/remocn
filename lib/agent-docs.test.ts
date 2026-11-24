@@ -101,6 +101,9 @@ describe("buildLlmsTxt with component pages", () => {
     expect(preamble).toContain(
       "(https://remocn.dev/docs/guides/remotion-text-animations.md)",
     );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/remotion-kinetic-typography.md)",
+    );
     expect(preamble).toContain("(https://remocn.dev/llms-full/typography.txt)");
   });
 });

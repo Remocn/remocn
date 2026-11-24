@@ -1,0 +1,208 @@
+---
+title: "Kinetic typography in Remotion: cuts, punches and rhythm, with code"
+navTitle: Kinetic typography
+description: "How to make kinetic typography in Remotion: cut between words instead of tweening them, keep the rhythm on a frame clock, one focal word per beat, a punch-in written in code, and the Remocn components that do it for you."
+lastModified: "2026-11-24"
+---
+
+_Last updated: November 24, 2026._
+
+To make kinetic typography in Remotion, cut between short shots of one word or line each, on a
+rhythm counted in frames, instead of tweening one long text animation. Each shot gets a few frames
+of motion (a punch-in, a slam) and then holds, and the cut to the next word is the main event. Or
+install a finished sequence: Remocn has 256 free, MIT-licensed text animation components for
+Remotion, many of them built on cuts and beats, added with `npx shadcn@latest add @remocn/<name>`.
+
+## Kinetic typography principles
+
+Kinetic type reads as energetic because of its edit, not because each word moves a lot.
+
+- **Cuts over tweens.** Replace the word on a frame instead of crossfading or sliding between
+  words. A crossfade shows two half-words at once; a cut shows one whole word. Keep motion inside
+  the shot: a word can punch in over four or five frames, then sit still.
+- **Rhythm on a frame clock.** Decide the beat in frames (or seconds converted to frames) and
+  derive which word is on screen from the current frame. Never chain `setTimeout`, CSS
+  animations or "after the previous one finishes" logic: Remotion renders frames out of order, so
+  the frame number is the only clock.
+- **One focal word per beat.** Each cut shows one word or one short line, big. If two things move
+  at once, the viewer reads neither.
+- **Regular beats, broken once.** Keep beats even (or steadily tightening) so the viewer locks
+  onto the rhythm, then break it once for the word that matters: a longer hold, a color flip, a
+  bigger size. The break only works because the rest is regular.
+- **Change the frame, not only the word.** Flip the background, the alignment or the size on
+  some cuts. The change itself carries energy, and costs nothing to render.
+- **Hold the last word.** End on a beat two to four times longer than the others, or cut to the
+  logo. A sequence that stops mid-rhythm feels cut off.
+
+How long a beat should be depends on the word. As a starting point, about 8 to 15 frames at 30 fps
+(a quarter to half a second) for single short words, longer for anything the viewer must actually
+read. If viewers can't read a word, the beat is too short for it.
+
+## How to make kinetic typography in Remotion
+
+A frame clock with tightening beats, a punch-in on every cut, a background flip on alternate
+beats, and a long hold on the last word. The beat list is data, so changing the rhythm is editing
+one array.
+
+```tsx
+import {
+  AbsoluteFill,
+  Easing,
+  interpolate,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
+
+const WORDS = ["Plan.", "Write.", "Render.", "Ship."];
+// Beat lengths in seconds: they tighten, then the last word holds.
+const BEATS = [0.5, 0.4, 0.3, 1.5];
+
+export const KineticTitles = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const t = frame / fps;
+
+  // The frame clock: find the beat this frame falls in.
+  let start = 0;
+  let i = 0;
+  while (i < BEATS.length - 1 && t >= start + BEATS[i]) {
+    start += BEATS[i];
+    i++;
+  }
+
+  // Punch-in: the word lands from 135% in 0.12 s, then holds still.
+  const punch = interpolate(t - start, [0, 0.12], [1.35, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.out(Easing.cubic),
+  });
+
+  const dark = i % 2 === 0;
+
+  return (
+    <AbsoluteFill
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        background: dark ? "#0B0B0C" : "#F4F1EA",
+      }}
+    >
+      <span
+        style={{
+          fontSize: 220,
+          fontWeight: 800,
+          letterSpacing: "-0.04em",
+          color: dark ? "#FFFFFF" : "#0B0B0C",
+          scale: punch,
+        }}
+      >
+        {WORDS[i]}
+      </span>
+    </AbsoluteFill>
+  );
+};
+```
+
+The four beats add up to 2.7 seconds, so register it with `durationInFrames={162}` at `fps={60}`
+(or 81 at 30 fps). Because time is measured in seconds, the rhythm is the same at any frame rate.
+
+Why it is built this way:
+
+- **The cut is a state change, not an animation.** The word and background switch on one frame.
+  Nothing tweens between beats.
+- **The punch is short and then stops.** A fast scale reads as impact. A slow scale or a slow
+  vertical drift on text steps from pixel to pixel in Chrome and shimmers, so the word holds
+  still once it lands.
+- **The punch pivots on the word's center.** For a multi-line block, try
+  `transformOrigin: "50% 100%"` so the block grows up from its bottom line instead of in every
+  direction.
+- **Each beat is a separate shot** you can also write as `<Series>` with one
+  `<Series.Sequence>` per word. The frame-clock version is easier to retime from a list; the
+  `<Series>` version is easier when each shot is its own component.
+
+## Remocn components for kinetic typography
+
+These handle the clock, the cuts and the hold for you. **Length** is the component's own motion
+in 30 fps frames, the minimum for its `Sequence`; double it in a 60 fps composition and add a hold.
+The [Typography](/docs/typography) page lists all 256 text animation components.
+
+| Job | Component | What it does | Length | Install |
+|---|---|---|---|---|
+| Words slam in on a beat | [Full Bleed Type](/docs/typography/full-bleed-type) | Huge condensed caps, one word per `beat` frames, the last one lit by a gradient | 57f | `npx shadcn@latest add @remocn/full-bleed-type` |
+| Accelerating cuts | [Escalate Cards](/docs/typography/escalate-cards) | One word per card, each shorter than the last, until the final word fills the frame | 65f | `npx shadcn@latest add @remocn/escalate-cards` |
+| Hard cuts across grounds | [Strobe Words](/docs/typography/strobe-words) | Words cut across glow, dark and light fields on a tightening `rhythm`, then a poster with the logo | 68f | `npx shadcn@latest add @remocn/strobe-words` |
+| Kinetic type into a logo | [Blink Cut](/docs/logo-stings/blink-cut) | Words blink in a fixed `framesPerWord` rhythm across layouts, then cut to the logo and a tagline | 108f | `npx shadcn@latest add @remocn/blink-cut` |
+| Poster stack | [Word Stack](/docs/typography/word-stack) | Caps words push up into a tight stack on a `beat`; the last one turns serif italic | 99f | `npx shadcn@latest add @remocn/word-stack` |
+| Colored blocks | [Wrapped Squash](/docs/typography/wrapped-squash) | Each caps line squashes into its own colored block, stacking into a poster | 93f | `npx shadcn@latest add @remocn/wrapped-squash` |
+| Two hits | [Two Hit](/docs/typography/two-hit) | A headline lands in two hits, white then accent | 91f | `npx shadcn@latest add @remocn/two-hit` |
+| Countdown slam | [KO Count](/docs/typography/ko-count) | Hard-cut numerals count down, then a full-frame word slams in | 98f | `npx shadcn@latest add @remocn/ko-count` |
+| Fight-card intro | [Round Slam](/docs/typography/round-slam) | "ROUND 1" slams in two hits, then a call-to-action word punches over a slashed band | 66f | `npx shadcn@latest add @remocn/round-slam` |
+| A script cut into shots | [Script Cut](/docs/typography/script-cut) | A one-line script is cut by ticks into shots, and each piece flies up to fill the frame | 176f | `npx shadcn@latest add @remocn/script-cut` |
+| Phrase that builds centered | [Kinetic Center Build](/docs/typography/kinetic-center-build) | Words enter from the right and push the line until it locks centered | 60f | `npx shadcn@latest add @remocn/kinetic-center-build` |
+| Words pushing in | [Word Push](/docs/typography/word-push) | Words drive in from the right and push the line left into its new center | 42f | `npx shadcn@latest add @remocn/word-push` |
+| Hard-cut phrase swap | [Shared Axis Y](/docs/typography/shared-axis-y) | A per-word hard-cut staircase from one phrase to the next | 90f | `npx shadcn@latest add @remocn/shared-axis-y` |
+| Voiceover pace | [Word Stream](/docs/typography/word-stream) | Phrases build word by word at speaking pace while the line drifts left | 63f | `npx shadcn@latest add @remocn/word-stream` |
+
+A strobe-like sequence in one line:
+
+```bash
+npx shadcn@latest add @remocn/strobe-words
+```
+
+```tsx
+import { StrobeWords } from "@/components/remocn/strobe-words";
+
+export const Hook = () => (
+  <StrobeWords words={["Plan.", "Write.", "Render.", "Ship."]} accent="#3B5BFD" />
+);
+```
+
+Hard cuts between bright and dark fields flash. If the video may reach people sensitive to
+flashing, keep beats longer and avoid full-frame light and dark alternation.
+
+## Using Remocn from an AI agent
+
+- **Agent skill:** `npx skills add Remocn/remocn`. The agent reads the live component index from
+  remocn.dev and picks text effects by their use and avoid notes.
+- **Plugin for Claude Code and Codex:** `/plugin install remocn --marketplace Remocn/remocn`, then
+  `/remocn:video <brief>`.
+- **MCP server:** add `https://remocn.dev/mcp` to any MCP client. No auth. Ask for "words slamming
+  in on a beat" and `search_components` returns matching components. See
+  [MCP server](/docs/getting-started/mcp-server).
+- **Plain text:** every Typography page in one file at
+  [/llms-full/typography.txt](https://remocn.dev/llms-full/typography.txt). Any docs URL returns
+  Markdown when you append `.md`.
+
+## FAQ
+
+<Faq>
+
+**What is kinetic typography?**
+Text that moves in time with an edit: words or short lines appear one at a time, big, on a rhythm, usually with hard cuts between them. It carries a message without footage, which is why launch videos and social clips use it.
+
+**How do I make kinetic typography in Remotion?**
+Keep a list of words and beat lengths, work out from `useCurrentFrame()` which word is on screen, show only that word, and give it a few frames of punch-in with `interpolate()`. Or install a ready-made sequence with `npx shadcn@latest add @remocn/<name>`.
+
+**Should I crossfade or cut between words?**
+Cut. A crossfade shows two half-visible words at once and softens the rhythm. Put motion inside each shot instead.
+
+**How long should each word stay on screen?**
+Long enough to read it. As a starting point, about a quarter to half a second for one short word, longer for a phrase, and two to four times longer on the last word.
+
+**Why does my kinetic typography feel slow?**
+Usually the transitions are too long: each word eases in over half a second and the beat is all transition. Shorten the motion to a few frames, cut on the beat, and let the word hold.
+
+**How do I sync kinetic typography to music?**
+Set the beat length from the track's tempo: at 120 BPM a beat is 0.5 seconds, so 15 frames at 30 fps. Cut on the beat, and put the most important word on a downbeat. Remocn components take a `beat`, `rhythm` or `framesPerWord` prop for this where they have a fixed rhythm.
+
+**Are Remocn text components free?**
+Yes. Every Remocn component is free and MIT-licensed, and the source is copied into your project. Remotion keeps [its own license](https://www.remotion.dev/docs/license). Remocn is an independent project, not affiliated with Remotion or shadcn.
+
+</Faq>
+
+## What's next
+
+- [Remotion text animations](/docs/guides/remotion-text-animations): word reveals, typewriter, highlights and text pitfalls
+- [Remotion logo animation](/docs/guides/remotion-logo-animation): end the type on a logo sting
+- [Words on screen](/docs/guides/words-on-screen): how to write lines people can read in two seconds
+- [Typography](/docs/typography): all 256 text animation components
