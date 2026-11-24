@@ -11377,12 +11377,21 @@
       "title": "Flip Sting",
       "description": "The logo flips into place with a small tracked line settling under it.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/flip-sting/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/flip-sting.tsx"
+          "target": "components/remocn/flip-sting/index.tsx"
+        },
+        {
+          "path": "registry/remocn/flip-sting/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/flip-sting/timeline.ts"
         }
       ],
       "type": "registry:component"

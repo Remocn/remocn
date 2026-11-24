@@ -6,6 +6,12 @@ import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  FLIP_LENGTH,
+  type FlipStingElementId,
+  flipStingTimeline,
+} from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["400", "600"],
@@ -34,6 +40,12 @@ export interface FlipStingProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the camera's pull and push, single pages of
+   * the flip-book, the fill and the line, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FlipStingElementId>;
 }
 
 // A studio-ident sting in the manner of the Marvel Studios flip-book: the
@@ -45,16 +57,8 @@ export interface FlipStingProps {
 //  28–64   the flip slows: 3, 3, 3, 4, 4, 5, 6, 8 frames a page
 //  64      the last page lands: the logo fills with the gradient and holds
 //  74–88   the line rises in under the logo; slow push, poster hold to 130
-const PULL_END = 68;
-const LINE_AT = 74;
 /** Frames the demo needs: the flip plus a long poster hold. */
-export const FLIP_STING_DURATION = 130;
-
-/** Page lengths: a fast riffle that slows into the final fill. */
-const PAGES = [
-  2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 6, 8,
-];
-const SETTLE_AT = PAGES.reduce((a, b) => a + b, 0);
+export const FLIP_STING_DURATION = FLIP_LENGTH;
 
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -341,22 +345,34 @@ function ScaleLayer({
   );
 }
 
-export function FlipSting({
-  line = "LAUNCH FILMS",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = mono.fontFamily,
-  pull: pullEnd = PULL_END,
-  zoomFrom = 3.6,
-  scale: zoom = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: FlipStingProps) {
+export function FlipSting(props: FlipStingProps) {
+  const {
+    line = "LAUNCH FILMS",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = mono.fontFamily,
+    zoomFrom = 3.6,
+    scale: zoom = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    flipStingTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pullEl = tl.get("pull");
+  const pushEl = tl.get("push");
+  const fillEl = tl.get("fill");
+  const lineEl = tl.get("line");
+  const pages = tl.lane("Flip-book").filter((e) => e.id !== "fill");
   const c = THEMES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
@@ -366,12 +382,12 @@ export function FlipSting({
 
   // Camera: out of the R, settling on the whole logo, then a slow push.
   const pullAt = (f: number) =>
-    interpolate(f, [0, pullEnd], [0, 1], {
+    interpolate(f, [pullEl.start, pullEl.end], [0, 1], {
       ...CLAMP,
       easing: PULL,
     });
   const scaleAt = (f: number) => {
-    const push = interpolate(f, [pullEnd, FLIP_STING_DURATION], [0, 1], {
+    const push = interpolate(f, [pushEl.start, pushEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -379,7 +395,7 @@ export function FlipSting({
   };
   const pull = pullAt(t);
   const scale = scaleAt(t);
-  const restScale = scaleAt(FLIP_STING_DURATION);
+  const restScale = scaleAt(pushEl.end);
   // Any change at all: the push eases out to the last frame, and the logo
   // rests under it off the pixel grid, so the lean must not drop early.
   const cameraMoving =
@@ -390,18 +406,16 @@ export function FlipSting({
 
   // Which page of the flip-book is up.
   let page = -1;
-  let acc = 0;
-  for (let i = 0; i < PAGES.length; i++) {
-    if (t < acc + PAGES[i]) {
+  for (let i = 0; i < pages.length; i++) {
+    if (t < pages[i].end) {
       page = i;
       break;
     }
-    acc += PAGES[i];
   }
-  const settled = page === -1 || t >= SETTLE_AT;
-  const drift = interpolate(t, [SETTLE_AT, FLIP_STING_DURATION], [0, 1], CLAMP);
+  const settled = page === -1 || t >= fillEl.start;
+  const drift = interpolate(t, [fillEl.start, fillEl.end], [0, 1], CLAMP);
 
-  const lineIn = interpolate(t, [LINE_AT, LINE_AT + 16], [0, 1], {
+  const lineIn = interpolate(t, [lineEl.start, lineEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -411,7 +425,7 @@ export function FlipSting({
   const lineYAt = (f: number) =>
     (R_HEIGHT * size * (scaleAt(f) - restScale)) / 2 +
     (1 -
-      interpolate(f, [LINE_AT, LINE_AT + 16], [0, 1], {
+      interpolate(f, [lineEl.start, lineEl.end], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       })) *
