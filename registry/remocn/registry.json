@@ -2973,13 +2973,19 @@
       "registryDependencies": [
         "@remocn/stop-motion",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "crumple-toss/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/crumple-toss.tsx"
+          "target": "components/remocn/crumple-toss/index.tsx"
+        },
+        {
+          "path": "crumple-toss/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/crumple-toss/timeline.ts"
         }
       ]
     },

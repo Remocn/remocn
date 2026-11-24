@@ -1,9 +1,11 @@
 "use client";
 
 import type React from "react";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import { DEFAULT_STEP, hashRange, qstep } from "@/lib/remocn/stop-motion";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type CrumpleTossElementId, crumpleTossTimeline } from "./timeline";
 
 const GRAVITY = 0.9;
 const FLIGHT_SHRINK = 0.5;
@@ -231,17 +233,38 @@ export function crumpleTossLanding(options?: {
   };
 }
 
+/** Where a run of poses sits on the scene timeline, and how long each holds. */
+export type CrumpleSpan = { start: number; length: number; step: number };
+
+/**
+ * The card's pose on `frame`. `spans` places the crumple and the toss, as
+ * the component's timeline resolves them; by default they come from `at`,
+ * the pose counts and `step`.
+ */
 export function crumpleTossPose(
   args: CrumpleTossTiming & { frame: number },
+  spans?: { crumple: CrumpleSpan; toss: CrumpleSpan },
 ): CrumplePose {
-  const crumpleSteps = args.crumpleSteps ?? 4;
-  const tossSteps = args.tossSteps ?? 5;
+  const step = args.step ?? DEFAULT_STEP;
+  const crumpleSteps0 = args.crumpleSteps ?? 4;
+  const tossSteps0 = args.tossSteps ?? 5;
+  const crumple = spans?.crumple ?? {
+    start: args.at,
+    length: crumpleSteps0 * step,
+    step,
+  };
+  const toss = spans?.toss ?? {
+    start: args.at + crumpleSteps0 * step,
+    length: tossSteps0 * step,
+    step,
+  };
+  const crumpleSteps = Math.round(crumple.length / crumple.step);
+  const tossSteps = Math.round(toss.length / toss.step);
   const direction = args.direction ?? -35;
   const distance = args.distance ?? 900;
   const spin = args.spin ?? 220;
-  const step = args.step ?? DEFAULT_STEP;
 
-  if (args.frame < args.at) {
+  if (args.frame < crumple.start) {
     return {
       phase: "idle",
       crush: 0,
@@ -253,9 +276,12 @@ export function crumpleTossPose(
     };
   }
 
-  const pose = qstep(args.frame - args.at, step);
-
-  if (pose < crumpleSteps) {
+  if (args.frame < toss.start) {
+    // Holds the last crushed pose if the toss starts later.
+    const pose = Math.min(
+      qstep(args.frame - crumple.start, crumple.step),
+      crumpleSteps - 1,
+    );
     return {
       phase: "crumple",
       crush: (pose + 1) / crumpleSteps,
@@ -267,8 +293,9 @@ export function crumpleTossPose(
     };
   }
 
-  if (pose < crumpleSteps + tossSteps) {
-    const t = (pose - crumpleSteps + 1) / tossSteps;
+  const pose = qstep(args.frame - toss.start, toss.step);
+  if (pose < tossSteps) {
+    const t = (pose + 1) / tossSteps;
     const radians = (direction * Math.PI) / 180;
     return {
       phase: "toss",
@@ -299,25 +326,48 @@ export interface CrumpleTossProps extends CrumpleTossTiming {
   segments?: number;
   layers?: number;
   randomness?: number;
+  /**
+   * Moves, trims or stretches the crumple and the toss, by the ids in
+   * `./timeline`. Frames on the scene timeline.
+   */
+  timing?: Timing<CrumpleTossElementId>;
 }
 
-export function CrumpleToss({
-  children,
-  width,
-  height,
-  segments,
-  layers,
-  randomness,
-  ...timing
-}: CrumpleTossProps) {
+export function CrumpleToss(props: CrumpleTossProps) {
+  const {
+    children,
+    width,
+    height,
+    segments,
+    layers,
+    randomness,
+    timing,
+    ...motion
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const pose = crumpleTossPose({ frame, ...timing });
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(crumpleTossTimeline, props, durationInFrames, timing);
+  const crumpleEl = tl.get("crumple");
+  const tossEl = tl.get("toss");
+  const spans = {
+    crumple: {
+      start: crumpleEl.start,
+      length: crumpleEl.length,
+      step: crumpleEl.beat("step"),
+    },
+    toss: {
+      start: tossEl.start,
+      length: tossEl.length,
+      step: tossEl.beat("step"),
+    },
+  };
+  const pose = crumpleTossPose({ frame, ...motion }, spans);
   // The card leaves its flat pose by folding its copies at small angles,
   // which would snap off-grid text level-to-tilted; the mark keeps it off
   // the grid on every frame the pose changes.
   const poseKey = (f: number) =>
-    JSON.stringify(crumpleTossPose({ frame: f, ...timing }));
+    JSON.stringify(crumpleTossPose({ frame: f, ...motion }, spans));
   const here = JSON.stringify(pose);
   const moving = here !== poseKey(frame - 1) || here !== poseKey(frame + 1);
   if (pose.phase === "gone") return null;
@@ -328,8 +378,8 @@ export function CrumpleToss({
     segments,
     layers,
     randomness,
-    crushTo: timing.crushTo,
-    seed: timing.seed,
+    crushTo: motion.crushTo,
+    seed: motion.seed,
   });
   const c = pose.crush;
 
