@@ -193,6 +193,9 @@ const MCP_SERVERS = [
 /** The answer page for "animated text effects for Remotion". */
 export const TEXT_GUIDE_PATH = "/docs/guides/remotion-text-animations";
 
+/** The answer page for "animated charts and data videos in Remotion". */
+export const DATA_GUIDE_PATH = "/docs/guides/remotion-data-video";
+
 /** The answer page for "programmatic video alternatives to After Effects". */
 export const AE_GUIDE_PATH =
   "/docs/guides/after-effects-alternatives-for-developers";
@@ -384,6 +387,14 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
       `\nLooking for text animations? Remocn has ${textEffects} animated text effects for Remotion${captionNote}.` +
         ` [Remotion text animations](${SITE_URL}${TEXT_GUIDE_PATH}.md) answers how to animate text in Remotion and has a picker table;` +
         ` [/llms-full/typography.txt](${sectionCorpusUrl("typography")}) has every text component's props and usage in one file.`,
+    );
+  }
+  const numbers = componentCount(sections.get("numbers"));
+  if (numbers) {
+    lines.push(
+      `\nLooking for animated charts, counters or maps? Remocn has ${numbers} number, chart and map components for Remotion that take their data as props.` +
+        ` [Animated charts and data videos in Remotion](${SITE_URL}${DATA_GUIDE_PATH}.md) shows how to drive a chart from data, has a picker table (bar, bar race, line, donut, sankey, counters, maps) and a metrics recap video built from a JSON file;` +
+        ` [/llms-full/numbers.txt](${sectionCorpusUrl("numbers")}) has every component's props in one file.`,
     );
   }
   if (transitions) {
