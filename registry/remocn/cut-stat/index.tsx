@@ -7,6 +7,13 @@ import { Fragment, useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CutStatElementId,
+  claimWords,
+  cutStatTimeline,
+  DEFAULT_LABEL,
+} from "./timeline";
 
 const instrument = loadInstrument("normal", {
   weights: ["400", "500"],
@@ -41,6 +48,12 @@ export interface CutStatProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the bar, the cut, the readout swap, the flash,
+   * the release, the claim's words and the caption, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CutStatElementId>;
 }
 
 const MESH = ["#ecdcf2", "#8796ee", "#2e45b7", "#0e1645"] as const;
@@ -149,31 +162,46 @@ function ScaleLayer({
   );
 }
 
-export function CutStat({
-  value = 44,
-  decimals = 0,
-  prefix = "−",
-  suffix = "%",
-  label = "less time to a finished cut",
-  caption = "vs. keyframing every scene by hand",
-  fromLabel = "Before",
-  toLabel = "With remocn",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = instrument.fontFamily,
-  fontWeight = 500,
-  stagger = 3,
-  scale: zoom = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: CutStatProps) {
+export function CutStat(props: CutStatProps) {
+  const {
+    value = 44,
+    decimals = 0,
+    prefix = "−",
+    suffix = "%",
+    label = DEFAULT_LABEL,
+    caption = "vs. keyframing every scene by hand",
+    fromLabel = "Before",
+    toLabel = "With remocn",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = instrument.fontFamily,
+    fontWeight = 500,
+    scale: zoom = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const raw = Math.max(0, useSceneFrame() - delay);
   const frame = raw * speed;
   const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    cutStatTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introEl = tl.get("intro");
+  const fillEl = tl.get("fill");
+  const ticksEl = tl.get("ticks");
+  const cutEl = tl.get("cut");
+  const swapEl = tl.get("swap");
+  const flashEl = tl.get("flash");
+  const releaseEl = tl.get("release");
+  const captionEl = tl.get("caption");
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
 
@@ -182,22 +210,27 @@ export function CutStat({
   const v = Math.min(95, Math.max(5, value));
   const along = portrait ? height : width;
 
-  const intro = interpolate(frame, [0, 6], [0, 1], CLAMP);
-  const fill = interpolate(frame, [0, 15], [0, 1], {
+  const intro = interpolate(frame, [introEl.start, introEl.end], [0, 1], CLAMP);
+  const fill = interpolate(frame, [fillEl.start, fillEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const cut = interpolate(frame, [19, 51], [0, 1], {
+  const cut = interpolate(frame, [cutEl.start, cutEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_CUT,
   });
-  const flash = interpolate(frame, [49, 52, 63], [0, 1, 0], CLAMP);
+  const flash = interpolate(
+    frame,
+    [flashEl.start, flashEl.start + flashEl.beat("peak"), flashEl.end],
+    [0, 1, 0],
+    CLAMP,
+  );
   const drift = interpolate(raw, [0, durationInFrames], [0, 1], CLAMP);
   const cutPx = (along * v * cut) / 100;
   const remaining = 100 - v * cut;
   const counted = v * cut;
   const fmt = (n: number) => n.toFixed(decimals);
-  const swapT = interpolate(frame, [44, 56], [0, 1], {
+  const swapT = interpolate(frame, [swapEl.start, swapEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -214,21 +247,18 @@ export function CutStat({
     roomW / em,
     portrait ? Math.max(zone, height * 0.3) * 0.5 : Infinity,
   );
-  const words = label.split(/\s+/).filter(Boolean);
-  const wordT = (i: number) =>
-    interpolate(frame, [47 + i * stagger, 65 + i * stagger], [0, 1], {
+  const words = claimWords(label);
+  const wordT = (i: number) => {
+    const e = tl.get(`word:${i}`);
+    return interpolate(frame, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-  const capT = interpolate(
-    frame,
-    [63 + words.length * 2, 81 + words.length * 2],
-    [0, 1],
-    {
-      ...CLAMP,
-      easing: EASE_OUT,
-    },
-  );
+  };
+  const capT = interpolate(frame, [captionEl.start, captionEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
 
   const transparent = background === "transparent";
   const labelFs = 14 * u;
@@ -263,7 +293,7 @@ export function CutStat({
   const edgeTravel = Math.abs(edgePos - edgeRest) >= 1 / 128;
   const edgeAt = edgeTravel ? edgeRest : edgePos;
 
-  const release = interpolate(frame, [53, 69], [0, 1], {
+  const release = interpolate(frame, [releaseEl.start, releaseEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -272,7 +302,12 @@ export function CutStat({
     ? `inset(${clipAt}px 0 0 0)`
     : `inset(0 0 0 ${clipAt}px)`;
 
-  const scaleT = interpolate(frame, [4, 20], [0, 1], CLAMP);
+  const scaleT = interpolate(
+    frame,
+    [ticksEl.start, ticksEl.end],
+    [0, 1],
+    CLAMP,
+  );
   const scale = (line: string, text: string) => (
     <div style={{ position: "absolute", inset: 0, opacity: scaleT }}>
       {Array.from({ length: 11 }, (_, i) => {
@@ -403,7 +438,15 @@ export function CutStat({
           position: "absolute",
           inset: 0,
           clipPath: statClip,
-          opacity: interpolate(frame, [18, 20], [0, 1], CLAMP),
+          opacity: interpolate(
+            frame,
+            [
+              cutEl.start + cutEl.beat("showFrom"),
+              cutEl.start + cutEl.beat("showTo"),
+            ],
+            [0, 1],
+            CLAMP,
+          ),
           zIndex: 2,
         }}
       >

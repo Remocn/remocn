@@ -9740,12 +9740,21 @@
       "title": "Cut Stat",
       "description": "A blue bar graph wipes upward beside a big minus 44% caption, 'less time to a finished cut'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/cut-stat/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/cut-stat.tsx"
+          "target": "components/remocn/cut-stat/index.tsx"
+        },
+        {
+          "path": "registry/remocn/cut-stat/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/cut-stat/timeline.ts"
         }
       ],
       "type": "registry:component"
