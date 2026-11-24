@@ -13,6 +13,15 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  DEFAULT_MOMENTS,
+  linesOf,
+  momentsOf,
+  type WhatSticksElementId,
+  whatSticksTimeline,
+} from "./timeline";
 
 const rubik = loadFont("normal", {
   weights: ["400", "500"],
@@ -38,27 +47,18 @@ export interface WhatSticksProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single lines, single moments and the glow of
+   * the kept line, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<WhatSticksElementId>;
 }
 
 const THEMES = {
   dark: { bg: "#2A1033", ink: "#FFFFFF", accent: "#7CC4FF", ghost: 0.17 },
   light: { bg: "#F3EEF5", ink: "#2A1033", accent: "#2B7BD6", ghost: 0.2 },
 } as const;
-
-const DEFAULT_LINES = [
-  "Scenes install with one command.",
-  "Every word on screen is a prop.",
-  "Transitions land on the beat.",
-  "Captions come from the transcript.",
-  "You own every file.",
-  "It renders on your laptop.",
-];
-
-const DEFAULT_MOMENTS = [
-  "Tonight, you’ll remember all of it.",
-  "Tomorrow, about half.",
-  "Next week, just this.",
-];
 
 const WGHT = 500;
 const TRACK = -0.025;
@@ -168,32 +168,40 @@ const hash = (i: number, salt: number) => {
   return x - Math.floor(x);
 };
 
-export function WhatSticks({
-  lines = DEFAULT_LINES,
-  keep,
-  moments = DEFAULT_MOMENTS,
-  forget,
-  accent,
-  ink,
-  background,
-  fontFamily = rubik.fontFamily,
-  stagger = 5,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: WhatSticksProps) {
+export function WhatSticks(props: WhatSticksProps) {
+  const {
+    lines = DEFAULT_LINES,
+    keep,
+    moments = DEFAULT_MOMENTS,
+    forget,
+    accent,
+    ink,
+    background,
+    fontFamily = rubik.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The moments spread over what the clip leaves after `delay`.
+  const tl = useTimeline(
+    whatSticksTimeline,
+    props,
+    Math.max(0, durationInFrames - delay) * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = lines.length > 0 ? lines : DEFAULT_LINES;
-  const steps = moments.length > 0 ? moments : DEFAULT_MOMENTS;
+  const list = linesOf(lines);
+  const steps = momentsOf(moments);
   const n = list.length;
   const kept = Math.min(
     n - 1,
@@ -254,14 +262,8 @@ export function WhatSticks({
       : [...others].sort((a, b) => hash(a, n) - hash(b, n));
 
   const stepCount = Math.max(1, steps.length);
-  const span = Math.max(0, durationInFrames - delay) * speed;
-  const enterOf = (i: number) => 10 + i * stagger;
-  const first = enterOf(n - 1) + 18 + 30;
-  const gap =
-    stepCount > 2
-      ? Math.min(90, Math.max(42, (span - first - 100) / (stepCount - 2)))
-      : 0;
-  const stepAt = (s: number) => first + (s - 1) * gap;
+  const momentOf = (s: number) => tl.get(`moment:${s}`);
+  const stepAt = (s: number) => momentOf(s).start;
 
   const forgottenAt = new Map<number, { step: number; rank: number }>();
   if (stepCount > 1) {
@@ -283,17 +285,18 @@ export function WhatSticks({
   const nodes: React.ReactNode[] = [];
 
   for (let s = 0; s < stepCount; s++) {
-    const tin = s === 0 ? 0 : stepAt(s);
+    const moment = momentOf(s);
+    const tin = moment.start;
     const tout = s + 1 < stepCount ? stepAt(s + 1) : Number.POSITIVE_INFINITY;
-    if (t < tin - 1 || t > tout + 14) continue;
+    if (t < tin - 1 || t > tout + moment.beat("out") + 9) continue;
     if (Math.abs(s - slugIndex) > 1) continue;
-    const enter = s === 0 ? tin : tin + 6;
-    const pin = interpolate(t, [enter, enter + 14], [0, 1], {
+    const enter = tin + moment.beat("enter");
+    const pin = interpolate(t, [enter, enter + moment.beat("in")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
     const pout = Number.isFinite(tout)
-      ? interpolate(t, [tout, tout + 5], [0, 1], {
+      ? interpolate(t, [tout, tout + moment.beat("out")], [0, 1], {
           ...CLAMP,
           easing: EASE_IN_OUT,
         })
@@ -323,8 +326,11 @@ export function WhatSticks({
             whiteSpace: "pre",
             color: last
               ? interpolateColors(
-                  Math.min(Math.max(t, tin + 6), tin + 20),
-                  [tin + 6, tin + 20],
+                  Math.min(
+                    Math.max(t, tin + moment.beat("tint")),
+                    tin + moment.beat("tintEnd"),
+                  ),
+                  [tin + moment.beat("tint"), tin + moment.beat("tintEnd")],
                   [fg, hi],
                 )
               : fg,
@@ -339,30 +345,31 @@ export function WhatSticks({
   }
 
   let row = 0;
-  const finalStep = stepCount - 1;
-  const glowAt = stepAt(Math.max(1, finalStep)) + 22;
+  const keepEl = tl.get("keep");
   for (let i = 0; i < n; i++) {
     const rows = blocks[i];
     const y0 = top + slugH + gapAfterSlug + row * rowH;
     row += rows.length;
-    const d = enterOf(i);
+    const lineEl = tl.get(`line:${i}`);
+    const d = lineEl.start;
     if (t < d - 1) continue;
-    const pin = interpolate(t, [d, d + 18], [0, 1], {
+    const pin = interpolate(t, [d, lineEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
     const f = forgottenAt.get(i);
     let alpha = 1;
     if (f) {
-      const fs = stepAt(f.step) + 10 + f.rank * 5;
-      alpha = interpolate(t, [fs, fs + 20], [1, c.ghost], {
+      const by = momentOf(f.step);
+      const fs = by.start + by.beat("forget") + f.rank * by.beat("forgetGap");
+      alpha = interpolate(t, [fs, fs + by.beat("fade")], [1, c.ghost], {
         ...CLAMP,
         easing: EASE_IN_OUT,
       });
     }
     const isKept = i === kept && stepCount > 1;
     const glow = isKept
-      ? interpolate(t, [glowAt, glowAt + 18], [0, 1], {
+      ? interpolate(t, [keepEl.start, keepEl.end], [0, 1], {
           ...CLAMP,
           easing: EASE_IN_OUT,
         })

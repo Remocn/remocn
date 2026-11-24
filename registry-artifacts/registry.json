@@ -6711,12 +6711,21 @@
       "title": "What Sticks",
       "description": "A column of claims dims one by one until \"You own every file.\" is highlighted.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/what-sticks/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/what-sticks.tsx"
+          "target": "components/remocn/what-sticks/index.tsx"
+        },
+        {
+          "path": "registry/remocn/what-sticks/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/what-sticks/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -6716,10 +6716,19 @@
         {
           "path": "what-sticks/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/what-sticks.tsx"
+          "target": "components/remocn/what-sticks/index.tsx"
+        },
+        {
+          "path": "what-sticks/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/what-sticks/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "tldr-on-top",
