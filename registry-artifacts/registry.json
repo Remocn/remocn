@@ -6451,12 +6451,21 @@
       "title": "Phone Trio",
       "description": "Three phones side by side show a notification, a photo feed and a profile.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/gsh", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/gsh",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/phone-trio/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/phone-trio.tsx"
+          "target": "components/remocn/phone-trio/index.tsx"
+        },
+        {
+          "path": "registry/remocn/phone-trio/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/phone-trio/timeline.ts"
         }
       ],
       "type": "registry:component"
