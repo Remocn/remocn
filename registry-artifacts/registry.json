@@ -648,12 +648,21 @@
       "title": "Short Slide Down",
       "description": "Each new word drops in from above into its own line and pushes the stack downward until a centered three-line composition locks in place.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/short-slide-down/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/short-slide-down.tsx"
+          "target": "components/remocn/short-slide-down/index.tsx"
+        },
+        {
+          "path": "registry/remocn/short-slide-down/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/short-slide-down/timeline.ts"
         }
       ],
       "type": "registry:component"
