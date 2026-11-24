@@ -6976,12 +6976,21 @@
       "title": "Pitch Blanks",
       "description": "A fill-in-the-blank pitch where product, category and audience labels annotate each underlined phrase.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/pitch-blanks/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/pitch-blanks.tsx"
+          "target": "components/remocn/pitch-blanks/index.tsx"
+        },
+        {
+          "path": "registry/remocn/pitch-blanks/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/pitch-blanks/timeline.ts"
         }
       ],
       "type": "registry:component"
