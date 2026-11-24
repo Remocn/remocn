@@ -6,6 +6,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  rowsOf,
+  type WrappedSquashElementId,
+  wrappedSquashTimeline,
+} from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -32,6 +39,12 @@ export interface WrappedSquashProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the first block growing in, each next line
+   * arriving, the lock and the field's drift, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WrappedSquashElementId>;
 }
 
 // Bricolage Grotesque 500, per 1000 em, chars 32–126 (harfbuzz).
@@ -184,23 +197,30 @@ function ScaleGroup({
   );
 }
 
-export function WrappedSquash({
-  lines = ["YOU", "SHIPPED", "A LOT"],
-  accent = "#3B5BFD",
-  colors,
-  beat = 26,
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: WrappedSquashProps) {
+export function WrappedSquash(props: WrappedSquashProps) {
+  const {
+    lines = DEFAULT_LINES,
+    accent = "#3B5BFD",
+    colors,
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    wrappedSquashTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const t = THEMES[theme];
   const solid = ink ?? t.solid;
@@ -208,10 +228,7 @@ export function WrappedSquash({
   const stage =
     background === "transparent" ? "transparent" : (background ?? t.stage);
 
-  const rows = lines
-    .slice(0, 3)
-    .map((l) => l.toUpperCase().replace(/\s+/g, " ").trim())
-    .filter(Boolean);
+  const rows = rowsOf(lines);
   const n = Math.max(1, rows.length);
   const metrics = rows.map(measure);
   const inks = metrics.map((m) => m.ink);
@@ -228,9 +245,9 @@ export function WrappedSquash({
     : null;
 
   // Beats: line 1 grows in, each next line arrives on a beat, then the lock.
-  const BEATS = [beat, beat * 2].slice(0, n - 1);
-  const LOCK = beat + beat * (n - 1);
-  const intro = interpolate(frame, [0, 16], [0.46, 1], {
+  const introEl = tl.get("intro");
+  const lockEl = tl.get("lock");
+  const intro = interpolate(frame, [introEl.start, introEl.end], [0.46, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -245,10 +262,15 @@ export function WrappedSquash({
   const arrive = rows.map((_, i) =>
     i === 0
       ? 1
-      : interpolate(frame, [BEATS[i - 1], BEATS[i - 1] + 14], [0, 1], {
-          ...CLAMP,
-          easing: EASE_BEAT,
-        }),
+      : interpolate(
+          frame,
+          [tl.get(`line:${i}`).start, tl.get(`line:${i}`).end],
+          [0, 1],
+          {
+            ...CLAMP,
+            easing: EASE_BEAT,
+          },
+        ),
   );
   let frac = stages[0];
   for (let s = 1; s < n; s++) {
@@ -257,7 +279,7 @@ export function WrappedSquash({
   }
   const lockAt = (f: number) =>
     spring({
-      frame: f - LOCK,
+      frame: f - lockEl.start,
       fps,
       config: { damping: 16, stiffness: 170, mass: 0.9 },
     });
@@ -297,7 +319,8 @@ export function WrappedSquash({
   });
 
   // The field turns a few degrees and its light drifts across the shot.
-  const drift = interpolate(frame, [0, 150], [0, 1], CLAMP);
+  const driftEl = tl.get("drift");
+  const drift = interpolate(frame, [driftEl.start, driftEl.end], [0, 1], CLAMP);
   const ang = ((24 + 8 * drift) * Math.PI) / 180;
   const reach = Math.hypot(W, H) / 2;
   const fx = Math.cos(ang) * reach;

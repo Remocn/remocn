@@ -10596,12 +10596,21 @@
       "title": "Wrapped Squash",
       "description": "Each caps line squashes to fill its own coloured block, stacking into a poster.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/wrapped-squash/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/wrapped-squash.tsx"
+          "target": "components/remocn/wrapped-squash/index.tsx"
+        },
+        {
+          "path": "registry/remocn/wrapped-squash/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/wrapped-squash/timeline.ts"
         }
       ],
       "type": "registry:component"

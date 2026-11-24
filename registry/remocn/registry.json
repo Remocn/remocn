@@ -10601,10 +10601,19 @@
         {
           "path": "wrapped-squash/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/wrapped-squash.tsx"
+          "target": "components/remocn/wrapped-squash/index.tsx"
+        },
+        {
+          "path": "wrapped-squash/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/wrapped-squash/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "rubberband-word",
