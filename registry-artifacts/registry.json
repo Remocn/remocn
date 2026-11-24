@@ -12318,12 +12318,21 @@
       "title": "Domino Run",
       "description": "Dominoes fall in a chain, growing larger until a 10x stat is set off.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/domino-run/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/domino-run.tsx"
+          "target": "components/remocn/domino-run/index.tsx"
+        },
+        {
+          "path": "registry/remocn/domino-run/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/domino-run/timeline.ts"
         }
       ],
       "type": "registry:component"
