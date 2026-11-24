@@ -10949,12 +10949,21 @@
       "title": "Ellipsis Resolve",
       "description": "Three dots pulse and resolve into a gradient word and a closing period.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/ellipsis-resolve/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ellipsis-resolve.tsx"
+          "target": "components/remocn/ellipsis-resolve/index.tsx"
+        },
+        {
+          "path": "registry/remocn/ellipsis-resolve/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ellipsis-resolve/timeline.ts"
         }
       ],
       "type": "registry:component"

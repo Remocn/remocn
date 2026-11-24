@@ -6,6 +6,14 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type EllipsisResolveElementId,
+  ellipsisResolveTimeline,
+  RISE,
+  SWEEP,
+  SWEEP_LEN,
+} from "./timeline";
 
 const { fontFamily: serif } = loadFont("normal", {
   weights: ["400"],
@@ -32,6 +40,12 @@ export interface EllipsisResolveProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the dots' pulses, the resolve, the sweep and
+   * the landing, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<EllipsisResolveElementId>;
 }
 
 // Instrument Serif 400 advance widths (1/1000 em) for ASCII 32–126.
@@ -50,18 +64,6 @@ const BASELINE = 0.94; // baseline offset inside a lineHeight 1.2 box (asc 990, 
 const PERIOD = 0.213; // advance of "."
 const DOT = 0.105; // period diameter
 const DOT_LSB = 0.054; // period left side bearing
-
-// Beats (frames at 30fps).
-const PULSE_A = 2;
-const PULSE_B = 20;
-const BUMP = 11;
-const BUMP_STEP = 4;
-const STRETCH = 40;
-const STRETCH_LEN = 20;
-const SWEEP = 58;
-const SWEEP_LEN = 26;
-const RISE = 13;
-const SETTLE = 10;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -143,28 +145,39 @@ function ScaleLayer({
   );
 }
 
-export function EllipsisResolve({
-  word = "Shipped",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = serif,
-  resolveAt = STRETCH,
-  sweepFrames = SWEEP_LEN,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: EllipsisResolveProps) {
+export function EllipsisResolve(props: EllipsisResolveProps) {
+  const {
+    word = "Shipped",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = serif,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    ellipsisResolveTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pulses = [tl.get("pulse:0"), tl.get("pulse:1")];
+  const resolve = tl.get("resolve");
+  const sweepEl = tl.get("sweep");
+  const land = tl.get("land");
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const sweepAt = SWEEP + (resolveAt - STRETCH);
+  const sweepAt = sweepEl.start;
+  const sweepFrames = sweepEl.length;
   const u = H / 720;
 
   const layout = useMemo(() => {
@@ -191,23 +204,29 @@ export function EllipsisResolve({
 
   // Camera: starts close on the typing indicator, eases out to the word.
   const zoomAt = (tt: number) =>
-    interpolate(tt, [resolveAt - 6, resolveAt + STRETCH_LEN + 6], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    interpolate(
+      tt,
+      [
+        resolve.start + resolve.beat("zoomIn"),
+        resolve.start + resolve.beat("zoomOut"),
+      ],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
   const zoom = zoomAt(t);
   const cam = lerp(1.75, 1, zoom);
 
   // Dots begin centered in frame, then settle onto the word's baseline.
   const dropAt = (tt: number) =>
-    EASE_IO(
-      interpolate(tt, [resolveAt, resolveAt + STRETCH_LEN], [0, 1], CLAMP),
-    );
+    EASE_IO(interpolate(tt, [resolve.start, resolve.end], [0, 1], CLAMP));
 
   const bump = (tt: number, k: number) => {
     let b = 0;
-    for (const start of [PULSE_A, PULSE_B]) {
-      const local = (tt - start - k * BUMP_STEP) / BUMP;
+    for (const p of pulses) {
+      const local = (tt - p.start - k * p.beat("step")) / p.beat("bump");
       if (local > 0 && local < 1) b = Math.max(b, Math.sin(Math.PI * local));
     }
     return b;
@@ -218,7 +237,12 @@ export function EllipsisResolve({
     EASE_IO(
       interpolate(
         tt,
-        [resolveAt + (2 - k) * 2, resolveAt + (2 - k) * 2 + STRETCH_LEN - 4],
+        [
+          resolve.start + (2 - k) * resolve.beat("stagger"),
+          resolve.start +
+            (2 - k) * resolve.beat("stagger") +
+            resolve.beat("stretch"),
+        ],
         [0, 1],
         CLAMP,
       ),
@@ -242,13 +266,23 @@ export function EllipsisResolve({
   );
 
   const accentIn = EASE_OUT(
-    interpolate(t, [resolveAt + 4, resolveAt + STRETCH_LEN], [0, 1], CLAMP),
+    interpolate(
+      t,
+      [resolve.start + resolve.beat("accent"), resolve.end],
+      [0, 1],
+      CLAMP,
+    ),
   );
-  const landAt = sweepAt + sweepFrames;
-  const settle = interpolate(t, [landAt - 2, landAt + SETTLE], [0, 1], CLAMP);
+  const landAt = land.start;
+  const settle = interpolate(
+    t,
+    [landAt + land.beat("settleLead"), landAt + land.beat("settle")],
+    [0, 1],
+    CLAMP,
+  );
   const pop = 1 + 0.14 * Math.sin(Math.PI * EASE_OUT(settle));
   const pushAt = (tt: number) =>
-    interpolate(tt, [landAt, landAt + 40], [0, 1], {
+    interpolate(tt, [land.start, land.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -284,7 +318,12 @@ export function EllipsisResolve({
       H / 2,
     ];
     const accentAt = EASE_OUT(
-      interpolate(tt, [resolveAt + 4, resolveAt + STRETCH_LEN], [0, 1], CLAMP),
+      interpolate(
+        tt,
+        [resolve.start + resolve.beat("accent"), resolve.end],
+        [0, 1],
+        CLAMP,
+      ),
     );
     const dot3Cx = lerp(startCx(2), periodCx, st(tt, 2));
     const dot3: Dot = {
@@ -302,10 +341,15 @@ export function EllipsisResolve({
     // Sweep: the bar's left edge chases right and folds into the period.
     if (tt >= sweepAt) {
       const sweep = EASE_SWEEP(
-        interpolate(tt, [sweepAt, sweepAt + sweepFrames], [0, 1], CLAMP),
+        interpolate(tt, [sweepAt, sweepEl.end], [0, 1], CLAMP),
       );
       const closeGap = EASE_IO(
-        interpolate(tt, [sweepAt, sweepAt + 10], [0, 1], CLAMP),
+        interpolate(
+          tt,
+          [sweepAt, sweepAt + sweepEl.beat("closeGap")],
+          [0, 1],
+          CLAMP,
+        ),
       );
       const bar: Dot = {
         key: "bar",
@@ -394,7 +438,12 @@ export function EllipsisResolve({
         >
           {letters.map((l, i) => {
             const p = EASE_OUT(
-              interpolate(t, [crossAt[i], crossAt[i] + RISE], [0, 1], CLAMP),
+              interpolate(
+                t,
+                [crossAt[i], crossAt[i] + sweepEl.beat("rise")],
+                [0, 1],
+                CLAMP,
+              ),
             );
             if (p <= 0) return null;
             return (
