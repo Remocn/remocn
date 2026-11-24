@@ -7,6 +7,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_BARS,
+  type RadialBarsElementId,
+  radialBarsTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -45,6 +51,12 @@ export interface RadialBarsProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the dial, the camera, the bar sweep, the focus
+   * and the figure, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RadialBarsElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -104,7 +116,7 @@ function circDist(a: number, b: number, n: number) {
 }
 
 function makeDefaultValues() {
-  const n = 60;
+  const n = DEFAULT_BARS;
   return Array.from({ length: n }, (_, i) => {
     const main = Math.exp(-((circDist(i, 41, n) / 6.5) ** 2));
     const second = Math.exp(-((circDist(i, 18, n) / 5) ** 2));
@@ -185,27 +197,44 @@ function ScaleLayer({
   );
 }
 
-export function RadialBars({
-  values = DEFAULT_VALUES,
-  highlight,
-  value = "2.4M",
-  label = "renders in the peak hour",
-  ticks = ["00:00", "06:00", "12:00", "18:00"],
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  sweep = 54,
-  group = GROUP,
-  grain = true,
-  scale: size = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: RadialBarsProps) {
+export function RadialBars(props: RadialBarsProps) {
+  const {
+    values = DEFAULT_VALUES,
+    highlight,
+    value = "2.4M",
+    label = "renders in the peak hour",
+    ticks = ["00:00", "06:00", "12:00", "18:00"],
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    group = GROUP,
+    grain = true,
+    scale: size = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    radialBarsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const stageEl = tl.get("stage");
+  const spinEl = tl.get("spin");
+  const zoomEl = tl.get("zoom");
+  const ringEl = tl.get("ring");
+  const sweepEl = tl.get("sweep");
+  const ticksEl = tl.get("ticks");
+  const focusEl = tl.get("focus");
+  const bracketEl = tl.get("bracket");
+  const figureEl = tl.get("figure");
+  const captionEl = tl.get("caption");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -239,22 +268,21 @@ export function RadialBars({
   const Rmax = R0 + Lmax;
   const bw = Math.max(2, ((TAU * R0) / n) * 0.36);
 
-  const SWEEP = sweep;
-  const GROW = 22;
-  const START = 6;
-  const step = n > 1 ? SWEEP / (n - 1) : 0;
-  const HIT = START + SWEEP + GROW + 2;
+  const step = sweepEl.beat("step");
 
-  const stage = interpolate(t, [0, 10], [0, 1], CLAMP);
-  const base = interpolate(t, [0, 26], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const spin = interpolate(t, [0, HIT + 6], [-24, 0], {
+  const stage = interpolate(t, [stageEl.start, stageEl.end], [0, 1], CLAMP);
+  const base = interpolate(t, [ringEl.start, ringEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const spin = interpolate(t, [spinEl.start, spinEl.end], [-24, 0], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const scaleAt = (tt: number) =>
     0.955 +
     0.045 *
-      interpolate(tt, [0, HIT + 50], [0, 1], {
+      interpolate(tt, [zoomEl.start, zoomEl.end], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
@@ -264,27 +292,32 @@ export function RadialBars({
   const camMoving =
     Math.abs(scaleAt(t + speed) - scale) * (height / 2) > 1e-3 ||
     Math.abs(scale - scaleAt(t - speed)) * (height / 2) > 1e-3;
-  const focus = interpolate(t, [HIT, HIT + 16], [0, 1], {
+  const focus = interpolate(t, [focusEl.start, focusEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const bracket = interpolate(t, [HIT + 6, HIT + 24], [0, 1], {
+  const bracket = interpolate(t, [bracketEl.start, bracketEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const land = interpolate(t, [HIT + 6, HIT + 26], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const count = interpolate(t, [HIT + 6, HIT + 32], [0.6, 1], {
+  const land = interpolate(
+    t,
+    [figureEl.start, figureEl.start + figureEl.beat("land")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const count = interpolate(t, [figureEl.start, figureEl.end], [0.6, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
-  const labIn = interpolate(t, [HIT + 14, HIT + 32], [0, 1], {
+  const labIn = interpolate(t, [captionEl.start, captionEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const tickIn = interpolate(t, [10, 34], [0, 1], {
+  const tickIn = interpolate(t, [ticksEl.start, ticksEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -376,12 +409,22 @@ export function RadialBars({
                 opacity={0.7 * tickIn * (1 - 0.5 * focus)}
               />
               {list.map((v, i) => {
-                const s = START + i * step;
-                const k = interpolate(t, [s, s + GROW], [0, 1], {
-                  ...CLAMP,
-                  easing: EASE_GROW,
-                });
-                const vis = interpolate(t, [s - 2, s + 3], [0, 1], CLAMP);
+                const s = sweepEl.start + i * step;
+                const k = interpolate(
+                  t,
+                  [s, s + sweepEl.beat("grow")],
+                  [0, 1],
+                  {
+                    ...CLAMP,
+                    easing: EASE_GROW,
+                  },
+                );
+                const vis = interpolate(
+                  t,
+                  [s + sweepEl.beat("showFrom"), s + sweepEl.beat("show")],
+                  [0, 1],
+                  CLAMP,
+                );
                 if (vis <= 0) return null;
                 const hl = inGroup(i);
                 const len =

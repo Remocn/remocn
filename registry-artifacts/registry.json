@@ -13299,12 +13299,21 @@
       "title": "Radial Bars",
       "description": "A radial bar dial sweeps up to a peak while 2.4M renders per hour counts in the center.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/radial-bars/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/radial-bars.tsx"
+          "target": "components/remocn/radial-bars/index.tsx"
+        },
+        {
+          "path": "registry/remocn/radial-bars/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/radial-bars/timeline.ts"
         }
       ],
       "type": "registry:component"

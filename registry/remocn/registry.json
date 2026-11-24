@@ -13304,10 +13304,19 @@
         {
           "path": "radial-bars/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/radial-bars.tsx"
+          "target": "components/remocn/radial-bars/index.tsx"
+        },
+        {
+          "path": "radial-bars/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/radial-bars/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "radar-compare",
