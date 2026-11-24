@@ -12965,12 +12965,21 @@
       "title": "Transit Lines",
       "description": "Metro-map lines converge on a hub station that resolves into the logo as the next stop.",
       "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/transit-lines/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/transit-lines.tsx"
+          "target": "components/remocn/transit-lines/index.tsx"
+        },
+        {
+          "path": "registry/remocn/transit-lines/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/transit-lines/timeline.ts"
         }
       ],
       "type": "registry:component"

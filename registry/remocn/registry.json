@@ -12970,10 +12970,19 @@
         {
           "path": "transit-lines/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/transit-lines.tsx"
+          "target": "components/remocn/transit-lines/index.tsx"
+        },
+        {
+          "path": "transit-lines/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/transit-lines/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "slope-chart",
