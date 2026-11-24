@@ -3574,10 +3574,19 @@
         {
           "path": "echo-stack/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/echo-stack.tsx"
+          "target": "components/remocn/echo-stack/index.tsx"
+        },
+        {
+          "path": "echo-stack/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/echo-stack/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "type-wall",

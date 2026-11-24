@@ -5,6 +5,14 @@ import { useId } from "react";
 import { Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type EchoStackElementId,
+  echoStackTimeline,
+  FADE_IN,
+  MAIN,
+  UNFOLD,
+} from "./timeline";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -27,6 +35,11 @@ export interface EchoStackProps {
   cycle?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the main word and the echoes unfolding, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<EchoStackElementId>;
 }
 
 export const echoStackDefaults = {
@@ -42,7 +55,7 @@ export const echoStackDefaults = {
   direction: "up",
   cycle: 60,
   speed: 1,
-} satisfies Required<Omit<EchoStackProps, "className">>;
+} satisfies Required<Omit<EchoStackProps, "className" | "timing">>;
 
 /** Frame where the entrance has finished; the drift keeps running after it. */
 export const echoStackLength = 26;
@@ -52,9 +65,6 @@ export const echoStackPitch = 1.05;
 
 /** Echoes closer to the center than this, in pitches, hide behind the word. */
 const HIDDEN = 0.55;
-const MAIN = [0, 14] as const;
-const UNFOLD = [8, 26] as const;
-const FADE_IN = [8, 24] as const;
 const START_SPREAD = 0.6;
 const MAX_BLUR = 12;
 
@@ -84,9 +94,12 @@ export function getEchoStackTime(
   return (Math.max(0, finite(frame, 0)) * 30 * speed) / fps;
 }
 
-/** The main word focusing in. Blur is in reference px. */
-export function getEchoStackMain(t: number) {
-  const k = interpolate(t, [...MAIN], [0, 1], {
+/** A span of frames on the scene timeline. */
+type Span = readonly [number, number];
+
+/** The main word focusing in over `span`. Blur is in reference px. */
+export function getEchoStackMain(t: number, span: Span = MAIN) {
+  const k = interpolate(t, [...span], [0, 1], {
     ...CLAMP,
     easing: easeOutCubic,
   });
@@ -117,6 +130,10 @@ export function getEchoStackRows(
     echoOpacity?: number;
     cycle?: number;
     direction?: EchoStackDirection;
+    /** Frames the echoes spread out over. */
+    unfold?: Span;
+    /** Frames the echoes fade in over. */
+    fadeIn?: Span;
   } = {},
 ): EchoStackRow[] {
   const echoes = Math.max(0, Math.round(finite(options.echoes, 3)));
@@ -124,11 +141,16 @@ export function getEchoStackRows(
   const cycle = Math.max(1, finite(options.cycle, 60));
   const sign = options.direction === "down" ? 1 : -1;
   const phase = sign * ((t / cycle) % 1);
-  const spread = interpolate(t, [...UNFOLD], [START_SPREAD, 1], {
-    ...CLAMP,
-    easing: easeOutCubic,
-  });
-  const fadeIn = interpolate(t, [...FADE_IN], [0, 1], {
+  const spread = interpolate(
+    t,
+    [...(options.unfold ?? UNFOLD)],
+    [START_SPREAD, 1],
+    {
+      ...CLAMP,
+      easing: easeOutCubic,
+    },
+  );
+  const fadeIn = interpolate(t, [...(options.fadeIn ?? FADE_IN)], [0, 1], {
     ...CLAMP,
     easing: easeOutCubic,
   });
@@ -143,29 +165,46 @@ export function getEchoStackRows(
   return rows;
 }
 
-export function EchoStack({
-  text = echoStackDefaults.text,
-  fontSize = echoStackDefaults.fontSize,
-  fontWeight = echoStackDefaults.fontWeight,
-  fontFamily = echoStackDefaults.fontFamily,
-  color = echoStackDefaults.color,
-  echoColor = echoStackDefaults.echoColor,
-  echoes = echoStackDefaults.echoes,
-  echoOpacity = echoStackDefaults.echoOpacity,
-  strokeWidth = echoStackDefaults.strokeWidth,
-  direction = echoStackDefaults.direction,
-  cycle = echoStackDefaults.cycle,
-  speed = echoStackDefaults.speed,
-  className,
-}: EchoStackProps) {
+export function EchoStack(props: EchoStackProps) {
+  const {
+    text = echoStackDefaults.text,
+    fontSize = echoStackDefaults.fontSize,
+    fontWeight = echoStackDefaults.fontWeight,
+    fontFamily = echoStackDefaults.fontFamily,
+    color = echoStackDefaults.color,
+    echoColor = echoStackDefaults.echoColor,
+    echoes = echoStackDefaults.echoes,
+    echoOpacity = echoStackDefaults.echoOpacity,
+    strokeWidth = echoStackDefaults.strokeWidth,
+    direction = echoStackDefaults.direction,
+    cycle = echoStackDefaults.cycle,
+    speed = echoStackDefaults.speed,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { fps, height } = useSceneConfig();
+  const { fps, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    echoStackTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const mainEl = tl.get("main");
+  const echoesEl = tl.get("echoes");
   const unit = height / 720;
   const size = fontSize * unit;
   const t = getEchoStackTime(frame, { fps, speed });
-  const main = getEchoStackMain(t);
-  const rows = getEchoStackRows(t, { echoes, echoOpacity, cycle, direction });
+  const main = getEchoStackMain(t, [mainEl.start, mainEl.end]);
+  const rows = getEchoStackRows(t, {
+    echoes,
+    echoOpacity,
+    cycle,
+    direction,
+    unfold: [echoesEl.start, echoesEl.end],
+    fadeIn: [echoesEl.start, echoesEl.start + echoesEl.beat("fade")],
+  });
   const pitch = echoStackPitch * size;
   const outlineId = `echo-stack-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
