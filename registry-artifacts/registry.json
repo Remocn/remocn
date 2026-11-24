@@ -9258,12 +9258,21 @@
       "title": "Diff Swap",
       "description": "A before line is diffed into the after line, ending 'Install the scene. Edit the props.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/diff-swap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/diff-swap.tsx"
+          "target": "components/remocn/diff-swap/index.tsx"
+        },
+        {
+          "path": "registry/remocn/diff-swap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/diff-swap/timeline.ts"
         }
       ],
       "type": "registry:component"

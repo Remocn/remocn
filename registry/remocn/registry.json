@@ -9263,10 +9263,19 @@
         {
           "path": "diff-swap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/diff-swap.tsx"
+          "target": "components/remocn/diff-swap/index.tsx"
+        },
+        {
+          "path": "diff-swap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/diff-swap/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "heat-trace",
