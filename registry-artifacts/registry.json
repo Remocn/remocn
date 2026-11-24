@@ -9742,12 +9742,21 @@
       "title": "Stat Inline",
       "description": "A key number inside a sentence is highlighted: 'Builders shipped 12,480 launch videos this year.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/stat-inline/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/stat-inline.tsx"
+          "target": "components/remocn/stat-inline/index.tsx"
+        },
+        {
+          "path": "registry/remocn/stat-inline/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/stat-inline/timeline.ts"
         }
       ],
       "type": "registry:component"

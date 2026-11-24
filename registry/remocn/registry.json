@@ -9747,10 +9747,19 @@
         {
           "path": "stat-inline/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/stat-inline.tsx"
+          "target": "components/remocn/stat-inline/index.tsx"
+        },
+        {
+          "path": "stat-inline/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/stat-inline/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "launch-days",

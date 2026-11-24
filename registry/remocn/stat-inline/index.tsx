@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_VALUE,
+  type StatInlineElementId,
+  statInlineTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["400", "500"],
@@ -41,6 +47,12 @@ export interface StatInlineProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the ground, the number's characters, the
+   * label, the flight into the sentence and the sentence's words, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<StatInlineElementId>;
 }
 
 const MESH = ["#ecdcf2", "#8796ee", "#2e45b7", "#0e1645"] as const;
@@ -237,22 +249,22 @@ function ScaleLayer({
   );
 }
 
-export function StatInline({
-  value = "12,480",
-  text = "Builders shipped {value} launch videos with remocn this year.",
-  label = "Launch videos shipped",
-  align = "left",
-  hold = 52,
-  moveDuration = 28,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: StatInlineProps) {
+export function StatInline(props: StatInlineProps) {
+  const {
+    value = DEFAULT_VALUE,
+    text = "Builders shipped {value} launch videos with remocn this year.",
+    label = "Launch videos shipped",
+    align = "left",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const now = useSceneFrame();
   const at = (f: number) => Math.max(0, f - delay) * speed;
   const frame = at(now);
@@ -265,7 +277,18 @@ export function StatInline({
       Math.abs(here - travel(at(now - 1))) > 1e-3
     );
   };
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    statInlineTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const groundEl = tl.get("ground");
+  const driftEl = tl.get("drift");
+  const labelEl = tl.get("label");
+  const moveEl = tl.get("move");
+  const wordsEl = tl.get("words");
   const t = THEMES[theme];
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
@@ -322,9 +345,7 @@ export function StatInline({
   const heroBase = H / 2 + (0.72 * heroFs) / 2 - (label ? labelGap : 0) / 2;
   const heroX = (W - m.valueW * heroFs) / 2;
 
-  const MOVE = hold;
-  const MOVE_LEN = moveDuration;
-  const mv = interpolate(frame, [MOVE, MOVE + MOVE_LEN], [0, 1], {
+  const mv = interpolate(frame, [moveEl.start, moveEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -341,7 +362,7 @@ export function StatInline({
   // The number flies into its slot by the group's translate and scale, which
   // carry text too, so the drawing leans for as long as either moves.
   const flight = (f: number) => {
-    const p = interpolate(f, [MOVE, MOVE + MOVE_LEN], [0, 1], {
+    const p = interpolate(f, [moveEl.start, moveEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -356,22 +377,32 @@ export function StatInline({
     flight(f).some((v, i) => Math.abs(v - flightNow[i]) > 1e-3),
   );
 
-  const glyphRise = (i: number, f = frame) =>
-    interpolate(f, [i * 2, i * 2 + 20], [1, 0], {
+  const glyphRise = (i: number, f = frame) => {
+    const e = tl.get(`glyph:${i}`);
+    return interpolate(f, [e.start, e.end], [1, 0], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
 
   const labelAt = (f: number) =>
-    interpolate(f, [12, 28], [0, 1], {
+    interpolate(f, [labelEl.start, labelEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
   const labelIn = labelAt(frame);
-  const labelOut = interpolate(frame, [MOVE - 2, MOVE + 8], [1, 0], {
-    ...CLAMP,
-    easing: Easing.bezier(0.55, 0, 1, 0.45),
-  });
+  const labelOut = interpolate(
+    frame,
+    [
+      moveEl.start + moveEl.beat("labelOutAt"),
+      moveEl.start + moveEl.beat("labelOut"),
+    ],
+    [1, 0],
+    {
+      ...CLAMP,
+      easing: Easing.bezier(0.55, 0, 1, 0.45),
+    },
+  );
 
   const orderOf = (i: number) => {
     const p = placed[i];
@@ -380,19 +411,19 @@ export function StatInline({
     return dRow * 1.5 + dx;
   };
   const wordRise = (i: number, f = frame) => {
-    const s = MOVE + 17 + orderOf(i) * 2.5;
-    return interpolate(f, [s, s + 18], [1, 0], {
+    const s = wordsEl.start + orderOf(i) * wordsEl.beat("order");
+    return interpolate(f, [s, s + wordsEl.length], [1, 0], {
       ...CLAMP,
       easing: EASE_OUT,
     });
   };
 
-  const groundIn = interpolate(frame, [0, 30], [0, 1], {
+  const groundIn = interpolate(frame, [groundEl.start, groundEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const groundSettle = 1 - 0.45 * mv;
-  const drift = interpolate(frame, [0, 130], [0, 1], CLAMP);
+  const drift = interpolate(frame, [driftEl.start, driftEl.end], [0, 1], CLAMP);
   const ground = [
     `radial-gradient(60% 55% at ${30 + drift * 6}% ${108 - drift * 4}%, color-mix(in oklab, ${MESH[2]} 70%, transparent) 0%, transparent 70%)`,
     `radial-gradient(45% 40% at ${78 - drift * 5}% ${100 - drift * 3}%, color-mix(in oklab, ${MESH[1]} 45%, transparent) 0%, transparent 72%)`,
