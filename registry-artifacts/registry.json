@@ -8531,12 +8531,21 @@
       "title": "Wake Wipe",
       "description": "A wake-like wipe reveals 'Ship the launch video today.' with a gradient accent word.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/wake-wipe/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/wake-wipe.tsx"
+          "target": "components/remocn/wake-wipe/index.tsx"
+        },
+        {
+          "path": "registry/remocn/wake-wipe/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/wake-wipe/timeline.ts"
         }
       ],
       "type": "registry:component"

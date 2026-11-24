@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  type WakeWipeElementId,
+  wakeWipeTimeline,
+} from "./timeline";
 
 const figtree = loadFigtree("normal", {
   weights: ["400", "500"],
@@ -43,6 +49,11 @@ export interface WakeWipeProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches each line's wake and the eyebrow, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WakeWipeElementId>;
 }
 
 const THEMES = {
@@ -65,9 +76,6 @@ const THEMES = {
 } as const;
 
 const TRACK = -0.035;
-const START = 4;
-const WAKE_LEN = 28;
-const REVEAL_LEN = 18;
 const REVEAL_TAIL = 0.32;
 const TAIL = 0.5;
 
@@ -165,30 +173,33 @@ function ScaleLayer({
   );
 }
 
-export function WakeWipe({
-  lines = [
-    "Animations you own.",
-    "Transitions that land.",
-    "Ship the launch video today.",
-  ],
-  highlight = "today.",
-  eyebrow = "Inside remocn",
-  hold = 54,
-  wake = WAKE_LEN,
-  fontWeight = 500,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = figtree.fontFamily,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: WakeWipeProps) {
+export function WakeWipe(props: WakeWipeProps) {
+  const {
+    lines = DEFAULT_LINES,
+    highlight = "today.",
+    eyebrow = "Inside remocn",
+    fontWeight = 500,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = figtree.fontFamily,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    wakeWipeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const eyebrowEl = tl.get("eyebrow");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
@@ -245,32 +256,34 @@ export function WakeWipe({
     );
 
   const last = items.length - 1;
-  const startOf = (k: number) => START + k * hold;
+  const wakeOf = (k: number) => tl.get(`wake:${k}`);
   const rRest = Math.max(
     W * 1.06 - cx,
     last > 0 ? far(last - 1) + W * 0.03 : 0,
   );
   const frontAt = (k: number, time: number) => {
     const end = k === last ? rRest : r1;
-    const p = interpolate(time, [startOf(k), startOf(k) + wake], [0, 1], {
+    const e = wakeOf(k);
+    const p = interpolate(time, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_WAKE,
     });
     const breathe =
-      k === last ? Math.sin((time - startOf(k)) / 22) * W * 0.006 * p : 0;
+      k === last ? Math.sin((time - e.start) / 22) * W * 0.006 * p : 0;
     return r0 + (end - r0) * p + breathe;
   };
   const erasedAt = (k: number) => {
-    if (k === 0) return startOf(0);
+    const e = wakeOf(k);
+    if (k === 0) return e.start;
     const target = far(k - 1);
-    for (let s = 0; s <= wake; s += 0.25)
-      if (frontAt(k, startOf(k) + s) >= target) return startOf(k) + s;
-    return startOf(k) + wake;
+    for (let s = 0; s <= e.length; s += 0.25)
+      if (frontAt(k, e.start + s) >= target) return e.start + s;
+    return e.end;
   };
   const revealAt = (k: number, time: number) => {
     const t0 = erasedAt(k);
     if (time < t0) return 0;
-    const p = interpolate(time, [t0, t0 + REVEAL_LEN], [0, 1], {
+    const p = interpolate(time, [t0, t0 + wakeOf(k).beat("reveal")], [0, 1], {
       ...CLAMP,
       easing: EASE_REVEAL,
     });
@@ -279,7 +292,7 @@ export function WakeWipe({
   };
 
   let k = 0;
-  for (let i = 0; i < items.length; i++) if (t >= startOf(i)) k = i;
+  for (let i = 0; i < items.length; i++) if (t >= wakeOf(i).start) k = i;
   const R = frontAt(k, t);
   const R2 = revealAt(k, t);
   const at = `circle farthest-corner at ${cx.toFixed(1)}px ${cy.toFixed(1)}px`;
@@ -305,11 +318,20 @@ export function WakeWipe({
     textWrap: "balance",
   };
 
-  const revealEnd = erasedAt(last) + REVEAL_LEN;
-  const settled = interpolate(t, [revealEnd - 4, revealEnd + 8], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const lastWake = wakeOf(last);
+  const revealEnd = erasedAt(last) + lastWake.beat("reveal");
+  const settled = interpolate(
+    t,
+    [
+      revealEnd + lastWake.beat("settleFrom"),
+      revealEnd + lastWake.beat("settleTo"),
+    ],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const finalFill = `linear-gradient(100deg, ${c.edge[1]} 0%, ${c.edge[2]} 45%, ${deep} 100%)`;
 
   type Mode = "ink" | "lit" | "final";
@@ -350,7 +372,7 @@ export function WakeWipe({
     </div>
   );
 
-  const eyebrowP = interpolate(t, [START + 8, START + 26], [0, 1], {
+  const eyebrowP = interpolate(t, [eyebrowEl.start, eyebrowEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

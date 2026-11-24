@@ -8536,10 +8536,19 @@
         {
           "path": "wake-wipe/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/wake-wipe.tsx"
+          "target": "components/remocn/wake-wipe/index.tsx"
+        },
+        {
+          "path": "wake-wipe/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/wake-wipe/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "comet-headline",
