@@ -8346,13 +8346,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "shot-answers/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/shot-answers.tsx"
+          "target": "components/remocn/shot-answers/index.tsx"
+        },
+        {
+          "path": "shot-answers/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/shot-answers/timeline.ts"
         }
       ]
     },
