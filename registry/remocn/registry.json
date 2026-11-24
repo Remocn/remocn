@@ -12819,10 +12819,19 @@
         {
           "path": "tagline-justify/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/tagline-justify.tsx"
+          "target": "components/remocn/tagline-justify/index.tsx"
+        },
+        {
+          "path": "tagline-justify/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/tagline-justify/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "shape-cut",

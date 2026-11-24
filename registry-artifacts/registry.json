@@ -12814,12 +12814,21 @@
       "title": "Tagline Justify",
       "description": "A tagline sets itself into a justified column with an italic gradient word.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/tagline-justify/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/tagline-justify.tsx"
+          "target": "components/remocn/tagline-justify/index.tsx"
+        },
+        {
+          "path": "registry/remocn/tagline-justify/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/tagline-justify/timeline.ts"
         }
       ],
       "type": "registry:component"
