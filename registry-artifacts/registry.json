@@ -15572,13 +15572,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/video-call/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/video-call.tsx"
+          "target": "components/remocn/video-call/index.tsx"
+        },
+        {
+          "path": "registry/remocn/video-call/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/video-call/timeline.ts"
         }
       ],
       "type": "registry:component"
