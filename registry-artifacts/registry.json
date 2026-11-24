@@ -10236,12 +10236,21 @@
       "title": "Macro Pan",
       "description": "A serif headline is revealed by a close-up pan across its glyphs, ending on a gradient.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/macro-pan/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/macro-pan.tsx"
+          "target": "components/remocn/macro-pan/index.tsx"
+        },
+        {
+          "path": "registry/remocn/macro-pan/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/macro-pan/timeline.ts"
         }
       ],
       "type": "registry:component"
