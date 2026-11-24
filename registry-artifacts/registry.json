@@ -11585,12 +11585,21 @@
       "title": "Column Reflow",
       "description": "A justified paragraph reflows its column width, redistributing lines with even word spacing.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/column-reflow/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/column-reflow.tsx"
+          "target": "components/remocn/column-reflow/index.tsx"
+        },
+        {
+          "path": "registry/remocn/column-reflow/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/column-reflow/timeline.ts"
         }
       ],
       "type": "registry:component"

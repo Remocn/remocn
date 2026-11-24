@@ -11590,10 +11590,19 @@
         {
           "path": "column-reflow/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/column-reflow.tsx"
+          "target": "components/remocn/column-reflow/index.tsx"
+        },
+        {
+          "path": "column-reflow/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/column-reflow/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "word-insert",
