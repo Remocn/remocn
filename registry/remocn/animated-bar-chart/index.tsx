@@ -2,6 +2,12 @@
 
 import { spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AnimatedBarChartElementId,
+  animatedBarChartTimeline,
+  DEFAULT_DATA,
+} from "./timeline";
 
 export interface AnimatedBarChartProps {
   data?: number[];
@@ -13,21 +19,33 @@ export interface AnimatedBarChartProps {
   staggerFrames?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single bars, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<AnimatedBarChartElementId>;
 }
 
-export function AnimatedBarChart({
-  data = [35, 60, 45, 80, 55, 70, 90, 65],
-  labels,
-  width = 1000,
-  height = 500,
-  barColor = "#0ea5e9",
-  gap = 16,
-  staggerFrames = 6,
-  speed = 1,
-  className,
-}: AnimatedBarChartProps) {
+export function AnimatedBarChart(props: AnimatedBarChartProps) {
+  const {
+    data = DEFAULT_DATA,
+    labels,
+    width = 1000,
+    height = 500,
+    barColor = "#0ea5e9",
+    gap = 16,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
-  const { fps } = useSceneConfig();
+  const { fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    animatedBarChartTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
   const padding = 60;
   const labelSpace = labels ? 40 : 0;
@@ -67,7 +85,7 @@ export function AnimatedBarChart({
           const y = baseY - targetHeight;
 
           const scaleY = spring({
-            frame: frame - index * staggerFrames,
+            frame: frame - tl.get(`bar:${index}`).start,
             fps,
             config: { damping: 12, stiffness: 100, mass: 0.8 },
             from: 0,

@@ -2251,12 +2251,17 @@
       "title": "Animated Bar Chart",
       "description": "Bars spring up from the baseline in a staggered cascade.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/animated-bar-chart/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/animated-bar-chart.tsx"
+          "target": "components/remocn/animated-bar-chart/index.tsx"
+        },
+        {
+          "path": "registry/remocn/animated-bar-chart/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/animated-bar-chart/timeline.ts"
         }
       ],
       "type": "registry:component"
