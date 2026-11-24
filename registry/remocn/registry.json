@@ -15899,13 +15899,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "ai-answer-sources/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ai-answer-sources.tsx"
+          "target": "components/remocn/ai-answer-sources/index.tsx"
+        },
+        {
+          "path": "ai-answer-sources/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ai-answer-sources/timeline.ts"
         }
       ]
     },
