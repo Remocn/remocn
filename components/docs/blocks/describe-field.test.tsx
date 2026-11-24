@@ -136,6 +136,24 @@ describe("describe field", () => {
     );
   });
 
+  test("the dock folds into a pill, stays folded on the next page, and unfolds", async () => {
+    localStorage.clear();
+    const { unmount } = render(<Harness post={reply({})} />);
+    await userEvent.click(screen.getByRole("button", { name: "Hide" }));
+    expect(screen.queryByLabelText("Describe")).toBeNull();
+    const pill = screen.getByRole("button", { name: "Describe" });
+    expect(document.activeElement).toBe(pill);
+    expect(localStorage.getItem("remocn:describe-hidden")).toBe("1");
+
+    unmount();
+    render(<Harness post={reply({})} />);
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Describe" }),
+    );
+    expect(document.activeElement).toBe(screen.getByLabelText("Describe"));
+    expect(localStorage.getItem("remocn:describe-hidden")).toBeNull();
+  });
+
   test("an off-topic request changes nothing and says what the field is for", async () => {
     render(<Harness post={reply({ ai: "rejected" })} />);
     await userEvent.type(
