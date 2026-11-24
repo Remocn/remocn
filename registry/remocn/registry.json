@@ -13776,10 +13776,19 @@
         {
           "path": "contribution-heatmap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/contribution-heatmap.tsx"
+          "target": "components/remocn/contribution-heatmap/index.tsx"
+        },
+        {
+          "path": "contribution-heatmap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/contribution-heatmap/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "distribution-shift",

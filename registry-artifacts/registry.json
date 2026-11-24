@@ -13771,12 +13771,21 @@
       "title": "Contribution Heatmap",
       "description": "A pixel heatmap fills in under a counter rolling up to 12,480 renders.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/contribution-heatmap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/contribution-heatmap.tsx"
+          "target": "components/remocn/contribution-heatmap/index.tsx"
+        },
+        {
+          "path": "registry/remocn/contribution-heatmap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/contribution-heatmap/timeline.ts"
         }
       ],
       "type": "registry:component"

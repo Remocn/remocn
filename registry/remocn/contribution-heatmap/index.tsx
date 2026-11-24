@@ -6,6 +6,11 @@ import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ContributionHeatmapElementId,
+  contributionHeatmapTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -39,6 +44,12 @@ export interface ContributionHeatmapProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the grid, the camera, the axis, the sweep, the
+   * total and its label, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ContributionHeatmapElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -95,10 +106,6 @@ const MONTHS = [
   "Dec",
 ];
 const DAYS = ["", "Mon", "", "Wed", "", "Fri", ""];
-
-const SWEEP = [4, 50] as const;
-const CELL_IN = 10;
-const HIT = 62;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
@@ -177,25 +184,41 @@ function ScaleLayer({
   );
 }
 
-export function ContributionHeatmap({
-  value = 12480,
-  label = "renders this year",
-  weeks = 52,
-  accent = "#3B5BFD",
-  fontWeight = 400,
-  radius: roundness = 0.26,
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: ContributionHeatmapProps) {
+export function ContributionHeatmap(props: ContributionHeatmapProps) {
+  const {
+    value = 12480,
+    label = "renders this year",
+    weeks = 52,
+    accent = "#3B5BFD",
+    fontWeight = 400,
+    radius: roundness = 0.26,
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    contributionHeatmapTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const stageEl = tl.get("stage");
+  const zoomEl = tl.get("zoom");
+  const driftEl = tl.get("drift");
+  const axisEl = tl.get("axis");
+  const sweep = tl.get("sweep");
+  const settleEl = tl.get("settle");
+  const total = tl.get("total");
+  const labelEl = tl.get("label");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -217,18 +240,18 @@ export function ContributionHeatmap({
   const diag = 2.4;
   const span = cols + 6 * diag;
   const startOf = (c: number, r: number) =>
-    SWEEP[0] + ((c + r * diag) / span) * (SWEEP[1] - SWEEP[0]);
+    sweep.start + ((c + r * diag) / span) * sweep.beat("spread");
 
-  const stage = interpolate(t, [0, 8], [0.45, 1], CLAMP);
-  const settle = interpolate(t, [HIT - 4, HIT + 22], [0, 1], {
+  const stage = interpolate(t, [stageEl.start, stageEl.end], [0.45, 1], CLAMP);
+  const settle = interpolate(t, [settleEl.start, settleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const drift = interpolate(t, [0, HIT + 60], [0, 1], {
+  const drift = interpolate(t, [driftEl.start, driftEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const zoom = interpolate(t, [0, HIT - 2], [1.12, 1], {
+  const zoom = interpolate(t, [zoomEl.start, zoomEl.end], [1.12, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -237,18 +260,31 @@ export function ContributionHeatmap({
   const gridOpacity = 1 - p.dim * settle;
   const gridBlur = 0.9 * u * settle;
   const axisO =
-    interpolate(t, [2, 14], [0, 1], { ...CLAMP, easing: EASE_OUT }) *
-    interpolate(t, [HIT - 4, HIT + 6], [1, 0], CLAMP);
+    interpolate(t, [axisEl.start, axisEl.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    }) *
+    interpolate(
+      t,
+      [settleEl.start, settleEl.start + settleEl.beat("axisOut")],
+      [1, 0],
+      CLAMP,
+    );
 
-  const land = interpolate(t, [HIT + 6, HIT + 26], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const count = interpolate(t, [HIT + 6, HIT + 34], [0.8, 1], {
+  const land = interpolate(
+    t,
+    [total.start, total.start + total.beat("land")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const count = interpolate(t, [total.start, total.end], [0.8, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
-  const labIn = interpolate(t, [HIT + 14, HIT + 32], [0, 1], {
+  const labIn = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -259,9 +295,14 @@ export function ContributionHeatmap({
     for (let r = 0; r < 7; r++) {
       const lv = levelOf(c, r, cols);
       const s0 = startOf(c, r);
-      const k = interpolate(t, [s0, s0 + CELL_IN], [0, 1], CLAMP);
+      const k = interpolate(t, [s0, s0 + sweep.beat("cell")], [0, 1], CLAMP);
       const pop = EASE_POP(k);
-      const flash = interpolate(t - s0, [0, 3, 13], [0, 1, 0], CLAMP);
+      const flash = interpolate(
+        t - s0,
+        [0, sweep.beat("flashPeak"), sweep.beat("flash")],
+        [0, 1, 0],
+        CLAMP,
+      );
       const x = gx + c * pitch;
       const y = gy + r * pitch;
       const sz = cell * (0.66 + 0.34 * pop);
@@ -355,10 +396,18 @@ export function ContributionHeatmap({
           </svg>
           {MONTHS.map((m, i) => {
             const c = Math.round((i * cols) / 12);
-            const a = interpolate(t, [2 + i * 1.5, 14 + i * 1.5], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
+            const a = interpolate(
+              t,
+              [
+                axisEl.start + i * axisEl.beat("stagger"),
+                axisEl.end + i * axisEl.beat("stagger"),
+              ],
+              [0, 1],
+              {
+                ...CLAMP,
+                easing: EASE_OUT,
+              },
+            );
             return (
               <div
                 key={m}
