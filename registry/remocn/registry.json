@@ -3692,12 +3692,17 @@
       "title": "Squiggle",
       "description": "A flat line draws itself along a straight course as a traveling wave whose crests swim forward and calm down as the head runs out, in wave, zigzag, loop or coil shapes, then erases toward its end point.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "squiggle/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/squiggle.tsx"
+          "target": "components/remocn/squiggle/index.tsx"
+        },
+        {
+          "path": "squiggle/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/squiggle/timeline.ts"
         }
       ]
     },
