@@ -15913,12 +15913,17 @@
       "title": "Redline Measure",
       "description": "Spacing and size redlines draw over a UI one by one: ticks snap in, the line grows from its middle and the value pops on.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/audit-core"],
+      "registryDependencies": ["@remocn/audit-core", "@remocn/timeline"],
       "files": [
         {
           "path": "redline-measure/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/redline-measure.tsx"
+          "target": "components/remocn/redline-measure/index.tsx"
+        },
+        {
+          "path": "redline-measure/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/redline-measure/timeline.ts"
         }
       ]
     },
