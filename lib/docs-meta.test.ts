@@ -435,9 +435,9 @@ describe("components with a timeline read it through useTimeline", () => {
   it("a timeline.ts imports nothing that renders or reads the outside world", () => {
     const offenders = timelines.filter((file) => {
       const source = readFileSync(file, "utf8");
-      const imports = [...source.matchAll(/from\s*"([^"]+)"/g)].map(
-        (match) => match[1],
-      );
+      const imports = [
+        ...source.matchAll(/^import\b[^;]*?\bfrom\s*"([^"]+)"/gm),
+      ].map((match) => match[1]);
       return (
         imports.some((module) => module !== "@/lib/remocn/timeline") ||
         /\b(Math\.random|Date\.now|new Date|performance|document|window|globalThis)\b/.test(

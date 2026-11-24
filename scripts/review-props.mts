@@ -54,7 +54,9 @@ mkdirSync(out, { recursive: true });
 function registrySubset(): string {
   const index = readFileSync(path.join(root, "registry/__index__.tsx"), "utf8");
   const entries = names.map((name) => {
-    const start = index.indexOf(`\n  ${JSON.stringify(name)}: {\n`);
+    // A key that is a plain identifier is written without quotes.
+    const quoted = index.indexOf(`\n  ${JSON.stringify(name)}: {\n`);
+    const start = quoted === -1 ? index.indexOf(`\n  ${name}: {\n`) : quoted;
     if (start === -1) throw new Error(`No preview named "${name}"`);
     const end = index.indexOf("\n  },\n", start);
     return index.slice(start + 1, end + 5);
