@@ -2,6 +2,8 @@
 
 import { random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type MatrixDecodeElementId, matrixDecodeTimeline } from "./timeline";
 
 export interface MatrixDecodeProps {
   text: string;
@@ -12,28 +14,38 @@ export interface MatrixDecodeProps {
   revealDuration?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single letters, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<MatrixDecodeElementId>;
 }
 
-export function MatrixDecode({
-  text,
-  charset = "!@#$%^&*()_+-=<>?/\\|",
-  fontSize = 72,
-  color = "#22c55e",
-  fontWeight = 600,
-  revealDuration = 60,
-  speed = 1,
-  className,
-}: MatrixDecodeProps) {
+export function MatrixDecode(props: MatrixDecodeProps) {
+  const {
+    text,
+    charset = "!@#$%^&*()_+-=<>?/\\|",
+    fontSize = 72,
+    color = "#22c55e",
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
-  // useVideoConfig kept for consistency with sibling primitives
-  useSceneConfig();
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    matrixDecodeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
   let output = "";
   for (let i = 0; i < text.length; i++) {
-    const revealFrame = (i / Math.max(text.length, 1)) * revealDuration;
     if (text[i] === " ") {
       output += " ";
-    } else if (frame >= revealFrame) {
+    } else if (frame >= tl.get(`char:${i}`).start) {
       output += text[i];
     } else {
       const r = random(`${i}-${Math.floor(frame / 2)}`);

@@ -897,12 +897,17 @@
       "title": "Matrix Decode",
       "description": "Random scramble resolves left-to-right into the target text.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "matrix-decode/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/matrix-decode.tsx"
+          "target": "components/remocn/matrix-decode/index.tsx"
+        },
+        {
+          "path": "matrix-decode/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/matrix-decode/timeline.ts"
         }
       ]
     },
