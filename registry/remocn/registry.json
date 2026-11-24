@@ -12237,10 +12237,19 @@
         {
           "path": "bracket-index/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bracket-index.tsx"
+          "target": "components/remocn/bracket-index/index.tsx"
+        },
+        {
+          "path": "bracket-index/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bracket-index/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "select-replace",

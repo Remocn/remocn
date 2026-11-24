@@ -12232,12 +12232,21 @@
       "title": "Bracket Index",
       "description": "Indexed bracket labels step through words before the brackets close around the product name.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/bracket-index/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bracket-index.tsx"
+          "target": "components/remocn/bracket-index/index.tsx"
+        },
+        {
+          "path": "registry/remocn/bracket-index/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bracket-index/timeline.ts"
         }
       ],
       "type": "registry:component"
