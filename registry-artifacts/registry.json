@@ -9926,12 +9926,21 @@
       "title": "Rep Stack",
       "description": "One caps word is repeated in a stack of outlines and fills, with a blue accent period.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/rep-stack/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/rep-stack.tsx"
+          "target": "components/remocn/rep-stack/index.tsx"
+        },
+        {
+          "path": "registry/remocn/rep-stack/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/rep-stack/timeline.ts"
         }
       ],
       "type": "registry:component"
