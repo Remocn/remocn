@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_HEADS,
+  type FactorOutElementId,
+  factorOutTimeline,
+} from "./timeline";
 
 const rubik = loadFont("normal", {
   weights: ["400", "500"],
@@ -37,6 +43,12 @@ export interface FactorOutProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches each line, its tail lighting up, the tails
+   * aligning, each merge and the final lift, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FactorOutElementId>;
 }
 
 const THEMES = {
@@ -44,7 +56,6 @@ const THEMES = {
   light: { bg: "#F3EEF5", ink: "#2A1033", accent: "#2B7BD6" },
 } as const;
 
-const DEFAULT_HEADS = ["Write the scenes", "Pick the colors", "Fix the typos"];
 const DEFAULT_TAIL = "in your editor.";
 
 const WGHT = 500;
@@ -116,20 +127,21 @@ function ScaleLayer({
   );
 }
 
-export function FactorOut({
-  heads = DEFAULT_HEADS,
-  tail = DEFAULT_TAIL,
-  accent,
-  ink,
-  background,
-  fontFamily = rubik.fontFamily,
-  fontWeight = WGHT,
-  stagger = 8,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: FactorOutProps) {
+export function FactorOut(props: FactorOutProps) {
+  const {
+    heads = DEFAULT_HEADS,
+    tail = DEFAULT_TAIL,
+    accent,
+    ink,
+    background,
+    fontFamily = rubik.fontFamily,
+    fontWeight = WGHT,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const now = useSceneFrame();
   const tAt = (f: number) => Math.max(0, f - delay) * speed;
@@ -143,6 +155,12 @@ export function FactorOut({
     );
   };
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    factorOutTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -183,15 +201,8 @@ export function FactorOut({
   const finalH = n * rowH + gapBelow + G * F * LH;
   const colX = mX + (maxHead + sp) * F;
 
-  const span = durationInFrames * speed;
-  const k = Math.min(1.5, Math.max(0.85, (span - 50) / 140));
-  const enterAt = (i: number) => (6 + i * stagger) * k;
-  const spotAt = (i: number) => (44 + i * 4) * k;
-  const alignAt = 62 * k;
-  const MERGE = 15 * k;
-  const mergeAt = (i: number) => (86 + i * 18) * k;
-  const liftAt = mergeAt(n - 2) + MERGE + 8 * k;
-  const LIFT = 26 * k;
+  const alignEl = tl.get("align");
+  const liftEl = tl.get("lift");
 
   const lineStyle: React.CSSProperties = {
     fontFamily,
@@ -206,12 +217,12 @@ export function FactorOut({
   const nodes: React.ReactNode[] = [];
 
   const alignOf = (t: number) =>
-    interpolate(t, [alignAt, alignAt + 22 * k], [0, 1], {
+    interpolate(t, [alignEl.start, alignEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
     });
   const liftOf = (t: number) =>
-    interpolate(t, [liftAt, liftAt + LIFT], [0, 1], {
+    interpolate(t, [liftEl.start, liftEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
     });
@@ -233,10 +244,11 @@ export function FactorOut({
       : `translate(${dx}px, ${dy}px) `;
 
   for (let i = 0; i < n; i++) {
-    const d = enterAt(i);
+    const line = tl.get(`line:${i}`);
+    const d = line.start;
     if (t < d - 1) continue;
     const pinOf = (t: number) =>
-      interpolate(t, [d, d + 18], [0, 1], {
+      interpolate(t, [d, line.end], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
@@ -278,20 +290,23 @@ export function FactorOut({
 
     const x0 = mX + (m[list[i]] + sp) * F;
     const last = i === n - 1;
+    const merge = last ? null : tl.get(`merge:${i}`);
     const mpOf = (t: number) =>
-      last
+      merge === null
         ? 0
-        : interpolate(t, [mergeAt(i), mergeAt(i) + MERGE], [0, 1], {
+        : interpolate(t, [merge.start, merge.end], [0, 1], {
             ...CLAMP,
             easing: EASE_OUT,
           });
     const mp = mpOf(t);
     if (mp >= 1) continue;
-    const landAt = i > 0 ? mergeAt(i - 1) + MERGE * 0.35 : -1000;
+    // The first tail lands on nothing: its bump sits long before frame 0.
+    const landed = i > 0 ? tl.get(`merge:${i - 1}`) : null;
+    const landAt = landed ? landed.start + landed.beat("land") : -1000;
+    const landEnd = landed ? landAt + landed.beat("bump") : -990;
     const bumpOf = (t: number) =>
       Math.sin(
-        Math.PI *
-          interpolate(t, [landAt, landAt + 10 * k], [0, 1], { ...CLAMP }),
+        Math.PI * interpolate(t, [landAt, landEnd], [0, 1], { ...CLAMP }),
       ) * 0.045;
     /** The tail's top-left for an alignment and a lift. */
     const tailAt = (align: number, lift: number) => {
@@ -316,7 +331,8 @@ export function FactorOut({
     const textMoving = stirs(
       (t) => (1 - pinOf(t)) * rowH * 0.85 + mpOf(t) * rowH * 0.55,
     );
-    const tint = interpolate(t, [spotAt(i), spotAt(i) + 12], [0, 1], {
+    const spot = tl.get(`spot:${i}`);
+    const tint = interpolate(t, [spot.start, spot.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
     });

@@ -6741,12 +6741,21 @@
       "title": "Factor Out",
       "description": "Three short imperatives stack above a big blue \"in your editor.\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/factor-out/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/factor-out.tsx"
+          "target": "components/remocn/factor-out/index.tsx"
+        },
+        {
+          "path": "registry/remocn/factor-out/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/factor-out/timeline.ts"
         }
       ],
       "type": "registry:component"
