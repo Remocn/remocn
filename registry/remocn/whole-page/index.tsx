@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_BELIEFS,
+  type WholePageElementId,
+  wholePageTimeline,
+} from "./timeline";
 
 const gloock = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -35,16 +41,13 @@ export interface WholePageProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the intro, each belief and the pull back, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<WholePageElementId>;
 }
-
-const DEFAULT_BELIEFS = [
-  "A launch video is part of the launch, not the chore you do after it.",
-  "If it lives in code, it can live in the repo with everything else.",
-  "Every frame you install is a file you are free to rewrite.",
-  "Motion should explain the product. It should never show off.",
-  "A team of one deserves a real film, too.",
-  "The video goes out the same day the product does.",
-];
 
 const THEMES = {
   dark: { bg: "#0A1230", ink: "#FFFFFF", accent: "#FF4436" },
@@ -53,9 +56,6 @@ const THEMES = {
 
 const TRACK = -0.02;
 const LH = 1.12;
-const START = 6;
-const PULL = 36;
-const HOLD = 40;
 const DIM = 0;
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -156,24 +156,31 @@ function ScaleLayer({
   );
 }
 
-export function WholePage({
-  beliefs = DEFAULT_BELIEFS,
-  title = "What we believe",
-  accent,
-  ink,
-  background,
-  fontFamily = gloock.fontFamily,
-  hold = HOLD,
-  pull: pullLen = PULL,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: WholePageProps) {
+export function WholePage(props: WholePageProps) {
+  const {
+    beliefs = DEFAULT_BELIEFS,
+    title = "What we believe",
+    accent,
+    ink,
+    background,
+    fontFamily = gloock.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The beliefs are fitted to what is left of the scene after `delay`.
+  const tl = useTimeline(
+    wholePageTimeline,
+    props,
+    Math.max(0, durationInFrames - delay) * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -258,14 +265,12 @@ export function WholePage({
   const ax = mx;
   const ay = H * (portrait ? 0.1 : 0.1);
 
-  const D = Math.max(0, durationInFrames - delay) * speed;
-  const per = Math.max(30, (D - START - pullLen - hold) / n);
-  const pan = Math.min(16, per * 0.36);
-  const arriveAt = (i: number) => START + i * per;
-  const pullAt = START + n * per - 6;
+  const belief = (i: number) => tl.get(`belief:${i}`);
+  const pullEl = tl.get("pull");
+  const introEl = tl.get("intro");
 
   const pullOf = (tt: number) =>
-    interpolate(tt, [pullAt, pullAt + pullLen], [0, 1], {
+    interpolate(tt, [pullEl.start, pullEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -274,7 +279,8 @@ export function WholePage({
     let qy = paras[0].y;
     let S = zoomOf[0];
     for (let i = 1; i < n; i++) {
-      const p = interpolate(tt, [arriveAt(i) - pan, arriveAt(i)], [0, 1], {
+      const bi = belief(i);
+      const p = interpolate(tt, [bi.start - bi.beat("pan"), bi.start], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
@@ -295,7 +301,7 @@ export function WholePage({
   const cameraMoving =
     cameraAt(t + speed) !== camera || cameraAt(t - speed) !== camera;
 
-  const intro = interpolate(t, [0, 18], [0, 1], {
+  const intro = interpolate(t, [introEl.start, introEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -303,15 +309,17 @@ export function WholePage({
 
   const nodes: React.ReactNode[] = [];
   paras.forEach((para, i) => {
-    const arrive = i === 0 ? START : arriveAt(i);
-    const leaveAt = arriveAt(i + 1) - pan;
-    const leave =
-      i < n - 1
-        ? interpolate(t, [leaveAt, leaveAt + pan * 0.55], [0, 1], {
-            ...CLAMP,
-            easing: Easing.bezier(0.55, 0, 1, 0.45),
-          })
-        : 0;
+    const own = belief(i);
+    const arrive = own.start;
+    const pan = own.beat("pan");
+    const next = i < n - 1 ? belief(i + 1) : null;
+    const leaveAt = next ? next.start - next.beat("pan") : 0;
+    const leave = next
+      ? interpolate(t, [leaveAt, leaveAt + next.beat("pan") * 0.55], [0, 1], {
+          ...CLAMP,
+          easing: Easing.bezier(0.55, 0, 1, 0.45),
+        })
+      : 0;
     const isLast = i === n - 1;
     const wordsN = para.lay.words.length;
     const stagger = Math.min(1.6, 14 / Math.max(1, wordsN));
@@ -320,13 +328,14 @@ export function WholePage({
         t,
         [
           arrive - pan * 0.5 + wi * stagger,
-          arrive - pan * 0.5 + 12 + wi * stagger,
+          arrive - pan * 0.5 + own.beat("word") + wi * stagger,
         ],
         [0, 1],
         { ...CLAMP, easing: EASE_OUT },
       );
       const focus = on * (1 - leave);
-      const read = t >= arrive - pan * 0.5 + 12 + wi * stagger ? 1 : 0;
+      const read =
+        t >= arrive - pan * 0.5 + own.beat("word") + wi * stagger ? 1 : 0;
       const base = DIM + (1 - DIM) * focus;
       const finalOp = read ? 1 : DIM;
       const opacity = (base + (finalOp - base) * settle) * intro;

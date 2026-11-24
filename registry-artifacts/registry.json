@@ -7239,12 +7239,21 @@
       "title": "Whole Page",
       "description": "A manifesto of six serif belief paragraphs fills a navy page in columns.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/whole-page/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/whole-page.tsx"
+          "target": "components/remocn/whole-page/index.tsx"
+        },
+        {
+          "path": "registry/remocn/whole-page/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/whole-page/timeline.ts"
         }
       ],
       "type": "registry:component"
