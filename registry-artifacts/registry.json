@@ -9703,12 +9703,21 @@
       "title": "Tittle Drop",
       "description": "Dots of the i and j drop in last onto 'Ship it in minutes.' on a light ground.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/tittle-drop/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/tittle-drop.tsx"
+          "target": "components/remocn/tittle-drop/index.tsx"
+        },
+        {
+          "path": "registry/remocn/tittle-drop/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/tittle-drop/timeline.ts"
         }
       ],
       "type": "registry:component"
