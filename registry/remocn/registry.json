@@ -388,12 +388,17 @@
       "title": "Caret Swap",
       "description": "A gradient caret swells into a block that consumes the first phrase right-to-left, collapses back and types the second phrase out with a blinking caret.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "caret-swap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/caret-swap.tsx"
+          "target": "components/remocn/caret-swap/index.tsx"
+        },
+        {
+          "path": "caret-swap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/caret-swap/timeline.ts"
         }
       ]
     },
