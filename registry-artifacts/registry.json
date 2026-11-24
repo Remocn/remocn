@@ -15163,12 +15163,21 @@
       "title": "Gravity Grid",
       "description": "A grid bends into a gravity well and the logo lands at its bottom.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/gravity-grid/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/gravity-grid.tsx"
+          "target": "components/remocn/gravity-grid/index.tsx"
+        },
+        {
+          "path": "registry/remocn/gravity-grid/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/gravity-grid/timeline.ts"
         }
       ],
       "type": "registry:component"

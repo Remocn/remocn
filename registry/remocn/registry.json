@@ -15168,10 +15168,19 @@
         {
           "path": "gravity-grid/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/gravity-grid.tsx"
+          "target": "components/remocn/gravity-grid/index.tsx"
+        },
+        {
+          "path": "gravity-grid/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/gravity-grid/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "number-mosaic",
