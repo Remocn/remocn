@@ -12056,10 +12056,19 @@
         {
           "path": "moire-reveal/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/moire-reveal.tsx"
+          "target": "components/remocn/moire-reveal/index.tsx"
+        },
+        {
+          "path": "moire-reveal/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/moire-reveal/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "thread-weave",

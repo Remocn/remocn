@@ -6,6 +6,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type MoireRevealElementId, moireRevealTimeline } from "./timeline";
 
 const { fontFamily: geist } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -33,6 +35,12 @@ export interface MoireRevealProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the turn, the lock and the caption, by the
+   * ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MoireRevealElementId>;
 }
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
@@ -42,12 +50,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-const TURN_END = 86;
 const START_ANGLE = 11;
 const DRIFT = 3;
-const LOCK_AT = 100;
-const LOCK_END = 114;
-const CAPTION_AT = 110;
 
 const TURN = Easing.bezier(0.3, 0.15, 0.25, 1);
 const LOCK = Easing.bezier(0.5, 0, 0.1, 1);
@@ -173,25 +177,36 @@ function ScaleLayer({
   );
 }
 
-export function MoireReveal({
-  value = "10×",
-  shape = "text",
-  caption = "faster first frame on remocn render",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist,
-  lineSpacing = 7,
-  angle: startAngle = START_ANGLE,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: MoireRevealProps) {
+export function MoireReveal(props: MoireRevealProps) {
+  const {
+    value = "10×",
+    shape = "text",
+    caption = "faster first frame on remocn render",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist,
+    lineSpacing = 7,
+    angle: startAngle = START_ANGLE,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    moireRevealTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const turnEl = tl.get("turn");
+  const lockEl = tl.get("lock");
+  const captionEl = tl.get("caption");
   const u = H / 720;
   const stage = THEMES[theme];
   const bg =
@@ -208,23 +223,33 @@ export function MoireReveal({
   const cx = W / 2;
   const cy = H * 0.43;
 
-  const turn = TURN(interpolate(t, [0, TURN_END], [0, 1], CLAMP));
+  const turn = TURN(interpolate(t, [turnEl.start, turnEl.end], [0, 1], CLAMP));
   const angle = startAngle * (1 - turn);
   const phase = DRIFT * pitch * turn;
-  const detune = TURN(interpolate(t, [32, TURN_END - 4], [0, 1], CLAMP));
+  const detune = TURN(
+    interpolate(
+      t,
+      [
+        turnEl.start + turnEl.beat("detune"),
+        turnEl.start + turnEl.beat("detuneEnd"),
+      ],
+      [0, 1],
+      CLAMP,
+    ),
+  );
   const inner = pitch * (1 + 0.1 * detune);
-  const lock = LOCK(interpolate(t, [LOCK_AT, LOCK_END], [0, 1], CLAMP));
-  const locked = t >= LOCK_AT;
+  const lock = LOCK(interpolate(t, [lockEl.start, lockEl.end], [0, 1], CLAMP));
+  const locked = t >= lockEl.start;
   const innerWeight = weight + (inner * 0.66 - weight) * lock;
   const fieldDim = interpolate(
     t,
-    [LOCK_AT + 4, LOCK_END + 10],
+    [lockEl.start + lockEl.beat("dim"), lockEl.start + lockEl.beat("dimEnd")],
     [1, theme === "dark" ? 0.34 : 0.3],
     CLAMP,
   );
 
   const capIn = SETTLE(
-    interpolate(t, [CAPTION_AT, CAPTION_AT + 20], [0, 1], CLAMP),
+    interpolate(t, [captionEl.start, captionEl.end], [0, 1], CLAMP),
   );
   const capSize = Math.max(15, 22 * u);
 

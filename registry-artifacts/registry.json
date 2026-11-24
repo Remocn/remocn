@@ -12051,12 +12051,21 @@
       "title": "Moire Reveal",
       "description": "A big 10x resolves out of a moire line pattern with a small pill caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/moire-reveal/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/moire-reveal.tsx"
+          "target": "components/remocn/moire-reveal/index.tsx"
+        },
+        {
+          "path": "registry/remocn/moire-reveal/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/moire-reveal/timeline.ts"
         }
       ],
       "type": "registry:component"
