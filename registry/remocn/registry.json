@@ -14442,10 +14442,19 @@
         {
           "path": "benchmark-race/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/benchmark-race.tsx"
+          "target": "components/remocn/benchmark-race/index.tsx"
+        },
+        {
+          "path": "benchmark-race/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/benchmark-race/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "dot-globe",
