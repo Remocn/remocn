@@ -2,7 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { continueRender, delayRender, Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  KINETIC_WARP_MOVES,
+  type KineticWarpElementId,
+  kineticWarpTimeline,
+} from "./timeline";
 
 export interface KineticWarpProps {
   className?: string;
@@ -30,6 +36,11 @@ export interface KineticWarpProps {
   keyframeStride?: number;
   easingBezier?: [number, number, number, number];
   resampleStep?: number;
+  /**
+   * Moves, trims or stretches single moves of the warp, by the ids in
+   * `./timeline`. Frames on the scene timeline.
+   */
+  timing?: Timing<KineticWarpElementId>;
 }
 
 function monotoneSpline(xs: number[], ys: number[]): (x: number) => number {
@@ -82,34 +93,37 @@ function monotoneSpline(xs: number[], ys: number[]): (x: number) => number {
   };
 }
 
-export function KineticWarp({
-  className,
-  compWidth = 1920,
-  compHeight = 1080,
-  textColor = "#FFFFFF",
-  text = "REM\nOCN",
-  fontFamily = "sans-serif",
-  fontUrl = "",
-  fontWeight = 700,
-  fontSize = 107.1,
-  leading = 70,
-  tracking = -21,
-  layerScale = 480,
-  positionX = 960,
-  positionY = 540,
-  meshRows = 2,
-  meshColumns = 4,
-  colRestX = 960,
-  colRightX = 1255,
-  colLeftX = 678,
-  rowRestY = 540,
-  rowDownY = 850,
-  rowUpY = 387,
-  keyframeStride = 20,
-  easingBezier = [0.3, 0.74, 0.09, 1],
-  resampleStep = 4,
-}: KineticWarpProps) {
+export function KineticWarp(props: KineticWarpProps) {
+  const {
+    className,
+    compWidth = 1920,
+    compHeight = 1080,
+    textColor = "#FFFFFF",
+    text = "REM\nOCN",
+    fontFamily = "sans-serif",
+    fontUrl = "",
+    fontWeight = 700,
+    fontSize = 107.1,
+    leading = 70,
+    tracking = -21,
+    layerScale = 480,
+    positionX = 960,
+    positionY = 540,
+    meshRows = 2,
+    meshColumns = 4,
+    colRestX = 960,
+    colRightX = 1255,
+    colLeftX = 678,
+    rowRestY = 540,
+    rowDownY = 850,
+    rowUpY = 387,
+    easingBezier = [0.3, 0.74, 0.09, 1],
+    resampleStep = 4,
+    timing,
+  } = props;
   const frame = useSceneFrame();
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(kineticWarpTimeline, props, durationInFrames, timing);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [fontReady, setFontReady] = useState(false);
 
@@ -191,25 +205,42 @@ export function KineticWarp({
   }, [compWidth, compHeight]);
 
   const easing = Easing.bezier(...easingBezier);
-  const stops = [0, 1, 2, 3, 4, 5].map((i) => i * keyframeStride);
   const clamp = {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing,
   } as const;
 
-  const colX = interpolate(
-    frame,
-    stops,
-    [colRestX, colRightX, colRightX, colLeftX, colLeftX, colRestX],
-    clamp,
-  );
-  const rowY = interpolate(
-    frame,
-    stops,
-    [rowRestY, rowRestY, rowDownY, rowDownY, rowUpY, rowRestY],
-    clamp,
-  );
+  // One keyframe per move boundary. The move the frame is in is the first
+  // whose end it has not passed, as `interpolate` picks the segment of a
+  // multi-stop range; a frame between two moves holds the next one's start.
+  const moves = KINETIC_WARP_MOVES.map((id) => tl.get(id));
+  const keyed = (values: number[]) => {
+    let k = 0;
+    while (k < moves.length - 1 && moves[k].end < frame) k++;
+    return interpolate(
+      frame,
+      [moves[k].start, moves[k].end],
+      [values[k], values[k + 1]],
+      clamp,
+    );
+  };
+  const colX = keyed([
+    colRestX,
+    colRightX,
+    colRightX,
+    colLeftX,
+    colLeftX,
+    colRestX,
+  ]);
+  const rowY = keyed([
+    rowRestY,
+    rowRestY,
+    rowDownY,
+    rowDownY,
+    rowUpY,
+    rowRestY,
+  ]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

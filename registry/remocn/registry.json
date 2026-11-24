@@ -687,12 +687,17 @@
       "title": "Kinetic Warp",
       "description": "A coarse mesh warp bends a whole word in staccato beats, one axis per keyframe.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "kinetic-warp/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/kinetic-warp.tsx"
+          "target": "components/remocn/kinetic-warp/index.tsx"
+        },
+        {
+          "path": "kinetic-warp/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/kinetic-warp/timeline.ts"
         }
       ]
     },
