@@ -7039,10 +7039,19 @@
         {
           "path": "loop-break/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/loop-break.tsx"
+          "target": "components/remocn/loop-break/index.tsx"
+        },
+        {
+          "path": "loop-break/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/loop-break/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "crew-of-one",

@@ -7034,12 +7034,21 @@
       "title": "Loop Break",
       "description": "A loop of \"Render the cut. Spot a typo.\" breaks into \"Change one word. Done.\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/loop-break/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/loop-break.tsx"
+          "target": "components/remocn/loop-break/index.tsx"
+        },
+        {
+          "path": "registry/remocn/loop-break/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/loop-break/timeline.ts"
         }
       ],
       "type": "registry:component"

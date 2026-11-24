@@ -12,6 +12,19 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_FIX,
+  DEFAULT_LOOP,
+  ENTER,
+  type LoopBreakElementId,
+  loopBreakPlan,
+  loopBreakTimeline,
+  loopRows,
+  REWIND,
+  REWIND_WORD,
+  WORD_STAGGER,
+} from "./timeline";
 
 const dmSans = loadFont("normal", {
   weights: ["400", "500"],
@@ -39,6 +52,12 @@ export interface LoopBreakProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches each row's rise and rewind on each pass, the
+   * fix and the final dim, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LoopBreakElementId>;
 }
 
 const THEMES = {
@@ -49,7 +68,6 @@ const THEMES = {
 const WGHT = 500;
 const TRACK = -0.03;
 const PROBE = 200;
-const BASE = 215;
 const LEAD = 1.14;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -59,20 +77,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const START = 6;
-const ENTER = 14;
-const WORD_STAGGER = 3;
-const ROW_GAP = 15;
-const HOLD = 16;
-const REWIND = 7;
-const REWIND_WORD = 1.5;
-const REWIND_ROW = 4;
-const TEMPO = 0.6;
-const MIN_TEMPO = 0.4;
-const BREAK_PAUSE = 12;
-const FIX_TEMPO = 1.25;
-const DIM_AFTER = 6;
 
 interface Word {
   text: string;
@@ -183,62 +187,6 @@ function wrapFix(words: Word[], measure: number) {
   return out;
 }
 
-function schedule(
-  rowCount: number,
-  words: number[],
-  passes: number,
-  stagger: number,
-  hold: number,
-) {
-  const takes: Take[] = [];
-  let cursor = START;
-  let fixAt = 0;
-  for (let p = 0; p < passes; p++) {
-    const s = Math.max(MIN_TEMPO, TEMPO ** p);
-    const final = p === passes - 1;
-    const pass: Take[] = [];
-    for (let r = p === 0 ? 0 : 1; r < rowCount; r++) {
-      const fix = final && r === rowCount - 1;
-      if (fix) {
-        cursor += BREAK_PAUSE;
-        fixAt = cursor;
-      }
-      const take: Take = {
-        row: r,
-        fix,
-        at: cursor,
-        tempo: fix ? FIX_TEMPO : s,
-        back: Number.POSITIVE_INFINITY,
-        backTempo: s,
-      };
-      pass.push(take);
-      takes.push(take);
-      if (r < rowCount - 1) cursor += ROW_GAP * s;
-    }
-    const last = pass[pass.length - 1];
-    if (final) {
-      cursor =
-        last.at +
-        (ENTER + stagger * Math.max(0, words[rowCount] - 1)) * last.tempo;
-      break;
-    }
-    cursor =
-      last.at +
-      (ENTER + stagger * Math.max(0, words[last.row] - 1)) * s +
-      hold * s;
-    const back = [...pass].reverse().filter((tk) => tk.row > 0);
-    back.forEach((tk, i) => {
-      tk.back = cursor + i * REWIND_ROW * s;
-    });
-    const lastBack = back[back.length - 1];
-    cursor =
-      lastBack.back +
-      (REWIND + REWIND_WORD * Math.max(0, words[lastBack.row] - 1)) * s +
-      2;
-  }
-  return { takes, fixAt, end: cursor };
-}
-
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -255,33 +203,38 @@ function ScaleLayer({
   );
 }
 
-export function LoopBreak({
-  loop = ["Render the cut.", "Spot a typo.", "Start over."],
-  fix = "Change one word. Done.",
-  highlight = "Done.",
-  passes = 3,
-  stagger = WORD_STAGGER,
-  hold = HOLD,
-  accent,
-  ink,
-  background,
-  fontFamily = dmSans.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: LoopBreakProps) {
+export function LoopBreak(props: LoopBreakProps) {
+  const {
+    loop = DEFAULT_LOOP,
+    fix = DEFAULT_FIX,
+    highlight = "Done.",
+    stagger = WORD_STAGGER,
+    accent,
+    ink,
+    background,
+    fontFamily = dmSans.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
-  const k = Math.min(1, durationInFrames / BASE);
-  const t = (frame * speed) / k;
+  const t = frame * speed;
+  const tl = useTimeline(
+    loopBreakTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const rows = loop.length >= 2 ? loop : [...loop, "Start over."];
+  const rows = loopRows(loop);
   const m = useMetrics(rows, fix, fontFamily);
 
   if (!m) {
@@ -300,16 +253,20 @@ export function LoopBreak({
   const left = W * 0.08;
   const blockTop = (H - total * pitch) / 2;
 
-  const words = [...m.rows.map((r) => r.length), m.fix.length];
-  const plan = schedule(
-    R,
-    words,
-    Math.max(2, Math.round(passes)),
-    stagger,
-    hold,
-  );
-  const settled = plan.end + DIM_AFTER;
-  const dim = interpolate(t, [settled, settled + 12], [0, 1], {
+  const takes: Take[] = loopBreakPlan(props).takes.map((tk) => {
+    const rise = tl.get(tk.id);
+    const sink = tk.rewind ? tl.get(tk.rewind) : null;
+    return {
+      row: tk.row,
+      fix: tk.fix,
+      at: rise.start,
+      tempo: rise.beat("tempo"),
+      back: sink ? sink.start : Number.POSITIVE_INFINITY,
+      backTempo: sink ? sink.beat("tempo") : tk.backTempo,
+    };
+  });
+  const dimEl = tl.get("dim");
+  const dim = interpolate(t, [dimEl.start, dimEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -335,7 +292,7 @@ export function LoopBreak({
   const nodes: React.ReactNode[] = [];
   for (let r = 0; r < R; r++) {
     let take: Take | null = null;
-    for (const tk of plan.takes) {
+    for (const tk of takes) {
       if (tk.row === r && tk.at <= t) take = tk;
     }
     if (!take) continue;
@@ -370,8 +327,7 @@ export function LoopBreak({
         ((1 - (riseAt(tt) - sinkAt(tt))) * pitch).toFixed(2);
       const offset = offsetAt(t);
       const moving =
-        offset !== offsetAt(t + speed / k) ||
-        offset !== offsetAt(t - speed / k);
+        offset !== offsetAt(t + speed) || offset !== offsetAt(t - speed);
       const lit =
         cur.fix &&
         hiStart >= 0 &&
